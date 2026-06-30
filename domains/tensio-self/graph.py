@@ -838,18 +838,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-operator-may-have-parent",
             claim=(
-                "An Operator.parent shall reference another Operator.id or "
-                "be None (root)."
+                "An Operator.parent shall reference another Operator.id or be None (root)."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of R-operator-acting-facet (hierarchy concern). "
-                "Structural via the Operator.parent field type."
+                "Atom of R-operator-acting-facet (hierarchy concern). Structural via the Operator.parent field type."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=STRUCTURAL,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_no_dangling_operator_refs",),
         ),
         Requirement(
             id="R-context-budget-rule",
@@ -1232,16 +1230,10 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (P8): the P8 REFLECTION band emits the over-budget Action "
-                "sourced FROM the operator's budget field, measuring only the live "
-                "graph nodes (requirements+conflicts+assumptions) — the substrate "
-                "itself is never counted. Bounding the substrate would punish the "
-                "very act — crystallizing — that the budget rewards. Only "
-                "un-offloaded working knowledge competes for context, so only it "
-                "is metered. Implementation: tools/what_now.py + tools/tick.py."
+                "SETTLED (P8): the P8 REFLECTION band emits the over-budget Action sourced FROM the operator's budget field, measuring only the live graph nodes (requirements+conflicts+assumptions) — the substrate itself is never counted. Bounding the substrate would punish the very act — crystallizing — that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. Implementation: tools/what_now.py + tools/tick.py."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
             enforced_by=("test_reflection.py",),
         ),
         Requirement(
@@ -1307,25 +1299,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-stale-substrate",
             claim=(
-                "Crystallized knowledge whose enforcing assumption has died shall "
-                "be surfaced as stale (enforced-but-wrong, a bad habit)."
+                "Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit)."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (P6): the structural path now exists. The §Conscience "
-                "critical-core sweep (test_conscience.py::"
-                "test_real_meta_domain_passes_critical_core) flags any "
-                "critical-core invariant that fires on the live meta-domain — "
-                "including one resting on a DEAD assumption. Today the meta-domain "
-                "has zero DEAD assumptions, so no stale substrate fires; the "
-                "structural detection path is in place for when one does."
+                "SETTLED (P6): the structural path now exists. The §Conscience critical-core sweep (test_conscience.py::test_real_meta_domain_passes_critical_core) flags any critical-core invariant that fires on the live meta-domain — including one resting on a DEAD assumption. Today the meta-domain has zero DEAD assumptions, so no stale substrate fires; the structural detection path is in place for when one does."
             ),
             assumptions=("A-compaction-loses-working",),
-            enforcement=STRUCTURAL,
-            enforced_by=(
-                "test_conscience.py::test_real_meta_domain_passes_critical_core",
-            ),
+            enforcement="ENFORCED",
+            enforced_by=("test_reflection.py::test_reflection_emits_dead_assumption_enforcer", "test_conscience.py::test_real_meta_domain_passes_critical_core"),
         ),
         # --- OPEN(question) — load-bearing open decisions (M17–M31) ----------
         Requirement(
@@ -2238,7 +2221,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. WHY: business data in the framework source would couple it to a specific domain, violating content-free neutrality."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
         ),
         Requirement(
             id="R-content-free-no-examples",
@@ -2251,7 +2235,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture and misleads adopters into thinking it is real content."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
         ),
         Requirement(
             id="R-content-free-no-seed-graph",
@@ -2264,7 +2249,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
         ),
         Requirement(
             id="R-empty-content-wellformed",
@@ -2323,7 +2309,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-boot-from-substrate (WHAT to load). Without re-loading from the substrate, the operator lives in session memory and drifts from the graph's live state."
             ),
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
-            enforcement="STRUCTURAL",
+            enforcement=ENFORCED,
+            enforced_by=("test_reflection.py",),
         ),
         Requirement(
             id="R-boot-cite-in-first-sentence",
@@ -2523,7 +2510,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-process-aspect-first (opt-in concern). Core cost must not be imposed on domains that do not model processes."
             ),
             assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("test_process.py",),
         ),
         Requirement(
             id="R-process-lifecycle-wellformed-aspect",
@@ -2592,7 +2580,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-dependency-graph-parallelism (tracking concern). Relations are the data that makes dependency-driven delegation possible."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("check_no_dangling_requirement_relations",),
         ),
         Requirement(
             id="R-dependency-drives-parallel",
@@ -2655,7 +2644,7 @@ def build_graph() -> TensionGraph:
                 "Atom of R-operator-crystal-is-claude-md (tree-hierarchy concern). The tree structure mirrors the delegation hierarchy and is natively supported by Claude Code nested CLAUDE.md loading."
             ),
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
             enforced_by=("test_constitution_gen.py",),
         ),
         Requirement(
@@ -2753,7 +2742,8 @@ def build_graph() -> TensionGraph:
                 "The sensor-substrate inversion taken one step deeper: not only does code generate the operator's prompt, the tool IS its own requirement. The docstring is the claim, the body is the check, the test is the enforcer. Removing the tool removes the R; lying in the docstring is caught by the test failing. This eliminates the prose gap between 'R written in graph' and 'tool implementing R'."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement=ENFORCED,
+            enforced_by=("test_tool_derived_requirements.py",),
         ),
         Requirement(
             id="R-agent-scoped-constitution",
@@ -2822,7 +2812,8 @@ def build_graph() -> TensionGraph:
                 "Separates framework code (spec/, shared, immutable from any domain's view) from business content (domains/<name>/, per-business). Enables tools/create_domain to scaffold new businesses without touching the framework body. Builds on the agent-as-directory pattern: just as agents are directories with their own CLAUDE.md+tools+agents, domains are directories with their own graph+tools+agents+docs+CLAUDE.md."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("check_domain_manifest_exists_and_importable", "test_tool_create_domain.py::test_creates_required_files"),
         ),
         Requirement(
             id="R-domain-has-manifest",
@@ -2869,7 +2860,8 @@ def build_graph() -> TensionGraph:
                 "Isolates each domain's requirement graph from all others. The single-file convention (`build_graph()`) is inherited from spec/content/graph.py and load_content_graph(), so domain tooling reuses the same loader with a path argument. Cross-domain references are explicitly forbidden: a requirement is local or it is a shared framework node."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("check_domain_manifest_exists_and_importable", "test_tool_create_domain.py::test_creates_required_files"),
         ),
         Requirement(
             id="R-domain-owns-docs-gen",
@@ -2882,7 +2874,8 @@ def build_graph() -> TensionGraph:
                 "Generated docs are the human-readable shadow of the graph (R-deterministic-generation). Keeping them inside the domain directory ensures each operator's boot sequence reads only its own REQUIREMENTS.md/TENSIONS.md/OPEN.md, not a mixed-domain dump. The anti-drift meta-test must be domain-scoped accordingly."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_tool_create_domain.py::test_creates_required_files",),
         ),
         Requirement(
             id="R-domain-owns-tools-and-agents",
@@ -2895,7 +2888,8 @@ def build_graph() -> TensionGraph:
                 "tools/ holds domain-specific scripts (e.g. create_domain, gen_spec variants) that must not pollute the shared spec/tools/. agents/ is the recursive sub-operator tree (R-agent-is-recursive-director). Requiring both to exist even when empty makes scaffolding deterministic and avoids FileNotFoundError in tooling that expects the layout."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_tool_create_domain.py::test_creates_required_files",),
         ),
         Requirement(
             id="R-domain-owns-claude-md",
@@ -2950,7 +2944,11 @@ def build_graph() -> TensionGraph:
                 "The director is the domain's R-operator-acting-facet: it holds the crystal (CLAUDE.md), runs the boot sequence, and is the single entry point for any orchestrator. Without a director agent the domain has no defined operator and violates R-agent-never-lost. The name `director` is conventional, not arbitrary — it mirrors the OP-director role at the framework level."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement=ENFORCED,
+            enforced_by=(
+                "check_domain_director_exists",
+                "test_tool_create_domain.py::test_director_agent_created",
+            ),
         ),
         Requirement(
             id="R-agent-is-recursive-director",
@@ -2977,7 +2975,8 @@ def build_graph() -> TensionGraph:
                 "Shared docs are the single authoritative reference for framework thinking and tool usage across all agents and domains. Generating them deterministically from docstrings and --help ensures they cannot drift from the code (R-drift-structurally-impossible). The STRUCTURAL enforcement label means enforcement checks arrive in task #64 once the generator is built."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_domain_isolation_p17.py::test_shared_thinking_docs_generated", "test_domain_isolation_p17.py::test_shared_tool_docs_generated"),
         ),
         Requirement(
             id="R-shared-tool-doc-from-docstring-and-help",
@@ -2990,7 +2989,8 @@ def build_graph() -> TensionGraph:
                 "A tool doc that diverges from its --help output is worse than no doc — it misleads operators. Deriving both sections from the single source (module docstring + argparse) eliminates the divergence class entirely. The sentinel pattern mirrors how CONSTITUTION blocks are generated: machine-written between markers, never hand-edited."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement=ENFORCED,
+            enforced_by=("test_domain_isolation_p17.py::test_shared_tool_docs_content",),
         ),
         Requirement(
             id="R-shared-thinking-doc-from-canon-sections",
@@ -3003,7 +3003,8 @@ def build_graph() -> TensionGraph:
                 "The Canon: §Topic markers in framework docstrings are the authoritative source for each thinking topic; aggregating them into a single file makes cross-module rationale visible without repeating it. Hand-writing the thinking docs would immediately drift from the annotated code, violating R-drift-structurally-impossible. The generator collects all §Topic-marked docstrings in one pass, identical to how gen_spec collects CONSTITUTION sections."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement=ENFORCED,
+            enforced_by=("test_domain_isolation_p17.py::test_shared_thinking_docs_content",),
         ),
         Requirement(
             id="R-agent-references-shared-docs",
@@ -3016,7 +3017,8 @@ def build_graph() -> TensionGraph:
                 "Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement=ENFORCED,
+            enforced_by=("test_domain_isolation_p17.py::test_agent_shared_docs_block_present",),
         ),
         Requirement(
             id="R-agent-has-docs-dir",
@@ -3043,7 +3045,8 @@ def build_graph() -> TensionGraph:
                 "The docs/ wrapper cleanly separates machine-generated output (docs/gen/) from hand-written domain material without requiring two separate top-level directories. Domain operators need a place to put domain-level notes, ADRs, and glossaries that are domain-specific and not governed by the framework generator. Keeping everything under docs/ mirrors the spec/docs/ structure established for the framework level."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement=ENFORCED,
+            enforced_by=("test_tool_create_domain.py::test_creates_docs_dir",),
         ),
         Requirement(
             id="R-no-hand-edit-graph",

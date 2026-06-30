@@ -62,11 +62,13 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
 
-## `R-agent-references-shared-docs` (STRUCTURAL)
+## `R-agent-references-shared-docs` (ENFORCED)
 
 **Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content.
 
 **Why.** Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility.
+
+**Enforced by:** `test_domain_isolation_p17.py::test_agent_shared_docs_block_present`
 
 ## `R-agent-scoped-constitution` (ENFORCED)
 
@@ -82,11 +84,13 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-boot-from-substrate (WHEN to cite). Citing anchors the reply in the live substrate, proving the operator actually loaded it and is not parroting from memory.
 
-## `R-boot-reload-three-facts` (STRUCTURAL)
+## `R-boot-reload-three-facts` (ENFORCED)
 
 **Claim.** The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio.
 
 **Why.** Atom of R-boot-from-substrate (WHAT to load). Without re-loading from the substrate, the operator lives in session memory and drifts from the graph's live state.
+
+**Enforced by:** `test_reflection.py`
 
 ## `R-operator-has-context-budget` (ENFORCED)
 
@@ -104,11 +108,13 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
 
-## `R-operator-may-have-parent` (STRUCTURAL)
+## `R-operator-may-have-parent` (ENFORCED)
 
 **Claim.** An Operator.parent shall reference another Operator.id or be None (root).
 
 **Why.** Atom of R-operator-acting-facet (hierarchy concern). Structural via the Operator.parent field type.
+
+**Enforced by:** `check_no_dangling_operator_refs`
 
 ## `R-operator-not-self-approve` (ENFORCED)
 

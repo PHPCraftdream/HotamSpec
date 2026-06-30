@@ -14,23 +14,29 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 **Enforced by:** `test_docs_gen.py::test_claude_md_live_state_up_to_date`
 
-## `R-content-free-no-business-data` (STRUCTURAL)
+## `R-content-free-no-business-data` (ENFORCED)
 
 **Claim.** The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders).
 
 **Why.** Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. WHY: business data in the framework source would couple it to a specific domain, violating content-free neutrality.
 
-## `R-content-free-no-examples` (STRUCTURAL)
+**Enforced by:** `test_content_free.py::test_no_domain_instances_in_tensio_src`
+
+## `R-content-free-no-examples` (ENFORCED)
 
 **Claim.** The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo.
 
 **Why.** Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture and misleads adopters into thinking it is real content.
 
-## `R-content-free-no-seed-graph` (STRUCTURAL)
+**Enforced by:** `test_content_free.py::test_no_domain_instances_in_tensio_src`
+
+## `R-content-free-no-seed-graph` (ENFORCED)
 
 **Claim.** The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph().
 
 **Why.** Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts.
+
+**Enforced by:** `test_content_free.py::test_no_domain_instances_in_tensio_src`
 
 ## `R-content-layout-evolution` (ENFORCED)
 

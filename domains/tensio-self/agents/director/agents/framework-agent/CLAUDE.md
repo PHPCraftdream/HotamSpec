@@ -43,7 +43,7 @@ are included.
 
 **Other**
 
-- **R-tool-is-its-own-requirement** — *Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists.* [STRUCTURAL]
+- **R-tool-is-its-own-requirement** — *Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists.* [ENFORCED·test_tool_derived_requirements.py]
 
 **Tool-derived requirements**
 
