@@ -42,7 +42,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-agent-is-recursive-director` (ENFORCED)
 
-**Claim.** Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder.
+**Claim.** Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.
 
 **Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit — a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. ENFORCED via check_agent_has_agents_subdir (task #64).
 
@@ -64,7 +64,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-agent-references-shared-docs` (STRUCTURAL)
 
-**Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY).
+**Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content.
 
 **Why.** Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility.
 
@@ -134,9 +134,17 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `check_no_dangling_operator_refs`, `test_operator.py`
 
+## `R-operator-type-vs-facet` (ENFORCED)
+
+**Claim.** Operator shall be its own first-class frozen-dataclass type in tensio.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.
+
+**Why.** M20. DECIDED 2026-06-30: Operator is a new type. Rationale: a Stakeholder facet cannot carry a ContextBudget, enforce check_operator_within_budget, or be referenced by Goal.owner — all of which are live ENFORCED requirements. The clean separation (Stakeholder = party, Operator = acting facet with budget + capabilities) prevents conflation at the single-altitude-vs-multi-altitude axis. Evidence: spec/src/tensio/operator.py:Operator frozen dataclass; R-operator-is-frozen-dataclass SETTLED ENFORCED; check_typed_anchors_operator live.
+
+**Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
+
 ## `R-prefer-tool-over-hand` (STRUCTURAL)
 
-**Claim.** The operator shall prefer creating a reusable tool over performing the same action by hand; one-off acts are permitted only for genuine bootstrap or single-occurrence events.
+**Claim.** The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events.
 
 **Why.** Today's third architectural principle. Cannot be algorithmically enforced (no AST detection of 'you did it by hand'); STRUCTURAL via prose discipline in the operator-prompt + a generated discipline doc. Use SETTLED (not DRAFT) — the principle is now in force; the structural enforcement is the prose.
 

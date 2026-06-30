@@ -22,12 +22,14 @@ are included.
 **Substrate / Anchoring**
 
 - **R-anchor-everything** — *Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_section_anchors_known·test_glossary_sync.py]
-- **R-speak-by-reference** — *An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose.* [ENFORCED·test_glossary_sync.py·check_section_anchors_known·docs/playbooks/]
+- **R-anchor-taxonomy** — *The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_section_anchors_known]
+- **R-speak-by-reference** — *An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.* [ENFORCED·test_glossary_sync.py·check_section_anchors_known·docs/playbooks/]
 
 **Check / Invariant**
 
 - **R-axis-controlled-vocab** — *Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple.* [ENFORCED·check_axis_in_registry]
 - **R-bijection-r-to-enforcer** — *Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.* [ENFORCED·check_bijection_r_to_enforcer]
+- **R-check-method-is-atomic** — *Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.* [STRUCTURAL·tools/audit_atomicity.py]
 - **R-conflict-is-connector-node** — *A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements.* [STRUCTURAL]
 - **R-conflict-min-two-members** — *Every Conflict node shall contain at least two distinct Requirement ids in its members tuple.* [ENFORCED·check_conflict_min_two_members]
 - **R-conflict-structurally-visible** — *Every Conflict node shall carry a non-empty axis, context, and steward.* [ENFORCED·check_conflict_has_axis·check_conflict_has_context·check_conflict_has_steward]

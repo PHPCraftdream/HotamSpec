@@ -22,16 +22,10 @@ methodology-altitude decisions.
 |---|---|---|---|
 | M3 | `R-axis-gatekeeper-policy` | `ai-agent` | when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes? |
 | M5 | `R-trust-anchor-mechanism` | `framework-author` | what signature mechanism (PGP/SSH/web of trust) and cadence (quarterly/per-PR/on-domain-change) anchor the loop? |
-| M8 | `R-content-layout-evolution` | `framework-author` | one file forever, or split per sub-domain with federation? thresholds for splitting? |
 | M17 | `R-budget-measure` | `framework-author` | how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set? |
 | M18 | `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
-| M19 | `R-goal-type-vs-facet` | `domain-user` | is Goal its own first-class type, or a facet/status of Requirement? |
-| M20 | `R-operator-type-vs-facet` | `framework-author` | is Operator a new type, or a capabilities+context+domain facet bolted onto Stakeholder? |
 | M21 | `R-observation-evidence-scope` | `framework-reviewer` | does the methodology model an operator's BELIEF about business state and its drift from reality (Observation/Evidence), or is that out of scope as epistemics-creep? |
 | M22 | `R-rules-as-data` | `framework-reviewer` | do the methodology's own rules/invariants become first-class data the methodology reasons about, or stay as code check_* plus meta-domain requirements? |
-| M26 | `R-enforcement-first-class` | `framework-author` | is the enforcement level (PROSE/STRUCTURAL/ENFORCED) a first-class Requirement field with enforced_by anchors, or a derived report? |
-| M28 | `R-anchor-taxonomy` | `framework-author` | what is the frozen typed-anchor prefix set (R-/C-/A-/§/OP-/GOAL-/GAP-/DLG-/AX-), and does Axis.slug get a prefix or stay bare? |
-| M30 | `R-uncrystallizable-automated` | `framework-reviewer` | is 'uncrystallizable knowledge = missing type' an automated signal or human judgment, and what records it? |
 | M37 | `R-backend-scope` | `framework-author` | which backends beyond Claude Code are real targets — CI runner / a different coding agent / a programmatic or human steward — so the protocol is designed against concrete cases, not hypotheticals? |
 
 ## Notes

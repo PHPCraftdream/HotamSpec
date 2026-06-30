@@ -91,6 +91,11 @@ substrate (R-history-from-rejected-markers).
 - **owner:** `framework-author`
 - **why:** REJECTED — REPLACES split into R-enforcement-levels-declared + R-enforced-names-enforcer (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-enforcement-levels-declared + R-enforced-names-enforcer (wave 2, decided by framework-author 2026-06-30) — (was: Makes 'how deeply crystallized' measurable; pushes knowledge down toward enforced reflexes. A PROSE requirement is a wish; an ENFORCED one is a guarantee — naming the enforcer is what makes the difference auditable. When DRAFT >= SETTLED/2, the REFLECTION band fires on `burn-down` (M35: SETTLED:DRAFT ratio + UNENFORCED count). Promote, don't accrue.))
 
+### `R-bijection-r-to-enforcer-draft` — Each ENFORCED Requirement shall name exactly one enforcer in its `enforced_by` after atomization is complete.
+
+- **owner:** `framework-reviewer`
+- **why:** REJECTED — SUPERSEDED by R-bijection-r-to-enforcer SETTLED (wave 3 outcome). The SETTLED version generalizes this claim: every SETTLED/ENFORCED requirement must name an existing check_* in ALL_INVARIANTS or a real test_*, enforced by check_bijection_r_to_enforcer. The original id was duplicated with the SETTLED version; renamed to R-bijection-r-to-enforcer-draft for history preservation.
+
 ### `R-seed-in-src` — The framework shall ship with a seed graph baked into spec/src/tensio/graph.py so the demo runs without setup.
 
 - **owner:** `framework-author`

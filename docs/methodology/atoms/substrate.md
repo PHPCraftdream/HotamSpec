@@ -22,15 +22,23 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ## `R-content-free-no-examples` (STRUCTURAL)
 
-**Claim.** The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo.
+**Claim.** The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo.
 
 **Why.** Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture and misleads adopters into thinking it is real content.
 
 ## `R-content-free-no-seed-graph` (STRUCTURAL)
 
-**Claim.** The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention.
+**Claim.** The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph().
 
 **Why.** Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts.
+
+## `R-content-layout-evolution` (ENFORCED)
+
+**Claim.** Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17.
+
+**Why.** M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file or split?' question moot — the answer is per-domain directories, each owning its own graph.py, with gen_spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. Evidence: domains/tensio-self/graph.py, spec/tools/gen_spec.py load_content_graph, R-domain-owns-graph-py SETTLED.
+
+**Enforced by:** `check_domain_manifest_exists_and_importable`, `R-domain-owns-graph-py`
 
 ## `R-deterministic-generation` (ENFORCED)
 

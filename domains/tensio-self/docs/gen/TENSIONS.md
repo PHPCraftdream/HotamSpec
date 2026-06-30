@@ -38,8 +38,9 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **context:** extending the framework to surface behavioral contradictions (dead states, two processes one entity)
 - **members:** `R-content-free-framework`, `R-agent-never-lost`
 - **steward:** `domain-user`
-- **lifecycle:** DETECTED
+- **lifecycle:** ACKNOWLEDGED
 - **shared assumption:** `A-prose-suffices`
+- **revisit marker:** REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided.
 
 ### Axis `apparatus-weight-vs-coverage` — 1 conflict(s), single tension
 
@@ -132,7 +133,6 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-active-loop-protocol` | `R-ai-presents-not-decides` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-axis-controlled-vocab` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
-| `R-active-loop-protocol` | `R-bijection-r-to-enforcer` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-conflict-min-two-members` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-conflict-structurally-visible` | shares assumption(s): A-stakeholders-care |
@@ -637,7 +637,6 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-axis-controlled-vocab` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
-| `R-axis-controlled-vocab` | `R-bijection-r-to-enforcer` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-critical-core-methodology` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
@@ -656,7 +655,6 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-controlled-vocab` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
-| `R-axis-gatekeeper-policy` | `R-bijection-r-to-enforcer` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-critical-core-methodology` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
@@ -703,47 +701,29 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-backend-scope` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-bijection-r-to-enforcer` | `R-boot-cite-in-first-sentence` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-boot-reload-three-facts` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-claude-md-tree-of-crystals` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-constituting-requirements-converge` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-critical-core-methodology` | shares assumption(s): A-prose-suffices |
-| `R-bijection-r-to-enforcer` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
-| `R-bijection-r-to-enforcer` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
-| `R-bijection-r-to-enforcer` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
-| `R-bijection-r-to-enforcer` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
-| `R-bijection-r-to-enforcer` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
-| `R-bijection-r-to-enforcer` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies |
-| `R-bijection-r-to-enforcer` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |

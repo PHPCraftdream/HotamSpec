@@ -14,6 +14,14 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_section_anchors_known`, `test_glossary_sync.py`
 
+## `R-anchor-taxonomy` (ENFORCED)
+
+**Claim.** The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.
+
+**Why.** M28. DECIDED 2026-06-30: the prefix set is frozen by the check_typed_anchors_* family — one invariant per node type enforces the exact prefix. check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-) are all live in invariants.ALL_INVARIANTS. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph; a prefix would introduce redundancy. §-anchors are validated by check_section_anchors_known against the glossary. The full set: R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/tensio/invariants.py check_typed_anchors_* functions; R-anchor-everything SETTLED ENFORCED.
+
+**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_section_anchors_known`
+
 ## `R-crystallize-before-split` (STRUCTURAL)
 
 **Claim.** On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget.
@@ -22,13 +30,13 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 ## `R-crystallize-knowledge-to-code` (STRUCTURAL)
 
-**Claim.** An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious).
+**Claim.** An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context.
 
 **Why.** SETTLED (P4): the act of crystallization is now structurally supported. Every codified knowledge-piece flows through the proposal → approve → apply → verify-closure pipeline (tools/apply_proposal.py + tools/closure.py). The closure check makes crystallization audit-able: each applied proposal must prove it removed the triggering diagnosis, so the discipline is not merely claimed but structurally enforced at the feedback edge. STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a steward call; the pipeline + closure assert HOW it is done. Implementation: tools/apply_proposal.py + tools/closure.py + docs/playbooks/.
 
 ## `R-prefer-tool-over-hand` (STRUCTURAL)
 
-**Claim.** The operator shall prefer creating a reusable tool over performing the same action by hand; one-off acts are permitted only for genuine bootstrap or single-occurrence events.
+**Claim.** The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events.
 
 **Why.** Today's third architectural principle. Cannot be algorithmically enforced (no AST detection of 'you did it by hand'); STRUCTURAL via prose discipline in the operator-prompt + a generated discipline doc. Use SETTLED (not DRAFT) — the principle is now in force; the structural enforcement is the prose.
 
@@ -44,7 +52,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 ## `R-speak-by-reference` (ENFORCED)
 
-**Claim.** An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose.
+**Claim.** An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.
 
 **Why.** SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every §-anchor cited in framework docstrings resolves in the glossary — an operator that invents a §-token immediately fires a P1 STRUCTURE violation. test_glossary_sync.py provides the test-time mirror. docs/playbooks/ mandates that every proposal cites the R-/C-/§ anchor it acts on. The §Tick advisory output itself cites anchor ids in every action (target field). Together these make reference-not-content structurally visible and machine-checked.
 

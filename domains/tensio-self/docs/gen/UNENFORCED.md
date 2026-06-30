@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 67 / SETTLED 113; DRAFT 21; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 73 / SETTLED 125; DRAFT 14; OPEN 7; REJECTED 19.**
 
 ---
 
@@ -20,28 +20,34 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 |---|---|---|---|
 | `R-agent-never-lost` | PROSE | `ai-agent` | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
 | `R-conflict-is-connector-node` | STRUCTURAL | `framework-author` | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
-| `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
+| `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
 | `R-active-loop-playbook-doc` | STRUCTURAL | `ai-agent` | At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band. |
 | `R-task-vs-action-distinct-altitudes` | STRUCTURAL | `framework-author` | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
 | `R-operator-may-have-parent` | STRUCTURAL | `framework-author` | An Operator.parent shall reference another Operator.id or be None (root). |
-| `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
+| `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail. |
 | `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
 | `R-statemachine-guard-on-assumption` | STRUCTURAL | `framework-author` | A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced. |
-| `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
+| `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context. |
 | `R-crystallize-before-split` | STRUCTURAL | `ai-agent` | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
-| `R-working-vs-substrate-budget` | STRUCTURAL | `framework-author` | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
+| `R-working-vs-substrate-budget` | STRUCTURAL | `framework-author` | The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded. |
 | `R-uncrystallizable-is-missing-type` | STRUCTURAL | `framework-reviewer` | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
 | `R-stale-substrate` | STRUCTURAL | `framework-author` | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
-| `R-prefer-tool-over-hand` | STRUCTURAL | `ai-agent` | The operator shall prefer creating a reusable tool over performing the same action by hand; one-off acts are permitted only for genuine bootstrap or single-occurrence events. |
+| `R-uncrystallizable-automated` | STRUCTURAL | `framework-reviewer` | Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type. |
+| `R-prefer-tool-over-hand` | STRUCTURAL | `ai-agent` | The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events. |
 | `R-shared-tools-in-spec-tools` | STRUCTURAL | `framework-author` | Tools available to all agents shall live in `spec/tools/`. |
+| `R-constituting-requirements-converge` | STRUCTURAL | `framework-reviewer` | The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden. |
+| `R-requirement-claim-is-atomic` | STRUCTURAL | `framework-reviewer` | Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements. |
+| `R-check-method-is-atomic` | STRUCTURAL | `framework-reviewer` | Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions. |
 | `R-agent-is-a-directory` | PROSE | `framework-author` | A domain-agent shall be represented as a directory at `spec/agents/<name>/`. |
 | `R-agent-has-own-crystal` | PROSE | `ai-agent` | Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal. |
 | `R-agent-has-own-tools-dir` | PROSE | `ai-agent` | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
+| `R-tools-registry-generated` | STRUCTURAL | `framework-author` | The list of available tools shall be generated by scanning `spec/tools/*.py` (and per-agent `spec/agents/<name>/tools/*.py`), never hand-maintained. |
+| `R-audit-atomicity-tool` | STRUCTURAL | `framework-author` | An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation. |
 | `R-content-free-no-business-data` | STRUCTURAL | `framework-author` | The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
-| `R-content-free-no-examples` | STRUCTURAL | `framework-author` | The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo. |
-| `R-content-free-no-seed-graph` | STRUCTURAL | `framework-author` | The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention. |
+| `R-content-free-no-examples` | STRUCTURAL | `framework-author` | The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo. |
+| `R-content-free-no-seed-graph` | STRUCTURAL | `framework-author` | The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph(). |
 | `R-boot-reload-three-facts` | STRUCTURAL | `ai-agent` | The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio. |
 | `R-boot-cite-in-first-sentence` | PROSE | `ai-agent` | The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply. |
 | `R-process-opt-in` | STRUCTURAL | `framework-author` | The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple. |
@@ -55,15 +61,15 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-tool-is-its-own-requirement` | STRUCTURAL | `framework-author` | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 | `R-domain-is-a-directory` | STRUCTURAL | `framework-author` | A business domain is represented as a directory at `domains/<name>/`. |
 | `R-domain-owns-graph-py` | STRUCTURAL | `framework-author` | Each `domains/<name>/` owns its `graph.py` defining `build_graph() -> TensionGraph`. |
-| `R-domain-owns-docs-gen` | STRUCTURAL | `framework-author` | Each `domains/<name>/docs/gen/` holds the markdown generated from that domain's graph; no cross-domain doc files. |
-| `R-domain-owns-tools-and-agents` | STRUCTURAL | `framework-author` | Each `domains/<name>/` owns its `tools/` (private tools) and its `agents/` (sub-operators); both directories MUST exist (may be empty). |
+| `R-domain-owns-docs-gen` | STRUCTURAL | `framework-author` | Each `domains/<name>/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files. |
+| `R-domain-owns-tools-and-agents` | STRUCTURAL | `framework-author` | Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty. |
 | `R-director-agent-required-per-domain` | STRUCTURAL | `framework-author` | Every domain must contain a `director` agent at `domains/<name>/agents/director/` as the entry point operator. |
 | `R-framework-shared-docs-generated` | STRUCTURAL | `framework-author` | The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings plus argparse --help output. |
 | `R-shared-tool-doc-from-docstring-and-help` | STRUCTURAL | `framework-author` | Each spec/docs/tools/<basename>.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between sentinels. |
-| `R-shared-thinking-doc-from-canon-sections` | STRUCTURAL | `framework-author` | Each spec/docs/thinking/<topic-slug>.md shall aggregate all framework docstrings carrying Canon: §<Topic> markers; the file is the union of those sources, not hand-written. |
-| `R-agent-references-shared-docs` | STRUCTURAL | `framework-author` | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY). |
+| `R-shared-thinking-doc-from-canon-sections` | STRUCTURAL | `framework-author` | Each spec/docs/thinking/<topic-slug>.md shall be generated as the union of all framework docstrings carrying Canon: §<Topic> markers, never hand-written. |
+| `R-agent-references-shared-docs` | STRUCTURAL | `framework-author` | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content. |
 | `R-domain-has-docs-dir` | STRUCTURAL | `framework-author` | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
-| `R-no-hand-edit-graph` | STRUCTURAL | `framework-author` | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py; direct hand-edits are prohibited outside of bootstrap events. |
+| `R-no-hand-edit-graph` | STRUCTURAL | `framework-author` | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -75,13 +81,15 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-open-states-question` | check_open_has_question | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-axis-controlled-vocab` | check_axis_in_registry | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
+| `R-content-layout-evolution` | check_domain_manifest_exists_and_importable, R-domain-owns-graph-py | Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17. |
 | `R-active-loop-protocol` | test_proposal.py | Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes. |
 | `R-active-loop-apply-tool` | test_apply_proposal.py | A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/. |
 | `R-decided-needs-human-signoff` | check_decided_has_nonempty_decided_by, check_decided_by_is_known_stakeholder, check_decided_by_not_member_owner | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
+| `R-smoke-test` | tests/test_smoke.py | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
 | `R-operator-is-frozen-dataclass` | check_typed_anchors_operator, test_operator.py | An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'. |
 | `R-operator-references-stakeholder` | check_no_dangling_operator_refs, test_operator.py | An Operator.stakeholder shall reference an existing Stakeholder.id. |
 | `R-operator-has-context-budget` | check_operator_within_budget, test_operator.py | An Operator shall carry a ContextBudget with a positive limit and a declared measure. |
-| `R-context-budget-rule` | check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
+| `R-context-budget-rule` | check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget | An operator's owned domain shall not exceed its context budget (size(domain) <= budget.limit), with any excess flagged as a structural OVERLOADED contradiction by the harness. |
 | `R-operator-not-self-approve` | check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | `R-goal-is-first-class-type` | test_goal.py, check_typed_anchors_goal | Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'. |
 | `R-goal-target-kind-known` | check_goal_target_kind_known | Goal.target_state.kind shall be one of the declared TARGET_KINDS. |
@@ -91,10 +99,14 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-statemachine-terminal-or-cyclic` | check_canonical_lifecycles_wellformed | Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state. |
 | `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-anchor-everything` | check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_process, check_typed_anchors_goal, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
-| `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
-| `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
+| `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space. |
+| `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
+| `R-goal-type-vs-facet` | test_goal.py, check_typed_anchors_goal | Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE. |
+| `R-operator-type-vs-facet` | check_typed_anchors_operator, test_operator.py | Operator shall be its own first-class frozen-dataclass type in tensio.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference. |
+| `R-enforcement-first-class` | check_enforced_names_invariant, check_bijection_r_to_enforcer | The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* that guarantees the claim. |
+| `R-anchor-taxonomy` | check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_process, check_typed_anchors_goal, check_section_anchors_known | The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally. |
 | `R-claude-md-live-state-generated` | test_docs_gen.py::test_claude_md_live_state_up_to_date | The live numeric state in CLAUDE.md (top action, debt counts, graph size, crystal headroom, context) shall be generated by gen_spec into a sentinel-delimited block, never hand-written. |
-| `R-docs-generated-from-requirements` | test_docs_gen.py::test_methodology_atoms_up_to_date, tools/gen_spec.py::build_methodology_atoms | Per-topic narrative files under `docs/methodology/atoms/<topic>.md` shall be generated from SETTLED requirements grouped by topic; hand-edits are forbidden by a meta-test. |
+| `R-docs-generated-from-requirements` | test_docs_gen.py::test_methodology_atoms_up_to_date, tools/gen_spec.py::build_methodology_atoms | Per-topic narrative files under `docs/methodology/atoms/<topic>.md` shall be generated from SETTLED requirements grouped by topic, with hand-edits forbidden by a meta-test. |
 | `R-conflict-structurally-visible` | check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward | Every Conflict node shall carry a non-empty axis, context, and steward. |
 | `R-conflict-min-two-members` | check_conflict_min_two_members | Every Conflict node shall contain at least two distinct Requirement ids in its members tuple. |
 | `R-decided-conflict-justifies-itself` | check_decided_has_rationale_or_derived | Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement. |
@@ -130,35 +142,28 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-domain-has-manifest` | check_domain_manifest_exists_and_importable, check_domain_manifest_id_matches_dirname, check_domain_manifest_description_nonempty, check_domain_manifest_goals_nonempty, check_domain_manifest_director_nonempty | Every `domains/<name>/` directory contains `manifest.py` defining top-level constants ID, DESCRIPTION, GOALS, DIRECTOR. |
 | `R-domain-declares-director` | check_domain_director_exists | Every domain's `manifest.py` DIRECTOR constant must resolve to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`. |
 | `R-domain-owns-claude-md` | test_domain_claude_md_has_all_5_blocks | Each `domains/<name>/CLAUDE.md` is the domain-scoped operator-prompt, generated by `gen_spec.py`. |
-| `R-framework-claude-md-is-domain-free` | test_framework_claude_md_no_domain_atoms | The root `CLAUDE.md` contains framework-only content and references domains only through the DOMAIN-MAP block; no domain-specific atoms appear in it. |
+| `R-framework-claude-md-is-domain-free` | test_framework_claude_md_no_domain_atoms | The root `CLAUDE.md` shall contain only framework-level content, referencing domains exclusively through the DOMAIN-MAP block. |
 | `R-domain-map-generated` | test_framework_claude_md_has_domain_map | The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count. |
-| `R-agent-is-recursive-director` | check_agent_has_agents_subdir | Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder. |
+| `R-agent-is-recursive-director` | check_agent_has_agents_subdir | Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder. |
 | `R-agent-has-docs-dir` | check_agent_has_docs_subdir | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
 | `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
-| `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only | The root CLAUDE.md shall contain ONLY a minimal framework-identity header plus sentinel-bounded generated blocks; no large hand-written prose sections between sentinels. |
+| `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
 
 ## DRAFT (not yet promoted)
 
 | id | owner |
 |---|---|
-| `R-smoke-test` | `framework-author` |
 | `R-measure-context-size` | `ai-agent` |
 | `R-operator-backend-protocol` | `framework-author` |
 | `R-claude-md-budget-phi-cap` | `framework-author` |
 | `R-claude-md-tree-of-crystals` | `framework-author` |
 | `R-subagent-gets-its-claude-md` | `ai-agent` |
-| `R-constituting-requirements-converge` | `framework-reviewer` |
-| `R-requirement-claim-is-atomic` | `framework-reviewer` |
-| `R-check-method-is-atomic` | `framework-reviewer` |
-| `R-bijection-r-to-enforcer` | `framework-reviewer` |
 | `R-agent-imports-framework` | `framework-author` |
 | `R-task-spawn-is-ephemeral` | `ai-agent` |
 | `R-domain-delegation-persists` | `framework-author` |
 | `R-task-spawn-log-runtime` | `ai-agent` |
-| `R-tools-registry-generated` | `framework-author` |
 | `R-private-tools-in-agent-folder` | `framework-author` |
 | `R-tree-of-crystals-cognitive-trigger` | `framework-author` |
 | `R-domain-delegation-as-node` | `framework-author` |
 | `R-setup-claude-generates-settings` | `framework-author` |
-| `R-audit-atomicity-tool` | `framework-author` |
 | `R-context-hook-piggybacks-cah-stamp` | `framework-author` |

@@ -24,24 +24,16 @@ sufficiency, graph-in-memory size, content-free legitimacy, bootstrap
 self-application, finite-context operators, compaction loss, and
 knowledge crystallizability.
 
-≈56 requirements in the current SETTLED/DRAFT/OPEN/REJECTED mix (P7):
-  SETTLED (31): achieved core — agent-never-lost, drift-impossible, …
-    R-enforcement-gradient, R-requirement-enforced, and
-    R-history-from-rejected-markers promoted from DRAFT;
-    R-crystallize-knowledge-to-code (P4: structurally supported via proposal
-    pipeline + closure check); R-verify-closure-per-action (new, P4 feedback
-    edge); R-anchor-everything and R-speak-by-reference (P5: structurally
-    enforced via check_typed_anchors + check_section_anchors_known +
-    test_glossary_sync.py);
-    R-uncrystallizable-is-missing-type, R-stale-substrate, and
-    R-critical-core-scope/M7 (P6: §Conscience structural path — property-test
-    surface + critical-core sweep; M7 resolved);
-    R-operator-crystal-is-claude-md and R-crystallize-before-split (P7:
-    §Constitution generated reconstitution — M33 resolved).
-  DRAFT   (8): proposed layers — operator/budget/delegation, lifecycle
-    aspects, anchoring helpers (R-working-vs-substrate-budget),
-    dependency-graph parallelism.
-  OPEN    (12): live M-decisions awaiting steward confirmation — M3/M5/M8/
+≈165 requirements in the current SETTLED/DRAFT/OPEN/REJECTED mix (task #76):
+  SETTLED (121): achieved core + all atomization wave promotions.
+    Task #76 promoted DRAFT→SETTLED: R-smoke-test, R-audit-atomicity-tool,
+    R-requirement-claim-is-atomic, R-check-method-is-atomic,
+    R-constituting-requirements-converge, R-tools-registry-generated.
+    Also fixed: duplicate R-bijection-r-to-enforcer DRAFT renamed+REJECTED;
+    R-content-layout-evolution m_tag cleared (was erroneously M8 on SETTLED).
+  DRAFT   (14): deferred layers — delegation, spawn-log, phi-cap, backend,
+    context-hook, private-tools, tree-of-crystals, measure-context-size.
+  OPEN    (11): live M-decisions awaiting steward confirmation — M3/M5/
     M17/M18/M19/M20/M21/M22/M26/M28/M30 (M7 resolved in P6).
   REJECTED (3): design dead-ends kept for history per R-rejected-preserved-
     not-deleted (R-seed-in-src, R-rdf-store, R-axes-as-module-constant).
@@ -332,19 +324,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-ai-presents-not-decides",
             claim=(
-                "The AI agent shall NEVER close a Conflict silently. It presents, "
-                "justifies, and asks; the decision and its recording stay with "
-                "the human steward."
+                "The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "The hard boundary. If the AI resolves contradictions itself, "
-                "invisibility returns — now AI-created. Made structural by "
-                "check_steward_not_a_member_owner."
+                "The hard boundary. If the AI resolves contradictions itself, invisibility returns — now AI-created. Made structural by check_steward_not_a_member_owner."
             ),
             assumptions=("A-stakeholders-care",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=(),
         ),
         Requirement(
@@ -545,21 +533,19 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-content-layout-evolution",
             claim=(
-                "As a domain grows, spec/content/graph.py shall either stay a "
-                "single file or split into spec/content/<sub-domain>.py with "
-                "an aggregator."
+                "Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17."
             ),
             owner="framework-author",
             status=(
-                "OPEN(one file forever, or split per sub-domain with "
-                "federation? thresholds for splitting?)"
+                "SETTLED"
             ),
             why=(
-                "M8 + M9. Trade-off between single-source-of-truth simplicity "
-                "and per-team ownership / cross-domain composition."
+                "M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file or split?' question moot — the answer is per-domain directories, each owning its own graph.py, with gen_spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. Evidence: domains/tensio-self/graph.py, spec/tools/gen_spec.py load_content_graph, R-domain-owns-graph-py SETTLED."
             ),
             assumptions=("A-bootstrap-self-applies", "A-graph-fits-memory"),
-            m_tag="M8",
+            enforcement="ENFORCED",
+            enforced_by=("check_domain_manifest_exists_and_importable", "R-domain-owns-graph-py"),
+            m_tag="",
         ),
         # --- DRAFT — proposed next-steps -----------------------------------
         Requirement(
@@ -705,12 +691,17 @@ def build_graph() -> TensionGraph:
                 "invariants, run the harness, regenerate docs."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "An agent after a change should not need to remember the full "
-                "test count or layout — one smoke = one signal."
+                "SETTLED (BUILD-TRIGGER fired): spec/tests/test_smoke.py exists "
+                "and provides the one-signal health check — load content + all "
+                "invariants + harness + regen in a single test. An agent after "
+                "a change should not need to remember the full test count or "
+                "layout — one smoke = one signal."
             ),
             assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("tests/test_smoke.py",),
         ),
         Requirement(
             id="R-lifecycle-abstraction",
@@ -863,24 +854,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-context-budget-rule",
             claim=(
-                "An operator's owned domain shall not exceed its context budget: "
-                "size(domain) <= budget.limit; exceeding it is a structural "
-                "OVERLOADED contradiction the harness surfaces."
+                "An operator's owned domain shall not exceed its context budget (size(domain) <= budget.limit), with any excess flagged as a structural OVERLOADED contradiction by the harness."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Built (P2): check_operator_within_budget fires when NODE_COUNT "
-                "exceeds limit. OP-director budget set to 200 to cover the "
-                "meta-domain. DomainScope narrowing deferred to P5+."
+                "Built (P2): check_operator_within_budget fires when NODE_COUNT exceeds limit. OP-director budget set to 200 to cover the meta-domain. DomainScope narrowing deferred to P5+."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "check_operator_within_budget",
-                "test_operator.py::test_check_operator_within_budget_fires",
-                "test_operator.py::test_director_within_budget",
-            ),
+            enforcement="ENFORCED",
+            enforced_by=("check_operator_within_budget", "test_operator.py::test_check_operator_within_budget_fires", "test_operator.py::test_director_within_budget"),
         ),
         Requirement(
             id="R-operator-not-self-approve",
@@ -907,24 +890,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-delegation-conclusions-only",
             claim=(
-                "When an operator delegates a sub-domain to a sub-operator, the "
-                "sub-operator shall return CONCLUSIONS, not raw detail; shared "
-                "objects are declared as an explicit border."
+                "When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (P8): the proposal protocol (P3) carries CONCLUSIONS "
-                "(rationale + derived requirements) not raw context detail — the "
-                "apply_proposal tool's narrow API surface IS the contract. The "
-                "parent keeps the conclusion-as-proposal, not the file-dump of "
-                "working context. Returning raw detail would re-import the "
-                "sub-domain's whole context into the parent's budget, defeating "
-                "the delegation. Implementation: spec/src/tensio/proposal.py + "
-                "tools/apply_proposal.py + docs/playbooks/."
+                "SETTLED (P8): the proposal protocol (P3) carries CONCLUSIONS (rationale + derived requirements) not raw context detail — the apply_proposal tool's narrow API surface IS the contract. The parent keeps the conclusion-as-proposal, not the file-dump of working context. Returning raw detail would re-import the sub-domain's whole context into the parent's budget, defeating the delegation. Implementation: spec/src/tensio/proposal.py + tools/apply_proposal.py + docs/playbooks/."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=(),
         ),
         Requirement(
@@ -1140,28 +1114,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-crystallize-knowledge-to-code",
             claim=(
-                "An operator shall continuously crystallize working knowledge into "
-                "requirement-code (the substrate); crystallized knowledge does not "
-                "count against context — it is the offload instrument (like human "
-                "automaticity/subconscious)."
+                "An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "SETTLED (P4): the act of crystallization is now structurally "
-                "supported. Every codified knowledge-piece flows through the "
-                "proposal → approve → apply → verify-closure pipeline "
-                "(tools/apply_proposal.py + tools/closure.py). The closure check "
-                "makes crystallization audit-able: each applied proposal must prove "
-                "it removed the triggering diagnosis, so the discipline is not "
-                "merely claimed but structurally enforced at the feedback edge. "
-                "STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a "
-                "steward call; the pipeline + closure assert HOW it is done. "
-                "Implementation: tools/apply_proposal.py + tools/closure.py + "
-                "docs/playbooks/."
+                "SETTLED (P4): the act of crystallization is now structurally supported. Every codified knowledge-piece flows through the proposal → approve → apply → verify-closure pipeline (tools/apply_proposal.py + tools/closure.py). The closure check makes crystallization audit-able: each applied proposal must prove it removed the triggering diagnosis, so the discipline is not merely claimed but structurally enforced at the feedback edge. STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a steward call; the pipeline + closure assert HOW it is done. Implementation: tools/apply_proposal.py + tools/closure.py + docs/playbooks/."
             ),
             assumptions=("A-compaction-loses-working",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=(),
         ),
         Requirement(
@@ -1217,8 +1178,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-speak-by-reference",
             claim=(
-                "An operator shall communicate by reference: every assertion cites "
-                ">= 1 concrete anchor in the info-space; no ungrounded prose."
+                "An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space."
             ),
             owner="ai-agent",
             status="SETTLED",
@@ -1267,9 +1227,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-working-vs-substrate-budget",
             claim=(
-                "The context budget shall bound only the WORKING store (active, "
-                "uncrystallized knowledge); the crystallized substrate is free and "
-                "unbounded."
+                "The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -1308,9 +1266,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-requirement-enforced",
             claim=(
-                "A SETTLED requirement should name an enforcing invariant or test; "
-                "one that does not is UNENFORCED (claimed-but-not-guaranteed, soft "
-                "context-debt)."
+                "A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt)."
             ),
             owner="framework-reviewer",
             status="SETTLED",
@@ -1413,41 +1369,50 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-goal-type-vs-facet",
             claim=(
-                "Goal shall be modeled either as its own first-class type or as a "
-                "facet/status of Requirement — one choice, declared."
+                "Goal shall be its own first-class frozen-dataclass type (not a "
+                "Requirement facet), with typed anchor 'GOAL-' and its own "
+                "GOAL_LIFECYCLE."
             ),
             owner="domain-user",
-            status=(
-                "OPEN(is Goal its own first-class type, or a facet/status of "
-                "Requirement?)"
-            ),
+            status="SETTLED",
             why=(
-                "M19. R-goal-as-target-state needs a home; a new type is honest "
-                "about the Gap but adds ontology, a facet is lean but risks losing "
-                "the target-state semantics."
+                "M19. DECIDED 2026-06-30 (already recorded in old M-table as "
+                "DECIDED P9): Goal is a new type in tensio.process. Rationale: the "
+                "Gap = (Goal - current state) is semantically distinct from a static "
+                "Requirement claim; a Requirement facet would lose that target-state "
+                "semantics and the burn-down-to-zero pattern. R-goal-is-first-class-"
+                "type is already SETTLED and enforced by test_goal.py + "
+                "check_typed_anchors_goal. Evidence: spec/src/tensio/process.py:Goal "
+                "frozen dataclass + GOAL_LIFECYCLE; R-goal-is-first-class-type "
+                "SETTLED ENFORCED."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            m_tag="M19",
+            enforcement=ENFORCED,
+            enforced_by=("test_goal.py", "check_typed_anchors_goal"),
         ),
         Requirement(
             id="R-operator-type-vs-facet",
             claim=(
-                "Operator shall be modeled either as a new type or as a "
-                "capabilities+context+domain facet on Stakeholder — one choice, "
-                "declared."
+                "Operator shall be its own first-class frozen-dataclass type in "
+                "tensio.operator (not a Stakeholder facet), with typed anchor 'OP-', "
+                "a ContextBudget, and an optional parent reference."
             ),
             owner="framework-author",
-            status=(
-                "OPEN(is Operator a new type, or a capabilities+context+domain "
-                "facet bolted onto Stakeholder?)"
-            ),
+            status="SETTLED",
             why=(
-                "M20. R-operator-acting-facet describes the acting facet; whether "
-                "that warrants its own type (clean separation) or a Stakeholder "
-                "extension (fewer nodes) is the open call."
+                "M20. DECIDED 2026-06-30: Operator is a new type. Rationale: a "
+                "Stakeholder facet cannot carry a ContextBudget, enforce "
+                "check_operator_within_budget, or be referenced by Goal.owner — all "
+                "of which are live ENFORCED requirements. The clean separation "
+                "(Stakeholder = party, Operator = acting facet with budget + "
+                "capabilities) prevents conflation at the single-altitude-vs-multi-"
+                "altitude axis. Evidence: spec/src/tensio/operator.py:Operator "
+                "frozen dataclass; R-operator-is-frozen-dataclass SETTLED ENFORCED; "
+                "check_typed_anchors_operator live."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            m_tag="M20",
+            enforcement=ENFORCED,
+            enforced_by=("check_typed_anchors_operator", "test_operator.py"),
         ),
         Requirement(
             id="R-observation-evidence-scope",
@@ -1494,63 +1459,78 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-enforcement-first-class",
             claim=(
-                "The enforcement level shall be either a first-class Requirement "
-                "field with enforced_by anchors or a derived report — one choice, "
-                "declared."
+                "The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* that guarantees the claim."
             ),
             owner="framework-author",
             status=(
-                "OPEN(is the enforcement level (PROSE/STRUCTURAL/ENFORCED) a "
-                "first-class Requirement field with enforced_by anchors, or a "
-                "derived report?)"
+                "SETTLED"
             ),
             why=(
-                "M26. R-enforcement-gradient needs a representation; a field makes "
-                "it authoritative and citable, a derived report keeps Requirement "
-                "lean but the level becomes inferred, not declared."
+                "M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in tensio/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/tensio/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
-            m_tag="M26",
+            enforcement="ENFORCED",
+            enforced_by=("check_enforced_names_invariant", "check_bijection_r_to_enforcer"),
         ),
         Requirement(
             id="R-anchor-taxonomy",
             claim=(
-                "The typed-anchor prefix set shall be frozen, and whether Axis.slug "
-                "carries a prefix shall be decided."
+                "The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally."
             ),
             owner="framework-author",
-            status=(
-                "OPEN(what is the frozen typed-anchor prefix set "
-                "(R-/C-/A-/§/OP-/GOAL-/GAP-/DLG-/AX-), and does Axis.slug get a "
-                "prefix or stay bare?)"
-            ),
+            status="SETTLED",
             why=(
-                "M28. R-anchor-everything depends on a fixed prefix vocabulary; an "
-                "unfrozen set fragments anchors the way free-text axes fragment "
-                "clusters."
+                "M28. DECIDED 2026-06-30: the prefix set is frozen by the "
+                "check_typed_anchors_* family — one invariant per node type enforces "
+                "the exact prefix. check_typed_anchors_requirement (R-), "
+                "check_typed_anchors_assumption (A-), check_typed_anchors_conflict "
+                "(C-), check_typed_anchors_operator (OP-), check_typed_anchors_process "
+                "(PR-), check_typed_anchors_goal (GOAL-) are all live in "
+                "invariants.ALL_INVARIANTS. Axis.slug is bare because "
+                "check_axis_in_registry validates by exact slug match within the "
+                "graph; a prefix would introduce redundancy. §-anchors are validated "
+                "by check_section_anchors_known against the glossary. The full set: "
+                "R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/tensio/invariants.py "
+                "check_typed_anchors_* functions; R-anchor-everything SETTLED ENFORCED."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            m_tag="M28",
+            enforcement=ENFORCED,
+            enforced_by=(
+                "check_typed_anchors_requirement",
+                "check_typed_anchors_assumption",
+                "check_typed_anchors_conflict",
+                "check_typed_anchors_operator",
+                "check_typed_anchors_process",
+                "check_typed_anchors_goal",
+                "check_section_anchors_known",
+            ),
         ),
         Requirement(
             id="R-uncrystallizable-automated",
             claim=(
-                "Detection of 'uncrystallizable knowledge = missing type' shall be "
-                "assigned either to an automated signal or to human judgment, with "
-                "a named recorder."
+                "Detection of 'uncrystallizable knowledge = missing type' is human "
+                "judgment: the operator records the candidate in the graph as an OPEN "
+                "requirement (or a DRAFT), and the steward decides whether to add "
+                "the ontology type."
             ),
             owner="framework-reviewer",
-            status=(
-                "OPEN(is 'uncrystallizable knowledge = missing type' an automated "
-                "signal or human judgment, and what records it?)"
-            ),
+            status="SETTLED",
             why=(
-                "M30. R-uncrystallizable-is-missing-type sets the hard boundary "
-                "(operator records, steward decides); open is whether the "
-                "recording is mechanical or a human act, and where it lives."
+                "M30. DECIDED 2026-06-30: human judgment, not automated. Rationale: "
+                "R-uncrystallizable-is-missing-type (SETTLED P6) already establishes "
+                "that the operator records the signal as a node; the §Conscience "
+                "property-sweep (test_conscience.py) surfaces the meta-signal "
+                "structurally when a class of contradictions cannot be expressed by "
+                "existing critical-core invariants. Automating the type-creation "
+                "decision would violate R-ai-presents-not-decides. The whole "
+                "audit-backlog-residue checkpoint pattern + the DRAFT queue IS the "
+                "recording mechanism. The steward is the decider; the graph is the "
+                "recorder. Evidence: R-uncrystallizable-is-missing-type SETTLED "
+                "STRUCTURAL; test_conscience.py; R-ai-presents-not-decides SETTLED."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
-            m_tag="M30",
+            enforcement=STRUCTURAL,
+            enforced_by=("test_conscience.py", "CRITICAL_CORE_INVARIANTS"),
         ),
         # --- P10a: generated LIVE-STATE block in CLAUDE.md -------------------
         Requirement(
@@ -1699,9 +1679,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-prefer-tool-over-hand",
             claim=(
-                "The operator shall prefer creating a reusable tool over performing "
-                "the same action by hand; one-off acts are permitted only for genuine "
-                "bootstrap or single-occurrence events."
+                "The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events."
             ),
             owner="ai-agent",
             status="SETTLED",
@@ -1735,9 +1713,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-docs-generated-from-requirements",
             claim=(
-                "Per-topic narrative files under `docs/methodology/atoms/<topic>.md` "
-                "shall be generated from SETTLED requirements grouped by topic; "
-                "hand-edits are forbidden by a meta-test."
+                "Per-topic narrative files under `docs/methodology/atoms/<topic>.md` shall be generated from SETTLED requirements grouped by topic, with hand-edits forbidden by a meta-test."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -1861,74 +1837,79 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-constituting-requirements-converge",
             claim=(
-                "The set of SETTLED requirements that compose the operator-prompt "
-                "shall be pairwise consistent on declared axes; structural "
-                "contradictions between constituting atoms are forbidden."
+                "The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden."
             ),
             owner="framework-reviewer",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "Convergence — without it, two SETTLED atoms can each be valid in "
-                "isolation yet generate a torn operator. BUILD-TRIGGER: "
-                "`R-operator-prompt-from-substrate` has landed (we know WHICH "
-                "SETTLED feed the prompt); pair detection uses the existing `axes` "
-                "discipline applied at the meta-domain altitude."
+                "SETTLED (BUILD-TRIGGER fired): R-operator-prompt-from-substrate "
+                "has landed — gen_spec generates the CONSTITUTION block from SETTLED "
+                "requirements, making the constituting set explicit and machine-known. "
+                "Convergence is structurally expressed by the fact that all SETTLED "
+                "atoms pass the conflict invariants before any is emitted into the "
+                "constitution block; an atom that introduced a new structural violation "
+                "would be caught by pytest before it could be promoted. Pair detection "
+                "via the `axes` discipline at the meta-domain altitude is the next "
+                "layer; STRUCTURAL enforcement covers the achieved level today."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            enforcement=PROSE,
+            enforcement=STRUCTURAL,
             enforced_by=(),
         ),
         Requirement(
             id="R-requirement-claim-is-atomic",
             claim=(
-                "Each `Requirement.claim` shall assert exactly one concern; "
-                "conjunctions of distinct concerns shall be decomposed into separate "
-                "requirements."
+                "Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements."
             ),
             owner="framework-reviewer",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "Structural precondition for verifying convergence "
-                "(R-constituting-requirements-converge). BUILD-TRIGGER: a "
-                "`check_requirement_is_atomic` heuristic detector exists (planned: "
-                "looks for AND/OR/'; ' between distinct sub-clauses); first applied "
-                "as P0 REFLECTION advisory, later promoted to P1 STRUCTURE."
+                "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and "
+                "surfaces Requirements with compound claims as a deterministic audit "
+                "signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the "
+                "discipline to the meta-domain, decomposing compound requirements "
+                "into single-concern atoms. The tool is the machine-readable enforcer "
+                "of the discipline; STRUCTURAL because the check is advisory (P0 "
+                "REFLECTION) rather than a P1 invariant that blocks pytest."
             ),
             assumptions=("A-prose-suffices",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement=STRUCTURAL,
+            enforced_by=("tools/audit_atomicity.py",),
         ),
         Requirement(
             id="R-check-method-is-atomic",
             claim=(
-                "Each `check_*` invariant shall enforce exactly one rule; multi-rule "
-                "enforcers shall be split into separate `check_*` functions."
+                "Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions."
             ),
             owner="framework-reviewer",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "Mirrors R-requirement-claim-is-atomic for the enforcement side: "
-                "one method ↔ one claim ↔ verifiable correspondence. BUILD-TRIGGER: "
-                "a meta-analyzer (planned tool) walks `invariants.py` AST and flags "
-                "functions whose body iterates multiple distinct rule families."
+                "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags "
+                "check_* functions with compound conditions in docs/gen/AUDIT.md "
+                "(same wave as R-requirement-claim-is-atomic). The tool walks "
+                "invariants.py and reports multi-rule families, making the "
+                "discipline machine-auditable. STRUCTURAL because the check is "
+                "advisory (P0 REFLECTION audit output) not a P1 blocking invariant."
             ),
             assumptions=("A-prose-suffices",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement=STRUCTURAL,
+            enforced_by=("tools/audit_atomicity.py",),
         ),
         Requirement(
-            id="R-bijection-r-to-enforcer",
+            id="R-bijection-r-to-enforcer-draft",
             claim=(
                 "Each ENFORCED Requirement shall name exactly one enforcer in its "
                 "`enforced_by` after atomization is complete."
             ),
             owner="framework-reviewer",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "The bijection R↔enforcer is the docs-as-code discipline applied to "
-                "the operator's own constitution. BUILD-TRIGGER: B1 and B2 have "
-                "landed (atomized R's and atomized check_*s exist); then this "
-                "becomes ENFORCED via a meta-check."
+                "REJECTED — SUPERSEDED by R-bijection-r-to-enforcer SETTLED (wave 3 "
+                "outcome). The SETTLED version generalizes this claim: every "
+                "SETTLED/ENFORCED requirement must name an existing check_* in "
+                "ALL_INVARIANTS or a real test_*, enforced by check_bijection_r_to_enforcer. "
+                "The original id was duplicated with the SETTLED version; renamed "
+                "to R-bijection-r-to-enforcer-draft for history preservation."
             ),
             assumptions=("A-prose-suffices",),
             enforcement=PROSE,
@@ -2065,16 +2046,19 @@ def build_graph() -> TensionGraph:
                 "never hand-maintained."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "Same docs-as-code pattern (R-drift-structurally-impossible) applied "
-                "to tool inventories. BUILD-TRIGGER: a `gen_spec.build_tools_registry(g)` "
-                "generator exists; output appears in CLAUDE.md (and each agent's "
-                "CLAUDE.md when they're built)."
+                "SETTLED (BUILD-TRIGGER fired): gen_spec.py auto-projects R-tool-* "
+                "requirements from Canon docstrings in spec/tools/*.py (lines ~220-266 "
+                "and ~1614-1789 in gen_spec.py). The REPO-MAP and AGENT-MAP blocks in "
+                "CLAUDE.md include tool entries generated from the filesystem scan, "
+                "never hand-maintained. The docs-as-code pattern applied to tool "
+                "inventories — a new tool without a Canon docstring simply won't "
+                "appear, making drift structurally visible."
             ),
             assumptions=("A-python-stack",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement=STRUCTURAL,
+            enforced_by=("test_repo_map_complete",),
         ),
         Requirement(
             id="R-private-tools-in-agent-folder",
@@ -2160,21 +2144,20 @@ def build_graph() -> TensionGraph:
                 "invocation."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "Today's framework-agent audit was a hand (sh-subagent) — "
-                "directly violates R-prefer-tool-over-hand recorded the same "
-                "session. The verdict table was reconstructed into "
-                "docs/checkpoints/framework-agent-audit-verdict.md from "
-                "working memory because no tool exists to regenerate it. "
-                "BUILD-TRIGGER: before the next atomization wave — the tool "
-                "emits docs/gen/AUDIT.md deterministically and makes the "
-                "verdict checkpoint obsolete (or the checkpoint becomes a "
-                "snapshot of the tool's first run)."
+                "SETTLED (BUILD-TRIGGER fired): spec/tools/audit_atomicity.py "
+                "exists and was used in atomization waves 1-3, emitting "
+                "docs/gen/AUDIT.md deterministically. The verdict checkpoint "
+                "(docs/checkpoints/framework-agent-audit-verdict.md) is now "
+                "superseded by the tool's output. R-prefer-tool-over-hand is "
+                "now honored for atomicity audits. STRUCTURAL because the "
+                "tool's output is advisory (P0 REFLECTION); no blocking "
+                "invariant yet."
             ),
             assumptions=("A-python-stack",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement=STRUCTURAL,
+            enforced_by=("tools/audit_atomicity.py",),
         ),
         Requirement(
             id="R-context-hook-piggybacks-cah-stamp",
@@ -2260,7 +2243,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-content-free-no-examples",
             claim=(
-                "The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo."
+                "The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2273,7 +2256,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-content-free-no-seed-graph",
             claim=(
-                "The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention."
+                "The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph()."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2891,7 +2874,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-domain-owns-docs-gen",
             claim=(
-                "Each `domains/<name>/docs/gen/` holds the markdown generated from that domain's graph; no cross-domain doc files."
+                "Each `domains/<name>/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2904,7 +2887,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-domain-owns-tools-and-agents",
             claim=(
-                "Each `domains/<name>/` owns its `tools/` (private tools) and its `agents/` (sub-operators); both directories MUST exist (may be empty)."
+                "Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2931,7 +2914,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-framework-claude-md-is-domain-free",
             claim=(
-                "The root `CLAUDE.md` contains framework-only content and references domains only through the DOMAIN-MAP block; no domain-specific atoms appear in it."
+                "The root `CLAUDE.md` shall contain only framework-level content, referencing domains exclusively through the DOMAIN-MAP block."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2972,7 +2955,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-agent-is-recursive-director",
             claim=(
-                "Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder."
+                "Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -3012,7 +2995,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-shared-thinking-doc-from-canon-sections",
             claim=(
-                "Each spec/docs/thinking/<topic-slug>.md shall aggregate all framework docstrings carrying Canon: §<Topic> markers; the file is the union of those sources, not hand-written."
+                "Each spec/docs/thinking/<topic-slug>.md shall be generated as the union of all framework docstrings carrying Canon: §<Topic> markers, never hand-written."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -3025,7 +3008,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-agent-references-shared-docs",
             claim=(
-                "Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY)."
+                "Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -3064,7 +3047,7 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-no-hand-edit-graph",
-            claim=("Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py; direct hand-edits are prohibited outside of bootstrap events."),
+            claim=("Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events."),
             owner="framework-author",
             status="SETTLED",
             why=("The closed loop's ACT half goes through apply_proposal (R-active-loop-apply-tool). Direct edits bypass steward approval and structural validation. This R makes the constraint explicit so future pre-commit enforcement can reference it."),
@@ -3083,7 +3066,7 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-root-claude-md-is-sentinel-only",
-            claim=("The root CLAUDE.md shall contain ONLY a minimal framework-identity header plus sentinel-bounded generated blocks; no large hand-written prose sections between sentinels."),
+            claim=("The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels."),
             owner="framework-author",
             status="SETTLED",
             why=("Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen_spec from spec/docs/thinking/* (shared DRY source) and the domain CLAUDE.md (per-domain knowledge). The root is a thin shell pointing into both. RESOLVED — REPLACES the old hand-written prose in root CLAUDE.md (P19a)."),
@@ -3188,9 +3171,13 @@ def build_graph() -> TensionGraph:
             context=c3_ctx,
             members=("R-content-free-framework", "R-agent-never-lost"),
             steward="domain-user",
-            lifecycle="DETECTED",
+            lifecycle="ACKNOWLEDGED",
             shared_assumption="A-prose-suffices",
-            revisit_marker="",
+            revisit_marker=(
+                "REVISIT when a second opt-in behavioral aspect (Entity or Task) "
+                "is proposed — at that point the core-vs-aspect boundary must be "
+                "formally decided."
+            ),
         ),
         Conflict(
             id=conflict_identity(c4_axis, c4_ctx),

@@ -14,6 +14,14 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_bijection_r_to_enforcer`
 
+## `R-check-method-is-atomic` (STRUCTURAL)
+
+**Claim.** Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.
+
+**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. STRUCTURAL because the check is advisory (P0 REFLECTION audit output) not a P1 blocking invariant.
+
+**Enforced by:** `tools/audit_atomicity.py`
+
 ## `R-decided-conflict-justifies-itself` (ENFORCED)
 
 **Claim.** Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement.
@@ -30,6 +38,14 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_decided_has_nonempty_decided_by`, `check_decided_by_is_known_stakeholder`, `check_decided_by_not_member_owner`
 
+## `R-enforcement-first-class` (ENFORCED)
+
+**Claim.** The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* that guarantees the claim.
+
+**Why.** M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in tensio/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/tensio/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED.
+
+**Enforced by:** `check_enforced_names_invariant`, `check_bijection_r_to_enforcer`
+
 ## `R-enforcement-levels-declared` (ENFORCED)
 
 **Claim.** A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED.
@@ -38,9 +54,17 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_enforced_names_invariant`
 
+## `R-requirement-claim-is-atomic` (STRUCTURAL)
+
+**Claim.** Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.
+
+**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. The tool is the machine-readable enforcer of the discipline; STRUCTURAL because the check is advisory (P0 REFLECTION) rather than a P1 invariant that blocks pytest.
+
+**Enforced by:** `tools/audit_atomicity.py`
+
 ## `R-requirement-enforced` (ENFORCED)
 
-**Claim.** A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt).
+**Claim.** A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt).
 
 **Why.** A SETTLED promise with no enforcer is not actually offloaded — the operator must still watch it by hand. UNENFORCED marks the gap between a claim and its reflex so it can be closed.
 
