@@ -1,4 +1,6 @@
-"""The harness: derive the next correct action from ANY graph state ("what now").
+"""Canon: §Harness — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.
+
+The harness: derive the next correct action from ANY graph state ("what now").
 
 This is the centerpiece. dev-coin makes DRIFT structurally impossible (regen ==
 committed). Tensio generalizes that to make BEING LOST structurally impossible:

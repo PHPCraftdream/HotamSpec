@@ -1,4 +1,6 @@
-"""Generator: the human layer + structural anti-drift (docs-as-code, layer 9).
+"""Canon: §Generator — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.
+
+Generator: the human layer + structural anti-drift (docs-as-code, layer 9).
 
 The single source of truth is the executable model:
   - `spec/src/tensio/*.py` docstrings (the methodology narrative: RULE + Canon:§
@@ -36,7 +38,9 @@ from __future__ import annotations
 
 import argparse
 import ast
+import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 # --- Make the tensio package importable (model is the source of truth) ------
@@ -141,6 +145,70 @@ _EMPTY_NOTICE = (
     "See CLAUDE.md §How to populate to drop in a domain. The methodology "
     "narrative below is the framework itself and is always present._"
 )
+
+# ---------------------------------------------------------------------------
+# Tool-derived requirements — the tool-as-requirement projection
+# (R-tool-is-its-own-requirement)
+# ---------------------------------------------------------------------------
+
+_CANON_RE = re.compile(r"^Canon:\s+§(.+?)\s+[—\-]\s+(.+)$")
+
+SPEC_TOOLS_DIR = SPEC_ROOT / "tools"
+SPEC_TESTS_DIR = SPEC_ROOT / "tests"
+
+
+@dataclass(frozen=True)
+class ToolRequirement:
+    """Projection of one spec/tools/<basename>.py Canon: §<topic> — <claim> marker."""
+
+    id: str  # "R-tool-<basename>"
+    basename: str  # e.g. "apply_proposal"
+    canon_section: str  # e.g. "Proposal"
+    claim: str  # the claim text from the first docstring line
+    enforcer: str  # "test_tool_<basename>" if test file exists, else ""
+
+
+def _scan_tool_requirements(
+    spec_tools_dir: Path | None = None,
+) -> list[ToolRequirement]:
+    """Walk spec/tools/*.py and project each file with a Canon: §<topic> — <claim> marker.
+
+    Files whose module docstring does NOT open with the Canon: pattern are
+    silently skipped — they are "rough" utilities, not part of the constitution.
+    Returns a list sorted by basename (deterministic ordering).
+    """
+    tools_dir = spec_tools_dir or SPEC_TOOLS_DIR
+    tests_dir = SPEC_TESTS_DIR
+    results: list[ToolRequirement] = []
+    for path in sorted(tools_dir.glob("*.py")):
+        if path.name.startswith("_"):
+            continue
+        try:
+            src = path.read_text(encoding="utf-8")
+            tree = ast.parse(src)
+            doc = ast.get_docstring(tree) or ""
+        except Exception:
+            continue
+        first_line = doc.split("\n")[0].strip() if doc else ""
+        m = _CANON_RE.match(first_line)
+        if not m:
+            continue
+        basename = path.stem  # e.g. "apply_proposal"
+        rid = f"R-tool-{basename.replace('_', '-')}"
+        canon_section = m.group(1).strip()
+        claim = m.group(2).strip()
+        enforcer_path = tests_dir / f"test_tool_{basename}.py"
+        enforcer = f"test_tool_{basename}" if enforcer_path.exists() else ""
+        results.append(
+            ToolRequirement(
+                id=rid,
+                basename=basename,
+                canon_section=canon_section,
+                claim=claim,
+                enforcer=enforcer,
+            )
+        )
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -253,6 +321,11 @@ def build_requirements(g: TensionGraph) -> str:
                 f"| {_cell(target)} | {_cell(go.target_state.predicate)} |"
             )
         lines.append("")
+
+    # Tool-derived requirements section.
+    lines.append("---")
+    lines.append("")
+    lines.append(build_tool_derived_section())
 
     # Narrative: module docstrings in order.
     lines.append("---")
@@ -1469,6 +1542,21 @@ def _render_constitution_block(g: TensionGraph) -> str:
             lines.append(f"- **{r.id}** — *{r.claim}*{enf}")
         lines.append("")
 
+    # Append tool-derived requirements (R-tool-is-its-own-requirement projection).
+    tool_reqs = _scan_tool_requirements()
+    if tool_reqs:
+        lines.append("**Tool-derived requirements**")
+        lines.append("")
+        for tr in tool_reqs:
+            enforcer_str = (
+                f"enforcer: `{tr.enforcer}`" if tr.enforcer else "enforcer: (none)"
+            )
+            lines.append(
+                f"- **{tr.id}** — *{tr.claim}* "
+                f"[STRUCTURAL·tool · §{tr.canon_section}] [{enforcer_str}]"
+            )
+        lines.append("")
+
     return "\n".join(lines).rstrip()
 
 
@@ -1610,6 +1698,44 @@ def build_methodology_atoms_check(g: TensionGraph) -> str:
         "The atomic requirements about how rules are enforced — atomicity of claims, atomicity of checks, bijection.",
         sel,
     )
+
+
+# ---------------------------------------------------------------------------
+# Tool-derived requirements section for REQUIREMENTS.md
+# ---------------------------------------------------------------------------
+
+
+def build_tool_derived_section() -> str:
+    """Build the '## Tool-derived requirements' section for REQUIREMENTS.md as an LF string.
+
+    Scans spec/tools/*.py for Canon: §<topic> — <claim> markers and projects
+    each into a R-tool-<basename> entry. Sorted by basename (deterministic).
+    """
+    tool_reqs = _scan_tool_requirements()
+    lines: list[str] = []
+    lines.append("## Tool-derived requirements")
+    lines.append("")
+    lines.append(
+        "Projected from `spec/tools/*.py` module docstrings whose first line "
+        "matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). "
+        "The docstring IS the claim; the body IS the check; the test IS the enforcer. "
+        "Deleting the tool deletes the R."
+    )
+    lines.append("")
+    if not tool_reqs:
+        lines.append("_No tools carry a Canon: §... marker yet._")
+        lines.append("")
+    else:
+        for tr in tool_reqs:
+            enforcer_str = (
+                f"enforcer: `{tr.enforcer}`" if tr.enforcer else "enforcer: (none)"
+            )
+            lines.append(
+                f"- **{tr.id}** — *{tr.claim}* "
+                f"[STRUCTURAL·tool · §{tr.canon_section}] [{enforcer_str}]"
+            )
+        lines.append("")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------

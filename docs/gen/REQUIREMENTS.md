@@ -148,6 +148,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-critical-core-methodology` | SETTLED | `domain-user` | A-prose-suffices | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
 | `R-critical-core-per-domain` | SETTLED | `domain-user` | A-prose-suffices | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-bijection-r-to-enforcer` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
+| `R-tool-is-its-own-requirement` | SETTLED | `framework-author` | A-python-stack | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 
 ## Stakeholders
 
@@ -189,6 +190,20 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | id | owner | lifecycle | target | predicate |
 |---|---|---|---|---|
 | `GOAL-burn-down-zero` | `OP-director` | ACTIVE | enforcement-gradient | count(r for r in g.requirements if r.status==SETTLED and r.enforcement!=ENFORCED) == 0 |
+
+---
+
+## Tool-derived requirements
+
+Projected from `spec/tools/*.py` module docstrings whose first line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). The docstring IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R.
+
+- **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
+- **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: (none)]
+- **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
+- **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: (none)]
+- **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
+- **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
+- **R-tool-what-now** — *derives the prioritized next correct action from any graph state, making being-lost structurally impossible.* [STRUCTURAL·tool · §Harness] [enforcer: (none)]
 
 ---
 

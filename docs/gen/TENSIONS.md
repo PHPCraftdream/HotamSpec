@@ -357,6 +357,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-axis-controlled-vocab` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-bijection-r-to-enforcer` | shares assumption(s): A-prose-suffices |
@@ -622,6 +623,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-tree-of-crystals` | `R-constituting-requirements-converge` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
@@ -735,6 +737,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-content-free-no-seed-graph` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-deterministic-generation` | shares assumption(s): A-python-stack |
@@ -752,6 +755,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-deterministic-generation` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-docs-generated-from-requirements` | shares assumption(s): A-python-stack |
@@ -768,6 +772,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-content-layout-evolution` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
@@ -1083,6 +1088,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
@@ -1097,6 +1103,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-delegation-as-node` | `R-domain-delegation-persists` | shares assumption(s): A-finite-context-operators |
 | `R-domain-delegation-as-node` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
@@ -1137,6 +1144,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
@@ -1149,6 +1157,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1160,6 +1169,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-glossary-generated` | shares assumption(s): A-python-stack |
@@ -1170,6 +1180,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-wellformed` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-enforced-names-enforcer` | `R-enforcement-first-class` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-enforced-names-enforcer` | `R-enforcement-levels-declared` | shares assumption(s): A-most-knowledge-crystallizable |
@@ -1205,6 +1216,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-drift-stable` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices, A-python-stack |
 | `R-glossary-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices, A-python-stack |
@@ -1224,6 +1236,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices, A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
@@ -1242,6 +1255,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-dead` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
@@ -1259,6 +1273,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-unused` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-goal-is-first-class-type` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -1543,6 +1558,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-private-tools-in-agent-folder` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-private-tools-in-agent-folder` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-process-goal-owner-is-operator-aspect` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-goal-owner-is-operator-aspect` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
@@ -1634,11 +1650,14 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-setup-claude-generates-settings` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-setup-claude-generates-settings` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-shared-tools-in-spec-tools` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-smoke-test` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-smoke-test` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-smoke-test` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-speak-by-reference` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
@@ -1647,6 +1666,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-speak-by-reference` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-stable-conflict-identity` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-stable-conflict-identity` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-statemachine-deterministic` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-deterministic` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
@@ -1681,6 +1701,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-task-spawn-log-runtime` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-task-vs-action-distinct-altitudes` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-task-vs-action-distinct-altitudes` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-tool-is-its-own-requirement` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-tree-of-crystals-cognitive-trigger` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-tree-of-crystals-cognitive-trigger` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-trust-anchor-mechanism` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |

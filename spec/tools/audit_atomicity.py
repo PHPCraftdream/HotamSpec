@@ -1,9 +1,6 @@
-"""Atomicity audit: detect compound claims and compound invariants.
+"""Canon: §Invariants — surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.
 
-Canon: §Invariants — surfaces Requirements whose claim text carries multiple
-independent statements (compound claims) and check_* functions whose body
-checks multiple distinct semantic conditions or entity types (compound
-invariants). Both are structural signals for potential decomposition.
+Atomicity audit: detect compound claims and compound invariants.
 
 Run:
   uv run python tools/audit_atomicity.py            # audit domain content

@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 52 / SETTLED 83; DRAFT 24; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 52 / SETTLED 84; DRAFT 24; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -49,6 +49,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-crystal-reload-by-reference` | STRUCTURAL | `ai-agent` | An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context. |
 | `R-crystal-tree-hierarchy` | STRUCTURAL | `ai-agent` | The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget. |
 | `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
+| `R-tool-is-its-own-requirement` | STRUCTURAL | `framework-author` | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
