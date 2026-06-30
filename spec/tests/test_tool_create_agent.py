@@ -66,7 +66,7 @@ def test_creates_required_files(tmp_path: Path) -> None:
 def test_refuses_existing(tmp_path: Path) -> None:
     """Returns exit code 1 if the agent directory already exists."""
     (tmp_path / "existing-agent").mkdir()
-    rc = _scaffold(tmp_path, "existing-agent")
+    rc = _scaffold(tmp_path, "existing-agent", purpose="Some purpose.")
     assert rc == 1
 
 
@@ -74,8 +74,35 @@ def test_refuses_invalid_name(tmp_path: Path) -> None:
     """Returns exit code 1 for names that fail validation."""
     invalid_names = ["Foo", "with space", "with/slash", "123start", ""]
     for bad in invalid_names:
-        rc = _scaffold(tmp_path, bad)
+        rc = _scaffold(tmp_path, bad, purpose="Some purpose.")
         assert rc == 1, f"Expected rc=1 for name={bad!r}, got {rc}"
+
+
+def test_refuses_missing_purpose(tmp_path: Path) -> None:
+    """Returns exit code 1 when --purpose is not supplied via main()."""
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, str(_TOOLS / "create_agent.py"), "no-purpose-agent"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert "R-agent-declares-purpose" in result.stderr
+
+
+def test_purpose_written_to_scope_py(tmp_path: Path) -> None:
+    """PURPOSE constant is written into scope.py."""
+    rc = _scaffold(
+        tmp_path, "purposeful-agent", purpose="Stewards something important."
+    )
+    assert rc == 0
+
+    scope_text = (tmp_path / "purposeful-agent" / "scope.py").read_text(
+        encoding="utf-8"
+    )
+    assert 'PURPOSE = "Stewards something important."' in scope_text
 
 
 def test_scope_py_contains_passed_prefixes(tmp_path: Path) -> None:

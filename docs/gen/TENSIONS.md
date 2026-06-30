@@ -160,6 +160,30 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-active-loop-protocol` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-agent-declares-purpose` | `R-agent-scoped-constitution` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-audit-atomicity-tool` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-claude-md-live-state-generated` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-content-free-no-business-data` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-content-free-no-examples` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-content-free-no-seed-graph` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-deterministic-generation` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-docs-generated-from-requirements` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-glossary-generated` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-own-crystal` | `R-agent-has-own-tools-dir` | shares assumption(s): A-finite-context-operators |
 | `R-agent-has-own-crystal` | `R-agent-is-a-directory` | shares assumption(s): A-finite-context-operators |
 | `R-agent-has-own-crystal` | `R-backend-scope` | shares assumption(s): A-finite-context-operators |
@@ -278,6 +302,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-scoped-constitution` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -375,6 +400,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -641,6 +667,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -755,6 +782,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -773,6 +801,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -790,6 +819,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1106,6 +1136,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1121,6 +1152,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1162,6 +1194,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1175,6 +1208,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1187,6 +1221,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1198,6 +1233,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-wellformed` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1233,6 +1269,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-drift-stable` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
@@ -1253,6 +1290,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
@@ -1272,6 +1310,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-dead` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
@@ -1290,6 +1329,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-unused` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
@@ -1576,6 +1616,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-prefer-tool-over-hand` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-prefer-tool-over-hand` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-prefer-tool-over-hand` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-private-tools-in-agent-folder` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -1659,6 +1700,12 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-types-exist` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rejected-preserved-not-deleted` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-rejected-preserved-not-deleted` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-repo-map-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-repo-map-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-repo-map-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-repo-map-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-repo-map-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-repo-map-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-requirement-enforced` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-requirement-enforced` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-rules-as-data` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |

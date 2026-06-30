@@ -150,6 +150,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-bijection-r-to-enforcer` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 | `R-tool-is-its-own-requirement` | SETTLED | `framework-author` | A-python-stack | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 | `R-agent-scoped-constitution` | SETTLED | `framework-author` | A-python-stack | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
+| `R-repo-map-generated` | SETTLED | `framework-author` | A-python-stack | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
+| `R-agent-declares-purpose` | SETTLED | `framework-author` | A-python-stack | Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line. |
 
 ## Stakeholders
 

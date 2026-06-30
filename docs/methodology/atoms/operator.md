@@ -6,6 +6,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ---
 
+## `R-agent-declares-purpose` (ENFORCED)
+
+**Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.
+
+**Why.** An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine-readable (vs README which is prose); placing it next to SCOPE keeps the agent's contract in one file. Enforced structurally so the absence of PURPOSE = missing operator visibility = red test, not silent gap.
+
+**Enforced by:** `test_every_agent_declares_purpose`
+
 ## `R-agent-has-own-crystal` (PROSE)
 
 **Claim.** Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal.

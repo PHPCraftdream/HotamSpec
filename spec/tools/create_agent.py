@@ -62,7 +62,11 @@ _SCOPE_PY_TEMPLATE = '''\
 
 SCOPE is a tuple of R-id prefixes; the agent\'s CONSTITUTION block
 filters g.requirements where id.startswith(any of these).
+
+PURPOSE is a one-line machine-readable rationale used by AGENT-MAP.
 """
+
+PURPOSE = "{purpose}"
 
 SCOPE = {scope_tuple}
 '''
@@ -140,7 +144,9 @@ def scaffold(
 
     # scope.py
     scope_tuple = _build_scope_tuple(scope_prefixes)
-    scope_py = _SCOPE_PY_TEMPLATE.format(name=name, scope_tuple=scope_tuple)
+    scope_py = _SCOPE_PY_TEMPLATE.format(
+        name=name, purpose=purpose, scope_tuple=scope_tuple
+    )
     (agent_dir / "scope.py").write_text(scope_py, encoding="utf-8")
 
     # tools/__init__.py
@@ -173,10 +179,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--purpose",
-        default="(purpose not specified)",
-        help="One-line rationale written into README.md and CLAUDE.md.",
+        default="",
+        help="One-line rationale written into scope.py, README.md and CLAUDE.md (required).",
     )
     args = parser.parse_args(argv)
+
+    if not args.purpose.strip():
+        print(
+            "ERROR: `--purpose` is required (R-agent-declares-purpose); "
+            "pass a one-line rationale describing what this agent stewards",
+            file=sys.stderr,
+        )
+        return 1
 
     scope_prefixes = [p.strip() for p in args.scope.split(",") if p.strip()]
     return scaffold(

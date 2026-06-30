@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 53 / SETTLED 88; DRAFT 21; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 55 / SETTLED 90; DRAFT 21; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -111,6 +111,8 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-critical-core-methodology` | test_conscience.py | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
 | `R-bijection-r-to-enforcer` | check_bijection_r_to_enforcer | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 | `R-agent-scoped-constitution` | test_agent_scoped_constitution | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
+| `R-repo-map-generated` | test_repo_map_complete | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
+| `R-agent-declares-purpose` | test_every_agent_declares_purpose | Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line. |
 
 ## DRAFT (not yet promoted)
 
