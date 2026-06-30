@@ -66,9 +66,85 @@ def test_existing_hooks_preserved():
     data = _load_settings()
     pre = data["hooks"].get("PreToolUse", [])
     assert pre, "PreToolUse hooks missing — R-no-hand-edit-graph guard removed"
-    all_prompts = [h.get("prompt", "") for entry in pre for h in entry.get("hooks", [])]
-    assert any("domains/" in p and "graph.py" in p for p in all_prompts), (
-        "R-no-hand-edit-graph prompt guard not found in PreToolUse"
+    all_commands = [
+        h.get("command", "") for entry in pre for h in entry.get("hooks", [])
+    ]
+    assert any("_graph_guard.py" in c for c in all_commands), (
+        "R-no-hand-edit-graph command guard not found in PreToolUse"
+    )
+
+
+def _graph_guard_command() -> str:
+    data = _load_settings()
+    pre = data["hooks"].get("PreToolUse", [])
+    for entry in pre:
+        for h in entry.get("hooks", []):
+            if h.get("type") == "command" and "_graph_guard.py" in h.get("command", ""):
+                return h["command"]
+    raise AssertionError("No command-type graph-guard hook found in PreToolUse")
+
+
+def test_pretooluse_hook_is_command_not_prompt():
+    data = _load_settings()
+    pre = data["hooks"].get("PreToolUse", [])
+    assert pre, "PreToolUse hooks missing"
+    types = [h.get("type") for entry in pre for h in entry.get("hooks", [])]
+    assert "prompt" not in types, (
+        f"PreToolUse still has a prompt-type hook (LLM-judgment, non-deterministic): {types}"
+    )
+    assert "command" in types, f"Expected a command-type hook, got: {types}"
+
+
+_GRAPH_GUARD = Path(__file__).resolve().parents[1] / "tools" / "_graph_guard.py"
+
+
+def test_pretooluse_graph_guard_denies_graph_py():
+    # The hook command in settings.json must reference this exact script —
+    # invoke it directly (via sys.executable) to avoid PATH-dependent shell
+    # resolution differences between the test subprocess and the real hook.
+    cmd = _graph_guard_command()
+    assert "_graph_guard.py" in cmd
+    payload = json.dumps(
+        {
+            "tool_name": "Edit",
+            "tool_input": {
+                "file_path": "D:/dev/HotamSpec/domains/hotam-spec-self/graph.py"
+            },
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, str(_GRAPH_GUARD)],
+        input=payload,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.stdout.strip(), (
+        f"Expected deny JSON, got empty stdout. stderr={result.stderr}"
+    )
+    out = json.loads(result.stdout.strip())
+    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
+    assert "apply_proposal.py" in out["hookSpecificOutput"]["permissionDecisionReason"]
+
+
+def test_pretooluse_graph_guard_allows_other_files():
+    cmd = _graph_guard_command()
+    assert "_graph_guard.py" in cmd
+    payload = json.dumps(
+        {
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "D:/dev/HotamSpec/spec/tools/gen_spec.py"},
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, str(_GRAPH_GUARD)],
+        input=payload,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.stdout.strip() == "", (
+        f"Expected no deny output for non-graph.py file, got: {result.stdout}"
     )
 
 

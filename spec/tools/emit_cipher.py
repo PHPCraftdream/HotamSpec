@@ -58,6 +58,7 @@ def main() -> None:
             "additionalContext": additional,
         }
     }
+    sys.stdout.reconfigure(encoding="utf-8")
     sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
 

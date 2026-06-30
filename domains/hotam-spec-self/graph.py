@@ -3190,9 +3190,10 @@ def build_graph() -> TensionGraph:
             claim=("Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events."),
             owner="framework-author",
             status="SETTLED",
-            why=("The closed loop's ACT half goes through apply_proposal (R-active-loop-apply-tool). Direct edits bypass steward approval and structural validation. This R makes the constraint explicit so future pre-commit enforcement can reference it."),
+            why=("The closed loop's ACT half goes through apply_proposal (R-active-loop-apply-tool). A deterministic PreToolUse command-hook (not LLM-judgment) blocks direct Edit/Write on domains/*/graph.py, denying with a clear redirect to apply_proposal.py. Hardened from prompt-type judgment to command-type determinism to close an adversarial-bypass gap."),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_pretooluse_graph_guard_denies_graph_py",),
         ),
         Requirement(
             id="R-method-matches-docstring",
