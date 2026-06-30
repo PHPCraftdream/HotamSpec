@@ -54,8 +54,10 @@ are included.
 - **R-tool-create-agent** — *scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_create_agent`]
 - **R-tool-create-domain** — *scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.* [STRUCTURAL·tool · §Domain] [enforcer: `test_tool_create_domain`]
 - **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
+- **R-tool-emit-cipher** — *emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
+- **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]
 - **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
 - **R-tool-what-now** — *derives the prioritized next correct action from any graph state, making being-lost structurally impossible.* [STRUCTURAL·tool · §Harness] [enforcer: (none)]
 <!-- CONSTITUTION:END -->
@@ -99,8 +101,10 @@ are included.
 - [create_agent](../../../../../../spec/docs/tools/create_agent.md)
 - [create_domain](../../../../../../spec/docs/tools/create_domain.md)
 - [create_entity_type](../../../../../../spec/docs/tools/create_entity_type.md)
+- [emit_cipher](../../../../../../spec/docs/tools/emit_cipher.md)
 - [gen_spec](../../../../../../spec/docs/tools/gen_spec.md)
 - [invoke_agent](../../../../../../spec/docs/tools/invoke_agent.md)
+- [spawn_agent](../../../../../../spec/docs/tools/spawn_agent.md)
 - [tick](../../../../../../spec/docs/tools/tick.md)
 - [what_now](../../../../../../spec/docs/tools/what_now.md)
 <!-- SHARED-DOCS:END -->

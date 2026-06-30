@@ -71,12 +71,25 @@ def test_agent_map_sentinels_present() -> None:
 
 
 def test_root_claude_md_has_no_agent_map_sentinels() -> None:
-    """Root CLAUDE.md must NOT contain AGENT-MAP sentinels (framework-only in P17+)."""
+    """Root CLAUDE.md must NOT contain AGENT-MAP sentinels outside DOMAIN-CRYSTAL.
+
+    P22.B: root CLAUDE.md now embeds the domain's CLAUDE.md inside DOMAIN-CRYSTAL,
+    which legitimately contains AGENT-MAP sentinels. They must not appear outside
+    that block.
+    """
     if _ACTIVE_DOMAIN is None:
         return  # Legacy mode: skip.
     root_text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
+    # Strip the DOMAIN-CRYSTAL block before checking.
+    dc_begin = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
+    dc_end = "<!-- DOMAIN-CRYSTAL:END -->"
+    bp = root_text.find(dc_begin)
+    ep = root_text.find(dc_end)
+    if bp != -1 and ep != -1 and ep > bp:
+        root_text = root_text[:bp] + root_text[ep + len(dc_end):]
     assert _AGENT_MAP_BEGIN not in root_text, (
-        "Root CLAUDE.md still has AGENT-MAP:BEGIN — run gen_spec.py to strip it"
+        "Root CLAUDE.md has AGENT-MAP:BEGIN outside DOMAIN-CRYSTAL block — "
+        "run gen_spec.py to fix"
     )
 
 

@@ -12,3 +12,6 @@ __pycache__/
 
 # Claude Code session files (babysit lockfile, etc.)
 .claude/
+
+# Runtime ephemera (R-task-spawn-log-runtime — not committed substrate)
+.runtime/

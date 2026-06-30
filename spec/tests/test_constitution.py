@@ -59,12 +59,25 @@ def test_constitution_sentinels_present() -> None:
 
 
 def test_root_claude_md_has_no_constitution_sentinels() -> None:
-    """Root CLAUDE.md must NOT contain CONSTITUTION sentinels (framework-only in P17+)."""
+    """Root CLAUDE.md must NOT contain CONSTITUTION sentinels outside DOMAIN-CRYSTAL.
+
+    P22.B: root CLAUDE.md now embeds the domain's CLAUDE.md inside DOMAIN-CRYSTAL,
+    which legitimately contains CONSTITUTION sentinels. They must not appear outside
+    that block.
+    """
     if _ACTIVE_DOMAIN is None:
         return  # Legacy mode: skip.
     root_text = _read_normalized(gen_spec.CLAUDE_MD)
+    # Strip the DOMAIN-CRYSTAL block before checking.
+    dc_begin = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
+    dc_end = "<!-- DOMAIN-CRYSTAL:END -->"
+    bp = root_text.find(dc_begin)
+    ep = root_text.find(dc_end)
+    if bp != -1 and ep != -1 and ep > bp:
+        root_text = root_text[:bp] + root_text[ep + len(dc_end):]
     assert _CONST_BEGIN not in root_text, (
-        "Root CLAUDE.md still has CONSTITUTION:BEGIN — run gen_spec.py to strip it"
+        "Root CLAUDE.md has CONSTITUTION:BEGIN outside DOMAIN-CRYSTAL block — "
+        "run gen_spec.py to fix"
     )
 
 

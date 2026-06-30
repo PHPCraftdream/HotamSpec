@@ -33,13 +33,16 @@ _SENTINEL_PAIRS = [
     ("<!-- REPO-MAP:BEGIN -->", "<!-- REPO-MAP:END -->"),
     ("<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->"),
     ("<!-- THINKING-INDEX:BEGIN -->", "<!-- THINKING-INDEX:END -->"),
+    ("<!-- DOMAIN-CRYSTAL:BEGIN -->", "<!-- DOMAIN-CRYSTAL:END -->"),
+    ("<!-- RECENTLY-REJECTED:BEGIN -->", "<!-- RECENTLY-REJECTED:END -->"),
 ]
 
 _ACTIVE_DOMAIN = _gs._active_domain()
 
-# Character cap: header + 4 sentinel blocks + padding.
-# Set generously to allow REPO-MAP to be large; tighten over time.
-_CHAR_CAP = 7000
+# Character cap: header + sentinel blocks + padding.
+# DOMAIN-CRYSTAL embeds the full active domain's CLAUDE.md — cap is raised accordingly.
+# The shell outside sentinel blocks must remain thin.
+_CHAR_CAP = 200_000
 
 
 def _read(path: Path) -> str:
