@@ -1169,6 +1169,7 @@ def build_graph() -> TensionGraph:
                 "check_typed_anchors_operator",
                 "check_typed_anchors_process",
                 "check_typed_anchors_goal",
+                "check_typed_anchors_entity",
                 "check_section_anchors_known",
                 "test_glossary_sync.py",
             ),
@@ -1485,6 +1486,7 @@ def build_graph() -> TensionGraph:
                 "check_typed_anchors_operator",
                 "check_typed_anchors_process",
                 "check_typed_anchors_goal",
+                "check_typed_anchors_entity",
                 "check_section_anchors_known",
             ),
         ),
@@ -2568,6 +2570,147 @@ def build_graph() -> TensionGraph:
             assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_typed_anchors_process", "check_typed_anchors_goal"),
+        ),
+        Requirement(
+            id="R-entity-type-lifecycle-wellformed",
+            claim=(
+                "Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_entity_type_lifecycle_wellformed."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (lifecycle wellformedness concern). An EntityType with "
+                "an invalid lifecycle is structurally broken — check_entity_type_lifecycle_wellformed "
+                "reuses check_lifecycle_wellformed (the §Lifecycle keystone) for zero-parallel machinery (M12)."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_entity_type_lifecycle_wellformed",),
+        ),
+        Requirement(
+            id="R-entity-instance-state-in-lifecycle",
+            claim=(
+                "Every EntityInstance.state shall be a valid state in the corresponding EntityType.lifecycle."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (state validity concern). An instance with an unknown state "
+                "is structurally invalid — mirrors check_requirement_status_in_lifecycle for requirements."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_entity_instance_state_in_lifecycle",),
+        ),
+        Requirement(
+            id="R-entity-instance-required-fields",
+            claim=(
+                "Every EntityInstance shall provide values for all EntityFields with required=True."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (required-fields concern). A missing required field violates "
+                "the declared EntityType schema and makes downstream traversal unreliable."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_entity_instance_required_fields",),
+        ),
+        Requirement(
+            id="R-entity-instance-id-prefix",
+            claim=(
+                "Every EntityInstance.id shall start with 'ENT-<entity_type>-' (typed-anchor discipline)."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (typed-anchor concern). Encodes both type and entity kind in "
+                "the id, enabling unambiguous cross-reference (R-anchor-everything)."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_entity_instance_id_prefix", "check_typed_anchors_entity"),
+        ),
+        Requirement(
+            id="R-entity-instance-refs-resolve",
+            claim=(
+                "Every EntityInstance reference field shall resolve in the graph according to its ref_target."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (referential integrity concern). A dangling reference field "
+                "is the entity-level equivalent of a dangling Conflict member."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_entity_instance_refs_resolve",),
+        ),
+        Requirement(
+            id="R-entity-field-kind-known",
+            claim=(
+                "Every EntityField.kind shall be in ENTITY_FIELD_KINDS "
+                "(string | number | enum | reference | state)."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (field-kind concern). An unknown kind breaks the discriminant "
+                "for kind-specific invariants and future machine-checkable field validation."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_entity_field_kind_known",),
+        ),
+        Requirement(
+            id="R-entity-typed-anchors",
+            claim=(
+                "check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Entity aspect (typed-anchors concern). Without prefix validation, "
+                "EntityInstance nodes escape the anchoring discipline (R-anchor-everything)."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_typed_anchors_entity",),
+        ),
+        Requirement(
+            id="R-process-drives-existing-entities",
+            claim=(
+                "Every entity slug referenced in a Process.drives_entities shall resolve to a "
+                "declared EntityType slug in g.entity_types."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Process/§Entity coupling (referential integrity concern). A Process "
+                "that references undeclared entity types is structurally broken — the coupling "
+                "between the behavioral aspect and the entity aspect must be referentially sound."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_process_drives_existing_entities",),
+        ),
+        Requirement(
+            id="R-step-invokes-known-transition",
+            claim=(
+                "Every Step.transition (when non-empty) shall name a transition event declared "
+                "in the driven EntityType.lifecycle."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of §Process/§Entity coupling (step-transition concern). A Step that "
+                "invokes an undeclared transition is a structural dead-end — the lifecycle "
+                "machine cannot process it."
+            ),
+            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            enforcement=ENFORCED,
+            enforced_by=("check_step_invokes_known_transition",),
         ),
         Requirement(
             id="R-dependency-tracked",

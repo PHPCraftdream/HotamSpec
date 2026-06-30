@@ -21,8 +21,8 @@ are included.
 
 **Substrate / Anchoring**
 
-- **R-anchor-everything** — *Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_section_anchors_known·test_glossary_sync.py]
-- **R-anchor-taxonomy** — *The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_section_anchors_known]
+- **R-anchor-everything** — *Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_typed_anchors_entity·check_section_anchors_known·test_glossary_sync.py]
+- **R-anchor-taxonomy** — *The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_typed_anchors_entity·check_section_anchors_known]
 - **R-speak-by-reference** — *An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.* [ENFORCED·test_glossary_sync.py·check_section_anchors_known·docs/playbooks/]
 
 **Check / Invariant**
@@ -53,6 +53,7 @@ are included.
 - **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: (none)]
 - **R-tool-create-agent** — *scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_create_agent`]
 - **R-tool-create-domain** — *scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.* [STRUCTURAL·tool · §Domain] [enforcer: `test_tool_create_domain`]
+- **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
 - **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
@@ -97,6 +98,7 @@ are included.
 - [context](../../../../../../spec/docs/tools/context.md)
 - [create_agent](../../../../../../spec/docs/tools/create_agent.md)
 - [create_domain](../../../../../../spec/docs/tools/create_domain.md)
+- [create_entity_type](../../../../../../spec/docs/tools/create_entity_type.md)
 - [gen_spec](../../../../../../spec/docs/tools/gen_spec.md)
 - [invoke_agent](../../../../../../spec/docs/tools/invoke_agent.md)
 - [tick](../../../../../../spec/docs/tools/tick.md)

@@ -96,5 +96,37 @@ class ProposedRejection:
         return self.requirement_id
 
 
+@dataclass(frozen=True)
+class ProposedEntityType:
+    """Canon: §Proposal — propose a new EntityType to add to the active domain's graph.
+
+    RULE: kind="EntityType"; the apply_proposal tool serializes this into the
+    right EntityType(...) constructor call when the steward approves. Lifecycle
+    is given by serialized states + transitions tuples (the loader rebuilds
+    a Lifecycle object).
+    """
+
+    slug: str
+    description: str
+    why: str
+    # Lifecycle in serialized form:
+    states: tuple[tuple[str, str, str], ...]
+    # ^ each: (name, kind, why) — kind ∈ STATE_KINDS
+    transitions: tuple[tuple[str, str, str], ...]
+    # ^ each: (src, dst, event) — guard/why optional, default ""
+    cyclic: bool = False
+    fields: tuple[tuple[str, str, bool, str], ...] = field(default_factory=tuple)
+    # ^ each: (name, kind, required, ref_target) — kind ∈ ENTITY_FIELD_KINDS
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the entity slug is the anchor of this proposal."""
+        return f"EntityType:{self.slug}"
+
+
 # A union for type hints (no runtime enforcement; Python keeps it simple):
-Proposal = ProposedRequirement | ProposedConflictTransition | ProposedRejection
+Proposal = (
+    ProposedRequirement
+    | ProposedConflictTransition
+    | ProposedRejection
+    | ProposedEntityType
+)

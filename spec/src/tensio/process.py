@@ -9,11 +9,10 @@ R-process-aspect-first) because:
   - a method postcondition that violates an entity invariant is a real
     conflict surfaced as a Conflict node on a behavioral axis.
 
-Entity is DEFERRED to a future aspect (M12); Process declares
-`drives_entities: tuple[str, ...]` as forward-compat string references so
-the Process aspect can ship before Entity. When Entity lands, the
-invariant `check_process_drives_existing_entities` will activate (today
-it is a no-op because g has no entities collection yet).
+Entity HAS LANDED (P21, spec/src/tensio/entity.py). Process.drives_entities now
+resolves to declared EntityType slugs (check_process_drives_existing_entities).
+Step.invokes ("entity-slug.event") resolves to a real Lifecycle transition
+(check_step_invokes_known_transition). M12 — Entity deferred → LANDED.
 
 Goal is its OWN first-class type (M19): a target-state predicate + what it
 targets. Distinct from a static Requirement claim because it carries a

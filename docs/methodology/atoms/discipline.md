@@ -12,7 +12,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Why.** SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_section_anchors_known fires when any §-token in framework docstrings is absent from the glossary — an unresolved anchor. test_glossary_sync.py cross-checks the same invariant at test-time. Together these three make the anchor discipline machine-checkable at every invariant run.
 
-**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_section_anchors_known`, `test_glossary_sync.py`
+**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_typed_anchors_entity`, `check_section_anchors_known`, `test_glossary_sync.py`
 
 ## `R-anchor-taxonomy` (ENFORCED)
 
@@ -20,7 +20,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Why.** M28. DECIDED 2026-06-30: the prefix set is frozen by the check_typed_anchors_* family — one invariant per node type enforces the exact prefix. check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-) are all live in invariants.ALL_INVARIANTS. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph; a prefix would introduce redundancy. §-anchors are validated by check_section_anchors_known against the glossary. The full set: R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/tensio/invariants.py check_typed_anchors_* functions; R-anchor-everything SETTLED ENFORCED.
 
-**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_section_anchors_known`
+**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_typed_anchors_entity`, `check_section_anchors_known`
 
 ## `R-crystallize-before-split` (STRUCTURAL)
 

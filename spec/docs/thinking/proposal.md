@@ -43,3 +43,12 @@ Canon: §Proposal — propose REJECTING a Requirement (status → REJECTED).
 
 Preserves the anti-relitigation discipline: REJECTED is kept in the graph
 (R-rejected-preserved-not-deleted), never deleted.
+
+## From `spec/src/tensio/proposal.py::ProposedEntityType`
+
+Canon: §Proposal — propose a new EntityType to add to the active domain's graph.
+
+RULE: kind="EntityType"; the apply_proposal tool serializes this into the
+right EntityType(...) constructor call when the steward approves. Lifecycle
+is given by serialized states + transitions tuples (the loader rebuilds
+a Lifecycle object).

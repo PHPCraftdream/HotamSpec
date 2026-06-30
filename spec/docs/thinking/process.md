@@ -12,6 +12,20 @@ RULE: used by check_typed_anchors to verify PR- prefix discipline and by
 tests to confirm a named process is present. Empty when the §Process aspect
 is not loaded (opt-in, M12).
 
+## From `spec/src/tensio/graph.py::entity_state_conflict_suspects`
+
+Canon: §Process / §Entity / §Conflict — HEURISTIC: two processes driving one entity into mutually-exclusive resting states.
+
+RULE (HEURISTIC, not a proof): for each EntityType, find Process pairs whose
+Steps invoke Lifecycle transitions leading to DIFFERENT terminal/quiescent
+states. Flag as LatentSuspect for AI review. The hard boundary holds: NEVER
+auto-materialize a Conflict — only surface as suspicion.
+
+WHY this is M16 made structural: two processes driving one entity along
+incompatible state paths is the canonical hidden contradiction Tensio was
+designed to surface. Until P21, Entity was deferred; now this detector turns
+the abstract description into a real next-action for the harness.
+
 ## From `spec/src/tensio/invariants.py::check_process_lifecycle_wellformed`
 
 Canon: §Process / §Invariants — every Process lifecycle is structurally well-formed.
@@ -25,6 +39,30 @@ state-machine well-formedness. Reusing check_lifecycle_wellformed here
 means the Process aspect inherits all four lifecycle conditions (non-empty,
 single INITIAL, valid transition endpoints, terminal reachable) without
 parallel machinery (R-statemachine-wellformedness, M12).
+
+## From `spec/src/tensio/invariants.py::check_process_drives_existing_entities`
+
+Canon: §Process / §Entity / §Invariants — Process.drives_entities resolves.
+
+RULE: each entity slug in Process.drives_entities MUST be a declared
+EntityType.slug in g.entity_types. Activates the forward-compat seam
+Process declared from day one (R-process-drives-existing-entity).
+
+WHY: was deferred while Entity aspect was DEFERRED (M12). Now Entity has
+landed (P21.1), the resolution is real. A Process driving an undeclared
+entity slug is a structural dead-end the harness must surface.
+
+## From `spec/src/tensio/invariants.py::check_step_invokes_known_transition`
+
+Canon: §Process / §Entity / §Invariants — Step.invokes resolves to a real transition.
+
+RULE: when Step.invokes is non-empty, it MUST have format '<entity-slug>.<event>'
+where entity-slug is a declared EntityType.slug AND event matches a Transition.event
+in that EntityType.lifecycle.
+
+WHY: Step.invokes was prose-only while Entity was deferred. With Entity landed,
+the verb a Step invokes is a Lifecycle transition — making process steps and
+entity state machines structurally coupled. R-step-invokes-known-transition.
 
 ## From `spec/src/tensio/invariants.py::check_process_roles_declared`
 
@@ -54,11 +92,10 @@ R-process-aspect-first) because:
   - a method postcondition that violates an entity invariant is a real
     conflict surfaced as a Conflict node on a behavioral axis.
 
-Entity is DEFERRED to a future aspect (M12); Process declares
-`drives_entities: tuple[str, ...]` as forward-compat string references so
-the Process aspect can ship before Entity. When Entity lands, the
-invariant `check_process_drives_existing_entities` will activate (today
-it is a no-op because g has no entities collection yet).
+Entity HAS LANDED (P21, spec/src/tensio/entity.py). Process.drives_entities now
+resolves to declared EntityType slugs (check_process_drives_existing_entities).
+Step.invokes ("entity-slug.event") resolves to a real Lifecycle transition
+(check_step_invokes_known_transition). M12 — Entity deferred → LANDED.
 
 Goal is its OWN first-class type (M19): a target-state predicate + what it
 targets. Distinct from a static Requirement claim because it carries a

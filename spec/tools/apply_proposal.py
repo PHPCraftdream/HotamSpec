@@ -80,14 +80,20 @@ _SRC = _SPEC_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+import re as _re  # noqa: E402
+
 from tensio.conflict import conflict_identity  # noqa: E402
+from tensio.entity import ENTITY_FIELD_KINDS  # noqa: E402
+from tensio.lifecycle import STATE_KINDS  # noqa: E402
 from tensio.proposal import (  # noqa: E402
     Proposal,
     ProposedConflictTransition,
+    ProposedEntityType,
     ProposedRejection,
     ProposedRequirement,
 )
 
+_SLUG_RE = _re.compile(r"^[a-z][a-z0-9-]*$")
 _DOMAINS_ROOT = _SPEC_ROOT.parent / "domains"
 
 
@@ -119,10 +125,10 @@ _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
 def _validate_proposal(raw: dict) -> Proposal:
     """Canon: §Proposal — parse and validate a JSON dict into a Proposal variant.
 
-    RULE: 'kind' must be one of 'ConflictTransition', 'Requirement', or
-    'Rejection'. Each kind has its own required fields.
+    RULE: 'kind' must be one of 'ConflictTransition', 'Requirement', 'Rejection',
+    or 'EntityType'. Each kind has its own required fields.
 
-    Returns a Proposal (one of the three dataclass variants) or raises
+    Returns a Proposal (one of the four dataclass variants) or raises
     ValueError with a clear message.
     """
     kind = raw.get("kind", "")
@@ -132,9 +138,11 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_requirement(raw)
     if kind == "Rejection":
         return _validate_rejection(raw)
+    if kind == "EntityType":
+        return _validate_entity_type(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
-        f"Supported: 'ConflictTransition', 'Requirement', 'Rejection'."
+        f"Supported: 'ConflictTransition', 'Requirement', 'Rejection', 'EntityType'."
     )
 
 
@@ -221,6 +229,105 @@ def _validate_rejection(raw: dict) -> ProposedRejection:
     return ProposedRejection(
         requirement_id=requirement_id,
         reason=reason,
+    )
+
+
+def _validate_entity_type(raw: dict) -> ProposedEntityType:
+    """Parse and validate an EntityType proposal."""
+    slug = raw.get("slug", "").strip()
+    if not slug:
+        raise ValueError("'slug' is required for an EntityType proposal.")
+    if not _SLUG_RE.match(slug):
+        raise ValueError(
+            f"'slug' must be kebab-case (lowercase letters, digits, hyphens, "
+            f"starting with a letter); got '{slug}'."
+        )
+    description = raw.get("description", "").strip()
+    if not description:
+        raise ValueError("'description' is required and must be non-empty.")
+    why = raw.get("why", "")
+
+    # Validate states
+    states_raw = raw.get("states", [])
+    if not isinstance(states_raw, list) or not states_raw:
+        raise ValueError(
+            "'states' must be a non-empty list of [name, kind, why] triples."
+        )
+    states: list[tuple[str, str, str]] = []
+    for item in states_raw:
+        if not isinstance(item, (list, tuple)) or len(item) < 2:
+            raise ValueError(
+                f"Each state must be [name, kind] or [name, kind, why]; got {item!r}."
+            )
+        s_name, s_kind = str(item[0]), str(item[1])
+        s_why = str(item[2]) if len(item) > 2 else ""
+        if s_kind not in STATE_KINDS:
+            raise ValueError(
+                f"State kind '{s_kind}' is not valid; must be one of {sorted(STATE_KINDS)}."
+            )
+        states.append((s_name, s_kind, s_why))
+
+    # Exactly one initial state
+    initial_count = sum(1 for _, k, _ in states if k == "initial")
+    if initial_count != 1:
+        raise ValueError(
+            f"Exactly one state must have kind='initial'; found {initial_count}."
+        )
+
+    state_names = {s[0] for s in states}
+
+    # Validate transitions
+    transitions_raw = raw.get("transitions", [])
+    if not isinstance(transitions_raw, list):
+        raise ValueError("'transitions' must be a list of [src, dst, event] triples.")
+    transitions: list[tuple[str, str, str]] = []
+    for item in transitions_raw:
+        if not isinstance(item, (list, tuple)) or len(item) < 3:
+            raise ValueError(
+                f"Each transition must be [src, dst, event]; got {item!r}."
+            )
+        t_src, t_dst, t_event = str(item[0]), str(item[1]), str(item[2])
+        if t_src not in state_names:
+            raise ValueError(
+                f"Transition src '{t_src}' is not a declared state name. "
+                f"Declared: {sorted(state_names)}."
+            )
+        if t_dst not in state_names:
+            raise ValueError(
+                f"Transition dst '{t_dst}' is not a declared state name. "
+                f"Declared: {sorted(state_names)}."
+            )
+        transitions.append((t_src, t_dst, t_event))
+
+    cyclic = bool(raw.get("cyclic", False))
+
+    # Validate fields
+    fields_raw = raw.get("fields", [])
+    if not isinstance(fields_raw, list):
+        raise ValueError(
+            "'fields' must be a list of [name, kind, required, ref_target] tuples."
+        )
+    fields: list[tuple[str, str, bool, str]] = []
+    for item in fields_raw:
+        if not isinstance(item, (list, tuple)) or len(item) < 2:
+            raise ValueError(f"Each field must be at least [name, kind]; got {item!r}.")
+        f_name, f_kind = str(item[0]), str(item[1])
+        f_required = bool(item[2]) if len(item) > 2 else False
+        f_ref_target = str(item[3]) if len(item) > 3 else ""
+        if f_kind not in ENTITY_FIELD_KINDS:
+            raise ValueError(
+                f"Field kind '{f_kind}' is not valid; must be one of {sorted(ENTITY_FIELD_KINDS)}."
+            )
+        fields.append((f_name, f_kind, f_required, f_ref_target))
+
+    return ProposedEntityType(
+        slug=slug,
+        description=description,
+        why=why if isinstance(why, str) else "",
+        states=tuple(states),
+        transitions=tuple(transitions),
+        cyclic=cyclic,
+        fields=tuple(fields),
     )
 
 
@@ -661,6 +768,276 @@ def _apply_conflict_transition(
 
 
 # ---------------------------------------------------------------------------
+# Apply: EntityType
+# ---------------------------------------------------------------------------
+
+
+def _find_entity_types_tuple_end(tree: ast.AST) -> int | None:
+    """Find the end_lineno of the entity_types=(...) kwarg inside TensionGraph(...).
+
+    Returns None if the kwarg is absent (caller must insert it).
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = (
+            func.id
+            if isinstance(func, ast.Name)
+            else (func.attr if isinstance(func, ast.Attribute) else "")
+        )
+        if name != "TensionGraph":
+            continue
+        for kw in node.keywords:
+            if kw.arg == "entity_types":
+                return getattr(kw.value, "end_lineno", None)
+    return None
+
+
+def _find_tension_graph_call_end(tree: ast.AST) -> int | None:
+    """Return the end_lineno of the TensionGraph(...) call inside build_graph()."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef) or node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            for child in ast.walk(stmt):
+                if not isinstance(child, ast.Call):
+                    continue
+                func = child.func
+                name = (
+                    func.id
+                    if isinstance(func, ast.Name)
+                    else (func.attr if isinstance(func, ast.Attribute) else "")
+                )
+                if name == "TensionGraph":
+                    return getattr(child, "end_lineno", None)
+    return None
+
+
+def _find_tension_graph_kwarg_end(tree: ast.AST, kwarg_name: str) -> int | None:
+    """Return end_lineno of a specific kwarg value inside TensionGraph(...)."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = (
+            func.id
+            if isinstance(func, ast.Name)
+            else (func.attr if isinstance(func, ast.Attribute) else "")
+        )
+        if name != "TensionGraph":
+            continue
+        for kw in node.keywords:
+            if kw.arg == kwarg_name:
+                return getattr(kw.value, "end_lineno", None)
+    return None
+
+
+def _render_entity_type_source(proposal: ProposedEntityType, indent: str) -> str:
+    """Render an EntityType(...) constructor call as source text."""
+    inner = indent + "    "
+    state_inner = inner + "    "
+    lines: list[str] = []
+    lines.append(f"{indent}EntityType(")
+    lines.append(f'{inner}slug="{proposal.slug}",')
+    desc_escaped = proposal.description.replace("\\", "\\\\").replace('"', '\\"')
+    lines.append(f'{inner}description="{desc_escaped}",')
+
+    # Lifecycle
+    lines.append(f"{inner}lifecycle=Lifecycle(")
+    lines.append(f'{state_inner}slug="{proposal.slug}-lifecycle",')
+    lines.append(f"{state_inner}states=(")
+    for s_name, s_kind, s_why in proposal.states:
+        if s_why:
+            why_escaped = s_why.replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(
+                f'{state_inner}    State("{s_name}", kind="{s_kind}", why="{why_escaped}"),'
+            )
+        else:
+            lines.append(f'{state_inner}    State("{s_name}", kind="{s_kind}"),')
+    lines.append(f"{state_inner}),")
+    if proposal.transitions:
+        lines.append(f"{state_inner}transitions=(")
+        for t_src, t_dst, t_event in proposal.transitions:
+            lines.append(
+                f'{state_inner}    Transition("{t_src}", "{t_dst}", event="{t_event}"),'
+            )
+        lines.append(f"{state_inner}),")
+    if proposal.cyclic:
+        lines.append(f"{state_inner}cyclic=True,")
+    lines.append(f"{inner}),")
+
+    # Fields
+    if proposal.fields:
+        lines.append(f"{inner}fields=(")
+        for f_name, f_kind, f_required, f_ref_target in proposal.fields:
+            if f_ref_target:
+                lines.append(
+                    f'{inner}    EntityField("{f_name}", kind="{f_kind}", '
+                    f'required={f_required}, ref_target="{f_ref_target}"),'
+                )
+            else:
+                lines.append(
+                    f'{inner}    EntityField("{f_name}", kind="{f_kind}", '
+                    f"required={f_required}),"
+                )
+        lines.append(f"{inner}),")
+
+    if proposal.why:
+        why_escaped = proposal.why.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append(f'{inner}why="{why_escaped}",')
+    lines.append(f"{indent}),")
+    return "\n".join(lines) + "\n"
+
+
+def _apply_entity_type_to_source(
+    source_text: str,
+    proposal: ProposedEntityType,
+    content_graph_path: Path,
+) -> str:
+    """Apply a ProposedEntityType: insert a new EntityType into entity_types=(...).
+
+    If entity_types=(...) is absent from TensionGraph(), inserts the kwarg.
+    Refuses (raises RuntimeError) if an EntityType with the same slug already exists.
+    """
+    tree = ast.parse(source_text)
+
+    # Check for duplicate slug
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = (
+            func.id
+            if isinstance(func, ast.Name)
+            else (func.attr if isinstance(func, ast.Attribute) else "")
+        )
+        if name != "EntityType":
+            continue
+        for kw in node.keywords:
+            if kw.arg == "slug" and isinstance(kw.value, ast.Constant):
+                if kw.value.value == proposal.slug:
+                    raise RuntimeError(
+                        f"EntityType with slug='{proposal.slug}' already exists in "
+                        f"{content_graph_path}. Entity-type evolution is a separate proposal type."
+                    )
+
+    lines = source_text.splitlines(keepends=True)
+    indent = "        "  # default 8 spaces
+
+    # Check if entity_types= kwarg exists in TensionGraph(...)
+    tuple_end = _find_entity_types_tuple_end(tree)
+
+    if tuple_end is not None:
+        # Insert new EntityType before the closing ')' of entity_types=(...)
+        new_et = _render_entity_type_source(proposal, indent)
+        lines.insert(tuple_end - 1, new_et)
+    else:
+        # entity_types=(...) is absent; we need to INSERT the kwarg into TensionGraph(...)
+        # Strategy: find the end of TensionGraph call, then insert just before the closing ')'.
+        # We insert 'entity_types=(\n    <EntityType>\n),' before any 'entities=' kwarg
+        # or before the TensionGraph closing paren.
+        tg_end = _find_tension_graph_call_end(tree)
+        if tg_end is None:
+            raise RuntimeError(
+                "Cannot locate TensionGraph(...) call in build_graph(). "
+                "Is the domain graph.py well-formed?"
+            )
+
+        # Try to find 'entities=' kwarg to insert before it
+        entities_end = _find_tension_graph_kwarg_end(tree, "entities")
+        if entities_end is not None:
+            # Find the line where entities= starts (search backward from entities_end for 'entities=')
+            insert_line_idx = None
+            for i in range(entities_end - 1, -1, -1):
+                if "entities=" in lines[i]:
+                    insert_line_idx = i
+                    break
+            if insert_line_idx is None:
+                insert_line_idx = entities_end - 1
+        else:
+            # Insert just before the TensionGraph closing paren
+            insert_line_idx = tg_end - 1
+
+        # Detect indentation from the surrounding kwargs
+        kw_indent = "    "
+        for i in range(max(0, insert_line_idx - 5), insert_line_idx + 1):
+            stripped = lines[i].lstrip()
+            if stripped and not stripped.startswith("#"):
+                kw_indent = lines[i][: len(lines[i]) - len(stripped)]
+                break
+
+        et_rendered = _render_entity_type_source(proposal, indent)
+        new_kwarg = f"{kw_indent}entity_types=(\n{et_rendered}{kw_indent}),\n"
+        lines.insert(insert_line_idx, new_kwarg)
+
+    result = "".join(lines)
+
+    # Ensure required imports are present
+    needs_lifecycle_import = (
+        any(tok in result for tok in ("Lifecycle(", "State(", "Transition("))
+        and "from tensio.lifecycle import" not in result
+    )
+    if needs_lifecycle_import:
+        result = result.replace(
+            "from __future__ import annotations\n",
+            "from __future__ import annotations\n\nfrom tensio.lifecycle import Lifecycle, State, Transition\n",
+            1,
+        )
+    elif "from tensio.lifecycle import" in result:
+        # Check if Lifecycle, State, Transition are included
+        import re as _re2
+
+        m = _re2.search(r"from tensio\.lifecycle import ([^\n]+)", result)
+        if m:
+            existing = m.group(1)
+            needed = ["Lifecycle", "State", "Transition"]
+            missing = [n for n in needed if n not in existing]
+            if missing:
+                new_import = existing.rstrip() + ", " + ", ".join(missing)
+                result = result.replace(
+                    f"from tensio.lifecycle import {existing}",
+                    f"from tensio.lifecycle import {new_import}",
+                    1,
+                )
+
+    needs_entity_import = (
+        "EntityType(" in result or "EntityField(" in result
+    ) and "from tensio.entity import" not in result
+    if needs_entity_import:
+        # Insert after the lifecycle import or at the top of imports
+        if "from tensio.lifecycle import" in result:
+            result = result.replace(
+                "from tensio.lifecycle import",
+                "from tensio.entity import EntityField, EntityType\nfrom tensio.lifecycle import",
+                1,
+            )
+        else:
+            result = result.replace(
+                "from __future__ import annotations\n",
+                "from __future__ import annotations\n\nfrom tensio.entity import EntityField, EntityType\n",
+                1,
+            )
+    elif "from tensio.entity import" in result:
+        import re as _re3
+
+        m = _re3.search(r"from tensio\.entity import ([^\n]+)", result)
+        if m:
+            existing = m.group(1)
+            needed = ["EntityField", "EntityType"]
+            missing = [n for n in needed if n not in existing]
+            if missing:
+                new_import = existing.rstrip() + ", " + ", ".join(missing)
+                result = result.replace(
+                    f"from tensio.entity import {existing}",
+                    f"from tensio.entity import {new_import}",
+                    1,
+                )
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Main apply logic
 # ---------------------------------------------------------------------------
 
@@ -670,6 +1047,7 @@ def apply(
     *,
     dry_run: bool = False,
     triggering_kind: str | None = None,
+    content_graph: Path | None = None,
 ) -> int:
     """Canon: §Proposal — apply a validated Proposal to the graph.
 
@@ -677,6 +1055,7 @@ def apply(
       - ProposedConflictTransition: locate Conflict node, replace fields
       - ProposedRequirement: add new or update existing Requirement
       - ProposedRejection: set status to REJECTED, prepend reason
+      - ProposedEntityType: insert new EntityType into entity_types=()
 
     Steps:
       1. Read spec/content/graph.py.
@@ -691,7 +1070,8 @@ def apply(
     "DRIFT_FALLOUT"). If None, the closure check is skipped (backward-compat for
     P3 unit tests that do not supply a triggering kind).
     """
-    source_text = _CONTENT_GRAPH.read_text(encoding="utf-8")
+    active_graph = content_graph if content_graph is not None else _CONTENT_GRAPH
+    source_text = active_graph.read_text(encoding="utf-8")
     original_lines = source_text.splitlines(keepends=True)
 
     try:
@@ -702,6 +1082,11 @@ def apply(
             lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedRejection):
             new_source = _apply_rejection_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedEntityType):
+            new_source = _apply_entity_type_to_source(
+                source_text, proposal, active_graph
+            )
             lines = new_source.splitlines(keepends=True)
         else:
             print(
@@ -714,7 +1099,7 @@ def apply(
         return 1
 
     if dry_run:
-        diff = _render_diff(original_lines, lines, _CONTENT_GRAPH.name)
+        diff = _render_diff(original_lines, lines, active_graph.name)
         print("=== DRY RUN — proposed diff ===")
         print(diff)
         print("=== (no file written) ===")
@@ -732,8 +1117,8 @@ def apply(
 
     # Write
     new_source = "".join(lines)
-    _CONTENT_GRAPH.write_text(new_source, encoding="utf-8")
-    print(f"Written: {_CONTENT_GRAPH}")
+    active_graph.write_text(new_source, encoding="utf-8")
+    print(f"Written: {active_graph}")
 
     # Regen
     regen_result = subprocess.run(

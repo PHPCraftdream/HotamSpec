@@ -434,3 +434,59 @@ def entity_type_slugs(g: TensionGraph) -> frozenset[str]:
 def entity_ids(g: TensionGraph) -> frozenset[str]:
     """Canon: §Entity — set of all EntityInstance ids (for dangling-ref checks)."""
     return frozenset(e.id for e in g.entities)
+
+
+def entity_state_conflict_suspects(g: TensionGraph) -> tuple[LatentSuspect, ...]:
+    """Canon: §Process / §Entity / §Conflict — HEURISTIC: two processes driving one entity into mutually-exclusive resting states.
+
+    RULE (HEURISTIC, not a proof): for each EntityType, find Process pairs whose
+    Steps invoke Lifecycle transitions leading to DIFFERENT terminal/quiescent
+    states. Flag as LatentSuspect for AI review. The hard boundary holds: NEVER
+    auto-materialize a Conflict — only surface as suspicion.
+
+    WHY this is M16 made structural: two processes driving one entity along
+    incompatible state paths is the canonical hidden contradiction Tensio was
+    designed to surface. Until P21, Entity was deferred; now this detector turns
+    the abstract description into a real next-action for the harness.
+    """
+    type_by_slug = {et.slug: et for et in g.entity_types}
+    suspects: list[LatentSuspect] = []
+
+    def process_destinations(p: object, slug: str) -> set[str]:
+        """Set of resting destination states this process drives the named entity into."""
+        et = type_by_slug.get(slug)
+        if et is None:
+            return set()
+        transitions_by_event = {t.event: t for t in et.lifecycle.transitions}
+        terminal_or_quiescent = {s.name for s in et.lifecycle.states if s.is_terminal()}
+        dests: set[str] = set()
+        for step in p.steps:  # type: ignore[union-attr]
+            if not step.invokes or "." not in step.invokes:
+                continue
+            s, _, event = step.invokes.partition(".")
+            if s != slug:
+                continue
+            t = transitions_by_event.get(event)
+            if t and t.dst in terminal_or_quiescent:
+                dests.add(t.dst)
+        return dests
+
+    for et in g.entity_types:
+        slug = et.slug
+        ps = [p for p in g.processes if slug in p.drives_entities]
+        for i in range(len(ps)):
+            for j in range(i + 1, len(ps)):
+                a, b = ps[i], ps[j]
+                da, db = process_destinations(a, slug), process_destinations(b, slug)
+                if not da or not db:
+                    continue
+                if da.isdisjoint(db):
+                    left, right = sorted((a.id, b.id))
+                    hint = (
+                        f"both drive entity '{slug}' but to disjoint resting states: "
+                        f"{sorted(da)} vs {sorted(db)} — likely conflict on axis "
+                        f"behavioral-{slug}-state"
+                    )
+                    suspects.append(LatentSuspect(left=left, right=right, hint=hint))
+    suspects.sort(key=lambda s: (s.left, s.right))
+    return tuple(suspects)

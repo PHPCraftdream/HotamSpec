@@ -1414,6 +1414,88 @@ def check_process_lifecycle_wellformed(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_process_drives_existing_entities(g: TensionGraph) -> list[Violation]:
+    """Canon: §Process / §Entity / §Invariants — Process.drives_entities resolves.
+
+    RULE: each entity slug in Process.drives_entities MUST be a declared
+    EntityType.slug in g.entity_types. Activates the forward-compat seam
+    Process declared from day one (R-process-drives-existing-entity).
+
+    WHY: was deferred while Entity aspect was DEFERRED (M12). Now Entity has
+    landed (P21.1), the resolution is real. A Process driving an undeclared
+    entity slug is a structural dead-end the harness must surface.
+    """
+    from tensio.graph import entity_type_slugs  # noqa: PLC0415
+
+    slugs = entity_type_slugs(g)
+    out: list[Violation] = []
+    for p in g.processes:
+        for slug in p.drives_entities:
+            if slug not in slugs:
+                out.append(
+                    Violation(
+                        "check_process_drives_existing_entities",
+                        p.id,
+                        f"drives_entities slug '{slug}' is not a declared "
+                        f"EntityType.slug (declared: {sorted(slugs)})",
+                    )
+                )
+    return out
+
+
+def check_step_invokes_known_transition(g: TensionGraph) -> list[Violation]:
+    """Canon: §Process / §Entity / §Invariants — Step.invokes resolves to a real transition.
+
+    RULE: when Step.invokes is non-empty, it MUST have format '<entity-slug>.<event>'
+    where entity-slug is a declared EntityType.slug AND event matches a Transition.event
+    in that EntityType.lifecycle.
+
+    WHY: Step.invokes was prose-only while Entity was deferred. With Entity landed,
+    the verb a Step invokes is a Lifecycle transition — making process steps and
+    entity state machines structurally coupled. R-step-invokes-known-transition.
+    """
+    type_by_slug = {et.slug: et for et in g.entity_types}
+    out: list[Violation] = []
+    for p in g.processes:
+        for step in p.steps:
+            if not step.invokes:
+                continue
+            if "." not in step.invokes:
+                out.append(
+                    Violation(
+                        "check_step_invokes_known_transition",
+                        p.id,
+                        f"step '{step.name}'.invokes='{step.invokes}' must be "
+                        f"'<entity-slug>.<event>'",
+                    )
+                )
+                continue
+            slug, _, event = step.invokes.partition(".")
+            et = type_by_slug.get(slug)
+            if et is None:
+                out.append(
+                    Violation(
+                        "check_step_invokes_known_transition",
+                        p.id,
+                        f"step '{step.name}'.invokes='{step.invokes}' — "
+                        f"unknown entity '{slug}'",
+                    )
+                )
+                continue
+            events = {t.event for t in et.lifecycle.transitions}
+            if event not in events:
+                out.append(
+                    Violation(
+                        "check_step_invokes_known_transition",
+                        p.id,
+                        f"step '{step.name}'.invokes='{step.invokes}' — "
+                        f"event '{event}' is not a transition of '{slug}' "
+                        f"(known: {sorted(events)})",
+                    )
+                )
+    return out
+
+
 def check_process_roles_declared(g: TensionGraph) -> list[Violation]:
     """Canon: §Process / §Invariants — every Step.requires_role is in Process.roles_required.
 
@@ -1508,7 +1590,236 @@ def check_goal_owner_is_operator(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
-# 14. Section-anchor coherence — every §-token in framework docstrings is known
+# 14. §Entity aspect invariants (aspect-gated: no-op when g.entity_types/entities empty)
+# ---------------------------------------------------------------------------
+
+
+def check_entity_type_lifecycle_wellformed(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every EntityType.lifecycle is a well-formed Lifecycle.
+
+    RULE: every EntityType.lifecycle MUST pass check_lifecycle_wellformed (non-empty
+    states, exactly one INITIAL, all transition endpoints resolve, terminal reachable
+    if non-cyclic). No-ops when g.entity_types is empty (§Entity aspect not loaded).
+
+    WHY: the §Lifecycle keystone is the single source of truth for state-machine
+    well-formedness; reusing it here means every EntityType inherits all four
+    conditions without parallel machinery (R-statemachine-wellformedness, M12).
+    """
+    out: list[Violation] = []
+    for et in g.entity_types:
+        for issue in check_lifecycle_wellformed(et.lifecycle):
+            out.append(
+                Violation(
+                    "check_entity_type_lifecycle_wellformed",
+                    et.slug,
+                    issue,
+                )
+            )
+    return out
+
+
+def check_entity_instance_state_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every EntityInstance.state is valid in its EntityType.lifecycle.
+
+    RULE: EntityInstance.state MUST be matched by the lifecycle of the corresponding
+    EntityType (via Lifecycle.matches). An instance with an unknown state is
+    structurally invalid — the lifecycle machine cannot process it.
+    No-ops when g.entities is empty.
+
+    WHY: state integrity at the instance level mirrors check_requirement_status_in_lifecycle
+    for requirements — the same keystone discipline applied to domain entities.
+    """
+    type_by_slug = {et.slug: et for et in g.entity_types}
+    out: list[Violation] = []
+    for inst in g.entities:
+        et = type_by_slug.get(inst.entity_type)
+        if et is None:
+            out.append(
+                Violation(
+                    "check_entity_instance_state_in_lifecycle",
+                    inst.id,
+                    f"entity_type '{inst.entity_type}' is not declared",
+                )
+            )
+            continue
+        if et.lifecycle.matches(inst.state) is None:
+            out.append(
+                Violation(
+                    "check_entity_instance_state_in_lifecycle",
+                    inst.id,
+                    f"state '{inst.state}' is not in lifecycle '{et.lifecycle.slug}' "
+                    f"(valid: {sorted(et.lifecycle.state_names())})",
+                )
+            )
+    return out
+
+
+def check_entity_instance_required_fields(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every required EntityField is present in EntityInstance.field_values.
+
+    RULE: for each EntityField with required=True on the EntityType, the
+    corresponding field name MUST appear in EntityInstance.field_values. A missing
+    required field is a structural gap — the instance is incomplete.
+    No-ops when g.entities is empty.
+
+    WHY: required fields are the entity's schema contract; a missing required field
+    violates the declared type and makes downstream traversal unreliable.
+    """
+    type_by_slug = {et.slug: et for et in g.entity_types}
+    out: list[Violation] = []
+    for inst in g.entities:
+        et = type_by_slug.get(inst.entity_type)
+        if et is None:
+            continue  # already reported by check_entity_instance_state_in_lifecycle
+        provided = {n for n, _ in inst.field_values}
+        for f in et.fields:
+            if f.required and f.name not in provided:
+                out.append(
+                    Violation(
+                        "check_entity_instance_required_fields",
+                        inst.id,
+                        f"required field '{f.name}' is missing",
+                    )
+                )
+    return out
+
+
+def check_entity_instance_id_prefix(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every EntityInstance.id starts with 'ENT-<slug>-'.
+
+    RULE: EntityInstance.id MUST start with 'ENT-<entity_type>-' (typed-anchor
+    discipline, R-anchor-everything). A missing or wrong prefix breaks the
+    typed-anchor discipline and makes cite-by-reference unreliable.
+    No-ops when g.entities is empty.
+
+    WHY: the prefix encodes both type and entity kind in the id, enabling
+    unambiguous cross-reference in the graph (R-anchor-everything).
+    """
+    out: list[Violation] = []
+    for inst in g.entities:
+        expected_prefix = f"ENT-{inst.entity_type}-"
+        if not inst.id.startswith(expected_prefix):
+            out.append(
+                Violation(
+                    "check_entity_instance_id_prefix",
+                    inst.id,
+                    f"entity instance id must start with '{expected_prefix}'",
+                )
+            )
+    return out
+
+
+def check_entity_instance_refs_resolve(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every reference EntityField value resolves in the graph.
+
+    RULE: for each EntityField with kind='reference', any non-empty field value in
+    EntityInstance.field_values MUST resolve in the graph according to ref_target:
+    'stakeholder' resolves in stakeholder_ids(g); 'requirement' in requirement_ids(g);
+    'assumption' in assumption_ids(g); any other string is treated as an entity_type
+    slug and resolves among EntityInstance ids of that type. Empty values on optional
+    references are allowed; missing required references are caught by
+    check_entity_instance_required_fields. No-ops when g.entities is empty.
+
+    WHY: a dangling reference field is the entity-level equivalent of a dangling
+    Conflict member — the edge exists but resolves to nothing, making the
+    dependency invisible.
+    """
+    sids = stakeholder_ids(g)
+    rids = requirement_ids(g)
+    aids = assumption_ids(g)
+    entities_by_type: dict[str, set[str]] = {}
+    for e in g.entities:
+        entities_by_type.setdefault(e.entity_type, set()).add(e.id)
+
+    type_by_slug = {et.slug: et for et in g.entity_types}
+    out: list[Violation] = []
+    for inst in g.entities:
+        et = type_by_slug.get(inst.entity_type)
+        if et is None:
+            continue  # already reported by check_entity_instance_state_in_lifecycle
+        fv = dict(inst.field_values)
+        for f in et.fields:
+            if f.kind != "reference":
+                continue
+            val = fv.get(f.name, "")
+            if not val:
+                continue  # required-missing reported by check_entity_instance_required_fields
+            target = f.ref_target
+            if target == "stakeholder":
+                valid = val in sids
+            elif target == "requirement":
+                valid = val in rids
+            elif target == "assumption":
+                valid = val in aids
+            else:
+                valid = val in entities_by_type.get(target, set())
+            if not valid:
+                out.append(
+                    Violation(
+                        "check_entity_instance_refs_resolve",
+                        inst.id,
+                        f"reference field '{f.name}'='{val}' does not resolve "
+                        f"in ref_target '{target}'",
+                    )
+                )
+    return out
+
+
+def check_entity_field_kind_known(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every EntityField.kind is in ENTITY_FIELD_KINDS.
+
+    RULE: EntityField.kind MUST be in ENTITY_FIELD_KINDS
+    (string | number | enum | reference | state). An unknown kind is a
+    misconfiguration that makes the field type undiscoverable.
+    No-ops when g.entity_types is empty.
+
+    WHY: the kind discriminant is the seam for future machine-checkable field
+    validation; an unknown kind breaks the discriminant and hides the field
+    from any kind-specific invariant.
+    """
+    from tensio.entity import ENTITY_FIELD_KINDS  # noqa: PLC0415
+
+    out: list[Violation] = []
+    for et in g.entity_types:
+        for f in et.fields:
+            if f.kind not in ENTITY_FIELD_KINDS:
+                out.append(
+                    Violation(
+                        "check_entity_field_kind_known",
+                        et.slug,
+                        f"field '{f.name}' has unknown kind '{f.kind}' "
+                        f"(valid: {sorted(ENTITY_FIELD_KINDS)})",
+                    )
+                )
+    return out
+
+
+def check_typed_anchors_entity(g: TensionGraph) -> list[Violation]:
+    """Canon: §Entity / §Invariants — every EntityInstance id starts with 'ENT-'.
+
+    RULE: EntityInstance.id MUST start with 'ENT-' (typed-anchor discipline,
+    R-anchor-everything). Note: check_entity_instance_id_prefix verifies the
+    STRICTER 'ENT-<slug>-' rule. This check enforces only the prefix family.
+
+    WHY: the 'ENT-' prefix family anchors all entity instances in the typed-anchor
+    discipline (R-anchor-everything), enabling unambiguous cross-reference.
+    """
+    out: list[Violation] = []
+    for e in g.entities:
+        if not e.id.startswith("ENT-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_entity",
+                    e.id,
+                    f"EntityInstance id '{e.id}' must start with 'ENT-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 15. Section-anchor coherence — every §-token in framework docstrings is known
 # ---------------------------------------------------------------------------
 
 _SECTION_TOKEN_RE = re.compile(r"§[A-Za-z][\w-]*")
@@ -2258,9 +2569,19 @@ ALL_INVARIANTS = (
     # §Process aspect invariants (aspect-gated: no-op when g.processes empty)
     check_process_lifecycle_wellformed,
     check_process_roles_declared,
+    check_process_drives_existing_entities,
+    check_step_invokes_known_transition,
     # §Goal aspect invariants (aspect-gated: no-op when g.goals empty)
     check_goal_target_kind_known,
     check_goal_owner_is_operator,
+    # §Entity aspect invariants (aspect-gated: no-op when g.entity_types/entities empty)
+    check_entity_type_lifecycle_wellformed,
+    check_entity_instance_state_in_lifecycle,
+    check_entity_instance_required_fields,
+    check_entity_instance_id_prefix,
+    check_entity_instance_refs_resolve,
+    check_entity_field_kind_known,
+    check_typed_anchors_entity,
     check_section_anchors_known,
     check_bijection_r_to_enforcer,
     # §Domain + §Agent filesystem invariants (P17 task #64)

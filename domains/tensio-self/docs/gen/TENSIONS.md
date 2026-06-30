@@ -140,6 +140,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-active-loop-protocol` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-decided-conflict-justifies-itself` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-decided-needs-human-signoff` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-protocol` | `R-entity-field-kind-known` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-entity-instance-id-prefix` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-entity-instance-refs-resolve` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-entity-instance-required-fields` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-entity-typed-anchors` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
@@ -150,6 +157,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-active-loop-protocol` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-operator-not-self-approve` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-prefer-tool-over-hand` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-protocol` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -158,6 +166,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-active-loop-protocol` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-protocol` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-protocol` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-protocol` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-agent-declares-purpose` | `R-agent-has-docs-dir` | shares assumption(s): A-python-stack |
@@ -536,6 +545,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-everything` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -547,6 +563,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-everything` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -559,6 +576,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-everything` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -571,6 +589,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-taxonomy` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -582,6 +607,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-taxonomy` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -594,6 +620,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-taxonomy` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -640,6 +667,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-controlled-vocab` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-critical-core-methodology` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-field-kind-known` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-instance-id-prefix` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-instance-refs-resolve` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-instance-required-fields` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-entity-typed-anchors` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
@@ -648,6 +682,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-controlled-vocab` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -655,9 +690,17 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-controlled-vocab` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-critical-core-methodology` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-field-kind-known` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-instance-id-prefix` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-instance-refs-resolve` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-instance-required-fields` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-entity-typed-anchors` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
@@ -666,6 +709,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-gatekeeper-policy` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -673,6 +717,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-gatekeeper-policy` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-backend-scope` | `R-budget-measure` | shares assumption(s): A-finite-context-operators |
 | `R-backend-scope` | `R-claude-md-budget-phi-cap` | shares assumption(s): A-finite-context-operators |
 | `R-backend-scope` | `R-claude-md-tree-of-crystals` | shares assumption(s): A-finite-context-operators |
@@ -707,6 +752,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-bijection-r-to-enforcer` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -718,6 +770,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -730,6 +783,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-bijection-r-to-enforcer` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -741,6 +795,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-cite-in-first-sentence` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-cite-in-first-sentence` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-cite-in-first-sentence` | `R-crystallize-knowledge-to-code` | shares assumption(s): A-compaction-loses-working |
+| `R-boot-cite-in-first-sentence` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -752,6 +813,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-cite-in-first-sentence` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-cite-in-first-sentence` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -765,6 +827,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-cite-in-first-sentence` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -775,6 +838,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-reload-three-facts` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-reload-three-facts` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-reload-three-facts` | `R-crystallize-knowledge-to-code` | shares assumption(s): A-compaction-loses-working |
+| `R-boot-reload-three-facts` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -786,6 +856,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-reload-three-facts` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-reload-three-facts` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -799,6 +870,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-reload-three-facts` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -829,6 +901,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-budget-measure` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-check-method-is-atomic` | `R-critical-core-methodology` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-field-kind-known` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-instance-id-prefix` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-instance-refs-resolve` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-instance-required-fields` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-entity-typed-anchors` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
@@ -837,6 +916,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-check-method-is-atomic` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -844,6 +924,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-check-method-is-atomic` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-check-method-is-atomic` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-check-method-is-atomic` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-claude-md-budget-phi-cap` | `R-claude-md-tree-of-crystals` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-budget-phi-cap` | `R-context-bounded-delegation` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-budget-phi-cap` | `R-context-budget-rule` | shares assumption(s): A-finite-context-operators |
@@ -921,6 +1002,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-tree-of-crystals` | `R-dependency-tracked` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-tree-of-crystals` | `R-domain-delegation-as-node` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-tree-of-crystals` | `R-domain-delegation-persists` | shares assumption(s): A-finite-context-operators |
+| `R-claude-md-tree-of-crystals` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -939,6 +1027,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-tree-of-crystals` | `R-operator-references-stakeholder` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-tree-of-crystals` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-claude-md-tree-of-crystals` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -951,6 +1040,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-tree-of-crystals` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-subagent-gets-its-claude-md` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-tree-of-crystals` | `R-task-spawn-is-ephemeral` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-tree-of-crystals` | `R-task-spawn-log-runtime` | shares assumption(s): A-finite-context-operators |
@@ -979,6 +1069,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-constituting-requirements-converge` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -990,6 +1087,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-constituting-requirements-converge` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -1002,6 +1100,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-constituting-requirements-converge` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -1116,6 +1215,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-layout-evolution` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -1127,6 +1233,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-layout-evolution` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -1139,6 +1246,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-layout-evolution` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -1206,6 +1314,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-context-hook-piggybacks-cah-stamp` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-context-hook-piggybacks-cah-stamp` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-critical-core-methodology` | `R-critical-core-per-domain` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-field-kind-known` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-instance-id-prefix` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-instance-refs-resolve` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-instance-required-fields` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-entity-typed-anchors` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
@@ -1214,6 +1329,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-critical-core-methodology` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -1221,6 +1337,14 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-critical-core-methodology` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-methodology` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-methodology` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-field-kind-known` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-instance-id-prefix` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-instance-refs-resolve` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-instance-required-fields` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-entity-typed-anchors` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
@@ -1229,6 +1353,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-critical-core-per-domain` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -1236,9 +1361,17 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-critical-core-per-domain` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-per-domain` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-per-domain` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-crystal-is-claude-md` | `R-crystal-reload-by-reference` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-is-claude-md` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-is-claude-md` | `R-crystallize-knowledge-to-code` | shares assumption(s): A-compaction-loses-working |
+| `R-crystal-is-claude-md` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -1250,6 +1383,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-is-claude-md` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-is-claude-md` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -1263,11 +1397,19 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-is-claude-md` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-crystal-tree-hierarchy` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-reload-by-reference` | `R-crystallize-knowledge-to-code` | shares assumption(s): A-compaction-loses-working |
+| `R-crystal-reload-by-reference` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -1279,6 +1421,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-reload-by-reference` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-reload-by-reference` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -1292,10 +1435,18 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-reload-by-reference` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-crystallize-knowledge-to-code` | shares assumption(s): A-compaction-loses-working |
+| `R-crystal-tree-hierarchy` | `R-entity-field-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
@@ -1307,6 +1458,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-tree-hierarchy` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-tree-hierarchy` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -1320,6 +1472,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-tree-hierarchy` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -1887,6 +2040,286 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-enforcement-levels-declared` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-enforcement-levels-declared` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-enforcement-levels-declared` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-entity-field-kind-known` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-field-kind-known` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-field-kind-known` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-field-kind-known` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-id-prefix` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-id-prefix` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-refs-resolve` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-refs-resolve` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-entity-instance-state-in-lifecycle` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-required-fields` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-required-fields` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-entity-type-lifecycle-wellformed` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-instance-state-in-lifecycle` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-instance-state-in-lifecycle` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-type-lifecycle-wellformed` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-type-lifecycle-wellformed` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-glossary-drift-stable` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-glossary-generated` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-goal-is-first-class-type` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-goal-target-kind-known` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-entity-typed-anchors` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-entity-typed-anchors` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-entity-typed-anchors` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-framework-claude-md-is-domain-free` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-glossary-generated` | shares assumption(s): A-python-stack |
@@ -1932,6 +2365,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-glossary-drift-stable` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -1947,6 +2381,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-drift-stable` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices, A-python-stack |
@@ -1958,6 +2393,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-glossary-generated` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -1973,6 +2409,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-generated` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices, A-python-stack |
@@ -1983,6 +2420,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-dead` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -1998,6 +2436,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-dead` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
@@ -2007,6 +2446,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-unused` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -2022,6 +2462,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-unused` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-goal-is-first-class-type` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
@@ -2034,6 +2475,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-is-first-class-type` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-is-first-class-type` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2046,6 +2488,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-is-first-class-type` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-is-first-class-type` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2058,6 +2501,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-owner-is-operator` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-owner-is-operator` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2070,6 +2514,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-owner-is-operator` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-owner-is-operator` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2081,6 +2526,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-target-kind-known` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-target-kind-known` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2093,6 +2539,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-target-kind-known` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-target-kind-known` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2103,6 +2550,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-type-vs-facet` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2115,12 +2563,14 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-type-vs-facet` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-history-generated-from-decided` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-history-generated-from-decided` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -2128,8 +2578,10 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-history-generated-from-decided` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-decided` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-history-generated-from-decided` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-history-generated-from-rejected` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -2137,12 +2589,14 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-history-generated-from-rejected` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-history-generated-from-rejected` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-lifecycle-type-exists` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-type-exists` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2155,6 +2609,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-type-exists` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-type-exists` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2163,6 +2618,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-conflict` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-conflict` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2175,6 +2631,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-conflict` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-conflict` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2182,6 +2639,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-goal` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2194,12 +2652,14 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-goal` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-goal` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2212,11 +2672,13 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-operator` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-operator` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-requirement` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2229,10 +2691,12 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-requirement` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-requirement` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-m-tag-format-valid` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-m-tag-format-valid` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-m-tag-format-valid` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-m-tag-format-valid` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-m-tag-format-valid` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -2240,6 +2704,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-m-tag-format-valid` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-m-tag-format-valid` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-m-tag-format-valid` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-m-tag-format-valid` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-measure-context-size` | `R-operator-backend-protocol` | shares assumption(s): A-finite-context-operators |
 | `R-measure-context-size` | `R-operator-has-context-budget` | shares assumption(s): A-finite-context-operators |
 | `R-measure-context-size` | `R-operator-is-frozen-dataclass` | shares assumption(s): A-finite-context-operators |
@@ -2278,6 +2743,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-observation-evidence-scope` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-observation-evidence-scope` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-observation-evidence-scope` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-open-states-question` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-open-states-question` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
 | `R-open-states-question` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-prose-suffices |
 | `R-open-states-question` | `R-process-opt-in` | shares assumption(s): A-prose-suffices |
@@ -2285,6 +2751,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-open-states-question` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-open-states-question` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-open-states-question` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-open-states-question` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-operator-backend-protocol` | `R-operator-has-context-budget` | shares assumption(s): A-finite-context-operators |
 | `R-operator-backend-protocol` | `R-operator-is-frozen-dataclass` | shares assumption(s): A-finite-context-operators |
 | `R-operator-backend-protocol` | `R-operator-may-have-parent` | shares assumption(s): A-finite-context-operators |
@@ -2328,6 +2795,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-not-self-approve` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-operator-not-self-approve` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-operator-prompt-from-substrate` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-prompt-from-substrate` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2341,6 +2809,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-prompt-from-substrate` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-prompt-from-substrate` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2351,6 +2820,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-references-stakeholder` | `R-tree-of-crystals-cognitive-trigger` | shares assumption(s): A-finite-context-operators |
 | `R-operator-references-stakeholder` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-operator-references-stakeholder` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-operator-type-vs-facet` | `R-process-drives-existing-entities` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
@@ -2363,6 +2833,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-type-vs-facet` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2385,6 +2856,23 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-private-tools-in-agent-folder` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
+| `R-process-drives-existing-entities` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
+| `R-process-drives-existing-entities` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-drives-existing-entities` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-goal-owner-is-operator-aspect` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-goal-owner-is-operator-aspect` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-goal-owner-is-operator-aspect` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
@@ -2397,6 +2885,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-goal-owner-is-operator-aspect` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-goal-owner-is-operator-aspect` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-goal-owner-is-operator-aspect` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-goal-owner-is-operator-aspect` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-goal-owner-is-operator-aspect` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-goal-owner-is-operator-aspect` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-goal-owner-is-operator-aspect` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2411,6 +2900,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-lifecycle-wellformed-aspect` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-lifecycle-wellformed-aspect` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-lifecycle-wellformed-aspect` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-lifecycle-wellformed-aspect` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-lifecycle-wellformed-aspect` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-lifecycle-wellformed-aspect` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-lifecycle-wellformed-aspect` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2424,6 +2914,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-opt-in` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-opt-in` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-opt-in` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-opt-in` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-opt-in` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-opt-in` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-opt-in` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2436,6 +2927,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-roles-declared-aspect` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-roles-declared-aspect` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-roles-declared-aspect` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-roles-declared-aspect` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-roles-declared-aspect` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-roles-declared-aspect` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-roles-declared-aspect` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2447,6 +2939,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-typed-anchors-extended` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-typed-anchors-extended` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-typed-anchors-extended` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-typed-anchors-extended` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-typed-anchors-extended` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-typed-anchors-extended` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-typed-anchors-extended` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2457,6 +2950,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-types-exist` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-types-exist` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-types-exist` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-types-exist` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-process-types-exist` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-types-exist` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-types-exist` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2471,6 +2965,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-repo-map-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-repo-map-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-repo-map-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
+| `R-requirement-claim-is-atomic` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
 | `R-requirement-enforced` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-requirement-enforced` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-root-claude-md-is-sentinel-only` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -2486,6 +2981,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-rules-as-data` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rules-as-data` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rules-as-data` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-rules-as-data` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rules-as-data` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rules-as-data` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rules-as-data` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2518,6 +3014,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-speak-by-reference` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-speak-by-reference` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
@@ -2526,21 +3023,28 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-statemachine-deterministic` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-deterministic` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-deterministic` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-deterministic` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-deterministic` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-deterministic` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-deterministic` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-guard-on-assumption` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-guard-on-assumption` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-guard-on-assumption` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-guard-on-assumption` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-guard-on-assumption` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-guard-on-assumption` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-reachable` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-reachable` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-reachable` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-reachable` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-reachable` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-terminal-or-cyclic` | `R-step-invokes-known-transition` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-terminal-or-cyclic` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-terminal-or-cyclic` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-statemachine-terminal-or-cyclic` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-step-invokes-known-transition` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-step-invokes-known-transition` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-step-invokes-known-transition` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-steward-distinct-from-owners` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-subagent-gets-its-claude-md` | `R-task-spawn-is-ephemeral` | shares assumption(s): A-finite-context-operators |
 | `R-subagent-gets-its-claude-md` | `R-task-spawn-log-runtime` | shares assumption(s): A-finite-context-operators |

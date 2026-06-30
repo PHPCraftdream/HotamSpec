@@ -49,3 +49,91 @@ Canon: §Entity — set of all declared EntityType slugs (for ref-resolution).
 ## From `spec/src/tensio/graph.py::entity_ids`
 
 Canon: §Entity — set of all EntityInstance ids (for dangling-ref checks).
+
+## From `spec/src/tensio/invariants.py::check_entity_type_lifecycle_wellformed`
+
+Canon: §Entity / §Invariants — every EntityType.lifecycle is a well-formed Lifecycle.
+
+RULE: every EntityType.lifecycle MUST pass check_lifecycle_wellformed (non-empty
+states, exactly one INITIAL, all transition endpoints resolve, terminal reachable
+if non-cyclic). No-ops when g.entity_types is empty (§Entity aspect not loaded).
+
+WHY: the §Lifecycle keystone is the single source of truth for state-machine
+well-formedness; reusing it here means every EntityType inherits all four
+conditions without parallel machinery (R-statemachine-wellformedness, M12).
+
+## From `spec/src/tensio/invariants.py::check_entity_instance_state_in_lifecycle`
+
+Canon: §Entity / §Invariants — every EntityInstance.state is valid in its EntityType.lifecycle.
+
+RULE: EntityInstance.state MUST be matched by the lifecycle of the corresponding
+EntityType (via Lifecycle.matches). An instance with an unknown state is
+structurally invalid — the lifecycle machine cannot process it.
+No-ops when g.entities is empty.
+
+WHY: state integrity at the instance level mirrors check_requirement_status_in_lifecycle
+for requirements — the same keystone discipline applied to domain entities.
+
+## From `spec/src/tensio/invariants.py::check_entity_instance_required_fields`
+
+Canon: §Entity / §Invariants — every required EntityField is present in EntityInstance.field_values.
+
+RULE: for each EntityField with required=True on the EntityType, the
+corresponding field name MUST appear in EntityInstance.field_values. A missing
+required field is a structural gap — the instance is incomplete.
+No-ops when g.entities is empty.
+
+WHY: required fields are the entity's schema contract; a missing required field
+violates the declared type and makes downstream traversal unreliable.
+
+## From `spec/src/tensio/invariants.py::check_entity_instance_id_prefix`
+
+Canon: §Entity / §Invariants — every EntityInstance.id starts with 'ENT-<slug>-'.
+
+RULE: EntityInstance.id MUST start with 'ENT-<entity_type>-' (typed-anchor
+discipline, R-anchor-everything). A missing or wrong prefix breaks the
+typed-anchor discipline and makes cite-by-reference unreliable.
+No-ops when g.entities is empty.
+
+WHY: the prefix encodes both type and entity kind in the id, enabling
+unambiguous cross-reference in the graph (R-anchor-everything).
+
+## From `spec/src/tensio/invariants.py::check_entity_instance_refs_resolve`
+
+Canon: §Entity / §Invariants — every reference EntityField value resolves in the graph.
+
+RULE: for each EntityField with kind='reference', any non-empty field value in
+EntityInstance.field_values MUST resolve in the graph according to ref_target:
+'stakeholder' resolves in stakeholder_ids(g); 'requirement' in requirement_ids(g);
+'assumption' in assumption_ids(g); any other string is treated as an entity_type
+slug and resolves among EntityInstance ids of that type. Empty values on optional
+references are allowed; missing required references are caught by
+check_entity_instance_required_fields. No-ops when g.entities is empty.
+
+WHY: a dangling reference field is the entity-level equivalent of a dangling
+Conflict member — the edge exists but resolves to nothing, making the
+dependency invisible.
+
+## From `spec/src/tensio/invariants.py::check_entity_field_kind_known`
+
+Canon: §Entity / §Invariants — every EntityField.kind is in ENTITY_FIELD_KINDS.
+
+RULE: EntityField.kind MUST be in ENTITY_FIELD_KINDS
+(string | number | enum | reference | state). An unknown kind is a
+misconfiguration that makes the field type undiscoverable.
+No-ops when g.entity_types is empty.
+
+WHY: the kind discriminant is the seam for future machine-checkable field
+validation; an unknown kind breaks the discriminant and hides the field
+from any kind-specific invariant.
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_entity`
+
+Canon: §Entity / §Invariants — every EntityInstance id starts with 'ENT-'.
+
+RULE: EntityInstance.id MUST start with 'ENT-' (typed-anchor discipline,
+R-anchor-everything). Note: check_entity_instance_id_prefix verifies the
+STRICTER 'ENT-<slug>-' rule. This check enforces only the prefix family.
+
+WHY: the 'ENT-' prefix family anchors all entity instances in the typed-anchor
+discipline (R-anchor-everything), enabling unambiguous cross-reference.

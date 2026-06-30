@@ -139,6 +139,15 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-process-roles-declared-aspect` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every role referenced in a Process step shall be declared in the Process roles_required tuple. |
 | `R-process-goal-owner-is-operator-aspect` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator. |
 | `R-process-typed-anchors-extended` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes. |
+| `R-entity-type-lifecycle-wellformed` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_entity_type_lifecycle_wellformed. |
+| `R-entity-instance-state-in-lifecycle` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance.state shall be a valid state in the corresponding EntityType.lifecycle. |
+| `R-entity-instance-required-fields` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance shall provide values for all EntityFields with required=True. |
+| `R-entity-instance-id-prefix` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance.id shall start with 'ENT-<entity_type>-' (typed-anchor discipline). |
+| `R-entity-instance-refs-resolve` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance reference field shall resolve in the graph according to its ref_target. |
+| `R-entity-field-kind-known` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string \| number \| enum \| reference \| state). |
+| `R-entity-typed-anchors` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes. |
+| `R-process-drives-existing-entities` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types. |
+| `R-step-invokes-known-transition` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle. |
 | `R-dependency-tracked` | SETTLED | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements via Requirement.relations (depends_on, supports, refines). |
 | `R-dependency-drives-parallel` | SETTLED | `framework-author` | A-finite-context-operators | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
 | `R-dependency-drives-sequential` | SETTLED | `framework-author` | A-finite-context-operators | Dependency chains in the network shall be processed sequentially. |
@@ -229,6 +238,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: (none)]
 - **R-tool-create-agent** — *scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_create_agent`]
 - **R-tool-create-domain** — *scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.* [STRUCTURAL·tool · §Domain] [enforcer: `test_tool_create_domain`]
+- **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
 - **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
@@ -628,11 +638,10 @@ R-process-aspect-first) because:
   - a method postcondition that violates an entity invariant is a real
     conflict surfaced as a Conflict node on a behavioral axis.
 
-Entity is DEFERRED to a future aspect (M12); Process declares
-`drives_entities: tuple[str, ...]` as forward-compat string references so
-the Process aspect can ship before Entity. When Entity lands, the
-invariant `check_process_drives_existing_entities` will activate (today
-it is a no-op because g has no entities collection yet).
+Entity HAS LANDED (P21, spec/src/tensio/entity.py). Process.drives_entities now
+resolves to declared EntityType slugs (check_process_drives_existing_entities).
+Step.invokes ("entity-slug.event") resolves to a real Lifecycle transition
+(check_step_invokes_known_transition). M12 — Entity deferred → LANDED.
 
 Goal is its OWN first-class type (M19): a target-state predicate + what it
 targets. Distinct from a static Requirement claim because it carries a

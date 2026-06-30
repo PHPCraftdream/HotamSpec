@@ -61,6 +61,7 @@ from tensio.graph import (  # noqa: E402
     TensionGraph,
     conflicts_on_assumption,
     dead_assumptions,
+    entity_state_conflict_suspects,
     latent_connector_suspects,
     load_content_graph,
     requirement_by_id,
@@ -328,6 +329,16 @@ def diagnose(g: TensionGraph) -> list[Action]:
                     f"{s.hint} but have no Conflict node; consider materializing "
                     f"a connector (or confirm they do not collide)"
                 ),
+            )
+        )
+
+    for s in entity_state_conflict_suspects(g):
+        actions.append(
+            Action(
+                priority=P_LATENT_CONNECTOR,
+                kind=_BAND_LABEL[P_LATENT_CONNECTOR],
+                target=f"{s.left}~{s.right}",
+                imperative=(f"[HEURISTIC, entity-state conflict] {s.hint}"),
             )
         )
 

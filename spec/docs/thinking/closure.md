@@ -24,3 +24,7 @@ Canon: §Closure — the graph object this proposal is meant to change.
 
 For a ProposedRejection, the anchor is the R-… id being rejected.
 Used by closure.check_closure to verify the triggering action was removed.
+
+## From `spec/src/tensio/proposal.py::target_anchor`
+
+Canon: §Closure — the entity slug is the anchor of this proposal.
