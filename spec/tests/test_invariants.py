@@ -34,6 +34,7 @@ from tensio.invariants import (  # noqa: E402
     check_conflict_has_axis_context_steward,
     check_conflict_id_matches_identity,
     check_conflict_min_two_members,
+    check_decided_has_decided_by,
     check_decided_has_rationale_or_derived,
     check_enforced_names_invariant,
     check_m_tag_format,
@@ -476,4 +477,46 @@ def test_m_tag_valid_open_does_not_fire() -> None:
     )
     assert holds(check_m_tag_format(g)), (
         "check_m_tag_format must not fire on a valid m_tag='M17' on OPEN req"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 7. check_decided_has_decided_by — signoff lock invariant
+# ---------------------------------------------------------------------------
+
+
+def test_decided_without_decided_by_fires() -> None:
+    """check_decided_has_decided_by fires on a DECIDED conflict with empty decided_by."""
+    bad = _wellformed_conflict(lifecycle="DECIDED(because X)", decided_by="")
+    v = check_decided_has_decided_by(_graph_with(bad))
+    assert any(x.target == bad.id and "decided_by" in x.message.lower() for x in v), (
+        "check_decided_has_decided_by must fire on DECIDED conflict with empty decided_by"
+    )
+
+
+def test_decided_with_member_owner_decider_fires() -> None:
+    """check_decided_has_decided_by fires when decided_by equals a member's owner."""
+    # R-1 is owned by 'sa'; using 'sa' as decided_by violates steward-distinct rule
+    bad = _wellformed_conflict(lifecycle="DECIDED(because X)", decided_by="sa")
+    v = check_decided_has_decided_by(_graph_with(bad))
+    assert any(x.target == bad.id and "member" in x.message.lower() for x in v), (
+        "check_decided_has_decided_by must fire when decided_by owns a member"
+    )
+
+
+def test_decided_with_unknown_decider_fires() -> None:
+    """check_decided_has_decided_by fires when decided_by is an unknown Stakeholder."""
+    bad = _wellformed_conflict(lifecycle="DECIDED(because X)", decided_by="ghost")
+    v = check_decided_has_decided_by(_graph_with(bad))
+    assert any(x.target == bad.id and "ghost" in x.message for x in v), (
+        "check_decided_has_decided_by must fire when decided_by is unknown"
+    )
+
+
+def test_decided_with_distinct_decider_passes() -> None:
+    """check_decided_has_decided_by passes when decided_by is a non-member-owner Stakeholder."""
+    # outsider owns neither R-1 (sa) nor R-2 (sb)
+    bad = _wellformed_conflict(lifecycle="DECIDED(because X)", decided_by="outsider")
+    assert holds(check_decided_has_decided_by(_graph_with(bad))), (
+        "check_decided_has_decided_by must pass when decided_by is a non-member-owner"
     )

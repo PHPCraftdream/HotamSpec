@@ -193,6 +193,7 @@ def seed_graph() -> TensionGraph:
                 "DECIDED(fast-path the sync AML check via async pre-screening; "
                 "see R-300)"
             ),
+            decided_by="architecture",
             shared_assumption="A-sync-budget",
             derived=("R-300",),
             revisit_marker=(

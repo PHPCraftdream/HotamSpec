@@ -175,6 +175,22 @@ TERMS: tuple[Term, ...] = (
         "CONCEPT",
         "Promotion of DRAFT requirements to ENFORCED; the methodology's honesty governor.",
     ),
+    # §Proposal section and related concepts (P3 — Action half)
+    Term(
+        "§Proposal",
+        "SECTION",
+        "Structured operator-→-steward change proposals: the closed loop's ACT half.",
+    ),
+    Term(
+        "playbook",
+        "CONCEPT",
+        "A band-specific procedure the AI operator follows to convert a what_now action into a structured proposal for steward approval.",
+    ),
+    Term(
+        "apply_proposal",
+        "CONCEPT",
+        "The mechanical writer that lands a steward-approved proposal into spec/content/; the AI never edits the graph by hand.",
+    ),
 )
 
 

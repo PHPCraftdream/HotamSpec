@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 17 / SETTLED 22; DRAFT 17; OPEN 13; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 19 / SETTLED 24; DRAFT 15; OPEN 13; REJECTED 3.**
 
 ---
 
@@ -36,6 +36,8 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-open-states-question` | check_open_has_question | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-axis-controlled-vocab` | check_axis_in_registry | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
+| `R-active-loop-playbooks` | test_apply_proposal.py, test_proposal.py, docs/playbooks/P4-OPEN-ITEM.md | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
+| `R-decided-needs-human-signoff` | check_decided_has_decided_by | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
 | `R-glossary-sync-test` | test_glossary_sync.py, test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
 | `R-history-from-rejected-markers` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-lifecycle-abstraction` | check_status_in_lifecycle, test_lifecycle.py | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
@@ -50,8 +52,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
 | id | owner |
 |---|---|
-| `R-active-loop-playbooks` | `ai-agent` |
-| `R-decided-needs-human-signoff` | `framework-reviewer` |
 | `R-smoke-test` | `framework-author` |
 | `R-process-aspect-first` | `framework-author` |
 | `R-task-vs-action-distinct-altitudes` | `framework-author` |

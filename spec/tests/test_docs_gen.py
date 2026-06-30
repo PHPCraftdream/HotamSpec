@@ -179,6 +179,7 @@ REQUIRED_SECTIONS = [
     "§Lifecycle",
     "§Operator",
     "§ContextBudget",
+    "§Proposal",
 ]
 
 

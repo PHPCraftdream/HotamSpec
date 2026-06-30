@@ -117,6 +117,7 @@ def test_resolved_graph_says_not_lost() -> None:
         members=("R-1", "R-2"),
         steward="c",
         lifecycle="DECIDED(picked R-1; documented)",
+        decided_by="c",
     )
     g = TensionGraph(
         axes=DEMO_AXES, stakeholders=sh, requirements=reqs, conflicts=(con,)

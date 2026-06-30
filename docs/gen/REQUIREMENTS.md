@@ -27,8 +27,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-critical-core-scope` | OPEN(which requirement domains qualify as 'critical core' — money / access / SLA / workflow — vs run on graph + AI alone?) | `domain-user` | A-prose-suffices | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-axis-gatekeeper-policy` | OPEN(when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes?) | `ai-agent` | A-prose-suffices | The admission policy for a new axis slug shall be machine-checked against duplicate detection by the AI gatekeeper. |
 | `R-content-layout-evolution` | OPEN(one file forever, or split per sub-domain with federation? thresholds for splitting?) | `framework-author` | A-bootstrap-self-applies, A-graph-fits-memory | As a domain grows, spec/content/graph.py shall either stay a single file or split into spec/content/<sub-domain>.py with an aggregator. |
-| `R-active-loop-playbooks` | DRAFT | `ai-agent` | A-stakeholders-care, A-prose-suffices | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
-| `R-decided-needs-human-signoff` | DRAFT | `framework-reviewer` | A-stakeholders-care | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
+| `R-active-loop-playbooks` | SETTLED | `ai-agent` | A-stakeholders-care, A-prose-suffices | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
+| `R-decided-needs-human-signoff` | SETTLED | `framework-reviewer` | A-stakeholders-care | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
 | `R-glossary-sync-test` | SETTLED | `framework-author` | A-prose-suffices, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
 | `R-history-from-rejected-markers` | SETTLED | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-smoke-test` | DRAFT | `framework-author` | A-python-stack | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
@@ -356,11 +356,21 @@ lifecycle under a human STEWARD who is, by construction, not the owner of any
 member (a conflict lives between stakeholders). The AI presents, justifies, asks;
 the decision and its recording stay human.
 
+THE SIGNOFF LOCK: when a Conflict transitions to DECIDED, it MUST carry a
+`decided_by` field naming the human Stakeholder who approved the resolution.
+This is the structural twin of the steward-distinct boundary applied at the
+moment of decision: `decided_by` MUST be non-empty AND must NOT be the owner
+of any member (invariants.check_decided_has_decided_by). This prevents an AI
+from silently writing DECIDED without a named human decider, making the hard
+boundary enforceable at commit time (R-decided-needs-human-signoff,
+§Proposal — the closed loop's ACT half).
+
 Lifecycle (source of truth is the `lifecycle` field, params.py-style):
   DETECTED            — surfaced; node materialized; no steward action yet.
   ACKNOWLEDGED        — steward accepts it is real and owns it.
   DECIDED(rationale)  — resolved WITH recorded rationale and/or a derived
                         requirement (invariants.check_decided_has_rationale_or_derived).
+                        MUST carry a non-empty decided_by (the human who approved).
   REVISIT_WHEN(cond)  — parked with an explicit revisit condition (anti-relitigation:
                         the historian re-opens it when the condition triggers).
 

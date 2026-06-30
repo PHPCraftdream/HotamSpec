@@ -34,11 +34,21 @@ lifecycle under a human STEWARD who is, by construction, not the owner of any
 member (a conflict lives between stakeholders). The AI presents, justifies, asks;
 the decision and its recording stay human.
 
+THE SIGNOFF LOCK: when a Conflict transitions to DECIDED, it MUST carry a
+`decided_by` field naming the human Stakeholder who approved the resolution.
+This is the structural twin of the steward-distinct boundary applied at the
+moment of decision: `decided_by` MUST be non-empty AND must NOT be the owner
+of any member (invariants.check_decided_has_decided_by). This prevents an AI
+from silently writing DECIDED without a named human decider, making the hard
+boundary enforceable at commit time (R-decided-needs-human-signoff,
+§Proposal — the closed loop's ACT half).
+
 Lifecycle (source of truth is the `lifecycle` field, params.py-style):
   DETECTED            — surfaced; node materialized; no steward action yet.
   ACKNOWLEDGED        — steward accepts it is real and owns it.
   DECIDED(rationale)  — resolved WITH recorded rationale and/or a derived
                         requirement (invariants.check_decided_has_rationale_or_derived).
+                        MUST carry a non-empty decided_by (the human who approved).
   REVISIT_WHEN(cond)  — parked with an explicit revisit condition (anti-relitigation:
                         the historian re-opens it when the condition triggers).
 """
@@ -92,7 +102,10 @@ class Conflict:
       - members MUST contain >= 2 Requirement ids, all resolving in the graph
         (check_conflict_min_two_members, check_no_dangling_ids);
       - if lifecycle is DECIDED(...), it MUST carry a non-empty rationale OR a
-        non-empty `derived` (check_decided_has_rationale_or_derived).
+        non-empty `derived` (check_decided_has_rationale_or_derived);
+      - if lifecycle starts with DECIDED, `decided_by` MUST be non-empty AND
+        resolve to a known Stakeholder AND NOT be the owner of any member
+        (check_decided_has_decided_by — the signoff lock, R-decided-needs-human-signoff).
 
     Fields:
       id                — pass conflict_identity(axis, context); validated by
@@ -107,6 +120,10 @@ class Conflict:
       derived           — tuple of Requirement ids this conflict SPAWNED (lineage).
       revisit_marker    — anti-relitigation note (the historian's trigger / the
                           "RESOLVED — REPLACES ..." / "REJECTED ..." record).
+      decided_by        — Stakeholder.id of the human who approved DECIDED; empty
+                          for non-DECIDED conflicts. When lifecycle starts with
+                          DECIDED, MUST be non-empty and not a member-owner
+                          (the steward-distinct rule applied to the decider).
 
     WHY identity is validated, not just stored: passing a hand-written id would
     let the node drift from its (axis, context), breaking clustering and survival
@@ -122,6 +139,7 @@ class Conflict:
     shared_assumption: str | None = None
     derived: tuple[str, ...] = field(default_factory=tuple)
     revisit_marker: str = ""
+    decided_by: str = ""  # Stakeholder.id of the human who approved DECIDED; required when lifecycle starts with DECIDED
 
     def is_unresolved(self) -> bool:
         """Canon: §Conflict — True iff no steward resolution has landed yet.

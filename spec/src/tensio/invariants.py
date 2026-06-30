@@ -123,6 +123,8 @@ def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
         for did in c.derived:
             if did not in rids:
                 fire(c.id, f"derived '{did}' is not a known Requirement")
+        if c.decided_by and c.decided_by not in sids:
+            fire(c.id, f"decided_by '{c.decided_by}' is not a known Stakeholder")
     for op in g.operators:
         if op.stakeholder not in sids:
             fire(
@@ -359,6 +361,75 @@ def check_decided_has_rationale_or_derived(g: TensionGraph) -> list[Violation]:
                     c.id,
                     "DECIDED conflict must record a rationale 'DECIDED(<why>)' "
                     "or reference a derived requirement",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 5b. Signoff lock — a DECIDED conflict must name its human decider
+# ---------------------------------------------------------------------------
+
+
+def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a DECIDED conflict names a human decider outside its members.
+
+    RULE (R-decided-needs-human-signoff + §Proposal): when Conflict.lifecycle
+    starts with "DECIDED", `decided_by` MUST satisfy three conditions:
+      1. Non-empty (a DECIDED conflict without a named human decider is an
+         AI-silently-closeable hole — exactly the invisibility the hard
+         boundary forbids).
+      2. Resolves to a known Stakeholder id (check_no_dangling_ids also
+         catches this; this check names it explicitly for the harness).
+      3. NOT the owner of any of the conflict's member Requirements (the
+         steward-distinct boundary applied to the decider, not just the
+         steward — the act of deciding must be distinct from owning a side).
+
+    This is the structural twin of check_steward_not_a_member_owner applied
+    at the moment of resolution: if the decider owned one of the members,
+    the hard boundary would be circumvented at the decision step.
+
+    WHY: R-decided-needs-human-signoff makes the closed loop's ACT half
+    structurally visible. Without this lock, an AI could write
+    lifecycle="DECIDED(...)" with decided_by="" and pass all other
+    invariants. This invariant is the machine-checkable enforcement of
+    "the human steward approves" (§Proposal — the closed loop's ACT half).
+    """
+    owner_of = {r.id: r.owner for r in g.requirements}
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_decided():
+            continue
+        if not c.decided_by:
+            out.append(
+                Violation(
+                    "check_decided_has_decided_by",
+                    c.id,
+                    "DECIDED conflict must carry a non-empty decided_by "
+                    "(the Stakeholder.id of the human who approved the resolution; "
+                    "R-decided-needs-human-signoff)",
+                )
+            )
+            continue
+        if c.decided_by not in sids:
+            out.append(
+                Violation(
+                    "check_decided_has_decided_by",
+                    c.id,
+                    f"decided_by '{c.decided_by}' is not a known Stakeholder",
+                )
+            )
+            continue
+        member_owners = {owner_of[m] for m in c.members if m in owner_of}
+        if c.decided_by in member_owners:
+            out.append(
+                Violation(
+                    "check_decided_has_decided_by",
+                    c.id,
+                    f"decided_by '{c.decided_by}' also owns a member requirement; "
+                    f"the decider must be outside the conflict's members "
+                    f"(steward-distinct rule applied to the decider)",
                 )
             )
     return out
@@ -816,6 +887,7 @@ ALL_INVARIANTS = (
     check_steward_not_a_member_owner,
     check_open_has_question,
     check_decided_has_rationale_or_derived,
+    check_decided_has_decided_by,
     check_typed_anchors,
     check_enforced_names_invariant,
     check_m_tag_format,

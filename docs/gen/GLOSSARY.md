@@ -27,6 +27,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§ContextBudget` | The working-store ceiling of an Operator; the substrate is free. |
 | `§Loop` | The closed loop: State→Diagnosis→Next-action→Action→regenerate→State. |
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
+| `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
 
 ## Lifecycle states
 | slug | definition |
@@ -66,3 +67,5 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `anchor` | A stable, short, typed identifier (R-/C-/A-/§) the operator references rather than re-carries. |
 | `substrate` | The durable, enforced/regenerable/addressable store — free of context cost. |
 | `burn-down` | Promotion of DRAFT requirements to ENFORCED; the methodology's honesty governor. |
+| `playbook` | A band-specific procedure the AI operator follows to convert a what_now action into a structured proposal for steward approval. |
+| `apply_proposal` | The mechanical writer that lands a steward-approved proposal into spec/content/; the AI never edits the graph by hand. |
