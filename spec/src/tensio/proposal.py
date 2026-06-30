@@ -39,6 +39,14 @@ class ProposedRequirement:
     enforced_by: tuple[str, ...] = field(default_factory=tuple)
     m_tag: str = ""
 
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the graph object this proposal is meant to change.
+
+        For a ProposedRequirement, the anchor is the R-… id being created/modified.
+        Used by closure.check_closure to verify the triggering action was removed.
+        """
+        return self.id
+
 
 @dataclass(frozen=True)
 class ProposedConflictTransition:
@@ -59,6 +67,14 @@ class ProposedConflictTransition:
         default_factory=tuple
     )  # R-ids spawned by this decision
 
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the graph object this proposal is meant to change.
+
+        For a ProposedConflictTransition, the anchor is the C-… conflict id being moved.
+        Used by closure.check_closure to verify the triggering action was removed.
+        """
+        return self.conflict_id
+
 
 @dataclass(frozen=True)
 class ProposedRejection:
@@ -70,6 +86,14 @@ class ProposedRejection:
 
     requirement_id: str
     reason: str  # the REJECTED — REPLACES … prose
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the graph object this proposal is meant to change.
+
+        For a ProposedRejection, the anchor is the R-… id being rejected.
+        Used by closure.check_closure to verify the triggering action was removed.
+        """
+        return self.requirement_id
 
 
 # A union for type hints (no runtime enforcement; Python keeps it simple):

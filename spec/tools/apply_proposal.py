@@ -4,7 +4,8 @@ Reads a steward-approved JSON proposal from a file path argument, validates it
 against the ProposedConflictTransition shape, locates the target Conflict node
 in spec/content/graph.py via AST, applies the field changes via deterministic
 string replacement, regenerates docs via gen_spec.py, and runs pytest -q to
-verify the change is structurally clean.
+verify the change is structurally clean. Optionally runs the P4 closure check
+to confirm the triggering diagnosis was actually removed.
 
 This is the FIRST OPERATOR ACTION TOOL: the AI operator emits a proposal
 (see tensio/proposal.py); the steward approves out-of-band; then the AI calls
@@ -16,6 +17,7 @@ ProposedRequirement and ProposedRejection are deferred to P4+.
 Usage:
   uv run python tools/apply_proposal.py proposal.json
   uv run python tools/apply_proposal.py --dry-run proposal.json
+  uv run python tools/apply_proposal.py --triggering-kind CONFLICT_STALLED proposal.json
 
 The JSON shape (ProposedConflictTransition DECIDED):
   {
@@ -31,6 +33,14 @@ The tool REFUSES if:
   - new_lifecycle starts with DECIDED but decided_by is empty.
   - conflict_id does not resolve in spec/content/graph.py.
   - pytest fails after the write (reports exit code; does NOT auto-revert).
+
+Exit codes:
+  0 — success (write landed, tests green, and if --triggering-kind was supplied:
+      closure confirmed — the action is no longer in the post-apply diagnosis).
+  1 — failure (validation error, missing id, or pytest red).
+  2 — not advanced (write landed, tests green, but the triggering action STILL
+      appears in the post-apply diagnosis — the tick (P5) must NOT count this
+      as progress; investigate before marking closed).
 """
 
 from __future__ import annotations
@@ -277,7 +287,12 @@ def _render_diff(original: list[str], modified: list[str], label: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def apply(proposal: ProposedConflictTransition, *, dry_run: bool = False) -> int:
+def apply(
+    proposal: ProposedConflictTransition,
+    *,
+    dry_run: bool = False,
+    triggering_kind: str | None = None,
+) -> int:
     """Canon: §Proposal — apply a validated ProposedConflictTransition to the graph.
 
     Steps:
@@ -286,7 +301,13 @@ def apply(proposal: ProposedConflictTransition, *, dry_run: bool = False) -> int
       3. Replace/insert lifecycle, decided_by, revisit_marker, derived.
       4. If dry_run: print diff and return 0 without writing.
       5. Write the file, run gen_spec.py, run pytest -q.
-      6. Return 0 on success, 1 on any failure.
+      6. If triggering_kind supplied: run closure.check_closure; return 2 if not advanced.
+      7. Return 0 on success, 1 on any non-closure failure.
+
+    `triggering_kind` is the band/kind string of the original action this proposal
+    was meant to close (e.g. "CONFLICT_STALLED", "OPEN_ITEM", "STRUCTURE",
+    "DRIFT_FALLOUT"). If None, the closure check is skipped (backward-compat for
+    P3 unit tests that do not supply a triggering kind).
     """
     source_text = _CONTENT_GRAPH.read_text(encoding="utf-8")
     original_lines = source_text.splitlines(keepends=True)
@@ -336,6 +357,16 @@ def apply(proposal: ProposedConflictTransition, *, dry_run: bool = False) -> int
         print("=== DRY RUN — proposed diff ===")
         print(diff)
         print("=== (no file written) ===")
+        if triggering_kind is not None:
+            # In dry-run mode, we cannot truly check closure (no file was written),
+            # but we emit the section so callers can verify the flag is wired.
+            print(
+                f"\n=== CLOSURE CHECK (dry-run, not authoritative) ===\n"
+                f"  triggering_kind : {triggering_kind}\n"
+                f"  target          : {proposal.target_anchor()}\n"
+                f"  note            : (dry-run — run without --dry-run for real closure check)\n"
+                f"=== END CLOSURE CHECK ==="
+            )
         return 0
 
     # Write
@@ -376,6 +407,29 @@ def apply(proposal: ProposedConflictTransition, *, dry_run: bool = False) -> int
         )
         return 1
 
+    # Closure check (P4 feedback edge) — only when --triggering-kind is supplied.
+    if triggering_kind is not None:
+        import closure  # noqa: PLC0415  (lives in tools/, not a package)
+
+        result = closure.check_closure(proposal, triggering_kind)
+        print(
+            f"\n=== CLOSURE CHECK ===\n"
+            f"  advanced        : {result.advanced}\n"
+            f"  target          : {result.target}\n"
+            f"  triggering_kind : {result.triggering_kind}\n"
+            f"  still_open      : {result.still_open_count}\n"
+            f"  note            : {result.note}\n"
+            f"=== END CLOSURE CHECK ==="
+        )
+        if not result.advanced:
+            print(
+                "\nERROR: closure FAILED — the triggering action is STILL in the "
+                "post-apply diagnosis. The write landed (tests green) but the "
+                "action did NOT advance. Investigate before marking closed.",
+                file=sys.stderr,
+            )
+            return 2
+
     print(
         f"\nSUMMARY:\n"
         f"  conflict : {proposal.conflict_id}\n"
@@ -383,6 +437,8 @@ def apply(proposal: ProposedConflictTransition, *, dry_run: bool = False) -> int
         f"  new_lifecycle: {proposal.new_lifecycle}\n"
         f"  tests: GREEN"
     )
+    if triggering_kind is not None:
+        print(f"  closure: ADVANCED (action {proposal.target_anchor()!r} closed)")
     return 0
 
 
@@ -392,14 +448,36 @@ def apply(proposal: ProposedConflictTransition, *, dry_run: bool = False) -> int
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Canon: §Proposal — CLI entry point for apply_proposal.py."""
+    """Canon: §Proposal — CLI entry point for apply_proposal.py.
+
+    Exit codes:
+      0 — success (write landed, tests green, closure confirmed if --triggering-kind).
+      1 — failure (validation, missing id, or pytest red).
+      2 — not advanced (write+tests green, but triggering action STILL in diagnosis).
+    """
     parser = argparse.ArgumentParser(
-        description="Mechanically apply a steward-approved JSON proposal to spec/content/graph.py."
+        description=(
+            "Mechanically apply a steward-approved JSON proposal to spec/content/graph.py. "
+            "Optionally verify P4 closure: that the triggering diagnosis was removed."
+        )
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the proposed diff without writing any files.",
+    )
+    parser.add_argument(
+        "--triggering-kind",
+        metavar="KIND",
+        default=None,
+        help=(
+            "The what_now band/kind of the action this proposal was meant to close "
+            "(e.g. CONFLICT_STALLED, OPEN_ITEM, STRUCTURE, DRIFT_FALLOUT). "
+            "When supplied, runs closure.check_closure after pytest passes. "
+            "If the action still appears in the post-apply diagnosis, exit code 2 "
+            "is returned (distinguishable from pytest failures which exit 1). "
+            "Omit to skip the closure check (backward-compatible with P3 tests)."
+        ),
     )
     parser.add_argument(
         "proposal_file",
@@ -424,7 +502,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: invalid proposal: {exc}", file=sys.stderr)
         return 1
 
-    return apply(proposal, dry_run=args.dry_run)
+    return apply(proposal, dry_run=args.dry_run, triggering_kind=args.triggering_kind)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 19 / SETTLED 24; DRAFT 15; OPEN 13; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 20 / SETTLED 26; DRAFT 14; OPEN 13; REJECTED 3.**
 
 ---
 
@@ -23,6 +23,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
+| `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -45,6 +46,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-context-budget-rule` | check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
 | `R-operator-not-self-approve` | check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | `R-statemachine-wellformedness` | check_canonical_lifecycles_wellformed, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_dangling_transition, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_no_initial | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
+| `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-enforcement-gradient` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 
@@ -60,7 +62,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-context-bounded-delegation` | `framework-author` |
 | `R-dependency-graph-parallelism` | `framework-author` |
 | `R-operator-crystal-is-claude-md` | `ai-agent` |
-| `R-crystallize-knowledge-to-code` | `ai-agent` |
 | `R-anchor-everything` | `framework-author` |
 | `R-speak-by-reference` | `ai-agent` |
 | `R-crystallize-before-split` | `ai-agent` |

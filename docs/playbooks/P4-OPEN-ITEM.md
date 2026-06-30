@@ -50,3 +50,14 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
 - [ ] The impact (unblocked DRAFTs, spawned/closed conflicts, burn-down delta) is named.
 - [ ] The proposed JSON is syntactically valid and targets a real R-id.
 - [ ] `decided_by` is omitted from ProposedRequirement (it is only for ProposedConflictTransition).
+
+## After approval — verify closure (the feedback edge)
+
+Run apply_proposal with --triggering-kind OPEN_ITEM to assert the proposal
+actually removed the triggering diagnosis:
+
+    uv run python spec/tools/apply_proposal.py --triggering-kind OPEN_ITEM <proposal.json>
+
+If the closure check reports "advanced: False", the write technically landed
+but the action did NOT advance — investigate before considering this work
+closed. The tick (P5) refuses to count a non-advancing apply as progress.

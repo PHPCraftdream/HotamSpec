@@ -28,6 +28,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Loop` | The closed loop: State→Diagnosis→Next-action→Action→regenerate→State. |
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
 | `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
+| `§Closure` | Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed. |
 
 ## Lifecycle states
 | slug | definition |

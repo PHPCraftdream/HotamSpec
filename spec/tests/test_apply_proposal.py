@@ -228,3 +228,41 @@ def test_apply_unknown_conflict_id_returns_error(tmp_path: Path) -> None:
         apply_proposal._CONTENT_GRAPH = real_graph
 
     assert result == 1
+
+
+# ---------------------------------------------------------------------------
+# 7. apply() dry-run with --triggering-kind emits closure section in output
+# ---------------------------------------------------------------------------
+
+
+def test_apply_proposal_emits_closure_when_flagged(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    """apply(..., dry_run=True, triggering_kind=...) emits the closure section in stdout.
+
+    Dry-run path: no real graph write; we verify the closure section is printed.
+    This confirms --triggering-kind is wired through apply() → stdout.
+    """
+    sample_file = tmp_path / "graph.py"
+    sample_file.write_text(_SAMPLE_SOURCE, encoding="utf-8")
+
+    real_graph = apply_proposal._CONTENT_GRAPH
+    apply_proposal._CONTENT_GRAPH = sample_file
+    try:
+        proposal = ProposedConflictTransition(
+            conflict_id=_SAMPLE_CID,
+            new_lifecycle="DECIDED(because X resolves core-vs-aspect)",
+            decided_by="domain-user",
+        )
+        result = apply_proposal.apply(
+            proposal, dry_run=True, triggering_kind="OPEN_ITEM"
+        )
+    finally:
+        apply_proposal._CONTENT_GRAPH = real_graph
+
+    assert result == 0
+    captured = capsys.readouterr()
+    # The closure section must appear in stdout
+    assert "CLOSURE CHECK" in captured.out
+    assert "triggering_kind" in captured.out
+    assert "OPEN_ITEM" in captured.out

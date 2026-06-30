@@ -191,6 +191,12 @@ TERMS: tuple[Term, ...] = (
         "CONCEPT",
         "The mechanical writer that lands a steward-approved proposal into spec/content/; the AI never edits the graph by hand.",
     ),
+    # §Closure section (P4 — Per-action verify/closure)
+    Term(
+        "§Closure",
+        "SECTION",
+        "Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed.",
+    ),
 )
 
 
