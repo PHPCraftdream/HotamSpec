@@ -1,0 +1,5 @@
+# Pin source files to LF; silence Git's CRLF/LF warnings.
+* text=auto eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf

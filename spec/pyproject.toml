@@ -1,0 +1,28 @@
+[project]
+name = "tensio"
+version = "0.1.0"
+description = "Tensio — executable methodology for the lifecycle of contradictory business requirements (requirements-as-tension-graph, docs-as-code)"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+authors = [
+    { name = "Marat K", email = "klyde13@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.9.24,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+# Same dev stack as the dev-coin reference. cosmic-ray + z3-solver are listed
+# now but UNUSED — they belong to the DEFERRED formal layers (spec-stack 4-8,
+# see CLAUDE.md). Pinned here so the deferred layers can be switched on without
+# touching the dependency surface.
+dev = [
+    "cosmic-ray>=8.4.6",
+    "hypothesis>=6.155.2",
+    "pytest>=9.0.3",
+    "ruff>=0.15.16",
+    "z3-solver>=4.16.0.0",
+]

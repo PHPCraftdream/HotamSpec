@@ -1,0 +1,278 @@
+"""Tests for tensio.invariants — structural form of the tension graph.
+
+Two duties, mirroring dev-coin's test_invariants:
+  1. The demo seed fixture is structurally well-formed (every invariant holds).
+  2. Each invariant ACTUALLY FIRES on a deliberately-broken fixture — a guard
+     against phantom tests that stay green on broken data. For every check_* we
+     build a minimal graph that violates exactly that rule and assert a non-empty
+     violation list, naming the offending object.
+
+The fixture lives in `tests/fixtures/seed.py` (outside the framework): Tensio is
+a content-free framework, so the example business graph is test data, not
+src/tensio/ content.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+_SRC = Path(__file__).resolve().parents[1] / "src"
+_TESTS = Path(__file__).resolve().parent
+for _p in (_SRC, _TESTS):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from fixtures.seed import DEMO_AXES, seed_graph  # noqa: E402
+from tensio.assumption import DEAD, Assumption  # noqa: E402
+from tensio.conflict import Conflict, conflict_identity  # noqa: E402
+from tensio.graph import TensionGraph  # noqa: E402
+from tensio.invariants import (  # noqa: E402
+    ALL_INVARIANTS,
+    all_violations,
+    check_axis_in_registry,
+    check_conflict_has_axis_context_steward,
+    check_conflict_id_matches_identity,
+    check_conflict_min_two_members,
+    check_decided_has_rationale_or_derived,
+    check_no_dangling_ids,
+    check_open_has_question,
+    check_steward_not_a_member_owner,
+    holds,
+)
+from tensio.requirement import Relation, Requirement  # noqa: E402
+from tensio.stakeholder import Stakeholder  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# 1. The demo seed fixture is well-formed
+# ---------------------------------------------------------------------------
+
+
+def test_seed_fixture_is_structurally_wellformed() -> None:
+    """Every structural invariant holds on the canonical demo fixture."""
+    g = seed_graph()
+    violations = all_violations(g)
+    assert holds(violations), f"seed fixture has structural violations: {violations}"
+
+
+def test_all_invariants_in_registry_run_on_seed() -> None:
+    """Each registered invariant returns a list (the harness can consume all)."""
+    g = seed_graph()
+    for check in ALL_INVARIANTS:
+        result = check(g)
+        assert isinstance(result, list), f"{check.__name__} must return a list"
+
+
+# ---------------------------------------------------------------------------
+# 2. Broken fixtures — each invariant must FIRE (anti-phantom guard)
+# ---------------------------------------------------------------------------
+
+_S_OUT = Stakeholder(id="outsider", name="Outsider", domain="x")
+_S_A = Stakeholder(id="sa", name="A", domain="x")
+_S_B = Stakeholder(id="sb", name="B", domain="x")
+
+
+def _req(rid: str, owner: str, status: str = "SETTLED", **kw) -> Requirement:
+    return Requirement(id=rid, claim=f"claim {rid}", owner=owner, status=status, **kw)
+
+
+def _wellformed_conflict(**overrides) -> Conflict:
+    """A valid conflict (R1 owner=sa, R2 owner=sb, steward=outsider) to perturb."""
+    axis = overrides.pop("axis", "cost-vs-flexibility")
+    context = overrides.pop("context", "some shared scenario")
+    base = dict(
+        id=conflict_identity(axis, context),
+        axis=axis,
+        context=context,
+        members=("R1", "R2"),
+        steward="outsider",
+        lifecycle="ACKNOWLEDGED",
+    )
+    base.update(overrides)
+    if "id" not in overrides and ("axis" in overrides or "context" in overrides):
+        base["id"] = conflict_identity(base["axis"], base["context"])
+    return Conflict(**base)  # type: ignore[arg-type]
+
+
+def _graph_with(conflict: Conflict, reqs=None, assumptions=()) -> TensionGraph:
+    """Build a small TensionGraph including the demo axis vocabulary.
+
+    The axis vocabulary lives on the graph (the framework ships none), so test
+    graphs must declare the axes they use — otherwise check_axis_in_registry
+    would (correctly) fire on "cost-vs-flexibility" etc.
+    """
+    reqs = reqs if reqs is not None else (_req("R1", "sa"), _req("R2", "sb"))
+    return TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        assumptions=assumptions,
+        requirements=reqs,
+        conflicts=(conflict,),
+    )
+
+
+def test_dangling_member_fires() -> None:
+    """check_no_dangling_ids fires when a conflict references a missing member."""
+    bad = _wellformed_conflict(members=("R1", "R_GHOST"))
+    v = check_no_dangling_ids(_graph_with(bad))
+    assert any(x.target == bad.id and "R_GHOST" in x.message for x in v)
+
+
+def test_dangling_owner_fires() -> None:
+    """check_no_dangling_ids fires when a requirement owner is unknown."""
+    reqs = (_req("R1", "sa"), _req("R2", "no_such_owner"))
+    g = _graph_with(_wellformed_conflict(), reqs=reqs)
+    v = check_no_dangling_ids(g)
+    assert any(x.target == "R2" and "no_such_owner" in x.message for x in v)
+
+
+def test_dangling_relation_target_fires() -> None:
+    """check_no_dangling_ids fires on a relation pointing to a missing requirement."""
+    reqs = (
+        _req("R1", "sa", relations=(Relation(kind="supports", target="R_X"),)),
+        _req("R2", "sb"),
+    )
+    g = _graph_with(_wellformed_conflict(), reqs=reqs)
+    v = check_no_dangling_ids(g)
+    assert any(x.target == "R1" and "R_X" in x.message for x in v)
+
+
+def test_missing_axis_fires() -> None:
+    """check_conflict_has_axis_context_steward fires on an empty axis."""
+    bad = _wellformed_conflict(axis="", id="C-manual")
+    v = check_conflict_has_axis_context_steward(_graph_with(bad))
+    assert any("axis" in x.message for x in v)
+
+
+def test_missing_context_fires() -> None:
+    """check_conflict_has_axis_context_steward fires on an empty context."""
+    bad = _wellformed_conflict(context="", id="C-manual")
+    v = check_conflict_has_axis_context_steward(_graph_with(bad))
+    assert any("context" in x.message for x in v)
+
+
+def test_missing_steward_fires() -> None:
+    """check_conflict_has_axis_context_steward fires on an empty steward."""
+    bad = _wellformed_conflict(steward="")
+    v = check_conflict_has_axis_context_steward(_graph_with(bad))
+    assert any("steward" in x.message for x in v)
+
+
+def test_single_member_fires() -> None:
+    """check_conflict_min_two_members fires when a conflict has < 2 members."""
+    bad = _wellformed_conflict(members=("R1",))
+    v = check_conflict_min_two_members(_graph_with(bad))
+    assert any(x.target == bad.id for x in v)
+
+
+def test_unknown_axis_fires() -> None:
+    """check_axis_in_registry fires on an axis not in this domain's vocabulary."""
+    bad = _wellformed_conflict(axis="totally-made-up-axis")
+    v = check_axis_in_registry(_graph_with(bad))
+    assert any("controlled vocabulary" in x.message for x in v)
+
+
+def test_empty_axes_vocabulary_fires_on_any_axis() -> None:
+    """A graph with NO axes declared fires check_axis_in_registry on every conflict.
+
+    This is the structural enforcement that a content-free framework cannot
+    silently accept conflicts: a domain must declare its axis vocabulary.
+    """
+    bad = _wellformed_conflict()
+    g = TensionGraph(
+        axes=(),  # no vocabulary declared at all
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=(_req("R1", "sa"), _req("R2", "sb")),
+        conflicts=(bad,),
+    )
+    v = check_axis_in_registry(g)
+    assert any("controlled vocabulary" in x.message for x in v), (
+        "an empty axes vocabulary must be flagged for every conflict that uses an axis"
+    )
+
+
+def test_id_mismatch_fires() -> None:
+    """check_conflict_id_matches_identity fires when id != hash(axis, context)."""
+    bad = _wellformed_conflict(id="C-deadbeef")  # forced wrong id
+    v = check_conflict_id_matches_identity(_graph_with(bad))
+    assert any(x.target == "C-deadbeef" for x in v)
+
+
+def test_steward_is_member_owner_fires() -> None:
+    """check_steward_not_a_member_owner fires when steward owns a member."""
+    bad = _wellformed_conflict(steward="sa")
+    v = check_steward_not_a_member_owner(_graph_with(bad))
+    assert any(x.target == bad.id and "sa" in x.message for x in v)
+
+
+def test_open_without_question_fires() -> None:
+    """check_open_has_question fires on a bare 'OPEN' with no question."""
+    reqs = (_req("R1", "sa", status="OPEN"), _req("R2", "sb"))
+    g = _graph_with(_wellformed_conflict(), reqs=reqs)
+    v = check_open_has_question(g)
+    assert any(x.target == "R1" for x in v)
+
+
+def test_open_empty_parens_fires() -> None:
+    """check_open_has_question fires on 'OPEN()' (empty question)."""
+    reqs = (_req("R1", "sa", status="OPEN()"), _req("R2", "sb"))
+    g = _graph_with(_wellformed_conflict(), reqs=reqs)
+    v = check_open_has_question(g)
+    assert any(x.target == "R1" for x in v)
+
+
+def test_open_with_question_does_not_fire() -> None:
+    """check_open_has_question stays green on a proper OPEN(question)."""
+    reqs = (_req("R1", "sa", status="OPEN(which scope?)"), _req("R2", "sb"))
+    g = _graph_with(_wellformed_conflict(), reqs=reqs)
+    assert holds(check_open_has_question(g))
+
+
+def test_decided_without_justification_fires() -> None:
+    """check_decided_has_rationale_or_derived fires on bare DECIDED, no rationale."""
+    bad = _wellformed_conflict(lifecycle="DECIDED()", derived=())
+    v = check_decided_has_rationale_or_derived(_graph_with(bad))
+    assert any(x.target == bad.id for x in v)
+
+
+def test_decided_with_derived_does_not_fire() -> None:
+    """A DECIDED conflict justified by a derived requirement stays green."""
+    reqs = (_req("R1", "sa"), _req("R2", "sb"), _req("R3", "outsider", status="DRAFT"))
+    bad = _wellformed_conflict(lifecycle="DECIDED()", derived=("R3",))
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(bad,),
+    )
+    assert holds(check_decided_has_rationale_or_derived(g))
+
+
+def test_dead_assumption_owner_dangling_fires() -> None:
+    """check_no_dangling_ids fires on an assumption with an unknown owner."""
+    bad_assum = Assumption(id="A-x", statement="x", status=DEAD, owner="ghost_owner")
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        assumptions=(bad_assum,),
+        requirements=(_req("R1", "sa"), _req("R2", "sb")),
+        conflicts=(_wellformed_conflict(),),
+    )
+    v = check_no_dangling_ids(g)
+    assert any(x.target == "A-x" and "ghost_owner" in x.message for x in v)
+
+
+# ---------------------------------------------------------------------------
+# 3. Empty graph is well-formed (legitimate ship state)
+# ---------------------------------------------------------------------------
+
+
+def test_empty_graph_is_wellformed() -> None:
+    """A freshly-shipped framework (no content loaded) has no structural defects.
+
+    "No content yet" is a legitimate state. The structural invariants must NOT
+    fire on an empty graph — otherwise the framework would ship red.
+    """
+    g = TensionGraph()
+    assert g.is_empty()
+    assert holds(all_violations(g)), "empty framework graph must be well-formed"
