@@ -13,11 +13,11 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-agent-never-lost` | SETTLED | `ai-agent` | A-stakeholders-care | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
 | `R-drift-structurally-impossible` | SETTLED | `framework-author` | A-python-stack | The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte. |
 | `R-conflict-is-connector-node` | SETTLED | `framework-author` | A-content-free-honest | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
-| `R-content-free-framework` | SETTLED | `framework-author` | A-content-free-honest | spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph. |
+| `R-content-free-framework` | REJECTED | `framework-author` | A-content-free-honest | spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph. |
 | `R-deterministic-generation` | SETTLED | `framework-author` | A-python-stack | tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes. |
 | `R-ai-presents-not-decides` | SETTLED | `ai-agent` | A-stakeholders-care | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
 | `R-steward-distinct-from-owners` | SETTLED | `framework-author` | A-stakeholders-care | Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members. |
-| `R-empty-content-is-legitimate` | SETTLED | `domain-user` | A-content-free-honest | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
+| `R-empty-content-is-legitimate` | REJECTED | `domain-user` | A-content-free-honest | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
 | `R-open-states-question` | SETTLED | `framework-author` | A-prose-suffices | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-rejected-preserved-not-deleted` | SETTLED | `framework-author` | A-stakeholders-care | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-axis-controlled-vocab` | SETTLED | `framework-author` | A-prose-suffices | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
@@ -114,6 +114,12 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-seed-in-src` | REJECTED | `framework-author` | — | The framework shall ship with a seed graph baked into spec/src/tensio/graph.py so the demo runs without setup. |
 | `R-rdf-store` | REJECTED | `framework-author` | — | The tension graph shall be persisted in an RDF triplestore with SHACL shapes and SPARQL traversal. |
 | `R-axes-as-module-constant` | REJECTED | `framework-author` | — | The controlled vocabulary of axes shall live as a module-level REGISTRY in tensio.axis. |
+| `R-content-free-no-business-data` | SETTLED | `framework-author` | A-python-stack | The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
+| `R-content-free-no-examples` | SETTLED | `framework-author` | A-python-stack | The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo. |
+| `R-content-free-no-seed-graph` | SETTLED | `framework-author` | A-python-stack | The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention. |
+| `R-empty-content-wellformed` | SETTLED | `framework-author` | A-python-stack | A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed. |
+| `R-empty-content-calm-banner` | SETTLED | `framework-author` | A-python-stack | When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error. |
+| `R-empty-content-gen-notice` | SETTLED | `framework-author` | A-python-stack | When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
 
 ## Stakeholders
 

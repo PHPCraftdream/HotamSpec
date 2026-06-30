@@ -16,6 +16,16 @@ substrate (R-history-from-rejected-markers).
 
 ## REJECTED requirements (what we tried and discarded)
 
+### `R-content-free-framework` — spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph.
+
+- **owner:** `framework-author`
+- **why:** ('REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Tensio is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/tensio/graph.py.)',)
+
+### `R-empty-content-is-legitimate` — A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice.
+
+- **owner:** `domain-user`
+- **why:** ('REJECTED — REPLACES split into R-empty-content-wellformed + R-empty-content-calm-banner + R-empty-content-gen-notice (D2, decided by domain-user 2026-06-30) — (was: An empty content slot is honest, not a defect. Adopters can see the framework working before they have anything to model.)',)
+
 ### `R-active-loop-playbooks` — Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/.
 
 - **owner:** `ai-agent`

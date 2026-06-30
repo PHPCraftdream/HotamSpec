@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 38 / SETTLED 59; DRAFT 25; OPEN 13; REJECTED 7.**
+**Burn-down: SETTLED-ENFORCED 39 / SETTLED 63; DRAFT 25; OPEN 13; REJECTED 9.**
 
 ---
 
@@ -39,16 +39,17 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-stale-substrate` | STRUCTURAL | `framework-author` | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 | `R-prefer-tool-over-hand` | STRUCTURAL | `ai-agent` | The operator shall prefer creating a reusable tool over performing the same action by hand; one-off acts are permitted only for genuine bootstrap or single-occurrence events. |
 | `R-shared-tools-in-spec-tools` | STRUCTURAL | `framework-author` | Tools available to all agents shall live in `spec/tools/`. |
+| `R-content-free-no-business-data` | STRUCTURAL | `framework-author` | The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
+| `R-content-free-no-examples` | STRUCTURAL | `framework-author` | The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo. |
+| `R-content-free-no-seed-graph` | STRUCTURAL | `framework-author` | The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
 | id | enforced_by | claim |
 |---|---|---|
 | `R-drift-structurally-impossible` | test_docs_gen.py::test_requirements_md_up_to_date, test_docs_gen.py::test_tensions_md_up_to_date, test_docs_gen.py::test_open_md_up_to_date, test_docs_gen.py::test_unenforced_md_up_to_date | The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte. |
-| `R-content-free-framework` | test_content_free.py | spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph. |
 | `R-deterministic-generation` | test_docs_gen.py::test_generator_is_deterministic | tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes. |
 | `R-steward-distinct-from-owners` | check_steward_not_a_member_owner | Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members. |
-| `R-empty-content-is-legitimate` | test_what_now.py::test_main_empty_content_prints_calm_banner, test_docs_gen.py::test_empty_graph_renders_no_content_notice | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
 | `R-open-states-question` | check_open_has_question | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-axis-controlled-vocab` | check_axis_in_registry | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
@@ -82,6 +83,9 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-conflict-min-two-members` | check_conflict_min_two_members | Every Conflict node shall contain at least two distinct Requirement ids in its members tuple. |
 | `R-decided-conflict-justifies-itself` | check_decided_has_rationale_or_derived | Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement. |
 | `R-m-tag-format-valid` | check_m_tag_format | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
+| `R-empty-content-wellformed` | test_invariants.py::test_empty_graph_is_wellformed | A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed. |
+| `R-empty-content-calm-banner` | test_what_now.py::test_main_empty_content_prints_calm_banner | When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error. |
+| `R-empty-content-gen-notice` | test_docs_gen.py::test_empty_graph_renders_no_content_notice | When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
 
 ## DRAFT (not yet promoted)
 
