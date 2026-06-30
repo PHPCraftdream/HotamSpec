@@ -19,17 +19,47 @@ substrate (R-history-from-rejected-markers).
 ### `R-content-free-framework` — spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph.
 
 - **owner:** `framework-author`
-- **why:** ('REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Tensio is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/tensio/graph.py.)',)
+- **why:** REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Tensio is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/tensio/graph.py.)
 
 ### `R-empty-content-is-legitimate` — A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice.
 
 - **owner:** `domain-user`
-- **why:** ('REJECTED — REPLACES split into R-empty-content-wellformed + R-empty-content-calm-banner + R-empty-content-gen-notice (D2, decided by domain-user 2026-06-30) — (was: An empty content slot is honest, not a defect. Adopters can see the framework working before they have anything to model.)',)
+- **why:** REJECTED — REPLACES split into R-empty-content-wellformed + R-empty-content-calm-banner + R-empty-content-gen-notice (D2, decided by domain-user 2026-06-30) — (was: An empty content slot is honest, not a defect. Adopters can see the framework working before they have anything to model.)
+
+### `R-boot-from-substrate` — The operator shall begin every new turn by re-loading three facts from the substrate — current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio — and cite at least one of them in the first sentence of any substantive reply.
+
+- **owner:** `ai-agent`
+- **why:** REJECTED — REPLACES split into R-boot-reload-three-facts + R-boot-cite-in-first-sentence (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-boot-reload-three-facts + R-boot-cite-in-first-sentence (wave 2, decided by framework-author 2026-06-30) — (was: Without this, the operator knows the spec but lives in session memory; CLAUDE.md is the only file the harness auto-loads, so the boot ritual MUST live there (not in CONSTITUTION.md, which is referenceable but not auto-loaded). This is the structural fix for 'knows the spec vs lives by it'.))
+
+### `R-critical-core-scope` — The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared.
+
+- **owner:** `domain-user`
+- **why:** REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: M7 resolved (P6 — §Conscience): the critical core for the methodology's OWN domain is the six invariants in CRITICAL_CORE_INVARIANTS — check_steward_not_a_member_owner, check_operator_steward_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question. These six guard every path by which a contradiction could be introduced without being seen. Business-domain 'critical core' (money / access / SLA) is a separate per-domain calibration; the framework's own methodology critical core is now declared and property-tested via test_conscience.py.))
 
 ### `R-active-loop-playbooks` — Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/.
 
 - **owner:** `ai-agent`
 - **why:** REJECTED — REPLACES by R-active-loop-protocol + R-active-loop-apply-tool + R-active-loop-playbook-doc per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed three concerns: data-model, tool, documentation.
+
+### `R-glossary-sync-test` — A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: Terminology drift is its own kind of invisibility — 'axis' / 'dimension', 'steward' / 'owner', 'conflict' / 'tension' will fragment without it. Now ENFORCED: test_glossary_sync.py fires on any dead vocab or invented §-token, and test_docs_gen.py::test_glossary_md_up_to_date keeps GLOSSARY.md byte-stable.))
+
+### `R-history-from-rejected-markers` — docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts.
+
+- **owner:** `ai-agent`
+- **why:** REJECTED — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30) — (was: The historian artifact is now real: build_history() in tools/gen_spec.py materializes REJECTED requirements and DECIDED/REVISIT_WHEN conflicts into docs/gen/HISTORY.md. Anti-drift enforced by test_history_md_up_to_date; content coverage enforced by test_history_gen.py.))
+
+### `R-lifecycle-abstraction` — A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: Built: tensio/lifecycle.py ships REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE; check_status_in_lifecycle validates stored values against them on every invariant run (P1).))
+
+### `R-process-aspect-first` — tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P9): tensio/process.py ships Process + Step + Goal + TargetState + PROCESS_LIFECYCLE + GOAL_LIFECYCLE. The §Process aspect is opt-in (TensionGraph.processes defaults to empty). PR-closed-loop instantiates ONE worked example at the meta-domain level. Three new invariants enforce the behavioral surface: check_process_lifecycle_wellformed, check_process_roles_declared, and check_goal_owner_is_operator. check_typed_anchors extended for PR- and GOAL- prefixes. M12 resolved: Lifecycle is core; Process is the first opt-in aspect that proves the keystone supports new aspects without parallel machinery.))
 
 ### `R-operator-acting-facet` — An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator.
 
@@ -41,10 +71,25 @@ substrate (R-history-from-rejected-markers).
 - **owner:** `domain-user`
 - **why:** REJECTED — REPLACES by R-goal-is-first-class-type + R-goal-target-kind-known + R-goal-owner-is-operator per atomicity discipline (R-requirement-claim-is-atomic). The original claim was mostly atomic but its enforced_by tuple covered three distinct rules.
 
+### `R-dependency-graph-parallelism` — The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P8): Requirement.relations (depends_on/supports/refines) is the live dependency network; the U‖/A‖/B‖ parallel commits demonstrate the principle operationally — independent sub-graphs ran in parallel, dependency chains ran sequentially. Parallel-vs-sequential is decided by the dependency topology (independent components vs chains), not guessed; this makes delegation sound. Implementation: tensio.requirement.Relation + docs/playbooks/ + tools/what_now.py.))
+
+### `R-operator-crystal-is-claude-md` — Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md.
+
+- **owner:** `ai-agent`
+- **why:** REJECTED — REPLACES split into R-crystal-is-claude-md + R-crystal-reload-by-reference + R-crystal-tree-hierarchy (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-crystal-is-claude-md + R-crystal-reload-by-reference + R-crystal-tree-hierarchy (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P7): the crystal exists as substrate. The Director's Map in CLAUDE.md indexes the whole graph and provides the anchored map for the director-operator. docs/gen/CONSTITUTION.md is the generated reconstitution from the laws — a fresh agent reading it reconstitutes as operator without relying on a session checkpoint. The discipline is structural via: the Director's Map is the crystal (CLAUDE.md); CONSTITUTION.md is generated from the SETTLED laws; the boot-sequence in §6 names the exact steps to reconstitute. Per the anchoring super-rule it cites code handles (R-/C-/§/file) so understanding is regained fast; the delegation hierarchy is therefore a TREE of CLAUDE.md crystals (exactly how Claude Code nests CLAUDE.md per directory), one per operator, each bounded by its context budget. Implementation: docs/gen/CONSTITUTION.md + CLAUDE.md.))
+
 ### `R-statemachine-wellformedness` — Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam).
 
 - **owner:** `framework-author`
 - **why:** REJECTED — REPLACES by R-statemachine-reachable + R-statemachine-deterministic + R-statemachine-terminal-or-cyclic + R-statemachine-guard-on-assumption per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed four concerns: reachability, determinism, termination, guard-on-assumption.
+
+### `R-enforcement-gradient` — A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES split into R-enforcement-levels-declared + R-enforced-names-enforcer (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-enforcement-levels-declared + R-enforced-names-enforcer (wave 2, decided by framework-author 2026-06-30) — (was: Makes 'how deeply crystallized' measurable; pushes knowledge down toward enforced reflexes. A PROSE requirement is a wish; an ENFORCED one is a guarantee — naming the enforcer is what makes the difference auditable. When DRAFT >= SETTLED/2, the REFLECTION band fires on `burn-down` (M35: SETTLED:DRAFT ratio + UNENFORCED count). Promote, don't accrue.))
 
 ### `R-seed-in-src` — The framework shall ship with a seed graph baked into spec/src/tensio/graph.py so the demo runs without setup.
 

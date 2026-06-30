@@ -22,13 +22,13 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_decided_has_decided_by`
 
-## `R-enforcement-gradient` (ENFORCED)
+## `R-enforcement-levels-declared` (ENFORCED)
 
-**Claim.** A requirement shall carry an enforcement level PROSE | STRUCTURAL | ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test.
+**Claim.** A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED.
 
-**Why.** Makes 'how deeply crystallized' measurable; pushes knowledge down toward enforced reflexes. A PROSE requirement is a wish; an ENFORCED one is a guarantee — naming the enforcer is what makes the difference auditable. When DRAFT >= SETTLED/2, the REFLECTION band fires on `burn-down` (M35: SETTLED:DRAFT ratio + UNENFORCED count). Promote, don't accrue.
+**Why.** Atom of R-enforcement-gradient (levels-declared concern). The three levels make 'how deeply crystallized' measurable and auditable.
 
-**Enforced by:** `check_enforced_names_invariant`, `test_docs_gen.py::test_unenforced_md_up_to_date`
+**Enforced by:** `check_enforced_names_invariant`
 
 ## `R-requirement-enforced` (ENFORCED)
 

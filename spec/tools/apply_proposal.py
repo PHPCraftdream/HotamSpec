@@ -351,11 +351,14 @@ def _replace_or_insert_field(
             else:
                 # Multi-line value (e.g. long string): replace from col to end
                 new_repr = _python_repr(new_value)
-                # Remove intermediate lines, replace on first
+                # Grab the suffix after the value on the end line (e.g. ",\n")
+                end_line = lines[end_lineno - 1]
+                suffix = end_line[end_col:]
+                # Remove from the line after start through the end line (inclusive)
                 del lines[lineno + 1 : end_lineno - 1 + 1]
                 # Now recompute after deletion
                 line = lines[lineno]
-                lines[lineno] = line[:col] + new_repr + ","
+                lines[lineno] = line[:col] + new_repr + suffix
         return lines
 
     # Field not present: insert before the closing ')' of the Conflict call.

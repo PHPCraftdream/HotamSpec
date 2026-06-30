@@ -12,19 +12,17 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
 
-## `R-boot-from-substrate` (STRUCTURAL)
+## `R-boot-cite-in-first-sentence` (PROSE)
 
-**Claim.** The operator shall begin every new turn by re-loading three facts from the substrate — current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio — and cite at least one of them in the first sentence of any substantive reply.
+**Claim.** The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply.
 
-**Why.** Without this, the operator knows the spec but lives in session memory; CLAUDE.md is the only file the harness auto-loads, so the boot ritual MUST live there (not in CONSTITUTION.md, which is referenceable but not auto-loaded). This is the structural fix for 'knows the spec vs lives by it'.
+**Why.** Atom of R-boot-from-substrate (WHEN to cite). Citing anchors the reply in the live substrate, proving the operator actually loaded it and is not parroting from memory.
 
-## `R-operator-crystal-is-claude-md` (STRUCTURAL)
+## `R-boot-reload-three-facts` (STRUCTURAL)
 
-**Claim.** Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md.
+**Claim.** The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio.
 
-**Why.** SETTLED (P7): the crystal exists as substrate. The Director's Map in CLAUDE.md indexes the whole graph and provides the anchored map for the director-operator. docs/gen/CONSTITUTION.md is the generated reconstitution from the laws — a fresh agent reading it reconstitutes as operator without relying on a session checkpoint. The discipline is structural via: the Director's Map is the crystal (CLAUDE.md); CONSTITUTION.md is generated from the SETTLED laws; the boot-sequence in §6 names the exact steps to reconstitute. Per the anchoring super-rule it cites code handles (R-/C-/§/file) so understanding is regained fast; the delegation hierarchy is therefore a TREE of CLAUDE.md crystals (exactly how Claude Code nests CLAUDE.md per directory), one per operator, each bounded by its context budget. Implementation: docs/gen/CONSTITUTION.md + CLAUDE.md.
-
-**Enforced by:** `test_constitution_gen.py`
+**Why.** Atom of R-boot-from-substrate (WHAT to load). Without re-loading from the substrate, the operator lives in session memory and drifts from the graph's live state.
 
 ## `R-operator-has-context-budget` (ENFORCED)
 

@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 39 / SETTLED 63; DRAFT 25; OPEN 13; REJECTED 9.**
+**Burn-down: SETTLED-ENFORCED 50 / SETTLED 81; DRAFT 25; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -23,14 +23,11 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
-| `R-boot-from-substrate` | STRUCTURAL | `ai-agent` | The operator shall begin every new turn by re-loading three facts from the substrate — current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio — and cite at least one of them in the first sentence of any substantive reply. |
 | `R-active-loop-playbook-doc` | STRUCTURAL | `ai-agent` | At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band. |
 | `R-task-vs-action-distinct-altitudes` | STRUCTURAL | `framework-author` | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
 | `R-operator-may-have-parent` | STRUCTURAL | `framework-author` | An Operator.parent shall reference another Operator.id or be None (root). |
 | `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
 | `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
-| `R-dependency-graph-parallelism` | STRUCTURAL | `framework-author` | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
-| `R-operator-crystal-is-claude-md` | STRUCTURAL | `ai-agent` | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
 | `R-statemachine-guard-on-assumption` | STRUCTURAL | `framework-author` | A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced. |
 | `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
 | `R-crystallize-before-split` | STRUCTURAL | `ai-agent` | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
@@ -42,6 +39,16 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-content-free-no-business-data` | STRUCTURAL | `framework-author` | The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
 | `R-content-free-no-examples` | STRUCTURAL | `framework-author` | The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo. |
 | `R-content-free-no-seed-graph` | STRUCTURAL | `framework-author` | The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention. |
+| `R-boot-reload-three-facts` | STRUCTURAL | `ai-agent` | The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio. |
+| `R-boot-cite-in-first-sentence` | PROSE | `ai-agent` | The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply. |
+| `R-process-opt-in` | STRUCTURAL | `framework-author` | The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple. |
+| `R-dependency-tracked` | STRUCTURAL | `framework-author` | The system shall track the dependency network between requirements via Requirement.relations (depends_on, supports, refines). |
+| `R-dependency-drives-parallel` | STRUCTURAL | `framework-author` | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
+| `R-dependency-drives-sequential` | STRUCTURAL | `framework-author` | Dependency chains in the network shall be processed sequentially. |
+| `R-crystal-is-claude-md` | STRUCTURAL | `ai-agent` | Each operator's crystallized substrate shall be its own CLAUDE.md file. |
+| `R-crystal-reload-by-reference` | STRUCTURAL | `ai-agent` | An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context. |
+| `R-crystal-tree-hierarchy` | STRUCTURAL | `ai-agent` | The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget. |
+| `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -53,14 +60,9 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-open-states-question` | check_open_has_question | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-axis-controlled-vocab` | check_axis_in_registry | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
-| `R-critical-core-scope` | test_conscience.py | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-active-loop-protocol` | test_proposal.py | Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes. |
 | `R-active-loop-apply-tool` | test_apply_proposal.py | A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/. |
 | `R-decided-needs-human-signoff` | check_decided_has_decided_by | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
-| `R-glossary-sync-test` | test_glossary_sync.py, test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
-| `R-history-from-rejected-markers` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
-| `R-lifecycle-abstraction` | check_status_in_lifecycle, test_lifecycle.py | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
-| `R-process-aspect-first` | test_process.py, check_process_lifecycle_wellformed, check_process_roles_declared, check_typed_anchors | tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
 | `R-operator-is-frozen-dataclass` | check_typed_anchors, test_operator.py | An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'. |
 | `R-operator-references-stakeholder` | check_no_dangling_ids, test_operator.py | An Operator.stakeholder shall reference an existing Stakeholder.id. |
 | `R-operator-has-context-budget` | check_operator_within_budget, test_operator.py | An Operator shall carry a ContextBudget with a positive limit and a declared measure. |
@@ -75,7 +77,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-anchor-everything` | check_typed_anchors, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
-| `R-enforcement-gradient` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | `R-claude-md-live-state-generated` | test_docs_gen.py::test_claude_md_live_state_up_to_date | The live numeric state in CLAUDE.md (top action, debt counts, graph size, crystal headroom, context) shall be generated by gen_spec into a sentinel-delimited block, never hand-written. |
 | `R-docs-generated-from-requirements` | test_docs_gen.py::test_methodology_atoms_up_to_date, tools/gen_spec.py::build_methodology_atoms | Per-topic narrative files under `docs/methodology/atoms/<topic>.md` shall be generated from SETTLED requirements grouped by topic; hand-edits are forbidden by a meta-test. |
@@ -86,6 +87,23 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-empty-content-wellformed` | test_invariants.py::test_empty_graph_is_wellformed | A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed. |
 | `R-empty-content-calm-banner` | test_what_now.py::test_main_empty_content_prints_calm_banner | When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error. |
 | `R-empty-content-gen-notice` | test_docs_gen.py::test_empty_graph_renders_no_content_notice | When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
+| `R-glossary-generated` | test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md. |
+| `R-glossary-sync-fails-dead` | test_glossary_sync.py | The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework. |
+| `R-glossary-sync-fails-unused` | test_glossary_sync.py | The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary. |
+| `R-glossary-drift-stable` | test_docs_gen.py::test_glossary_md_up_to_date | The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte. |
+| `R-history-generated-from-rejected` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks. |
+| `R-history-generated-from-decided` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts. |
+| `R-lifecycle-type-exists` | test_lifecycle.py | A generic tensio.lifecycle module shall define State, Transition, and Lifecycle types. |
+| `R-lifecycle-validates-requirement` | check_status_in_lifecycle | Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE. |
+| `R-lifecycle-validates-conflict` | check_status_in_lifecycle | Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE. |
+| `R-process-types-exist` | test_process.py | tensio.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
+| `R-process-lifecycle-wellformed-aspect` | check_process_lifecycle_wellformed | Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed. |
+| `R-process-roles-declared-aspect` | check_process_roles_declared | Every role referenced in a Process step shall be declared in the Process roles_required tuple. |
+| `R-process-goal-owner-is-operator-aspect` | check_goal_owner_is_operator | Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator. |
+| `R-process-typed-anchors-extended` | check_typed_anchors | check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes. |
+| `R-enforcement-levels-declared` | check_enforced_names_invariant | A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED. |
+| `R-enforced-names-enforcer` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
+| `R-critical-core-methodology` | test_conscience.py | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
 
 ## DRAFT (not yet promoted)
 
