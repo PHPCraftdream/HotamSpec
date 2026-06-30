@@ -152,6 +152,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-agent-scoped-constitution` | SETTLED | `framework-author` | A-python-stack | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
 | `R-repo-map-generated` | SETTLED | `framework-author` | A-python-stack | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
 | `R-agent-declares-purpose` | SETTLED | `framework-author` | A-python-stack | Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line. |
+| `R-agent-map-generated` | SETTLED | `framework-author` | A-python-stack | CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path. |
 
 ## Stakeholders
 

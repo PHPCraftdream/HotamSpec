@@ -32,6 +32,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence.
 
+## `R-agent-map-generated` (ENFORCED)
+
+**Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
+
+**Why.** The operator needs an automatic map of delegated authority — who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep.
+
+**Enforced by:** `test_agent_map_complete`
+
 ## `R-agent-never-lost` (PROSE)
 
 **Claim.** The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.
