@@ -42,13 +42,13 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-goal-as-target-state` | DRAFT | `domain-user` | A-bootstrap-self-applies | A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process. |
 | `R-context-bounded-delegation` | DRAFT | `framework-author` | A-finite-context-operators | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
 | `R-dependency-graph-parallelism` | DRAFT | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
-| `R-operator-crystal-is-claude-md` | DRAFT | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
+| `R-operator-crystal-is-claude-md` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
 | `R-statemachine-wellformedness` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
 | `R-crystallize-knowledge-to-code` | SETTLED | `ai-agent` | A-compaction-loses-working | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
 | `R-verify-closure-per-action` | SETTLED | `ai-agent` | A-finite-context-operators | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-anchor-everything` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | SETTLED | `ai-agent` | A-bootstrap-self-applies | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
-| `R-crystallize-before-split` | DRAFT | `ai-agent` | A-finite-context-operators | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
+| `R-crystallize-before-split` | SETTLED | `ai-agent` | A-finite-context-operators | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
 | `R-working-vs-substrate-budget` | DRAFT | `framework-author` | A-finite-context-operators | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
 | `R-enforcement-gradient` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
@@ -195,9 +195,13 @@ CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Graph — the store and its traversal;
   §Loop — the what_now operating procedure (documented, exercised by the harness);
   §Glossary — the controlled methodology vocabulary (tensio.glossary.TERMS).
+  §Constitution — the operator's boot sequence generated from the SETTLED laws;
+                  a fresh agent reads this to reconstitute as operator without
+                  needing a session checkpoint (M33 resolved — P7).
 The generator (tools/gen_spec.py) walks modules in a fixed order and emits the
-human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md); the meta-test
-(tests/test_docs_gen.py) makes regeneration == committed, byte-for-byte.
+human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md,
+CONSTITUTION.md); the meta-test (tests/test_docs_gen.py) makes regeneration ==
+committed, byte-for-byte.
 
 OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
   operator — an acting agent that owns a bounded sub-domain of the graph; its

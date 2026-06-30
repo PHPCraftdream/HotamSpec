@@ -25,6 +25,8 @@ written by hand.
 
 ## Director's map — the operator's crystal
 
+> **Operator boot:** read `docs/gen/CONSTITUTION.md` first if you arrive without context — it is the generated reconstitution from the substrate (M33 resolved: the constitution is GENERATED, not hand-written; `docs/checkpoints/` remains a snapshot crutch, not the authoritative boot).
+
 This CLAUDE.md is the director-operator's crystallized substrate
 (`R-operator-crystal-is-claude-md`) — an anchored map reloaded by reference, not
 re-carried; sub-operators carry their own CLAUDE.md for their sub-domains, while
@@ -357,4 +359,5 @@ equivalent of dev-coin's genesis-number list.
 | M29 | prose-cite-anchor enforcement | discipline + optional resolvability check on structured why | OPEN(machine-check?) (no req mirror yet) |
 | M30 | uncrystallizable → missing-type | human judgment (operator records, steward decides) | OPEN(automate?) (see `R-uncrystallizable-automated`) |
 | M31 | crystallize-before-split enforcement | none | OPEN(enforced or advisory?) (no req mirror yet) |
+| M33 | operator reconstitution | generated docs/gen/CONSTITUTION.md from SETTLED constitution-set requirements | DECIDED (P7) — the constitution is GENERATED, not hand-written; docs/checkpoints/ remains a snapshot crutch, not the authoritative boot |
 | M36 | can an Operator steward a Conflict in which its own Stakeholder owns a side? | NO — structurally enforced | SETTLED (see R-operator-not-self-approve, check_operator_steward_not_self) |

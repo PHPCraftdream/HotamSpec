@@ -214,6 +214,12 @@ TERMS: tuple[Term, ...] = (
         "CONCEPT",
         "The set of invariants whose violation would silently break the hard boundary or anti-drift — the conscience's narrow scope (M7).",
     ),
+    # §Constitution section (P7 — the operator's generated boot sequence)
+    Term(
+        "§Constitution",
+        "SECTION",
+        "The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws.",
+    ),
 )
 
 

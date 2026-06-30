@@ -91,9 +91,13 @@ CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Graph — the store and its traversal;
   §Loop — the what_now operating procedure (documented, exercised by the harness);
   §Glossary — the controlled methodology vocabulary (tensio.glossary.TERMS).
+  §Constitution — the operator's boot sequence generated from the SETTLED laws;
+                  a fresh agent reads this to reconstitute as operator without
+                  needing a session checkpoint (M33 resolved — P7).
 The generator (tools/gen_spec.py) walks modules in a fixed order and emits the
-human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md); the meta-test
-(tests/test_docs_gen.py) makes regeneration == committed, byte-for-byte.
+human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md,
+CONSTITUTION.md); the meta-test (tests/test_docs_gen.py) makes regeneration ==
+committed, byte-for-byte.
 
 OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
   operator — an acting agent that owns a bounded sub-domain of the graph; its

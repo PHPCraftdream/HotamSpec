@@ -31,6 +31,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Closure` | Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed. |
 | `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |
 | `§Conscience` | The Hypothesis property-test sweep over the critical-core invariants (M7) — does my OWN edit introduce a contradiction? |
+| `§Constitution` | The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws. |
 
 ## Lifecycle states
 | slug | definition |
