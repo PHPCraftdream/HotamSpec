@@ -22,6 +22,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Stakeholder` | Accountability facet: who owns a requirement or stewards a conflict. |
 | `§Invariants` | Structural form of the tension graph (check_* functions). |
 | `§Graph` | The TensionGraph container + traversal + loader. |
+| `§Lifecycle` | The generic state-machine value-type — keystone for Requirement.status / Conflict.lifecycle / future Operator/Process lifecycles. |
 | `§Loop` | The closed loop: State→Diagnosis→Next-action→Action→regenerate→State. |
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
 

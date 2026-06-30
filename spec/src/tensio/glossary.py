@@ -61,6 +61,11 @@ TERMS: tuple[Term, ...] = (
     ),
     Term("§Graph", "SECTION", "The TensionGraph container + traversal + loader."),
     Term(
+        "§Lifecycle",
+        "SECTION",
+        "The generic state-machine value-type — keystone for Requirement.status / Conflict.lifecycle / future Operator/Process lifecycles.",
+    ),
+    Term(
         "§Loop",
         "SECTION",
         "The closed loop: State→Diagnosis→Next-action→Action→regenerate→State.",

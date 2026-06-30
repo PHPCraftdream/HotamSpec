@@ -176,6 +176,7 @@ REQUIRED_SECTIONS = [
     "§Stakeholder",
     "§Invariants",
     "§Graph",
+    "§Lifecycle",
 ]
 
 

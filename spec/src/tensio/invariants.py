@@ -24,6 +24,7 @@ wants pass/fail.
 from __future__ import annotations
 
 import re
+from collections import deque
 from dataclasses import dataclass
 
 from tensio.conflict import conflict_identity
@@ -33,6 +34,11 @@ from tensio.graph import (
     axis_slugs,
     requirement_ids,
     stakeholder_ids,
+)
+from tensio.lifecycle import (
+    CONFLICT_LIFECYCLE,
+    REQUIREMENT_STATUS_LIFECYCLE,
+    Lifecycle,
 )
 from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, OPEN_PREFIX, RELATION_KINDS
 
@@ -512,6 +518,155 @@ def check_m_tag_format(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 9. Lifecycle well-formedness helper + Lifecycle-status validators
+# ---------------------------------------------------------------------------
+
+
+def check_lifecycle_wellformed(lc: Lifecycle) -> list[str]:
+    """Canon: §Lifecycle — return structural issues in a Lifecycle itself.
+
+    RULE: a well-formed Lifecycle satisfies all four conditions below.
+    Returns a list of human-readable issue strings (empty = well-formed).
+    This is a plain helper (not a graph-level check_*); it is called by
+    check_canonical_lifecycles_wellformed and by tests directly.
+
+    Four conditions checked:
+      1. states is non-empty.
+      2. Exactly one INITIAL state.
+      3. Every transition endpoint (src and dst) resolves to a declared state.
+      4. If cyclic=False, at least one terminal/quiescent state is reachable
+         from the INITIAL state via BFS on the transition graph.
+
+    WHY BFS: deterministic traversal, no hidden ordering; only reachable
+    states matter for the terminal-reachability check.
+    """
+    issues: list[str] = []
+    if not lc.states:
+        issues.append(f"{lc.slug}: Lifecycle has no states")
+        return issues  # no further checks meaningful
+
+    names = lc.state_names()
+
+    # Condition 2: exactly one INITIAL
+    initials = [s for s in lc.states if s.is_initial()]
+    if len(initials) != 1:
+        issues.append(
+            f"{lc.slug}: expected exactly 1 INITIAL state, found {len(initials)}"
+        )
+
+    # Condition 3: every transition endpoint resolves
+    for t in lc.transitions:
+        if t.src not in names:
+            issues.append(
+                f"{lc.slug}: transition '{t.event}' has unknown src '{t.src}'"
+            )
+        if t.dst not in names:
+            issues.append(
+                f"{lc.slug}: transition '{t.event}' has unknown dst '{t.dst}'"
+            )
+
+    # Condition 4: if not cyclic, at least one terminal/quiescent is reachable
+    if not lc.cyclic and initials:
+        start = initials[0].name
+        # BFS over transition graph
+        reachable: set[str] = {start}
+        queue: deque[str] = deque([start])
+        adjacency: dict[str, list[str]] = {s.name: [] for s in lc.states}
+        for t in lc.transitions:
+            if t.src in adjacency:
+                adjacency[t.src].append(t.dst)
+        while queue:
+            cur = queue.popleft()
+            for nxt in adjacency.get(cur, []):
+                if nxt not in reachable:
+                    reachable.add(nxt)
+                    queue.append(nxt)
+        state_by_name = {s.name: s for s in lc.states}
+        terminal_reachable = any(
+            state_by_name[n].is_terminal() for n in reachable if n in state_by_name
+        )
+        if not terminal_reachable:
+            issues.append(
+                f"{lc.slug}: no terminal/quiescent state reachable from INITIAL "
+                f"'{start}' (mark cyclic=True if intentional)"
+            )
+
+    return issues
+
+
+def check_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every status/lifecycle value matches a canonical Lifecycle.
+
+    RULE (two sub-rules):
+      1. Every Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE
+         (exact match for DRAFT/SETTLED/REJECTED; prefix match for OPEN(question)).
+      2. Every Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE
+         (exact match for DETECTED/ACKNOWLEDGED; prefix match for
+         DECIDED(rationale) and REVISIT_WHEN(condition)).
+
+    When matches() returns None, the value is not a recognized state of the
+    canonical lifecycle; a Violation is fired naming the offending value and
+    lifecycle slug.
+
+    WHY structural: both status and lifecycle are hand-rolled string state
+    machines; this invariant enforces that stored values belong to the
+    canonical set, making the state machines structurally visible and checkable
+    rather than only convention-held. References: R-lifecycle-abstraction,
+    R-statemachine-wellformedness.
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if REQUIREMENT_STATUS_LIFECYCLE.matches(r.status) is None:
+            out.append(
+                Violation(
+                    "check_status_in_lifecycle",
+                    r.id,
+                    f"Requirement.status '{r.status}' is not a valid state in "
+                    f"lifecycle '{REQUIREMENT_STATUS_LIFECYCLE.slug}' "
+                    f"(valid: {sorted(REQUIREMENT_STATUS_LIFECYCLE.state_names())})",
+                )
+            )
+    for c in g.conflicts:
+        if CONFLICT_LIFECYCLE.matches(c.lifecycle) is None:
+            out.append(
+                Violation(
+                    "check_status_in_lifecycle",
+                    c.id,
+                    f"Conflict.lifecycle '{c.lifecycle}' is not a valid state in "
+                    f"lifecycle '{CONFLICT_LIFECYCLE.slug}' "
+                    f"(valid: {sorted(CONFLICT_LIFECYCLE.state_names())})",
+                )
+            )
+    return out
+
+
+def check_canonical_lifecycles_wellformed(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — the framework's own lifecycle constants are well-formed.
+
+    RULE: REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE MUST each pass
+    check_lifecycle_wellformed (no structural issues). This check runs on
+    every invocation of the full invariant suite — the framework checks its
+    own shipped state machines, not only user content.
+
+    WHY self-application: strong self-application is the methodology's
+    bootstrap test. If the framework's own lifecycles are malformed, all
+    downstream status validation is meaningless. References:
+    R-statemachine-wellformedness, R-lifecycle-abstraction.
+    """
+    out: list[Violation] = []
+    for lc in (REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE):
+        for issue in check_lifecycle_wellformed(lc):
+            out.append(
+                Violation(
+                    "check_canonical_lifecycles_wellformed",
+                    lc.slug,
+                    issue,
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -527,6 +682,8 @@ ALL_INVARIANTS = (
     check_typed_anchors,
     check_enforced_names_invariant,
     check_m_tag_format,
+    check_status_in_lifecycle,
+    check_canonical_lifecycles_wellformed,
 )
 
 
