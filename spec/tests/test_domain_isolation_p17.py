@@ -43,8 +43,8 @@ FRAMEWORK_AGENT_DIR = AGENTS_ROOT / "framework-agent"
 
 def test_check_domain_manifest_valid_empty_domains():
     """check_domain_manifest_valid returns no violations when domains/ is absent or empty."""
-    from tensio.invariants import check_domain_manifest_valid
-    from tensio.graph import TensionGraph
+    from hotam_spec.invariants import check_domain_manifest_valid
+    from hotam_spec.graph import TensionGraph
 
     g = TensionGraph()
     viols = check_domain_manifest_valid(g)
@@ -53,8 +53,8 @@ def test_check_domain_manifest_valid_empty_domains():
 
 def test_check_domain_director_exists_empty_domains():
     """check_domain_director_exists returns no violations when domains/ is absent or empty."""
-    from tensio.invariants import check_domain_director_exists
-    from tensio.graph import TensionGraph
+    from hotam_spec.invariants import check_domain_director_exists
+    from hotam_spec.graph import TensionGraph
 
     g = TensionGraph()
     viols = check_domain_director_exists(g)
@@ -63,9 +63,9 @@ def test_check_domain_director_exists_empty_domains():
 
 def test_check_domain_manifest_valid_with_domain(tmp_path):
     """check_domain_manifest_valid catches missing/invalid manifest.py in a tmp domain."""
-    from tensio.invariants import check_domain_manifest_valid
-    from tensio.graph import TensionGraph
-    import tensio.invariants as inv_mod
+    from hotam_spec.invariants import check_domain_manifest_valid
+    from hotam_spec.graph import TensionGraph
+    import hotam_spec.invariants as inv_mod
 
     # Temporarily override _DOMAINS_ROOT to a tmp dir.
     original = inv_mod._DOMAINS_ROOT
@@ -99,9 +99,9 @@ def test_check_domain_manifest_valid_with_domain(tmp_path):
 
 def test_check_domain_director_exists_with_domain(tmp_path):
     """check_domain_director_exists catches missing director agent scope.py."""
-    from tensio.invariants import check_domain_director_exists
-    from tensio.graph import TensionGraph
-    import tensio.invariants as inv_mod
+    from hotam_spec.invariants import check_domain_director_exists
+    from hotam_spec.graph import TensionGraph
+    import hotam_spec.invariants as inv_mod
 
     original = inv_mod._DOMAINS_ROOT
     inv_mod._DOMAINS_ROOT = tmp_path
@@ -163,8 +163,8 @@ def test_agent_has_docs_subdir():
 
 def test_check_agent_has_agents_subdir_passes_on_real_agents():
     """check_agent_has_agents_subdir returns no violations for the real agents root."""
-    from tensio.invariants import check_agent_has_agents_subdir
-    from tensio.graph import TensionGraph
+    from hotam_spec.invariants import check_agent_has_agents_subdir
+    from hotam_spec.graph import TensionGraph
 
     g = TensionGraph()
     viols = check_agent_has_agents_subdir(g)
@@ -173,8 +173,8 @@ def test_check_agent_has_agents_subdir_passes_on_real_agents():
 
 def test_check_agent_has_docs_subdir_passes_on_real_agents():
     """check_agent_has_docs_subdir returns no violations for the real agents root."""
-    from tensio.invariants import check_agent_has_docs_subdir
-    from tensio.graph import TensionGraph
+    from hotam_spec.invariants import check_agent_has_docs_subdir
+    from hotam_spec.graph import TensionGraph
 
     g = TensionGraph()
     viols = check_agent_has_docs_subdir(g)

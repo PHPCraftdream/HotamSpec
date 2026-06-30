@@ -15,7 +15,7 @@ Canon: §Harness — derives the prioritized next correct action from any graph 
 The harness: derive the next correct action from ANY graph state ("what now").
 
 This is the centerpiece. dev-coin makes DRIFT structurally impossible (regen ==
-committed). Tensio generalizes that to make BEING LOST structurally impossible:
+committed). Hotam-Spec generalizes that to make BEING LOST structurally impossible:
 an agent dropped into the repo in any state runs this tool and deterministically
 gets a prioritized, typed list of next actions. It is the Diagnosis step of the
 closed loop:
@@ -51,7 +51,7 @@ Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)
   uv run python tools/what_now.py --demo     # diagnose the fixture demo graph
 
-Dependency-light (stdlib + the tensio package). Deterministic ordering.
+Dependency-light (stdlib + the hotam_spec package). Deterministic ordering.
 
 ## CLI usage
 

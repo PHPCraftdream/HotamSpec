@@ -31,8 +31,8 @@ import create_entity_type  # noqa: E402
 _MINIMAL_GRAPH = """\
 from __future__ import annotations
 
-from tensio.graph import TensionGraph
-from tensio.stakeholder import Stakeholder
+from hotam_spec.graph import TensionGraph
+from hotam_spec.stakeholder import Stakeholder
 
 
 def build_graph() -> TensionGraph:
@@ -47,10 +47,10 @@ def build_graph() -> TensionGraph:
 _GRAPH_WITH_EXISTING_ENTITY = """\
 from __future__ import annotations
 
-from tensio.entity import EntityField, EntityType
-from tensio.graph import TensionGraph
-from tensio.lifecycle import Lifecycle, State, Transition
-from tensio.stakeholder import Stakeholder
+from hotam_spec.entity import EntityField, EntityType
+from hotam_spec.graph import TensionGraph
+from hotam_spec.lifecycle import Lifecycle, State, Transition
+from hotam_spec.stakeholder import Stakeholder
 
 
 def build_graph() -> TensionGraph:
@@ -137,8 +137,8 @@ def test_success(tmp_path: Path) -> None:
     assert "EntityType(" in result_text
     assert "PENDING" in result_text
     assert "FULFILLED" in result_text
-    assert "from tensio.entity import" in result_text
-    assert "from tensio.lifecycle import" in result_text
+    assert "from hotam_spec.entity import" in result_text
+    assert "from hotam_spec.lifecycle import" in result_text
 
 
 def test_refuses_duplicate_slug(tmp_path: Path) -> None:

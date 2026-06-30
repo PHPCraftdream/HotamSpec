@@ -34,7 +34,7 @@ the loop run AS A LOOP, not as a manually-prompted sequence.
 ```
 usage: tick.py [-h] [--cycle CYCLE]
 
-Tensio tick — advisory diagnostic cycle.
+Hotam-Spec tick — advisory diagnostic cycle.
 
 options:
   -h, --help     show this help message and exit

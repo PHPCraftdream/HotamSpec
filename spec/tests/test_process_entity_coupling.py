@@ -6,14 +6,14 @@ Covers: P21.3 — activating the forward-compat seam between Process and Entity.
 from __future__ import annotations
 
 
-from tensio.entity import EntityType
-from tensio.graph import TensionGraph
-from tensio.invariants import (
+from hotam_spec.entity import EntityType
+from hotam_spec.graph import TensionGraph
+from hotam_spec.invariants import (
     check_process_drives_existing_entities,
     check_step_invokes_known_transition,
 )
-from tensio.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
-from tensio.process import Process, Step
+from hotam_spec.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
+from hotam_spec.process import Process, Step
 
 
 # ---------------------------------------------------------------------------
@@ -52,7 +52,7 @@ def _customer_entity_type() -> EntityType:
 def _make_process(
     proc_id: str, drives: tuple[str, ...], steps: tuple[Step, ...]
 ) -> Process:
-    from tensio.lifecycle import (
+    from hotam_spec.lifecycle import (
         INITIAL as I,
         QUIESCENT as Q,
         Lifecycle,

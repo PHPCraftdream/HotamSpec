@@ -61,7 +61,7 @@ def _strip_domain_crystal(text: str) -> str:
     ep = text.find(end)
     if bp == -1 or ep == -1 or ep <= bp:
         return text
-    return text[:bp] + text[ep + len(end):]
+    return text[:bp] + text[ep + len(end) :]
 
 
 def _strip_recently_rejected(text: str) -> str:
@@ -72,7 +72,7 @@ def _strip_recently_rejected(text: str) -> str:
     ep = text.find(end)
     if bp == -1 or ep == -1 or ep <= bp:
         return text
-    return text[:bp] + text[ep + len(end):]
+    return text[:bp] + text[ep + len(end) :]
 
 
 def test_framework_claude_md_constitution_only_inside_domain_crystal() -> None:
@@ -176,7 +176,7 @@ def test_framework_claude_md_has_repo_map_scoped_to_spec() -> None:
     block = _extract_block(text, "<!-- REPO-MAP:BEGIN -->", "<!-- REPO-MAP:END -->")
     assert block is not None, "REPO-MAP block not found in root CLAUDE.md"
     # Framework body files must be present.
-    assert "spec/src/tensio/" in block, "REPO-MAP missing framework body section"
+    assert "spec/src/hotam_spec/" in block, "REPO-MAP missing framework body section"
     assert "spec/tools/" in block, "REPO-MAP missing tools section"
 
 

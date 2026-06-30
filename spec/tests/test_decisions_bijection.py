@@ -34,7 +34,7 @@ for _p in (_SRC, _TOOLS):
 
 import gen_spec  # noqa: E402
 
-from tensio.graph import load_content_graph  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]  # spec/tests -> spec -> HotamSpec
 _CLAUDE_MD = _REPO_ROOT / "CLAUDE.md"

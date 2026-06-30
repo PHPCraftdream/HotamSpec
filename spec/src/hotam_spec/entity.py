@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from tensio.lifecycle import Lifecycle
+from hotam_spec.lifecycle import Lifecycle
 
 ENTITY_FIELD_KINDS: frozenset[str] = frozenset(
     {"string", "number", "enum", "reference", "state"}

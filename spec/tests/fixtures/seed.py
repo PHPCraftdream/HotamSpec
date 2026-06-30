@@ -11,22 +11,22 @@ so the harness has something to show:
 
 These are not bugs in the fixture; they are the methodology's working surface.
 
-WHY a fixture (and not seed data in src/tensio/): Tensio is a CONTENT-FREE
+WHY a fixture (and not seed data in src/hotam_spec/): Hotam-Spec is a CONTENT-FREE
 framework. Business content (this file) is example data for the tests and the
 opt-in `--demo` run; real domains live under `spec/content/`.
 """
 
 from __future__ import annotations
 
-from tensio.assumption import DEAD, Assumption
-from tensio.axis import Axis
-from tensio.conflict import Conflict, conflict_identity
-from tensio.entity import EntityField, EntityInstance, EntityType  # noqa: F401
-from tensio.graph import TensionGraph
-from tensio.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
-from tensio.process import PROCESS_LIFECYCLE, Process, Step
-from tensio.requirement import Relation, Requirement
-from tensio.stakeholder import Stakeholder
+from hotam_spec.assumption import DEAD, Assumption
+from hotam_spec.axis import Axis
+from hotam_spec.conflict import Conflict, conflict_identity
+from hotam_spec.entity import EntityField, EntityInstance, EntityType  # noqa: F401
+from hotam_spec.graph import TensionGraph
+from hotam_spec.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
+from hotam_spec.process import PROCESS_LIFECYCLE, Process, Step
+from hotam_spec.requirement import Relation, Requirement
+from hotam_spec.stakeholder import Stakeholder
 
 
 # --- Customer entity type ----------------------------------------------------

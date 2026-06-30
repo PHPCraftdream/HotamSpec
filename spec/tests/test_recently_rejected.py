@@ -19,9 +19,9 @@ if _tools not in sys.path:
     sys.path.insert(0, _tools)
 
 import gen_spec as _gs  # noqa: E402
-from tensio.graph import TensionGraph
-from tensio.requirement import Requirement
-from tensio.stakeholder import Stakeholder
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.requirement import Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 _ACTIVE_DOMAIN = _gs._active_domain()
@@ -103,9 +103,7 @@ def test_recently_rejected_regen_byte_identical() -> None:
         text=True,
         cwd=str(SPEC_ROOT),
     )
-    assert result.returncode == 0, (
-        f"gen_spec.py failed:\n{result.stderr}"
-    )
+    assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
     after = _read(ROOT_CLAUDE_MD)
     assert before == after, (
         "Root CLAUDE.md changed on re-regen — RECENTLY-REJECTED block is not idempotent. "

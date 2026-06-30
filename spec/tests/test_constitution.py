@@ -74,7 +74,7 @@ def test_root_claude_md_has_no_constitution_sentinels() -> None:
     bp = root_text.find(dc_begin)
     ep = root_text.find(dc_end)
     if bp != -1 and ep != -1 and ep > bp:
-        root_text = root_text[:bp] + root_text[ep + len(dc_end):]
+        root_text = root_text[:bp] + root_text[ep + len(dc_end) :]
     assert _CONST_BEGIN not in root_text, (
         "Root CLAUDE.md has CONSTITUTION:BEGIN outside DOMAIN-CRYSTAL block — "
         "run gen_spec.py to fix"

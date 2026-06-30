@@ -1,6 +1,6 @@
 """Content-free framework structural scan — enforces R-content-free-framework.
 
-Walks every module under spec/src/tensio/ and asserts that no top-level name
+Walks every module under spec/src/hotam_spec/ and asserts that no top-level name
 is an INSTANCE of the domain object types (TensionGraph, Requirement, Conflict,
 Axis, Stakeholder, Assumption). Classes themselves, functions, dunders, module-
 level constants OTHER than those instances, and the type objects imported for
@@ -25,19 +25,19 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 # Import the types we are scanning for AFTER adding src to path.
-from tensio.assumption import Assumption  # noqa: E402
-from tensio.axis import Axis  # noqa: E402
-from tensio.conflict import Conflict  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
-from tensio.requirement import Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.assumption import Assumption  # noqa: E402
+from hotam_spec.axis import Axis  # noqa: E402
+from hotam_spec.conflict import Conflict  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.requirement import Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 _INSTANCE_TYPES = (TensionGraph, Requirement, Conflict, Axis, Stakeholder, Assumption)
-_TENSIO_SRC = _SRC / "tensio"
+_TENSIO_SRC = _SRC / "hotam_spec"
 
 
 def test_no_domain_instances_in_tensio_src() -> None:
-    """No top-level domain-object instance lives in any spec/src/tensio/*.py module.
+    """No top-level domain-object instance lives in any spec/src/hotam_spec/*.py module.
 
     Uses the already-imported (canonical) module objects from sys.modules so
     that dataclass type annotations resolve correctly.  Scans every public,
@@ -49,7 +49,7 @@ def test_no_domain_instances_in_tensio_src() -> None:
     bad: list[str] = []
     for path in py_files:
         stem = path.stem
-        mod_key = f"tensio.{stem}" if stem != "__init__" else "tensio"
+        mod_key = f"hotam_spec.{stem}" if stem != "__init__" else "hotam_spec"
         # Ensure the module is imported (it should already be).
         mod = importlib.import_module(mod_key)
         for name, value in vars(mod).items():
@@ -64,6 +64,7 @@ def test_no_domain_instances_in_tensio_src() -> None:
                     f"(violates R-content-free-framework)"
                 )
 
-    assert not bad, "spec/src/tensio/ contains domain-object instances:\n" + "\n".join(
-        f"  {b}" for b in bad
+    assert not bad, (
+        "spec/src/hotam_spec/ contains domain-object instances:\n"
+        + "\n".join(f"  {b}" for b in bad)
     )

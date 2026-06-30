@@ -7,10 +7,10 @@ exclusive terminal/quiescent states is the canonical hidden contradiction (M16).
 
 from __future__ import annotations
 
-from tensio.entity import EntityType
-from tensio.graph import TensionGraph, entity_state_conflict_suspects
-from tensio.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
-from tensio.process import Process, Step
+from hotam_spec.entity import EntityType
+from hotam_spec.graph import TensionGraph, entity_state_conflict_suspects
+from hotam_spec.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
+from hotam_spec.process import Process, Step
 
 
 # ---------------------------------------------------------------------------

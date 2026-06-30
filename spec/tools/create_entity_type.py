@@ -32,8 +32,8 @@ _SRC = _SPEC_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tensio.entity import ENTITY_FIELD_KINDS  # noqa: E402
-from tensio.lifecycle import STATE_KINDS  # noqa: E402
+from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
+from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 
 _APPLY_PROPOSAL = Path(__file__).resolve().parent / "apply_proposal.py"
 

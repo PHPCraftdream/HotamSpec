@@ -24,8 +24,8 @@ from fixtures.seed import (  # noqa: E402
     PR_BILLING_CLOSE_DELINQUENT,
     seed_graph,
 )
-from tensio.graph import entity_state_conflict_suspects  # noqa: E402
-from tensio.invariants import all_violations, holds  # noqa: E402
+from hotam_spec.graph import entity_state_conflict_suspects  # noqa: E402
+from hotam_spec.invariants import all_violations, holds  # noqa: E402
 
 import what_now  # noqa: E402
 
@@ -90,7 +90,7 @@ def test_demo_fixture_entity_state_detector_fires():
 def test_demo_fixture_check_process_drives_existing_entities_green():
     """Both opposing processes declare drives_entities=('customer',) which
     resolves to the declared CUSTOMER_ENTITY — no dangling reference."""
-    from tensio.invariants import check_process_drives_existing_entities  # noqa: PLC0415
+    from hotam_spec.invariants import check_process_drives_existing_entities  # noqa: PLC0415
 
     g = _g()
     violations = check_process_drives_existing_entities(g)
@@ -108,7 +108,7 @@ def test_demo_fixture_check_process_drives_existing_entities_green():
 def test_demo_fixture_check_step_invokes_known_transition_green():
     """Each Step.invokes ('customer.suspend', 'customer.close') resolves to a
     real Lifecycle transition on the CUSTOMER_ENTITY lifecycle."""
-    from tensio.invariants import check_step_invokes_known_transition  # noqa: PLC0415
+    from hotam_spec.invariants import check_step_invokes_known_transition  # noqa: PLC0415
 
     g = _g()
     violations = check_step_invokes_known_transition(g)
@@ -125,7 +125,7 @@ def test_demo_fixture_check_step_invokes_known_transition_green():
 
 def test_demo_fixture_check_entity_instance_state_in_lifecycle_green():
     """CUSTOMER_ACME.state == 'ACTIVE' — a valid state in CUSTOMER_LIFECYCLE."""
-    from tensio.invariants import check_entity_instance_state_in_lifecycle  # noqa: PLC0415
+    from hotam_spec.invariants import check_entity_instance_state_in_lifecycle  # noqa: PLC0415
 
     g = _g()
     violations = check_entity_instance_state_in_lifecycle(g)
@@ -143,7 +143,7 @@ def test_demo_fixture_check_entity_instance_state_in_lifecycle_green():
 def test_demo_fixture_check_entity_instance_refs_resolve_green():
     """CUSTOMER_ACME.owner references 'finance' — a real Stakeholder.id in the
     seed graph — so the reference resolves cleanly."""
-    from tensio.invariants import check_entity_instance_refs_resolve  # noqa: PLC0415
+    from hotam_spec.invariants import check_entity_instance_refs_resolve  # noqa: PLC0415
 
     g = _g()
     violations = check_entity_instance_refs_resolve(g)

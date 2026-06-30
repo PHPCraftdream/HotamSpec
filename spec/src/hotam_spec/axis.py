@@ -12,7 +12,7 @@ only works if the axis is a normalized, shared slug rather than ad-hoc prose;
 into two. So Conflict.axis MUST be a slug present in the graph's `axes`
 vocabulary (invariants.check_axis_in_registry).
 
-WHY the vocabulary lives on TensionGraph.axes (not as a module constant): Tensio
+WHY the vocabulary lives on TensionGraph.axes (not as a module constant): Hotam-Spec
 is a CONTENT-FREE framework. The framework ships zero axes; each domain owns its
 own vocabulary, declared on its graph in `spec/content/graph.py`. The framework
 provides the Axis dataclass shape and the invariant; the slugs are the domain's.

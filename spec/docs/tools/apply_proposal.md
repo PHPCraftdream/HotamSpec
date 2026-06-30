@@ -21,7 +21,7 @@ Optionally runs the P4 closure check to confirm the triggering diagnosis was
 actually removed.
 
 This is the FIRST OPERATOR ACTION TOOL: the AI operator emits a proposal
-(see tensio/proposal.py); the steward approves out-of-band; then the AI calls
+(see hotam_spec/proposal.py); the steward approves out-of-band; then the AI calls
 this tool to mechanically land the change. No free-text editing of the graph.
 
 Supported proposal kinds:

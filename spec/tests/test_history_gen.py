@@ -14,7 +14,7 @@ if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
 import gen_spec  # noqa: E402
-from tensio.graph import load_content_graph  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
 
 
 def test_history_contains_every_rejected_requirement() -> None:

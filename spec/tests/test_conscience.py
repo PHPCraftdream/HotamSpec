@@ -28,9 +28,9 @@ for _p in (_SRC, _TESTS):
 from hypothesis import given, settings, HealthCheck, strategies as st  # noqa: E402
 
 from fixtures.seed import DEMO_AXES  # noqa: E402
-from tensio.conflict import Conflict, conflict_identity  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     CRITICAL_CORE_INVARIANTS,
     check_decided_has_decided_by,
     check_no_dangling_ids,
@@ -40,9 +40,9 @@ from tensio.invariants import (  # noqa: E402
     check_typed_anchors,
     holds,
 )
-from tensio.operator import ContextBudget, Operator  # noqa: E402
-from tensio.requirement import Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.operator import ContextBudget, Operator  # noqa: E402
+from hotam_spec.requirement import Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Shared small building blocks
@@ -314,7 +314,7 @@ def test_real_meta_domain_passes_critical_core() -> None:
     DEAD assumption causes a critical-core invariant to fire on the meta-domain,
     it appears here first.
     """
-    from tensio.graph import load_content_graph  # noqa: PLC0415
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     g = load_content_graph()
     for check in CRITICAL_CORE_INVARIANTS:

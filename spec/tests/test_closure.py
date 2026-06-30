@@ -26,7 +26,7 @@ for _p in (_SRC, _TOOLS):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from tensio.proposal import (  # noqa: E402
+from hotam_spec.proposal import (  # noqa: E402
     ProposedConflictTransition,
     ProposedRejection,
     ProposedRequirement,

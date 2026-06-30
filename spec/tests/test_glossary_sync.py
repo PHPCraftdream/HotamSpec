@@ -1,7 +1,7 @@
 """Glossary sync: terminology drift is structurally impossible.
 
 Three assertions:
-  1. Every term in TERMS is referenced in at least one spec/src/tensio/*.py
+  1. Every term in TERMS is referenced in at least one spec/src/hotam_spec/*.py
      docstring (no dead vocab).
   2. Every §-prefixed token in framework docstrings is in term_slugs()
      (no invented terms).
@@ -24,7 +24,7 @@ from pathlib import Path
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _TOOLS = _SPEC_ROOT / "tools"
 _TESTS = Path(__file__).resolve().parent
-_SRC = _SPEC_ROOT / "src" / "tensio"
+_SRC = _SPEC_ROOT / "src" / "hotam_spec"
 
 for _p in (_TOOLS, _TESTS, _SPEC_ROOT / "src"):
     if str(_p) not in sys.path:
@@ -32,7 +32,7 @@ for _p in (_TOOLS, _TESTS, _SPEC_ROOT / "src"):
 
 import gen_spec  # noqa: E402
 
-from tensio.glossary import TERMS, term_slugs  # noqa: E402
+from hotam_spec.glossary import TERMS, term_slugs  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +45,7 @@ def _read_normalized(path: Path) -> str:
 
 
 def _all_framework_docstrings() -> str:
-    """Collect every module + class + function docstring in spec/src/tensio/*.py."""
+    """Collect every module + class + function docstring in spec/src/hotam_spec/*.py."""
     parts: list[str] = []
     for path in sorted(_SRC.glob("*.py")):
         tree = ast.parse(_read_normalized(path))
@@ -74,7 +74,7 @@ def _all_framework_docstrings() -> str:
 
 
 def test_every_term_used_in_docstrings() -> None:
-    """Every Term.slug in TERMS appears in at least one tensio/*.py docstring.
+    """Every Term.slug in TERMS appears in at least one hotam_spec/*.py docstring.
 
     Canon: §Glossary — dead vocabulary (added to TERMS but never referenced
     in docstrings) is caught here. Fix: either add the slug to a relevant
@@ -83,7 +83,7 @@ def test_every_term_used_in_docstrings() -> None:
     corpus = _all_framework_docstrings()
     missing = [t.slug for t in TERMS if t.slug not in corpus]
     assert not missing, (
-        f"Terms in TERMS but never referenced in any tensio docstring "
+        f"Terms in TERMS but never referenced in any hotam_spec docstring "
         f"(dead vocab — add to a docstring or remove from TERMS): {missing}"
     )
 
@@ -94,7 +94,7 @@ def test_every_term_used_in_docstrings() -> None:
 
 
 def test_section_tokens_in_docstrings_are_known() -> None:
-    """Every §-prefixed token in tensio docstrings is in term_slugs().
+    """Every §-prefixed token in hotam_spec docstrings is in term_slugs().
 
     Canon: §Glossary — invented §-tokens (written in a docstring but missing
     from TERMS) are caught here. Fix: add the term to glossary.TERMS or
@@ -106,7 +106,7 @@ def test_section_tokens_in_docstrings_are_known() -> None:
     found = set(re.findall(r"§[A-Za-z][\w-]*", corpus))
     unknown = found - known
     assert not unknown, (
-        f"§-tokens in tensio docstrings that are NOT in term_slugs() "
+        f"§-tokens in hotam_spec docstrings that are NOT in term_slugs() "
         f"(invented terms — add to TERMS or fix the docstring typo): {unknown}"
     )
 

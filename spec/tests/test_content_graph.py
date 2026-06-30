@@ -22,8 +22,8 @@ for _p in (_SRC, _TOOLS):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from tensio.graph import load_content_graph  # noqa: E402
-from tensio.invariants import all_violations, holds  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
+from hotam_spec.invariants import all_violations, holds  # noqa: E402
 import gen_spec  # noqa: E402
 import what_now  # noqa: E402
 

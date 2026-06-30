@@ -21,7 +21,7 @@ for _p in (_TOOLS, _SRC):
         sys.path.insert(0, str(_p))
 
 import tick as tick_module  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

@@ -9,19 +9,24 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Make tensio importable.
+# Make hotam_spec importable.
 _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tensio.graph import load_content_graph, operator_ids  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.graph import load_content_graph, operator_ids  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     check_goal_owner_is_operator,
     check_goal_target_kind_known,
     check_status_in_lifecycle,
     check_typed_anchors,
 )
-from tensio.process import TARGET_KINDS, Goal, TargetState, TARGET_KIND_GRAPH_PROPERTY  # noqa: E402
+from hotam_spec.process import (
+    TARGET_KINDS,
+    Goal,
+    TargetState,
+    TARGET_KIND_GRAPH_PROPERTY,
+)  # noqa: E402
 
 
 def test_goal_burn_down_present() -> None:
@@ -78,7 +83,7 @@ def test_goal_typed_anchor() -> None:
 
 def test_check_typed_anchors_fires_on_bad_goal_id() -> None:
     """check_typed_anchors fires when a Goal id lacks the GOAL- prefix."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     bad = Goal(
         id="G-bad",
@@ -96,7 +101,7 @@ def test_check_typed_anchors_fires_on_bad_goal_id() -> None:
 
 def test_check_goal_target_kind_fires_on_unknown_kind() -> None:
     """check_goal_target_kind_known fires on an unknown kind."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     bad = Goal(
         id="GOAL-bad",
@@ -115,7 +120,7 @@ def test_check_goal_target_kind_fires_on_unknown_kind() -> None:
 
 def test_check_goal_owner_fires_on_unknown_operator() -> None:
     """check_goal_owner_is_operator fires when owner is not a known Operator."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     bad = Goal(
         id="GOAL-orphan",
@@ -134,7 +139,7 @@ def test_check_goal_owner_fires_on_unknown_operator() -> None:
 
 def test_goal_aspect_noop_on_empty_goals() -> None:
     """Both goal invariants are no-ops when g.goals is empty."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     g = TensionGraph()  # empty; no goals
     assert check_goal_target_kind_known(g) == []

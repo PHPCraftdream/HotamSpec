@@ -10,9 +10,14 @@ Plus an aspect-gating sanity test (empty entity_types/entities → all six retur
 from __future__ import annotations
 
 
-from tensio.entity import ENTITY_FIELD_KINDS, EntityField, EntityInstance, EntityType
-from tensio.graph import TensionGraph
-from tensio.invariants import (
+from hotam_spec.entity import (
+    ENTITY_FIELD_KINDS,
+    EntityField,
+    EntityInstance,
+    EntityType,
+)
+from hotam_spec.graph import TensionGraph
+from hotam_spec.invariants import (
     check_entity_field_kind_known,
     check_entity_instance_id_prefix,
     check_entity_instance_refs_resolve,
@@ -21,8 +26,15 @@ from tensio.invariants import (
     check_entity_type_lifecycle_wellformed,
     check_typed_anchors_entity,
 )
-from tensio.lifecycle import INITIAL, NORMAL, QUIESCENT, Lifecycle, State, Transition
-from tensio.stakeholder import Stakeholder
+from hotam_spec.lifecycle import (
+    INITIAL,
+    NORMAL,
+    QUIESCENT,
+    Lifecycle,
+    State,
+    Transition,
+)
+from hotam_spec.stakeholder import Stakeholder
 
 # ---------------------------------------------------------------------------
 # Shared fixtures

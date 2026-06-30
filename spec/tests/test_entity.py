@@ -1,4 +1,4 @@
-"""Tests for spec/src/tensio/entity.py — P21.1 Entity layer.
+"""Tests for spec/src/hotam_spec/entity.py — P21.1 Entity layer.
 
 Covers EntityField, EntityType, EntityInstance, ENTITY_FIELD_KINDS, and
 TensionGraph integration (entity_types, entities fields + helpers).
@@ -8,14 +8,14 @@ import dataclasses
 
 import pytest
 
-from tensio.entity import (
+from hotam_spec.entity import (
     ENTITY_FIELD_KINDS,
     EntityField,
     EntityInstance,
     EntityType,
 )
-from tensio.graph import TensionGraph, entity_ids, entity_type_slugs
-from tensio.lifecycle import REQUIREMENT_STATUS_LIFECYCLE
+from hotam_spec.graph import TensionGraph, entity_ids, entity_type_slugs
+from hotam_spec.lifecycle import REQUIREMENT_STATUS_LIFECYCLE
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +53,7 @@ def test_entity_type_reuses_lifecycle_keystone():
         lifecycle=_minimal_lifecycle(),
     )
     # Lifecycle keystone is on the field
-    from tensio.lifecycle import Lifecycle
+    from hotam_spec.lifecycle import Lifecycle
 
     assert isinstance(et.lifecycle, Lifecycle)
     # No parallel state-machine attributes directly on EntityType

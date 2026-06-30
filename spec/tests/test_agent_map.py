@@ -86,7 +86,7 @@ def test_root_claude_md_has_no_agent_map_sentinels() -> None:
     bp = root_text.find(dc_begin)
     ep = root_text.find(dc_end)
     if bp != -1 and ep != -1 and ep > bp:
-        root_text = root_text[:bp] + root_text[ep + len(dc_end):]
+        root_text = root_text[:bp] + root_text[ep + len(dc_end) :]
     assert _AGENT_MAP_BEGIN not in root_text, (
         "Root CLAUDE.md has AGENT-MAP:BEGIN outside DOMAIN-CRYSTAL block — "
         "run gen_spec.py to fix"
@@ -210,7 +210,7 @@ def test_agent_map_empty_when_no_agents() -> None:
 
     # Load the real graph.
     sys.path.insert(0, str(SPEC_ROOT / "src"))
-    from tensio.graph import load_content_graph  # noqa: PLC0415
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     g = load_content_graph()
 

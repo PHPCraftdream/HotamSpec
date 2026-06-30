@@ -1,6 +1,6 @@
 """Canon: executable methodology for the lifecycle of contradictory requirements.
 
-Tensio models a body of business requirements NOT as a truth (a single
+Hotam-Spec models a body of business requirements NOT as a truth (a single
 non-contradictory canon) but as a TENSION GRAPH: many requirements, constantly
 changing, mutually contradictory, each resting on assumptions with their own
 lifecycle. The goal is the INVERSE of a consistency proof: not to eliminate
@@ -9,7 +9,7 @@ visible over time as first-class, owned, history-bearing objects.
 
 THE CENTRAL INVERSION (vs the dev-coin reference):
   dev-coin proves CONSISTENCY — one canon, drift forbidden, conflicts closed
-  forever (0 open mechanisms). Tensio does the OPPOSITE — it makes contradictions
+  forever (0 open mechanisms). Hotam-Spec does the OPPOSITE — it makes contradictions
   visible and KEEPS them visible. A contradiction is never silently "fixed"; it
   is a node that transitions through a lifecycle under a human steward.
 
@@ -65,7 +65,7 @@ invariants are boolean check_* functions; anti-drift is generator + meta-test.
 No RDF/SHACL/Postgres.
 
 CONTENT-FREE FRAMEWORK: the package itself ships ZERO business data — no example
-requirements, no example axes. Tensio is a blank kit; the framework hosts the
+requirements, no example axes. Hotam-Spec is a blank kit; the framework hosts the
 ontology, the invariants, the generator and the harness. A real domain is loaded
 from `spec/content/graph.py` exposing `build_graph() -> TensionGraph`; an empty
 content slot is the legitimate ship state. The worked example lives outside the
@@ -90,7 +90,7 @@ CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Invariants — the structural rules;
   §Graph — the store and its traversal;
   §Loop — the what_now operating procedure (documented, exercised by the harness);
-  §Glossary — the controlled methodology vocabulary (tensio.glossary.TERMS).
+  §Glossary — the controlled methodology vocabulary (hotam_spec.glossary.TERMS).
   §Constitution — the operator's boot sequence generated from the SETTLED laws;
                   a fresh agent reads this to reconstitute as operator without
                   needing a session checkpoint (M33 resolved — P7).

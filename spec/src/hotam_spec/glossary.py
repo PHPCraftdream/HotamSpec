@@ -1,7 +1,7 @@
 """Canon: §Glossary — the methodology's controlled vocabulary (framework-side).
 
-RULE: every §-token used in tensio framework docstrings MUST appear here as a
-Term entry. Every Term entry MUST be referenced in at least one tensio docstring.
+RULE: every §-token used in hotam_spec framework docstrings MUST appear here as a
+Term entry. Every Term entry MUST be referenced in at least one hotam_spec docstring.
 Violations are caught by tests/test_glossary_sync.py.
 
 Canon: §Glossary — this module IS the authoritative membership list of admitted

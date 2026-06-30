@@ -1,4 +1,4 @@
-"""Tests for tensio.proposal — the structured operator-→-steward proposal types.
+"""Tests for hotam_spec.proposal — the structured operator-→-steward proposal types.
 
 Two duties:
   1. Type-shape tests: frozen dataclasses with the right fields and defaults.
@@ -19,7 +19,7 @@ for _p in (_SRC, _TOOLS):
 
 import pytest  # noqa: E402
 
-from tensio.proposal import (  # noqa: E402
+from hotam_spec.proposal import (  # noqa: E402
     ProposedConflictTransition,
     ProposedRejection,
     ProposedRequirement,

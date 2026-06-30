@@ -27,7 +27,7 @@ if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
 
 import gen_spec as _gen_spec  # noqa: E402
-from tensio.glossary import TERMS  # noqa: E402
+from hotam_spec.glossary import TERMS  # noqa: E402
 
 _ACTIVE_DOMAIN = _gen_spec._active_domain()
 CLAUDE_MD = (

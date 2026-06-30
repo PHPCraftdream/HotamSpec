@@ -23,13 +23,13 @@ for _p in (_SRC, _TOOLS):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from tensio.assumption import DEAD, Assumption  # noqa: E402
-from tensio.axis import Axis  # noqa: E402
-from tensio.conflict import Conflict, conflict_identity  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
-from tensio.operator import ContextBudget, Operator  # noqa: E402
-from tensio.requirement import DRAFT, ENFORCED, PROSE, SETTLED, Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.assumption import DEAD, Assumption  # noqa: E402
+from hotam_spec.axis import Axis  # noqa: E402
+from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.operator import ContextBudget, Operator  # noqa: E402
+from hotam_spec.requirement import DRAFT, ENFORCED, PROSE, SETTLED, Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 from what_now import P_REFLECTION, P_STRUCTURE, diagnose  # noqa: E402
 
@@ -356,7 +356,7 @@ def test_real_meta_domain_reflection_today() -> None:
       - No DEAD assumptions -> no dead-assumption-on-enforcer
       - R-active-loop-playbooks is DECIDED derived but SETTLED -> no derived-unbuilt
     """
-    from tensio.graph import load_content_graph  # noqa: PLC0415
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     g = load_content_graph()
     actions = diagnose(g)

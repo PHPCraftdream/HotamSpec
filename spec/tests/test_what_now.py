@@ -26,10 +26,10 @@ for _p in (_SRC, _TOOLS, _TESTS):
         sys.path.insert(0, str(_p))
 
 from fixtures.seed import DEMO_AXES, seed_graph  # noqa: E402
-from tensio.conflict import Conflict, conflict_identity  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
-from tensio.requirement import Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.requirement import Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 import what_now  # noqa: E402
 from what_now import (  # noqa: E402

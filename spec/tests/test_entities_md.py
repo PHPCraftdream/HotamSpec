@@ -64,11 +64,11 @@ def test_entities_md_regenerates_byte_identical() -> None:
 def _make_synthetic_graph_with_entity():
     """Return a TensionGraph containing one EntityType('test-widget', …)."""
     # Import after path is set up.
-    from tensio.axis import Axis  # noqa: PLC0415
-    from tensio.entity import EntityField, EntityType  # noqa: PLC0415
-    from tensio.graph import TensionGraph  # noqa: PLC0415
-    from tensio.lifecycle import Lifecycle, State, Transition  # noqa: PLC0415
-    from tensio.stakeholder import Stakeholder  # noqa: PLC0415
+    from hotam_spec.axis import Axis  # noqa: PLC0415
+    from hotam_spec.entity import EntityField, EntityType  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.lifecycle import Lifecycle, State, Transition  # noqa: PLC0415
+    from hotam_spec.stakeholder import Stakeholder  # noqa: PLC0415
 
     lc = Lifecycle(
         slug="widget-lc",
@@ -123,8 +123,8 @@ def test_entities_md_lists_types_when_present() -> None:
 
 def test_check_entities_md_lists_all_types_no_types() -> None:
     """A domain with no entity_types → check_entities_md_lists_all_types returns []."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
-    from tensio.invariants import check_entities_md_lists_all_types  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.invariants import check_entities_md_lists_all_types  # noqa: PLC0415
 
     g = TensionGraph()  # no entity_types
     # The check walks domains/ on disk; tensio-self has no entity_types, so [] expected.
@@ -142,10 +142,10 @@ def test_check_entities_md_lists_all_types_no_types() -> None:
 def test_check_entities_md_lists_all_types_missing_slug(tmp_path: Path) -> None:
     """When a domain's graph.py declares an entity type but ENTITIES.md lacks the section,
     check_entities_md_lists_all_types fires one Violation."""
-    from tensio.invariants import (  # noqa: PLC0415
+    from hotam_spec.invariants import (  # noqa: PLC0415
         check_entities_md_lists_all_types,
     )
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     # Create a synthetic domain directory under tmp_path that mimics domains/<name>/.
     domain_dir = tmp_path / "domains" / "test-domain"
@@ -154,11 +154,11 @@ def test_check_entities_md_lists_all_types_missing_slug(tmp_path: Path) -> None:
 
     # Write a minimal graph.py with entity_types.
     graph_src = """\
-from tensio.axis import Axis
-from tensio.entity import EntityType
-from tensio.graph import TensionGraph
-from tensio.lifecycle import Lifecycle, State, Transition
-from tensio.stakeholder import Stakeholder
+from hotam_spec.axis import Axis
+from hotam_spec.entity import EntityType
+from hotam_spec.graph import TensionGraph
+from hotam_spec.lifecycle import Lifecycle, State, Transition
+from hotam_spec.stakeholder import Stakeholder
 
 def build_graph():
     lc = Lifecycle(
@@ -181,7 +181,7 @@ def build_graph():
     )
 
     # Monkey-patch _DOMAINS_ROOT_FOR_ENTITY_CHECK to point at tmp_path/domains.
-    import tensio.invariants as _inv  # noqa: PLC0415
+    import hotam_spec.invariants as _inv  # noqa: PLC0415
 
     orig = _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK
     try:
@@ -215,7 +215,7 @@ def test_entity_constitution_section_appears_when_types_present() -> None:
 
 def test_entity_constitution_section_absent_when_no_types() -> None:
     """_render_constitution_block omits Entity-derived section when entity_types is empty."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     g = TensionGraph()
     block = gen_spec._render_constitution_block(g)

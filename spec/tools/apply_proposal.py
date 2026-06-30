@@ -9,7 +9,7 @@ Optionally runs the P4 closure check to confirm the triggering diagnosis was
 actually removed.
 
 This is the FIRST OPERATOR ACTION TOOL: the AI operator emits a proposal
-(see tensio/proposal.py); the steward approves out-of-band; then the AI calls
+(see hotam_spec/proposal.py); the steward approves out-of-band; then the AI calls
 this tool to mechanically land the change. No free-text editing of the graph.
 
 Supported proposal kinds:
@@ -73,7 +73,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# --- Make tensio importable --------------------------------------------------
+# --- Make hotam_spec importable --------------------------------------------------
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _SRC = _SPEC_ROOT / "src"
@@ -82,10 +82,10 @@ if str(_SRC) not in sys.path:
 
 import re as _re  # noqa: E402
 
-from tensio.conflict import conflict_identity  # noqa: E402
-from tensio.entity import ENTITY_FIELD_KINDS  # noqa: E402
-from tensio.lifecycle import STATE_KINDS  # noqa: E402
-from tensio.proposal import (  # noqa: E402
+from hotam_spec.conflict import conflict_identity  # noqa: E402
+from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
+from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
+from hotam_spec.proposal import (  # noqa: E402
     Proposal,
     ProposedConflictTransition,
     ProposedEntityType,
@@ -674,8 +674,8 @@ def _apply_requirement_to_source(
             # Check if Relation is already imported
             if "Relation" not in source_text:
                 result = result.replace(
-                    "from tensio.requirement import",
-                    "from tensio.requirement import Relation,",
+                    "from hotam_spec.requirement import",
+                    "from hotam_spec.requirement import Relation,",
                     1,
                 )
     return result
@@ -976,19 +976,19 @@ def _apply_entity_type_to_source(
     # Ensure required imports are present
     needs_lifecycle_import = (
         any(tok in result for tok in ("Lifecycle(", "State(", "Transition("))
-        and "from tensio.lifecycle import" not in result
+        and "from hotam_spec.lifecycle import" not in result
     )
     if needs_lifecycle_import:
         result = result.replace(
             "from __future__ import annotations\n",
-            "from __future__ import annotations\n\nfrom tensio.lifecycle import Lifecycle, State, Transition\n",
+            "from __future__ import annotations\n\nfrom hotam_spec.lifecycle import Lifecycle, State, Transition\n",
             1,
         )
-    elif "from tensio.lifecycle import" in result:
+    elif "from hotam_spec.lifecycle import" in result:
         # Check if Lifecycle, State, Transition are included
         import re as _re2
 
-        m = _re2.search(r"from tensio\.lifecycle import ([^\n]+)", result)
+        m = _re2.search(r"from hotam_spec\.lifecycle import ([^\n]+)", result)
         if m:
             existing = m.group(1)
             needed = ["Lifecycle", "State", "Transition"]
@@ -996,32 +996,32 @@ def _apply_entity_type_to_source(
             if missing:
                 new_import = existing.rstrip() + ", " + ", ".join(missing)
                 result = result.replace(
-                    f"from tensio.lifecycle import {existing}",
-                    f"from tensio.lifecycle import {new_import}",
+                    f"from hotam_spec.lifecycle import {existing}",
+                    f"from hotam_spec.lifecycle import {new_import}",
                     1,
                 )
 
     needs_entity_import = (
         "EntityType(" in result or "EntityField(" in result
-    ) and "from tensio.entity import" not in result
+    ) and "from hotam_spec.entity import" not in result
     if needs_entity_import:
         # Insert after the lifecycle import or at the top of imports
-        if "from tensio.lifecycle import" in result:
+        if "from hotam_spec.lifecycle import" in result:
             result = result.replace(
-                "from tensio.lifecycle import",
-                "from tensio.entity import EntityField, EntityType\nfrom tensio.lifecycle import",
+                "from hotam_spec.lifecycle import",
+                "from hotam_spec.entity import EntityField, EntityType\nfrom hotam_spec.lifecycle import",
                 1,
             )
         else:
             result = result.replace(
                 "from __future__ import annotations\n",
-                "from __future__ import annotations\n\nfrom tensio.entity import EntityField, EntityType\n",
+                "from __future__ import annotations\n\nfrom hotam_spec.entity import EntityField, EntityType\n",
                 1,
             )
-    elif "from tensio.entity import" in result:
+    elif "from hotam_spec.entity import" in result:
         import re as _re3
 
-        m = _re3.search(r"from tensio\.entity import ([^\n]+)", result)
+        m = _re3.search(r"from hotam_spec\.entity import ([^\n]+)", result)
         if m:
             existing = m.group(1)
             needed = ["EntityField", "EntityType"]
@@ -1029,8 +1029,8 @@ def _apply_entity_type_to_source(
             if missing:
                 new_import = existing.rstrip() + ", " + ", ".join(missing)
                 result = result.replace(
-                    f"from tensio.entity import {existing}",
-                    f"from tensio.entity import {new_import}",
+                    f"from hotam_spec.entity import {existing}",
+                    f"from hotam_spec.entity import {new_import}",
                     1,
                 )
 

@@ -13,8 +13,8 @@ existing check_* functions at the 5% threshold).
 
 from __future__ import annotations
 
-from tensio.graph import TensionGraph
-from tensio.invariants import (
+from hotam_spec.graph import TensionGraph
+from hotam_spec.invariants import (
     _JACCARD_THRESHOLD,
     _extract_rule_from_docstring,
     _tokenize,

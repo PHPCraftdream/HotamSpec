@@ -6,7 +6,7 @@ edges are tuple-of-id fields on those objects; traversal is the plain functions
 below. No database, no RDF — the graph instance the invariants, the generator
 and the harness all read is the one assembled by the loader.
 
-CONTENT-FREE FRAMEWORK: this module ships ZERO business data. Tensio is a blank
+CONTENT-FREE FRAMEWORK: this module ships ZERO business data. Hotam-Spec is a blank
 kit. Real domains populate `spec/content/graph.py` exposing `build_graph() ->
 TensionGraph`; an empty `spec/content/` is the legitimate ship state ("no
 content yet"). The example demo lives outside the framework in
@@ -25,14 +25,14 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from tensio.assumption import DEAD, Assumption
-from tensio.axis import Axis
-from tensio.conflict import Conflict
-from tensio.entity import EntityInstance, EntityType
-from tensio.operator import Operator
-from tensio.process import Goal, Process
-from tensio.requirement import Requirement
-from tensio.stakeholder import Stakeholder
+from hotam_spec.assumption import DEAD, Assumption
+from hotam_spec.axis import Axis
+from hotam_spec.conflict import Conflict
+from hotam_spec.entity import EntityInstance, EntityType
+from hotam_spec.operator import Operator
+from hotam_spec.process import Goal, Process
+from hotam_spec.requirement import Requirement
+from hotam_spec.stakeholder import Stakeholder
 
 
 @dataclass(frozen=True)
@@ -115,12 +115,12 @@ class TensionGraph:
 # ---------------------------------------------------------------------------
 
 #: Path to the user-content slot (legacy; used when no domains/ are present).
-# graph.py lives at spec/src/tensio/graph.py; parents[2] is `spec/`.
+# graph.py lives at spec/src/hotam_spec/graph.py; parents[2] is `spec/`.
 CONTENT_DIR = Path(__file__).resolve().parents[2] / "content"
 CONTENT_GRAPH_FILE = CONTENT_DIR / "graph.py"
 CONTENT_BUILDER_NAME = "build_graph"
 
-#: Repo root (spec/src/tensio/graph.py -> parents[3] = repo root)
+#: Repo root (spec/src/hotam_spec/graph.py -> parents[3] = repo root)
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOMAINS_ROOT = _REPO_ROOT / "domains"
 
@@ -128,7 +128,7 @@ _DOMAINS_ROOT = _REPO_ROOT / "domains"
 def _active_domain_graph_file() -> Path | None:
     """Canon: §Graph — return path to the active domain's graph.py, or None.
 
-    RULE: check TENSIO_ACTIVE_DOMAIN env var first; then fall back to the first
+    RULE: check HOTAM_SPEC_ACTIVE_DOMAIN env var first; then fall back to the first
     domains/<name>/graph.py alphabetically. Returns None if domains/ is absent
     or empty (legitimate state: the framework has no domain yet).
 
@@ -137,7 +137,7 @@ def _active_domain_graph_file() -> Path | None:
     """
     import os  # noqa: PLC0415
 
-    env_domain = os.environ.get("TENSIO_ACTIVE_DOMAIN", "").strip()
+    env_domain = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN", "").strip()
     if env_domain:
         candidate = _DOMAINS_ROOT / env_domain / "graph.py"
         if candidate.exists():
@@ -162,12 +162,12 @@ def _load_graph_file(graph_file: Path) -> TensionGraph:
     use the same import/validate pattern; one implementation avoids drift.
     """
     spec = importlib.util.spec_from_file_location(
-        "tensio_user_content_graph", graph_file
+        "hotam_spec_user_content_graph", graph_file
     )
     if spec is None or spec.loader is None:  # pragma: no cover — defensive
         return TensionGraph()
     module = importlib.util.module_from_spec(spec)
-    # Make sure user content can `from tensio.* import …` cleanly.
+    # Make sure user content can `from hotam_spec.* import …` cleanly.
     src_dir = str(Path(__file__).resolve().parents[1])
     if src_dir not in sys.path:
         sys.path.insert(0, src_dir)
@@ -191,7 +191,7 @@ def load_content_graph() -> TensionGraph:
     """Canon: §Graph — load the user's graph from domains/<name>/ or spec/content/.
 
     RULE: discovery order:
-      1. TENSIO_ACTIVE_DOMAIN env var → domains/<name>/graph.py
+      1. HOTAM_SPEC_ACTIVE_DOMAIN env var → domains/<name>/graph.py
       2. First domains/<name>/graph.py alphabetically.
       3. Legacy fallback: spec/content/graph.py (backward-compat).
       4. Nothing found → return empty TensionGraph (legitimate framework state).
@@ -406,7 +406,7 @@ def latent_connector_suspects(g: TensionGraph) -> tuple[LatentSuspect, ...]:
     deliberately stronger than "violated invariant" because it points at the
     not-yet-recorded. Real semantic detection is deferred (see CLAUDE.md / ROADMAP).
     """
-    from tensio.requirement import REJECTED  # noqa: PLC0415
+    from hotam_spec.requirement import REJECTED  # noqa: PLC0415
 
     already = members_pair_set(g)
     reqs = [r for r in g.requirements if r.status != REJECTED]
@@ -445,7 +445,7 @@ def entity_state_conflict_suspects(g: TensionGraph) -> tuple[LatentSuspect, ...]
     auto-materialize a Conflict — only surface as suspicion.
 
     WHY this is M16 made structural: two processes driving one entity along
-    incompatible state paths is the canonical hidden contradiction Tensio was
+    incompatible state paths is the canonical hidden contradiction Hotam-Spec was
     designed to surface. Until P21, Entity was deferred; now this detector turns
     the abstract description into a real next-action for the harness.
     """

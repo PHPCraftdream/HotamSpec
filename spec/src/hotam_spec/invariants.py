@@ -40,8 +40,8 @@ from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 
-from tensio.conflict import conflict_identity
-from tensio.graph import (
+from hotam_spec.conflict import conflict_identity
+from hotam_spec.graph import (
     TensionGraph,
     assumption_ids,
     axis_slugs,
@@ -49,14 +49,19 @@ from tensio.graph import (
     requirement_ids,
     stakeholder_ids,
 )
-from tensio.lifecycle import (
+from hotam_spec.lifecycle import (
     CONFLICT_LIFECYCLE,
     REQUIREMENT_STATUS_LIFECYCLE,
     Lifecycle,
 )
-from tensio.operator import OPERATOR_LIFECYCLE
-from tensio.process import GOAL_LIFECYCLE, TARGET_KINDS
-from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, OPEN_PREFIX, RELATION_KINDS
+from hotam_spec.operator import OPERATOR_LIFECYCLE
+from hotam_spec.process import GOAL_LIFECYCLE, TARGET_KINDS
+from hotam_spec.requirement import (
+    ENFORCED,
+    ENFORCEMENT_LEVELS,
+    OPEN_PREFIX,
+    RELATION_KINDS,
+)
 
 _M_TAG_RE = re.compile(r"^M[1-9][0-9]*$")
 
@@ -1261,8 +1266,8 @@ def check_canonical_lifecycles_wellformed(g: TensionGraph) -> list[Violation]:
     validation is meaningless. References: R-statemachine-wellformedness,
     R-lifecycle-abstraction, R-process-aspect-first.
     """
-    from tensio.process import GOAL_LIFECYCLE as GL  # noqa: PLC0415
-    from tensio.process import PROCESS_LIFECYCLE as PL  # noqa: PLC0415
+    from hotam_spec.process import GOAL_LIFECYCLE as GL  # noqa: PLC0415
+    from hotam_spec.process import PROCESS_LIFECYCLE as PL  # noqa: PLC0415
 
     out: list[Violation] = []
     for lc in (
@@ -1357,10 +1362,10 @@ def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
     behind a seam for future phases. See R-budget-measure and R-context-budget-rule.
 
     WHY fire (not warn): 'domain > context' is exactly the kind of measurable,
-    structural contradiction Tensio exists to surface. An over-budget operator
+    structural contradiction Hotam-Spec exists to surface. An over-budget operator
     is a real conflict the graph holds visibly, not a soft warning.
     """
-    from tensio.operator import NODE_COUNT  # noqa: PLC0415
+    from hotam_spec.operator import NODE_COUNT  # noqa: PLC0415
 
     out: list[Violation] = []
     for op in g.operators:
@@ -1425,7 +1430,7 @@ def check_process_drives_existing_entities(g: TensionGraph) -> list[Violation]:
     landed (P21.1), the resolution is real. A Process driving an undeclared
     entity slug is a structural dead-end the harness must surface.
     """
-    from tensio.graph import entity_type_slugs  # noqa: PLC0415
+    from hotam_spec.graph import entity_type_slugs  # noqa: PLC0415
 
     slugs = entity_type_slugs(g)
     out: list[Violation] = []
@@ -1777,7 +1782,7 @@ def check_entity_field_kind_known(g: TensionGraph) -> list[Violation]:
     validation; an unknown kind breaks the discriminant and hides the field
     from any kind-specific invariant.
     """
-    from tensio.entity import ENTITY_FIELD_KINDS  # noqa: PLC0415
+    from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: PLC0415
 
     out: list[Violation] = []
     for et in g.entity_types:
@@ -1915,8 +1920,8 @@ def check_section_anchors_known(g: TensionGraph) -> list[Violation]:
 
     RULE: every section-anchor token (pattern: section-sign followed by an
     identifier, e.g. the tokens used in 'Canon: §Requirement') found in any
-    spec/src/tensio/*.py docstring MUST appear in
-    `tensio.glossary.term_slugs()`. An unrecognised section-anchor token is
+    spec/src/hotam_spec/*.py docstring MUST appear in
+    `hotam_spec.glossary.term_slugs()`. An unrecognised section-anchor token is
     an invented term (R-speak-by-reference violation) that makes
     R-anchor-everything structurally unsafe — the anchor does not resolve.
 
@@ -1933,7 +1938,7 @@ def check_section_anchors_known(g: TensionGraph) -> list[Violation]:
     References: R-anchor-everything, R-speak-by-reference,
     test_glossary_sync.py::test_section_tokens_in_docstrings_are_known.
     """
-    from tensio.glossary import term_slugs  # noqa: PLC0415
+    from hotam_spec.glossary import term_slugs  # noqa: PLC0415
 
     known = term_slugs()
     out: list[Violation] = []

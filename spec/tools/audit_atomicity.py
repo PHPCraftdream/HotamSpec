@@ -18,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-# --- Make the tensio package importable ------------------------------------
+# --- Make the hotam_spec package importable ------------------------------------
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent  # .../HotamSpec
@@ -27,8 +27,8 @@ GEN_DIR = REPO_ROOT / "docs" / "gen"
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
 
-from tensio.graph import TensionGraph, load_content_graph  # noqa: E402
-from tensio.invariants import ALL_INVARIANTS  # noqa: E402
+from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
+from hotam_spec.invariants import ALL_INVARIANTS  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

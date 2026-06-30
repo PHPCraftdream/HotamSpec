@@ -23,7 +23,7 @@ CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 _REPO_MAP_BEGIN = "<!-- REPO-MAP:BEGIN -->"
 _REPO_MAP_END = "<!-- REPO-MAP:END -->"
 
-SRC_DIR = SPEC_ROOT / "src" / "tensio"
+SRC_DIR = SPEC_ROOT / "src" / "hotam_spec"
 TOOLS_DIR = SPEC_ROOT / "tools"
 CONTENT_DIR = SPEC_ROOT / "content"
 GEN_DIR = REPO_ROOT / "docs" / "gen"
@@ -76,7 +76,7 @@ def test_repo_map_complete() -> None:
     for p in sorted(SRC_DIR.glob("*.py")):
         if p.name.startswith("_"):
             continue
-        entry = f"spec/src/tensio/{p.name}"
+        entry = f"spec/src/hotam_spec/{p.name}"
         if entry not in block:
             errors.append(f"Missing framework file: {entry}")
 

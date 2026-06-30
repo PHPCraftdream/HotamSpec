@@ -3,7 +3,7 @@
 The harness: derive the next correct action from ANY graph state ("what now").
 
 This is the centerpiece. dev-coin makes DRIFT structurally impossible (regen ==
-committed). Tensio generalizes that to make BEING LOST structurally impossible:
+committed). Hotam-Spec generalizes that to make BEING LOST structurally impossible:
 an agent dropped into the repo in any state runs this tool and deterministically
 gets a prioritized, typed list of next actions. It is the Diagnosis step of the
 closed loop:
@@ -39,7 +39,7 @@ Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)
   uv run python tools/what_now.py --demo     # diagnose the fixture demo graph
 
-Dependency-light (stdlib + the tensio package). Deterministic ordering.
+Dependency-light (stdlib + the hotam_spec package). Deterministic ordering.
 """
 
 from __future__ import annotations
@@ -49,14 +49,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# tensio lives in spec/src; make it importable whether run via uv or plain python.
+# hotam_spec lives in spec/src; make it importable whether run via uv or plain python.
 _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tensio.assumption import DEAD as _DEAD  # noqa: E402
-from tensio.conflict import ACKNOWLEDGED, DETECTED  # noqa: E402
-from tensio.graph import (  # noqa: E402
+from hotam_spec.assumption import DEAD as _DEAD  # noqa: E402
+from hotam_spec.conflict import ACKNOWLEDGED, DETECTED  # noqa: E402
+from hotam_spec.graph import (  # noqa: E402
     CONTENT_GRAPH_FILE,
     TensionGraph,
     conflicts_on_assumption,
@@ -67,8 +67,8 @@ from tensio.graph import (  # noqa: E402
     requirement_by_id,
     requirements_on_assumption,
 )
-from tensio.invariants import all_violations  # noqa: E402
-from tensio.requirement import DRAFT, ENFORCED, SETTLED  # noqa: E402
+from hotam_spec.invariants import all_violations  # noqa: E402
+from hotam_spec.requirement import DRAFT, ENFORCED, SETTLED  # noqa: E402
 
 # --- Priority bands (lower number = more urgent) ----------------------------
 

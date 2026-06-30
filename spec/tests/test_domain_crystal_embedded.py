@@ -106,9 +106,7 @@ def test_domain_crystal_regen_byte_identical() -> None:
         text=True,
         cwd=str(SPEC_ROOT),
     )
-    assert result.returncode == 0, (
-        f"gen_spec.py failed:\n{result.stderr}"
-    )
+    assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
     after = _read(ROOT_CLAUDE_MD)
     assert before == after, (
         "Root CLAUDE.md changed on re-regen — DOMAIN-CRYSTAL block is not idempotent. "

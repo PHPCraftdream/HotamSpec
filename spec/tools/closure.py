@@ -17,13 +17,13 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# Make tensio importable (lives in spec/src)
+# Make hotam_spec importable (lives in spec/src)
 _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tensio.graph import load_content_graph  # noqa: E402
-from tensio.proposal import Proposal  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
+from hotam_spec.proposal import Proposal  # noqa: E402
 
 
 @dataclass(frozen=True)

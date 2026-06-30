@@ -15,7 +15,7 @@ Canon: §Generator — regenerates docs/gen/ from the executable model (docstrin
 Generator: the human layer + structural anti-drift (docs-as-code, layer 9).
 
 The single source of truth is the executable model:
-  - `spec/src/tensio/*.py` docstrings (the methodology narrative: RULE + Canon:§
+  - `spec/src/hotam_spec/*.py` docstrings (the methodology narrative: RULE + Canon:§
     + WHY) — they ship with the framework and are content-free;
   - `spec/content/graph.py:build_graph()` (the domain's tension graph) — populated
     by the user; empty in a fresh framework.
@@ -27,7 +27,7 @@ committed, byte-for-byte.
 Pipeline (mirrors dev-coin's gen_spec, purpose inverted from "prove no conflict"
 to "render the tensions visibly"):
 
-    tensio docstrings (narrative)            --gen-->  REQUIREMENTS.md
+    hotam_spec docstrings (narrative)            --gen-->  REQUIREMENTS.md
     content graph (Requirements + ...)       --gen-->  REQUIREMENTS.md (roster)
     Conflict clusters by axis + Mermaid      --gen-->  TENSIONS.md
     OPEN requirements + unresolved conflicts --gen-->  OPEN.md

@@ -20,7 +20,7 @@ if str(_SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_SPEC_ROOT / "src"))
 
 import gen_spec  # noqa: E402
-from tensio.graph import load_content_graph  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
 
 _CONST_BEGIN = gen_spec._CONST_BEGIN
 _CONST_END = gen_spec._CONST_END

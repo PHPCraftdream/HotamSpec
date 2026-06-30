@@ -9,7 +9,7 @@ R-process-aspect-first) because:
   - a method postcondition that violates an entity invariant is a real
     conflict surfaced as a Conflict node on a behavioral axis.
 
-Entity HAS LANDED (P21, spec/src/tensio/entity.py). Process.drives_entities now
+Entity HAS LANDED (P21, spec/src/hotam_spec/entity.py). Process.drives_entities now
 resolves to declared EntityType slugs (check_process_drives_existing_entities).
 Step.invokes ("entity-slug.event") resolves to a real Lifecycle transition
 (check_step_invokes_known_transition). M12 — Entity deferred → LANDED.
@@ -35,7 +35,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from tensio.lifecycle import INITIAL, NORMAL, QUIESCENT, Lifecycle, State, Transition
+from hotam_spec.lifecycle import (
+    INITIAL,
+    NORMAL,
+    QUIESCENT,
+    Lifecycle,
+    State,
+    Transition,
+)
 
 
 # ---------------------------------------------------------------------------

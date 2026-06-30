@@ -56,7 +56,7 @@ DIRECTOR = "director"
 _GRAPH_PY_TEMPLATE = '''\
 """Canon: §Domain — content graph of domain \'{name}\'."""
 
-from tensio.graph import TensionGraph
+from hotam_spec.graph import TensionGraph
 
 
 def build_graph() -> TensionGraph:

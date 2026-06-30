@@ -1,4 +1,4 @@
-"""Tests for tensio.invariants — structural form of the tension graph.
+"""Tests for hotam_spec.invariants — structural form of the tension graph.
 
 Two duties, mirroring dev-coin's test_invariants:
   1. The demo seed fixture is structurally well-formed (every invariant holds).
@@ -7,9 +7,9 @@ Two duties, mirroring dev-coin's test_invariants:
      build a minimal graph that violates exactly that rule and assert a non-empty
      violation list, naming the offending object.
 
-The fixture lives in `tests/fixtures/seed.py` (outside the framework): Tensio is
+The fixture lives in `tests/fixtures/seed.py` (outside the framework): Hotam-Spec is
 a content-free framework, so the example business graph is test data, not
-src/tensio/ content.
+src/hotam_spec/ content.
 """
 
 from __future__ import annotations
@@ -24,10 +24,10 @@ for _p in (_SRC, _TESTS):
         sys.path.insert(0, str(_p))
 
 from fixtures.seed import DEMO_AXES, seed_graph  # noqa: E402
-from tensio.assumption import DEAD, Assumption  # noqa: E402
-from tensio.conflict import Conflict, conflict_identity  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.assumption import DEAD, Assumption  # noqa: E402
+from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     ALL_INVARIANTS,
     all_violations,
     check_axis_in_registry,
@@ -44,9 +44,9 @@ from tensio.invariants import (  # noqa: E402
     check_typed_anchors,
     holds,
 )
-from tensio.requirement import ENFORCED  # noqa: E402
-from tensio.requirement import Relation, Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.requirement import ENFORCED  # noqa: E402
+from hotam_spec.requirement import Relation, Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # 1. The demo seed fixture is well-formed
@@ -309,7 +309,7 @@ def test_typed_anchors_fires_on_bad_requirement_id() -> None:
 
 def test_typed_anchors_fires_on_bad_assumption_id() -> None:
     """check_typed_anchors fires on an Assumption whose id lacks the 'A-' prefix."""
-    from tensio.assumption import Assumption, HOLDS  # noqa: PLC0415
+    from hotam_spec.assumption import Assumption, HOLDS  # noqa: PLC0415
 
     bad_assum = Assumption(id="assum-x", statement="x", status=HOLDS, owner="sa")
     g = TensionGraph(
@@ -526,17 +526,17 @@ def test_decided_with_distinct_decider_passes() -> None:
 # 8. check_section_anchors_known — §-token coherence (P5)
 # ---------------------------------------------------------------------------
 
-from tensio.invariants import check_section_anchors_known  # noqa: E402
+from hotam_spec.invariants import check_section_anchors_known  # noqa: E402
 
 
 def test_section_anchors_known_passes_on_real_graph() -> None:
     """check_section_anchors_known passes on the real meta-domain (all §-tokens admitted)."""
-    from tensio.graph import load_content_graph  # noqa: PLC0415
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     g = load_content_graph()
     v = check_section_anchors_known(g)
     assert holds(v), (
         f"check_section_anchors_known fires on the real meta-domain: {v}\n"
-        "Fix: add the unknown §-token to tensio/glossary.py TERMS or "
+        "Fix: add the unknown §-token to hotam_spec/glossary.py TERMS or "
         "correct the docstring typo."
     )

@@ -1,6 +1,6 @@
 """Smoke test — one fast end-to-end health signal for the framework.
 
-Imports every tensio module, loads the content graph, runs all invariants,
+Imports every hotam_spec module, loads the content graph, runs all invariants,
 runs the harness, and runs the generators twice to confirm determinism. A single
 green signal means: the framework is alive, the content graph is structurally
 sound, the harness and generators work.
@@ -21,17 +21,17 @@ for _p in (_SRC, _TOOLS):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-# Import every tensio module explicitly (framework health).
-import tensio.assumption  # noqa: E402, F401
-import tensio.axis  # noqa: E402, F401
-import tensio.conflict  # noqa: E402, F401
-import tensio.graph  # noqa: E402, F401
-import tensio.invariants  # noqa: E402, F401
-import tensio.requirement  # noqa: E402, F401
-import tensio.stakeholder  # noqa: E402, F401
+# Import every hotam_spec module explicitly (framework health).
+import hotam_spec.assumption  # noqa: E402, F401
+import hotam_spec.axis  # noqa: E402, F401
+import hotam_spec.conflict  # noqa: E402, F401
+import hotam_spec.graph  # noqa: E402, F401
+import hotam_spec.invariants  # noqa: E402, F401
+import hotam_spec.requirement  # noqa: E402, F401
+import hotam_spec.stakeholder  # noqa: E402, F401
 
-from tensio.graph import load_content_graph  # noqa: E402
-from tensio.invariants import all_violations, holds  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
+from hotam_spec.invariants import all_violations, holds  # noqa: E402
 import gen_spec  # noqa: E402
 import what_now  # noqa: E402
 

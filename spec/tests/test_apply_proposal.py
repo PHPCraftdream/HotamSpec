@@ -27,8 +27,8 @@ for _p in (_SRC, _TOOLS):
         sys.path.insert(0, str(_p))
 
 import apply_proposal  # noqa: E402
-from tensio.conflict import conflict_identity  # noqa: E402
-from tensio.proposal import ProposedConflictTransition  # noqa: E402
+from hotam_spec.conflict import conflict_identity  # noqa: E402
+from hotam_spec.proposal import ProposedConflictTransition  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ _SAMPLE_CID = conflict_identity(_SAMPLE_AXIS, _SAMPLE_CTX)  # == "C-8600b1b8"
 # locator to extract them via conflict_identity(). Variable references like
 # axis=_axis are not supported by _find_conflict_call's current implementation.
 _SAMPLE_SOURCE = f'''\
-from tensio.conflict import Conflict, conflict_identity
+from hotam_spec.conflict import Conflict, conflict_identity
 
 conflicts = (
     Conflict(

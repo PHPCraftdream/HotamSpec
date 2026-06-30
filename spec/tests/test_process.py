@@ -9,18 +9,18 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Make tensio importable.
+# Make hotam_spec importable.
 _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tensio.graph import load_content_graph  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     check_process_lifecycle_wellformed,
     check_process_roles_declared,
     check_typed_anchors,
 )
-from tensio.process import PROCESS_LIFECYCLE, Process, Step  # noqa: E402
+from hotam_spec.process import PROCESS_LIFECYCLE, Process, Step  # noqa: E402
 
 
 def test_pr_closed_loop_present() -> None:
@@ -49,7 +49,7 @@ def test_process_roles_declared_passes() -> None:
 
 def test_check_process_roles_undeclared_fires() -> None:
     """Manufacturing a Step with undeclared role fires check_process_roles_declared."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     bad_process = Process(
         id="PR-bad",
@@ -74,7 +74,7 @@ def test_process_typed_anchor() -> None:
 
 def test_check_typed_anchors_fires_on_bad_process_id() -> None:
     """check_typed_anchors fires when a Process id lacks the PR- prefix."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     bad = Process(
         id="PROCESS-bad",
@@ -89,7 +89,7 @@ def test_check_typed_anchors_fires_on_bad_process_id() -> None:
 
 def test_process_aspect_noop_on_empty_processes() -> None:
     """Both process invariants are no-ops when g.processes is empty."""
-    from tensio.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     g = TensionGraph()  # empty; no processes
     assert check_process_lifecycle_wellformed(g) == []

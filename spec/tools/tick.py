@@ -32,7 +32,7 @@ for p in (_TOOLS, _SRC):
         sys.path.insert(0, str(p))
 
 import what_now  # noqa: E402
-from tensio.graph import load_content_graph  # noqa: E402
+from hotam_spec.graph import load_content_graph  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -158,7 +158,9 @@ def main() -> int:
     pytest + gen_spec determinism checks. A caller cron can log the output;
     it never fails the build.
     """
-    p = argparse.ArgumentParser(description="Tensio tick — advisory diagnostic cycle.")
+    p = argparse.ArgumentParser(
+        description="Hotam-Spec tick — advisory diagnostic cycle."
+    )
     p.add_argument(
         "--cycle",
         type=int,

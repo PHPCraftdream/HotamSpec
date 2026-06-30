@@ -1,4 +1,4 @@
-"""Tests for tensio.operator + the Operator layer in the meta-domain graph.
+"""Tests for hotam_spec.operator + the Operator layer in the meta-domain graph.
 
 Two duties:
   1. Live meta-domain assertions: OP-director is present, typed-anchors hold,
@@ -20,21 +20,21 @@ for _p in (_SRC, _TESTS):
         sys.path.insert(0, str(_p))
 
 from fixtures.seed import DEMO_AXES  # noqa: E402
-from tensio.assumption import HOLDS, Assumption  # noqa: E402
-from tensio.conflict import Conflict, conflict_identity  # noqa: E402
-from tensio.graph import TensionGraph, load_content_graph, stakeholder_ids  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.assumption import HOLDS, Assumption  # noqa: E402
+from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
+from hotam_spec.graph import TensionGraph, load_content_graph, stakeholder_ids  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     check_operator_steward_not_self,
     check_operator_within_budget,
     holds,
 )
-from tensio.operator import (  # noqa: E402
+from hotam_spec.operator import (  # noqa: E402
     OPERATOR_LIFECYCLE,
     ContextBudget,
     Operator,
 )
-from tensio.requirement import Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.requirement import Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Shared helpers

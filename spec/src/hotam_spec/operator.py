@@ -42,7 +42,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from tensio.lifecycle import INITIAL, NORMAL, QUIESCENT, Lifecycle, State, Transition
+from hotam_spec.lifecycle import (
+    INITIAL,
+    NORMAL,
+    QUIESCENT,
+    Lifecycle,
+    State,
+    Transition,
+)
 
 # ---------------------------------------------------------------------------
 # ContextBudget measure constants (M17: NODE_COUNT is the default now)

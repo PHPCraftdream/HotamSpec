@@ -52,12 +52,12 @@ TENSIONS,OPEN}.md by tools/gen_spec.py; diagnosed by tools/what_now.py.
 
 from __future__ import annotations
 
-from tensio.assumption import HOLDS, UNCERTAIN, Assumption
-from tensio.axis import Axis
-from tensio.conflict import Conflict, conflict_identity
-from tensio.graph import TensionGraph
-from tensio.operator import ContextBudget, Operator
-from tensio.process import (
+from hotam_spec.assumption import HOLDS, UNCERTAIN, Assumption
+from hotam_spec.axis import Axis
+from hotam_spec.conflict import Conflict, conflict_identity
+from hotam_spec.graph import TensionGraph
+from hotam_spec.operator import ContextBudget, Operator
+from hotam_spec.process import (
     Goal,
     Process,
     Step,
@@ -65,8 +65,8 @@ from tensio.process import (
     TARGET_KIND_GRAPH_PROPERTY,
     PROCESS_LIFECYCLE,
 )
-from tensio.requirement import ENFORCED, PROSE, STRUCTURAL, Requirement
-from tensio.stakeholder import Stakeholder
+from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL, Requirement
+from hotam_spec.stakeholder import Stakeholder
 
 
 def build_graph() -> TensionGraph:

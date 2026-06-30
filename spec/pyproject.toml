@@ -1,7 +1,7 @@
 [project]
-name = "tensio"
+name = "hotam-spec"
 version = "0.1.0"
-description = "Tensio — executable methodology for the lifecycle of contradictory business requirements (requirements-as-tension-graph, docs-as-code)"
+description = "Hotam-Spec — executable methodology for the lifecycle of contradictory business requirements (requirements-as-tension-graph, docs-as-code)"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 authors = [

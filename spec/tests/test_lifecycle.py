@@ -1,4 +1,4 @@
-"""Tests for tensio.lifecycle — the generic state-machine value-type (P1).
+"""Tests for hotam_spec.lifecycle — the generic state-machine value-type (P1).
 
 Two duties:
   1. The framework-supplied canonical Lifecycles (REQUIREMENT_STATUS_LIFECYCLE,
@@ -20,14 +20,14 @@ _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from tensio.conflict import Conflict, conflict_identity  # noqa: E402
-from tensio.graph import TensionGraph, load_content_graph  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
+from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     check_canonical_lifecycles_wellformed,
     check_lifecycle_wellformed,
     check_status_in_lifecycle,
 )
-from tensio.lifecycle import (  # noqa: E402
+from hotam_spec.lifecycle import (  # noqa: E402
     CONFLICT_LIFECYCLE,
     INITIAL,
     NORMAL,
@@ -37,8 +37,8 @@ from tensio.lifecycle import (  # noqa: E402
     State,
     Transition,
 )
-from tensio.requirement import Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.requirement import Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -69,7 +69,7 @@ def _conflict(lifecycle: str = "DETECTED") -> Conflict:
 def _small_graph(
     req_status: str = "SETTLED", conflict_lifecycle: str = "DETECTED"
 ) -> TensionGraph:
-    from tensio.axis import Axis  # noqa: PLC0415
+    from hotam_spec.axis import Axis  # noqa: PLC0415
 
     axes = (Axis(slug="cost-vs-flexibility", description="cost vs flexibility"),)
     reqs = (_req("R-1", "sa", status=req_status), _req("R-2", "sb"))

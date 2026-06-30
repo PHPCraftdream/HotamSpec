@@ -17,14 +17,14 @@ for _p in (_SRC, _TESTS):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from tensio.axis import Axis  # noqa: E402
-from tensio.graph import TensionGraph  # noqa: E402
-from tensio.invariants import (  # noqa: E402
+from hotam_spec.axis import Axis  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from hotam_spec.invariants import (  # noqa: E402
     check_bijection_r_to_enforcer,
     holds,
 )
-from tensio.requirement import ENFORCED, Requirement  # noqa: E402
-from tensio.stakeholder import Stakeholder  # noqa: E402
+from hotam_spec.requirement import ENFORCED, Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 
 def _minimal_graph(*reqs: Requirement) -> TensionGraph:
@@ -43,7 +43,7 @@ def _minimal_graph(*reqs: Requirement) -> TensionGraph:
 
 def test_content_graph_bijection_clean() -> None:
     """The meta-domain graph has no bijection violations."""
-    from tensio.graph import load_content_graph  # noqa: PLC0415
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     g = load_content_graph()
     assert holds(check_bijection_r_to_enforcer(g))

@@ -19,21 +19,21 @@ Read your domain's CLAUDE.md (listed in DOMAIN-MAP below) for the operator boot 
 
 ### Repository Map
 
-**Framework body** (`spec/src/tensio/`)
+**Framework body** (`spec/src/hotam_spec/`)
 
-- `spec/src/tensio/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
-- `spec/src/tensio/axis.py` — controlled vocabulary of tension dimensions.
-- `spec/src/tensio/conflict.py` — the first-class connector NODE (the centerpiece).
-- `spec/src/tensio/entity.py` — domain-declared business concept with its own lifecycle.
-- `spec/src/tensio/glossary.py` — the methodology's controlled vocabulary (framework-side).
-- `spec/src/tensio/graph.py` — the tension graph store and its traversal helpers.
-- `spec/src/tensio/invariants.py` — structural form of the tension graph (the check_* layer).
-- `spec/src/tensio/lifecycle.py` — the generic state-machine value-type (framework keystone).
-- `spec/src/tensio/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
-- `spec/src/tensio/process.py` — opt-in behavioral aspect (M12).
-- `spec/src/tensio/proposal.py` — structured operator-→-steward change proposals.
-- `spec/src/tensio/requirement.py` — a business requirement as a node in the tension graph.
-- `spec/src/tensio/stakeholder.py` — who owns requirements and stewards conflicts.
+- `spec/src/hotam_spec/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
+- `spec/src/hotam_spec/axis.py` — controlled vocabulary of tension dimensions.
+- `spec/src/hotam_spec/conflict.py` — the first-class connector NODE (the centerpiece).
+- `spec/src/hotam_spec/entity.py` — domain-declared business concept with its own lifecycle.
+- `spec/src/hotam_spec/glossary.py` — the methodology's controlled vocabulary (framework-side).
+- `spec/src/hotam_spec/graph.py` — the tension graph store and its traversal helpers.
+- `spec/src/hotam_spec/invariants.py` — structural form of the tension graph (the check_* layer).
+- `spec/src/hotam_spec/lifecycle.py` — the generic state-machine value-type (framework keystone).
+- `spec/src/hotam_spec/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
+- `spec/src/hotam_spec/process.py` — opt-in behavioral aspect (M12).
+- `spec/src/hotam_spec/proposal.py` — structured operator-→-steward change proposals.
+- `spec/src/hotam_spec/requirement.py` — a business requirement as a node in the tension graph.
+- `spec/src/hotam_spec/stakeholder.py` — who owns requirements and stewards conflicts.
 
 **Tools** (`spec/tools/`)
 
@@ -428,21 +428,21 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
 
 ### Repository Map
 
-**Framework body** (`spec/src/tensio/`)
+**Framework body** (`spec/src/hotam_spec/`)
 
-- `spec/src/tensio/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
-- `spec/src/tensio/axis.py` — controlled vocabulary of tension dimensions.
-- `spec/src/tensio/conflict.py` — the first-class connector NODE (the centerpiece).
-- `spec/src/tensio/entity.py` — domain-declared business concept with its own lifecycle.
-- `spec/src/tensio/glossary.py` — the methodology's controlled vocabulary (framework-side).
-- `spec/src/tensio/graph.py` — the tension graph store and its traversal helpers.
-- `spec/src/tensio/invariants.py` — structural form of the tension graph (the check_* layer).
-- `spec/src/tensio/lifecycle.py` — the generic state-machine value-type (framework keystone).
-- `spec/src/tensio/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
-- `spec/src/tensio/process.py` — opt-in behavioral aspect (M12).
-- `spec/src/tensio/proposal.py` — structured operator-→-steward change proposals.
-- `spec/src/tensio/requirement.py` — a business requirement as a node in the tension graph.
-- `spec/src/tensio/stakeholder.py` — who owns requirements and stewards conflicts.
+- `spec/src/hotam_spec/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
+- `spec/src/hotam_spec/axis.py` — controlled vocabulary of tension dimensions.
+- `spec/src/hotam_spec/conflict.py` — the first-class connector NODE (the centerpiece).
+- `spec/src/hotam_spec/entity.py` — domain-declared business concept with its own lifecycle.
+- `spec/src/hotam_spec/glossary.py` — the methodology's controlled vocabulary (framework-side).
+- `spec/src/hotam_spec/graph.py` — the tension graph store and its traversal helpers.
+- `spec/src/hotam_spec/invariants.py` — structural form of the tension graph (the check_* layer).
+- `spec/src/hotam_spec/lifecycle.py` — the generic state-machine value-type (framework keystone).
+- `spec/src/hotam_spec/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
+- `spec/src/hotam_spec/process.py` — opt-in behavioral aspect (M12).
+- `spec/src/hotam_spec/proposal.py` — structured operator-→-steward change proposals.
+- `spec/src/hotam_spec/requirement.py` — a business requirement as a node in the tension graph.
+- `spec/src/hotam_spec/stakeholder.py` — who owns requirements and stewards conflicts.
 
 **Tools** (`spec/tools/`)
 
@@ -502,7 +502,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`
   - tested: `spec/tests/test_agent_scoped_constitution.py`, `spec/tests/test_domain_isolation_p17.py`, `spec/tests/test_tool_spawn_agent.py`
 - **§Assumption**
-  - defined: `spec/src/tensio/assumption.py`
+  - defined: `spec/src/hotam_spec/assumption.py`
   - enforced: _(none)_
   - tested: `spec/tests/test_docs_gen.py`
 - **§Atoms**
@@ -510,7 +510,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: _(none)_
   - tested: `spec/tests/test_docs_gen.py`
 - **§Axis**
-  - defined: `spec/src/tensio/axis.py`
+  - defined: `spec/src/hotam_spec/axis.py`
   - enforced: `check_axis_in_registry`
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`
 - **§Closure**
@@ -518,7 +518,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: _(none)_
   - tested: `spec/tests/test_closure.py`
 - **§Conflict**
-  - defined: `spec/src/tensio/conflict.py`
+  - defined: `spec/src/hotam_spec/conflict.py`
   - enforced: `check_conflict_has_axis`, `check_conflict_has_axis_context_steward`, `check_conflict_has_context`, `check_conflict_has_steward`, `check_conflict_id_matches_identity`, `check_conflict_min_two_members`, `check_decided_by_is_known_stakeholder`, `check_decided_by_not_member_owner`, `check_decided_has_decided_by`, `check_decided_has_nonempty_decided_by`, `check_decided_has_rationale_or_derived`, `check_steward_not_a_member_owner`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`
 - **§Conscience**
@@ -542,11 +542,11 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: `check_domain_director_exists`, `check_domain_manifest_description_nonempty`, `check_domain_manifest_director_nonempty`, `check_domain_manifest_exists_and_importable`, `check_domain_manifest_goals_nonempty`, `check_domain_manifest_id_matches_dirname`, `check_domain_manifest_valid`
   - tested: `spec/tests/test_domain_isolation_p17.py`, `spec/tests/test_framework_claude_md_purity.py`, `spec/tests/test_root_claude_md_is_sentinel_only.py`
 - **§Entity**
-  - defined: `spec/src/tensio/entity.py`
+  - defined: `spec/src/hotam_spec/entity.py`
   - enforced: `check_entities_md_lists_all_types`, `check_entity_field_kind_known`, `check_entity_instance_id_prefix`, `check_entity_instance_refs_resolve`, `check_entity_instance_required_fields`, `check_entity_instance_state_in_lifecycle`, `check_entity_type_lifecycle_wellformed`, `check_process_drives_existing_entities`, `check_step_invokes_known_transition`, `check_typed_anchors_entity`
   - tested: `spec/tests/test_demo_fixture.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_entities_md.py`, `spec/tests/test_entity_invariants.py`, `spec/tests/test_process_entity_coupling.py`, `spec/tests/test_tool_create_entity_type.py`
 - **§Glossary**
-  - defined: `spec/src/tensio/glossary.py`
+  - defined: `spec/src/hotam_spec/glossary.py`
   - enforced: `check_section_anchors_known`
   - tested: `spec/tests/test_glossary_sync.py`, `spec/tests/test_invariants.py`
 - **§Goal**
@@ -554,15 +554,15 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: `check_goal_owner_is_operator`, `check_goal_target_kind_known`
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_goal.py`
 - **§Graph**
-  - defined: `spec/src/tensio/graph.py`
+  - defined: `spec/src/hotam_spec/graph.py`
   - enforced: _(none)_
   - tested: `spec/tests/test_docs_gen.py`
 - **§Invariants**
-  - defined: `spec/src/tensio/invariants.py`
+  - defined: `spec/src/hotam_spec/invariants.py`
   - enforced: `check_bijection_r_to_enforcer`, `check_canonical_lifecycles_wellformed`, `check_conflict_lifecycle_in_lifecycle`, `check_entities_md_lists_all_types`, `check_entity_field_kind_known`, `check_entity_instance_id_prefix`, `check_entity_instance_refs_resolve`, `check_entity_instance_required_fields`, `check_entity_instance_state_in_lifecycle`, `check_entity_type_lifecycle_wellformed`, `check_goal_lifecycle_in_lifecycle`, `check_goal_owner_is_operator`, `check_goal_target_kind_known`, `check_method_matches_docstring`, `check_no_dangling_assumption_owner`, `check_no_dangling_conflict_refs`, `check_no_dangling_ids`, `check_no_dangling_operator_refs`, `check_no_dangling_requirement_assumptions`, `check_no_dangling_requirement_owner`, `check_no_dangling_requirement_relations`, `check_operator_lifecycle_in_lifecycle`, `check_operator_steward_not_self`, `check_operator_within_budget`, `check_process_drives_existing_entities`, `check_process_lifecycle_wellformed`, `check_process_roles_declared`, `check_requirement_status_in_lifecycle`, `check_section_anchors_known`, `check_status_in_lifecycle`, `check_step_invokes_known_transition`, `check_typed_anchors`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_entity`, `check_typed_anchors_goal`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_requirement`
   - tested: `spec/tests/test_bijection.py`, `spec/tests/test_conscience.py`, `spec/tests/test_demo_fixture.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_entities_md.py`, `spec/tests/test_entity_invariants.py`, `spec/tests/test_goal.py`, `spec/tests/test_invariants.py`, `spec/tests/test_lifecycle.py`, `spec/tests/test_method_matches_docstring.py`, `spec/tests/test_operator.py`, `spec/tests/test_process.py`, `spec/tests/test_process_entity_coupling.py`
 - **§Lifecycle**
-  - defined: `spec/src/tensio/lifecycle.py`
+  - defined: `spec/src/hotam_spec/lifecycle.py`
   - enforced: `check_canonical_lifecycles_wellformed`, `check_conflict_lifecycle_in_lifecycle`, `check_entity_type_lifecycle_wellformed`, `check_goal_lifecycle_in_lifecycle`, `check_lifecycle_wellformed`, `check_operator_lifecycle_in_lifecycle`, `check_process_lifecycle_wellformed`, `check_requirement_status_in_lifecycle`, `check_status_in_lifecycle`
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_entities_md.py`, `spec/tests/test_entity_invariants.py`, `spec/tests/test_goal.py`, `spec/tests/test_lifecycle.py`, `spec/tests/test_process.py`
 - **§Loop**
@@ -570,15 +570,15 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: _(none)_
   - tested: _(none)_
 - **§Operator**
-  - defined: `spec/src/tensio/operator.py`
+  - defined: `spec/src/hotam_spec/operator.py`
   - enforced: `check_goal_owner_is_operator`, `check_operator_steward_not_self`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_goal.py`, `spec/tests/test_operator.py`
 - **§Process**
-  - defined: `spec/src/tensio/process.py`
+  - defined: `spec/src/hotam_spec/process.py`
   - enforced: `check_process_drives_existing_entities`, `check_process_lifecycle_wellformed`, `check_process_roles_declared`, `check_step_invokes_known_transition`
   - tested: `spec/tests/test_demo_fixture.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_process.py`, `spec/tests/test_process_entity_coupling.py`
 - **§Proposal**
-  - defined: `spec/src/tensio/proposal.py`
+  - defined: `spec/src/hotam_spec/proposal.py`
   - enforced: `check_decided_has_decided_by`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`
 - **§Reflection**
@@ -586,11 +586,11 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - enforced: _(none)_
   - tested: `spec/tests/test_docs_gen.py`
 - **§Requirement**
-  - defined: `spec/src/tensio/requirement.py`
+  - defined: `spec/src/hotam_spec/requirement.py`
   - enforced: `check_enforced_names_invariant`, `check_m_tag_format`, `check_m_tag_open_only`, `check_m_tag_unique`, `check_m_tag_valid_format`, `check_open_has_question`, `check_section_anchors_known`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_decisions_bijection.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`
 - **§Stakeholder**
-  - defined: `spec/src/tensio/stakeholder.py`
+  - defined: `spec/src/hotam_spec/stakeholder.py`
   - enforced: `check_operator_steward_not_self`, `check_steward_not_a_member_owner`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_operator.py`
 - **§Tick**
