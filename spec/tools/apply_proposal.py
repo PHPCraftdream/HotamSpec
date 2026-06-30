@@ -1,25 +1,31 @@
 """Canon: §Proposal — mechanical writer for steward-approved JSON proposals.
 
 Reads a steward-approved JSON proposal from a file path argument, validates it
-against the ProposedConflictTransition shape, locates the target Conflict node
-in spec/content/graph.py via AST, applies the field changes via deterministic
-string replacement, regenerates docs via gen_spec.py, and runs pytest -q to
-verify the change is structurally clean. Optionally runs the P4 closure check
-to confirm the triggering diagnosis was actually removed.
+against the proposal shape (ProposedConflictTransition, ProposedRequirement, or
+ProposedRejection), locates the target node in spec/content/graph.py via AST,
+applies the field changes via deterministic string replacement, regenerates docs
+via gen_spec.py, and runs pytest -q to verify the change is structurally clean.
+Optionally runs the P4 closure check to confirm the triggering diagnosis was
+actually removed.
 
 This is the FIRST OPERATOR ACTION TOOL: the AI operator emits a proposal
 (see tensio/proposal.py); the steward approves out-of-band; then the AI calls
 this tool to mechanically land the change. No free-text editing of the graph.
 
-SCOPE (P3): implements ONLY the ProposedConflictTransition → DECIDED path.
-ProposedRequirement and ProposedRejection are deferred to P4+.
+Supported proposal kinds:
+  - ConflictTransition — move a Conflict lifecycle (DETECTED → DECIDED etc.)
+  - Requirement — add or update a Requirement in the graph
+  - Rejection — reject an existing Requirement (status → REJECTED)
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
   uv run python tools/apply_proposal.py --dry-run proposal.json
   uv run python tools/apply_proposal.py --triggering-kind CONFLICT_STALLED proposal.json
+  uv run python tools/apply_proposal.py --batch proposals_array.json
 
-The JSON shape (ProposedConflictTransition DECIDED):
+The JSON shapes:
+
+  ProposedConflictTransition DECIDED:
   {
     "kind": "ConflictTransition",
     "conflict_id": "C-8600b1b8",
@@ -29,10 +35,25 @@ The JSON shape (ProposedConflictTransition DECIDED):
     "derived": ["R-foo"]
   }
 
-The tool REFUSES if:
-  - new_lifecycle starts with DECIDED but decided_by is empty.
-  - conflict_id does not resolve in spec/content/graph.py.
-  - pytest fails after the write (reports exit code; does NOT auto-revert).
+  ProposedRequirement (add or update):
+  {
+    "kind": "Requirement",
+    "id": "R-foo",
+    "claim": "The system shall ...",
+    "owner": "framework-author",
+    "status": "DRAFT",
+    "why": "...",
+    "assumptions": ["A-python-stack"],
+    "enforcement": "ENFORCED",
+    "enforced_by": ["check_foo"]
+  }
+
+  ProposedRejection:
+  {
+    "kind": "Rejection",
+    "requirement_id": "R-foo",
+    "reason": "REJECTED — REPLACES R-bar; see R-new"
+  }
 
 Exit codes:
   0 — success (write landed, tests green, and if --triggering-kind was supplied:
@@ -60,7 +81,12 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from tensio.conflict import conflict_identity  # noqa: E402
-from tensio.proposal import ProposedConflictTransition  # noqa: E402
+from tensio.proposal import (  # noqa: E402
+    Proposal,
+    ProposedConflictTransition,
+    ProposedRejection,
+    ProposedRequirement,
+)
 
 _CONTENT_GRAPH = _SPEC_ROOT / "content" / "graph.py"
 _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
@@ -70,22 +96,30 @@ _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
 # ---------------------------------------------------------------------------
 
 
-def _validate_proposal(raw: dict) -> ProposedConflictTransition:
-    """Canon: §Proposal — parse and validate a JSON dict into ProposedConflictTransition.
+def _validate_proposal(raw: dict) -> Proposal:
+    """Canon: §Proposal — parse and validate a JSON dict into a Proposal variant.
 
-    RULE: 'kind' must equal 'ConflictTransition'; 'conflict_id' and
-    'new_lifecycle' are required strings. If new_lifecycle starts with DECIDED,
-    decided_by must be non-empty.
+    RULE: 'kind' must be one of 'ConflictTransition', 'Requirement', or
+    'Rejection'. Each kind has its own required fields.
 
-    Returns a ProposedConflictTransition or raises ValueError with a clear
-    message.
+    Returns a Proposal (one of the three dataclass variants) or raises
+    ValueError with a clear message.
     """
     kind = raw.get("kind", "")
-    if kind != "ConflictTransition":
-        raise ValueError(
-            f"Unsupported proposal kind '{kind}'. "
-            f"P3 implements only 'ConflictTransition'."
-        )
+    if kind == "ConflictTransition":
+        return _validate_conflict_transition(raw)
+    if kind == "Requirement":
+        return _validate_requirement(raw)
+    if kind == "Rejection":
+        return _validate_rejection(raw)
+    raise ValueError(
+        f"Unsupported proposal kind '{kind}'. "
+        f"Supported: 'ConflictTransition', 'Requirement', 'Rejection'."
+    )
+
+
+def _validate_conflict_transition(raw: dict) -> ProposedConflictTransition:
+    """Parse and validate a ConflictTransition proposal."""
     conflict_id = raw.get("conflict_id", "").strip()
     if not conflict_id:
         raise ValueError("'conflict_id' is required and must be non-empty.")
@@ -111,6 +145,114 @@ def _validate_proposal(raw: dict) -> ProposedConflictTransition:
         revisit_marker=revisit_marker if isinstance(revisit_marker, str) else "",
         derived=derived,
     )
+
+
+def _validate_requirement(raw: dict) -> ProposedRequirement:
+    """Parse and validate a Requirement proposal."""
+    req_id = raw.get("id", "").strip()
+    if not req_id:
+        raise ValueError("'id' is required for a Requirement proposal.")
+    claim = raw.get("claim", "").strip()
+    if not claim:
+        raise ValueError("'claim' is required and must be non-empty.")
+    owner = raw.get("owner", "").strip()
+    if not owner:
+        raise ValueError("'owner' is required and must be non-empty.")
+    status = raw.get("status", "").strip()
+    if not status:
+        raise ValueError("'status' is required and must be non-empty.")
+    why = raw.get("why", "")
+    assumptions_raw = raw.get("assumptions", [])
+    if not isinstance(assumptions_raw, list):
+        raise ValueError("'assumptions' must be a list of assumption id strings.")
+    assumptions = tuple(str(x) for x in assumptions_raw)
+    relations_raw = raw.get("relations", [])
+    if not isinstance(relations_raw, list):
+        raise ValueError("'relations' must be a list of [kind, target] pairs.")
+    relations = tuple((str(r[0]), str(r[1])) for r in relations_raw)
+    enforcement = raw.get("enforcement", "PROSE").strip()
+    enforced_by_raw = raw.get("enforced_by", [])
+    if not isinstance(enforced_by_raw, list):
+        raise ValueError("'enforced_by' must be a list of strings.")
+    enforced_by = tuple(str(x) for x in enforced_by_raw)
+    m_tag = raw.get("m_tag", "")
+    return ProposedRequirement(
+        id=req_id,
+        claim=claim,
+        owner=owner,
+        status=status,
+        why=why if isinstance(why, str) else "",
+        assumptions=assumptions,
+        relations=relations,
+        enforcement=enforcement,
+        enforced_by=enforced_by,
+        m_tag=m_tag if isinstance(m_tag, str) else "",
+    )
+
+
+def _validate_rejection(raw: dict) -> ProposedRejection:
+    """Parse and validate a Rejection proposal."""
+    requirement_id = raw.get("requirement_id", "").strip()
+    if not requirement_id:
+        raise ValueError("'requirement_id' is required for a Rejection proposal.")
+    reason = raw.get("reason", "").strip()
+    if not reason:
+        raise ValueError("'reason' is required and must be non-empty.")
+    return ProposedRejection(
+        requirement_id=requirement_id,
+        reason=reason,
+    )
+
+
+# ---------------------------------------------------------------------------
+# AST-based requirement locator
+# ---------------------------------------------------------------------------
+
+
+def _find_requirement_call(tree: ast.AST, req_id: str) -> ast.Call | None:
+    """Canon: §Proposal — locate the Requirement(...) AST call whose id matches.
+
+    Walks the AST looking for ast.Call nodes whose function is 'Requirement'. For
+    each, extracts the 'id' keyword arg (string literal only). Returns the matching
+    node or None.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id != "Requirement":
+            continue
+        if isinstance(func, ast.Attribute) and func.attr != "Requirement":
+            continue
+        # Extract id= kwarg
+        for kw in node.keywords:
+            if kw.arg == "id" and isinstance(kw.value, ast.Constant):
+                if kw.value.value == req_id:
+                    return node  # type: ignore[return-value]
+    return None
+
+
+def _find_requirements_tuple_end(tree: ast.AST, source_lines: list[str]) -> int | None:
+    """Find the line number (1-indexed) of the closing ')' of `requirements = (...)`.
+
+    Looks for an assignment `requirements = (...)` inside `build_graph()` and
+    returns the end_lineno of the Tuple node (the line with the closing paren).
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == "requirements":
+                    # The value is a Tuple
+                    val = stmt.value
+                    end = getattr(val, "end_lineno", None)
+                    return end
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -283,26 +425,243 @@ def _render_diff(original: list[str], modified: list[str], label: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Requirement rendering
+# ---------------------------------------------------------------------------
+
+
+def _render_requirement_source(proposal: ProposedRequirement, indent: str) -> str:
+    """Render a Requirement(...) constructor call as source text.
+
+    Uses the same indentation style as existing entries in the content graph.
+    """
+    inner = indent + "    "  # one extra level for kwargs
+    lines: list[str] = []
+    lines.append(f"{indent}Requirement(")
+    lines.append(f'{inner}id="{proposal.id}",')
+    # Claim: use parenthesized string for readability
+    claim_escaped = proposal.claim.replace("\\", "\\\\").replace('"', '\\"')
+    lines.append(f'{inner}claim=("{claim_escaped}"),')
+    lines.append(f'{inner}owner="{proposal.owner}",')
+    lines.append(f'{inner}status="{proposal.status}",')
+    if proposal.why:
+        why_escaped = proposal.why.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append(f'{inner}why=("{why_escaped}"),')
+    if proposal.assumptions:
+        items = ", ".join(f'"{a}"' for a in proposal.assumptions)
+        lines.append(f"{inner}assumptions=({items},),")
+    if proposal.relations:
+        rel_items = ", ".join(
+            f'Relation("{kind}", "{target}")' for kind, target in proposal.relations
+        )
+        lines.append(f"{inner}relations=({rel_items},),")
+    # enforcement: use the constant name if it matches, else string
+    enf = proposal.enforcement
+    if enf in ("PROSE", "STRUCTURAL", "ENFORCED"):
+        lines.append(f"{inner}enforcement={enf},")
+    else:
+        lines.append(f'{inner}enforcement="{enf}",')
+    if proposal.enforced_by:
+        items = ", ".join(f'"{e}"' for e in proposal.enforced_by)
+        lines.append(f"{inner}enforced_by=({items},),")
+    if proposal.m_tag:
+        lines.append(f'{inner}m_tag="{proposal.m_tag}",')
+    lines.append(f"{indent}),")
+    return "\n".join(lines) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# Apply: Requirement (add or update)
+# ---------------------------------------------------------------------------
+
+
+def _apply_requirement_to_source(
+    source_text: str, proposal: ProposedRequirement
+) -> str:
+    """Apply a ProposedRequirement to graph source: add new or update existing."""
+    tree = ast.parse(source_text)
+    existing = _find_requirement_call(tree, proposal.id)
+
+    if existing is not None:
+        # UPDATE existing requirement fields
+        lines = source_text.splitlines(keepends=True)
+        call_node = existing
+        for field_name, new_value in [
+            ("claim", proposal.claim),
+            ("owner", proposal.owner),
+            ("status", proposal.status),
+            ("why", proposal.why),
+            ("assumptions", proposal.assumptions),
+            ("enforcement", proposal.enforcement),
+            ("enforced_by", proposal.enforced_by),
+        ]:
+            # Skip empty optional fields not already present
+            if field_name in ("assumptions", "enforced_by") and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
+            lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
+            new_src = "".join(lines)
+            tree = ast.parse(new_src)
+            call_node = _find_requirement_call(tree, proposal.id)
+            if call_node is None:
+                raise RuntimeError(
+                    f"Lost track of requirement '{proposal.id}' after "
+                    f"replacing field '{field_name}'."
+                )
+        return "".join(lines)
+
+    # ADD new requirement at end of requirements tuple
+    lines = source_text.splitlines(keepends=True)
+    tree = ast.parse(source_text)
+    tuple_end = _find_requirements_tuple_end(tree, lines)
+    if tuple_end is None:
+        raise RuntimeError(
+            "Cannot find `requirements = (...)` tuple in build_graph(). "
+            "Is spec/content/graph.py well-formed?"
+        )
+
+    # Determine indentation from existing Requirement calls
+    indent = "        "  # default: 8 spaces
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "Requirement":
+            line_text = lines[node.lineno - 1]
+            stripped = line_text.lstrip()
+            indent = line_text[: len(line_text) - len(stripped)]
+            break
+
+    new_req = _render_requirement_source(proposal, indent)
+    # Insert before the closing ')' of the tuple (tuple_end is 1-indexed)
+    insert_at = tuple_end - 1  # 0-indexed: the ')' line
+    lines.insert(insert_at, new_req)
+
+    result = "".join(lines)
+
+    # Ensure Relation import exists if relations are used
+    if proposal.relations:
+        if "Relation" not in result.split("import")[0]:
+            # Check if Relation is already imported
+            if "Relation" not in source_text:
+                result = result.replace(
+                    "from tensio.requirement import",
+                    "from tensio.requirement import Relation,",
+                    1,
+                )
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Apply: Rejection
+# ---------------------------------------------------------------------------
+
+
+def _apply_rejection_to_source(source_text: str, proposal: ProposedRejection) -> str:
+    """Apply a ProposedRejection: set status to REJECTED, prepend reason to why."""
+    tree = ast.parse(source_text)
+    call_node = _find_requirement_call(tree, proposal.requirement_id)
+    if call_node is None:
+        raise RuntimeError(
+            f"Requirement '{proposal.requirement_id}' not found in {_CONTENT_GRAPH}."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+
+    # Set status to "REJECTED"
+    lines = _replace_or_insert_field(lines, call_node, "status", "REJECTED")
+    new_src = "".join(lines)
+    tree = ast.parse(new_src)
+    call_node = _find_requirement_call(tree, proposal.requirement_id)
+    if call_node is None:
+        raise RuntimeError(
+            f"Lost track of requirement '{proposal.requirement_id}' after "
+            f"setting status."
+        )
+
+    # Prepend rejection reason to why
+    existing_why = ""
+    for kw in call_node.keywords:
+        if kw.arg == "why" and isinstance(kw.value, ast.Constant):
+            existing_why = kw.value.value
+            break
+
+    new_why = proposal.reason
+    if existing_why:
+        new_why = f"{proposal.reason} — (was: {existing_why})"
+
+    lines = _replace_or_insert_field(lines, call_node, "why", new_why)
+    return "".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Apply: ConflictTransition
+# ---------------------------------------------------------------------------
+
+
+def _apply_conflict_transition(
+    source_text: str, proposal: ProposedConflictTransition
+) -> list[str]:
+    """Apply a ConflictTransition to graph source. Returns modified lines."""
+    tree = ast.parse(source_text)
+    call_node = _find_conflict_call(tree, proposal.conflict_id)
+    if call_node is None:
+        raise RuntimeError(
+            f"conflict_id '{proposal.conflict_id}' not found in "
+            f"{_CONTENT_GRAPH}. No changes made."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    for field_name, new_value in [
+        ("lifecycle", proposal.new_lifecycle),
+        ("decided_by", proposal.decided_by),
+        ("revisit_marker", proposal.revisit_marker),
+        ("derived", proposal.derived),
+    ]:
+        if field_name in ("revisit_marker",) and not new_value:
+            existing = _kwarg_line_col(call_node, field_name)
+            if existing is None:
+                continue
+        if field_name == "derived" and not new_value:
+            existing = _kwarg_line_col(call_node, field_name)
+            if existing is None:
+                continue
+        lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
+        new_src = "".join(lines)
+        tree = ast.parse(new_src)
+        call_node = _find_conflict_call(tree, proposal.conflict_id)
+        if call_node is None:
+            raise RuntimeError(
+                f"Lost track of conflict '{proposal.conflict_id}' after "
+                f"replacing field '{field_name}'."
+            )
+    return list(lines)
+
+
+# ---------------------------------------------------------------------------
 # Main apply logic
 # ---------------------------------------------------------------------------
 
 
 def apply(
-    proposal: ProposedConflictTransition,
+    proposal: Proposal,
     *,
     dry_run: bool = False,
     triggering_kind: str | None = None,
 ) -> int:
-    """Canon: §Proposal — apply a validated ProposedConflictTransition to the graph.
+    """Canon: §Proposal — apply a validated Proposal to the graph.
+
+    Dispatches to the appropriate handler based on proposal type:
+      - ProposedConflictTransition: locate Conflict node, replace fields
+      - ProposedRequirement: add new or update existing Requirement
+      - ProposedRejection: set status to REJECTED, prepend reason
 
     Steps:
-      1. Read and parse spec/content/graph.py via ast.
-      2. Locate the Conflict node whose computed id matches proposal.conflict_id.
-      3. Replace/insert lifecycle, decided_by, revisit_marker, derived.
-      4. If dry_run: print diff and return 0 without writing.
-      5. Write the file, run gen_spec.py, run pytest -q.
-      6. If triggering_kind supplied: run closure.check_closure; return 2 if not advanced.
-      7. Return 0 on success, 1 on any non-closure failure.
+      1. Read spec/content/graph.py.
+      2. Apply the proposal (type-dispatched).
+      3. If dry_run: print diff and return 0 without writing.
+      4. Write the file, run gen_spec.py, run pytest -q.
+      5. If triggering_kind supplied: run closure.check_closure; return 2 if not advanced.
+      6. Return 0 on success, 1 on any non-closure failure.
 
     `triggering_kind` is the band/kind string of the original action this proposal
     was meant to close (e.g. "CONFLICT_STALLED", "OPEN_ITEM", "STRUCTURE",
@@ -311,46 +670,25 @@ def apply(
     """
     source_text = _CONTENT_GRAPH.read_text(encoding="utf-8")
     original_lines = source_text.splitlines(keepends=True)
-    tree = ast.parse(source_text)
 
-    call_node = _find_conflict_call(tree, proposal.conflict_id)
-    if call_node is None:
-        print(
-            f"ERROR: conflict_id '{proposal.conflict_id}' not found in "
-            f"{_CONTENT_GRAPH}. No changes made.",
-            file=sys.stderr,
-        )
-        return 1
-
-    # Apply field replacements in order
-    lines = list(original_lines)
-    for field_name, new_value in [
-        ("lifecycle", proposal.new_lifecycle),
-        ("decided_by", proposal.decided_by),
-        ("revisit_marker", proposal.revisit_marker),
-        ("derived", proposal.derived),
-    ]:
-        # Skip empty optional fields that aren't already present
-        if field_name in ("revisit_marker",) and not new_value:
-            existing = _kwarg_line_col(call_node, field_name)
-            if existing is None:
-                continue  # don't insert empty revisit_marker
-        if field_name == "derived" and not new_value:
-            existing = _kwarg_line_col(call_node, field_name)
-            if existing is None:
-                continue  # don't insert empty derived
-        lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
-        # Re-parse after each replacement to keep AST offsets accurate
-        new_src = "".join(lines)
-        tree = ast.parse(new_src)
-        call_node = _find_conflict_call(tree, proposal.conflict_id)
-        if call_node is None:
+    try:
+        if isinstance(proposal, ProposedConflictTransition):
+            lines = _apply_conflict_transition(source_text, proposal)
+        elif isinstance(proposal, ProposedRequirement):
+            new_source = _apply_requirement_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedRejection):
+            new_source = _apply_rejection_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        else:
             print(
-                f"ERROR: lost track of conflict '{proposal.conflict_id}' after "
-                f"replacing field '{field_name}'. Aborting.",
+                f"ERROR: unhandled proposal type {type(proposal).__name__}",
                 file=sys.stderr,
             )
             return 1
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
     if dry_run:
         diff = _render_diff(original_lines, lines, _CONTENT_GRAPH.name)
@@ -430,15 +768,21 @@ def apply(
             )
             return 2
 
+    summary_target = proposal.target_anchor()
+    summary_kind = type(proposal).__name__
     print(
         f"\nSUMMARY:\n"
-        f"  conflict : {proposal.conflict_id}\n"
-        f"  decided_by: {proposal.decided_by or '(none)'}\n"
-        f"  new_lifecycle: {proposal.new_lifecycle}\n"
-        f"  tests: GREEN"
+        f"  kind   : {summary_kind}\n"
+        f"  target : {summary_target}\n"
+        f"  tests  : GREEN"
     )
+    if isinstance(proposal, ProposedConflictTransition):
+        print(
+            f"  decided_by   : {proposal.decided_by or '(none)'}\n"
+            f"  new_lifecycle: {proposal.new_lifecycle}"
+        )
     if triggering_kind is not None:
-        print(f"  closure: ADVANCED (action {proposal.target_anchor()!r} closed)")
+        print(f"  closure: ADVANCED (action {summary_target!r} closed)")
     return 0
 
 
@@ -480,6 +824,14 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--batch",
+        action="store_true",
+        help=(
+            "Treat the JSON file as an array of proposals and apply them "
+            "sequentially. Critical for atomized wave proposals."
+        ),
+    )
+    parser.add_argument(
         "proposal_file",
         help="Path to the steward-approved JSON proposal file.",
     )
@@ -495,6 +847,34 @@ def main(argv: list[str] | None = None) -> int:
     except json.JSONDecodeError as exc:
         print(f"ERROR: invalid JSON in {proposal_path}: {exc}", file=sys.stderr)
         return 1
+
+    if args.batch:
+        if not isinstance(raw, list):
+            print(
+                "ERROR: --batch expects a JSON array of proposals.",
+                file=sys.stderr,
+            )
+            return 1
+        for i, item in enumerate(raw):
+            print(f"\n--- Proposal {i + 1}/{len(raw)} ---")
+            try:
+                proposal = _validate_proposal(item)
+            except ValueError as exc:
+                print(f"ERROR: invalid proposal #{i + 1}: {exc}", file=sys.stderr)
+                return 1
+            rc = apply(
+                proposal,
+                dry_run=args.dry_run,
+                triggering_kind=args.triggering_kind,
+            )
+            if rc != 0:
+                print(
+                    f"ERROR: proposal #{i + 1} failed with exit code {rc}. "
+                    f"Stopping batch.",
+                    file=sys.stderr,
+                )
+                return rc
+        return 0
 
     try:
         proposal = _validate_proposal(raw)
