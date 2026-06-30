@@ -35,6 +35,31 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `A-sync-budget` | UNCERTAIN | `platform` | A request may spend up to 2s of synchronous work. |
 | `A-eu-only` | HOLDS | `security` | All processed data subjects reside in the EU. |
 
+## Processes
+
+| id | lifecycle | steps | roles | drives |
+|---|---|---|---|---|
+| `PR-auto-suspend-fraud` | process-lifecycle | detect | fraud-analyst | customer |
+| `PR-billing-close-delinquent` | process-lifecycle | close | billing-manager | customer |
+
+---
+
+## Tool-derived requirements
+
+Projected from `spec/tools/*.py` module docstrings whose first line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). The docstring IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R.
+
+- **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
+- **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: (none)]
+- **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
+- **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: (none)]
+- **R-tool-create-agent** — *scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_create_agent`]
+- **R-tool-create-domain** — *scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.* [STRUCTURAL·tool · §Domain] [enforcer: `test_tool_create_domain`]
+- **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
+- **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
+- **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
+- **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
+- **R-tool-what-now** — *derives the prioritized next correct action from any graph state, making being-lost structurally impossible.* [STRUCTURAL·tool · §Harness] [enforcer: (none)]
+
 ---
 
 ## Methodology (generated from module docstrings)
@@ -128,14 +153,34 @@ Package structure (module = ontology section / methodology chapter):
                 hold (a stewardless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 
-CANON-SECTION SCHEME (the `Canon: §N` labels every public object carries):
+CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Requirement, §Conflict, §Assumption, §Axis, §Stakeholder — the ontology;
   §Invariants — the structural rules;
   §Graph — the store and its traversal;
-  §Loop — the what_now operating procedure (documented, exercised by the harness).
+  §Loop — the what_now operating procedure (documented, exercised by the harness);
+  §Glossary — the controlled methodology vocabulary (tensio.glossary.TERMS).
+  §Constitution — the operator's boot sequence generated from the SETTLED laws;
+                  a fresh agent reads this to reconstitute as operator without
+                  needing a session checkpoint (M33 resolved — P7).
 The generator (tools/gen_spec.py) walks modules in a fixed order and emits the
-human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md); the meta-test
-(tests/test_docs_gen.py) makes regeneration == committed, byte-for-byte.
+human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md,
+CONSTITUTION.md); the meta-test (tests/test_docs_gen.py) makes regeneration ==
+committed, byte-for-byte.
+
+§Atoms — per-topic narrative files under docs/methodology/atoms/ generated from
+  SETTLED requirements grouped by topic (R-docs-generated-from-requirements).
+
+OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
+  operator — an acting agent that owns a bounded sub-domain of the graph; its
+             crystallized substrate is the durable store free of context cost.
+  DRIFT_FALLOUT — a DEAD assumption with live dependents that must be revisited.
+  latent connector — a requirement pair that SHOULD have a Conflict node but
+             doesn't; the heuristic hunt lives in graph.latent_connector_suspects.
+  three-cipher pulse — the operator's per-turn vital-signs anchored in R-boot-from-substrate
+             (context % + top what_now action + unenforced-SETTLED+DRAFT debt count).
+  boot ritual — the per-turn sequence (CLAUDE.md§Operator boot ritual) that re-loads
+             the operator from the substrate so every reply is grounded in the live
+             substrate rather than session memory.
 
 ### 2. §Stakeholder — owners and stewards — `tensio.stakeholder`
 
@@ -234,6 +279,22 @@ Lifecycle (source of truth is `status`, params.py-style):
                    the harness and listed in OPEN.md.
   REJECTED       — withdrawn; kept for history (anti-relitigation), not deleted.
 
+Enforcement gradient (R-enforcement-gradient / R-requirement-enforced):
+  PROSE      — the requirement is recorded only; no structural or automated check
+               enforces it. The promise is held by human discipline alone.
+  STRUCTURAL — the requirement is visible and addressable (surfaced by the
+               harness, listed in docs) but no check_* invariant or test fires
+               automatically on violation. Context-debt: cheaper than PROSE but
+               not a reflex.
+  ENFORCED   — an invariant (check_*) or test fires on violation; the guarantee
+               is automatic. The `enforced_by` field MUST name the enforcer(s)
+               so the guarantee is auditable. This is a crystallized reflex: the
+               system actively rejects the violation, not just records it.
+
+  The direction of progress is PROSE -> STRUCTURAL -> ENFORCED. UNENFORCED
+  (PROSE + STRUCTURAL on SETTLED requirements) is the burn-down meter: it is
+  the gap between what is claimed and what is guaranteed.
+
 ### 6. §Conflict — the connector node — `tensio.conflict`
 
 Canon: §Conflict — the first-class connector NODE (the centerpiece).
@@ -272,11 +333,21 @@ lifecycle under a human STEWARD who is, by construction, not the owner of any
 member (a conflict lives between stakeholders). The AI presents, justifies, asks;
 the decision and its recording stay human.
 
+THE SIGNOFF LOCK: when a Conflict transitions to DECIDED, it MUST carry a
+`decided_by` field naming the human Stakeholder who approved the resolution.
+This is the structural twin of the steward-distinct boundary applied at the
+moment of decision: `decided_by` MUST be non-empty AND must NOT be the owner
+of any member (invariants.check_decided_has_decided_by). This prevents an AI
+from silently writing DECIDED without a named human decider, making the hard
+boundary enforceable at commit time (R-decided-needs-human-signoff,
+§Proposal — the closed loop's ACT half).
+
 Lifecycle (source of truth is the `lifecycle` field, params.py-style):
   DETECTED            — surfaced; node materialized; no steward action yet.
   ACKNOWLEDGED        — steward accepts it is real and owns it.
   DECIDED(rationale)  — resolved WITH recorded rationale and/or a derived
                         requirement (invariants.check_decided_has_rationale_or_derived).
+                        MUST carry a non-empty decided_by (the human who approved).
   REVISIT_WHEN(cond)  — parked with an explicit revisit condition (anti-relitigation:
                         the historian re-opens it when the condition triggers).
 
@@ -301,7 +372,110 @@ WHY traversal lives here as functions (not methods on a graph class doing logic)
 keeps the ontology dataclasses pure data and the queries in one auditable place,
 mirroring dev-coin where chain logic is module functions over frozen dataclasses.
 
-### 8. §Invariants — structural form — `tensio.invariants`
+### 8. §Lifecycle — the generic state-machine keystone — `tensio.lifecycle`
+
+Canon: §Lifecycle — the generic state-machine value-type (framework keystone).
+
+RULE: every modeled state machine (Requirement.status, Conflict.lifecycle,
+and future Operator/Process lifecycles) MUST validate against a framework-
+supplied Lifecycle constant via invariants.check_status_in_lifecycle.
+
+Canon: §Lifecycle — this module ships the SHAPE (State / Transition / Lifecycle)
+plus the two canonical framework instances (REQUIREMENT_STATUS_LIFECYCLE and
+CONFLICT_LIFECYCLE). It is content-free: no business data lives here.
+
+References:
+  R-lifecycle-abstraction — introduces this keystone abstraction (DRY the two
+    hand-rolled state machines; opens the door to behavioral aspects).
+  R-statemachine-wellformedness — every modeled state machine is reachable,
+    deterministic, and terminal (or explicitly cyclic); transition guards may
+    rest on an Assumption (the behavioral drift seam).
+
+WHY one module, two constants: Requirement.status and Conflict.lifecycle are
+BOTH hand-rolled prefix-test state machines with the same shape. Generalizing
+them into Lifecycle:
+  - makes the stored strings the single source of truth (no parallel storage),
+  - adds a structural invariant that validates stored values against canonical
+    states without changing how they are stored or compared,
+  - and establishes the keystone so that Operator.lifecycle / Goal.status /
+    Process.lifecycle in later phases can reuse it — no parallel machinery.
+
+### 9. §Operator — the acting facet of a Stakeholder — `tensio.operator`
+
+Canon: §Operator — the acting facet of a Stakeholder (M20: NEW TYPE).
+
+RULE: an Operator is the acting facet of a Stakeholder (§Stakeholder). Where a
+Stakeholder answers 'who is accountable', an Operator answers 'who can act,
+within what context, over which slice of the graph'. The two facets MUST stay
+separate — single-altitude-vs-multi-altitude.
+
+Canon: §Reflection — the P0 operator self-diagnosis band observes Operator nodes
+directly: it checks context_budget.limit vs graph size (over-budget), and flags
+DRAFT-overhang, UNENFORCED-SETTLED debt, DEAD-assumption-on-ENFORCER, and
+derived-but-unbuilt debt. An operator that cannot see its own state is worse than
+a malformed graph (ranked P0, above §Invariants P1 STRUCTURE).
+
+Canon: §Context — the working-context fullness is MEASURED, not guessed; the
+three-cipher pulse cites it as the first cipher (tools/context.py reader;
+R-measure-context-size DRAFT).
+
+Canon: §Operator — every Operator:
+  - carries a typed anchor starting with 'OP-' (R-anchor-everything);
+  - references a Stakeholder.id (the accountability facet, §Stakeholder);
+  - has a lifecycle value matched by OPERATOR_LIFECYCLE (§Lifecycle);
+  - carries a ContextBudget (§ContextBudget) bounding its WORKING store;
+  - optionally has a parent Operator (the delegation hierarchy).
+
+Canon: §ContextBudget — bounds the working store only; the crystallized
+substrate (graph + generated docs) is FREE. See R-working-vs-substrate-budget.
+
+References:
+  R-operator-acting-facet — the acting facet is where context and capability live.
+  R-context-budget-rule   — size(domain) <= budget.limit is a structural check.
+  R-crystallize-before-split — crystallize first, split only if still over budget.
+  R-operator-crystal-is-claude-md — each operator's crystal is its CLAUDE.md.
+
+WHY a new type (M20 = new type, not a Stakeholder facet): separating them
+(Operator is a NEW TYPE referencing Stakeholder) preserves the steward-distinct
+boundary at the methodology altitude. A Stakeholder is an accountability node;
+the acting/context/domain facet lives on Operator. Conflating them would merge
+two things that the single-altitude-vs-multi-altitude axis explicitly separates.
+
+### 10. §Process / §Goal — behavioral aspect (M12) and Goal type (M19) — `tensio.process`
+
+Canon: §Process — opt-in behavioral aspect (M12).
+
+A Process is a Lifecycle + ordered Steps + the roles it requires + the
+entities it drives. It is the richest contradiction surface (M12 /
+R-process-aspect-first) because:
+  - two processes driving one entity along incompatible state paths is
+    the canonical hidden contradiction;
+  - a step requiring a role no actor provides is a structural dead-end;
+  - a method postcondition that violates an entity invariant is a real
+    conflict surfaced as a Conflict node on a behavioral axis.
+
+Entity HAS LANDED (P21, spec/src/tensio/entity.py). Process.drives_entities now
+resolves to declared EntityType slugs (check_process_drives_existing_entities).
+Step.invokes ("entity-slug.event") resolves to a real Lifecycle transition
+(check_step_invokes_known_transition). M12 — Entity deferred → LANDED.
+
+Goal is its OWN first-class type (M19): a target-state predicate + what it
+targets. Distinct from a static Requirement claim because it carries a
+MOVING TARGET that yields a Gap.
+
+Goal CONFLICTS reuse the existing Conflict connector node on a goal-tension
+axis (M23) — no new GoalConflict type. Keep "conflict is one node type".
+
+References:
+  R-process-aspect-first — this module IS the first behavioral aspect.
+  R-goal-as-target-state — §Goal ships here as its own type (M19).
+  R-statemachine-wellformedness — PROCESS_LIFECYCLE and GOAL_LIFECYCLE
+    validate via check_lifecycle_wellformed (same keystone path as
+    REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE).
+  R-task-vs-action-distinct-altitudes — Process.steps use prose `invokes`
+    (forward-compat); the harness Action type is NOT merged here.
+
+### 11. §Invariants — structural form — `tensio.invariants`
 
 Canon: §Invariants — structural form of the tension graph (the check_* layer).
 
@@ -324,3 +498,13 @@ goal is a single pass/fail gate. Here the SAME functions feed the "what now"
 diagnosis, which needs the offending id and a human imperative — so the richer
 return type is load-bearing, and `holds()` recovers the boolean when a test just
 wants pass/fail.
+
+M7 resolved here (operator proposes, the goal hook ratifies via continuation):
+The methodology's critical core is the six invariants in CRITICAL_CORE_INVARIANTS.
+These six guard every path by which a contradiction could be INTRODUCED without
+being seen — the hard boundary, the anti-drift discipline, the decision-moment
+lock, the typed-anchor discipline, referential integrity, and visible openness.
+All other invariants are structurally sound but occupy a SECONDARY ring: same
+machinery, lower priority signal. The §Conscience Hypothesis sweep (test_conscience.py)
+covers the critical core with property-tests; secondary invariants pass the same
+suite but are not the primary conscience boundary.

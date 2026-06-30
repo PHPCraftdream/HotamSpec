@@ -184,6 +184,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-no-hand-edit-graph` | SETTLED | `framework-author` | A-python-stack | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events. |
 | `R-method-matches-docstring` | SETTLED | `framework-author` | A-python-stack | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
 | `R-root-claude-md-is-sentinel-only` | SETTLED | `framework-author` | A-python-stack | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
+| `R-entities-md-generated` | SETTLED | `framework-author` | A-python-stack | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
+| `R-entity-derived-requirement` | SETTLED | `framework-author` | A-python-stack | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
 
 ## Stakeholders
 

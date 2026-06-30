@@ -195,6 +195,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-declares-purpose` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -239,6 +241,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-has-docs-dir` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -375,6 +379,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-is-recursive-director` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -417,6 +423,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-map-generated` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -467,6 +475,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-references-shared-docs` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -507,6 +517,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-scoped-constitution` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -644,6 +656,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -968,6 +982,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1122,6 +1138,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1158,6 +1176,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1193,6 +1213,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1589,6 +1611,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1622,6 +1646,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-director-agent-required-per-domain` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1654,6 +1680,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1685,6 +1713,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-declares-director` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1742,6 +1772,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-docs-dir` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1771,6 +1803,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-manifest` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1799,6 +1833,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-is-a-directory` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1826,6 +1862,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-map-generated` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1852,6 +1890,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-claude-md` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1877,6 +1917,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-docs-gen` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1901,6 +1943,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-graph-py` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1924,6 +1968,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-tools-and-agents` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1946,6 +1992,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1967,6 +2015,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -1987,6 +2037,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -2006,6 +2058,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -2040,6 +2094,45 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-enforcement-levels-declared` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-enforcement-levels-declared` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-enforcement-levels-declared` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-entities-md-generated` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-glossary-generated` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-root-claude-md-is-sentinel-only` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-shared-thinking-doc-from-canon-sections` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-framework-shared-docs-generated` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-glossary-generated` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-root-claude-md-is-sentinel-only` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-shared-thinking-doc-from-canon-sections` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-field-kind-known` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-entity-field-kind-known` | `R-entity-instance-refs-resolve` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
 | `R-entity-field-kind-known` | `R-entity-instance-required-fields` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |

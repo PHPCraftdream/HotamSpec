@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 103 / SETTLED 134; DRAFT 14; OPEN 7; REJECTED 19.**
+**Burn-down: SETTLED-ENFORCED 104 / SETTLED 136; DRAFT 14; OPEN 7; REJECTED 19.**
 
 ---
 
@@ -49,6 +49,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-crystal-reload-by-reference` | STRUCTURAL | `ai-agent` | An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context. |
 | `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-no-hand-edit-graph` | STRUCTURAL | `framework-author` | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events. |
+| `R-entity-derived-requirement` | STRUCTURAL | `framework-author` | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -157,6 +158,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-domain-has-docs-dir` | test_tool_create_domain.py::test_creates_docs_dir | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
 | `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
 | `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
+| `R-entities-md-generated` | check_entities_md_lists_all_types | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
 
 ## DRAFT (not yet promoted)
 

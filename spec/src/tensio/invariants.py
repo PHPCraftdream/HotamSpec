@@ -1819,6 +1819,90 @@ def check_typed_anchors_entity(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 14b. Entity-docs anti-drift — ENTITIES.md lists every declared EntityType
+# ---------------------------------------------------------------------------
+
+_DOMAINS_ROOT_FOR_ENTITY_CHECK = Path(__file__).resolve().parents[3] / "domains"
+_REPO_ROOT_FOR_ENTITY_CHECK = Path(__file__).resolve().parents[3]
+
+
+def check_entities_md_lists_all_types(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Entity / §Invariants — every declared EntityType appears as a section in ENTITIES.md.
+
+    RULE: for each domain in domains/<name>/ whose graph.py declares entity_types,
+    the corresponding domains/<name>/docs/gen/ENTITIES.md MUST contain a section
+    header '## <slug>' for every EntityType slug. A new EntityType without a
+    generated map entry would silently disappear from the operator's view —
+    R-drift-structurally-impossible applied to entity-derived docs.
+
+    WHY walks domains (not the passed graph): this is a filesystem-coherence check
+    on the committed generated docs — mirrors check_domain_manifest_* in style.
+    The graph argument is accepted for API consistency but not used; the check
+    loads each domain's graph independently. This avoids false positives when
+    the invariant is run against an in-memory fixture (e.g. seed_graph()).
+
+    WHY aspect-gated per domain: a domain with no entity_types need not have any
+    ## type sections in its ENTITIES.md.
+    """
+    domains_root = _DOMAINS_ROOT_FOR_ENTITY_CHECK
+    if not domains_root.exists():
+        return []
+
+    import importlib.util as _ilu  # noqa: PLC0415
+
+    out: list[Violation] = []
+
+    for domain_dir in sorted(domains_root.iterdir()):
+        if not domain_dir.is_dir() or domain_dir.name.startswith("_"):
+            continue
+
+        domain_graph_py = domain_dir / "graph.py"
+        if not domain_graph_py.exists():
+            continue
+        try:
+            _spec = _ilu.spec_from_file_location(
+                f"_entity_check_domain_{domain_dir.name}_graph", domain_graph_py
+            )
+            if _spec is None or _spec.loader is None:
+                continue
+            _mod = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_mod)  # type: ignore[union-attr]
+            dg: TensionGraph = _mod.build_graph()
+        except Exception:
+            continue  # Malformed graph — handled by other domain-manifest checks.
+
+        if not dg.entity_types:
+            continue  # §Entity aspect not activated in this domain.
+
+        entities_md = domain_dir / "docs" / "gen" / "ENTITIES.md"
+        if not entities_md.exists():
+            for et in dg.entity_types:
+                out.append(
+                    Violation(
+                        "check_entities_md_lists_all_types",
+                        et.slug,
+                        f"EntityType '{et.slug}' in domain '{domain_dir.name}' not listed "
+                        f"in ENTITIES.md (file does not exist — run gen_spec.py)",
+                    )
+                )
+            continue
+
+        content = entities_md.read_text(encoding="utf-8")
+        for et in dg.entity_types:
+            if not re.search(rf"^## {re.escape(et.slug)}\b", content, re.MULTILINE):
+                out.append(
+                    Violation(
+                        "check_entities_md_lists_all_types",
+                        et.slug,
+                        f"EntityType '{et.slug}' in domain '{domain_dir.name}' has no "
+                        f"'## {et.slug}' section in ENTITIES.md "
+                        f"(run gen_spec.py to regenerate — R-drift-structurally-impossible)",
+                    )
+                )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # 15. Section-anchor coherence — every §-token in framework docstrings is known
 # ---------------------------------------------------------------------------
 
@@ -2582,6 +2666,7 @@ ALL_INVARIANTS = (
     check_entity_instance_refs_resolve,
     check_entity_field_kind_known,
     check_typed_anchors_entity,
+    check_entities_md_lists_all_types,
     check_section_anchors_known,
     check_bijection_r_to_enforcer,
     # §Domain + §Agent filesystem invariants (P17 task #64)

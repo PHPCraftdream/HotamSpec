@@ -3220,6 +3220,25 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_root_claude_md_is_sentinel_only",),
         ),
+        Requirement(
+            id="R-entities-md-generated",
+            claim=("domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Substrate-generates-operator extended to the entity layer. ENTITIES.md is the per-domain entity registry; emitter writes it deterministically (LF, utf-8) from build_graph(). check_entities_md_lists_all_types enforces no EntityType is silently omitted. Anti-drift via existing test_docs_gen byte-identical regen."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("check_entities_md_lists_all_types",),
+        ),
+        Requirement(
+            id="R-entity-derived-requirement",
+            claim=("Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description changes the claim. Eliminates the prose gap between 'R about entity behavior' and 'EntityType implementing it'."),
+            assumptions=("A-python-stack",),
+            enforcement=STRUCTURAL,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

@@ -137,3 +137,22 @@ STRICTER 'ENT-<slug>-' rule. This check enforces only the prefix family.
 
 WHY: the 'ENT-' prefix family anchors all entity instances in the typed-anchor
 discipline (R-anchor-everything), enabling unambiguous cross-reference.
+
+## From `spec/src/tensio/invariants.py::check_entities_md_lists_all_types`
+
+Canon: §Entity / §Invariants — every declared EntityType appears as a section in ENTITIES.md.
+
+RULE: for each domain in domains/<name>/ whose graph.py declares entity_types,
+the corresponding domains/<name>/docs/gen/ENTITIES.md MUST contain a section
+header '## <slug>' for every EntityType slug. A new EntityType without a
+generated map entry would silently disappear from the operator's view —
+R-drift-structurally-impossible applied to entity-derived docs.
+
+WHY walks domains (not the passed graph): this is a filesystem-coherence check
+on the committed generated docs — mirrors check_domain_manifest_* in style.
+The graph argument is accepted for API consistency but not used; the check
+loads each domain's graph independently. This avoids false positives when
+the invariant is run against an in-memory fixture (e.g. seed_graph()).
+
+WHY aspect-gated per domain: a domain with no entity_types need not have any
+## type sections in its ENTITIES.md.

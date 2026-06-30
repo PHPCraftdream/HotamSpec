@@ -21,9 +21,129 @@ from __future__ import annotations
 from tensio.assumption import DEAD, Assumption
 from tensio.axis import Axis
 from tensio.conflict import Conflict, conflict_identity
+from tensio.entity import EntityField, EntityInstance, EntityType  # noqa: F401
 from tensio.graph import TensionGraph
+from tensio.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
+from tensio.process import PROCESS_LIFECYCLE, Process, Step
 from tensio.requirement import Relation, Requirement
 from tensio.stakeholder import Stakeholder
+
+
+# --- Customer entity type ----------------------------------------------------
+
+CUSTOMER_LIFECYCLE = Lifecycle(
+    slug="customer-lifecycle",
+    states=(
+        State("ACTIVE", kind=INITIAL, why="Customer is paying and using the service."),
+        State(
+            "SUSPENDED",
+            kind=QUIESCENT,
+            why="Customer temporarily paused for fraud signal or non-payment.",
+        ),
+        State("CLOSED", kind=QUIESCENT, why="Customer terminated; account closed."),
+    ),
+    transitions=(
+        Transition(
+            "ACTIVE",
+            "SUSPENDED",
+            event="suspend",
+            guard="fraud signal present OR account delinquent",
+            why="Risk team or billing engine triggers a pause.",
+        ),
+        Transition(
+            "ACTIVE",
+            "CLOSED",
+            event="close",
+            guard="customer-requested cancellation OR steward-decided termination",
+            why="Account permanently ended; no reopen path.",
+        ),
+        Transition(
+            "SUSPENDED",
+            "ACTIVE",
+            event="reopen",
+            guard="fraud cleared AND account current",
+            why="Customer is back in good standing.",
+        ),
+    ),
+    cyclic=False,
+)
+
+CUSTOMER_ENTITY = EntityType(
+    slug="customer",
+    description="A paying account that may be ACTIVE, SUSPENDED, or CLOSED.",
+    lifecycle=CUSTOMER_LIFECYCLE,
+    fields=(
+        EntityField(name="email", kind="string", required=True),
+        EntityField(name="tier", kind="enum", required=False),
+        EntityField(
+            name="owner",
+            kind="reference",
+            required=True,
+            ref_target="stakeholder",
+        ),
+    ),
+    why=(
+        "First worked-example business entity. Demonstrates the full Entity "
+        "machine: a declarative type, a Lifecycle, fields including a typed "
+        "reference to an existing Stakeholder, and the conflict surface when "
+        "two Processes try to drive it to incompatible states."
+    ),
+)
+
+CUSTOMER_ACME = EntityInstance(
+    id="ENT-customer-acme",
+    entity_type="customer",
+    state="ACTIVE",
+    field_values=(
+        ("email", "billing@acme.com"),
+        ("tier", "gold"),
+        ("owner", "finance"),
+    ),
+)
+
+# --- Opposing processes that surface entity-state conflict -------------------
+
+PR_AUTO_SUSPEND_FRAUD = Process(
+    id="PR-auto-suspend-fraud",
+    lifecycle=PROCESS_LIFECYCLE,
+    drives_entities=("customer",),
+    roles_required=("fraud-analyst",),
+    steps=(
+        Step(
+            name="detect",
+            requires_role="fraud-analyst",
+            invokes="customer.suspend",
+            why="Fraud signal observed; automatic pause.",
+        ),
+    ),
+    why=(
+        "When a customer trips the fraud heuristic, the risk team's process "
+        "suspends them. The terminal observable state this process targets "
+        "is SUSPENDED."
+    ),
+)
+
+PR_BILLING_CLOSE_DELINQUENT = Process(
+    id="PR-billing-close-delinquent",
+    lifecycle=PROCESS_LIFECYCLE,
+    drives_entities=("customer",),
+    roles_required=("billing-manager",),
+    steps=(
+        Step(
+            name="close",
+            requires_role="billing-manager",
+            invokes="customer.close",
+            why="Account persistently delinquent; billing closes permanently.",
+        ),
+    ),
+    why=(
+        "Billing's mandate for unrecoverable delinquency is permanent closure. "
+        "The terminal observable state of this process is CLOSED — disjoint from "
+        "PR-auto-suspend-fraud's SUSPENDED. A customer flagged for both fraud AND "
+        "delinquency surfaces a behavioral contradiction (M16): fraud team wants "
+        "SUSPENDED (recoverable), billing wants CLOSED (permanent)."
+    ),
+)
 
 
 # --- Controlled vocabulary used by this fixture -----------------------------
@@ -221,4 +341,7 @@ def seed_graph() -> TensionGraph:
         assumptions=assumptions,
         requirements=requirements,
         conflicts=conflicts,
+        entity_types=(CUSTOMER_ENTITY,),
+        entities=(CUSTOMER_ACME,),
+        processes=(PR_AUTO_SUSPEND_FRAUD, PR_BILLING_CLOSE_DELINQUENT),
     )
