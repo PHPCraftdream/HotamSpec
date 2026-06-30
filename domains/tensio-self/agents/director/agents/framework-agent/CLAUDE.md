@@ -75,6 +75,7 @@ are included.
 - [§Context](../../../../../../spec/docs/thinking/context.md)
 - [§Contextbudget](../../../../../../spec/docs/thinking/contextbudget.md)
 - [§Domain](../../../../../../spec/docs/thinking/domain.md)
+- [§Entity](../../../../../../spec/docs/thinking/entity.md)
 - [§Glossary](../../../../../../spec/docs/thinking/glossary.md)
 - [§Goal](../../../../../../spec/docs/thinking/goal.md)
 - [§Graph](../../../../../../spec/docs/thinking/graph.md)

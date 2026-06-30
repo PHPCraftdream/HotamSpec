@@ -285,6 +285,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
 - `spec/src/tensio/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
 - `spec/src/tensio/axis.py` — controlled vocabulary of tension dimensions.
 - `spec/src/tensio/conflict.py` — the first-class connector NODE (the centerpiece).
+- `spec/src/tensio/entity.py` — domain-declared business concept with its own lifecycle.
 - `spec/src/tensio/glossary.py` — the methodology's controlled vocabulary (framework-side).
 - `spec/src/tensio/graph.py` — the tension graph store and its traversal helpers.
 - `spec/src/tensio/invariants.py` — structural form of the tension graph (the check_* layer).
@@ -388,6 +389,10 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
   - defined: `_(not yet mapped)_`
   - enforced: `check_domain_director_exists`, `check_domain_manifest_description_nonempty`, `check_domain_manifest_director_nonempty`, `check_domain_manifest_exists_and_importable`, `check_domain_manifest_goals_nonempty`, `check_domain_manifest_id_matches_dirname`, `check_domain_manifest_valid`
   - tested: `spec/tests/test_domain_isolation_p17.py`, `spec/tests/test_framework_claude_md_purity.py`, `spec/tests/test_root_claude_md_is_sentinel_only.py`
+- **§Entity**
+  - defined: `spec/src/tensio/entity.py`
+  - enforced: _(none)_
+  - tested: _(none)_
 - **§Glossary**
   - defined: `spec/src/tensio/glossary.py`
   - enforced: `check_section_anchors_known`
@@ -459,6 +464,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
 - [§Context](../../spec/docs/thinking/context.md)
 - [§Contextbudget](../../spec/docs/thinking/contextbudget.md)
 - [§Domain](../../spec/docs/thinking/domain.md)
+- [§Entity](../../spec/docs/thinking/entity.md)
 - [§Glossary](../../spec/docs/thinking/glossary.md)
 - [§Goal](../../spec/docs/thinking/goal.md)
 - [§Graph](../../spec/docs/thinking/graph.md)

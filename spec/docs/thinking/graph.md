@@ -42,6 +42,14 @@ Fields:
   operators    — tuple of Operator (§Operator — the acting facets; M20).
   processes    — tuple of Process (§Process — opt-in behavioral aspect, M12).
   goals        — tuple of Goal (§Goal — first-class target-state type, M19).
+  entity_types — tuple of EntityType (§Entity — domain-declared business concepts; M12).
+                 WHY: allows a domain to declare lifecycle-bearing concepts (customer,
+                 order, invoice) without framework code per entity — coverage
+                 iterates g.entity_types.
+  entities     — tuple of EntityInstance (§Entity — concrete in-graph instances).
+                 WHY: a declared EntityType without instances is the legitimate
+                 schema-only state; EntityInstance carries the per-instance
+                 id/state/field_values for traversal and invariant checking.
 
 WHY frozen + tuples: determinism. The generator emits docs in graph order and
 the meta-test demands byte-for-byte stability; a mutable/unordered store would
@@ -146,7 +154,7 @@ Canon: §Graph — True iff no domain content has been loaded.
 
 RULE: empty iff every collection is empty. An empty graph is the
 legitimate ship state of the framework (no content under spec/content/).
-Includes the §Process and §Goal aspect collections.
+Includes the §Process, §Goal, and §Entity aspect collections.
 
 WHY: the harness and generator use this to render a calm "no content
 yet" message instead of an awkwardly empty roster.

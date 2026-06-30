@@ -39,6 +39,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Atoms` | The atomized methodology docs generated under docs/methodology/atoms/ from SETTLED requirements grouped by topic. |
 | `§Agent` | A scoped sub-operator directory (spec/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories. |
 | `§Domain` | A self-contained business domain directory (domains/<name>/) with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md. |
+| `§Entity` | Domain-declared business concept with its own lifecycle (M12 opt-in aspect): EntityType + EntityField + EntityInstance; check_entity_* covers every declared type by iteration. |
 
 ## Lifecycle states
 | slug | definition |

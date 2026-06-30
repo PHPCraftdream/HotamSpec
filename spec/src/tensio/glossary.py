@@ -288,6 +288,12 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "A self-contained business domain directory (domains/<name>/) with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.",
     ),
+    # §Entity section (P21 — first opt-in domain-declarative aspect, M12)
+    Term(
+        "§Entity",
+        "SECTION",
+        "Domain-declared business concept with its own lifecycle (M12 opt-in aspect): EntityType + EntityField + EntityInstance; check_entity_* covers every declared type by iteration.",
+    ),
 )
 
 

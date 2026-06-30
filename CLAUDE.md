@@ -24,6 +24,7 @@ Read your domain's CLAUDE.md (listed in DOMAIN-MAP below) for the operator boot 
 - `spec/src/tensio/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
 - `spec/src/tensio/axis.py` — controlled vocabulary of tension dimensions.
 - `spec/src/tensio/conflict.py` — the first-class connector NODE (the centerpiece).
+- `spec/src/tensio/entity.py` — domain-declared business concept with its own lifecycle.
 - `spec/src/tensio/glossary.py` — the methodology's controlled vocabulary (framework-side).
 - `spec/src/tensio/graph.py` — the tension graph store and its traversal helpers.
 - `spec/src/tensio/invariants.py` — structural form of the tension graph (the check_* layer).
@@ -92,6 +93,7 @@ Read your domain's CLAUDE.md (listed in DOMAIN-MAP below) for the operator boot 
 - [§Context](spec/docs/thinking/context.md)
 - [§Contextbudget](spec/docs/thinking/contextbudget.md)
 - [§Domain](spec/docs/thinking/domain.md)
+- [§Entity](spec/docs/thinking/entity.md)
 - [§Glossary](spec/docs/thinking/glossary.md)
 - [§Goal](spec/docs/thinking/goal.md)
 - [§Graph](spec/docs/thinking/graph.md)
