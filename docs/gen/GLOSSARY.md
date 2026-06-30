@@ -36,6 +36,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Process` | The opt-in behavioral aspect (M12): a Lifecycle + ordered Steps + roles_required + drives_entities — the richest contradiction surface. |
 | `§Goal` | A first-class target-state type (M19): distinct from a static Requirement because it carries a MOVING TARGET that yields a Gap driving a Process. |
 | `§Context` | The operator's working-context fullness measurement — MEASURED from a runtime stamp, never guessed (R-measure-context-size). |
+| `§Atoms` | The atomized methodology docs generated under docs/methodology/atoms/ from SETTLED requirements grouped by topic. |
 
 ## Lifecycle states
 | slug | definition |

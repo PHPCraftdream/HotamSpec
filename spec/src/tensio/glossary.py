@@ -270,6 +270,12 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "The operator's working-context fullness measurement — MEASURED from a runtime stamp, never guessed (R-measure-context-size).",
     ),
+    # §Atoms section (P11 — atomized methodology docs generated from SETTLED requirements)
+    Term(
+        "§Atoms",
+        "SECTION",
+        "The atomized methodology docs generated under docs/methodology/atoms/ from SETTLED requirements grouped by topic.",
+    ),
 )
 
 

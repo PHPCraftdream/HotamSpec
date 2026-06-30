@@ -69,6 +69,12 @@ _LS_END = "<!-- LIVE-STATE:END -->"
 # φ-cap: 1_000_000 / φ ≈ 618033 tokens — the crystal must stay well below.
 _PHI_CAP = int(1_000_000 / 1.618033988749895)  # 618033
 
+ATOMS_DIR = REPO_ROOT / "docs" / "methodology" / "atoms"
+ATOMS_OPERATOR_MD = ATOMS_DIR / "operator.md"
+ATOMS_SUBSTRATE_MD = ATOMS_DIR / "substrate.md"
+ATOMS_DISCIPLINE_MD = ATOMS_DIR / "discipline.md"
+ATOMS_CHECK_MD = ATOMS_DIR / "check.md"
+
 REQUIREMENTS_MD = GEN_DIR / "REQUIREMENTS.md"
 TENSIONS_MD = GEN_DIR / "TENSIONS.md"
 OPEN_MD = GEN_DIR / "OPEN.md"
@@ -1346,6 +1352,110 @@ def _update_claude_md_live_state(g: TensionGraph) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Atomized methodology docs (docs/methodology/atoms/)
+# Each generator emits one topic file from SETTLED requirements tagged with
+# that topic. Topic-grouping uses a helper that scans requirement ids for
+# known prefixes — atomic methods, one per topic.
+# ---------------------------------------------------------------------------
+
+
+def _select_settled(g: TensionGraph, predicate) -> list:
+    """Return SETTLED requirements satisfying predicate(r) -> bool. One atom."""
+    return [r for r in g.requirements if r.status == SETTLED and predicate(r)]
+
+
+def _render_atoms(title: str, intro: str, reqs: list) -> str:
+    """Render one atoms file from a sorted requirement list. One atom."""
+    lines: list[str] = [BANNER, "", f"# {title}", "", intro, "", "---", ""]
+    if not reqs:
+        lines += ["_No atomic requirements in this topic yet._", ""]
+    else:
+        for r in sorted(reqs, key=lambda r: r.id):
+            lines += [f"## `{r.id}` ({r.enforcement})", "", f"**Claim.** {r.claim}", ""]
+            if r.why.strip():
+                lines += [f"**Why.** {r.why}", ""]
+            if r.enforced_by:
+                lines += [
+                    "**Enforced by:** " + ", ".join(f"`{e}`" for e in r.enforced_by),
+                    "",
+                ]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def build_methodology_atoms_operator(g: TensionGraph) -> str:
+    """Atomic: operator-altitude atoms (R-operator-*, R-agent-*, R-boot-*, R-prefer-tool-*)."""
+    sel = _select_settled(
+        g,
+        lambda r: r.id.startswith(
+            ("R-operator-", "R-agent-", "R-boot-", "R-prefer-tool-")
+        ),
+    )
+    return _render_atoms(
+        "Operator atoms",
+        "The atomic requirements that constitute the operator's role, identity, and discipline.",
+        sel,
+    )
+
+
+def build_methodology_atoms_substrate(g: TensionGraph) -> str:
+    """Atomic: substrate atoms (R-claude-md-*, R-content-*, R-deterministic-*, R-drift-*, R-rejected-*)."""
+    sel = _select_settled(
+        g,
+        lambda r: r.id.startswith(
+            (
+                "R-claude-md-",
+                "R-content-",
+                "R-deterministic-",
+                "R-drift-",
+                "R-rejected-",
+            )
+        ),
+    )
+    return _render_atoms(
+        "Substrate atoms",
+        "The atomic requirements that govern how the substrate (graph + generated docs) behaves.",
+        sel,
+    )
+
+
+def build_methodology_atoms_discipline(g: TensionGraph) -> str:
+    """Atomic: discipline atoms (R-anchor-*, R-speak-*, R-crystallize-*, R-prefer-tool-*, R-shared-tools-*)."""
+    sel = _select_settled(
+        g,
+        lambda r: (
+            r.id.startswith(("R-anchor-", "R-speak-", "R-crystallize-"))
+            or r.id in {"R-prefer-tool-over-hand", "R-shared-tools-in-spec-tools"}
+        ),
+    )
+    return _render_atoms(
+        "Discipline atoms",
+        "The atomic requirements that govern operator discipline — anchoring, crystallizing, tool-preference.",
+        sel,
+    )
+
+
+def build_methodology_atoms_check(g: TensionGraph) -> str:
+    """Atomic: check/enforcement atoms (R-check-*, R-requirement-*, R-bijection-*, R-enforcement-*, R-decided-*)."""
+    sel = _select_settled(
+        g,
+        lambda r: r.id.startswith(
+            (
+                "R-check-",
+                "R-requirement-",
+                "R-bijection-",
+                "R-enforcement-",
+                "R-decided-",
+            )
+        ),
+    )
+    return _render_atoms(
+        "Check & enforcement atoms",
+        "The atomic requirements about how rules are enforced — atomicity of claims, atomicity of checks, bijection.",
+        sel,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
 
@@ -1401,6 +1511,19 @@ def main(argv: list[str] | None = None) -> None:
     for path, text in targets.items():
         _write(path, text)
         print(f"written: {path}")
+
+    # Atomized methodology docs (docs/methodology/atoms/) — always written, not demo-gated.
+    if not args.demo:
+        ATOMS_DIR.mkdir(parents=True, exist_ok=True)
+        atoms_targets = {
+            ATOMS_DIR / "operator.md": build_methodology_atoms_operator(g),
+            ATOMS_DIR / "substrate.md": build_methodology_atoms_substrate(g),
+            ATOMS_DIR / "discipline.md": build_methodology_atoms_discipline(g),
+            ATOMS_DIR / "check.md": build_methodology_atoms_check(g),
+        }
+        for path, text in atoms_targets.items():
+            _write(path, text)
+            print(f"written: {path}")
 
     if not args.demo:
         _update_claude_md_live_state(g)

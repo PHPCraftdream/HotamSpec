@@ -99,6 +99,9 @@ human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md,
 CONSTITUTION.md); the meta-test (tests/test_docs_gen.py) makes regeneration ==
 committed, byte-for-byte.
 
+§Atoms — per-topic narrative files under docs/methodology/atoms/ generated from
+  SETTLED requirements grouped by topic (R-docs-generated-from-requirements).
+
 OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
   operator — an acting agent that owns a bounded sub-domain of the graph; its
              crystallized substrate is the durable store free of context cost.
