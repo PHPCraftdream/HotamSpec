@@ -2884,6 +2884,173 @@ def _process_domains(g: TensionGraph) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Domain CLAUDE.md — all-5-blocks population (P17 domain-active mode)
+# ---------------------------------------------------------------------------
+
+
+def _strip_stale_root_sentinels() -> None:
+    """Remove CONSTITUTION, AGENT-MAP, and SHARED-DOCS sentinel blocks from root CLAUDE.md.
+
+    In domain-active mode (P17+) these blocks belong in the domain's CLAUDE.md, not root.
+    If sentinels are absent this function is a no-op (idempotent).
+    """
+    if not CLAUDE_MD.exists():
+        return
+    text = _read(CLAUDE_MD)
+    changed = False
+
+    for begin_sentinel, end_sentinel in [
+        (_CONST_BEGIN, _CONST_END),
+        (_AGENT_MAP_BEGIN, _AGENT_MAP_END),
+        (_SHARED_DOCS_BEGIN, _SHARED_DOCS_END),
+    ]:
+        if begin_sentinel in text and end_sentinel in text:
+            begin_pos = text.find(begin_sentinel)
+            end_pos = text.find(end_sentinel) + len(end_sentinel)
+            # Strip up to one leading newline before begin and trailing newline after end.
+            strip_start = begin_pos
+            if strip_start > 0 and text[strip_start - 1] == "\n":
+                strip_start -= 1
+            if strip_start > 0 and text[strip_start - 1] == "\n":
+                strip_start -= 1
+            strip_end = end_pos
+            if strip_end < len(text) and text[strip_end] == "\n":
+                strip_end += 1
+            text = text[:strip_start] + text[strip_end:]
+            changed = True
+
+    if changed:
+        _write(CLAUDE_MD, text)
+
+
+def _update_domain_claude_md_all_blocks(domain_dir: Path, g: TensionGraph) -> None:
+    """Populate all 5 sentinel blocks in domains/<name>/CLAUDE.md.
+
+    Blocks written: LIVE-STATE, CONSTITUTION, REPO-MAP, AGENT-MAP, SHARED-DOCS.
+    If a sentinel pair is absent in the domain CLAUDE.md it is appended.
+    Idempotent: calling twice on an unchanged graph and filesystem produces identical output.
+    """
+    domain_claude_md = domain_dir / "CLAUDE.md"
+    if not domain_claude_md.exists():
+        return
+
+    # --- LIVE-STATE ---
+    text = _read(domain_claude_md)
+    live_block = build_live_state(g)
+    if _LS_BEGIN in text and _LS_END in text:
+        bp = text.find(_LS_BEGIN)
+        ep = text.find(_LS_END)
+        text = text[: bp + len(_LS_BEGIN)] + "\n" + live_block + "\n" + text[ep:]
+    else:
+        text = text.rstrip("\n") + f"\n\n{_LS_BEGIN}\n{live_block}\n{_LS_END}\n"
+    _write(domain_claude_md, text)
+
+    # --- CONSTITUTION ---
+    text = _read(domain_claude_md)
+    const_block = _render_constitution_block(g)
+    if _CONST_BEGIN in text and _CONST_END in text:
+        bp = text.find(_CONST_BEGIN)
+        ep = text.find(_CONST_END)
+        text = text[: bp + len(_CONST_BEGIN)] + "\n" + const_block + "\n" + text[ep:]
+    else:
+        # Insert after LIVE-STATE:END.
+        ls_end_pos = text.find(_LS_END)
+        if ls_end_pos != -1:
+            insert_at = ls_end_pos + len(_LS_END)
+            text = (
+                text[:insert_at]
+                + f"\n\n{_CONST_BEGIN}\n{const_block}\n{_CONST_END}\n"
+                + text[insert_at:]
+            )
+        else:
+            text = (
+                text.rstrip("\n") + f"\n\n{_CONST_BEGIN}\n{const_block}\n{_CONST_END}\n"
+            )
+    _write(domain_claude_md, text)
+
+    # --- REPO-MAP (scoped to domain dir) ---
+    text = _read(domain_claude_md)
+    repo_block = _scan_repo_map(
+        content_dir=domain_dir,
+        gen_dir=domain_dir / "docs" / "gen",
+    )
+    if _REPO_MAP_BEGIN in text and _REPO_MAP_END in text:
+        bp = text.find(_REPO_MAP_BEGIN)
+        ep = text.find(_REPO_MAP_END)
+        text = text[: bp + len(_REPO_MAP_BEGIN)] + "\n" + repo_block + "\n" + text[ep:]
+    else:
+        const_end_pos = text.find(_CONST_END)
+        if const_end_pos != -1:
+            insert_at = const_end_pos + len(_CONST_END)
+            text = (
+                text[:insert_at]
+                + f"\n\n{_REPO_MAP_BEGIN}\n{repo_block}\n{_REPO_MAP_END}\n"
+                + text[insert_at:]
+            )
+        else:
+            text = (
+                text.rstrip("\n")
+                + f"\n\n{_REPO_MAP_BEGIN}\n{repo_block}\n{_REPO_MAP_END}\n"
+            )
+    _write(domain_claude_md, text)
+
+    # --- AGENT-MAP (scoped to domain director's agents) ---
+    text = _read(domain_claude_md)
+    agent_block = _scan_agent_map(g, agents_root=_AGENTS_ROOT)
+    if _AGENT_MAP_BEGIN in text and _AGENT_MAP_END in text:
+        bp = text.find(_AGENT_MAP_BEGIN)
+        ep = text.find(_AGENT_MAP_END)
+        text = (
+            text[: bp + len(_AGENT_MAP_BEGIN)] + "\n" + agent_block + "\n" + text[ep:]
+        )
+    else:
+        repo_end_pos = text.find(_REPO_MAP_END)
+        if repo_end_pos != -1:
+            insert_at = repo_end_pos + len(_REPO_MAP_END)
+            text = (
+                text[:insert_at]
+                + f"\n\n{_AGENT_MAP_BEGIN}\n{agent_block}\n{_AGENT_MAP_END}\n"
+                + text[insert_at:]
+            )
+        else:
+            text = (
+                text.rstrip("\n")
+                + f"\n\n{_AGENT_MAP_BEGIN}\n{agent_block}\n{_AGENT_MAP_END}\n"
+            )
+    _write(domain_claude_md, text)
+
+    # --- SHARED-DOCS ---
+    text = _read(domain_claude_md)
+    shared_block = _render_shared_docs_block(domain_dir, scope=())
+    if _SHARED_DOCS_BEGIN in text and _SHARED_DOCS_END in text:
+        bp = text.find(_SHARED_DOCS_BEGIN)
+        ep = text.find(_SHARED_DOCS_END)
+        text = (
+            text[: bp + len(_SHARED_DOCS_BEGIN)]
+            + "\n"
+            + shared_block
+            + "\n"
+            + text[ep:]
+        )
+    else:
+        agent_end_pos = text.find(_AGENT_MAP_END)
+        if agent_end_pos != -1:
+            insert_at = agent_end_pos + len(_AGENT_MAP_END)
+            text = (
+                text[:insert_at]
+                + f"\n\n{_SHARED_DOCS_BEGIN}\n{shared_block}\n{_SHARED_DOCS_END}\n"
+                + text[insert_at:]
+            )
+        else:
+            text = (
+                text.rstrip("\n")
+                + f"\n\n{_SHARED_DOCS_BEGIN}\n{shared_block}\n{_SHARED_DOCS_END}\n"
+            )
+    _write(domain_claude_md, text)
+    print(f"updated domain CLAUDE.md: {domain_claude_md}")
+
+
+# ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
 
@@ -2955,10 +3122,21 @@ def main(argv: list[str] | None = None) -> None:
             print(f"written: {path}")
 
     if not args.demo:
+        active = _active_domain()
+        # Root CLAUDE.md: always update LIVE-STATE, DOMAIN-MAP, REPO-MAP.
+        # In domain-active mode: strip stale CONSTITUTION/AGENT-MAP/SHARED-DOCS sentinels
+        # from root (they belong in the domain's CLAUDE.md, not root).
         _update_claude_md_live_state(g)
-        _update_claude_md_constitution(g)
-        _update_claude_md_repo_map(g)
-        _update_claude_md_agent_map(g)
+        if active is None:
+            # Legacy single-domain mode: root gets everything.
+            _update_claude_md_constitution(g)
+            _update_claude_md_repo_map(g)
+            _update_claude_md_agent_map(g)
+        else:
+            # Domain-active mode: root is FRAMEWORK-ONLY.
+            _strip_stale_root_sentinels()
+            _update_claude_md_repo_map(g)
+            _update_domain_claude_md_all_blocks(active, g)
         _update_claude_md_domain_map(g)
         print(f"updated: {CLAUDE_MD}")
         _regenerate_agent_constitutions(g)

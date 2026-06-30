@@ -1,9 +1,13 @@
-"""Tests for the CONSTITUTION block in CLAUDE.md.
+"""Tests for the CONSTITUTION block in the domain CLAUDE.md (P17+).
 
-Canon: §Constitution — the CONSTITUTION block in CLAUDE.md lists all SETTLED
-requirements grouped by category, generated deterministically from
-spec/content/graph.py by tools/gen_spec.py. Anti-drift: regeneration must
-produce byte-identical CLAUDE.md.
+After the P17 domain-isolation migration, the CONSTITUTION block lives in
+`domains/tensio-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
+framework-only (LIVE-STATE + REPO-MAP + DOMAIN-MAP only).
+
+Canon: §Constitution — the CONSTITUTION block in the domain CLAUDE.md lists all
+SETTLED requirements grouped by category, generated deterministically from
+domains/tensio-self/graph.py by tools/gen_spec.py. Anti-drift: regeneration must
+produce byte-identical output.
 """
 
 from __future__ import annotations
@@ -17,7 +21,13 @@ if str(_TOOLS) not in sys.path:
 
 import gen_spec  # noqa: E402
 
-CLAUDE_MD = gen_spec.CLAUDE_MD
+REPO_ROOT = Path(__file__).resolve().parents[2]
+# P17: constitution block is in the active domain's CLAUDE.md.
+_ACTIVE_DOMAIN = gen_spec._active_domain()
+DOMAIN_CLAUDE_MD = (
+    _ACTIVE_DOMAIN / "CLAUDE.md" if _ACTIVE_DOMAIN is not None else gen_spec.CLAUDE_MD
+)
+
 _CONST_BEGIN = gen_spec._CONST_BEGIN
 _CONST_END = gen_spec._CONST_END
 
@@ -35,33 +45,47 @@ def _extract_constitution_block(text: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# 1. Sentinels present
+# 1. Sentinels present in the domain CLAUDE.md
 # ---------------------------------------------------------------------------
 
 
 def test_constitution_sentinels_present() -> None:
-    """CLAUDE.md contains both CONSTITUTION sentinels."""
-    text = _read_normalized(CLAUDE_MD)
-    assert _CONST_BEGIN in text, "CLAUDE.md missing CONSTITUTION:BEGIN sentinel"
-    assert _CONST_END in text, "CLAUDE.md missing CONSTITUTION:END sentinel"
+    """Domain CLAUDE.md contains both CONSTITUTION sentinels (P17: not root CLAUDE.md)."""
+    text = _read_normalized(DOMAIN_CLAUDE_MD)
+    assert _CONST_BEGIN in text, (
+        f"{DOMAIN_CLAUDE_MD} missing CONSTITUTION:BEGIN sentinel"
+    )
+    assert _CONST_END in text, f"{DOMAIN_CLAUDE_MD} missing CONSTITUTION:END sentinel"
+
+
+def test_root_claude_md_has_no_constitution_sentinels() -> None:
+    """Root CLAUDE.md must NOT contain CONSTITUTION sentinels (framework-only in P17+)."""
+    if _ACTIVE_DOMAIN is None:
+        return  # Legacy mode: skip.
+    root_text = _read_normalized(gen_spec.CLAUDE_MD)
+    assert _CONST_BEGIN not in root_text, (
+        "Root CLAUDE.md still has CONSTITUTION:BEGIN — run gen_spec.py to strip it"
+    )
 
 
 # ---------------------------------------------------------------------------
-# 2. Anti-drift: regeneration produces identical CLAUDE.md
+# 2. Anti-drift: regeneration produces identical block
 # ---------------------------------------------------------------------------
 
 
 def test_constitution_block_generated() -> None:
-    """Regenerating gen_spec produces byte-identical CONSTITUTION block in CLAUDE.md."""
+    """Regenerating gen_spec produces byte-identical CONSTITUTION block in domain CLAUDE.md."""
     g = gen_spec.load_content_graph()
     expected_block = gen_spec._render_constitution_block(g)
 
-    text = _read_normalized(CLAUDE_MD)
+    text = _read_normalized(DOMAIN_CLAUDE_MD)
     actual_block = _extract_constitution_block(text)
 
-    assert actual_block is not None, "CONSTITUTION block not found in CLAUDE.md"
+    assert actual_block is not None, (
+        f"CONSTITUTION block not found in {DOMAIN_CLAUDE_MD}"
+    )
     assert actual_block == expected_block, (
-        "CONSTITUTION block in CLAUDE.md has drifted from gen_spec output. "
+        "CONSTITUTION block in domain CLAUDE.md has drifted from gen_spec output. "
         "Run: uv run python tools/gen_spec.py"
     )
 
@@ -74,7 +98,7 @@ def test_constitution_block_generated() -> None:
 def test_constitution_lists_all_settled() -> None:
     """Every SETTLED requirement id appears in the CONSTITUTION block."""
     g = gen_spec.load_content_graph()
-    text = _read_normalized(CLAUDE_MD)
+    text = _read_normalized(DOMAIN_CLAUDE_MD)
     block = _extract_constitution_block(text)
     assert block is not None, "CONSTITUTION block not found"
 

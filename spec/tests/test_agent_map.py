@@ -1,10 +1,14 @@
-"""Tests for the AGENT-MAP sentinel block in CLAUDE.md.
+"""Tests for the AGENT-MAP sentinel block in the domain CLAUDE.md (P17+).
+
+After the P17 domain-isolation migration, the AGENT-MAP block lives in
+`domains/tensio-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
+framework-only (LIVE-STATE + REPO-MAP + DOMAIN-MAP only).
 
 Verifies that:
-1. Both AGENT-MAP sentinels are present in CLAUDE.md.
-2. Every spec/agents/<name>/ directory has a corresponding heading in the block.
+1. Both AGENT-MAP sentinels are present in the domain CLAUDE.md.
+2. Every domain agent directory has a corresponding heading in the block.
 3. The framework-agent section has non-empty purpose, scope, atoms, tools, crystal.
-4. Regenerating gen_spec twice produces byte-identical CLAUDE.md.
+4. Regenerating gen_spec twice produces byte-identical output.
 5. An empty agents root yields the '_(no sub-operators yet)_' placeholder.
 """
 
@@ -26,7 +30,7 @@ import sys as _sys_am
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent
-CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
+ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
 _tools_am = str(SPEC_ROOT / "tools")
 if _tools_am not in _sys_am.path:
@@ -35,13 +39,18 @@ import gen_spec as _gen_spec_am  # noqa: E402
 
 # After P17 migration, agents_root is inside the active domain.
 AGENTS_ROOT = _gen_spec_am._AGENTS_ROOT
+_ACTIVE_DOMAIN = _gen_spec_am._active_domain()
+# P17: AGENT-MAP lives in the domain CLAUDE.md.
+CLAUDE_MD = (
+    _ACTIVE_DOMAIN / "CLAUDE.md" if _ACTIVE_DOMAIN is not None else ROOT_CLAUDE_MD
+)
 
 _AGENT_MAP_BEGIN = "<!-- AGENT-MAP:BEGIN -->"
 _AGENT_MAP_END = "<!-- AGENT-MAP:END -->"
 
 
 def _agent_map_block() -> str:
-    """Extract the AGENT-MAP block content from CLAUDE.md."""
+    """Extract the AGENT-MAP block content from the domain CLAUDE.md."""
     text = CLAUDE_MD.read_text(encoding="utf-8")
     begin = text.find(_AGENT_MAP_BEGIN)
     end = text.find(_AGENT_MAP_END)
@@ -55,10 +64,20 @@ def _agent_map_block() -> str:
 
 
 def test_agent_map_sentinels_present() -> None:
-    """Both AGENT-MAP sentinels shall exist in CLAUDE.md."""
+    """Both AGENT-MAP sentinels shall exist in domain CLAUDE.md (not root in P17+)."""
     text = CLAUDE_MD.read_text(encoding="utf-8")
-    assert _AGENT_MAP_BEGIN in text, f"Missing {_AGENT_MAP_BEGIN!r} in CLAUDE.md"
-    assert _AGENT_MAP_END in text, f"Missing {_AGENT_MAP_END!r} in CLAUDE.md"
+    assert _AGENT_MAP_BEGIN in text, f"Missing {_AGENT_MAP_BEGIN!r} in {CLAUDE_MD}"
+    assert _AGENT_MAP_END in text, f"Missing {_AGENT_MAP_END!r} in {CLAUDE_MD}"
+
+
+def test_root_claude_md_has_no_agent_map_sentinels() -> None:
+    """Root CLAUDE.md must NOT contain AGENT-MAP sentinels (framework-only in P17+)."""
+    if _ACTIVE_DOMAIN is None:
+        return  # Legacy mode: skip.
+    root_text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
+    assert _AGENT_MAP_BEGIN not in root_text, (
+        "Root CLAUDE.md still has AGENT-MAP:BEGIN — run gen_spec.py to strip it"
+    )
 
 
 # ---------------------------------------------------------------------------
