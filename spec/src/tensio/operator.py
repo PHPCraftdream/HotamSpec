@@ -5,6 +5,12 @@ Stakeholder answers 'who is accountable', an Operator answers 'who can act,
 within what context, over which slice of the graph'. The two facets MUST stay
 separate — single-altitude-vs-multi-altitude.
 
+Canon: §Reflection — the P0 operator self-diagnosis band observes Operator nodes
+directly: it checks context_budget.limit vs graph size (over-budget), and flags
+DRAFT-overhang, UNENFORCED-SETTLED debt, DEAD-assumption-on-ENFORCER, and
+derived-but-unbuilt debt. An operator that cannot see its own state is worse than
+a malformed graph (ranked P0, above §Invariants P1 STRUCTURE).
+
 Canon: §Operator — every Operator:
   - carries a typed anchor starting with 'OP-' (R-anchor-everything);
   - references a Stakeholder.id (the accountability facet, §Stakeholder);

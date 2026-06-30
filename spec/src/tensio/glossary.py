@@ -220,6 +220,12 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws.",
     ),
+    # §Reflection section (P8 — operator self-diagnosis band)
+    Term(
+        "§Reflection",
+        "SECTION",
+        "The operator self-diagnosis band (P0) — diagnoses the operator's OWN readiness: DRAFT-overhang, UNENFORCED-SETTLED debt, over-budget operators, dead-assumption-on-enforcer, derived-but-unbuilt.",
+    ),
 )
 
 

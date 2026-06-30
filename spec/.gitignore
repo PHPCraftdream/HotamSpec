@@ -9,3 +9,6 @@ __pycache__/
 .hypothesis/
 .ruff_cache/
 .mypy_cache/
+
+# Claude Code session files (babysit lockfile, etc.)
+.claude/

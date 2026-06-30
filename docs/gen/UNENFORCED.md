@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 23 / SETTLED 33; DRAFT 8; OPEN 12; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 23 / SETTLED 37; DRAFT 4; OPEN 12; REJECTED 3.**
 
 ---
 
@@ -23,9 +23,13 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
+| `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
+| `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
+| `R-dependency-graph-parallelism` | STRUCTURAL | `framework-author` | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
 | `R-operator-crystal-is-claude-md` | STRUCTURAL | `ai-agent` | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
 | `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
 | `R-crystallize-before-split` | STRUCTURAL | `ai-agent` | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
+| `R-working-vs-substrate-budget` | STRUCTURAL | `framework-author` | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
 | `R-uncrystallizable-is-missing-type` | STRUCTURAL | `framework-reviewer` | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
 | `R-stale-substrate` | STRUCTURAL | `framework-author` | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 
@@ -64,8 +68,4 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-smoke-test` | `framework-author` |
 | `R-process-aspect-first` | `framework-author` |
 | `R-task-vs-action-distinct-altitudes` | `framework-author` |
-| `R-delegation-conclusions-only` | `framework-author` |
 | `R-goal-as-target-state` | `domain-user` |
-| `R-context-bounded-delegation` | `framework-author` |
-| `R-dependency-graph-parallelism` | `framework-author` |
-| `R-working-vs-substrate-budget` | `framework-author` |

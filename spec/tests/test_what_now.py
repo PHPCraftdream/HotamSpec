@@ -37,6 +37,7 @@ from what_now import (  # noqa: E402
     P_DRIFT_FALLOUT,
     P_LATENT_CONNECTOR,
     P_OPEN_ITEM,
+    P_REFLECTION,
     P_STRUCTURE,
     diagnose,
     render,
@@ -157,8 +158,9 @@ def test_structure_outranks_everything() -> None:
 
 
 def test_priority_band_constants_are_ordered() -> None:
-    """Priority bands are strictly increasing (structure most urgent)."""
+    """Priority bands are strictly increasing (P0=REFLECTION most urgent)."""
     bands = [
+        P_REFLECTION,
         P_STRUCTURE,
         P_DRIFT_FALLOUT,
         P_CONFLICT_STALLED,

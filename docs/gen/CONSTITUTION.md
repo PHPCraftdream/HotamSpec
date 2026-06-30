@@ -68,7 +68,7 @@ Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-im
 
 **BUDGET** (R-working-vs-substrate-budget):
   Claim: The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded.
-  Why: Bounding the substrate would punish the very act — crystallizing — the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered.
+  Why: SETTLED (P8): the P8 REFLECTION band emits the over-budget Action sourced FROM the operator's budget field, measuring only the live graph nodes (requirements+conflicts+assumptions) — the substrate itself is never counted. Bounding the substrate would punish the very act — crystallizing — that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. Structural via the band logic (tools/what_now.py, tools/tick.py, test_reflection.py).
 
 ## 5. The conscience
 
@@ -140,7 +140,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | `R-anchor-everything` | ENFORCED | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | ENFORCED | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
 | `R-crystallize-before-split` | STRUCTURAL | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
-| `R-working-vs-substrate-budget` | PROSE | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
+| `R-working-vs-substrate-budget` | STRUCTURAL | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
 | `R-enforcement-gradient` | ENFORCED | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | ENFORCED | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | **Loop machinery** | | |

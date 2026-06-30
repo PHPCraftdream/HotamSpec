@@ -97,10 +97,18 @@ def tick(cycle: int = 1) -> TickReport:
         f"a steward-approved proposal via apply_proposal.py; the tick does not "
         f"auto-apply."
     )
+    # If REFLECTION actions are present, surface them explicitly — P0 lands first.
+    reflection_n = sum(1 for a in actions if a.kind == "REFLECTION")
+    reflection_note = (
+        f" ({reflection_n} REFLECTION — operator self-readiness)"
+        if reflection_n
+        else ""
+    )
     advisory = (
-        f"TICK CYCLE {cycle}: {len(actions)} action(s); top is [P{top.priority}] "
-        f"{top.kind} on `{top.target}`. Steward should review and submit a "
-        f"proposal via apply_proposal.py (see docs/playbooks/)."
+        f"TICK CYCLE {cycle}: {len(actions)} action(s){reflection_note};"
+        f" top is [P{top.priority}] {top.kind} on `{top.target}`."
+        f" Steward should review and submit a"
+        f" proposal via apply_proposal.py (see docs/playbooks/)."
     )
     return TickReport(
         cycle=cycle,

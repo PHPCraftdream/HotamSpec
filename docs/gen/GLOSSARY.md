@@ -32,6 +32,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |
 | `§Conscience` | The Hypothesis property-test sweep over the critical-core invariants (M7) — does my OWN edit introduce a contradiction? |
 | `§Constitution` | The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws. |
+| `§Reflection` | The operator self-diagnosis band (P0) — diagnoses the operator's OWN readiness: DRAFT-overhang, UNENFORCED-SETTLED debt, over-budget operators, dead-assumption-on-enforcer, derived-but-unbuilt. |
 
 ## Lifecycle states
 | slug | definition |

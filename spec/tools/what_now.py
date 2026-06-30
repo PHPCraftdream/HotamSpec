@@ -14,10 +14,14 @@ closed loop:
       -> State.
 
 It aggregates, in priority order:
+  P0 REFLECTION       — operator self-diagnosis: DRAFT-overhang (burn-down meter),
+                        UNENFORCED-SETTLED debt, over-budget operators, dead-
+                        assumption-on-enforcer, derived-but-unbuilt. Ranked ABOVE
+                        P1 STRUCTURE because an operator that cannot see its own
+                        state is worse than a malformed graph. (§Reflection, M35)
   P1 STRUCTURE        — failing structural invariants (malformed form / dangling
                         refs / conflict missing axis|context|steward). A malformed
-                        graph makes all softer diagnosis unreliable, so it ranks
-                        first.
+                        graph makes all softer diagnosis unreliable.
   P2 DRIFT_FALLOUT    — DEAD assumptions with live dependents: every Requirement
                         and Conflict resting on them to revisit (context drift,
                         invisibility #3). One dead assumption re-opens a cluster.
@@ -48,6 +52,7 @@ _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+from tensio.assumption import DEAD as _DEAD  # noqa: E402
 from tensio.conflict import ACKNOWLEDGED, DETECTED  # noqa: E402
 from tensio.graph import (  # noqa: E402
     CONTENT_GRAPH_FILE,
@@ -56,12 +61,15 @@ from tensio.graph import (  # noqa: E402
     dead_assumptions,
     latent_connector_suspects,
     load_content_graph,
+    requirement_by_id,
     requirements_on_assumption,
 )
 from tensio.invariants import all_violations  # noqa: E402
+from tensio.requirement import DRAFT, ENFORCED, SETTLED  # noqa: E402
 
 # --- Priority bands (lower number = more urgent) ----------------------------
 
+P_REFLECTION = 0  # highest — operator self-readiness ranked above structural form
 P_STRUCTURE = 1
 P_DRIFT_FALLOUT = 2
 P_CONFLICT_STALLED = 3
@@ -69,6 +77,7 @@ P_OPEN_ITEM = 4
 P_LATENT_CONNECTOR = 5
 
 _BAND_LABEL = {
+    P_REFLECTION: "REFLECTION",
     P_STRUCTURE: "STRUCTURE",
     P_DRIFT_FALLOUT: "DRIFT_FALLOUT",
     P_CONFLICT_STALLED: "CONFLICT_STALLED",
@@ -82,8 +91,9 @@ class Action:
     """One typed, addressable next-action the agent can take.
 
     Fields:
-      priority — band (1..5); lower is more urgent.
-      kind     — the band label (STRUCTURE / DRIFT_FALLOUT / ...).
+      priority — band (0..5); lower is more urgent. P0=REFLECTION is the
+                 operator self-readiness band; P1..P5 are domain diagnosis.
+      kind     — the band label (REFLECTION / STRUCTURE / DRIFT_FALLOUT / ...).
       target   — the object id to act on (Requirement/Conflict/Assumption id).
       imperative — human-readable instruction (what to do, in the imperative).
 
@@ -97,6 +107,18 @@ class Action:
     imperative: str
 
 
+def _graph_size(g: TensionGraph) -> int:
+    """Canon: §Reflection — NODE_COUNT for the operator budget check.
+
+    RULE: size = |requirements| + |conflicts| + |assumptions|. This is the
+    same metric used by check_operator_within_budget (R-context-budget-rule)
+    — the Reflection band reuses identical logic but surfaces it as a P0
+    advisory, not a P1 structural violation, so over-budget operators appear
+    at the TOP of the action list before any structural noise.
+    """
+    return len(g.requirements) + len(g.conflicts) + len(g.assumptions)
+
+
 def diagnose(g: TensionGraph) -> list[Action]:
     """Derive the full prioritized next-action list from a graph state.
 
@@ -105,6 +127,107 @@ def diagnose(g: TensionGraph) -> list[Action]:
     the global order. Running twice on the same graph yields the same list.
     """
     actions: list[Action] = []
+
+    # P0 REFLECTION — operator self-readiness (§Reflection, M35).
+    # Five conditions, all observable from g alone — no I/O, no test runs.
+    settled_reqs = [r for r in g.requirements if r.status == SETTLED]
+    draft_reqs = [r for r in g.requirements if r.status == DRAFT]
+    settled_n = len(settled_reqs)
+    draft_n = len(draft_reqs)
+
+    # 1. DRAFT-overhang — burn-down meter (M35: SETTLED:DRAFT ratio).
+    if settled_n > 0 and draft_n >= settled_n / 2:
+        actions.append(
+            Action(
+                priority=P_REFLECTION,
+                kind=_BAND_LABEL[P_REFLECTION],
+                target="burn-down",
+                imperative=(
+                    f"DRAFT-overhang: {draft_n} DRAFT vs {settled_n} SETTLED"
+                    " — promote DRAFTs toward ENFORCED before crystallizing"
+                    " more (R-crystallize-before-split, C-06e2d84e)."
+                ),
+            )
+        )
+
+    # 2. UNENFORCED-SETTLED overhang (> 5 = generous threshold).
+    n_unenforced = sum(1 for r in settled_reqs if r.enforcement != ENFORCED)
+    if n_unenforced > 5:
+        actions.append(
+            Action(
+                priority=P_REFLECTION,
+                kind=_BAND_LABEL[P_REFLECTION],
+                target="enforcement-gradient",
+                imperative=(
+                    f"{n_unenforced} SETTLED requirements are PROSE/STRUCTURAL"
+                    " — claimed but not guaranteed, soft context-debt."
+                    " See docs/gen/UNENFORCED.md."
+                ),
+            )
+        )
+
+    # 3. Over-budget operators.
+    graph_size = _graph_size(g)
+    for op in g.operators:
+        limit = op.context_budget.limit
+        if limit > 0 and graph_size > limit:
+            actions.append(
+                Action(
+                    priority=P_REFLECTION,
+                    kind=_BAND_LABEL[P_REFLECTION],
+                    target=op.id,
+                    imperative=(
+                        f"Operator '{op.id}' holds {graph_size} nodes"
+                        f" > budget {limit}; crystallize first"
+                        " (R-crystallize-before-split); if still over, delegate"
+                        " a sub-domain (R-context-bounded-delegation)."
+                    ),
+                )
+            )
+
+    # 4. DEAD-assumption-on-ENFORCER — an enforced requirement resting on a dead
+    #    assumption: the enforcer may be enforcing a now-wrong premise.
+    dead_ids = {a.id for a in g.assumptions if a.status == _DEAD}
+    if dead_ids:
+        for r in g.requirements:
+            if r.enforcement != ENFORCED:
+                continue
+            for aid in r.assumptions:
+                if aid in dead_ids:
+                    actions.append(
+                        Action(
+                            priority=P_REFLECTION,
+                            kind=_BAND_LABEL[P_REFLECTION],
+                            target=r.id,
+                            imperative=(
+                                f"R-stale-substrate signal: enforced requirement"
+                                f" '{r.id}' rests on DEAD assumption '{aid}';"
+                                " its enforcer may be enforcing a now-wrong premise."
+                            ),
+                        )
+                    )
+
+    # 5. Derived-but-unbuilt — DECIDED conflict whose derived tuple names a DRAFT
+    #    (or absent) requirement.
+    draft_ids = {r.id for r in g.requirements if r.status == DRAFT}
+    for c in g.conflicts:
+        if not c.lifecycle.startswith("DECIDED"):
+            continue
+        for derived_id in c.derived:
+            derived_req = requirement_by_id(g, derived_id)
+            if derived_req is None or derived_req.id in draft_ids:
+                actions.append(
+                    Action(
+                        priority=P_REFLECTION,
+                        kind=_BAND_LABEL[P_REFLECTION],
+                        target=derived_id,
+                        imperative=(
+                            f"DECIDED conflict '{c.id}' spawned '{derived_id}'"
+                            " but it remains DRAFT/unbuilt"
+                            " — derived-but-unbuilt debt."
+                        ),
+                    )
+                )
 
     # P1 STRUCTURE — failing structural invariants.
     for v in all_violations(g):

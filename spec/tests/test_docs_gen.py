@@ -193,6 +193,7 @@ REQUIRED_SECTIONS = [
     "§Tick",
     "§Conscience",
     "§Constitution",
+    "§Reflection",
 ]
 
 

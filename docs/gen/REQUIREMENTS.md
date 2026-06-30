@@ -38,10 +38,10 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-operator-acting-facet` | SETTLED | `framework-author` | A-finite-context-operators | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
 | `R-context-budget-rule` | SETTLED | `framework-author` | A-finite-context-operators | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
 | `R-operator-not-self-approve` | SETTLED | `framework-author` | A-stakeholders-care | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
-| `R-delegation-conclusions-only` | DRAFT | `framework-author` | A-finite-context-operators | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
+| `R-delegation-conclusions-only` | SETTLED | `framework-author` | A-finite-context-operators | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
 | `R-goal-as-target-state` | DRAFT | `domain-user` | A-bootstrap-self-applies | A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process. |
-| `R-context-bounded-delegation` | DRAFT | `framework-author` | A-finite-context-operators | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
-| `R-dependency-graph-parallelism` | DRAFT | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
+| `R-context-bounded-delegation` | SETTLED | `framework-author` | A-finite-context-operators | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
+| `R-dependency-graph-parallelism` | SETTLED | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
 | `R-operator-crystal-is-claude-md` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
 | `R-statemachine-wellformedness` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
 | `R-crystallize-knowledge-to-code` | SETTLED | `ai-agent` | A-compaction-loses-working | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
@@ -49,7 +49,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-anchor-everything` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | SETTLED | `ai-agent` | A-bootstrap-self-applies | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
 | `R-crystallize-before-split` | SETTLED | `ai-agent` | A-finite-context-operators | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
-| `R-working-vs-substrate-budget` | DRAFT | `framework-author` | A-finite-context-operators | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
+| `R-working-vs-substrate-budget` | SETTLED | `framework-author` | A-finite-context-operators | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
 | `R-enforcement-gradient` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | `R-uncrystallizable-is-missing-type` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
@@ -436,6 +436,12 @@ RULE: an Operator is the acting facet of a Stakeholder (§Stakeholder). Where a
 Stakeholder answers 'who is accountable', an Operator answers 'who can act,
 within what context, over which slice of the graph'. The two facets MUST stay
 separate — single-altitude-vs-multi-altitude.
+
+Canon: §Reflection — the P0 operator self-diagnosis band observes Operator nodes
+directly: it checks context_budget.limit vs graph size (over-budget), and flags
+DRAFT-overhang, UNENFORCED-SETTLED debt, DEAD-assumption-on-ENFORCER, and
+derived-but-unbuilt debt. An operator that cannot see its own state is worse than
+a malformed graph (ranked P0, above §Invariants P1 STRUCTURE).
 
 Canon: §Operator — every Operator:
   - carries a typed anchor starting with 'OP-' (R-anchor-everything);
