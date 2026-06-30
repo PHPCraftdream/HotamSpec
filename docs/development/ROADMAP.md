@@ -1,6 +1,6 @@
 # ROADMAP — phased rollout
 
-Tensio ships the CORE now and DEFERS the heavy formal layers. The governing rule
+Hotam-Spec ships the CORE now and DEFERS the heavy formal layers. The governing rule
 (from [`../../CLAUDE.md`](../../CLAUDE.md)) is the calibration principle: **the
 weight of the apparatus is proportional to the cost of an unnoticed conflict.**
 Heavy formal machinery is justified only for the critical core (money, access,
@@ -13,7 +13,7 @@ The minimal core from which the "agent is never lost" property is demonstrable:
 
 - **Layer 1 — form.** Frozen-dataclass ontology (`requirement`, `conflict`,
   `assumption`, `axis`, `stakeholder`), ruff-clean.
-- **Layer 2 — structural graph invariants.** `tensio.invariants.check_*`
+- **Layer 2 — structural graph invariants.** `hotam_spec.invariants.check_*`
   returning `[Violation]`: referential integrity, conflict has axis/context/
   steward, ≥2 members, axis ∈ registry, id == `hash(axis, context)`, steward ≠
   member owner, OPEN states its question, DECIDED justifies itself. Each invariant
@@ -58,7 +58,7 @@ Switched on per critical-core domain, not globally. Dependencies (`z3-solver`,
   a hand-rolled dependency map vs `graph.dependents`-style traversal.
 - **Layer 8 — mutation testing of the detectors (cosmic-ray).** Guards against
   *phantom detectors* — detectors that stay green on broken data. Generic mutation
-  operators are not enough; Tensio needs **semantic mutation operators** that
+  operators are not enough; Hotam-Spec needs **semantic mutation operators** that
   perturb the meaning of a requirement/assumption and assert the detector
   notices:
   - **weaken assumption** — flip a `machine_check` bound to a strictly weaker one

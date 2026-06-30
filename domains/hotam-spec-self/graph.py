@@ -1,8 +1,8 @@
-"""Tensio modeling itself — the meta-domain (the framework's own design).
+"""Hotam-Spec modeling itself — the meta-domain (the framework's own design).
 
-Tensio eats its own dog food: the methodology's design is the FIRST domain
+Hotam-Spec eats its own dog food: the methodology's design is the FIRST domain
 populated under spec/content/. This is the strongest possible stress test of
-the framework — if Tensio cannot model its own lifecycle cleanly, there is a
+the framework — if Hotam-Spec cannot model its own lifecycle cleanly, there is a
 hole in the framework.
 
 Four stakeholders carry the tensions: the framework AUTHOR (who designs and
@@ -46,7 +46,7 @@ C-d210d6d0, sequential-vs-parallel C-d4f3eadf) + 1 live DETECTED
 M-decisions: M1–M31 catalogued in CLAUDE.md; OPEN requirements R-trust-anchor-
 mechanism through R-uncrystallizable-automated mirror the corresponding rows.
 
-Build by `tensio.graph.load_content_graph()`; rendered into docs/gen/{REQUIREMENTS,
+Build by `hotam_spec.graph.load_content_graph()`; rendered into docs/gen/{REQUIREMENTS,
 TENSIONS,OPEN}.md by tools/gen_spec.py; diagnosed by tools/what_now.py.
 """
 
@@ -70,7 +70,7 @@ from hotam_spec.stakeholder import Stakeholder
 
 
 def build_graph() -> TensionGraph:
-    """Tensio's own design as a TensionGraph (the meta-domain)."""
+    """Hotam-Spec's own design as a TensionGraph (the meta-domain)."""
     stakeholders = (
         Stakeholder(
             id="framework-author",
@@ -106,7 +106,7 @@ def build_graph() -> TensionGraph:
         Axis(
             slug="framework-purity-vs-helpfulness",
             description=(
-                "Content-free shipping (zero business data in src/tensio) vs "
+                "Content-free shipping (zero business data in src/hotam_spec) vs "
                 "out-of-the-box utility for a fresh adopter. Purity is honest; "
                 "helpfulness lowers adoption cost."
             ),
@@ -208,7 +208,7 @@ def build_graph() -> TensionGraph:
         ),
         Assumption(
             id="A-bootstrap-self-applies",
-            statement="The framework can model its own design coherently — Tensio's own methodology fits its own ontology with no special-casing.",
+            statement="The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing.",
             status=UNCERTAIN,
             owner="framework-reviewer",
         ),
@@ -294,12 +294,12 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-content-free-framework",
             claim=(
-                "spec/src/tensio/ shall contain ZERO business content — no "
+                "spec/src/hotam_spec/ shall contain ZERO business content — no "
                 "example requirements, no example axes, no seed graph."
             ),
             owner="framework-author",
             status="REJECTED",
-            why="REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Tensio is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/tensio/graph.py.)",
+            why="REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Hotam-Spec is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/hotam_spec/graph.py.)",
             assumptions=("A-content-free-honest",),
             enforcement=ENFORCED,
             enforced_by=("test_content_free.py",),
@@ -447,7 +447,7 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Realized in THIS meta-domain — Tensio modeling its own design IS "
+                "Realized in THIS meta-domain — Hotam-Spec modeling its own design IS "
                 "the proof that one ontology serves both altitudes. "
                 "D3 (decided by domain-user 2026-06-30): downgraded "
                 "STRUCTURAL→PROSE — no structural enforcer exists; the claim is "
@@ -579,7 +579,7 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=(
                 "Atom of R-active-loop-playbooks (data-model concern). "
-                "tensio/proposal.py defines the three types."
+                "hotam_spec/proposal.py defines the three types."
             ),
             assumptions=("A-stakeholders-care", "A-prose-suffices"),
             enforcement=ENFORCED,
@@ -706,14 +706,14 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-lifecycle-abstraction",
             claim=(
-                "A generic tensio.lifecycle (State / Transition / Lifecycle) "
+                "A generic hotam_spec.lifecycle (State / Transition / Lifecycle) "
                 "shall be introduced; Requirement.status and Conflict.lifecycle "
                 "shall validate against framework-supplied Lifecycle constants."
             ),
             owner="framework-author",
             status="REJECTED",
             why=(
-                "REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: Built: tensio/lifecycle.py ships REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE; check_status_in_lifecycle validates stored values against them on every invariant run (P1).))"
+                "REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: Built: hotam_spec/lifecycle.py ships REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE; check_status_in_lifecycle validates stored values against them on every invariant run (P1).))"
             ),
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
@@ -722,14 +722,14 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-process-aspect-first",
             claim=(
-                "tensio.process shall be the FIRST opt-in behavioral aspect — "
+                "hotam_spec.process shall be the FIRST opt-in behavioral aspect — "
                 "Lifecycle + Steps + roles_required + drives_entities — added "
                 "after the keystone Lifecycle abstraction lands."
             ),
             owner="framework-author",
             status="REJECTED",
             why=(
-                "REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P9): tensio/process.py ships Process + Step + Goal + TargetState + PROCESS_LIFECYCLE + GOAL_LIFECYCLE. The §Process aspect is opt-in (TensionGraph.processes defaults to empty). PR-closed-loop instantiates ONE worked example at the meta-domain level. Three new invariants enforce the behavioral surface: check_process_lifecycle_wellformed, check_process_roles_declared, and check_goal_owner_is_operator. check_typed_anchors extended for PR- and GOAL- prefixes. M12 resolved: Lifecycle is core; Process is the first opt-in aspect that proves the keystone supports new aspects without parallel machinery.))"
+                "REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P9): hotam_spec/process.py ships Process + Step + Goal + TargetState + PROCESS_LIFECYCLE + GOAL_LIFECYCLE. The §Process aspect is opt-in (TensionGraph.processes defaults to empty). PR-closed-loop instantiates ONE worked example at the meta-domain level. Three new invariants enforce the behavioral surface: check_process_lifecycle_wellformed, check_process_roles_declared, and check_goal_owner_is_operator. check_typed_anchors extended for PR- and GOAL- prefixes. M12 resolved: Lifecycle is core; Process is the first opt-in aspect that proves the keystone supports new aspects without parallel machinery.))"
             ),
             assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
             enforcement=ENFORCED,
@@ -751,15 +751,15 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=(
                 "SETTLED (P9): the discipline is structural by omission. "
-                "Tensio's framework has NO Task type — only the harness Action "
-                "(tensio.what_now.Action). Process.steps carry a forward-compat "
+                "Hotam-Spec's framework has NO Task type — only the harness Action "
+                "(hotam_spec.what_now.Action). Process.steps carry a forward-compat "
                 "prose `invokes` field (not a Task type) so the behavioral "
                 "altitude stays separable from the harness altitude. The two "
                 "are typed differently by construction: Action is the harness's "
                 "typed instruction; any future Task would be a domain-modeled "
                 "work item under the §Process aspect. The altitudes cannot "
                 "collapse because they live in different namespaces. "
-                "Implementation: tensio.what_now.Action + docs/gen/CONSTITUTION.md + "
+                "Implementation: hotam_spec.what_now.Action + docs/gen/CONSTITUTION.md + "
                 "docs/playbooks/."
             ),
             assumptions=("A-bootstrap-self-applies",),
@@ -790,14 +790,14 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-operator-is-frozen-dataclass",
             claim=(
-                "An Operator shall be a frozen dataclass in tensio.operator "
+                "An Operator shall be a frozen dataclass in hotam_spec.operator "
                 "with typed anchor 'OP-'."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
                 "Atom of R-operator-acting-facet (type identity concern). "
-                "tensio.operator.Operator is a frozen dataclass; OP-director "
+                "hotam_spec.operator.Operator is a frozen dataclass; OP-director "
                 "is the first instance."
             ),
             assumptions=("A-finite-context-operators",),
@@ -893,7 +893,7 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (P8): the proposal protocol (P3) carries CONCLUSIONS (rationale + derived requirements) not raw context detail — the apply_proposal tool's narrow API surface IS the contract. The parent keeps the conclusion-as-proposal, not the file-dump of working context. Returning raw detail would re-import the sub-domain's whole context into the parent's budget, defeating the delegation. Implementation: spec/src/tensio/proposal.py + tools/apply_proposal.py + docs/playbooks/."
+                "SETTLED (P8): the proposal protocol (P3) carries CONCLUSIONS (rationale + derived requirements) not raw context detail — the apply_proposal tool's narrow API surface IS the contract. The parent keeps the conclusion-as-proposal, not the file-dump of working context. Returning raw detail would re-import the sub-domain's whole context into the parent's budget, defeating the delegation. Implementation: spec/src/hotam_spec/proposal.py + tools/apply_proposal.py + docs/playbooks/."
             ),
             assumptions=("A-finite-context-operators",),
             enforcement="STRUCTURAL",
@@ -928,7 +928,7 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=(
                 "Atom of R-goal-as-target-state (type identity concern). "
-                "tensio/process.py defines Goal as a frozen dataclass with "
+                "hotam_spec/process.py defines Goal as a frozen dataclass with "
                 "GOAL_LIFECYCLE. M19 resolved."
             ),
             assumptions=("A-bootstrap-self-applies",),
@@ -998,7 +998,7 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="REJECTED",
             why=(
-                "REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P8): Requirement.relations (depends_on/supports/refines) is the live dependency network; the U‖/A‖/B‖ parallel commits demonstrate the principle operationally — independent sub-graphs ran in parallel, dependency chains ran sequentially. Parallel-vs-sequential is decided by the dependency topology (independent components vs chains), not guessed; this makes delegation sound. Implementation: tensio.requirement.Relation + docs/playbooks/ + tools/what_now.py.))"
+                "REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P8): Requirement.relations (depends_on/supports/refines) is the live dependency network; the U‖/A‖/B‖ parallel commits demonstrate the principle operationally — independent sub-graphs ran in parallel, dependency chains ran sequentially. Parallel-vs-sequential is decided by the dependency topology (independent components vs chains), not guessed; this makes delegation sound. Implementation: hotam_spec.requirement.Relation + docs/playbooks/ + tools/what_now.py.))"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=STRUCTURAL,
@@ -1361,12 +1361,12 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=(
                 "M19. DECIDED 2026-06-30 (already recorded in old M-table as "
-                "DECIDED P9): Goal is a new type in tensio.process. Rationale: the "
+                "DECIDED P9): Goal is a new type in hotam_spec.process. Rationale: the "
                 "Gap = (Goal - current state) is semantically distinct from a static "
                 "Requirement claim; a Requirement facet would lose that target-state "
                 "semantics and the burn-down-to-zero pattern. R-goal-is-first-class-"
                 "type is already SETTLED and enforced by test_goal.py + "
-                "check_typed_anchors_goal. Evidence: spec/src/tensio/process.py:Goal "
+                "check_typed_anchors_goal. Evidence: spec/src/hotam_spec/process.py:Goal "
                 "frozen dataclass + GOAL_LIFECYCLE; R-goal-is-first-class-type "
                 "SETTLED ENFORCED."
             ),
@@ -1378,7 +1378,7 @@ def build_graph() -> TensionGraph:
             id="R-operator-type-vs-facet",
             claim=(
                 "Operator shall be its own first-class frozen-dataclass type in "
-                "tensio.operator (not a Stakeholder facet), with typed anchor 'OP-', "
+                "hotam_spec.operator (not a Stakeholder facet), with typed anchor 'OP-', "
                 "a ContextBudget, and an optional parent reference."
             ),
             owner="framework-author",
@@ -1390,7 +1390,7 @@ def build_graph() -> TensionGraph:
                 "of which are live ENFORCED requirements. The clean separation "
                 "(Stakeholder = party, Operator = acting facet with budget + "
                 "capabilities) prevents conflation at the single-altitude-vs-multi-"
-                "altitude axis. Evidence: spec/src/tensio/operator.py:Operator "
+                "altitude axis. Evidence: spec/src/hotam_spec/operator.py:Operator "
                 "frozen dataclass; R-operator-is-frozen-dataclass SETTLED ENFORCED; "
                 "check_typed_anchors_operator live."
             ),
@@ -1450,7 +1450,7 @@ def build_graph() -> TensionGraph:
                 "SETTLED"
             ),
             why=(
-                "M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in tensio/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/tensio/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED."
+                "M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in hotam_spec/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/hotam_spec/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
             enforcement="ENFORCED",
@@ -1474,7 +1474,7 @@ def build_graph() -> TensionGraph:
                 "check_axis_in_registry validates by exact slug match within the "
                 "graph; a prefix would introduce redundancy. §-anchors are validated "
                 "by check_section_anchors_known against the glossary. The full set: "
-                "R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/tensio/invariants.py "
+                "R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/hotam_spec/invariants.py "
                 "check_typed_anchors_* functions; R-anchor-everything SETTLED ENFORCED."
             ),
             assumptions=("A-bootstrap-self-applies",),
@@ -1951,7 +1951,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-agent-imports-framework",
             claim=(
-                "An agent's code shall import the framework body (`tensio.*`) as "
+                "An agent's code shall import the framework body (`hotam_spec.*`) as "
                 "shared infrastructure; the framework body is owned by no single agent."
             ),
             owner="framework-author",
@@ -2160,7 +2160,7 @@ def build_graph() -> TensionGraph:
             id="R-seed-in-src",
             claim=(
                 "The framework shall ship with a seed graph baked into "
-                "spec/src/tensio/graph.py so the demo runs without setup."
+                "spec/src/hotam_spec/graph.py so the demo runs without setup."
             ),
             owner="framework-author",
             status="REJECTED",
@@ -2193,7 +2193,7 @@ def build_graph() -> TensionGraph:
             id="R-axes-as-module-constant",
             claim=(
                 "The controlled vocabulary of axes shall live as a module-"
-                "level REGISTRY in tensio.axis."
+                "level REGISTRY in hotam_spec.axis."
             ),
             owner="framework-author",
             status="REJECTED",
@@ -2209,7 +2209,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-content-free-no-business-data",
             claim=(
-                "The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders)."
+                "The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders)."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2414,7 +2414,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-lifecycle-type-exists",
             claim=(
-                "A generic tensio.lifecycle module shall define State, Transition, and Lifecycle types."
+                "A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2484,7 +2484,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-process-types-exist",
             claim=(
-                "tensio.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types."
+                "hotam_spec.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -2853,7 +2853,7 @@ def build_graph() -> TensionGraph:
             id="R-bijection-r-to-enforcer",
             claim=(
                 "Every SETTLED/ENFORCED requirement shall name an existing "
-                "check_* in tensio.invariants.ALL_INVARIANTS or a real test_* "
+                "check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* "
                 "in spec/tests/."
             ),
             owner="framework-author",
@@ -2899,7 +2899,7 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-repo-map-generated",
             claim=(
-                "CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter."
+                "CLAUDE.md shall contain a REPO-MAP block listing every spec/src/hotam_spec/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter."
             ),
             owner="framework-author",
             status="SETTLED",
@@ -3196,7 +3196,7 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-method-matches-docstring",
-            claim=("Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages."),
+            claim=("Each check_* function in hotam_spec.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages."),
             owner="framework-author",
             status="SETTLED",
             why=("The audit principle 'docstring is the description, body is the verification' is verifiable structurally: if the RULE says one thing and the violation messages say another, drift is happening. The Jaccard threshold is heuristic but catches gross mismatch; refinement comes from running it."),
@@ -3321,6 +3321,15 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_post_compact_hook_runs_gen_spec",),
         ),
+        Requirement(
+            id="R-project-name-hotam-spec",
+            claim=("The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name and the user's chosen identity. Convention: 'Hotam-Spec' in prose (capitalized hyphen), 'hotam_spec' snake_case in Python source (imports/identifiers), 'hotam-spec' kebab-case for filesystem and PyPI. Renames completed in three sequential passes (#89 package, #90 domain, #91 prose)."),
+            assumptions=("A-python-stack",),
+            enforcement=STRUCTURAL,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
@@ -3331,7 +3340,7 @@ def build_graph() -> TensionGraph:
     c1_axis = "agent-autonomy-vs-human-control"
     c1_ctx = "the agent develops requirements, integrates new ones, finds contradictions, proposes resolutions, formalizes back into code, runs tests"
 
-    # C2: the bootstrap-paradox — Tensio modeling its OWN design in
+    # C2: the bootstrap-paradox — Hotam-Spec modeling its OWN design in
     # spec/content/. Resolved by treating the meta-domain as content like any
     # other; the framework code stays empty of business data.
     c2_axis = "framework-purity-vs-helpfulness"
@@ -3346,7 +3355,7 @@ def build_graph() -> TensionGraph:
     # C4: apparatus-weight — crystallizing the full accumulated design vs keeping
     # the framework minimal. The very tension that JUSTIFIES this crystallization.
     # DECIDED: record the design as DRAFT/OPEN requirements (coverage without
-    # adding apparatus weight to src/tensio).
+    # adding apparatus weight to src/hotam_spec).
     c4_axis = "apparatus-weight-vs-coverage"
     c4_ctx = "crystallizing the full accumulated design into the methodology vs keeping the framework minimal"
 
@@ -3436,7 +3445,7 @@ def build_graph() -> TensionGraph:
                 "DECIDED(crystallize the design as DRAFT/OPEN requirements — "
                 "recorded but UNBUILT; the status itself marks them "
                 "proposed-not-built, so coverage rises without adding apparatus "
-                "weight to src/tensio. The substrate grows; the framework code "
+                "weight to src/hotam_spec. The substrate grows; the framework code "
                 "stays minimal.)"
             ),
             decided_by="framework-reviewer",

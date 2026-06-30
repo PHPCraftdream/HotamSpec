@@ -1,7 +1,7 @@
 # Methodology — the tension graph and its closed loop
 
 This is the human-written companion to the executable model in
-`spec/src/tensio`. It explains the philosophy and the operating procedure; the
+`spec/src/hotam_spec`. It explains the philosophy and the operating procedure; the
 normative detail is generated into [`../gen/`](../gen/) and the working contract
 is [`../../CLAUDE.md`](../../CLAUDE.md).
 
@@ -9,7 +9,7 @@ is [`../../CLAUDE.md`](../../CLAUDE.md).
 
 The reference project HotamChain is a docs-as-code blockchain spec that proves
 **consistency**: one non-contradictory canon, drift forbidden, every conflict
-mechanism closed forever (zero open mechanisms). Tensio reuses that machinery for
+mechanism closed forever (zero open mechanisms). Hotam-Spec reuses that machinery for
 the **opposite** purpose. Business requirements are many, change constantly, and
 contradict each other; the goal is not to eliminate contradictions but to make
 them **visible and keep them visible over time**.
@@ -35,7 +35,7 @@ question; every decision justifies itself. The one forbidden thing is an
 
 A naive model makes a conflict an edge `conflicts_with` between R-87 and R-203.
 The edge holds nothing: remove it and the two requirements fall apart into
-isolation. Tensio makes a **Conflict a first-class node** — a mediator through
+isolation. Hotam-Spec makes a **Conflict a first-class node** — a mediator through
 which the two otherwise-unconnectable requirements first come to lie in one
 structure:
 
@@ -103,7 +103,7 @@ suspect is presented to a human, never auto-materialized.
 ## 4. The closed loop — the operating procedure
 
 The centerpiece. HotamChain makes an agent never-lost narrowly: run `pytest`,
-read `HOLES.md`, follow the edit cycle. Tensio generalizes that into a single
+read `HOLES.md`, follow the edit cycle. Hotam-Spec generalizes that into a single
 deterministic question — *what now?* — answerable from any state:
 
 ```mermaid

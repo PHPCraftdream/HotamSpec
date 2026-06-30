@@ -24,7 +24,7 @@ without re-implementing transcript-stats parsing. The whole apparatus was
 
 ## The right direction
 
-- **Substrate (`spec/content/graph.py` + framework `tensio/*`) is the source.**
+- **Substrate (`spec/content/graph.py` + framework `hotam_spec/*`) is the source.**
 - **Generator (`gen_spec.py`) writes the operator-prompt** — currently a tiny
   block (LIVE-STATE, R-claude-md-live-state-generated). Should expand to
   whole sections (the unbuilt R-operator-prompt-from-substrate, A1 in

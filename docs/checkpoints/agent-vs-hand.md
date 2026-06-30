@@ -20,7 +20,7 @@ An **agent** is:
 - Persistent across sessions (it's in git).
 - Has its own `CLAUDE.md` (its crystal — its operator-prompt).
 - Has its own `tools/` subdirectory (its private tool set).
-- Uses framework code (`import tensio.*`) as shared infrastructure.
+- Uses framework code (`import hotam_spec.*`) as shared infrastructure.
 - Has authority over a SETTLED sub-domain.
 
 Today I spawned 30+ hands. Zero agents.
@@ -33,7 +33,7 @@ explicit):
 - **R-agent-is-a-directory** (DRAFT) — domain-agent = `spec/agents/<name>/`.
 - **R-agent-has-own-crystal** (DRAFT) — its own `CLAUDE.md`.
 - **R-agent-has-own-tools-dir** (DRAFT) — its private `tools/`.
-- **R-agent-imports-framework** (DRAFT) — uses `tensio.*` as shared
+- **R-agent-imports-framework** (DRAFT) — uses `hotam_spec.*` as shared
   infrastructure, owns nothing in the framework body.
 
 Plus the distinction itself:
@@ -64,7 +64,7 @@ is the φ-cap by size):
 This is the trigger I was already past today. The framework body (AST
 locators, edge-cases of each `check_*`, multi-clause docstrings) is
 detail-deep, and I was holding it all in working context. A framework-
-agent would have its own crystal scoped to `spec/src/tensio/` + its own
+agent would have its own crystal scoped to `spec/src/hotam_spec/` + its own
 tools, and I would see only its surfaced conclusions.
 
 ## The tool-over-hand discipline (separate but related)
@@ -99,7 +99,7 @@ To support agents-with-own-tools, the tool registry must be addressable:
 A `framework-agent` directory:
 ```
 spec/agents/framework-agent/
-├── CLAUDE.md                  # its operator-prompt; scoped to spec/src/tensio/
+├── CLAUDE.md                  # its operator-prompt; scoped to spec/src/hotam_spec/
 ├── tools/
 │   ├── audit_atomicity.py     # private — scans claims/methods for compoundness
 │   └── audit_bijection.py     # private — checks R ↔ check_* mapping

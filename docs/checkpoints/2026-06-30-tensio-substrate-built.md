@@ -2,17 +2,17 @@
 
 ## Session summary
 
-We built **Tensio** from scratch in `D:\dev\HotamSpec` — an executable methodology
+We built **Hotam-Spec** from scratch in `D:\dev\HotamSpec` — an executable methodology
 for the lifecycle of contradictory business requirements, modeled as a tension
 graph; the inverse of the dev-coin (`D:\dev\dev-coin`) blockchain spec from
 which it borrows the docs-as-code machinery. Core ontology is frozen dataclasses
 (`Requirement`, `Conflict`, `Assumption`, `Axis`, `Stakeholder`) under
-`spec/src/tensio/`; the centerpieces are the `what_now` harness ("agent is never
+`spec/src/hotam_spec/`; the centerpieces are the `what_now` harness ("agent is never
 lost") and the anti-drift `gen_spec` meta-test ("drift is structurally
-impossible"). The hard-won refactor split the framework (`src/tensio/`,
+impossible"). The hard-won refactor split the framework (`src/hotam_spec/`,
 content-free) from user content (`spec/content/graph.py`); the worked example
 was demoted to a test fixture (`spec/tests/fixtures/seed.py`). Two commits
-shipped: the framework + the meta-domain (Tensio modeling itself in
+shipped: the framework + the meta-domain (Hotam-Spec modeling itself in
 `spec/content/graph.py`).
 
 Mid-session the user added a series of architectural insights that we **crystallized
@@ -21,7 +21,7 @@ stateful aspects (Lifecycle / Entity / Process / Task); (2) the full-system
 ontology — operators with capabilities/states, goals as target-states, processes
 as transformers (4 mutation kinds: state/req/refine/entity); (3) the
 **context-bounded recursive delegation** scaling law (`size(domain) ≤ budget` →
-spawn sub-operator with conclusions-only interface — Tensio's answer to M8);
+spawn sub-operator with conclusions-only interface — Hotam-Spec's answer to M8);
 (4) the **crystallization super-rule** (knowledge → code; offload, don't carry —
 substrate is enforced/regenerable/addressable and doesn't count against
 context); (5) the **anchoring super-rule** (everything addressable, speak by
@@ -38,7 +38,7 @@ Current graph state: **54 requirements** (13 SETTLED · 25 DRAFT · 13 OPEN · 3
 REJECTED), 9 axes, 6 conflicts (5 DECIDED, 1 live DETECTED — `C-8600b1b8` on
 `core-vs-aspect`, steward `domain-user`), 9 assumptions, 4 stakeholders;
 M-decisions M1–M31 in CLAUDE.md (currently DUPLICATED with the graph's OPEN
-reqs — flagged as U5, Tensio's own anti-drift violation).
+reqs — flagged as U5, Hotam-Spec's own anti-drift violation).
 
 Final move before checkpoint: I produced a **ratification sheet** resolving the
 blocking open decisions via dev-coin precedent — M26 (enforcement = FIELD AND
@@ -53,7 +53,7 @@ check, U5 cross-anchor interim); **Batch B** sequential framework-touching
 aspect). Waiting on user ratification of the sheet before executing.
 
 Files studied this session (verified, not guessed): all of
-`D:\dev\HotamSpec\spec\src\tensio\*.py`, `spec/tools/{what_now,gen_spec}.py`,
+`D:\dev\HotamSpec\spec\src\hotam_spec\*.py`, `spec/tools/{what_now,gen_spec}.py`,
 `spec/tests/*.py`, `spec/tests/fixtures/seed.py`, `spec/content/graph.py`,
 `CLAUDE.md`, `README.md`, `docs/methodology/README.md`,
 `docs/development/ROADMAP.md`; and from dev-coin: `spec/src/hotam/params.py`,
@@ -96,8 +96,8 @@ Older tasks (#4–#16) were the framework-build + content-free refactor work; al
 ## Decisions
 
 - **Storage = Python code, NOT RDF/SHACL.** Frozen dataclasses + tuple-of-id edges + plain-function traversal + `check_*` invariants + generator. Rejected RDF as the heavy parallel substrate dev-coin already disproves the need for. (Recorded as `R-rdf-store` REJECTED.)
-- **Framework is CONTENT-FREE.** Demo seed lives in `spec/tests/fixtures/seed.py`, real domain in `spec/content/graph.py`; `src/tensio/` ships zero business data. (Recorded as `R-content-free-framework` SETTLED; the leaked seed in src as `R-seed-in-src` REJECTED.)
-- **Tensio models itself in `spec/content/graph.py`** (the meta-domain). The methodology eats its own dog food as the strongest stress test — proving `R-two-altitude-ontology` (operator : methodology :: actor : business).
+- **Framework is CONTENT-FREE.** Demo seed lives in `spec/tests/fixtures/seed.py`, real domain in `spec/content/graph.py`; `src/hotam_spec/` ships zero business data. (Recorded as `R-content-free-framework` SETTLED; the leaked seed in src as `R-seed-in-src` REJECTED.)
+- **Hotam-Spec models itself in `spec/content/graph.py`** (the meta-domain). The methodology eats its own dog food as the strongest stress test — proving `R-two-altitude-ontology` (operator : methodology :: actor : business).
 - **M26 (enforcement representation) — BOTH field AND generated report**, per dev-coin's `Param.status`+`HOLES.md` precedent. Pre-decided before steward ratification, awaiting greenlight.
 - **First heavy increment = Lifecycle keystone**, not Operator trio. The dependency-graph principle (`R-dependency-graph-parallelism`) puts Lifecycle upstream of Operator and aspects; trio has two now-resolved blockers (M17 NODE_COUNT, M20 new type). Awaiting steward ratification.
 
@@ -118,6 +118,6 @@ Older tasks (#4–#16) were the framework-build + content-free refactor work; al
 ```
 
 ```
-3b11447 feat(content): meta-domain — Tensio modeling its own design
-6465c93 feat: Tensio — content-free requirements-as-tension-graph methodology framework
+3b11447 feat(content): meta-domain — Hotam-Spec modeling its own design
+6465c93 feat: Hotam-Spec — content-free requirements-as-tension-graph methodology framework
 ```

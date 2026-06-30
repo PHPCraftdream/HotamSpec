@@ -1,16 +1,16 @@
-# Tensio — requirements as a tension graph
+# Hotam-Spec — requirements as a tension graph
 
 > **A methodology whose centerpiece is: an AI agent dropped into the repo in any
 > state, at any moment, can deterministically derive the next correct action.**
 > "The agent is never lost" — the same way the reference project HotamChain makes
-> spec *drift* structurally impossible, Tensio makes *being lost* structurally
+> spec *drift* structurally impossible, Hotam-Spec makes *being lost* structurally
 > impossible.
 
-Tensio manages the lifecycle of **business requirements** that are many,
+Hotam-Spec manages the lifecycle of **business requirements** that are many,
 constantly changing, and **mutually contradictory**. It is the deliberate
 INVERSE of a consistency specification. The companion project HotamChain (a
 docs-as-code blockchain spec) proves ONE non-contradictory canon and forbids
-drift, closing every conflict forever. Tensio reuses that exact machinery
+drift, closing every conflict forever. Hotam-Spec reuses that exact machinery
 inverted: not to eliminate contradictions, but to guarantee **we never fail to
 see them**, and to keep them visible over time.
 
@@ -26,7 +26,7 @@ steward.
 
 A naive model makes a conflict an edge `conflicts_with` between two requirements.
 That edge holds nothing — remove it and the requirements fall back into
-isolation. Tensio makes a **Conflict a first-class NODE** (a mediator) through
+isolation. Hotam-Spec makes a **Conflict a first-class NODE** (a mediator) through
 which two otherwise-unconnectable requirements first come to lie in one
 structure:
 
@@ -95,7 +95,7 @@ hold conflict". **Weight of apparatus ∝ cost of an unnoticed conflict.**
 | Level | Mechanism | Guarantees | Status |
 |---|---|---|---|
 | Frozen dataclass form | ruff | objects well-formed | CORE |
-| Structural graph invariants | `tensio.invariants.check_*` | every conflict has axis+context+steward; no dangling refs; OPEN states its question; a decision justifies itself; steward ≠ member owner | CORE |
+| Structural graph invariants | `hotam_spec.invariants.check_*` | every conflict has axis+context+steward; no dangling refs; OPEN states its question; a decision justifies itself; steward ≠ member owner | CORE |
 | Visibility of the open | `OPEN(question)` → generated `OPEN.md` | open holes & unresolved conflicts cannot hide | CORE |
 | Latent-conflict property detector | Hypothesis (hunts missing connectors) | catches the invisible | DEFERRED |
 | Formal conflict detector | Z3 (model where two requirements jointly break) | machine proof a pair collides | DEFERRED |
@@ -108,8 +108,8 @@ hold conflict". **Weight of apparatus ∝ cost of an unnoticed conflict.**
 
 ## Framework vs content (content-free by design)
 
-Tensio is a **blank kit**, not a project with example business data. The package
-`spec/src/tensio/` ships ZERO business content: no example requirements, no
+Hotam-Spec is a **blank kit**, not a project with example business data. The package
+`spec/src/hotam_spec/` ships ZERO business content: no example requirements, no
 example axes. A real domain populates a single file:
 
 ```
@@ -133,7 +133,7 @@ uv run python tools/gen_spec.py --demo     # write docs/demo/ from the fixture
 
 | Layer | Where | What |
 |---|---|---|
-| **Framework (content-free)** | [`spec/src/tensio/`](spec/src/tensio/) | the ontology + traversal + content loader + structural invariants |
+| **Framework (content-free)** | [`spec/src/hotam_spec/`](spec/src/hotam_spec/) | the ontology + traversal + content loader + structural invariants |
 | **Your domain's graph** | [`spec/content/graph.py`](spec/content/README.md) | `build_graph() -> TensionGraph` — empty by default |
 | Worked example (test fixture) | [`spec/tests/fixtures/seed.py`](spec/tests/fixtures/seed.py) | the demo graph used by tests and `--demo` |
 | The harness | [`spec/tools/what_now.py`](spec/tools/what_now.py) | derives the next action from any state |
@@ -167,7 +167,7 @@ are DEFERRED for the critical core.
 Methodology decisions M1–M31 are catalogued in [`CLAUDE.md`](CLAUDE.md).
 The following new requirement layers have been crystallized as DRAFT/UNBUILT
 per `C-06e2d84e` (apparatus-weight-vs-coverage DECIDED: record design as
-DRAFT requirements, not apparatus weight in src/tensio):
+DRAFT requirements, not apparatus weight in src/hotam_spec):
 - **Operator/budget/delegation** — `R-operator-acting-facet`,
   `R-context-budget-rule`, `R-delegation-conclusions-only`,
   `R-context-bounded-delegation`, `R-dependency-graph-parallelism`,

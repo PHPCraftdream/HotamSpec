@@ -2,7 +2,7 @@
 
 ## Session summary
 
-We crystallized the entire forward plan for Tensio into a phased, executable
+We crystallized the entire forward plan for Hotam-Spec into a phased, executable
 development schedule (P0–P9 + three parallel ‖ mechanical items A‖/B‖/U‖). The
 plan merges three previously-decided threads — the "becoming-the-operator"
 organ-path, the ratified Batch B framework increments, and the remaining audit
@@ -57,7 +57,7 @@ R-enforcement-gradient and R-requirement-enforced, netting DRAFT 25→23).
 
 Files inspected this session (via the delegated max-effort audits and plan):
 `spec/content/graph.py` (the 54-req substrate), `CLAUDE.md` (M1–M31 table +
-Director's map), `spec/src/tensio/{requirement,invariants,graph}.py`,
+Director's map), `spec/src/hotam_spec/{requirement,invariants,graph}.py`,
 `spec/tools/{what_now,gen_spec}.py`, `spec/tests/test_*.py`,
 `docs/development/ROADMAP.md`, `docs/methodology/README.md`, prior checkpoint.
 No /loop or /babysit timers active.
@@ -129,8 +129,8 @@ prior crystallization waves — all completed and committed in `6465c93`,
 ```
 5603635 docs: session checkpoint 2026-06-30 (tensio-substrate-built)
 efac8fa feat(content): crystallize operator/super-rule designs + Batch A anchor
-3b11447 feat(content): meta-domain — Tensio modeling its own design
-6465c93 feat: Tensio — content-free requirements-as-tension-graph methodology framework
+3b11447 feat(content): meta-domain — Hotam-Spec modeling its own design
+6465c93 feat: Hotam-Spec — content-free requirements-as-tension-graph methodology framework
 ```
 
 ## The plan — phase spine

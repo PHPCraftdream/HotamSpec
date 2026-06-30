@@ -102,9 +102,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-operator-is-frozen-dataclass` (ENFORCED)
 
-**Claim.** An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'.
+**Claim.** An Operator shall be a frozen dataclass in hotam_spec.operator with typed anchor 'OP-'.
 
-**Why.** Atom of R-operator-acting-facet (type identity concern). tensio.operator.Operator is a frozen dataclass; OP-director is the first instance.
+**Why.** Atom of R-operator-acting-facet (type identity concern). hotam_spec.operator.Operator is a frozen dataclass; OP-director is the first instance.
 
 **Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
 
@@ -150,9 +150,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-operator-type-vs-facet` (ENFORCED)
 
-**Claim.** Operator shall be its own first-class frozen-dataclass type in tensio.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.
+**Claim.** Operator shall be its own first-class frozen-dataclass type in hotam_spec.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.
 
-**Why.** M20. DECIDED 2026-06-30: Operator is a new type. Rationale: a Stakeholder facet cannot carry a ContextBudget, enforce check_operator_within_budget, or be referenced by Goal.owner — all of which are live ENFORCED requirements. The clean separation (Stakeholder = party, Operator = acting facet with budget + capabilities) prevents conflation at the single-altitude-vs-multi-altitude axis. Evidence: spec/src/tensio/operator.py:Operator frozen dataclass; R-operator-is-frozen-dataclass SETTLED ENFORCED; check_typed_anchors_operator live.
+**Why.** M20. DECIDED 2026-06-30: Operator is a new type. Rationale: a Stakeholder facet cannot carry a ContextBudget, enforce check_operator_within_budget, or be referenced by Goal.owner — all of which are live ENFORCED requirements. The clean separation (Stakeholder = party, Operator = acting facet with budget + capabilities) prevents conflation at the single-altitude-vs-multi-altitude axis. Evidence: spec/src/hotam_spec/operator.py:Operator frozen dataclass; R-operator-is-frozen-dataclass SETTLED ENFORCED; check_typed_anchors_operator live.
 
 **Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
 

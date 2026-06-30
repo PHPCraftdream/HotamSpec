@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 112 / SETTLED 147; DRAFT 12; OPEN 7; REJECTED 19.**
+**Burn-down: SETTLED-ENFORCED 112 / SETTLED 148; DRAFT 12; OPEN 7; REJECTED 19.**
 
 ---
 
@@ -53,6 +53,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-entity-is-declarative` | STRUCTURAL | `framework-author` | The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph(). |
 | `R-entity-reuses-lifecycle` | STRUCTURAL | `framework-author` | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
 | `R-entity-checks-by-iteration` | STRUCTURAL | `framework-author` | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
+| `R-project-name-hotam-spec` | STRUCTURAL | `framework-author` | The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -69,7 +70,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-active-loop-apply-tool` | test_apply_proposal.py | A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/. |
 | `R-decided-needs-human-signoff` | check_decided_has_nonempty_decided_by, check_decided_by_is_known_stakeholder, check_decided_by_not_member_owner | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
 | `R-smoke-test` | tests/test_smoke.py | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
-| `R-operator-is-frozen-dataclass` | check_typed_anchors_operator, test_operator.py | An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'. |
+| `R-operator-is-frozen-dataclass` | check_typed_anchors_operator, test_operator.py | An Operator shall be a frozen dataclass in hotam_spec.operator with typed anchor 'OP-'. |
 | `R-operator-references-stakeholder` | check_no_dangling_operator_refs, test_operator.py | An Operator.stakeholder shall reference an existing Stakeholder.id. |
 | `R-operator-has-context-budget` | check_operator_within_budget, test_operator.py | An Operator shall carry a ContextBudget with a positive limit and a declared measure. |
 | `R-operator-may-have-parent` | check_no_dangling_operator_refs | An Operator.parent shall reference another Operator.id or be None (root). |
@@ -88,7 +89,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | `R-stale-substrate` | test_reflection.py::test_reflection_emits_dead_assumption_enforcer, test_conscience.py::test_real_meta_domain_passes_critical_core | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 | `R-goal-type-vs-facet` | test_goal.py, check_typed_anchors_goal | Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE. |
-| `R-operator-type-vs-facet` | check_typed_anchors_operator, test_operator.py | Operator shall be its own first-class frozen-dataclass type in tensio.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference. |
+| `R-operator-type-vs-facet` | check_typed_anchors_operator, test_operator.py | Operator shall be its own first-class frozen-dataclass type in hotam_spec.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference. |
 | `R-enforcement-first-class` | check_enforced_names_invariant, check_bijection_r_to_enforcer | The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* that guarantees the claim. |
 | `R-anchor-taxonomy` | check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_process, check_typed_anchors_goal, check_typed_anchors_entity, check_section_anchors_known | The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally. |
 | `R-claude-md-live-state-generated` | test_docs_gen.py::test_claude_md_live_state_up_to_date | The live numeric state in CLAUDE.md (top action, debt counts, graph size, crystal headroom, context) shall be generated by gen_spec into a sentinel-delimited block, never hand-written. |
@@ -100,7 +101,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-m-tag-format-valid` | check_m_tag_valid_format, check_m_tag_unique, check_m_tag_open_only | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
 | `R-operator-prompt-from-substrate` | test_constitution_block_generated | The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py. |
 | `R-task-spawn-log-runtime` | test_spawn_log_written | Task-agent invocations shall be appended to `spec/.runtime/spawn-log.jsonl` with parent, child kind, task subject, and stamp. |
-| `R-content-free-no-business-data` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
+| `R-content-free-no-business-data` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
 | `R-content-free-no-examples` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo. |
 | `R-content-free-no-seed-graph` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph(). |
 | `R-empty-content-wellformed` | test_invariants.py::test_empty_graph_is_wellformed | A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed. |
@@ -113,12 +114,12 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-glossary-drift-stable` | test_docs_gen.py::test_glossary_md_up_to_date | The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte. |
 | `R-history-generated-from-rejected` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks. |
 | `R-history-generated-from-decided` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts. |
-| `R-lifecycle-type-exists` | test_lifecycle.py | A generic tensio.lifecycle module shall define State, Transition, and Lifecycle types. |
+| `R-lifecycle-type-exists` | test_lifecycle.py | A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types. |
 | `R-lifecycle-validates-requirement` | check_requirement_status_in_lifecycle | Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE. |
 | `R-lifecycle-validates-conflict` | check_conflict_lifecycle_in_lifecycle | Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE. |
 | `R-lifecycle-validates-operator` | check_operator_lifecycle_in_lifecycle | Operator.lifecycle shall validate against the framework-supplied OPERATOR_LIFECYCLE. |
 | `R-lifecycle-validates-goal` | check_goal_lifecycle_in_lifecycle | Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE. |
-| `R-process-types-exist` | test_process.py | tensio.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
+| `R-process-types-exist` | test_process.py | hotam_spec.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
 | `R-process-opt-in` | test_process.py | The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple. |
 | `R-process-lifecycle-wellformed-aspect` | check_process_lifecycle_wellformed | Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed. |
 | `R-process-roles-declared-aspect` | check_process_roles_declared | Every role referenced in a Process step shall be declared in the Process roles_required tuple. |
@@ -138,10 +139,10 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-enforcement-levels-declared` | check_enforced_names_invariant | A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED. |
 | `R-enforced-names-enforcer` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
 | `R-critical-core-methodology` | test_conscience.py, check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dangling_requirement_relations, check_no_dangling_conflict_refs | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
-| `R-bijection-r-to-enforcer` | check_bijection_r_to_enforcer | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
+| `R-bijection-r-to-enforcer` | check_bijection_r_to_enforcer | Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 | `R-tool-is-its-own-requirement` | test_tool_derived_requirements.py | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 | `R-agent-scoped-constitution` | test_agent_scoped_constitution | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
-| `R-repo-map-generated` | test_repo_map_complete | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
+| `R-repo-map-generated` | test_repo_map_complete | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/hotam_spec/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
 | `R-agent-declares-purpose` | test_every_agent_declares_purpose | Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line. |
 | `R-agent-map-generated` | test_agent_map_complete | CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path. |
 | `R-domain-is-a-directory` | check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files | A business domain is represented as a directory at `domains/<name>/`. |
@@ -161,7 +162,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-agent-references-shared-docs` | test_domain_isolation_p17.py::test_agent_shared_docs_block_present | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content. |
 | `R-agent-has-docs-dir` | check_agent_has_docs_subdir | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
 | `R-domain-has-docs-dir` | test_tool_create_domain.py::test_creates_docs_dir | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
-| `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
+| `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in hotam_spec.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
 | `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
 | `R-entities-md-generated` | check_entities_md_lists_all_types | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
 | `R-entity-state-conflict-surfaced` | test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict | Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects(). |

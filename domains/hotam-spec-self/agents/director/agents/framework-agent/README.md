@@ -1,6 +1,6 @@
 # framework-agent
 
-Stewards the framework's own structural invariants: atomicity audits, R↔check bijection, atom decomposition proposals. Operates only on spec/src/tensio/ + ALL_INVARIANTS; never edits spec/content/graph.py directly (returns ProposedRequirement JSON via apply_proposal queue).
+Stewards the framework's own structural invariants: atomicity audits, R↔check bijection, atom decomposition proposals. Operates only on spec/src/hotam_spec/ + ALL_INVARIANTS; never edits spec/content/graph.py directly (returns ProposedRequirement JSON via apply_proposal queue).
 
 ## Agent-as-directory pattern
 

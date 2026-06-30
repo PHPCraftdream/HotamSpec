@@ -49,7 +49,7 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **context:** crystallizing the full accumulated design into the methodology vs keeping the framework minimal
 - **members:** `R-crystallize-knowledge-to-code`, `R-content-free-framework`
 - **steward:** `framework-reviewer`
-- **lifecycle:** DECIDED(crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/tensio. The substrate grows; the framework code stays minimal.)
+- **lifecycle:** DECIDED(crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/hotam_spec. The substrate grows; the framework code stays minimal.)
 - **shared assumption:** `A-content-free-honest`
 - **revisit marker:** REVISIT if the DRAFT backlog grows faster than it is built — then prune or promote.
 
@@ -114,7 +114,7 @@ graph TD
 | axis slug | description |
 |---|---|
 | `agent-autonomy-vs-human-control` | How far the AI agent acts vs how strictly it presents/asks. Autonomy makes the loop fast; human control keeps invisibility from being AI-created. |
-| `framework-purity-vs-helpfulness` | Content-free shipping (zero business data in src/tensio) vs out-of-the-box utility for a fresh adopter. Purity is honest; helpfulness lowers adoption cost. |
+| `framework-purity-vs-helpfulness` | Content-free shipping (zero business data in src/hotam_spec) vs out-of-the-box utility for a fresh adopter. Purity is honest; helpfulness lowers adoption cost. |
 | `core-vs-aspect` | What stays in the minimal framework core vs what becomes an opt-in pluggable aspect. Core costs every domain; aspects cost only those who load them. |
 | `apparatus-weight-vs-coverage` | Heavy formal machinery (Z3 / Quint / mutation testing) catches more contradictions but slows the loop. Calibration rule: weight of apparatus ∝ cost of an unnoticed conflict. |
 | `formalization-vs-prose` | Machine-checkable predicate (deterministic, narrow) vs EARS / free-prose claim (broad, ambiguous). Most claims are prose; the critical core is formalized. |
@@ -212,6 +212,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-declares-purpose` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -267,6 +268,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-has-docs-dir` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -414,6 +416,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-is-recursive-director` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -467,6 +470,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-map-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -528,6 +532,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-references-shared-docs` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -579,6 +584,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-scoped-constitution` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -727,6 +733,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1062,6 +1069,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1227,6 +1235,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1274,6 +1283,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1320,6 +1330,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1727,6 +1738,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1771,6 +1783,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-director-agent-required-per-domain` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1814,6 +1827,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1856,6 +1870,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-declares-director` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1924,6 +1939,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-docs-dir` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -1964,6 +1980,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-manifest` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2003,6 +2020,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-is-a-directory` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2041,6 +2059,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-map-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2078,6 +2097,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-claude-md` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2114,6 +2134,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-docs-gen` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2149,6 +2170,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-graph-py` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2183,6 +2205,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-tools-and-agents` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2216,6 +2239,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2248,6 +2272,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2279,6 +2304,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2309,6 +2335,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-wellformed` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2353,6 +2380,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entities-md-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2381,6 +2409,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-checks-by-iteration` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entity-checks-by-iteration` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2408,6 +2437,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-derived-requirement` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2639,6 +2669,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-is-declarative` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entity-is-declarative` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2664,6 +2695,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-reuses-lifecycle` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entity-reuses-lifecycle` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2688,6 +2720,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-state-conflict-surfaced` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-entity-state-conflict-surfaced` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2786,6 +2819,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-claude-md-is-domain-free` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-framework-claude-md-is-domain-free` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2808,6 +2842,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-shared-docs-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-framework-shared-docs-generated` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -2840,6 +2875,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-drift-stable` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
@@ -2873,6 +2909,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-generated` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
@@ -2905,6 +2942,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-dead` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
@@ -2936,6 +2974,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-process-roles-declared-aspect` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-typed-anchors-extended` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-unused` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
@@ -3207,6 +3246,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-method-matches-docstring` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-method-matches-docstring` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -3223,6 +3263,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-no-hand-edit-graph` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -3311,6 +3352,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-prompt-from-substrate` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-loaded-at-session-start` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-operator-prompt-loaded-at-session-start` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-operator-prompt-loaded-at-session-start` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-operator-prompt-loaded-at-session-start` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-operator-prompt-loaded-at-session-start` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -3355,6 +3397,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-partition-vs-border` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-partition-vs-border` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-post-compact-regen-from-substrate` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-post-compact-regen-from-substrate` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-post-compact-regen-from-substrate` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-post-compact-regen-from-substrate` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -3371,6 +3414,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-prefer-tool-over-hand` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-prefer-tool-over-hand` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-prefer-tool-over-hand` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-private-tools-in-agent-folder` | `R-project-name-hotam-spec` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
@@ -3482,6 +3526,19 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-process-types-exist` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-types-exist` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-types-exist` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-project-name-hotam-spec` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-root-claude-md-is-sentinel-only` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-shared-thinking-doc-from-canon-sections` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-project-name-hotam-spec` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-root-claude-md-is-sentinel-only` | shares assumption(s): A-python-stack |

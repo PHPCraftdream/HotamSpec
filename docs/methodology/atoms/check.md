@@ -8,7 +8,7 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ## `R-bijection-r-to-enforcer` (ENFORCED)
 
-**Claim.** Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.
+**Claim.** Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.
 
 **Why.** Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. WAVE 3 outcome.
 
@@ -42,7 +42,7 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Claim.** The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* that guarantees the claim.
 
-**Why.** M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in tensio/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/tensio/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED.
+**Why.** M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in hotam_spec/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/hotam_spec/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED.
 
 **Enforced by:** `check_enforced_names_invariant`, `check_bijection_r_to_enforcer`
 

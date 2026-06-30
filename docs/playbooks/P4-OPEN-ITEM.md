@@ -25,7 +25,7 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
 - Decide the OPEN question itself (R-ai-presents-not-decides).
 - Edit `spec/content/graph.py` by hand (use `apply_proposal.py`).
 - Skip naming the assumption(s) — silent assumption-binding is exactly the
-  invisibility Tensio surfaces (the three invisibilities in CLAUDE.md).
+  invisibility Hotam-Spec surfaces (the three invisibilities in CLAUDE.md).
 
 ## JSON shape for a P4 resolution (ProposedRequirement)
 

@@ -8,7 +8,7 @@ PURPOSE is a one-line machine-readable rationale used by AGENT-MAP.
 
 PURPOSE = (
     "Stewards the framework's structural invariants: atomicity audits, R↔check bijection, "
-    "atom decomposition proposals. Operates only on spec/src/tensio/ + ALL_INVARIANTS; "
+    "atom decomposition proposals. Operates only on spec/src/hotam_spec/ + ALL_INVARIANTS; "
     "never edits spec/content/graph.py directly (returns ProposedRequirement JSON via "
     "apply_proposal queue)."
 )

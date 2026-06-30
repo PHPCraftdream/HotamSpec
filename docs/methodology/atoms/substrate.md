@@ -16,7 +16,7 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ## `R-content-free-no-business-data` (ENFORCED)
 
-**Claim.** The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders).
+**Claim.** The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders).
 
 **Why.** Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. WHY: business data in the framework source would couple it to a specific domain, violating content-free neutrality.
 

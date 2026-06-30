@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Stewards the framework's own structural invariants: atomicity audits, R↔check bijection, atom decomposition proposals. Operates only on spec/src/tensio/ + ALL_INVARIANTS; never edits spec/content/graph.py directly (returns ProposedRequirement JSON via apply_proposal queue).
+Stewards the framework's own structural invariants: atomicity audits, R↔check bijection, atom decomposition proposals. Operates only on spec/src/hotam_spec/ + ALL_INVARIANTS; never edits spec/content/graph.py directly (returns ProposedRequirement JSON via apply_proposal queue).
 
 ## Scope
 
@@ -28,7 +28,7 @@ are included.
 **Check / Invariant**
 
 - **R-axis-controlled-vocab** — *Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple.* [ENFORCED·check_axis_in_registry]
-- **R-bijection-r-to-enforcer** — *Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.* [ENFORCED·check_bijection_r_to_enforcer]
+- **R-bijection-r-to-enforcer** — *Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.* [ENFORCED·check_bijection_r_to_enforcer]
 - **R-check-method-is-atomic** — *Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.* [STRUCTURAL·tools/audit_atomicity.py]
 - **R-conflict-is-connector-node** — *A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements.* [STRUCTURAL]
 - **R-conflict-min-two-members** — *Every Conflict node shall contain at least two distinct Requirement ids in its members tuple.* [ENFORCED·check_conflict_min_two_members]

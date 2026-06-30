@@ -1,8 +1,8 @@
-# tensio (spec)
+# hotam_spec (spec)
 
-Executable model for the **Tensio** methodology: managing the lifecycle of
+Executable model for the **Hotam-Spec** methodology: managing the lifecycle of
 contradictory business requirements as a **tension graph**. The store IS this
-Python code — frozen dataclasses in `src/tensio/`, structural invariants as
+Python code — frozen dataclasses in `src/hotam_spec/`, structural invariants as
 `check_*` functions, the human layer generated into `../docs/gen/`.
 
 This is the spec package. For the philosophy and the closed loop see the
@@ -20,7 +20,7 @@ uv run pytest -q                                # tests (meta-test: regen == com
 
 ## Layout
 
-- `src/tensio/` — the ontology (Requirement, Conflict, Assumption, Axis,
+- `src/hotam_spec/` — the ontology (Requirement, Conflict, Assumption, Axis,
   Stakeholder), the seed graph + traversal (`graph.py`), and the structural
   invariants (`invariants.py`).
 - `tools/gen_spec.py` — deterministic generator of the human layer.

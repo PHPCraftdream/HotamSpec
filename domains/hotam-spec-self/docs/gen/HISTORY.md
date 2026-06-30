@@ -16,10 +16,10 @@ substrate (R-history-from-rejected-markers).
 
 ## REJECTED requirements (what we tried and discarded)
 
-### `R-content-free-framework` — spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph.
+### `R-content-free-framework` — spec/src/hotam_spec/ shall contain ZERO business content — no example requirements, no example axes, no seed graph.
 
 - **owner:** `framework-author`
-- **why:** REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Tensio is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/tensio/graph.py.)
+- **why:** REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Hotam-Spec is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/hotam_spec/graph.py.)
 
 ### `R-empty-content-is-legitimate` — A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice.
 
@@ -51,15 +51,15 @@ substrate (R-history-from-rejected-markers).
 - **owner:** `ai-agent`
 - **why:** REJECTED — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30) — (was: The historian artifact is now real: build_history() in tools/gen_spec.py materializes REJECTED requirements and DECIDED/REVISIT_WHEN conflicts into docs/gen/HISTORY.md. Anti-drift enforced by test_history_md_up_to_date; content coverage enforced by test_history_gen.py.))
 
-### `R-lifecycle-abstraction` — A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants.
+### `R-lifecycle-abstraction` — A generic hotam_spec.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants.
 
 - **owner:** `framework-author`
-- **why:** REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: Built: tensio/lifecycle.py ships REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE; check_status_in_lifecycle validates stored values against them on every invariant run (P1).))
+- **why:** REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30) — (was: Built: hotam_spec/lifecycle.py ships REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE; check_status_in_lifecycle validates stored values against them on every invariant run (P1).))
 
-### `R-process-aspect-first` — tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands.
+### `R-process-aspect-first` — hotam_spec.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands.
 
 - **owner:** `framework-author`
-- **why:** REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P9): tensio/process.py ships Process + Step + Goal + TargetState + PROCESS_LIFECYCLE + GOAL_LIFECYCLE. The §Process aspect is opt-in (TensionGraph.processes defaults to empty). PR-closed-loop instantiates ONE worked example at the meta-domain level. Three new invariants enforce the behavioral surface: check_process_lifecycle_wellformed, check_process_roles_declared, and check_goal_owner_is_operator. check_typed_anchors extended for PR- and GOAL- prefixes. M12 resolved: Lifecycle is core; Process is the first opt-in aspect that proves the keystone supports new aspects without parallel machinery.))
+- **why:** REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P9): hotam_spec/process.py ships Process + Step + Goal + TargetState + PROCESS_LIFECYCLE + GOAL_LIFECYCLE. The §Process aspect is opt-in (TensionGraph.processes defaults to empty). PR-closed-loop instantiates ONE worked example at the meta-domain level. Three new invariants enforce the behavioral surface: check_process_lifecycle_wellformed, check_process_roles_declared, and check_goal_owner_is_operator. check_typed_anchors extended for PR- and GOAL- prefixes. M12 resolved: Lifecycle is core; Process is the first opt-in aspect that proves the keystone supports new aspects without parallel machinery.))
 
 ### `R-operator-acting-facet` — An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator.
 
@@ -74,7 +74,7 @@ substrate (R-history-from-rejected-markers).
 ### `R-dependency-graph-parallelism` — The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY.
 
 - **owner:** `framework-author`
-- **why:** REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P8): Requirement.relations (depends_on/supports/refines) is the live dependency network; the U‖/A‖/B‖ parallel commits demonstrate the principle operationally — independent sub-graphs ran in parallel, dependency chains ran sequentially. Parallel-vs-sequential is decided by the dependency topology (independent components vs chains), not guessed; this makes delegation sound. Implementation: tensio.requirement.Relation + docs/playbooks/ + tools/what_now.py.))
+- **why:** REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P8): Requirement.relations (depends_on/supports/refines) is the live dependency network; the U‖/A‖/B‖ parallel commits demonstrate the principle operationally — independent sub-graphs ran in parallel, dependency chains ran sequentially. Parallel-vs-sequential is decided by the dependency topology (independent components vs chains), not guessed; this makes delegation sound. Implementation: hotam_spec.requirement.Relation + docs/playbooks/ + tools/what_now.py.))
 
 ### `R-operator-crystal-is-claude-md` — Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md.
 
@@ -96,7 +96,7 @@ substrate (R-history-from-rejected-markers).
 - **owner:** `framework-reviewer`
 - **why:** REJECTED — SUPERSEDED by R-bijection-r-to-enforcer SETTLED (wave 3 outcome). The SETTLED version generalizes this claim: every SETTLED/ENFORCED requirement must name an existing check_* in ALL_INVARIANTS or a real test_*, enforced by check_bijection_r_to_enforcer. The original id was duplicated with the SETTLED version; renamed to R-bijection-r-to-enforcer-draft for history preservation.
 
-### `R-seed-in-src` — The framework shall ship with a seed graph baked into spec/src/tensio/graph.py so the demo runs without setup.
+### `R-seed-in-src` — The framework shall ship with a seed graph baked into spec/src/hotam_spec/graph.py so the demo runs without setup.
 
 - **owner:** `framework-author`
 - **why:** REJECTED — REPLACES by R-content-free-framework. The framework must ship blank; the seed graph leaked business content (R-87, A-single-customer, axes like latency-vs-completeness) into the framework package, breaking the framework / content split.
@@ -106,7 +106,7 @@ substrate (R-history-from-rejected-markers).
 - **owner:** `framework-author`
 - **why:** REJECTED — REPLACES by storage = the Python code itself. RDF adds a heavy parallel substrate over what frozen dataclasses + plain-function traversal already do; SHACL duplicates the check_* invariants; SPARQL is unnecessary at the in-memory graph sizes we serve.
 
-### `R-axes-as-module-constant` — The controlled vocabulary of axes shall live as a module-level REGISTRY in tensio.axis.
+### `R-axes-as-module-constant` — The controlled vocabulary of axes shall live as a module-level REGISTRY in hotam_spec.axis.
 
 - **owner:** `framework-author`
 - **why:** REJECTED — REPLACES by per-graph TensionGraph.axes. A module-level registry bakes a specific business vocabulary (latency-vs-completeness, privacy-vs-analytics, ...) into the content-free framework. Each domain owns its own vocabulary.
@@ -137,7 +137,7 @@ substrate (R-history-from-rejected-markers).
 - **context:** crystallizing the full accumulated design into the methodology vs keeping the framework minimal
 - **members:** `R-crystallize-knowledge-to-code`, `R-content-free-framework`
 - **steward:** `framework-reviewer`
-- **rationale:** crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/tensio. The substrate grows; the framework code stays minimal.
+- **rationale:** crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/hotam_spec. The substrate grows; the framework code stays minimal.
 - **shared assumption:** `A-content-free-honest`
 - **revisit when:** REVISIT if the DRAFT backlog grows faster than it is built — then prune or promote.
 
