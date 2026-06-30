@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 11 / SETTLED 16; DRAFT 22; OPEN 13; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 12 / SETTLED 17; DRAFT 21; OPEN 13; REJECTED 3.**
 
 ---
 
@@ -37,6 +37,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-axis-controlled-vocab` | check_axis_in_registry | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
 | `R-glossary-sync-test` | test_glossary_sync.py, test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
+| `R-history-from-rejected-markers` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-enforcement-gradient` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 
@@ -46,7 +47,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 |---|---|
 | `R-active-loop-playbooks` | `ai-agent` |
 | `R-decided-needs-human-signoff` | `framework-reviewer` |
-| `R-history-from-rejected-markers` | `ai-agent` |
 | `R-smoke-test` | `framework-author` |
 | `R-lifecycle-abstraction` | `framework-author` |
 | `R-process-aspect-first` | `framework-author` |
