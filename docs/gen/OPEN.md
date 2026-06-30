@@ -4,7 +4,7 @@
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-Open requirements: **12**. Unresolved conflicts: **1**.
+Open requirements: **13**. Unresolved conflicts: **1**.
 
 ---
 
@@ -24,6 +24,7 @@ Open requirements: **12**. Unresolved conflicts: **1**.
 | `R-enforcement-first-class` | `framework-author` | is the enforcement level (PROSE/STRUCTURAL/ENFORCED) a first-class Requirement field with enforced_by anchors, or a derived report? |
 | `R-anchor-taxonomy` | `framework-author` | what is the frozen typed-anchor prefix set (R-/C-/A-/§/OP-/GOAL-/GAP-/DLG-/AX-), and does Axis.slug get a prefix or stay bare? |
 | `R-uncrystallizable-automated` | `framework-reviewer` | is 'uncrystallizable knowledge = missing type' an automated signal or human judgment, and what records it? |
+| `R-backend-scope` | `framework-author` | which backends beyond Claude Code are real targets — CI runner / a different coding agent / a programmatic or human steward — so the protocol is designed against concrete cases, not hypotheticals? |
 
 ## Unresolved conflicts (no steward resolution yet)
 

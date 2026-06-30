@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 26 / SETTLED 42; DRAFT 2; OPEN 12; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 26 / SETTLED 42; DRAFT 6; OPEN 13; REJECTED 3.**
 
 ---
 
@@ -72,3 +72,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 |---|---|
 | `R-smoke-test` | `framework-author` |
 | `R-measure-context-size` | `ai-agent` |
+| `R-operator-backend-protocol` | `framework-author` |
+| `R-claude-md-budget-phi-cap` | `framework-author` |
+| `R-claude-md-tree-of-crystals` | `framework-author` |
+| `R-subagent-gets-its-claude-md` | `ai-agent` |
