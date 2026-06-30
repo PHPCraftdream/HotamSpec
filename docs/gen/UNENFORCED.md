@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 53 / SETTLED 85; DRAFT 24; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 53 / SETTLED 88; DRAFT 21; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -36,6 +36,9 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-stale-substrate` | STRUCTURAL | `framework-author` | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 | `R-prefer-tool-over-hand` | STRUCTURAL | `ai-agent` | The operator shall prefer creating a reusable tool over performing the same action by hand; one-off acts are permitted only for genuine bootstrap or single-occurrence events. |
 | `R-shared-tools-in-spec-tools` | STRUCTURAL | `framework-author` | Tools available to all agents shall live in `spec/tools/`. |
+| `R-agent-is-a-directory` | PROSE | `framework-author` | A domain-agent shall be represented as a directory at `spec/agents/<name>/`. |
+| `R-agent-has-own-crystal` | PROSE | `ai-agent` | Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal. |
+| `R-agent-has-own-tools-dir` | PROSE | `ai-agent` | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
 | `R-content-free-no-business-data` | STRUCTURAL | `framework-author` | The framework spec/src/tensio/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
 | `R-content-free-no-examples` | STRUCTURAL | `framework-author` | The framework shall not include illustrative example Requirement(...) calls in its source modules; worked examples live under spec/tests/fixtures/seed.py and are loaded only via --demo. |
 | `R-content-free-no-seed-graph` | STRUCTURAL | `framework-author` | The framework shall not embed a seed TensionGraph; load_content_graph() discovers the user's spec/content/graph.py:build_graph() by convention. |
@@ -123,9 +126,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-requirement-claim-is-atomic` | `framework-reviewer` |
 | `R-check-method-is-atomic` | `framework-reviewer` |
 | `R-bijection-r-to-enforcer` | `framework-reviewer` |
-| `R-agent-is-a-directory` | `framework-author` |
-| `R-agent-has-own-crystal` | `ai-agent` |
-| `R-agent-has-own-tools-dir` | `ai-agent` |
 | `R-agent-imports-framework` | `framework-author` |
 | `R-task-spawn-is-ephemeral` | `ai-agent` |
 | `R-domain-delegation-persists` | `framework-author` |

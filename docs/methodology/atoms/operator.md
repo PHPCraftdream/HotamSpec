@@ -6,6 +6,24 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ---
 
+## `R-agent-has-own-crystal` (PROSE)
+
+**Claim.** Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal.
+
+**Why.** The agent's prompt is independent of the director's. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/CLAUDE.md generated and populated.
+
+## `R-agent-has-own-tools-dir` (PROSE)
+
+**Claim.** Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
+
+**Why.** Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/tools/ exists as concrete evidence.
+
+## `R-agent-is-a-directory` (PROSE)
+
+**Claim.** A domain-agent shall be represented as a directory at `spec/agents/<name>/`.
+
+**Why.** The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence.
+
 ## `R-agent-never-lost` (PROSE)
 
 **Claim.** The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.

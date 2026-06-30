@@ -97,9 +97,9 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-requirement-claim-is-atomic` | DRAFT | `framework-reviewer` | A-prose-suffices | Each `Requirement.claim` shall assert exactly one concern; conjunctions of distinct concerns shall be decomposed into separate requirements. |
 | `R-check-method-is-atomic` | DRAFT | `framework-reviewer` | A-prose-suffices | Each `check_*` invariant shall enforce exactly one rule; multi-rule enforcers shall be split into separate `check_*` functions. |
 | `R-bijection-r-to-enforcer` | DRAFT | `framework-reviewer` | A-prose-suffices | Each ENFORCED Requirement shall name exactly one enforcer in its `enforced_by` after atomization is complete. |
-| `R-agent-is-a-directory` | DRAFT | `framework-author` | A-finite-context-operators | A domain-agent shall be represented as a directory at `spec/agents/<name>/`. |
-| `R-agent-has-own-crystal` | DRAFT | `ai-agent` | A-finite-context-operators, A-compaction-loses-working | Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal. |
-| `R-agent-has-own-tools-dir` | DRAFT | `ai-agent` | A-finite-context-operators | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
+| `R-agent-is-a-directory` | SETTLED | `framework-author` | A-finite-context-operators | A domain-agent shall be represented as a directory at `spec/agents/<name>/`. |
+| `R-agent-has-own-crystal` | SETTLED | `ai-agent` | A-finite-context-operators, A-compaction-loses-working | Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal. |
+| `R-agent-has-own-tools-dir` | SETTLED | `ai-agent` | A-finite-context-operators | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
 | `R-agent-imports-framework` | DRAFT | `framework-author` | A-content-free-honest | An agent's code shall import the framework body (`tensio.*`) as shared infrastructure; the framework body is owned by no single agent. |
 | `R-task-spawn-is-ephemeral` | DRAFT | `ai-agent` | A-finite-context-operators | A task-agent invocation (a sh/Agent-tool call) is a hand: it returns conclusions and does not persist between invocations. |
 | `R-domain-delegation-persists` | DRAFT | `framework-author` | A-finite-context-operators | A domain-delegation shall persist as a directory + a substrate node (`Delegation`). |
