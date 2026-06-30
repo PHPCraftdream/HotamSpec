@@ -147,6 +147,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-enforced-names-enforcer` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
 | `R-critical-core-methodology` | SETTLED | `domain-user` | A-prose-suffices | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
 | `R-critical-core-per-domain` | SETTLED | `domain-user` | A-prose-suffices | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
+| `R-bijection-r-to-enforcer` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 
 ## Stakeholders
 

@@ -1126,6 +1126,82 @@ def check_section_anchors_known(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 15. R↔check_* bijection — enforcer names resolve; no orphan checks
+# ---------------------------------------------------------------------------
+
+
+def check_bijection_r_to_enforcer(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every enforcer name resolves; no orphan check_* exists.
+
+    RULE (R-bijection-r-to-enforcer): two sub-rules enforce the bijection
+    between SETTLED/ENFORCED requirements and the check_* functions in
+    ALL_INVARIANTS:
+
+      1. RESOLVABILITY: for every SETTLED requirement with enforcement==ENFORCED,
+         each name in `enforced_by` that starts with 'check_' MUST resolve to a
+         function in ALL_INVARIANTS. Names starting with 'test_' or other
+         prefixes are exempt (they reference test files, not invariant functions).
+         An unresolvable check_* name is an unverifiable claim — the named
+         enforcer does not exist.
+
+      2. ORPHAN DETECTION: every function in ALL_INVARIANTS MUST be named by at
+         least one SETTLED/ENFORCED requirement's `enforced_by`. A check_*
+         function that no SETTLED/ENFORCED requirement points to is an orphan —
+         it runs but is not anchored to a claim, making the bijection
+         incomplete.
+
+    SHARED enforcers (one check_* named by multiple SETTLED/ENFORCED
+    requirements) are acceptable — they are not violations today.
+
+    WHY structural: the bijection between claim and check is what makes
+    ENFORCED mean something beyond a label. An unresolvable enforcer name
+    hides compoundness; an orphan check hides unclaimed guarantees.
+    """
+    inv_names = {fn.__name__ for fn in ALL_INVARIANTS}
+    out: list[Violation] = []
+
+    # Build map: check_name → [R-ids that name it]
+    check_to_rids: dict[str, list[str]] = {name: [] for name in inv_names}
+    has_enforced = False
+
+    for r in g.requirements:
+        if r.status != "SETTLED" or r.enforcement != ENFORCED:
+            continue
+        has_enforced = True
+        for name in r.enforced_by:
+            if name.startswith("check_"):
+                if name not in inv_names:
+                    out.append(
+                        Violation(
+                            "check_bijection_r_to_enforcer",
+                            r.id,
+                            f"enforced_by names '{name}' which is not a function "
+                            f"in ALL_INVARIANTS (unresolvable check_* enforcer)",
+                        )
+                    )
+                else:
+                    check_to_rids[name].append(r.id)
+
+    # Orphan detection: only meaningful when there are SETTLED/ENFORCED requirements.
+    # An empty graph or a graph with no ENFORCED requirements has no bijection to check.
+    if has_enforced:
+        for name, rids in sorted(check_to_rids.items()):
+            if not rids:
+                out.append(
+                    Violation(
+                        "check_bijection_r_to_enforcer",
+                        name,
+                        f"check_* function '{name}' exists in ALL_INVARIANTS but "
+                        f"is not named by any SETTLED/ENFORCED requirement's "
+                        f"enforced_by (orphan enforcer — anchor it to a "
+                        f"Requirement)",
+                    )
+                )
+
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -1153,6 +1229,7 @@ ALL_INVARIANTS = (
     check_goal_target_kind_known,
     check_goal_owner_is_operator,
     check_section_anchors_known,
+    check_bijection_r_to_enforcer,
 )
 
 # --- M7: the critical core ---

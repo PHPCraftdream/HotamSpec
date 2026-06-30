@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 50 / SETTLED 81; DRAFT 25; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 51 / SETTLED 82; DRAFT 25; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -71,9 +71,9 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-goal-is-first-class-type` | test_goal.py, check_typed_anchors | Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'. |
 | `R-goal-target-kind-known` | check_goal_target_kind_known | Goal.target_state.kind shall be one of the declared TARGET_KINDS. |
 | `R-goal-owner-is-operator` | check_goal_owner_is_operator, check_no_dangling_ids | Goal.owner shall reference an existing Operator.id. |
-| `R-statemachine-reachable` | check_lifecycle_wellformed, check_canonical_lifecycles_wellformed | Every state in a canonical Lifecycle shall be reachable from the initial state. |
-| `R-statemachine-deterministic` | check_lifecycle_wellformed | A Lifecycle's transitions shall be deterministic — no two transitions with the same (src, event) and overlapping guards. |
-| `R-statemachine-terminal-or-cyclic` | check_lifecycle_wellformed | Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state. |
+| `R-statemachine-reachable` | check_canonical_lifecycles_wellformed | Every state in a canonical Lifecycle shall be reachable from the initial state. |
+| `R-statemachine-deterministic` | check_canonical_lifecycles_wellformed | A Lifecycle's transitions shall be deterministic — no two transitions with the same (src, event) and overlapping guards. |
+| `R-statemachine-terminal-or-cyclic` | check_canonical_lifecycles_wellformed | Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state. |
 | `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-anchor-everything` | check_typed_anchors, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
@@ -104,6 +104,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-enforcement-levels-declared` | check_enforced_names_invariant | A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED. |
 | `R-enforced-names-enforcer` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
 | `R-critical-core-methodology` | test_conscience.py | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
+| `R-bijection-r-to-enforcer` | check_bijection_r_to_enforcer | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 
 ## DRAFT (not yet promoted)
 

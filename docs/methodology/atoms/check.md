@@ -6,6 +6,14 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ---
 
+## `R-bijection-r-to-enforcer` (ENFORCED)
+
+**Claim.** Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.
+
+**Why.** Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. WAVE 3 outcome.
+
+**Enforced by:** `check_bijection_r_to_enforcer`
+
 ## `R-decided-conflict-justifies-itself` (ENFORCED)
 
 **Claim.** Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement.
