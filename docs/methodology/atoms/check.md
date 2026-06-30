@@ -6,6 +6,14 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ---
 
+## `R-decided-conflict-justifies-itself` (ENFORCED)
+
+**Claim.** Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement.
+
+**Why.** Anti-relitigation — a DECIDED conflict without recorded reasoning gets re-litigated. Was orphan check; now claimed. Distinct from R-decided-needs-human-signoff (about decided_by attribution) — this is about the resolution's justification.
+
+**Enforced by:** `check_decided_has_rationale_or_derived`
+
 ## `R-decided-needs-human-signoff` (ENFORCED)
 
 **Claim.** A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant.

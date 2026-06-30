@@ -12,7 +12,7 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 **Why.** Commit 36ceabd hand-wrote 'Today: 15 unenforced' into CLAUDE.md — the auto-loaded file — and it drifted to 16 within one phase. The U5 lesson (single source + generated mirror) applied to the operator's own crystal. gen_spec is the 'hook that updates it with the logic run'.
 
-**Enforced by:** `test_docs_gen.py::test_claude_md_live_state_up_to_date`, `tools/gen_spec.py`
+**Enforced by:** `test_docs_gen.py::test_claude_md_live_state_up_to_date`
 
 ## `R-content-free-framework` (ENFORCED)
 

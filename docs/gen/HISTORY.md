@@ -16,6 +16,26 @@ substrate (R-history-from-rejected-markers).
 
 ## REJECTED requirements (what we tried and discarded)
 
+### `R-active-loop-playbooks` — Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/.
+
+- **owner:** `ai-agent`
+- **why:** REJECTED — REPLACES by R-active-loop-protocol + R-active-loop-apply-tool + R-active-loop-playbook-doc per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed three concerns: data-model, tool, documentation.
+
+### `R-operator-acting-facet` — An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES by R-operator-is-frozen-dataclass + R-operator-references-stakeholder + R-operator-has-context-budget + R-operator-may-have-parent per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed four concerns: type identity, stakeholder reference, budget, hierarchy.
+
+### `R-goal-as-target-state` — A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process.
+
+- **owner:** `domain-user`
+- **why:** REJECTED — REPLACES by R-goal-is-first-class-type + R-goal-target-kind-known + R-goal-owner-is-operator per atomicity discipline (R-requirement-claim-is-atomic). The original claim was mostly atomic but its enforced_by tuple covered three distinct rules.
+
+### `R-statemachine-wellformedness` — Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam).
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES by R-statemachine-reachable + R-statemachine-deterministic + R-statemachine-terminal-or-cyclic + R-statemachine-guard-on-assumption per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed four concerns: reachability, determinism, termination, guard-on-assumption.
+
 ### `R-seed-in-src` — The framework shall ship with a seed graph baked into spec/src/tensio/graph.py so the demo runs without setup.
 
 - **owner:** `framework-author`

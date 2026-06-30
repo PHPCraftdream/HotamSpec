@@ -52,7 +52,7 @@ Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-im
 
 **CRYSTALLIZE** (R-crystallize-knowledge-to-code):
   Claim: An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious).
-  Why: SETTLED (P4): the act of crystallization is now structurally supported. Every codified knowledge-piece flows through the proposal → approve → apply → verify-closure pipeline (tools/apply_proposal.py + tools/closure.py). The closure check makes crystallization audit-able: each applied proposal must prove it removed the triggering diagnosis, so the discipline is not merely claimed but structurally enforced at the feedback edge. STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a steward call; the pipeline + closure assert HOW it is done.
+  Why: SETTLED (P4): the act of crystallization is now structurally supported. Every codified knowledge-piece flows through the proposal → approve → apply → verify-closure pipeline (tools/apply_proposal.py + tools/closure.py). The closure check makes crystallization audit-able: each applied proposal must prove it removed the triggering diagnosis, so the discipline is not merely claimed but structurally enforced at the feedback edge. STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a steward call; the pipeline + closure assert HOW it is done. Implementation: tools/apply_proposal.py + tools/closure.py + docs/playbooks/.
 
 **ANCHOR** (R-anchor-everything):
   Claim: Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).
@@ -64,11 +64,11 @@ Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-im
 
 **ORDER** (R-crystallize-before-split):
   Claim: On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget.
-  Why: SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies advancement before any split is even considered; the constitution §4 (super-rules) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place.
+  Why: SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies advancement before any split is even considered; the constitution §4 (super-rules) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. Implementation: tools/apply_proposal.py + tools/closure.py + docs/gen/CONSTITUTION.md.
 
 **BUDGET** (R-working-vs-substrate-budget):
   Claim: The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded.
-  Why: SETTLED (P8): the P8 REFLECTION band emits the over-budget Action sourced FROM the operator's budget field, measuring only the live graph nodes (requirements+conflicts+assumptions) — the substrate itself is never counted. Bounding the substrate would punish the very act — crystallizing — that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. Structural via the band logic (tools/what_now.py, tools/tick.py, test_reflection.py).
+  Why: SETTLED (P8): the P8 REFLECTION band emits the over-budget Action sourced FROM the operator's budget field, measuring only the live graph nodes (requirements+conflicts+assumptions) — the substrate itself is never counted. Bounding the substrate would punish the very act — crystallizing — that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. Implementation: tools/what_now.py + tools/tick.py.
 
 ## 5. The conscience
 
@@ -132,7 +132,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | `R-decided-needs-human-signoff` | ENFORCED | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
 | `R-operator-not-self-approve` | ENFORCED | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | **Self + delegation** | | |
-| `R-operator-acting-facet` | ENFORCED | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
+| `R-operator-acting-facet` | PROSE | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
 | `R-context-budget-rule` | ENFORCED | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
 | `R-operator-crystal-is-claude-md` | STRUCTURAL | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
 | **Super-rules (crystallize + anchor)** | | |
@@ -144,7 +144,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | `R-enforcement-gradient` | ENFORCED | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | ENFORCED | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | **Loop machinery** | | |
-| `R-active-loop-playbooks` | ENFORCED | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
+| `R-active-loop-playbooks` | PROSE | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
 | `R-verify-closure-per-action` | ENFORCED | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | **Conscience** | | |
 | `R-critical-core-scope` | ENFORCED | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |

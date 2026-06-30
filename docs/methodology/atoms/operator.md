@@ -18,23 +18,35 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Without this, the operator knows the spec but lives in session memory; CLAUDE.md is the only file the harness auto-loads, so the boot ritual MUST live there (not in CONSTITUTION.md, which is referenceable but not auto-loaded). This is the structural fix for 'knows the spec vs lives by it'.
 
-**Enforced by:** `CLAUDE.md§Operator boot ritual`, `docs/gen/CONSTITUTION.md`
-
-## `R-operator-acting-facet` (ENFORCED)
-
-**Claim.** An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator.
-
-**Why.** Built (P2): tensio.operator.Operator is a new frozen dataclass referencing a Stakeholder.id (M20 = new type). OP-director instantiated in content/graph.py as the first concrete operator.
-
-**Enforced by:** `test_operator.py`, `check_no_dangling_ids`, `check_typed_anchors`
-
 ## `R-operator-crystal-is-claude-md` (STRUCTURAL)
 
 **Claim.** Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md.
 
-**Why.** SETTLED (P7): the crystal exists as substrate. The Director's Map in CLAUDE.md indexes the whole graph and provides the anchored map for the director-operator. docs/gen/CONSTITUTION.md is the generated reconstitution from the laws — a fresh agent reading it reconstitutes as operator without relying on a session checkpoint. The discipline is structural via: the Director's Map is the crystal (CLAUDE.md); CONSTITUTION.md is generated from the SETTLED laws; the boot-sequence in §6 names the exact steps to reconstitute. Per the anchoring super-rule it cites code handles (R-/C-/§/file) so understanding is regained fast; the delegation hierarchy is therefore a TREE of CLAUDE.md crystals (exactly how Claude Code nests CLAUDE.md per directory), one per operator, each bounded by its context budget.
+**Why.** SETTLED (P7): the crystal exists as substrate. The Director's Map in CLAUDE.md indexes the whole graph and provides the anchored map for the director-operator. docs/gen/CONSTITUTION.md is the generated reconstitution from the laws — a fresh agent reading it reconstitutes as operator without relying on a session checkpoint. The discipline is structural via: the Director's Map is the crystal (CLAUDE.md); CONSTITUTION.md is generated from the SETTLED laws; the boot-sequence in §6 names the exact steps to reconstitute. Per the anchoring super-rule it cites code handles (R-/C-/§/file) so understanding is regained fast; the delegation hierarchy is therefore a TREE of CLAUDE.md crystals (exactly how Claude Code nests CLAUDE.md per directory), one per operator, each bounded by its context budget. Implementation: docs/gen/CONSTITUTION.md + CLAUDE.md.
 
-**Enforced by:** `docs/gen/CONSTITUTION.md`, `CLAUDE.md`, `test_constitution_gen.py`
+**Enforced by:** `test_constitution_gen.py`
+
+## `R-operator-has-context-budget` (ENFORCED)
+
+**Claim.** An Operator shall carry a ContextBudget with a positive limit and a declared measure.
+
+**Why.** Atom of R-operator-acting-facet (budget concern). check_operator_within_budget validates the budget.
+
+**Enforced by:** `check_operator_within_budget`, `test_operator.py`
+
+## `R-operator-is-frozen-dataclass` (ENFORCED)
+
+**Claim.** An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'.
+
+**Why.** Atom of R-operator-acting-facet (type identity concern). tensio.operator.Operator is a frozen dataclass; OP-director is the first instance.
+
+**Enforced by:** `check_typed_anchors`, `test_operator.py`
+
+## `R-operator-may-have-parent` (STRUCTURAL)
+
+**Claim.** An Operator.parent shall reference another Operator.id or be None (root).
+
+**Why.** Atom of R-operator-acting-facet (hierarchy concern). Structural via the Operator.parent field type.
 
 ## `R-operator-not-self-approve` (ENFORCED)
 
@@ -43,6 +55,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Why.** M36 — the reflexive twin of check_steward_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the steward-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.
 
 **Enforced by:** `check_operator_steward_not_self`, `test_operator.py::test_check_operator_steward_not_self_fires`
+
+## `R-operator-references-stakeholder` (ENFORCED)
+
+**Claim.** An Operator.stakeholder shall reference an existing Stakeholder.id.
+
+**Why.** Atom of R-operator-acting-facet (stakeholder reference concern). check_no_dangling_ids validates the reference.
+
+**Enforced by:** `check_no_dangling_ids`, `test_operator.py`
 
 ## `R-prefer-tool-over-hand` (STRUCTURAL)
 
