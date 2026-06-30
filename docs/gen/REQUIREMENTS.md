@@ -8,7 +8,55 @@ Generated from the executable model: the methodology narrative comes from `spec/
 
 ## Requirement roster
 
-_No domain content loaded — `spec/content/graph.py` is absent or empty. See CLAUDE.md §How to populate to drop in a domain. The methodology narrative below is the framework itself and is always present._
+| id | status | owner | assumptions | claim |
+|---|---|---|---|---|
+| `R-agent-never-lost` | SETTLED | `ai-agent` | A-stakeholders-care | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
+| `R-drift-structurally-impossible` | SETTLED | `framework-author` | A-python-stack | The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte. |
+| `R-conflict-is-connector-node` | SETTLED | `framework-author` | A-content-free-honest | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
+| `R-content-free-framework` | SETTLED | `framework-author` | A-content-free-honest | spec/src/tensio/ shall contain ZERO business content — no example requirements, no example axes, no seed graph. |
+| `R-deterministic-generation` | SETTLED | `framework-author` | A-python-stack | tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes. |
+| `R-ai-presents-not-decides` | SETTLED | `ai-agent` | A-stakeholders-care | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
+| `R-steward-distinct-from-owners` | SETTLED | `framework-author` | A-stakeholders-care | Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members. |
+| `R-empty-content-is-legitimate` | SETTLED | `domain-user` | A-content-free-honest | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
+| `R-open-states-question` | SETTLED | `framework-author` | A-prose-suffices | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
+| `R-rejected-preserved-not-deleted` | SETTLED | `framework-author` | A-stakeholders-care | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
+| `R-axis-controlled-vocab` | SETTLED | `framework-author` | A-prose-suffices | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
+| `R-stable-conflict-identity` | SETTLED | `framework-author` | A-python-stack | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
+| `R-trust-anchor-mechanism` | OPEN(what signature mechanism (PGP/SSH/web of trust) and cadence (quarterly/per-PR/on-domain-change) anchor the loop?) | `framework-author` | A-stakeholders-care, A-bootstrap-self-applies | The methodology shall be externally anchored by a periodic stakeholder cryptographic signature on the tension map per domain — to ground the internal loop in a living human. |
+| `R-critical-core-scope` | OPEN(which requirement domains qualify as 'critical core' — money / access / SLA / workflow — vs run on graph + AI alone?) | `domain-user` | A-prose-suffices | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
+| `R-axis-gatekeeper-policy` | OPEN(when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes?) | `ai-agent` | A-prose-suffices | The admission policy for a new axis slug shall be machine-checked against duplicate detection by the AI gatekeeper. |
+| `R-content-layout-evolution` | OPEN(one file forever, or split per sub-domain with federation? thresholds for splitting?) | `framework-author` | A-bootstrap-self-applies, A-graph-fits-memory | As a domain grows, spec/content/graph.py shall either stay a single file or split into spec/content/<sub-domain>.py with an aggregator. |
+| `R-active-loop-playbooks` | DRAFT | `ai-agent` | A-stakeholders-care, A-prose-suffices | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
+| `R-decided-needs-human-signoff` | DRAFT | `framework-reviewer` | A-stakeholders-care | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
+| `R-glossary-sync-test` | DRAFT | `framework-author` | A-prose-suffices, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
+| `R-history-from-rejected-markers` | DRAFT | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
+| `R-smoke-test` | DRAFT | `framework-author` | A-python-stack | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
+| `R-lifecycle-abstraction` | DRAFT | `framework-author` | A-bootstrap-self-applies | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
+| `R-process-aspect-first` | DRAFT | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
+| `R-task-vs-action-distinct-altitudes` | DRAFT | `framework-author` | A-bootstrap-self-applies | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
+| `R-seed-in-src` | REJECTED | `framework-author` | — | The framework shall ship with a seed graph baked into spec/src/tensio/graph.py so the demo runs without setup. |
+| `R-rdf-store` | REJECTED | `framework-author` | — | The tension graph shall be persisted in an RDF triplestore with SHACL shapes and SPARQL traversal. |
+| `R-axes-as-module-constant` | REJECTED | `framework-author` | — | The controlled vocabulary of axes shall live as a module-level REGISTRY in tensio.axis. |
+
+## Stakeholders
+
+| id | name | domain |
+|---|---|---|
+| `framework-author` | Framework author | framework integrity, direction, philosophical premises |
+| `ai-agent` | AI agent | the three roles (Detector / Socratic / Historian) and the hard boundary |
+| `domain-user` | Domain user | a practitioner populating their business domain under spec/content/ |
+| `framework-reviewer` | Framework reviewer | independent stewardship of tensions between author and AI |
+
+## Assumptions
+
+| id | status | owner | statement |
+|---|---|---|---|
+| `A-python-stack` | HOLDS | `framework-author` | The framework runs on Python 3.12+ with uv + ruff + pytest + hypothesis. |
+| `A-stakeholders-care` | HOLDS | `framework-author` | At least two distinct human stakeholders exist who are willing to steward conflicts. |
+| `A-prose-suffices` | UNCERTAIN | `ai-agent` | For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core. |
+| `A-graph-fits-memory` | HOLDS | `framework-author` | The whole tension graph fits in one Python process; streaming/persistence is not required. |
+| `A-content-free-honest` | HOLDS | `framework-author` | An empty spec/content/ is a legitimate ship state — the framework's value is real even before any domain is populated. |
+| `A-bootstrap-self-applies` | UNCERTAIN | `framework-reviewer` | The framework can model its own design coherently — Tensio's own methodology fits its own ontology with no special-casing. |
 
 ---
 

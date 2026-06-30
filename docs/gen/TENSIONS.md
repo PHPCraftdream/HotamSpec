@@ -6,4 +6,146 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 
 ---
 
-_No domain content loaded — `spec/content/graph.py` is absent or empty. See CLAUDE.md §How to populate to drop in a domain. The methodology narrative below is the framework itself and is always present._
+## Clusters by axis
+
+### Axis `agent-autonomy-vs-human-control` — 1 conflict(s), single tension
+
+#### `C-186c4347` — agent-autonomy-vs-human-control
+
+- **context:** the agent develops requirements, integrates new ones, finds contradictions, proposes resolutions, formalizes back into code, runs tests
+- **members:** `R-agent-never-lost`, `R-ai-presents-not-decides`
+- **steward:** `framework-author`
+- **lifecycle:** DECIDED(structured proposal protocol — the AI emits ProposedRequirement / ProposedConflict / ProposedResolution as JSON; the human steward approves; tools/apply_proposal.py mechanically writes the change into spec/content/; see derived R-active-loop-playbooks)
+- **shared assumption:** `A-stakeholders-care`
+- **spawned (lineage):** `R-active-loop-playbooks`
+- **revisit marker:** REVISIT if domain-users report the playbook overhead negates the harness's directness (the loop becomes slower than free manual editing) — then re-calibrate band-by-band.
+
+### Axis `framework-purity-vs-helpfulness` — 1 conflict(s), single tension
+
+#### `C-c3911f28` — framework-purity-vs-helpfulness
+
+- **context:** the methodology's own design needs to be modeled to demonstrate the framework end-to-end
+- **members:** `R-content-free-framework`, `R-empty-content-is-legitimate`
+- **steward:** `framework-reviewer`
+- **lifecycle:** DECIDED(the meta-domain lives in spec/content/graph.py exactly as any user's domain would; the framework code stays empty of business data; the worked-example fixture stays under spec/tests/fixtures/. The framework's own design is content for the methodology's reference domain.)
+- **shared assumption:** `A-content-free-honest`
+- **revisit marker:** REVISIT if a fresh framework clone needs the meta-domain to self-bootstrap (cf. M8 content-layout evolution).
+
+### Axis `core-vs-aspect` — 1 conflict(s), single tension
+
+#### `C-8600b1b8` — core-vs-aspect
+
+- **context:** extending the framework to surface behavioral contradictions (dead states, two processes one entity)
+- **members:** `R-content-free-framework`, `R-agent-never-lost`
+- **steward:** `domain-user`
+- **lifecycle:** DETECTED
+- **shared assumption:** `A-prose-suffices`
+
+## Tension map (Mermaid)
+
+```mermaid
+graph TD
+    R_agent_never_lost["R-agent-never-lost"]
+    R_ai_presents_not_decides["R-ai-presents-not-decides"]
+    R_active_loop_playbooks["R-active-loop-playbooks"]
+    R_content_free_framework["R-content-free-framework"]
+    R_empty_content_is_legitimate["R-empty-content-is-legitimate"]
+    C_186c4347{"C-186c4347\nagent-autonomy-vs-human-control"}
+    R_agent_never_lost --> C_186c4347
+    R_ai_presents_not_decides --> C_186c4347
+    C_186c4347 -.spawns.-> R_active_loop_playbooks
+    C_c3911f28{"C-c3911f28\nframework-purity-vs-helpfulness"}
+    R_content_free_framework --> C_c3911f28
+    R_empty_content_is_legitimate --> C_c3911f28
+    C_8600b1b8{"C-8600b1b8\ncore-vs-aspect"}
+    R_content_free_framework --> C_8600b1b8
+    R_agent_never_lost --> C_8600b1b8
+```
+
+## Controlled vocabulary of axes (this domain)
+
+| axis slug | description |
+|---|---|
+| `agent-autonomy-vs-human-control` | How far the AI agent acts vs how strictly it presents/asks. Autonomy makes the loop fast; human control keeps invisibility from being AI-created. |
+| `framework-purity-vs-helpfulness` | Content-free shipping (zero business data in src/tensio) vs out-of-the-box utility for a fresh adopter. Purity is honest; helpfulness lowers adoption cost. |
+| `core-vs-aspect` | What stays in the minimal framework core vs what becomes an opt-in pluggable aspect. Core costs every domain; aspects cost only those who load them. |
+| `apparatus-weight-vs-coverage` | Heavy formal machinery (Z3 / Quint / mutation testing) catches more contradictions but slows the loop. Calibration rule: weight of apparatus ∝ cost of an unnoticed conflict. |
+| `formalization-vs-prose` | Machine-checkable predicate (deterministic, narrow) vs EARS / free-prose claim (broad, ambiguous). Most claims are prose; the critical core is formalized. |
+| `single-altitude-vs-multi-altitude` | Conflating the methodology's own concepts with the modeled domain's (Task-vs-Action; Conflict-as-methodology-node vs Conflict-as-business-event). Two altitudes must stay separable. |
+
+## Latent-connector suspicions (heuristic, for AI review)
+
+Requirement pairs that SHOULD perhaps have a connector node but do not. This is a heuristic stub for the deferred detector — a suspicion to judge, never an auto-materialized conflict.
+
+| left | right | hint |
+|---|---|---|
+| `R-active-loop-playbooks` | `R-agent-never-lost` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-playbooks` | `R-ai-presents-not-decides` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-playbooks` | `R-axis-controlled-vocab` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-critical-core-scope` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-decided-needs-human-signoff` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-playbooks` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-playbooks` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
+| `R-active-loop-playbooks` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-agent-never-lost` | `R-decided-needs-human-signoff` | shares assumption(s): A-stakeholders-care |
+| `R-agent-never-lost` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
+| `R-agent-never-lost` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
+| `R-agent-never-lost` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-ai-presents-not-decides` | `R-decided-needs-human-signoff` | shares assumption(s): A-stakeholders-care |
+| `R-ai-presents-not-decides` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
+| `R-ai-presents-not-decides` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
+| `R-ai-presents-not-decides` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-axis-controlled-vocab` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-critical-core-scope` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-axis-controlled-vocab` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-critical-core-scope` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-axis-gatekeeper-policy` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-conflict-is-connector-node` | `R-content-free-framework` | shares assumption(s): A-content-free-honest |
+| `R-conflict-is-connector-node` | `R-empty-content-is-legitimate` | shares assumption(s): A-content-free-honest |
+| `R-content-layout-evolution` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-critical-core-scope` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-scope` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-scope` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-critical-core-scope` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-decided-needs-human-signoff` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
+| `R-decided-needs-human-signoff` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
+| `R-decided-needs-human-signoff` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-deterministic-generation` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-glossary-sync-test` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-glossary-sync-test` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-test` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-test` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-test` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-test` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-test` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-history-from-rejected-markers` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-history-from-rejected-markers` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-lifecycle-abstraction` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-open-states-question` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-process-aspect-first` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-aspect-first` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-rejected-preserved-not-deleted` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
+| `R-rejected-preserved-not-deleted` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-smoke-test` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-steward-distinct-from-owners` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-task-vs-action-distinct-altitudes` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |

@@ -4,4 +4,21 @@
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-_No domain content loaded — `spec/content/graph.py` is absent or empty. See CLAUDE.md §How to populate to drop in a domain. The methodology narrative below is the framework itself and is always present._
+Open requirements: **4**. Unresolved conflicts: **1**.
+
+---
+
+## OPEN requirements
+
+| id | owner | question |
+|---|---|---|
+| `R-trust-anchor-mechanism` | `framework-author` | what signature mechanism (PGP/SSH/web of trust) and cadence (quarterly/per-PR/on-domain-change) anchor the loop? |
+| `R-critical-core-scope` | `domain-user` | which requirement domains qualify as 'critical core' — money / access / SLA / workflow — vs run on graph + AI alone? |
+| `R-axis-gatekeeper-policy` | `ai-agent` | when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes? |
+| `R-content-layout-evolution` | `framework-author` | one file forever, or split per sub-domain with federation? thresholds for splitting? |
+
+## Unresolved conflicts (no steward resolution yet)
+
+| id | axis | lifecycle | steward | members |
+|---|---|---|---|---|
+| `C-8600b1b8` | `core-vs-aspect` | DETECTED | `domain-user` | R-content-free-framework, R-agent-never-lost |
