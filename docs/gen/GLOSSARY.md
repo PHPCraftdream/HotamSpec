@@ -29,6 +29,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
 | `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
 | `§Closure` | Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed. |
+| `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |
 
 ## Lifecycle states
 | slug | definition |

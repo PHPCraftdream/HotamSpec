@@ -180,6 +180,7 @@ REQUIRED_SECTIONS = [
     "§Operator",
     "§ContextBudget",
     "§Proposal",
+    "§Tick",
 ]
 
 

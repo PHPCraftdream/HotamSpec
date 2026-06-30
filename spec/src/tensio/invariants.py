@@ -23,9 +23,11 @@ wants pass/fail.
 
 from __future__ import annotations
 
+import ast
 import re
 from collections import deque
 from dataclasses import dataclass
+from pathlib import Path
 
 from tensio.conflict import conflict_identity
 from tensio.graph import (
@@ -875,6 +877,79 @@ def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 12. Section-anchor coherence — every §-token in framework docstrings is known
+# ---------------------------------------------------------------------------
+
+_SECTION_TOKEN_RE = re.compile(r"§[A-Za-z][\w-]*")
+_TENSIO_SRC = Path(__file__).resolve().parent
+
+
+def check_section_anchors_known(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants / §Glossary — every section-anchor token in framework docstrings is known.
+
+    RULE: every section-anchor token (pattern: section-sign followed by an
+    identifier, e.g. the tokens used in 'Canon: §Requirement') found in any
+    spec/src/tensio/*.py docstring MUST appear in
+    `tensio.glossary.term_slugs()`. An unrecognised section-anchor token is
+    an invented term (R-speak-by-reference violation) that makes
+    R-anchor-everything structurally unsafe — the anchor does not resolve.
+
+    WHY a structural invariant (not only a test): test_glossary_sync.py
+    catches this at test-time, but the invariant surface makes it a P1
+    STRUCTURE violation in the what_now harness — the same drift that
+    breaks the glossary also raises the priority band, ensuring the steward
+    sees it as the top-ranked action.
+
+    Implementation mirrors test_glossary_sync.py::test_section_tokens_in_docstrings_are_known
+    but returns Violation records keyed on the bad token so the harness can
+    target them individually.
+
+    References: R-anchor-everything, R-speak-by-reference,
+    test_glossary_sync.py::test_section_tokens_in_docstrings_are_known.
+    """
+    from tensio.glossary import term_slugs  # noqa: PLC0415
+
+    known = term_slugs()
+    out: list[Violation] = []
+    for path in sorted(_TENSIO_SRC.glob("*.py")):
+        try:
+            source = path.read_text(encoding="utf-8")
+            tree = ast.parse(source)
+        except (OSError, SyntaxError):
+            continue
+        # Collect all docstrings in the module
+        docstrings: list[str] = []
+        mod_doc = ast.get_docstring(tree)
+        if mod_doc:
+            docstrings.append(mod_doc)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                doc = ast.get_docstring(node)
+                if doc:
+                    docstrings.append(doc)
+        for doc in docstrings:
+            for token in _SECTION_TOKEN_RE.findall(doc):
+                if token not in known:
+                    out.append(
+                        Violation(
+                            "check_section_anchors_known",
+                            token,
+                            f"§-token '{token}' appears in {path.name} docstring(s) "
+                            f"but is not in glossary.term_slugs() "
+                            f"(R-speak-by-reference: cite only admitted anchors)",
+                        )
+                    )
+    # Deduplicate: same token may appear in multiple docstrings; one violation per token.
+    seen: set[str] = set()
+    deduped: list[Violation] = []
+    for v in out:
+        if v.target not in seen:
+            seen.add(v.target)
+            deduped.append(v)
+    return deduped
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -895,6 +970,7 @@ ALL_INVARIANTS = (
     check_canonical_lifecycles_wellformed,
     check_operator_steward_not_self,
     check_operator_within_budget,
+    check_section_anchors_known,
 )
 
 
@@ -902,11 +978,13 @@ def all_violations(g: TensionGraph) -> list[Violation]:
     """Canon: §Invariants — run every structural invariant, concatenate violations.
 
     RULE: the graph is structurally well-formed iff this returns []. The harness
-    calls this first; a structural failure outranks every softer signal because a
-    malformed graph makes all downstream diagnosis unreliable.
+    (tools/what_now.py) and the Drive organ (§Tick) call this first; a structural
+    failure outranks every softer signal because a malformed graph makes all
+    downstream diagnosis unreliable.
 
     WHY one entry point: keeps tests, the gate and the harness reading the exact
-    same set of invariants in the exact same order (determinism).
+    same set of invariants in the exact same order (determinism). The §Tick driver
+    (P5) calls diagnose() which calls this; §Tick is advisory (M32 conservative).
     """
     out: list[Violation] = []
     for check in ALL_INVARIANTS:

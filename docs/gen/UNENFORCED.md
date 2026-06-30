@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 20 / SETTLED 26; DRAFT 14; OPEN 13; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 22 / SETTLED 28; DRAFT 12; OPEN 13; REJECTED 3.**
 
 ---
 
@@ -47,6 +47,8 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-operator-not-self-approve` | check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | `R-statemachine-wellformedness` | check_canonical_lifecycles_wellformed, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_dangling_transition, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_no_initial | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
 | `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
+| `R-anchor-everything` | check_typed_anchors, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
+| `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
 | `R-enforcement-gradient` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 
@@ -62,8 +64,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-context-bounded-delegation` | `framework-author` |
 | `R-dependency-graph-parallelism` | `framework-author` |
 | `R-operator-crystal-is-claude-md` | `ai-agent` |
-| `R-anchor-everything` | `framework-author` |
-| `R-speak-by-reference` | `ai-agent` |
 | `R-crystallize-before-split` | `ai-agent` |
 | `R-working-vs-substrate-budget` | `framework-author` |
 | `R-uncrystallizable-is-missing-type` | `framework-reviewer` |

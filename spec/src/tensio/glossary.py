@@ -197,6 +197,12 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed.",
     ),
+    # §Tick section (P5 — Drive/tick: the closed-loop diagnostic driver)
+    Term(
+        "§Tick",
+        "SECTION",
+        "The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention.",
+    ),
 )
 
 

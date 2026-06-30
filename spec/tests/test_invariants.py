@@ -520,3 +520,23 @@ def test_decided_with_distinct_decider_passes() -> None:
     assert holds(check_decided_has_decided_by(_graph_with(bad))), (
         "check_decided_has_decided_by must pass when decided_by is a non-member-owner"
     )
+
+
+# ---------------------------------------------------------------------------
+# 8. check_section_anchors_known — §-token coherence (P5)
+# ---------------------------------------------------------------------------
+
+from tensio.invariants import check_section_anchors_known  # noqa: E402
+
+
+def test_section_anchors_known_passes_on_real_graph() -> None:
+    """check_section_anchors_known passes on the real meta-domain (all §-tokens admitted)."""
+    from tensio.graph import load_content_graph  # noqa: PLC0415
+
+    g = load_content_graph()
+    v = check_section_anchors_known(g)
+    assert holds(v), (
+        f"check_section_anchors_known fires on the real meta-domain: {v}\n"
+        "Fix: add the unknown §-token to tensio/glossary.py TERMS or "
+        "correct the docstring typo."
+    )
