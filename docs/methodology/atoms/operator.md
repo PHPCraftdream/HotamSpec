@@ -54,6 +54,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `check_operator_steward_not_self`, `test_operator.py::test_check_operator_steward_not_self_fires`
 
+## `R-operator-prompt-from-substrate` (ENFORCED)
+
+**Claim.** The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py.
+
+**Why.** Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from code. The atomized SETTLEDs are now the actual constitution; gen_spec emits them into CLAUDE.md between CONSTITUTION sentinels.
+
+**Enforced by:** `test_constitution_block_generated`
+
 ## `R-operator-references-stakeholder` (ENFORCED)
 
 **Claim.** An Operator.stakeholder shall reference an existing Stakeholder.id.

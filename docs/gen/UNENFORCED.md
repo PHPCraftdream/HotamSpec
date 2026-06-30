@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 51 / SETTLED 82; DRAFT 25; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 52 / SETTLED 83; DRAFT 24; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -84,6 +84,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-conflict-min-two-members` | check_conflict_min_two_members | Every Conflict node shall contain at least two distinct Requirement ids in its members tuple. |
 | `R-decided-conflict-justifies-itself` | check_decided_has_rationale_or_derived | Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement. |
 | `R-m-tag-format-valid` | check_m_tag_format | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
+| `R-operator-prompt-from-substrate` | test_constitution_block_generated | The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py. |
 | `R-empty-content-wellformed` | test_invariants.py::test_empty_graph_is_wellformed | A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed. |
 | `R-empty-content-calm-banner` | test_what_now.py::test_main_empty_content_prints_calm_banner | When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error. |
 | `R-empty-content-gen-notice` | test_docs_gen.py::test_empty_graph_renders_no_content_notice | When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
@@ -116,7 +117,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-claude-md-budget-phi-cap` | `framework-author` |
 | `R-claude-md-tree-of-crystals` | `framework-author` |
 | `R-subagent-gets-its-claude-md` | `ai-agent` |
-| `R-operator-prompt-from-substrate` | `ai-agent` |
 | `R-constituting-requirements-converge` | `framework-reviewer` |
 | `R-requirement-claim-is-atomic` | `framework-reviewer` |
 | `R-check-method-is-atomic` | `framework-reviewer` |
