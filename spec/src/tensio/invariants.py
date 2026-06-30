@@ -34,6 +34,7 @@ suite but are not the primary conscience boundary.
 from __future__ import annotations
 
 import ast
+import inspect
 import re
 from collections import deque
 from dataclasses import dataclass
@@ -254,7 +255,9 @@ def check_no_dangling_conflict_refs(g: TensionGraph) -> list[Violation]:
             if mid not in rids:
                 out.append(_dangle(c.id, "member", mid, "Requirement"))
         if c.shared_assumption is not None and c.shared_assumption not in aids:
-            out.append(_dangle(c.id, "shared_assumption", c.shared_assumption, "Assumption"))
+            out.append(
+                _dangle(c.id, "shared_assumption", c.shared_assumption, "Assumption")
+            )
         for did in c.derived:
             if did not in rids:
                 out.append(_dangle(c.id, "derived", did, "Requirement"))
@@ -2013,6 +2016,195 @@ def check_agent_has_docs_subdir(g: TensionGraph) -> list[Violation]:  # noqa: AR
 
 
 # ---------------------------------------------------------------------------
+# 16. Meta-invariant — each check_*'s docstring RULE matches its body's Violations
+# ---------------------------------------------------------------------------
+
+_STOPWORDS = frozenset(
+    {
+        "a",
+        "an",
+        "the",
+        "is",
+        "must",
+        "shall",
+        "of",
+        "in",
+        "to",
+        "for",
+        "with",
+        "that",
+        "this",
+        "be",
+        "not",
+        "has",
+        "have",
+        "or",
+        "and",
+        "if",
+        "its",
+        "it",
+        "by",
+        "from",
+        "on",
+        "are",
+        "each",
+        "any",
+        "no",
+        "all",
+    }
+)
+
+_CANON_RULE_RE = re.compile(r"Canon:\s*§[A-Za-z][\w-]*\s*[/\w\s-]*—\s*(.+)")
+_RULE_LINE_RE = re.compile(r"RULE(?:\s*\([^)]*\))?:\s*(.+)")
+
+
+def _tokenize(text: str) -> set[str]:
+    """Return lowercase alphanumeric/underscore tokens with stopwords removed."""
+    tokens = re.findall(r"[a-zA-Z_]\w*", text.lower())
+    return {t for t in tokens if t not in _STOPWORDS}
+
+
+def _extract_rule_from_docstring(doc: str) -> str | None:
+    """Return the rule text from a docstring, or None if not found.
+
+    Tries 'Canon: <section-anchor> — <rule>' on the first line first;
+    falls back to any line containing RULE: <text>.
+    """
+    lines = doc.splitlines()
+    # Try first line Canon pattern
+    if lines:
+        m = _CANON_RULE_RE.search(lines[0])
+        if m:
+            return m.group(1).strip()
+    # Fall back: find any RULE: line
+    for line in lines:
+        m = _RULE_LINE_RE.search(line)
+        if m:
+            return m.group(1).strip()
+    return None
+
+
+def _extract_violation_messages_from_source(fn: object) -> list[str]:
+    """Extract all string literals passed as the message (3rd positional or message=) to Violation(...).
+
+    Uses ast on the function source; returns empty list if source is unavailable or unparseable.
+    """
+    try:
+        source = inspect.getsource(fn)  # type: ignore[arg-type]
+        tree = ast.parse(source)
+    except (OSError, TypeError, SyntaxError):
+        return []
+
+    messages: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        # Match Violation(...) constructor calls
+        func = node.func
+        is_violation = (isinstance(func, ast.Name) and func.id == "Violation") or (
+            isinstance(func, ast.Attribute) and func.attr == "Violation"
+        )
+        if not is_violation:
+            continue
+        # 3rd positional arg (index 2) is the message
+        if len(node.args) >= 3:
+            arg = node.args[2]
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                messages.append(arg.value)
+            elif isinstance(arg, ast.JoinedStr):
+                # f-string — extract literal parts
+                parts = [
+                    v.value
+                    for v in arg.values
+                    if isinstance(v, ast.Constant) and isinstance(v.value, str)
+                ]
+                messages.append(" ".join(parts))
+        # keyword message=
+        for kw in node.keywords:
+            if kw.arg == "message":
+                if isinstance(kw.value, ast.Constant) and isinstance(
+                    kw.value.value, str
+                ):
+                    messages.append(kw.value.value)
+                elif isinstance(kw.value, ast.JoinedStr):
+                    parts = [
+                        v.value
+                        for v in kw.value.values
+                        if isinstance(v, ast.Constant) and isinstance(v.value, str)
+                    ]
+                    messages.append(" ".join(parts))
+    return messages
+
+
+_JACCARD_THRESHOLD = 0.05
+
+
+def check_method_matches_docstring(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Invariants — each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages.
+
+    RULE: for every function in ALL_INVARIANTS, the RULE line extracted from its
+    docstring MUST share at least 5% Jaccard token overlap with the concatenated
+    text of all Violation messages in the function body. A mismatch means the
+    docstring describes a different rule from what the code enforces (silent drift).
+
+    WHY: docstring-body drift is the silent failure mode where a check_* says one
+    thing and does another. This meta-invariant catches gross mismatches
+    automatically — the same 'visible-not-invisible' principle applied to the
+    framework's own machinery.
+
+    The Jaccard threshold (0.05) is heuristic and chosen to catch obvious mismatches
+    without over-flagging terse-but-correct docstrings that use different but
+    semantically related vocabulary (R-method-matches-docstring).
+    """
+    out: list[Violation] = []
+    for fn in ALL_INVARIANTS:
+        name = fn.__name__
+        doc = inspect.getdoc(fn)
+        if not doc:
+            out.append(
+                Violation(
+                    "check_method_matches_docstring",
+                    name,
+                    f"check_* '{name}' has no docstring — add a docstring with a RULE line",
+                )
+            )
+            continue
+        rule_text = _extract_rule_from_docstring(doc)
+        if rule_text is None:
+            out.append(
+                Violation(
+                    "check_method_matches_docstring",
+                    name,
+                    f"check_* '{name}' has no RULE line in docstring "
+                    f"(expected 'RULE: ...' or first line matching Canon pattern)",
+                )
+            )
+            continue
+        messages = _extract_violation_messages_from_source(fn)
+        if not messages:
+            # No Violation calls found (e.g. thin delegator that calls sub-checks) — skip overlap check
+            continue
+        rule_tokens = _tokenize(rule_text)
+        body_tokens = _tokenize(" ".join(messages))
+        if not rule_tokens or not body_tokens:
+            continue
+        intersection = rule_tokens & body_tokens
+        union = rule_tokens | body_tokens
+        jaccard = len(intersection) / len(union)
+        if jaccard < _JACCARD_THRESHOLD:
+            out.append(
+                Violation(
+                    "check_method_matches_docstring",
+                    name,
+                    f"check_* '{name}': docstring RULE and body violation messages share "
+                    f"{jaccard:.0%} token overlap (threshold 5%) — "
+                    f"verify they describe the same rule",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -2080,6 +2272,8 @@ ALL_INVARIANTS = (
     check_domain_director_exists,
     check_agent_has_agents_subdir,
     check_agent_has_docs_subdir,
+    # §Meta-invariant — docstring/body coherence
+    check_method_matches_docstring,
 )
 
 # --- M7: the critical core ---

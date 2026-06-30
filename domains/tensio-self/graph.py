@@ -3071,6 +3071,26 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=STRUCTURAL,
         ),
+        Requirement(
+            id="R-method-matches-docstring",
+            claim=("Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The audit principle 'docstring is the description, body is the verification' is verifiable structurally: if the RULE says one thing and the violation messages say another, drift is happening. The Jaccard threshold is heuristic but catches gross mismatch; refinement comes from running it."),
+            assumptions=("A-python-stack",),
+            enforcement="ENFORCED",
+            enforced_by=("check_method_matches_docstring",),
+        ),
+        Requirement(
+            id="R-root-claude-md-is-sentinel-only",
+            claim=("The root CLAUDE.md shall contain ONLY a minimal framework-identity header plus sentinel-bounded generated blocks; no large hand-written prose sections between sentinels."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen_spec from spec/docs/thinking/* (shared DRY source) and the domain CLAUDE.md (per-domain knowledge). The root is a thin shell pointing into both. RESOLVED — REPLACES the old hand-written prose in root CLAUDE.md (P19a)."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("test_root_claude_md_is_sentinel_only",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

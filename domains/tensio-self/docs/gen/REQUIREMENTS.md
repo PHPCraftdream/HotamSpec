@@ -173,6 +173,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-agent-has-docs-dir` | SETTLED | `framework-author` | A-python-stack | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
 | `R-domain-has-docs-dir` | SETTLED | `framework-author` | A-python-stack | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
 | `R-no-hand-edit-graph` | SETTLED | `framework-author` | A-python-stack | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py; direct hand-edits are prohibited outside of bootstrap events. |
+| `R-method-matches-docstring` | SETTLED | `framework-author` | A-python-stack | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
+| `R-root-claude-md-is-sentinel-only` | SETTLED | `framework-author` | A-python-stack | The root CLAUDE.md shall contain ONLY a minimal framework-identity header plus sentinel-bounded generated blocks; no large hand-written prose sections between sentinels. |
 
 ## Stakeholders
 

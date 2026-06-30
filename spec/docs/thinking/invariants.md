@@ -268,6 +268,24 @@ WHY structural: the bijection between claim and check is what makes
 ENFORCED mean something beyond a label. An unresolvable enforcer name
 hides compoundness; an orphan check hides unclaimed guarantees.
 
+## From `spec/src/tensio/invariants.py::check_method_matches_docstring`
+
+Canon: §Invariants — each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages.
+
+RULE: for every function in ALL_INVARIANTS, the RULE line extracted from its
+docstring MUST share at least 5% Jaccard token overlap with the concatenated
+text of all Violation messages in the function body. A mismatch means the
+docstring describes a different rule from what the code enforces (silent drift).
+
+WHY: docstring-body drift is the silent failure mode where a check_* says one
+thing and does another. This meta-invariant catches gross mismatches
+automatically — the same 'visible-not-invisible' principle applied to the
+framework's own machinery.
+
+The Jaccard threshold (0.05) is heuristic and chosen to catch obvious mismatches
+without over-flagging terse-but-correct docstrings that use different but
+semantically related vocabulary (R-method-matches-docstring).
+
 ## From `spec/src/tensio/invariants.py::all_violations`
 
 Canon: §Invariants — run every structural invariant, concatenate violations.

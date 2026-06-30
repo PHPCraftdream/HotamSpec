@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 65 / SETTLED 111; DRAFT 21; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 67 / SETTLED 113; DRAFT 21; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -134,6 +134,8 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-domain-map-generated` | test_framework_claude_md_has_domain_map | The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count. |
 | `R-agent-is-recursive-director` | check_agent_has_agents_subdir | Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder. |
 | `R-agent-has-docs-dir` | check_agent_has_docs_subdir | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
+| `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
+| `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only | The root CLAUDE.md shall contain ONLY a minimal framework-identity header plus sentinel-bounded generated blocks; no large hand-written prose sections between sentinels. |
 
 ## DRAFT (not yet promoted)
 

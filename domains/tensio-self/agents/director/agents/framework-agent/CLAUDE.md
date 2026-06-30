@@ -84,6 +84,7 @@ are included.
 - [§Reflection](../../../../../../spec/docs/thinking/reflection.md)
 - [§Requirement](../../../../../../spec/docs/thinking/requirement.md)
 - [§Stakeholder](../../../../../../spec/docs/thinking/stakeholder.md)
+- [§Topic](../../../../../../spec/docs/thinking/topic.md)
 
 **Tools** — in your scope
 
