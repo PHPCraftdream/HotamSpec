@@ -203,6 +203,17 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention.",
     ),
+    # §Conscience section (P6 — Hypothesis property-tests over the critical core)
+    Term(
+        "§Conscience",
+        "SECTION",
+        "The Hypothesis property-test sweep over the critical-core invariants (M7) — does my OWN edit introduce a contradiction?",
+    ),
+    Term(
+        "critical core",
+        "CONCEPT",
+        "The set of invariants whose violation would silently break the hard boundary or anti-drift — the conscience's narrow scope (M7).",
+    ),
 )
 
 

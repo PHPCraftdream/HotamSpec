@@ -181,6 +181,7 @@ REQUIRED_SECTIONS = [
     "§ContextBudget",
     "§Proposal",
     "§Tick",
+    "§Conscience",
 ]
 
 

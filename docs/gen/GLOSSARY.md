@@ -30,6 +30,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
 | `§Closure` | Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed. |
 | `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |
+| `§Conscience` | The Hypothesis property-test sweep over the critical-core invariants (M7) — does my OWN edit introduce a contradiction? |
 
 ## Lifecycle states
 | slug | definition |
@@ -71,3 +72,4 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `burn-down` | Promotion of DRAFT requirements to ENFORCED; the methodology's honesty governor. |
 | `playbook` | A band-specific procedure the AI operator follows to convert a what_now action into a structured proposal for steward approval. |
 | `apply_proposal` | The mechanical writer that lands a steward-approved proposal into spec/content/; the AI never edits the graph by hand. |
+| `critical core` | The set of invariants whose violation would silently break the hard boundary or anti-drift — the conscience's narrow scope (M7). |

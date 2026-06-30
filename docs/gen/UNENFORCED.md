@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 22 / SETTLED 28; DRAFT 12; OPEN 13; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 23 / SETTLED 31; DRAFT 10; OPEN 12; REJECTED 3.**
 
 ---
 
@@ -24,6 +24,8 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
 | `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate); crystallized knowledge does not count against context — it is the offload instrument (like human automaticity/subconscious). |
+| `R-uncrystallizable-is-missing-type` | STRUCTURAL | `framework-reviewer` | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
+| `R-stale-substrate` | STRUCTURAL | `framework-author` | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -37,6 +39,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-open-states-question` | check_open_has_question | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-axis-controlled-vocab` | check_axis_in_registry | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
+| `R-critical-core-scope` | test_conscience.py, CRITICAL_CORE_INVARIANTS | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-active-loop-playbooks` | test_apply_proposal.py, test_proposal.py, docs/playbooks/P4-OPEN-ITEM.md | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
 | `R-decided-needs-human-signoff` | check_decided_has_decided_by | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
 | `R-glossary-sync-test` | test_glossary_sync.py, test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
@@ -66,5 +69,3 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-operator-crystal-is-claude-md` | `ai-agent` |
 | `R-crystallize-before-split` | `ai-agent` |
 | `R-working-vs-substrate-budget` | `framework-author` |
-| `R-uncrystallizable-is-missing-type` | `framework-reviewer` |
-| `R-stale-substrate` | `framework-author` |

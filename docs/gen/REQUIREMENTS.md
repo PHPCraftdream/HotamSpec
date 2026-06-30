@@ -24,7 +24,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-stable-conflict-identity` | SETTLED | `framework-author` | A-python-stack | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
 | `R-two-altitude-ontology` | SETTLED | `framework-author` | A-bootstrap-self-applies | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
 | `R-trust-anchor-mechanism` | OPEN(what signature mechanism (PGP/SSH/web of trust) and cadence (quarterly/per-PR/on-domain-change) anchor the loop?) | `framework-author` | A-stakeholders-care, A-bootstrap-self-applies | The methodology shall be externally anchored by a periodic stakeholder cryptographic signature on the tension map per domain — to ground the internal loop in a living human. |
-| `R-critical-core-scope` | OPEN(which requirement domains qualify as 'critical core' — money / access / SLA / workflow — vs run on graph + AI alone?) | `domain-user` | A-prose-suffices | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
+| `R-critical-core-scope` | SETTLED | `domain-user` | A-prose-suffices | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-axis-gatekeeper-policy` | OPEN(when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes?) | `ai-agent` | A-prose-suffices | The admission policy for a new axis slug shall be machine-checked against duplicate detection by the AI gatekeeper. |
 | `R-content-layout-evolution` | OPEN(one file forever, or split per sub-domain with federation? thresholds for splitting?) | `framework-author` | A-bootstrap-self-applies, A-graph-fits-memory | As a domain grows, spec/content/graph.py shall either stay a single file or split into spec/content/<sub-domain>.py with an aggregator. |
 | `R-active-loop-playbooks` | SETTLED | `ai-agent` | A-stakeholders-care, A-prose-suffices | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
@@ -52,8 +52,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-working-vs-substrate-budget` | DRAFT | `framework-author` | A-finite-context-operators | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
 | `R-enforcement-gradient` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
-| `R-uncrystallizable-is-missing-type` | DRAFT | `framework-reviewer` | A-most-knowledge-crystallizable | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
-| `R-stale-substrate` | DRAFT | `framework-author` | A-compaction-loses-working | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
+| `R-uncrystallizable-is-missing-type` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
+| `R-stale-substrate` | SETTLED | `framework-author` | A-compaction-loses-working | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 | `R-budget-measure` | OPEN(how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set?) | `framework-author` | A-finite-context-operators | The context budget shall be measured by a single declared metric so size(domain) <= budget.limit is computable. |
 | `R-partition-vs-border` | OPEN(do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders?) | `framework-author` | A-finite-context-operators | Operator sub-domains shall relate to the parent graph by a single declared discipline (strict partition or declared-border overlap). |
 | `R-goal-type-vs-facet` | OPEN(is Goal its own first-class type, or a facet/status of Requirement?) | `domain-user` | A-bootstrap-self-applies | Goal shall be modeled either as its own first-class type or as a facet/status of Requirement — one choice, declared. |
@@ -478,3 +478,13 @@ goal is a single pass/fail gate. Here the SAME functions feed the "what now"
 diagnosis, which needs the offending id and a human imperative — so the richer
 return type is load-bearing, and `holds()` recovers the boolean when a test just
 wants pass/fail.
+
+M7 resolved here (operator proposes, the goal hook ratifies via continuation):
+The methodology's critical core is the six invariants in CRITICAL_CORE_INVARIANTS.
+These six guard every path by which a contradiction could be INTRODUCED without
+being seen — the hard boundary, the anti-drift discipline, the decision-moment
+lock, the typed-anchor discipline, referential integrity, and visible openness.
+All other invariants are structurally sound but occupy a SECONDARY ring: same
+machinery, lower priority signal. The §Conscience Hypothesis sweep (test_conscience.py)
+covers the critical core with property-tests; secondary invariants pass the same
+suite but are not the primary conscience boundary.

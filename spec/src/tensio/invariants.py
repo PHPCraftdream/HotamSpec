@@ -19,6 +19,16 @@ goal is a single pass/fail gate. Here the SAME functions feed the "what now"
 diagnosis, which needs the offending id and a human imperative — so the richer
 return type is load-bearing, and `holds()` recovers the boolean when a test just
 wants pass/fail.
+
+M7 resolved here (operator proposes, the goal hook ratifies via continuation):
+The methodology's critical core is the six invariants in CRITICAL_CORE_INVARIANTS.
+These six guard every path by which a contradiction could be INTRODUCED without
+being seen — the hard boundary, the anti-drift discipline, the decision-moment
+lock, the typed-anchor discipline, referential integrity, and visible openness.
+All other invariants are structurally sound but occupy a SECONDARY ring: same
+machinery, lower priority signal. The §Conscience Hypothesis sweep (test_conscience.py)
+covers the critical core with property-tests; secondary invariants pass the same
+suite but are not the primary conscience boundary.
 """
 
 from __future__ import annotations
@@ -973,6 +983,25 @@ ALL_INVARIANTS = (
     check_section_anchors_known,
 )
 
+# --- M7: the critical core ---
+# These six invariants guard paths by which contradictions could be INTRODUCED
+# without being seen. They get the Hypothesis property-sweep treatment
+# (test_conscience.py). Other invariants are still in ALL_INVARIANTS and tested
+# normally; this constant marks the boundary.
+#
+# Canon: §Conscience — the critical core is the methodology's own hard boundary
+# made narrow and machine-checkable (M7 resolved). Secondary-ring invariants
+# (e.g. check_axis_in_registry, check_conflict_id_matches_identity) are still in
+# ALL_INVARIANTS and receive the same Hypothesis machinery but at lower priority.
+CRITICAL_CORE_INVARIANTS = (
+    check_steward_not_a_member_owner,
+    check_operator_steward_not_self,
+    check_decided_has_decided_by,
+    check_typed_anchors,
+    check_no_dangling_ids,
+    check_open_has_question,
+)
+
 
 def all_violations(g: TensionGraph) -> list[Violation]:
     """Canon: §Invariants — run every structural invariant, concatenate violations.
@@ -985,6 +1014,11 @@ def all_violations(g: TensionGraph) -> list[Violation]:
     WHY one entry point: keeps tests, the gate and the harness reading the exact
     same set of invariants in the exact same order (determinism). The §Tick driver
     (P5) calls diagnose() which calls this; §Tick is advisory (M32 conservative).
+
+    Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of six
+    invariants whose violation would silently break the hard boundary or anti-drift.
+    The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over
+    this boundary; all_violations runs the full set (both rings).
     """
     out: list[Violation] = []
     for check in ALL_INVARIANTS:

@@ -22,7 +22,6 @@ methodology-altitude decisions.
 |---|---|---|---|
 | M3 | `R-axis-gatekeeper-policy` | `ai-agent` | when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes? |
 | M5 | `R-trust-anchor-mechanism` | `framework-author` | what signature mechanism (PGP/SSH/web of trust) and cadence (quarterly/per-PR/on-domain-change) anchor the loop? |
-| M7 | `R-critical-core-scope` | `domain-user` | which requirement domains qualify as 'critical core' — money / access / SLA / workflow — vs run on graph + AI alone? |
 | M8 | `R-content-layout-evolution` | `framework-author` | one file forever, or split per sub-domain with federation? thresholds for splitting? |
 | M17 | `R-budget-measure` | `framework-author` | how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set? |
 | M18 | `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
