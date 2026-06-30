@@ -1,0 +1,100 @@
+"""Tests for spec/tools/create_agent.py — sub-agent directory scaffolder.
+
+Uses tmp_path to isolate all file creation from the real spec/agents/ directory.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+
+_TOOLS = Path(__file__).resolve().parents[1] / "tools"
+if str(_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_TOOLS))
+
+import create_agent  # noqa: E402
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _scaffold(
+    tmp_path: Path, name: str, scope: str = "", purpose: str = "Test agent."
+) -> int:
+    """Invoke scaffold() with tmp_path as agents_root."""
+    scope_prefixes = [p.strip() for p in scope.split(",") if p.strip()]
+    return create_agent.scaffold(
+        name=name,
+        scope_prefixes=scope_prefixes,
+        purpose=purpose,
+        agents_root=tmp_path,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+
+def test_creates_required_files(tmp_path: Path) -> None:
+    """All four expected paths exist after a successful scaffold."""
+    rc = _scaffold(tmp_path, "my-agent", purpose="Does something useful.")
+    assert rc == 0
+
+    agent_dir = tmp_path / "my-agent"
+    assert (agent_dir / "CLAUDE.md").is_file()
+    assert (agent_dir / "scope.py").is_file()
+    assert (agent_dir / "tools" / "__init__.py").is_file()
+    assert (agent_dir / "README.md").is_file()
+
+    # Content fragments
+    claude_text = (agent_dir / "CLAUDE.md").read_text(encoding="utf-8")
+    assert "my-agent" in claude_text
+    assert "Does something useful." in claude_text
+
+    readme_text = (agent_dir / "README.md").read_text(encoding="utf-8")
+    assert "my-agent" in readme_text
+    assert "Does something useful." in readme_text
+
+    scope_text = (agent_dir / "scope.py").read_text(encoding="utf-8")
+    assert "SCOPE" in scope_text
+
+
+def test_refuses_existing(tmp_path: Path) -> None:
+    """Returns exit code 1 if the agent directory already exists."""
+    (tmp_path / "existing-agent").mkdir()
+    rc = _scaffold(tmp_path, "existing-agent")
+    assert rc == 1
+
+
+def test_refuses_invalid_name(tmp_path: Path) -> None:
+    """Returns exit code 1 for names that fail validation."""
+    invalid_names = ["Foo", "with space", "with/slash", "123start", ""]
+    for bad in invalid_names:
+        rc = _scaffold(tmp_path, bad)
+        assert rc == 1, f"Expected rc=1 for name={bad!r}, got {rc}"
+
+
+def test_scope_py_contains_passed_prefixes(tmp_path: Path) -> None:
+    """scope.py contains every prefix passed via --scope as a tuple entry."""
+    rc = _scaffold(tmp_path, "scoped-agent", scope="R-check-,R-bijection-")
+    assert rc == 0
+
+    scope_text = (tmp_path / "scoped-agent" / "scope.py").read_text(encoding="utf-8")
+    assert '"R-check-"' in scope_text
+    assert '"R-bijection-"' in scope_text
+
+
+def test_claude_md_has_constitution_sentinels(tmp_path: Path) -> None:
+    """CLAUDE.md placeholder contains both CONSTITUTION sentinels."""
+    rc = _scaffold(tmp_path, "sentinel-agent")
+    assert rc == 0
+
+    claude_text = (tmp_path / "sentinel-agent" / "CLAUDE.md").read_text(
+        encoding="utf-8"
+    )
+    assert "<!-- CONSTITUTION:BEGIN -->" in claude_text
+    assert "<!-- CONSTITUTION:END -->" in claude_text
