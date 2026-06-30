@@ -161,6 +161,16 @@ def test_director_agent_created(tmp_path: Path) -> None:
     assert (director / "agents").is_dir(), "director must have recursive agents/ subdir"
 
 
+def test_creates_docs_dir(tmp_path: Path) -> None:
+    """scaffold() creates a docs/ directory wrapping docs/gen/ (R-domain-has-docs-dir)."""
+    rc = _scaffold(tmp_path, name="docs-domain")
+    assert rc == 0
+
+    d = tmp_path / "docs-domain"
+    assert (d / "docs").is_dir(), "docs/ directory must exist (R-domain-has-docs-dir)"
+    assert (d / "docs" / "gen").is_dir(), "docs/gen/ must exist inside docs/"
+
+
 def test_director_scope_is_empty_tuple(tmp_path: Path) -> None:
     """Director agent's SCOPE is () — meaning whole domain in scope."""
     rc = _scaffold(tmp_path, name="scope-domain")

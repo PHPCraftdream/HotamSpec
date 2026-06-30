@@ -14,6 +14,12 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `test_every_agent_declares_purpose`
 
+## `R-agent-has-docs-dir` (STRUCTURAL)
+
+**Claim.** Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content.
+
+**Why.** Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs.
+
 ## `R-agent-has-own-crystal` (PROSE)
 
 **Claim.** Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal.
@@ -51,6 +57,12 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Claim.** The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.
 
 **Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
+
+## `R-agent-references-shared-docs` (STRUCTURAL)
+
+**Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY).
+
+**Why.** Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility.
 
 ## `R-agent-scoped-constitution` (ENFORCED)
 

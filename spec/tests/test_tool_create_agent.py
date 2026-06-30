@@ -138,6 +138,19 @@ def test_creates_agents_subdir(tmp_path: Path) -> None:
     assert (agents_subdir / "__init__.py").is_file(), "agents/__init__.py must exist"
 
 
+def test_creates_docs_dir(tmp_path: Path) -> None:
+    """scaffold() creates a docs/ subdirectory with .gitkeep (R-agent-has-docs-dir)."""
+    rc = _scaffold(tmp_path, "docs-agent", purpose="Has a docs dir.")
+    assert rc == 0
+
+    agent_dir = tmp_path / "docs-agent"
+    docs_dir = agent_dir / "docs"
+    assert docs_dir.is_dir(), "docs/ subdir must exist (R-agent-has-docs-dir)"
+    assert (docs_dir / ".gitkeep").is_file(), (
+        "docs/.gitkeep must exist so git tracks the dir"
+    )
+
+
 def test_parent_flag_creates_nested_agent(tmp_path: Path) -> None:
     """--parent flag places the new agent under the given parent directory."""
     # Simulate a parent agent directory already having an agents/ subdir

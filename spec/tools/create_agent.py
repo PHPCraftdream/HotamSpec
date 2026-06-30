@@ -163,6 +163,11 @@ def scaffold(
     agents_subdir.mkdir()
     (agents_subdir / "__init__.py").write_text("", encoding="utf-8")
 
+    # docs/ — private notes/checkpoints for this agent (R-agent-has-docs-dir)
+    docs_dir = agent_dir / "docs"
+    docs_dir.mkdir()
+    (docs_dir / ".gitkeep").write_text("", encoding="utf-8")
+
     # README.md
     readme = _README_TEMPLATE.format(name=name, purpose=purpose)
     (agent_dir / "README.md").write_text(readme, encoding="utf-8")

@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 56 / SETTLED 102; DRAFT 21; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 56 / SETTLED 108; DRAFT 21; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -64,6 +64,12 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-domain-map-generated` | STRUCTURAL | `framework-author` | The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count. |
 | `R-director-agent-required-per-domain` | STRUCTURAL | `framework-author` | Every domain must contain a `director` agent at `domains/<name>/agents/director/` as the entry point operator. |
 | `R-agent-is-recursive-director` | STRUCTURAL | `framework-author` | Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder. |
+| `R-framework-shared-docs-generated` | STRUCTURAL | `framework-author` | The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings plus argparse --help output. |
+| `R-shared-tool-doc-from-docstring-and-help` | STRUCTURAL | `framework-author` | Each spec/docs/tools/<basename>.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between sentinels. |
+| `R-shared-thinking-doc-from-canon-sections` | STRUCTURAL | `framework-author` | Each spec/docs/thinking/<topic-slug>.md shall aggregate all framework docstrings carrying Canon: §<Topic> markers; the file is the union of those sources, not hand-written. |
+| `R-agent-references-shared-docs` | STRUCTURAL | `framework-author` | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY). |
+| `R-agent-has-docs-dir` | STRUCTURAL | `framework-author` | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
+| `R-domain-has-docs-dir` | STRUCTURAL | `framework-author` | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
