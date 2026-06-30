@@ -12,6 +12,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
 
+## `R-agent-scoped-constitution` (ENFORCED)
+
+**Claim.** For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
+
+**Why.** Each sub-operator needs an operator-prompt scoped to its domain — the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally.
+
+**Enforced by:** `test_agent_scoped_constitution`
+
 ## `R-boot-cite-in-first-sentence` (PROSE)
 
 **Claim.** The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply.

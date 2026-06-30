@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 52 / SETTLED 84; DRAFT 24; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 53 / SETTLED 85; DRAFT 24; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -107,6 +107,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-enforced-names-enforcer` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
 | `R-critical-core-methodology` | test_conscience.py | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
 | `R-bijection-r-to-enforcer` | check_bijection_r_to_enforcer | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
+| `R-agent-scoped-constitution` | test_agent_scoped_constitution | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
 
 ## DRAFT (not yet promoted)
 

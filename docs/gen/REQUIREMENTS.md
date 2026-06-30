@@ -149,6 +149,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-critical-core-per-domain` | SETTLED | `domain-user` | A-prose-suffices | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-bijection-r-to-enforcer` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 | `R-tool-is-its-own-requirement` | SETTLED | `framework-author` | A-python-stack | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
+| `R-agent-scoped-constitution` | SETTLED | `framework-author` | A-python-stack | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
 
 ## Stakeholders
 
