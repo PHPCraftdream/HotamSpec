@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 23 / SETTLED 37; DRAFT 4; OPEN 12; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 25 / SETTLED 40; DRAFT 1; OPEN 12; REJECTED 3.**
 
 ---
 
@@ -23,6 +23,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
+| `R-task-vs-action-distinct-altitudes` | STRUCTURAL | `framework-author` | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
 | `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
 | `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
 | `R-dependency-graph-parallelism` | STRUCTURAL | `framework-author` | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
@@ -51,10 +52,12 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-glossary-sync-test` | test_glossary_sync.py, test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
 | `R-history-from-rejected-markers` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-lifecycle-abstraction` | check_status_in_lifecycle, test_lifecycle.py | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
+| `R-process-aspect-first` | test_process.py, check_process_lifecycle_wellformed, check_process_roles_declared, check_typed_anchors | tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
 | `R-operator-acting-facet` | test_operator.py, check_no_dangling_ids, check_typed_anchors | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
 | `R-context-budget-rule` | check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
 | `R-operator-not-self-approve` | check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
-| `R-statemachine-wellformedness` | check_canonical_lifecycles_wellformed, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_dangling_transition, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_no_initial | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
+| `R-goal-as-target-state` | test_goal.py, check_goal_target_kind_known, check_goal_owner_is_operator, check_status_in_lifecycle, check_typed_anchors | A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process. |
+| `R-statemachine-wellformedness` | check_canonical_lifecycles_wellformed, check_lifecycle_wellformed, check_process_lifecycle_wellformed, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_dangling_transition, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_no_initial | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
 | `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-anchor-everything` | check_typed_anchors, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
@@ -66,6 +69,3 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | id | owner |
 |---|---|
 | `R-smoke-test` | `framework-author` |
-| `R-process-aspect-first` | `framework-author` |
-| `R-task-vs-action-distinct-altitudes` | `framework-author` |
-| `R-goal-as-target-state` | `domain-user` |

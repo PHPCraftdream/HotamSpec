@@ -29,6 +29,7 @@ from tensio.assumption import DEAD, Assumption
 from tensio.axis import Axis
 from tensio.conflict import Conflict
 from tensio.operator import Operator
+from tensio.process import Goal, Process
 from tensio.requirement import Requirement
 from tensio.stakeholder import Stakeholder
 
@@ -48,6 +49,8 @@ class TensionGraph:
       requirements — tuple of Requirement.
       conflicts    — tuple of Conflict.
       operators    — tuple of Operator (§Operator — the acting facets; M20).
+      processes    — tuple of Process (§Process — opt-in behavioral aspect, M12).
+      goals        — tuple of Goal (§Goal — first-class target-state type, M19).
 
     WHY frozen + tuples: determinism. The generator emits docs in graph order and
     the meta-test demands byte-for-byte stability; a mutable/unordered store would
@@ -57,6 +60,10 @@ class TensionGraph:
     controlled vocabulary; the framework ships with none. Two domains may admit
     different axes, and the invariant `check_axis_in_registry` reads from this
     field so the per-domain vocabulary is the authority.
+
+    WHY processes and goals default to empty tuple: they are opt-in aspects (M12).
+    A domain that does not model processes pays nothing — is_empty() still works
+    correctly with the extended set.
     """
 
     axes: tuple[Axis, ...] = field(default_factory=tuple)
@@ -65,12 +72,15 @@ class TensionGraph:
     requirements: tuple[Requirement, ...] = field(default_factory=tuple)
     conflicts: tuple[Conflict, ...] = field(default_factory=tuple)
     operators: tuple[Operator, ...] = field(default_factory=tuple)
+    processes: tuple[Process, ...] = field(default_factory=tuple)
+    goals: tuple[Goal, ...] = field(default_factory=tuple)
 
     def is_empty(self) -> bool:
         """Canon: §Graph — True iff no domain content has been loaded.
 
         RULE: empty iff every collection is empty. An empty graph is the
         legitimate ship state of the framework (no content under spec/content/).
+        Includes the §Process and §Goal aspect collections.
 
         WHY: the harness and generator use this to render a calm "no content
         yet" message instead of an awkwardly empty roster.
@@ -82,6 +92,8 @@ class TensionGraph:
             or self.requirements
             or self.conflicts
             or self.operators
+            or self.processes
+            or self.goals
         )
 
 
@@ -175,6 +187,26 @@ def operator_ids(g: TensionGraph) -> frozenset[str]:
     and by check_operator_steward_not_self to identify operator acting facets.
     """
     return frozenset(op.id for op in g.operators)
+
+
+def process_ids(g: TensionGraph) -> frozenset[str]:
+    """Canon: §Process — set of all Process ids in the graph.
+
+    RULE: used by check_typed_anchors to verify PR- prefix discipline and by
+    tests to confirm a named process is present. Empty when the §Process aspect
+    is not loaded (opt-in, M12).
+    """
+    return frozenset(p.id for p in g.processes)
+
+
+def goal_ids(g: TensionGraph) -> frozenset[str]:
+    """Canon: §Goal — set of all Goal ids in the graph.
+
+    RULE: used by check_typed_anchors to verify GOAL- prefix discipline and by
+    check_goal_owner_is_operator to resolve Goal.owner references. Empty when
+    the §Goal aspect is not loaded (opt-in, M12/M19).
+    """
+    return frozenset(go.id for go in g.goals)
 
 
 def requirement_by_id(g: TensionGraph, rid: str) -> Requirement | None:

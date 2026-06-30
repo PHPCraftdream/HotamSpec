@@ -226,6 +226,33 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "The operator self-diagnosis band (P0) — diagnoses the operator's OWN readiness: DRAFT-overhang, UNENFORCED-SETTLED debt, over-budget operators, dead-assumption-on-enforcer, derived-but-unbuilt.",
     ),
+    # §Process section (P9 — first opt-in behavioral aspect, M12)
+    Term(
+        "§Process",
+        "SECTION",
+        "The opt-in behavioral aspect (M12): a Lifecycle + ordered Steps + roles_required + drives_entities — the richest contradiction surface.",
+    ),
+    # §Goal section (P9 — Goal as first-class type, M19)
+    Term(
+        "§Goal",
+        "SECTION",
+        "A first-class target-state type (M19): distinct from a static Requirement because it carries a MOVING TARGET that yields a Gap driving a Process.",
+    ),
+    Term(
+        "Step",
+        "CONCEPT",
+        "One step in a Process — a verb requiring a declared role (requires_role must be in Process.roles_required).",
+    ),
+    Term(
+        "Gap",
+        "CONCEPT",
+        "The distance between a Goal's target_state and the current state — drives Process execution and is the measurable work remaining.",
+    ),
+    Term(
+        "Target state",
+        "CONCEPT",
+        "The desired-state predicate carried by a Goal (kind in TARGET_KINDS: GRAPH_PROPERTY | BUSINESS_STATE | ENTITY_STATE).",
+    ),
 )
 
 

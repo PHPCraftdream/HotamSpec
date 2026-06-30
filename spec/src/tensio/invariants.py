@@ -54,6 +54,7 @@ from tensio.lifecycle import (
     Lifecycle,
 )
 from tensio.operator import OPERATOR_LIFECYCLE
+from tensio.process import GOAL_LIFECYCLE, TARGET_KINDS
 from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, OPEN_PREFIX, RELATION_KINDS
 
 _M_TAG_RE = re.compile(r"^M[1-9][0-9]*$")
@@ -509,6 +510,26 @@ def check_typed_anchors(g: TensionGraph) -> list[Violation]:
                     f"(typed-anchor rule, R-anchor-everything)",
                 )
             )
+    for p in g.processes:
+        if not p.id.startswith("PR-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors",
+                    p.id,
+                    f"Process id '{p.id}' must start with 'PR-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    for go in g.goals:
+        if not go.id.startswith("GOAL-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors",
+                    go.id,
+                    f"Goal id '{go.id}' must start with 'GOAL-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
     return out
 
 
@@ -757,24 +778,45 @@ def check_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
                     f"(valid: {sorted(OPERATOR_LIFECYCLE.state_names())})",
                 )
             )
+    for go in g.goals:
+        if GOAL_LIFECYCLE.matches(go.lifecycle) is None:
+            out.append(
+                Violation(
+                    "check_status_in_lifecycle",
+                    go.id,
+                    f"Goal.lifecycle '{go.lifecycle}' is not a valid state in "
+                    f"lifecycle '{GOAL_LIFECYCLE.slug}' "
+                    f"(valid: {sorted(GOAL_LIFECYCLE.state_names())})",
+                )
+            )
     return out
 
 
 def check_canonical_lifecycles_wellformed(g: TensionGraph) -> list[Violation]:
     """Canon: §Lifecycle / §Invariants — the framework's own lifecycle constants are well-formed.
 
-    RULE: REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE, and OPERATOR_LIFECYCLE
-    MUST each pass check_lifecycle_wellformed (no structural issues). This check
-    runs on every invocation of the full invariant suite — the framework checks
-    its own shipped state machines, not only user content.
+    RULE: REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE, OPERATOR_LIFECYCLE,
+    PROCESS_LIFECYCLE, and GOAL_LIFECYCLE MUST each pass check_lifecycle_wellformed
+    (no structural issues). This check runs on every invocation of the full
+    invariant suite — the framework checks its own shipped state machines, not
+    only user content.
 
     WHY self-application: strong self-application is the methodology's bootstrap
     test. If the framework's own lifecycles are malformed, all downstream status
     validation is meaningless. References: R-statemachine-wellformedness,
-    R-lifecycle-abstraction.
+    R-lifecycle-abstraction, R-process-aspect-first.
     """
+    from tensio.process import GOAL_LIFECYCLE as GL  # noqa: PLC0415
+    from tensio.process import PROCESS_LIFECYCLE as PL  # noqa: PLC0415
+
     out: list[Violation] = []
-    for lc in (REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE, OPERATOR_LIFECYCLE):
+    for lc in (
+        REQUIREMENT_STATUS_LIFECYCLE,
+        CONFLICT_LIFECYCLE,
+        OPERATOR_LIFECYCLE,
+        PL,
+        GL,
+    ):
         for issue in check_lifecycle_wellformed(lc):
             out.append(
                 Violation(
@@ -887,7 +929,131 @@ def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
-# 12. Section-anchor coherence — every §-token in framework docstrings is known
+# 12. §Process aspect invariants (aspect-gated: no-op when g.processes empty)
+# ---------------------------------------------------------------------------
+
+
+def check_process_lifecycle_wellformed(g: TensionGraph) -> list[Violation]:
+    """Canon: §Process / §Invariants — every Process lifecycle is structurally well-formed.
+
+    RULE (aspect-gated): for each Process in g.processes, run
+    check_lifecycle_wellformed(p.lifecycle); any issues become Violations.
+    No-ops when g.processes is empty (§Process aspect not loaded).
+
+    WHY structural: the §Lifecycle keystone is the single source of truth for
+    state-machine well-formedness. Reusing check_lifecycle_wellformed here
+    means the Process aspect inherits all four lifecycle conditions (non-empty,
+    single INITIAL, valid transition endpoints, terminal reachable) without
+    parallel machinery (R-statemachine-wellformedness, M12).
+    """
+    out: list[Violation] = []
+    for p in g.processes:
+        for issue in check_lifecycle_wellformed(p.lifecycle):
+            out.append(
+                Violation(
+                    "check_process_lifecycle_wellformed",
+                    p.id,
+                    issue,
+                )
+            )
+    return out
+
+
+def check_process_roles_declared(g: TensionGraph) -> list[Violation]:
+    """Canon: §Process / §Invariants — every Step.requires_role is in Process.roles_required.
+
+    RULE (aspect-gated): for each Process p and each Step s in p.steps,
+    s.requires_role MUST be in p.roles_required. A Step that demands a role
+    not declared in the Process is a structural dead-end (the 'missing actor'
+    contradiction). No-ops when g.processes is empty.
+
+    WHY 'no implicit role': an undeclared role is invisible — the Process
+    claims to need an actor it has never introduced. This is the structural
+    twin of check_conflict_has_axis_context_steward applied to the behavioral
+    altitude: every demanded role must be named. Supply ≥ demand is checked
+    here; who fulfills each role is a future actor-matching invariant.
+    """
+    out: list[Violation] = []
+    for p in g.processes:
+        declared = frozenset(p.roles_required)
+        for s in p.steps:
+            if s.requires_role not in declared:
+                out.append(
+                    Violation(
+                        "check_process_roles_declared",
+                        p.id,
+                        f"step '{s.name}' requires role '{s.requires_role}' "
+                        f"which is not in Process.roles_required "
+                        f"{sorted(declared)}; "
+                        f"declare it explicitly (no implicit roles)",
+                    )
+                )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 13. §Goal aspect invariants (aspect-gated: no-op when g.goals empty)
+# ---------------------------------------------------------------------------
+
+
+def check_goal_target_kind_known(g: TensionGraph) -> list[Violation]:
+    """Canon: §Goal / §Invariants — every Goal.target_state.kind is in TARGET_KINDS.
+
+    RULE (aspect-gated): for each Goal in g.goals, target_state.kind MUST be
+    in TARGET_KINDS (GRAPH_PROPERTY | BUSINESS_STATE | ENTITY_STATE). An
+    unknown kind is a misconfiguration that breaks the kind discriminant used
+    by future machine-checkable predicates. No-ops when g.goals is empty.
+
+    WHY a discriminant (not free-text): the kind field future-proofs Goal for
+    machine-checkable predicates — the same seam as Assumption.machine_check.
+    An unchecked kind lets two Goals with incompatible target types form a
+    Conflict that the invariant surface can never detect.
+    """
+    out: list[Violation] = []
+    for go in g.goals:
+        if go.target_state.kind not in TARGET_KINDS:
+            out.append(
+                Violation(
+                    "check_goal_target_kind_known",
+                    go.id,
+                    f"Goal.target_state.kind '{go.target_state.kind}' is not "
+                    f"in TARGET_KINDS {sorted(TARGET_KINDS)}; "
+                    f"use one of the declared kind constants",
+                )
+            )
+    return out
+
+
+def check_goal_owner_is_operator(g: TensionGraph) -> list[Violation]:
+    """Canon: §Goal / §Operator / §Invariants — every Goal.owner resolves to a known Operator.
+
+    RULE (aspect-gated): for each Goal in g.goals, Goal.owner MUST be in
+    operator_ids(g). A Goal with a dangling owner is a structurally invisible
+    target — no acting facet pursues it. No-ops when g.goals is empty.
+
+    WHY Operator (not Stakeholder): a Goal drives a Process; Processes are
+    executed by Operators (the acting facets). A Stakeholder without an
+    Operator cannot run steps — the Goal would be declared but unexecuted.
+    Referential integrity at the behavioral altitude (M19).
+    """
+    oids = operator_ids(g)
+    out: list[Violation] = []
+    for go in g.goals:
+        if go.owner not in oids:
+            out.append(
+                Violation(
+                    "check_goal_owner_is_operator",
+                    go.id,
+                    f"Goal.owner '{go.owner}' is not a known Operator id; "
+                    f"a Goal must be owned by an Operator (the acting facet "
+                    f"that pursues it) — M19",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 14. Section-anchor coherence — every §-token in framework docstrings is known
 # ---------------------------------------------------------------------------
 
 _SECTION_TOKEN_RE = re.compile(r"§[A-Za-z][\w-]*")
@@ -980,6 +1146,12 @@ ALL_INVARIANTS = (
     check_canonical_lifecycles_wellformed,
     check_operator_steward_not_self,
     check_operator_within_budget,
+    # §Process aspect invariants (aspect-gated: no-op when g.processes empty)
+    check_process_lifecycle_wellformed,
+    check_process_roles_declared,
+    # §Goal aspect invariants (aspect-gated: no-op when g.goals empty)
+    check_goal_target_kind_known,
+    check_goal_owner_is_operator,
     check_section_anchors_known,
 )
 

@@ -339,18 +339,18 @@ equivalent of dev-coin's genesis-number list.
 | M9 | Multi-domain composition | a graph is one whole; multiple domains live in one `build_graph()` | OPEN(how does the methodology compose graphs across teams — federation, namespacing, or a single merged graph?) (absorbed into M8 / R-content-layout-evolution; no separate req mirror yet) |
 | M10 | Task vs Action altitudes | both modeled, distinct | OPEN(ever unified?) (no req mirror yet) |
 | M11 | status/lifecycle via generic Lifecycle | keep stored string + validating invariant | OPEN(adopt generic Lifecycle?) (no req mirror yet) |
-| M12 | Entity/Process/Task core or aspect | lifecycle core, three opt-in aspects | OPEN(confirm?) (no req mirror yet) |
+| M12 | Entity/Process/Task core or aspect | Lifecycle is core; Process/Entity/Task are opt-in aspects; P9 ships Process only | DECIDED (P9) — tensio.process ships as first opt-in behavioral aspect; Entity deferred; Task deferred; Process declares drives_entities as forward-compat string refs |
 | M13 | formalize guards/preconditions | prose + optional machine_check; Z3 only critical core | OPEN(how far?) (no req mirror yet) |
 | M14 | Conflict.members Requirement-only or behavioral ids | Requirement-only; behaviors via Requirement.subject | OPEN(widen?) (no req mirror yet) |
 | M15 | Role new type or Stakeholder facet | facet | OPEN(confirm?) (no req mirror yet) |
 | M16 | two-processes-one-entity incompatibility | structural where explicit else heuristic | OPEN(which?) (no req mirror yet) |
 | M17 | context budget measure | node-count | OPEN(node/token/complexity?) (see `R-budget-measure`) |
 | M18 | partition vs declared border | none | OPEN(partition or border-overlap?) (see `R-partition-vs-border`) |
-| M19 | Goal type vs facet | own type | OPEN(type or Requirement facet?) (see `R-goal-type-vs-facet`) |
+| M19 | Goal type vs facet | own first-class type (Goal with TargetState + GOAL_LIFECYCLE) | DECIDED (P9) — Goal is its own type in tensio.process; preserves the Gap as a moving target distinct from a static Requirement claim; GOAL-burn-down-zero instantiated in meta-domain |
 | M20 | Operator type vs facet | split (role vs acting) | OPEN(type or Stakeholder facet?) (see `R-operator-type-vs-facet`) |
 | M21 | Observation/Evidence scope | defer | OPEN(model belief↔reality drift?) (see `R-observation-evidence-scope`) |
 | M22 | rules-as-data | resist (code + meta-domain reqs) | OPEN(promote rules to data?) (see `R-rules-as-data`) |
-| M23 | goal-conflict reuse Conflict | reuse | OPEN(reuse Conflict or new GoalConflict?) (no req mirror yet) |
+| M23 | goal-conflict reuse Conflict | reuse existing Conflict connector node on a goal-tension axis; no new GoalConflict type | DECIDED (P9) — conflict is one node type; a Goal conflict is two incompatible TargetStates mediated by the existing Conflict on a goal-tension axis |
 | M24 | content split automatic vs steward-approved | steward-approved | OPEN(automate the split?) (no req mirror yet) |
 | M25 | working vs substrate measure | none | OPEN(what counts as working context?) (no req mirror yet) |
 | M26 | enforcement first-class field | yes | OPEN(field or derived report?) (see `R-enforcement-first-class`) |

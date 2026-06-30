@@ -87,6 +87,7 @@ MODULE_ORDER: list[tuple[str, str]] = [
     ("graph", "§Graph — the store, the loader, and traversal"),
     ("lifecycle", "§Lifecycle — the generic state-machine keystone"),
     ("operator", "§Operator — the acting facet of a Stakeholder"),
+    ("process", "§Process / §Goal — behavioral aspect (M12) and Goal type (M19)"),
     ("invariants", "§Invariants — structural form"),
 ]
 
@@ -202,6 +203,36 @@ def build_requirements(g: TensionGraph) -> str:
             lines.append(
                 f"| `{op.id}` | `{op.stakeholder}` | {op.lifecycle} "
                 f"| {budget} | {parent} |"
+            )
+        lines.append("")
+
+    # Roster: processes (§Process opt-in behavioral aspect, M12).
+    if g.processes:
+        lines.append("## Processes")
+        lines.append("")
+        lines.append("| id | lifecycle | steps | roles | drives |")
+        lines.append("|---|---|---|---|---|")
+        for p in g.processes:
+            step_names = ", ".join(s.name for s in p.steps) if p.steps else "—"
+            roles = ", ".join(p.roles_required) if p.roles_required else "—"
+            drives = ", ".join(p.drives_entities) if p.drives_entities else "—"
+            lines.append(
+                f"| `{p.id}` | {p.lifecycle.slug} | {_cell(step_names)} "
+                f"| {_cell(roles)} | {_cell(drives)} |"
+            )
+        lines.append("")
+
+    # Roster: goals (§Goal first-class type, M19).
+    if g.goals:
+        lines.append("## Goals")
+        lines.append("")
+        lines.append("| id | owner | lifecycle | target | predicate |")
+        lines.append("|---|---|---|---|---|")
+        for go in g.goals:
+            target = go.target_state.target or "—"
+            lines.append(
+                f"| `{go.id}` | `{go.owner}` | {go.lifecycle} "
+                f"| {_cell(target)} | {_cell(go.target_state.predicate)} |"
             )
         lines.append("")
 

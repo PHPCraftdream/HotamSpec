@@ -194,6 +194,8 @@ REQUIRED_SECTIONS = [
     "§Conscience",
     "§Constitution",
     "§Reflection",
+    "§Process",
+    "§Goal",
 ]
 
 

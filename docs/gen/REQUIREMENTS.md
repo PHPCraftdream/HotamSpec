@@ -33,13 +33,13 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-history-from-rejected-markers` | SETTLED | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-smoke-test` | DRAFT | `framework-author` | A-python-stack | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
 | `R-lifecycle-abstraction` | SETTLED | `framework-author` | A-bootstrap-self-applies | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
-| `R-process-aspect-first` | DRAFT | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
-| `R-task-vs-action-distinct-altitudes` | DRAFT | `framework-author` | A-bootstrap-self-applies | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
+| `R-process-aspect-first` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
+| `R-task-vs-action-distinct-altitudes` | SETTLED | `framework-author` | A-bootstrap-self-applies | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
 | `R-operator-acting-facet` | SETTLED | `framework-author` | A-finite-context-operators | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
 | `R-context-budget-rule` | SETTLED | `framework-author` | A-finite-context-operators | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
 | `R-operator-not-self-approve` | SETTLED | `framework-author` | A-stakeholders-care | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | `R-delegation-conclusions-only` | SETTLED | `framework-author` | A-finite-context-operators | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
-| `R-goal-as-target-state` | DRAFT | `domain-user` | A-bootstrap-self-applies | A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process. |
+| `R-goal-as-target-state` | SETTLED | `domain-user` | A-bootstrap-self-applies | A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process. |
 | `R-context-bounded-delegation` | SETTLED | `framework-author` | A-finite-context-operators | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
 | `R-dependency-graph-parallelism` | SETTLED | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements/operators/entities (building on Requirement.relations depends_on/supports/refines) so that independent sub-graphs may be delegated to PARALLEL sub-operators while dependency chains are processed SEQUENTIALLY. |
 | `R-operator-crystal-is-claude-md` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
@@ -95,6 +95,18 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | id | stakeholder | lifecycle | budget | parent |
 |---|---|---|---|---|
 | `OP-director` | `framework-author` | ACTIVE | 200 (NODE_COUNT) | — |
+
+## Processes
+
+| id | lifecycle | steps | roles | drives |
+|---|---|---|---|---|
+| `PR-closed-loop` | process-lifecycle | diagnose, propose, approve, apply, regenerate, verify | operator, steward | — |
+
+## Goals
+
+| id | owner | lifecycle | target | predicate |
+|---|---|---|---|---|
+| `GOAL-burn-down-zero` | `OP-director` | ACTIVE | enforcement-gradient | count(r for r in g.requirements if r.status==SETTLED and r.enforcement!=ENFORCED) == 0 |
 
 ---
 
@@ -465,7 +477,42 @@ boundary at the methodology altitude. A Stakeholder is an accountability node;
 the acting/context/domain facet lives on Operator. Conflating them would merge
 two things that the single-altitude-vs-multi-altitude axis explicitly separates.
 
-### 10. §Invariants — structural form — `tensio.invariants`
+### 10. §Process / §Goal — behavioral aspect (M12) and Goal type (M19) — `tensio.process`
+
+Canon: §Process — opt-in behavioral aspect (M12).
+
+A Process is a Lifecycle + ordered Steps + the roles it requires + the
+entities it drives. It is the richest contradiction surface (M12 /
+R-process-aspect-first) because:
+  - two processes driving one entity along incompatible state paths is
+    the canonical hidden contradiction;
+  - a step requiring a role no actor provides is a structural dead-end;
+  - a method postcondition that violates an entity invariant is a real
+    conflict surfaced as a Conflict node on a behavioral axis.
+
+Entity is DEFERRED to a future aspect (M12); Process declares
+`drives_entities: tuple[str, ...]` as forward-compat string references so
+the Process aspect can ship before Entity. When Entity lands, the
+invariant `check_process_drives_existing_entities` will activate (today
+it is a no-op because g has no entities collection yet).
+
+Goal is its OWN first-class type (M19): a target-state predicate + what it
+targets. Distinct from a static Requirement claim because it carries a
+MOVING TARGET that yields a Gap.
+
+Goal CONFLICTS reuse the existing Conflict connector node on a goal-tension
+axis (M23) — no new GoalConflict type. Keep "conflict is one node type".
+
+References:
+  R-process-aspect-first — this module IS the first behavioral aspect.
+  R-goal-as-target-state — §Goal ships here as its own type (M19).
+  R-statemachine-wellformedness — PROCESS_LIFECYCLE and GOAL_LIFECYCLE
+    validate via check_lifecycle_wellformed (same keystone path as
+    REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE).
+  R-task-vs-action-distinct-altitudes — Process.steps use prose `invokes`
+    (forward-compat); the harness Action type is NOT merged here.
+
+### 11. §Invariants — structural form — `tensio.invariants`
 
 Canon: §Invariants — structural form of the tension graph (the check_* layer).
 

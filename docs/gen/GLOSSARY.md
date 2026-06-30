@@ -33,6 +33,8 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Conscience` | The Hypothesis property-test sweep over the critical-core invariants (M7) — does my OWN edit introduce a contradiction? |
 | `§Constitution` | The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws. |
 | `§Reflection` | The operator self-diagnosis band (P0) — diagnoses the operator's OWN readiness: DRAFT-overhang, UNENFORCED-SETTLED debt, over-budget operators, dead-assumption-on-enforcer, derived-but-unbuilt. |
+| `§Process` | The opt-in behavioral aspect (M12): a Lifecycle + ordered Steps + roles_required + drives_entities — the richest contradiction surface. |
+| `§Goal` | A first-class target-state type (M19): distinct from a static Requirement because it carries a MOVING TARGET that yields a Gap driving a Process. |
 
 ## Lifecycle states
 | slug | definition |
@@ -75,3 +77,6 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `playbook` | A band-specific procedure the AI operator follows to convert a what_now action into a structured proposal for steward approval. |
 | `apply_proposal` | The mechanical writer that lands a steward-approved proposal into spec/content/; the AI never edits the graph by hand. |
 | `critical core` | The set of invariants whose violation would silently break the hard boundary or anti-drift — the conscience's narrow scope (M7). |
+| `Step` | One step in a Process — a verb requiring a declared role (requires_role must be in Process.roles_required). |
+| `Gap` | The distance between a Goal's target_state and the current state — drives Process execution and is the measurable work remaining. |
+| `Target state` | The desired-state predicate carried by a Goal (kind in TARGET_KINDS: GRAPH_PROPERTY \| BUSINESS_STATE \| ENTITY_STATE). |
