@@ -57,9 +57,77 @@ Canon: §Invariants — True iff there are no violations (boolean view).
 WHY: tests and gates that only care pass/fail call holds(check(g)); the
 harness consumes the list itself.
 
+## From `spec/src/tensio/invariants.py::check_no_dangling_assumption_owner`
+
+Canon: §Invariants — every Assumption.owner resolves to a known Stakeholder.
+
+RULE: Assumption.owner MUST be in stakeholder_ids(g). A dangling assumption
+owner is an invisible hole — the methodology cannot surface context drift
+if the assumption is unowned.
+
+WHY: a dangling owner makes the assumption unanchored; drift detection depends
+on assumptions having a live, resolvable owner.
+
+## From `spec/src/tensio/invariants.py::check_no_dangling_requirement_owner`
+
+Canon: §Invariants — every Requirement.owner resolves to a known Stakeholder.
+
+RULE: Requirement.owner MUST be in stakeholder_ids(g). A requirement without
+a resolvable owner is structurally unanchored.
+
+WHY: a dangling owner makes the requirement unanchored and breaks the steward
+boundary invariant downstream.
+
+## From `spec/src/tensio/invariants.py::check_no_dangling_requirement_assumptions`
+
+Canon: §Invariants — every Requirement.assumptions[*] resolves to a known Assumption.
+
+RULE: each id in Requirement.assumptions MUST be in assumption_ids(g). A dangling
+assumption reference hides drift — if the assumption never existed the dependency
+is invisible.
+
+WHY: drift detection (DRIFT_FALLOUT band) traverses assumption dependencies; a
+dangling reference breaks the traversal silently.
+
+## From `spec/src/tensio/invariants.py::check_no_dangling_requirement_relations`
+
+Canon: §Invariants — every Requirement.relations[*] has a known kind and target.
+
+RULE: each Relation.kind MUST be in RELATION_KINDS, and each Relation.target
+MUST be in requirement_ids(g). An unknown kind or dangling target is an
+unresolvable edge.
+
+WHY: relation edges drive the dependency graph (R-dependency-graph-parallelism);
+a dangling or mis-typed edge makes the graph structurally incomplete.
+
+## From `spec/src/tensio/invariants.py::check_no_dangling_conflict_refs`
+
+Canon: §Invariants — every Conflict's steward, members, shared_assumption, derived, and decided_by resolve.
+
+RULE: Conflict.steward MUST be in stakeholder_ids(g); each member MUST be in
+requirement_ids(g); shared_assumption (if set) MUST be in assumption_ids(g);
+each derived id MUST be in requirement_ids(g); decided_by (if set) MUST be in
+stakeholder_ids(g).
+
+WHY: a dangling member is how a conflict silently loses a party; a dangling
+assumption is how drift hides. Dangling refs on a Conflict are the cardinal
+invisibility the methodology forbids.
+
+## From `spec/src/tensio/invariants.py::check_no_dangling_operator_refs`
+
+Canon: §Invariants — every Operator.stakeholder and Operator.parent resolve.
+
+RULE: Operator.stakeholder MUST be in stakeholder_ids(g); Operator.parent
+(if set) MUST be in operator_ids(g). A dangling operator ref makes the
+delegation hierarchy structurally broken.
+
+WHY: the operator tree is the recursive delegation structure
+(R-operator-crystal-is-claude-md); a dangling parent or stakeholder collapses
+the tree invisibly.
+
 ## From `spec/src/tensio/invariants.py::check_no_dangling_ids`
 
-Canon: §Invariants — every id referenced by an edge resolves in the graph.
+Canon: §Invariants — every id referenced by an edge resolves in the graph (thin delegator).
 
 RULE: Requirement.owner, Requirement.assumptions[*], Relation.target,
 Conflict.steward, Conflict.members[*], Conflict.shared_assumption,
@@ -70,9 +138,67 @@ WHY first and broadest: a dangling member is how a conflict silently loses a
 party; a dangling assumption is how drift hides. A dangling edge is an
 invisible hole, the cardinal sin of the methodology.
 
+This is a THIN DELEGATOR — it calls the atomic sub-checks and concatenates
+their results. The atomic sub-checks are registered individually in ALL_INVARIANTS.
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_requirement`
+
+Canon: §Invariants — every Requirement.id starts with 'R-'.
+
+RULE: Requirement.id MUST start with 'R-'. An id with the wrong prefix
+breaks the typed-anchor discipline (R-anchor-everything) and makes
+cite-by-reference unreliable (R-speak-by-reference).
+
+References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_assumption`
+
+Canon: §Invariants — every Assumption.id starts with 'A-'.
+
+RULE: Assumption.id MUST start with 'A-'. An id with the wrong prefix
+breaks the typed-anchor discipline (R-anchor-everything).
+
+References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_conflict`
+
+Canon: §Invariants — every Conflict.id starts with 'C-'.
+
+RULE: Conflict.id MUST start with 'C-'. An id with the wrong prefix
+breaks the typed-anchor discipline (R-anchor-everything).
+
+References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_operator`
+
+Canon: §Invariants — every Operator.id starts with 'OP-'.
+
+RULE: Operator.id MUST start with 'OP-'. An id with the wrong prefix
+breaks the typed-anchor discipline (R-anchor-everything).
+
+References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_process`
+
+Canon: §Invariants — every Process.id starts with 'PR-'.
+
+RULE: Process.id MUST start with 'PR-'. An id with the wrong prefix
+breaks the typed-anchor discipline (R-anchor-everything).
+
+References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+
+## From `spec/src/tensio/invariants.py::check_typed_anchors_goal`
+
+Canon: §Invariants — every Goal.id starts with 'GOAL-'.
+
+RULE: Goal.id MUST start with 'GOAL-'. An id with the wrong prefix
+breaks the typed-anchor discipline (R-anchor-everything).
+
+References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+
 ## From `spec/src/tensio/invariants.py::check_typed_anchors`
 
-Canon: §Invariants — every id carries the prefix that matches its kind.
+Canon: §Invariants — every id carries the prefix that matches its kind (thin delegator).
 
 RULE: Requirement.id MUST start with 'R-'; Assumption.id MUST start with
 'A-'; Conflict.id MUST start with 'C-'; Operator.id MUST start with 'OP-'.
@@ -84,6 +210,9 @@ WHY minimal: this check enforces the CURRENTLY USED prefixes (R-/A-/C-/OP-)
 that are already discipline in the codebase; it does NOT yet encode the full
 M28 taxonomy (GOAL-/GAP-/DLG-/AX-) — those are still OPEN per
 R-anchor-taxonomy.
+
+This is a THIN DELEGATOR — calls the atomic per-entity-type sub-checks and
+concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
 References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
 
@@ -152,7 +281,7 @@ WHY one entry point: keeps tests, the gate and the harness reading the exact
 same set of invariants in the exact same order (determinism). The §Tick driver
 (P5) calls diagnose() which calls this; §Tick is advisory (M32 conservative).
 
-Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of six
-invariants whose violation would silently break the hard boundary or anti-drift.
+Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of invariants
+whose violation would silently break the hard boundary or anti-drift.
 The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over
 this boundary; all_violations runs the full set (both rings).

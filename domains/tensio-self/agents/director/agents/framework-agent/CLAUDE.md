@@ -21,7 +21,7 @@ are included.
 
 **Substrate / Anchoring**
 
-- **R-anchor-everything** — *Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).* [ENFORCED·check_typed_anchors·check_section_anchors_known·test_glossary_sync.py]
+- **R-anchor-everything** — *Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).* [ENFORCED·check_typed_anchors_requirement·check_typed_anchors_assumption·check_typed_anchors_conflict·check_typed_anchors_operator·check_typed_anchors_process·check_typed_anchors_goal·check_section_anchors_known·test_glossary_sync.py]
 - **R-speak-by-reference** — *An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose.* [ENFORCED·test_glossary_sync.py·check_section_anchors_known·docs/playbooks/]
 
 **Check / Invariant**
@@ -30,10 +30,10 @@ are included.
 - **R-bijection-r-to-enforcer** — *Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.* [ENFORCED·check_bijection_r_to_enforcer]
 - **R-conflict-is-connector-node** — *A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements.* [STRUCTURAL]
 - **R-conflict-min-two-members** — *Every Conflict node shall contain at least two distinct Requirement ids in its members tuple.* [ENFORCED·check_conflict_min_two_members]
-- **R-conflict-structurally-visible** — *Every Conflict node shall carry a non-empty axis, context, and steward.* [ENFORCED·check_conflict_has_axis_context_steward]
+- **R-conflict-structurally-visible** — *Every Conflict node shall carry a non-empty axis, context, and steward.* [ENFORCED·check_conflict_has_axis·check_conflict_has_context·check_conflict_has_steward]
 - **R-decided-conflict-justifies-itself** — *Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement.* [ENFORCED·check_decided_has_rationale_or_derived]
-- **R-decided-needs-human-signoff** — *A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant.* [ENFORCED·check_decided_has_decided_by]
-- **R-m-tag-format-valid** — *Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements.* [ENFORCED·check_m_tag_format]
+- **R-decided-needs-human-signoff** — *A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant.* [ENFORCED·check_decided_has_nonempty_decided_by·check_decided_by_is_known_stakeholder·check_decided_by_not_member_owner]
+- **R-m-tag-format-valid** — *Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements.* [ENFORCED·check_m_tag_valid_format·check_m_tag_unique·check_m_tag_open_only]
 - **R-statemachine-deterministic** — *A Lifecycle's transitions shall be deterministic — no two transitions with the same (src, event) and overlapping guards.* [ENFORCED·check_canonical_lifecycles_wellformed]
 - **R-statemachine-guard-on-assumption** — *A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced.* [STRUCTURAL]
 - **R-statemachine-reachable** — *Every state in a canonical Lifecycle shall be reachable from the initial state.* [ENFORCED·check_canonical_lifecycles_wellformed]

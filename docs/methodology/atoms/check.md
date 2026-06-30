@@ -28,7 +28,7 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Why.** SETTLED (P3): Conflict.decided_by field added; check_decided_has_decided_by fires when lifecycle starts with DECIDED but decided_by is empty or owned by a member. Makes the hard boundary structural at the decision moment — the AI cannot silently write DECIDED without naming a human decider who is outside the conflict's members.
 
-**Enforced by:** `check_decided_has_decided_by`
+**Enforced by:** `check_decided_has_nonempty_decided_by`, `check_decided_by_is_known_stakeholder`, `check_decided_by_not_member_owner`
 
 ## `R-enforcement-levels-declared` (ENFORCED)
 

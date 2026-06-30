@@ -88,7 +88,27 @@ from tensio.proposal import (  # noqa: E402
     ProposedRequirement,
 )
 
-_CONTENT_GRAPH = _SPEC_ROOT / "content" / "graph.py"
+_DOMAINS_ROOT = _SPEC_ROOT.parent / "domains"
+
+
+def _resolve_content_graph() -> "Path":
+    """Return the active graph.py: domains/<first>/graph.py or legacy spec/content/graph.py.
+
+    Mirrors gen_spec.py::_resolve_active_content_dir() so both tools target
+    the same file when a domain is present.
+    """
+    if _DOMAINS_ROOT.exists():
+        domain_dirs = sorted(
+            d
+            for d in _DOMAINS_ROOT.iterdir()
+            if d.is_dir() and not d.name.startswith("_")
+        )
+        if domain_dirs:
+            return domain_dirs[0] / "graph.py"
+    return _SPEC_ROOT / "content" / "graph.py"
+
+
+_CONTENT_GRAPH = _resolve_content_graph()
 _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
 
 # ---------------------------------------------------------------------------

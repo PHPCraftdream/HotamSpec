@@ -17,7 +17,7 @@ WHY one entry point: keeps tests, the gate and the harness reading the exact
 same set of invariants in the exact same order (determinism). The §Tick driver
 (P5) calls diagnose() which calls this; §Tick is advisory (M32 conservative).
 
-Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of six
-invariants whose violation would silently break the hard boundary or anti-drift.
+Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of invariants
+whose violation would silently break the hard boundary or anti-drift.
 The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over
 this boundary; all_violations runs the full set (both rings).

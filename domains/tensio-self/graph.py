@@ -653,7 +653,11 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-stakeholders-care",),
             enforcement=ENFORCED,
-            enforced_by=("check_decided_has_decided_by",),
+            enforced_by=(
+                "check_decided_has_nonempty_decided_by",
+                "check_decided_by_is_known_stakeholder",
+                "check_decided_by_not_member_owner",
+            ),
         ),
         Requirement(
             id="R-glossary-sync-test",
@@ -807,7 +811,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
-            enforced_by=("check_typed_anchors", "test_operator.py"),
+            enforced_by=("check_typed_anchors_operator", "test_operator.py"),
         ),
         Requirement(
             id="R-operator-references-stakeholder",
@@ -822,7 +826,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
-            enforced_by=("check_no_dangling_ids", "test_operator.py"),
+            enforced_by=("check_no_dangling_operator_refs", "test_operator.py"),
         ),
         Requirement(
             id="R-operator-has-context-budget",
@@ -957,7 +961,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
-            enforced_by=("test_goal.py", "check_typed_anchors"),
+            enforced_by=("test_goal.py", "check_typed_anchors_goal"),
         ),
         Requirement(
             id="R-goal-target-kind-known",
@@ -983,7 +987,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
-            enforced_by=("check_goal_owner_is_operator", "check_no_dangling_ids"),
+            enforced_by=("check_goal_owner_is_operator", "check_no_dangling_operator_refs"),
         ),
         Requirement(
             id="R-context-bounded-delegation",
@@ -1200,7 +1204,12 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=(
-                "check_typed_anchors",
+                "check_typed_anchors_requirement",
+                "check_typed_anchors_assumption",
+                "check_typed_anchors_conflict",
+                "check_typed_anchors_operator",
+                "check_typed_anchors_process",
+                "check_typed_anchors_goal",
                 "check_section_anchors_known",
                 "test_glossary_sync.py",
             ),
@@ -1763,7 +1772,11 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-stakeholders-care",),
             enforcement=ENFORCED,
-            enforced_by=("check_conflict_has_axis_context_steward",),
+            enforced_by=(
+                "check_conflict_has_axis",
+                "check_conflict_has_context",
+                "check_conflict_has_steward",
+            ),
         ),
         Requirement(
             id="R-conflict-min-two-members",
@@ -1819,7 +1832,11 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-prose-suffices",),
             enforcement=ENFORCED,
-            enforced_by=("check_m_tag_format",),
+            enforced_by=(
+                "check_m_tag_valid_format",
+                "check_m_tag_unique",
+                "check_m_tag_open_only",
+            ),
         ),
         # --- DRAFT — P11 new: convergence, atomicity, agent-dir, delegation, tools ---
         Requirement(
@@ -2454,7 +2471,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
-            enforced_by=("check_status_in_lifecycle",),
+            enforced_by=("check_requirement_status_in_lifecycle",),
         ),
         Requirement(
             id="R-lifecycle-validates-conflict",
@@ -2468,7 +2485,35 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
-            enforced_by=("check_status_in_lifecycle",),
+            enforced_by=("check_conflict_lifecycle_in_lifecycle",),
+        ),
+        Requirement(
+            id="R-lifecycle-validates-operator",
+            claim=(
+                "Operator.lifecycle shall validate against the framework-supplied OPERATOR_LIFECYCLE."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of R-lifecycle-abstraction (operator validation concern). check_operator_lifecycle_in_lifecycle validates Operator lifecycles on every invariant run."
+            ),
+            assumptions=("A-bootstrap-self-applies",),
+            enforcement="ENFORCED",
+            enforced_by=("check_operator_lifecycle_in_lifecycle",),
+        ),
+        Requirement(
+            id="R-lifecycle-validates-goal",
+            claim=(
+                "Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE."
+            ),
+            owner="framework-author",
+            status="SETTLED",
+            why=(
+                "Atom of R-lifecycle-abstraction (goal validation concern). check_goal_lifecycle_in_lifecycle validates Goal lifecycles on every invariant run."
+            ),
+            assumptions=("A-bootstrap-self-applies",),
+            enforcement="ENFORCED",
+            enforced_by=("check_goal_lifecycle_in_lifecycle",),
         ),
         Requirement(
             id="R-process-types-exist",
@@ -2551,7 +2596,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
-            enforced_by=("check_typed_anchors",),
+            enforced_by=("check_typed_anchors_process", "check_typed_anchors_goal"),
         ),
         Requirement(
             id="R-dependency-tracked",
@@ -2673,7 +2718,14 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-prose-suffices",),
             enforcement="ENFORCED",
-            enforced_by=("test_conscience.py",),
+            enforced_by=(
+                "test_conscience.py",
+                "check_no_dangling_assumption_owner",
+                "check_no_dangling_requirement_owner",
+                "check_no_dangling_requirement_assumptions",
+                "check_no_dangling_requirement_relations",
+                "check_no_dangling_conflict_refs",
+            ),
         ),
         Requirement(
             id="R-critical-core-per-domain",
@@ -2801,7 +2853,13 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
-            enforced_by=("check_domain_manifest_valid",),
+            enforced_by=(
+                "check_domain_manifest_exists_and_importable",
+                "check_domain_manifest_id_matches_dirname",
+                "check_domain_manifest_description_nonempty",
+                "check_domain_manifest_goals_nonempty",
+                "check_domain_manifest_director_nonempty",
+            ),
         ),
         Requirement(
             id="R-domain-declares-director",
@@ -3001,6 +3059,15 @@ def build_graph() -> TensionGraph:
             why=(
                 "The docs/ wrapper cleanly separates machine-generated output (docs/gen/) from hand-written domain material without requiring two separate top-level directories. Domain operators need a place to put domain-level notes, ADRs, and glossaries that are domain-specific and not governed by the framework generator. Keeping everything under docs/ mirrors the spec/docs/ structure established for the framework level."
             ),
+            assumptions=("A-python-stack",),
+            enforcement=STRUCTURAL,
+        ),
+        Requirement(
+            id="R-no-hand-edit-graph",
+            claim=("Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py; direct hand-edits are prohibited outside of bootstrap events."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The closed loop's ACT half goes through apply_proposal (R-active-loop-apply-tool). Direct edits bypass steward approval and structural validation. This R makes the constraint explicit so future pre-commit enforcement can reference it."),
             assumptions=("A-python-stack",),
             enforcement=STRUCTURAL,
         ),

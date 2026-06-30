@@ -131,6 +131,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-lifecycle-type-exists` | SETTLED | `framework-author` | A-bootstrap-self-applies | A generic tensio.lifecycle module shall define State, Transition, and Lifecycle types. |
 | `R-lifecycle-validates-requirement` | SETTLED | `framework-author` | A-bootstrap-self-applies | Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE. |
 | `R-lifecycle-validates-conflict` | SETTLED | `framework-author` | A-bootstrap-self-applies | Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE. |
+| `R-lifecycle-validates-operator` | SETTLED | `framework-author` | A-bootstrap-self-applies | Operator.lifecycle shall validate against the framework-supplied OPERATOR_LIFECYCLE. |
+| `R-lifecycle-validates-goal` | SETTLED | `framework-author` | A-bootstrap-self-applies | Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE. |
 | `R-process-types-exist` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | tensio.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
 | `R-process-opt-in` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple. |
 | `R-process-lifecycle-wellformed-aspect` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed. |
@@ -170,6 +172,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-agent-references-shared-docs` | SETTLED | `framework-author` | A-python-stack | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY). |
 | `R-agent-has-docs-dir` | SETTLED | `framework-author` | A-python-stack | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
 | `R-domain-has-docs-dir` | SETTLED | `framework-author` | A-python-stack | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
+| `R-no-hand-edit-graph` | SETTLED | `framework-author` | A-python-stack | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py; direct hand-edits are prohibited outside of bootstrap events. |
 
 ## Stakeholders
 

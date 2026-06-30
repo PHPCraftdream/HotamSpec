@@ -38,7 +38,7 @@ contradiction). No-ops when g.processes is empty.
 WHY 'no implicit role': an undeclared role is invisible — the Process
 claims to need an actor it has never introduced. This is the structural
 twin of check_conflict_has_axis_context_steward applied to the behavioral
-altitude: every demanded role must be named. Supply ≥ demand is checked
+altitude: every demanded role must be named. Supply >= demand is checked
 here; who fulfills each role is a future actor-matching invariant.
 
 ## From `spec/src/tensio/process.py` (module)

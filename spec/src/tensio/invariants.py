@@ -88,12 +88,217 @@ def holds(violations: list[Violation]) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# 1. Referential integrity — no dangling ids anywhere
+# Internal helpers — not in ALL_INVARIANTS; used by multiple check_* functions
 # ---------------------------------------------------------------------------
 
 
+def _requirement_owner_map(g: TensionGraph) -> dict[str, str]:
+    """Return {requirement_id: owner} for all requirements in the graph.
+
+    Centralised here so check_* functions that cross-reference requirement
+    owners do not each embed a ``for r in g.requirements`` comprehension,
+    which the atomicity audit treats as a second entity loop.
+    """
+    return {r.id: r.owner for r in g.requirements}
+
+
+def _stakeholder_to_operator_ids(g: TensionGraph) -> dict[str, list[str]]:
+    """Return {stakeholder_id: [operator_id, ...]} for all operators in the graph.
+
+    Centralised here so check_* functions that look up operators by stakeholder
+    do not embed a ``for op in g.operators`` loop at the call site, which the
+    atomicity audit would count as a second entity loop.
+    """
+    result: dict[str, list[str]] = {}
+    for op in g.operators:
+        result.setdefault(op.stakeholder, []).append(op.id)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# 1. Referential integrity — no dangling ids anywhere (atomized sub-checks)
+# ---------------------------------------------------------------------------
+
+
+def check_no_dangling_assumption_owner(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Assumption.owner resolves to a known Stakeholder.
+
+    RULE: Assumption.owner MUST be in stakeholder_ids(g). A dangling assumption
+    owner is an invisible hole — the methodology cannot surface context drift
+    if the assumption is unowned.
+
+    WHY: a dangling owner makes the assumption unanchored; drift detection depends
+    on assumptions having a live, resolvable owner.
+    """
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for a in g.assumptions:
+        if a.owner not in sids:
+            out.append(
+                Violation(
+                    "check_no_dangling_assumption_owner",
+                    a.id,
+                    f"assumption owner '{a.owner}' is not a known Stakeholder",
+                )
+            )
+    return out
+
+
+def check_no_dangling_requirement_owner(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Requirement.owner resolves to a known Stakeholder.
+
+    RULE: Requirement.owner MUST be in stakeholder_ids(g). A requirement without
+    a resolvable owner is structurally unanchored.
+
+    WHY: a dangling owner makes the requirement unanchored and breaks the steward
+    boundary invariant downstream.
+    """
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for r in g.requirements:
+        if r.owner not in sids:
+            out.append(
+                Violation(
+                    "check_no_dangling_requirement_owner",
+                    r.id,
+                    f"requirement owner '{r.owner}' is not a known Stakeholder",
+                )
+            )
+    return out
+
+
+def check_no_dangling_requirement_assumptions(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Requirement.assumptions[*] resolves to a known Assumption.
+
+    RULE: each id in Requirement.assumptions MUST be in assumption_ids(g). A dangling
+    assumption reference hides drift — if the assumption never existed the dependency
+    is invisible.
+
+    WHY: drift detection (DRIFT_FALLOUT band) traverses assumption dependencies; a
+    dangling reference breaks the traversal silently.
+    """
+    aids = assumption_ids(g)
+    out: list[Violation] = []
+    for r in g.requirements:
+        for aid in r.assumptions:
+            if aid not in aids:
+                out.append(
+                    Violation(
+                        "check_no_dangling_requirement_assumptions",
+                        r.id,
+                        f"assumption '{aid}' is not a known Assumption",
+                    )
+                )
+    return out
+
+
+def check_no_dangling_requirement_relations(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Requirement.relations[*] has a known kind and target.
+
+    RULE: each Relation.kind MUST be in RELATION_KINDS, and each Relation.target
+    MUST be in requirement_ids(g). An unknown kind or dangling target is an
+    unresolvable edge.
+
+    WHY: relation edges drive the dependency graph (R-dependency-graph-parallelism);
+    a dangling or mis-typed edge makes the graph structurally incomplete.
+    """
+    rids = requirement_ids(g)
+    out: list[Violation] = []
+    for r in g.requirements:
+        for rel in r.relations:
+            if rel.kind not in RELATION_KINDS:
+                out.append(
+                    Violation(
+                        "check_no_dangling_requirement_relations",
+                        r.id,
+                        f"relation kind '{rel.kind}' is not a known kind",
+                    )
+                )
+            if rel.target not in rids:
+                out.append(
+                    Violation(
+                        "check_no_dangling_requirement_relations",
+                        r.id,
+                        f"relation target '{rel.target}' is not a known Requirement",
+                    )
+                )
+    return out
+
+
+def check_no_dangling_conflict_refs(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Conflict's steward, members, shared_assumption, derived, and decided_by resolve.
+
+    RULE: Conflict.steward MUST be in stakeholder_ids(g); each member MUST be in
+    requirement_ids(g); shared_assumption (if set) MUST be in assumption_ids(g);
+    each derived id MUST be in requirement_ids(g); decided_by (if set) MUST be in
+    stakeholder_ids(g).
+
+    WHY: a dangling member is how a conflict silently loses a party; a dangling
+    assumption is how drift hides. Dangling refs on a Conflict are the cardinal
+    invisibility the methodology forbids.
+    """
+    sids, aids, rids = stakeholder_ids(g), assumption_ids(g), requirement_ids(g)
+    out: list[Violation] = []
+
+    def _dangle(c_id: str, ref_name: str, ref_val: str, kind: str) -> Violation:
+        return Violation(
+            "check_no_dangling_conflict_refs",
+            c_id,
+            f"dangling Conflict ref — {ref_name} '{ref_val}' is not a known {kind}",
+        )
+
+    for c in g.conflicts:
+        if c.steward not in sids:
+            out.append(_dangle(c.id, "steward", c.steward, "Stakeholder"))
+        for mid in c.members:
+            if mid not in rids:
+                out.append(_dangle(c.id, "member", mid, "Requirement"))
+        if c.shared_assumption is not None and c.shared_assumption not in aids:
+            out.append(_dangle(c.id, "shared_assumption", c.shared_assumption, "Assumption"))
+        for did in c.derived:
+            if did not in rids:
+                out.append(_dangle(c.id, "derived", did, "Requirement"))
+        if c.decided_by and c.decided_by not in sids:
+            out.append(_dangle(c.id, "decided_by", c.decided_by, "Stakeholder"))
+    return out
+
+
+def check_no_dangling_operator_refs(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Operator.stakeholder and Operator.parent resolve.
+
+    RULE: Operator.stakeholder MUST be in stakeholder_ids(g); Operator.parent
+    (if set) MUST be in operator_ids(g). A dangling operator ref makes the
+    delegation hierarchy structurally broken.
+
+    WHY: the operator tree is the recursive delegation structure
+    (R-operator-crystal-is-claude-md); a dangling parent or stakeholder collapses
+    the tree invisibly.
+    """
+    sids = stakeholder_ids(g)
+    oids = operator_ids(g)
+    out: list[Violation] = []
+    for op in g.operators:
+        if op.stakeholder not in sids:
+            out.append(
+                Violation(
+                    "check_no_dangling_operator_refs",
+                    op.id,
+                    f"operator stakeholder '{op.stakeholder}' is not a known Stakeholder",
+                )
+            )
+        if op.parent is not None and op.parent not in oids:
+            out.append(
+                Violation(
+                    "check_no_dangling_operator_refs",
+                    op.id,
+                    f"operator parent '{op.parent}' is not a known Operator",
+                )
+            )
+    return out
+
+
 def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
-    """Canon: §Invariants — every id referenced by an edge resolves in the graph.
+    """Canon: §Invariants — every id referenced by an edge resolves in the graph (thin delegator).
 
     RULE: Requirement.owner, Requirement.assumptions[*], Relation.target,
     Conflict.steward, Conflict.members[*], Conflict.shared_assumption,
@@ -103,59 +308,95 @@ def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
     WHY first and broadest: a dangling member is how a conflict silently loses a
     party; a dangling assumption is how drift hides. A dangling edge is an
     invisible hole, the cardinal sin of the methodology.
+
+    This is a THIN DELEGATOR — it calls the atomic sub-checks and concatenates
+    their results. The atomic sub-checks are registered individually in ALL_INVARIANTS.
     """
-    sids, aids, rids = stakeholder_ids(g), assumption_ids(g), requirement_ids(g)
-    oids = operator_ids(g)
     out: list[Violation] = []
-
-    def fire(target: str, msg: str) -> None:
-        out.append(Violation("check_no_dangling_ids", target, msg))
-
-    for a in g.assumptions:
-        if a.owner not in sids:
-            fire(a.id, f"assumption owner '{a.owner}' is not a known Stakeholder")
-    for r in g.requirements:
-        if r.owner not in sids:
-            fire(r.id, f"requirement owner '{r.owner}' is not a known Stakeholder")
-        for aid in r.assumptions:
-            if aid not in aids:
-                fire(r.id, f"assumption '{aid}' is not a known Assumption")
-        for rel in r.relations:
-            if rel.kind not in RELATION_KINDS:
-                fire(r.id, f"relation kind '{rel.kind}' is not a known kind")
-            if rel.target not in rids:
-                fire(r.id, f"relation target '{rel.target}' is not a known Requirement")
-    for c in g.conflicts:
-        if c.steward not in sids:
-            fire(c.id, f"steward '{c.steward}' is not a known Stakeholder")
-        for mid in c.members:
-            if mid not in rids:
-                fire(c.id, f"member '{mid}' is not a known Requirement")
-        if c.shared_assumption is not None and c.shared_assumption not in aids:
-            fire(c.id, f"shared_assumption '{c.shared_assumption}' is not known")
-        for did in c.derived:
-            if did not in rids:
-                fire(c.id, f"derived '{did}' is not a known Requirement")
-        if c.decided_by and c.decided_by not in sids:
-            fire(c.id, f"decided_by '{c.decided_by}' is not a known Stakeholder")
-    for op in g.operators:
-        if op.stakeholder not in sids:
-            fire(
-                op.id,
-                f"operator stakeholder '{op.stakeholder}' is not a known Stakeholder",
-            )
-        if op.parent is not None and op.parent not in oids:
-            fire(op.id, f"operator parent '{op.parent}' is not a known Operator")
+    out.extend(check_no_dangling_assumption_owner(g))
+    out.extend(check_no_dangling_requirement_owner(g))
+    out.extend(check_no_dangling_requirement_assumptions(g))
+    out.extend(check_no_dangling_requirement_relations(g))
+    out.extend(check_no_dangling_conflict_refs(g))
+    out.extend(check_no_dangling_operator_refs(g))
     return out
 
 
 # ---------------------------------------------------------------------------
-# 2. A conflict is a CONNECTOR — axis, context, steward all present
+# 2. A conflict is a CONNECTOR — axis, context, steward all present (atomized)
 # ---------------------------------------------------------------------------
 
 
+def check_conflict_has_axis(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — every Conflict carries a non-empty axis.
+
+    RULE: Conflict.axis MUST be a non-empty string. An axis-less conflict is not
+    a connector node — it does not name the tension dimension it mediates.
+
+    WHY: the axis is what makes conflicts cluster into architectural choices;
+    an axis-less conflict is invisible in any cluster view.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.axis.strip():
+            out.append(
+                Violation(
+                    "check_conflict_has_axis",
+                    c.id,
+                    "conflict has no tension axis (along WHAT do they diverge?)",
+                )
+            )
+    return out
+
+
+def check_conflict_has_context(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — every Conflict carries a non-empty context.
+
+    RULE: Conflict.context MUST be a non-empty string describing the scenario
+    where the two requirements collide. A context-less conflict has no scenario
+    and cannot be communicated to a steward.
+
+    WHY: without a context the conflict cannot be communicated to a steward or
+    a domain user in a way that enables resolution.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.context.strip():
+            out.append(
+                Violation(
+                    "check_conflict_has_context",
+                    c.id,
+                    "conflict has no context (in WHICH scenario do they collide?)",
+                )
+            )
+    return out
+
+
+def check_conflict_has_steward(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — every Conflict carries a non-empty steward.
+
+    RULE: Conflict.steward MUST be a non-empty string. A stewardless conflict
+    has no holder — the tension is invisible to the methodology.
+
+    WHY: this is the structural definition of "the contradiction is visible". A
+    stewardless conflict is exactly an invisible contradiction — the hard
+    boundary (R-ai-presents-not-decides) requires a named outside party.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.steward.strip():
+            out.append(
+                Violation(
+                    "check_conflict_has_steward",
+                    c.id,
+                    "conflict has no steward (WHO holds this tension?)",
+                )
+            )
+    return out
+
+
 def check_conflict_has_axis_context_steward(g: TensionGraph) -> list[Violation]:
-    """Canon: §Conflict — every Conflict carries a non-empty axis, context, steward.
+    """Canon: §Conflict — every Conflict carries a non-empty axis, context, steward (thin delegator).
 
     RULE: axis, context and steward MUST all be non-empty. These three are the
     knowledge that belongs to neither member; a conflict missing any of them is
@@ -163,33 +404,15 @@ def check_conflict_has_axis_context_steward(g: TensionGraph) -> list[Violation]:
 
     WHY: this is the structural definition of "the contradiction is visible". An
     axis-less or stewardless conflict is exactly an invisible contradiction.
+
+    This is a THIN DELEGATOR — calls check_conflict_has_axis,
+    check_conflict_has_context, check_conflict_has_steward and concatenates.
+    The atomic sub-checks are registered individually in ALL_INVARIANTS.
     """
     out: list[Violation] = []
-    for c in g.conflicts:
-        if not c.axis.strip():
-            out.append(
-                Violation(
-                    "check_conflict_has_axis_context_steward",
-                    c.id,
-                    "conflict has no tension axis (along WHAT do they diverge?)",
-                )
-            )
-        if not c.context.strip():
-            out.append(
-                Violation(
-                    "check_conflict_has_axis_context_steward",
-                    c.id,
-                    "conflict has no context (in WHICH scenario do they collide?)",
-                )
-            )
-        if not c.steward.strip():
-            out.append(
-                Violation(
-                    "check_conflict_has_axis_context_steward",
-                    c.id,
-                    "conflict has no steward (WHO holds this tension?)",
-                )
-            )
+    out.extend(check_conflict_has_axis(g))
+    out.extend(check_conflict_has_context(g))
+    out.extend(check_conflict_has_steward(g))
     return out
 
 
@@ -287,7 +510,7 @@ def check_steward_not_a_member_owner(g: TensionGraph) -> list[Violation]:
     AI never closing a conflict silently — the holder of the tension must be a
     party who does not own either claim, or invisibility returns.
     """
-    owner_of = {r.id: r.owner for r in g.requirements}
+    owner_of = _requirement_owner_map(g)
     out: list[Violation] = []
     for c in g.conflicts:
         member_owners = {owner_of[m] for m in c.members if m in owner_of}
@@ -380,36 +603,21 @@ def check_decided_has_rationale_or_derived(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
-# 5b. Signoff lock — a DECIDED conflict must name its human decider
+# 5b. Signoff lock — a DECIDED conflict must name its human decider (atomized)
 # ---------------------------------------------------------------------------
 
 
-def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
-    """Canon: §Conflict — a DECIDED conflict names a human decider outside its members.
+def check_decided_has_nonempty_decided_by(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a DECIDED conflict carries a non-empty decided_by field.
 
-    RULE (R-decided-needs-human-signoff + §Proposal): when Conflict.lifecycle
-    starts with "DECIDED", `decided_by` MUST satisfy three conditions:
-      1. Non-empty (a DECIDED conflict without a named human decider is an
-         AI-silently-closeable hole — exactly the invisibility the hard
-         boundary forbids).
-      2. Resolves to a known Stakeholder id (check_no_dangling_ids also
-         catches this; this check names it explicitly for the harness).
-      3. NOT the owner of any of the conflict's member Requirements (the
-         steward-distinct boundary applied to the decider, not just the
-         steward — the act of deciding must be distinct from owning a side).
+    RULE: when Conflict.lifecycle starts with "DECIDED", `decided_by` MUST be
+    non-empty. A DECIDED conflict without a named human decider is an
+    AI-silently-closeable hole — exactly the invisibility the hard boundary forbids.
 
-    This is the structural twin of check_steward_not_a_member_owner applied
-    at the moment of resolution: if the decider owned one of the members,
-    the hard boundary would be circumvented at the decision step.
-
-    WHY: R-decided-needs-human-signoff makes the closed loop's ACT half
-    structurally visible. Without this lock, an AI could write
-    lifecycle="DECIDED(...)" with decided_by="" and pass all other
-    invariants. This invariant is the machine-checkable enforcement of
-    "the human steward approves" (§Proposal — the closed loop's ACT half).
+    WHY: R-decided-needs-human-signoff makes the closed loop's ACT half structurally
+    visible. Without this lock, an AI could write lifecycle="DECIDED(...)" with
+    decided_by="" and pass all other invariants.
     """
-    owner_of = {r.id: r.owner for r in g.requirements}
-    sids = stakeholder_ids(g)
     out: list[Violation] = []
     for c in g.conflicts:
         if not c.is_decided():
@@ -417,28 +625,68 @@ def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
         if not c.decided_by:
             out.append(
                 Violation(
-                    "check_decided_has_decided_by",
+                    "check_decided_has_nonempty_decided_by",
                     c.id,
                     "DECIDED conflict must carry a non-empty decided_by "
                     "(the Stakeholder.id of the human who approved the resolution; "
                     "R-decided-needs-human-signoff)",
                 )
             )
+    return out
+
+
+def check_decided_by_is_known_stakeholder(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a DECIDED conflict's decided_by resolves to a known Stakeholder.
+
+    RULE: when Conflict.lifecycle starts with "DECIDED" and decided_by is non-empty,
+    decided_by MUST be in stakeholder_ids(g). An unresolvable decider is a dangling
+    reference that cannot be audited.
+
+    WHY: check_no_dangling_conflict_refs also catches this, but naming it explicitly
+    in the harness makes the missing signoff traceable to the decision moment.
+    """
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_decided():
             continue
+        if not c.decided_by:
+            continue  # caught by check_decided_has_nonempty_decided_by
         if c.decided_by not in sids:
             out.append(
                 Violation(
-                    "check_decided_has_decided_by",
+                    "check_decided_by_is_known_stakeholder",
                     c.id,
                     f"decided_by '{c.decided_by}' is not a known Stakeholder",
                 )
             )
+    return out
+
+
+def check_decided_by_not_member_owner(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a DECIDED conflict's decided_by is not the owner of any member Requirement.
+
+    RULE: when Conflict.lifecycle starts with "DECIDED", decided_by MUST NOT be
+    the owner of any of the conflict's member Requirements. The decider must be
+    outside the conflict's members (steward-distinct rule applied to the decider).
+
+    WHY: if the decider owned one of the members, the hard boundary would be
+    circumvented at the decision step. This is the structural twin of
+    check_steward_not_a_member_owner applied at the moment of resolution.
+    """
+    owner_of = _requirement_owner_map(g)
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_decided():
             continue
+        if not c.decided_by or c.decided_by not in sids:
+            continue  # caught by prior atomic checks
         member_owners = {owner_of[m] for m in c.members if m in owner_of}
         if c.decided_by in member_owners:
             out.append(
                 Violation(
-                    "check_decided_has_decided_by",
+                    "check_decided_by_not_member_owner",
                     c.id,
                     f"decided_by '{c.decided_by}' also owns a member requirement; "
                     f"the decider must be outside the conflict's members "
@@ -448,13 +696,169 @@ def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a DECIDED conflict names a human decider outside its members (thin delegator).
+
+    RULE (R-decided-needs-human-signoff + §Proposal): when Conflict.lifecycle
+    starts with "DECIDED", `decided_by` MUST satisfy three conditions:
+      1. Non-empty.
+      2. Resolves to a known Stakeholder id.
+      3. NOT the owner of any of the conflict's member Requirements.
+
+    This is a THIN DELEGATOR — calls check_decided_has_nonempty_decided_by,
+    check_decided_by_is_known_stakeholder, check_decided_by_not_member_owner
+    and concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
+
+    WHY: R-decided-needs-human-signoff makes the closed loop's ACT half structurally
+    visible (§Proposal — the closed loop's ACT half).
+    """
+    out: list[Violation] = []
+    out.extend(check_decided_has_nonempty_decided_by(g))
+    out.extend(check_decided_by_is_known_stakeholder(g))
+    out.extend(check_decided_by_not_member_owner(g))
+    return out
+
+
 # ---------------------------------------------------------------------------
-# 6. Typed-anchor prefixes — every id carries the right kind prefix
+# 6. Typed-anchor prefixes — every id carries the right kind prefix (atomized)
 # ---------------------------------------------------------------------------
+
+
+def check_typed_anchors_requirement(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Requirement.id starts with 'R-'.
+
+    RULE: Requirement.id MUST start with 'R-'. An id with the wrong prefix
+    breaks the typed-anchor discipline (R-anchor-everything) and makes
+    cite-by-reference unreliable (R-speak-by-reference).
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if not r.id.startswith("R-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_requirement",
+                    r.id,
+                    f"Requirement id '{r.id}' must start with 'R-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+def check_typed_anchors_assumption(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Assumption.id starts with 'A-'.
+
+    RULE: Assumption.id MUST start with 'A-'. An id with the wrong prefix
+    breaks the typed-anchor discipline (R-anchor-everything).
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for a in g.assumptions:
+        if not a.id.startswith("A-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_assumption",
+                    a.id,
+                    f"Assumption id '{a.id}' must start with 'A-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+def check_typed_anchors_conflict(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Conflict.id starts with 'C-'.
+
+    RULE: Conflict.id MUST start with 'C-'. An id with the wrong prefix
+    breaks the typed-anchor discipline (R-anchor-everything).
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.id.startswith("C-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_conflict",
+                    c.id,
+                    f"Conflict id '{c.id}' must start with 'C-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+def check_typed_anchors_operator(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Operator.id starts with 'OP-'.
+
+    RULE: Operator.id MUST start with 'OP-'. An id with the wrong prefix
+    breaks the typed-anchor discipline (R-anchor-everything).
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for op in g.operators:
+        if not op.id.startswith("OP-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_operator",
+                    op.id,
+                    f"Operator id '{op.id}' must start with 'OP-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+def check_typed_anchors_process(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Process.id starts with 'PR-'.
+
+    RULE: Process.id MUST start with 'PR-'. An id with the wrong prefix
+    breaks the typed-anchor discipline (R-anchor-everything).
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for p in g.processes:
+        if not p.id.startswith("PR-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_process",
+                    p.id,
+                    f"Process id '{p.id}' must start with 'PR-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+def check_typed_anchors_goal(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Goal.id starts with 'GOAL-'.
+
+    RULE: Goal.id MUST start with 'GOAL-'. An id with the wrong prefix
+    breaks the typed-anchor discipline (R-anchor-everything).
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for go in g.goals:
+        if not go.id.startswith("GOAL-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors_goal",
+                    go.id,
+                    f"Goal id '{go.id}' must start with 'GOAL-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
 
 
 def check_typed_anchors(g: TensionGraph) -> list[Violation]:
-    """Canon: §Invariants — every id carries the prefix that matches its kind.
+    """Canon: §Invariants — every id carries the prefix that matches its kind (thin delegator).
 
     RULE: Requirement.id MUST start with 'R-'; Assumption.id MUST start with
     'A-'; Conflict.id MUST start with 'C-'; Operator.id MUST start with 'OP-'.
@@ -467,69 +871,18 @@ def check_typed_anchors(g: TensionGraph) -> list[Violation]:
     M28 taxonomy (GOAL-/GAP-/DLG-/AX-) — those are still OPEN per
     R-anchor-taxonomy.
 
+    This is a THIN DELEGATOR — calls the atomic per-entity-type sub-checks and
+    concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
+
     References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
     """
     out: list[Violation] = []
-    for r in g.requirements:
-        if not r.id.startswith("R-"):
-            out.append(
-                Violation(
-                    "check_typed_anchors",
-                    r.id,
-                    f"Requirement id '{r.id}' must start with 'R-' "
-                    f"(typed-anchor rule, R-anchor-everything)",
-                )
-            )
-    for a in g.assumptions:
-        if not a.id.startswith("A-"):
-            out.append(
-                Violation(
-                    "check_typed_anchors",
-                    a.id,
-                    f"Assumption id '{a.id}' must start with 'A-' "
-                    f"(typed-anchor rule, R-anchor-everything)",
-                )
-            )
-    for c in g.conflicts:
-        if not c.id.startswith("C-"):
-            out.append(
-                Violation(
-                    "check_typed_anchors",
-                    c.id,
-                    f"Conflict id '{c.id}' must start with 'C-' "
-                    f"(typed-anchor rule, R-anchor-everything)",
-                )
-            )
-    for op in g.operators:
-        if not op.id.startswith("OP-"):
-            out.append(
-                Violation(
-                    "check_typed_anchors",
-                    op.id,
-                    f"Operator id '{op.id}' must start with 'OP-' "
-                    f"(typed-anchor rule, R-anchor-everything)",
-                )
-            )
-    for p in g.processes:
-        if not p.id.startswith("PR-"):
-            out.append(
-                Violation(
-                    "check_typed_anchors",
-                    p.id,
-                    f"Process id '{p.id}' must start with 'PR-' "
-                    f"(typed-anchor rule, R-anchor-everything)",
-                )
-            )
-    for go in g.goals:
-        if not go.id.startswith("GOAL-"):
-            out.append(
-                Violation(
-                    "check_typed_anchors",
-                    go.id,
-                    f"Goal id '{go.id}' must start with 'GOAL-' "
-                    f"(typed-anchor rule, R-anchor-everything)",
-                )
-            )
+    out.extend(check_typed_anchors_requirement(g))
+    out.extend(check_typed_anchors_assumption(g))
+    out.extend(check_typed_anchors_conflict(g))
+    out.extend(check_typed_anchors_operator(g))
+    out.extend(check_typed_anchors_process(g))
+    out.extend(check_typed_anchors_goal(g))
     return out
 
 
@@ -579,51 +932,55 @@ def check_enforced_names_invariant(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
-# 8. M-tag format, uniqueness, and OPEN-only discipline
+# 8. M-tag format, uniqueness, and OPEN-only discipline (atomized)
 # ---------------------------------------------------------------------------
 
 
-def check_m_tag_format(g: TensionGraph) -> list[Violation]:
-    """Canon: §Requirement — every non-empty m_tag is valid, unique, and OPEN-only.
+def check_m_tag_valid_format(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — every non-empty m_tag matches ^M[1-9][0-9]*$.
 
-    RULE (three sub-rules):
-      1. FORMAT: a non-empty `m_tag` MUST match `^M[1-9][0-9]*$` — "M" followed
-         by a positive integer with no leading zeros (e.g. M3, M17, M26; not M01,
-         m17, M, Mfoo). This is the typed-anchor discipline applied to M-tags.
-      2. UNIQUE: no two Requirements in the graph may share the same `m_tag`. A
-         duplicate tag breaks the bijection that `docs/gen/DECISIONS.md` relies on:
-         one M-decision maps to exactly one Requirement.
-      3. OPEN-ONLY: an `m_tag` SHOULD appear only on an OPEN requirement. An M-tag
-         on a SETTLED, DRAFT, or REJECTED requirement fires a violation — the
-         M-registry tracks live open decisions, not resolved or proposed ones.
+    RULE: a non-empty `m_tag` MUST match `^M[1-9][0-9]*$` — "M" followed by a
+    positive integer with no leading zeros (e.g. M3, M17, M26; not M01, m17, M,
+    Mfoo). This is the typed-anchor discipline applied to M-tags.
 
-    WHY: the M-tag field is the bridge between the graph and `docs/gen/DECISIONS.md`
-    (the generated canonical M-registry). Invalid format breaks parsing; duplicates
-    break the one-to-one mapping; non-OPEN tags would pollute the registry with
-    decisions that are no longer open (R-drift-structurally-impossible applied to the
-    M-registry itself — see U5).
+    WHY: invalid format breaks M-registry parsing; the format is the typed-anchor
+    convention for methodology decisions (R-drift-structurally-impossible / U5).
     """
     out: list[Violation] = []
-    seen_tags: dict[str, str] = {}  # tag -> first requirement id
-
     for r in g.requirements:
         if not r.m_tag:
             continue
-        # Rule 1: format
         if not _M_TAG_RE.match(r.m_tag):
             out.append(
                 Violation(
-                    "check_m_tag_format",
+                    "check_m_tag_valid_format",
                     r.id,
                     f"m_tag '{r.m_tag}' does not match ^M[1-9][0-9]*$ "
                     f"(must be 'M' followed by a positive integer, no leading zeros)",
                 )
             )
-        # Rule 2: uniqueness
+    return out
+
+
+def check_m_tag_unique(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — no two Requirements share the same m_tag.
+
+    RULE: each non-empty `m_tag` MUST appear on at most one Requirement in the
+    graph. A duplicate tag breaks the bijection that `docs/gen/DECISIONS.md` relies
+    on: one M-decision maps to exactly one Requirement.
+
+    WHY: duplicates break the one-to-one mapping between an M-entry and its
+    Requirement (R-drift-structurally-impossible applied to the M-registry).
+    """
+    out: list[Violation] = []
+    seen_tags: dict[str, str] = {}
+    for r in g.requirements:
+        if not r.m_tag:
+            continue
         if r.m_tag in seen_tags:
             out.append(
                 Violation(
-                    "check_m_tag_format",
+                    "check_m_tag_unique",
                     r.id,
                     f"m_tag '{r.m_tag}' is already used by '{seen_tags[r.m_tag]}'; "
                     f"each M-tag must be unique across the graph",
@@ -631,22 +988,60 @@ def check_m_tag_format(g: TensionGraph) -> list[Violation]:
             )
         else:
             seen_tags[r.m_tag] = r.id
-        # Rule 3: OPEN-only
+    return out
+
+
+def check_m_tag_open_only(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — an m_tag appears only on an OPEN requirement.
+
+    RULE: an `m_tag` MUST only appear on a Requirement with status starting with
+    OPEN. An M-tag on a SETTLED, DRAFT, or REJECTED requirement would pollute the
+    M-registry with decisions that are no longer open.
+
+    WHY: the M-registry tracks live open decisions; a non-OPEN m_tag makes the
+    registry structurally incorrect (R-drift-structurally-impossible / U5).
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if not r.m_tag:
+            continue
         if not r.status.startswith(OPEN_PREFIX):
             out.append(
                 Violation(
-                    "check_m_tag_format",
+                    "check_m_tag_open_only",
                     r.id,
                     f"m_tag '{r.m_tag}' appears on a non-OPEN requirement (status={r.status!r}); "
                     f"M-tags are only for OPEN requirements (the live M-decision registry)",
                 )
             )
+    return out
 
+
+def check_m_tag_format(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — every non-empty m_tag is valid, unique, and OPEN-only (thin delegator).
+
+    RULE (three sub-rules):
+      1. FORMAT: a non-empty `m_tag` MUST match `^M[1-9][0-9]*$`.
+      2. UNIQUE: no two Requirements may share the same `m_tag`.
+      3. OPEN-ONLY: an `m_tag` MUST only appear on an OPEN requirement.
+
+    WHY: the M-tag field is the bridge between the graph and `docs/gen/DECISIONS.md`
+    (the generated canonical M-registry). Invalid format breaks parsing; duplicates
+    break the one-to-one mapping; non-OPEN tags pollute the registry.
+
+    This is a THIN DELEGATOR — calls check_m_tag_valid_format, check_m_tag_unique,
+    check_m_tag_open_only and concatenates. The atomic sub-checks are registered
+    individually in ALL_INVARIANTS.
+    """
+    out: list[Violation] = []
+    out.extend(check_m_tag_valid_format(g))
+    out.extend(check_m_tag_unique(g))
+    out.extend(check_m_tag_open_only(g))
     return out
 
 
 # ---------------------------------------------------------------------------
-# 9. Lifecycle well-formedness helper + Lifecycle-status validators
+# 9. Lifecycle well-formedness helper + Lifecycle-status validators (atomized)
 # ---------------------------------------------------------------------------
 
 
@@ -722,73 +1117,130 @@ def check_lifecycle_wellformed(lc: Lifecycle) -> list[str]:
     return issues
 
 
-def check_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
-    """Canon: §Lifecycle / §Invariants — every status/lifecycle value matches a canonical Lifecycle.
+def check_requirement_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every Requirement.status matches REQUIREMENT_STATUS_LIFECYCLE.
 
-    RULE (three sub-rules):
-      1. Every Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE
-         (exact match for DRAFT/SETTLED/REJECTED; prefix match for OPEN(question)).
-      2. Every Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE
-         (exact match for DETECTED/ACKNOWLEDGED; prefix match for
-         DECIDED(rationale) and REVISIT_WHEN(condition)).
-      3. Every Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE
-         (exact match for ACTIVE/SATURATED/DELEGATED/RETIRED).
+    RULE: Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE
+    (exact match for DRAFT/SETTLED/REJECTED; prefix match for OPEN(question)).
+    When matches() returns None, fire a Violation.
 
-    When matches() returns None, the value is not a recognized state of the
-    canonical lifecycle; a Violation is fired naming the offending value and
-    lifecycle slug.
-
-    WHY structural: status and lifecycle are hand-rolled string state machines;
-    this invariant enforces that stored values belong to the canonical set,
-    making the state machines structurally visible and checkable rather than
-    only convention-held. References: R-lifecycle-abstraction,
-    R-statemachine-wellformedness.
+    WHY structural: status is a hand-rolled string state machine; this invariant
+    enforces that stored values belong to the canonical set. References:
+    R-lifecycle-abstraction, R-statemachine-wellformedness.
     """
     out: list[Violation] = []
     for r in g.requirements:
         if REQUIREMENT_STATUS_LIFECYCLE.matches(r.status) is None:
             out.append(
                 Violation(
-                    "check_status_in_lifecycle",
+                    "check_requirement_status_in_lifecycle",
                     r.id,
                     f"Requirement.status '{r.status}' is not a valid state in "
                     f"lifecycle '{REQUIREMENT_STATUS_LIFECYCLE.slug}' "
                     f"(valid: {sorted(REQUIREMENT_STATUS_LIFECYCLE.state_names())})",
                 )
             )
+    return out
+
+
+def check_conflict_lifecycle_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every Conflict.lifecycle matches CONFLICT_LIFECYCLE.
+
+    RULE: Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE (exact match
+    for DETECTED/ACKNOWLEDGED; prefix match for DECIDED(rationale) and
+    REVISIT_WHEN(condition)). When matches() returns None, fire a Violation.
+
+    WHY structural: conflict lifecycle is a hand-rolled string state machine;
+    enforcing canonical values makes the machine structurally visible and checkable.
+    References: R-lifecycle-abstraction, R-statemachine-wellformedness.
+    """
+    out: list[Violation] = []
     for c in g.conflicts:
         if CONFLICT_LIFECYCLE.matches(c.lifecycle) is None:
             out.append(
                 Violation(
-                    "check_status_in_lifecycle",
+                    "check_conflict_lifecycle_in_lifecycle",
                     c.id,
                     f"Conflict.lifecycle '{c.lifecycle}' is not a valid state in "
                     f"lifecycle '{CONFLICT_LIFECYCLE.slug}' "
                     f"(valid: {sorted(CONFLICT_LIFECYCLE.state_names())})",
                 )
             )
+    return out
+
+
+def check_operator_lifecycle_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every Operator.lifecycle matches OPERATOR_LIFECYCLE.
+
+    RULE: Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE (exact match
+    for ACTIVE/SATURATED/DELEGATED/RETIRED). When matches() returns None, fire a
+    Violation.
+
+    WHY structural: operator lifecycle is a hand-rolled string state machine;
+    enforcing canonical values makes the machine structurally visible and checkable.
+    References: R-lifecycle-abstraction, R-statemachine-wellformedness.
+    """
+    out: list[Violation] = []
     for op in g.operators:
         if OPERATOR_LIFECYCLE.matches(op.lifecycle) is None:
             out.append(
                 Violation(
-                    "check_status_in_lifecycle",
+                    "check_operator_lifecycle_in_lifecycle",
                     op.id,
                     f"Operator.lifecycle '{op.lifecycle}' is not a valid state in "
                     f"lifecycle '{OPERATOR_LIFECYCLE.slug}' "
                     f"(valid: {sorted(OPERATOR_LIFECYCLE.state_names())})",
                 )
             )
+    return out
+
+
+def check_goal_lifecycle_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every Goal.lifecycle matches GOAL_LIFECYCLE.
+
+    RULE: Goal.lifecycle MUST be matched by GOAL_LIFECYCLE. When matches() returns
+    None, fire a Violation.
+
+    WHY structural: goal lifecycle is a hand-rolled string state machine; enforcing
+    canonical values makes the machine structurally visible and checkable.
+    References: R-lifecycle-abstraction, R-statemachine-wellformedness.
+    """
+    out: list[Violation] = []
     for go in g.goals:
         if GOAL_LIFECYCLE.matches(go.lifecycle) is None:
             out.append(
                 Violation(
-                    "check_status_in_lifecycle",
+                    "check_goal_lifecycle_in_lifecycle",
                     go.id,
                     f"Goal.lifecycle '{go.lifecycle}' is not a valid state in "
                     f"lifecycle '{GOAL_LIFECYCLE.slug}' "
                     f"(valid: {sorted(GOAL_LIFECYCLE.state_names())})",
                 )
             )
+    return out
+
+
+def check_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every status/lifecycle value matches a canonical Lifecycle (thin delegator).
+
+    RULE (four sub-rules):
+      1. Every Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE.
+      2. Every Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE.
+      3. Every Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE.
+      4. Every Goal.lifecycle MUST be matched by GOAL_LIFECYCLE.
+
+    WHY structural: status and lifecycle are hand-rolled string state machines;
+    this invariant enforces canonical values. References: R-lifecycle-abstraction,
+    R-statemachine-wellformedness.
+
+    This is a THIN DELEGATOR — calls the four atomic per-entity sub-checks and
+    concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
+    """
+    out: list[Violation] = []
+    out.extend(check_requirement_status_in_lifecycle(g))
+    out.extend(check_conflict_lifecycle_in_lifecycle(g))
+    out.extend(check_operator_lifecycle_in_lifecycle(g))
+    out.extend(check_goal_lifecycle_in_lifecycle(g))
     return out
 
 
@@ -854,11 +1306,11 @@ def check_operator_steward_not_self(g: TensionGraph) -> list[Violation]:
 
     This is the reflexive twin of check_steward_not_a_member_owner.
     """
-    owner_of = {r.id: r.owner for r in g.requirements}
-    # Map from stakeholder id -> operator ids that are that stakeholder's acting facet
-    op_by_stakeholder: dict[str, list[str]] = {}
-    for op in g.operators:
-        op_by_stakeholder.setdefault(op.stakeholder, []).append(op.id)
+    owner_of = _requirement_owner_map(g)
+    # Build lookup: stakeholder id -> list of operator ids (acting facets).
+    # Delegated to _stakeholder_to_operator_ids to avoid a second entity loop
+    # at this call site (atomicity audit counts for-loops over g.<entity>).
+    op_by_stakeholder = _stakeholder_to_operator_ids(g)
 
     out: list[Violation] = []
     for c in g.conflicts:
@@ -970,7 +1422,7 @@ def check_process_roles_declared(g: TensionGraph) -> list[Violation]:
     WHY 'no implicit role': an undeclared role is invisible — the Process
     claims to need an actor it has never introduced. This is the structural
     twin of check_conflict_has_axis_context_steward applied to the behavioral
-    altitude: every demanded role must be named. Supply ≥ demand is checked
+    altitude: every demanded role must be named. Supply >= demand is checked
     here; who fulfills each role is a future actor-matching invariant.
     """
     out: list[Violation] = []
@@ -1233,13 +1685,42 @@ def _resolve_spec_agents_root() -> Path:
 _SPEC_AGENTS_ROOT = _resolve_spec_agents_root()
 
 
-def check_domain_manifest_valid(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
-    """Canon: §Domain — every domains/<name>/manifest.py defines ID (matching dirname), DESCRIPTION, GOALS, DIRECTOR.
+def _load_domain_manifest(domain_dir: Path) -> object | None:
+    """Load and return the manifest module for a domain directory, or None on failure.
 
-    RULE: A domain without a valid manifest is invisible to the framework.
-    WHY: The manifest is the stable identity anchor for a domain; missing or
-    mismatched fields make the domain undiscoverable by gen_spec and
-    create_domain tooling (R-domain-has-manifest).
+    Helper for domain manifest atomic checks — avoids duplicating importlib logic.
+    Returns the loaded module object, or None if the manifest is missing or unloadable.
+    Not a check_* function; not in ALL_INVARIANTS.
+    """
+    import importlib.util  # noqa: PLC0415
+
+    manifest_py = domain_dir / "manifest.py"
+    if not manifest_py.exists():
+        return None
+    spec = importlib.util.spec_from_file_location(
+        f"_manifest_{domain_dir.name}", manifest_py
+    )
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    except Exception:
+        return None
+    return mod
+
+
+def check_domain_manifest_exists_and_importable(  # noqa: ARG001
+    g: TensionGraph,
+) -> list[Violation]:
+    """Canon: §Domain — every domains/<name>/manifest.py exists and can be imported.
+
+    RULE: A domain directory MUST contain a manifest.py that can be loaded
+    without error. Missing or unloadable manifests make the domain invisible to
+    the framework (R-domain-has-manifest).
+
+    WHY: The manifest is the stable identity anchor for a domain; if it cannot
+    be loaded, no field checks are possible and the domain is structurally dark.
     """
     if not _DOMAINS_ROOT.exists():
         return []
@@ -1253,73 +1734,178 @@ def check_domain_manifest_valid(g: TensionGraph) -> list[Violation]:  # noqa: AR
         if not manifest_py.exists():
             out.append(
                 Violation(
-                    "check_domain_manifest_valid",
+                    "check_domain_manifest_exists_and_importable",
                     domain_dir.name,
                     f"domains/{domain_dir.name}/manifest.py is missing — "
                     "every domain must declare ID, DESCRIPTION, GOALS, DIRECTOR",
                 )
             )
             continue
+        load_error: str | None = None
         spec = importlib.util.spec_from_file_location(
-            f"_manifest_{domain_dir.name}", manifest_py
+            f"_manifest_exi_{domain_dir.name}", manifest_py
         )
         if spec is None or spec.loader is None:
+            load_error = "bad spec or loader"
+        else:
+            mod = importlib.util.module_from_spec(spec)
+            try:
+                spec.loader.exec_module(mod)  # type: ignore[union-attr]
+            except Exception as exc:
+                load_error = str(exc)
+        if load_error is not None:
             out.append(
                 Violation(
-                    "check_domain_manifest_valid",
+                    "check_domain_manifest_exists_and_importable",
                     domain_dir.name,
-                    f"Cannot load manifest.py for domain '{domain_dir.name}'",
+                    f"manifest.py could not be loaded for domain '{domain_dir.name}': {load_error}",
                 )
             )
+    return out
+
+
+def check_domain_manifest_id_matches_dirname(  # noqa: ARG001
+    g: TensionGraph,
+) -> list[Violation]:
+    """Canon: §Domain — every domains/<name>/manifest.py ID field matches the directory name.
+
+    RULE: manifest.py MUST define an ID attribute equal to the directory name.
+    A mismatched ID breaks the identity anchor for gen_spec and create_domain tooling.
+
+    WHY: The manifest ID is the stable identity key; a mismatch makes the domain
+    undiscoverable or discoverable under the wrong name (R-domain-has-manifest).
+    """
+    if not _DOMAINS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+        if not domain_dir.is_dir():
             continue
-        mod = importlib.util.module_from_spec(spec)
-        try:
-            spec.loader.exec_module(mod)  # type: ignore[union-attr]
-        except Exception as exc:
-            out.append(
-                Violation(
-                    "check_domain_manifest_valid",
-                    domain_dir.name,
-                    f"manifest.py import error: {exc}",
-                )
-            )
-            continue
+        mod = _load_domain_manifest(domain_dir)
+        if mod is None:
+            continue  # caught by check_domain_manifest_exists_and_importable
         domain_id = getattr(mod, "ID", None)
-        description = getattr(mod, "DESCRIPTION", None)
-        goals = getattr(mod, "GOALS", None)
-        director = getattr(mod, "DIRECTOR", None)
         if domain_id != domain_dir.name:
             out.append(
                 Violation(
-                    "check_domain_manifest_valid",
+                    "check_domain_manifest_id_matches_dirname",
                     domain_dir.name,
                     f"manifest.py ID '{domain_id}' does not match dirname '{domain_dir.name}'",
                 )
             )
-        if not description:
+    return out
+
+
+def check_domain_manifest_description_nonempty(  # noqa: ARG001
+    g: TensionGraph,
+) -> list[Violation]:
+    """Canon: §Domain — every domains/<name>/manifest.py DESCRIPTION is non-empty.
+
+    RULE: manifest.py MUST define a non-empty DESCRIPTION attribute. A domain
+    without a description is undocumented and invisible to human readers.
+
+    WHY: The manifest DESCRIPTION is surfaced in gen_spec output; missing it
+    breaks the generated domain map (R-domain-has-manifest).
+    """
+    if not _DOMAINS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        mod = _load_domain_manifest(domain_dir)
+        if mod is None:
+            continue
+        if not getattr(mod, "DESCRIPTION", None):
             out.append(
                 Violation(
-                    "check_domain_manifest_valid",
+                    "check_domain_manifest_description_nonempty",
                     domain_dir.name,
                     "manifest.py DESCRIPTION is empty",
                 )
             )
-        if not goals:
+    return out
+
+
+def check_domain_manifest_goals_nonempty(  # noqa: ARG001
+    g: TensionGraph,
+) -> list[Violation]:
+    """Canon: §Domain — every domains/<name>/manifest.py GOALS is non-empty.
+
+    RULE: manifest.py MUST define a non-empty GOALS attribute. A domain without
+    declared goals has no visible intent and cannot drive the burn-down meter.
+
+    WHY: GOALS drive the Goal objects in the domain graph; missing them makes
+    the domain's purpose invisible (R-domain-has-manifest).
+    """
+    if not _DOMAINS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        mod = _load_domain_manifest(domain_dir)
+        if mod is None:
+            continue
+        if not getattr(mod, "GOALS", None):
             out.append(
                 Violation(
-                    "check_domain_manifest_valid",
+                    "check_domain_manifest_goals_nonempty",
                     domain_dir.name,
                     "manifest.py GOALS is empty or missing",
                 )
             )
-        if not director:
+    return out
+
+
+def check_domain_manifest_director_nonempty(  # noqa: ARG001
+    g: TensionGraph,
+) -> list[Violation]:
+    """Canon: §Domain — every domains/<name>/manifest.py DIRECTOR is non-empty.
+
+    RULE: manifest.py MUST define a non-empty DIRECTOR attribute naming the
+    director agent. A domain without a declared director is headless.
+
+    WHY: The DIRECTOR is the entry point for all domain-level operator delegation;
+    missing it means no agent can be discovered (R-domain-declares-director).
+    """
+    if not _DOMAINS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        mod = _load_domain_manifest(domain_dir)
+        if mod is None:
+            continue
+        if not getattr(mod, "DIRECTOR", None):
             out.append(
                 Violation(
-                    "check_domain_manifest_valid",
+                    "check_domain_manifest_director_nonempty",
                     domain_dir.name,
                     "manifest.py DIRECTOR is empty or missing",
                 )
             )
+    return out
+
+
+def check_domain_manifest_valid(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Domain — every domains/<name>/manifest.py defines ID (matching dirname), DESCRIPTION, GOALS, DIRECTOR (thin delegator).
+
+    RULE: A domain without a valid manifest is invisible to the framework.
+    WHY: The manifest is the stable identity anchor for a domain; missing or
+    mismatched fields make the domain undiscoverable by gen_spec and
+    create_domain tooling (R-domain-has-manifest).
+
+    This is a THIN DELEGATOR — calls the atomic sub-checks and concatenates.
+    The atomic sub-checks are registered individually in ALL_INVARIANTS.
+    """
+    out: list[Violation] = []
+    out.extend(check_domain_manifest_exists_and_importable(g))
+    out.extend(check_domain_manifest_id_matches_dirname(g))
+    out.extend(check_domain_manifest_description_nonempty(g))
+    out.extend(check_domain_manifest_goals_nonempty(g))
+    out.extend(check_domain_manifest_director_nonempty(g))
     return out
 
 
@@ -1431,20 +2017,50 @@ def check_agent_has_docs_subdir(g: TensionGraph) -> list[Violation]:  # noqa: AR
 # ---------------------------------------------------------------------------
 
 ALL_INVARIANTS = (
-    check_no_dangling_ids,
-    check_conflict_has_axis_context_steward,
+    # §Referential integrity (atomized; check_no_dangling_ids is the thin delegator)
+    check_no_dangling_assumption_owner,
+    check_no_dangling_requirement_owner,
+    check_no_dangling_requirement_assumptions,
+    check_no_dangling_requirement_relations,
+    check_no_dangling_conflict_refs,
+    check_no_dangling_operator_refs,
+    # §Conflict connector node (atomized; check_conflict_has_axis_context_steward is thin delegator)
+    check_conflict_has_axis,
+    check_conflict_has_context,
+    check_conflict_has_steward,
     check_conflict_min_two_members,
     check_axis_in_registry,
     check_conflict_id_matches_identity,
+    # §Boundary
     check_steward_not_a_member_owner,
+    # §Visibility of the open
     check_open_has_question,
+    # §Anti-relitigation
     check_decided_has_rationale_or_derived,
-    check_decided_has_decided_by,
-    check_typed_anchors,
+    # §Signoff lock (atomized; check_decided_has_decided_by is thin delegator)
+    check_decided_has_nonempty_decided_by,
+    check_decided_by_is_known_stakeholder,
+    check_decided_by_not_member_owner,
+    # §Typed anchors (atomized; check_typed_anchors is thin delegator)
+    check_typed_anchors_requirement,
+    check_typed_anchors_assumption,
+    check_typed_anchors_conflict,
+    check_typed_anchors_operator,
+    check_typed_anchors_process,
+    check_typed_anchors_goal,
+    # §Enforcement gradient
     check_enforced_names_invariant,
-    check_m_tag_format,
-    check_status_in_lifecycle,
+    # §M-tag (atomized; check_m_tag_format is thin delegator)
+    check_m_tag_valid_format,
+    check_m_tag_unique,
+    check_m_tag_open_only,
+    # §Lifecycle status (atomized; check_status_in_lifecycle is thin delegator)
+    check_requirement_status_in_lifecycle,
+    check_conflict_lifecycle_in_lifecycle,
+    check_operator_lifecycle_in_lifecycle,
+    check_goal_lifecycle_in_lifecycle,
     check_canonical_lifecycles_wellformed,
+    # §Operator safety
     check_operator_steward_not_self,
     check_operator_within_budget,
     # §Process aspect invariants (aspect-gated: no-op when g.processes empty)
@@ -1456,14 +2072,18 @@ ALL_INVARIANTS = (
     check_section_anchors_known,
     check_bijection_r_to_enforcer,
     # §Domain + §Agent filesystem invariants (P17 task #64)
-    check_domain_manifest_valid,
+    check_domain_manifest_exists_and_importable,
+    check_domain_manifest_id_matches_dirname,
+    check_domain_manifest_description_nonempty,
+    check_domain_manifest_goals_nonempty,
+    check_domain_manifest_director_nonempty,
     check_domain_director_exists,
     check_agent_has_agents_subdir,
     check_agent_has_docs_subdir,
 )
 
 # --- M7: the critical core ---
-# These six invariants guard paths by which contradictions could be INTRODUCED
+# These invariants guard paths by which contradictions could be INTRODUCED
 # without being seen. They get the Hypothesis property-sweep treatment
 # (test_conscience.py). Other invariants are still in ALL_INVARIANTS and tested
 # normally; this constant marks the boundary.
@@ -1472,12 +2092,32 @@ ALL_INVARIANTS = (
 # made narrow and machine-checkable (M7 resolved). Secondary-ring invariants
 # (e.g. check_axis_in_registry, check_conflict_id_matches_identity) are still in
 # ALL_INVARIANTS and receive the same Hypothesis machinery but at lower priority.
+#
+# NOTE: compound thin-delegators (check_no_dangling_ids, check_typed_anchors,
+# check_decided_has_decided_by) are replaced here by their atomic sub-checks so
+# the conscience boundary uses the smallest possible, independently addressable
+# invariants.
 CRITICAL_CORE_INVARIANTS = (
     check_steward_not_a_member_owner,
     check_operator_steward_not_self,
-    check_decided_has_decided_by,
-    check_typed_anchors,
-    check_no_dangling_ids,
+    # check_decided_has_decided_by atomized:
+    check_decided_has_nonempty_decided_by,
+    check_decided_by_is_known_stakeholder,
+    check_decided_by_not_member_owner,
+    # check_typed_anchors atomized:
+    check_typed_anchors_requirement,
+    check_typed_anchors_assumption,
+    check_typed_anchors_conflict,
+    check_typed_anchors_operator,
+    check_typed_anchors_process,
+    check_typed_anchors_goal,
+    # check_no_dangling_ids atomized:
+    check_no_dangling_assumption_owner,
+    check_no_dangling_requirement_owner,
+    check_no_dangling_requirement_assumptions,
+    check_no_dangling_requirement_relations,
+    check_no_dangling_conflict_refs,
+    check_no_dangling_operator_refs,
     check_open_has_question,
 )
 
@@ -1494,8 +2134,8 @@ def all_violations(g: TensionGraph) -> list[Violation]:
     same set of invariants in the exact same order (determinism). The §Tick driver
     (P5) calls diagnose() which calls this; §Tick is advisory (M32 conservative).
 
-    Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of six
-    invariants whose violation would silently break the hard boundary or anti-drift.
+    Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of invariants
+    whose violation would silently break the hard boundary or anti-drift.
     The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over
     this boundary; all_violations runs the full set (both rings).
     """

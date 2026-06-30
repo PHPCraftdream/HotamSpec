@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 63 / SETTLED 108; DRAFT 21; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 65 / SETTLED 111; DRAFT 21; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -63,6 +63,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-shared-thinking-doc-from-canon-sections` | STRUCTURAL | `framework-author` | Each spec/docs/thinking/<topic-slug>.md shall aggregate all framework docstrings carrying Canon: §<Topic> markers; the file is the union of those sources, not hand-written. |
 | `R-agent-references-shared-docs` | STRUCTURAL | `framework-author` | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY). |
 | `R-domain-has-docs-dir` | STRUCTURAL | `framework-author` | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
+| `R-no-hand-edit-graph` | STRUCTURAL | `framework-author` | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py; direct hand-edits are prohibited outside of bootstrap events. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -76,28 +77,28 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-stable-conflict-identity` | check_conflict_id_matches_identity | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
 | `R-active-loop-protocol` | test_proposal.py | Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes. |
 | `R-active-loop-apply-tool` | test_apply_proposal.py | A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/. |
-| `R-decided-needs-human-signoff` | check_decided_has_decided_by | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
-| `R-operator-is-frozen-dataclass` | check_typed_anchors, test_operator.py | An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'. |
-| `R-operator-references-stakeholder` | check_no_dangling_ids, test_operator.py | An Operator.stakeholder shall reference an existing Stakeholder.id. |
+| `R-decided-needs-human-signoff` | check_decided_has_nonempty_decided_by, check_decided_by_is_known_stakeholder, check_decided_by_not_member_owner | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
+| `R-operator-is-frozen-dataclass` | check_typed_anchors_operator, test_operator.py | An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'. |
+| `R-operator-references-stakeholder` | check_no_dangling_operator_refs, test_operator.py | An Operator.stakeholder shall reference an existing Stakeholder.id. |
 | `R-operator-has-context-budget` | check_operator_within_budget, test_operator.py | An Operator shall carry a ContextBudget with a positive limit and a declared measure. |
 | `R-context-budget-rule` | check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
 | `R-operator-not-self-approve` | check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
-| `R-goal-is-first-class-type` | test_goal.py, check_typed_anchors | Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'. |
+| `R-goal-is-first-class-type` | test_goal.py, check_typed_anchors_goal | Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'. |
 | `R-goal-target-kind-known` | check_goal_target_kind_known | Goal.target_state.kind shall be one of the declared TARGET_KINDS. |
-| `R-goal-owner-is-operator` | check_goal_owner_is_operator, check_no_dangling_ids | Goal.owner shall reference an existing Operator.id. |
+| `R-goal-owner-is-operator` | check_goal_owner_is_operator, check_no_dangling_operator_refs | Goal.owner shall reference an existing Operator.id. |
 | `R-statemachine-reachable` | check_canonical_lifecycles_wellformed | Every state in a canonical Lifecycle shall be reachable from the initial state. |
 | `R-statemachine-deterministic` | check_canonical_lifecycles_wellformed | A Lifecycle's transitions shall be deterministic — no two transitions with the same (src, event) and overlapping guards. |
 | `R-statemachine-terminal-or-cyclic` | check_canonical_lifecycles_wellformed | Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state. |
 | `R-verify-closure-per-action` | test_closure.py, tools/closure.py::check_closure | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
-| `R-anchor-everything` | check_typed_anchors, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
+| `R-anchor-everything` | check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_process, check_typed_anchors_goal, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, docs/playbooks/ | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | `R-claude-md-live-state-generated` | test_docs_gen.py::test_claude_md_live_state_up_to_date | The live numeric state in CLAUDE.md (top action, debt counts, graph size, crystal headroom, context) shall be generated by gen_spec into a sentinel-delimited block, never hand-written. |
 | `R-docs-generated-from-requirements` | test_docs_gen.py::test_methodology_atoms_up_to_date, tools/gen_spec.py::build_methodology_atoms | Per-topic narrative files under `docs/methodology/atoms/<topic>.md` shall be generated from SETTLED requirements grouped by topic; hand-edits are forbidden by a meta-test. |
-| `R-conflict-structurally-visible` | check_conflict_has_axis_context_steward | Every Conflict node shall carry a non-empty axis, context, and steward. |
+| `R-conflict-structurally-visible` | check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward | Every Conflict node shall carry a non-empty axis, context, and steward. |
 | `R-conflict-min-two-members` | check_conflict_min_two_members | Every Conflict node shall contain at least two distinct Requirement ids in its members tuple. |
 | `R-decided-conflict-justifies-itself` | check_decided_has_rationale_or_derived | Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement. |
-| `R-m-tag-format-valid` | check_m_tag_format | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
+| `R-m-tag-format-valid` | check_m_tag_valid_format, check_m_tag_unique, check_m_tag_open_only | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
 | `R-operator-prompt-from-substrate` | test_constitution_block_generated | The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py. |
 | `R-empty-content-wellformed` | test_invariants.py::test_empty_graph_is_wellformed | A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed. |
 | `R-empty-content-calm-banner` | test_what_now.py::test_main_empty_content_prints_calm_banner | When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error. |
@@ -109,22 +110,24 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-history-generated-from-rejected` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks. |
 | `R-history-generated-from-decided` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-lifecycle-type-exists` | test_lifecycle.py | A generic tensio.lifecycle module shall define State, Transition, and Lifecycle types. |
-| `R-lifecycle-validates-requirement` | check_status_in_lifecycle | Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE. |
-| `R-lifecycle-validates-conflict` | check_status_in_lifecycle | Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE. |
+| `R-lifecycle-validates-requirement` | check_requirement_status_in_lifecycle | Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE. |
+| `R-lifecycle-validates-conflict` | check_conflict_lifecycle_in_lifecycle | Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE. |
+| `R-lifecycle-validates-operator` | check_operator_lifecycle_in_lifecycle | Operator.lifecycle shall validate against the framework-supplied OPERATOR_LIFECYCLE. |
+| `R-lifecycle-validates-goal` | check_goal_lifecycle_in_lifecycle | Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE. |
 | `R-process-types-exist` | test_process.py | tensio.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
 | `R-process-lifecycle-wellformed-aspect` | check_process_lifecycle_wellformed | Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed. |
 | `R-process-roles-declared-aspect` | check_process_roles_declared | Every role referenced in a Process step shall be declared in the Process roles_required tuple. |
 | `R-process-goal-owner-is-operator-aspect` | check_goal_owner_is_operator | Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator. |
-| `R-process-typed-anchors-extended` | check_typed_anchors | check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes. |
+| `R-process-typed-anchors-extended` | check_typed_anchors_process, check_typed_anchors_goal | check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes. |
 | `R-enforcement-levels-declared` | check_enforced_names_invariant | A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED. |
 | `R-enforced-names-enforcer` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
-| `R-critical-core-methodology` | test_conscience.py | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
+| `R-critical-core-methodology` | test_conscience.py, check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dangling_requirement_relations, check_no_dangling_conflict_refs | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
 | `R-bijection-r-to-enforcer` | check_bijection_r_to_enforcer | Every SETTLED/ENFORCED requirement shall name an existing check_* in tensio.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 | `R-agent-scoped-constitution` | test_agent_scoped_constitution | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
 | `R-repo-map-generated` | test_repo_map_complete | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
 | `R-agent-declares-purpose` | test_every_agent_declares_purpose | Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line. |
 | `R-agent-map-generated` | test_agent_map_complete | CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path. |
-| `R-domain-has-manifest` | check_domain_manifest_valid | Every `domains/<name>/` directory contains `manifest.py` defining top-level constants ID, DESCRIPTION, GOALS, DIRECTOR. |
+| `R-domain-has-manifest` | check_domain_manifest_exists_and_importable, check_domain_manifest_id_matches_dirname, check_domain_manifest_description_nonempty, check_domain_manifest_goals_nonempty, check_domain_manifest_director_nonempty | Every `domains/<name>/` directory contains `manifest.py` defining top-level constants ID, DESCRIPTION, GOALS, DIRECTOR. |
 | `R-domain-declares-director` | check_domain_director_exists | Every domain's `manifest.py` DIRECTOR constant must resolve to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`. |
 | `R-domain-owns-claude-md` | test_domain_claude_md_has_all_5_blocks | Each `domains/<name>/CLAUDE.md` is the domain-scoped operator-prompt, generated by `gen_spec.py`. |
 | `R-framework-claude-md-is-domain-free` | test_framework_claude_md_no_domain_atoms | The root `CLAUDE.md` contains framework-only content and references domains only through the DOMAIN-MAP block; no domain-specific atoms appear in it. |

@@ -106,9 +106,13 @@ def test_claude_md_r_anchors_resolve_in_graph_with_matching_m_tag() -> None:
     req_by_id = {r.id: r for r in g.requirements}
 
     claude_rows = _read_claude_m_rows()
-    assert claude_rows, (
-        "M-table parse found no R-anchors — check regex or CLAUDE.md path"
-    )
+    if not claude_rows:
+        # Root CLAUDE.md no longer carries the M-table (P19c removed it; the
+        # canonical M-registry is now docs/gen/DECISIONS.md). The bijection is
+        # enforced graph-side (Assertion 1) and at the DECISIONS.md level via
+        # gen_spec; this assertion becomes a no-op until a CLAUDE.md surfaces
+        # M-rows again.
+        return
 
     bad: list[str] = []
     for m_num, anchors in claude_rows.items():

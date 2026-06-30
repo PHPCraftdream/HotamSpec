@@ -12,7 +12,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Why.** SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_section_anchors_known fires when any §-token in framework docstrings is absent from the glossary — an unresolved anchor. test_glossary_sync.py cross-checks the same invariant at test-time. Together these three make the anchor discipline machine-checkable at every invariant run.
 
-**Enforced by:** `check_typed_anchors`, `check_section_anchors_known`, `test_glossary_sync.py`
+**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_section_anchors_known`, `test_glossary_sync.py`
 
 ## `R-crystallize-before-split` (STRUCTURAL)
 

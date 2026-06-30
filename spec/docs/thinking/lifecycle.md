@@ -23,28 +23,69 @@ Four conditions checked:
 WHY BFS: deterministic traversal, no hidden ordering; only reachable
 states matter for the terminal-reachability check.
 
+## From `spec/src/tensio/invariants.py::check_requirement_status_in_lifecycle`
+
+Canon: §Lifecycle / §Invariants — every Requirement.status matches REQUIREMENT_STATUS_LIFECYCLE.
+
+RULE: Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE
+(exact match for DRAFT/SETTLED/REJECTED; prefix match for OPEN(question)).
+When matches() returns None, fire a Violation.
+
+WHY structural: status is a hand-rolled string state machine; this invariant
+enforces that stored values belong to the canonical set. References:
+R-lifecycle-abstraction, R-statemachine-wellformedness.
+
+## From `spec/src/tensio/invariants.py::check_conflict_lifecycle_in_lifecycle`
+
+Canon: §Lifecycle / §Invariants — every Conflict.lifecycle matches CONFLICT_LIFECYCLE.
+
+RULE: Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE (exact match
+for DETECTED/ACKNOWLEDGED; prefix match for DECIDED(rationale) and
+REVISIT_WHEN(condition)). When matches() returns None, fire a Violation.
+
+WHY structural: conflict lifecycle is a hand-rolled string state machine;
+enforcing canonical values makes the machine structurally visible and checkable.
+References: R-lifecycle-abstraction, R-statemachine-wellformedness.
+
+## From `spec/src/tensio/invariants.py::check_operator_lifecycle_in_lifecycle`
+
+Canon: §Lifecycle / §Invariants — every Operator.lifecycle matches OPERATOR_LIFECYCLE.
+
+RULE: Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE (exact match
+for ACTIVE/SATURATED/DELEGATED/RETIRED). When matches() returns None, fire a
+Violation.
+
+WHY structural: operator lifecycle is a hand-rolled string state machine;
+enforcing canonical values makes the machine structurally visible and checkable.
+References: R-lifecycle-abstraction, R-statemachine-wellformedness.
+
+## From `spec/src/tensio/invariants.py::check_goal_lifecycle_in_lifecycle`
+
+Canon: §Lifecycle / §Invariants — every Goal.lifecycle matches GOAL_LIFECYCLE.
+
+RULE: Goal.lifecycle MUST be matched by GOAL_LIFECYCLE. When matches() returns
+None, fire a Violation.
+
+WHY structural: goal lifecycle is a hand-rolled string state machine; enforcing
+canonical values makes the machine structurally visible and checkable.
+References: R-lifecycle-abstraction, R-statemachine-wellformedness.
+
 ## From `spec/src/tensio/invariants.py::check_status_in_lifecycle`
 
-Canon: §Lifecycle / §Invariants — every status/lifecycle value matches a canonical Lifecycle.
+Canon: §Lifecycle / §Invariants — every status/lifecycle value matches a canonical Lifecycle (thin delegator).
 
-RULE (three sub-rules):
-  1. Every Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE
-     (exact match for DRAFT/SETTLED/REJECTED; prefix match for OPEN(question)).
-  2. Every Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE
-     (exact match for DETECTED/ACKNOWLEDGED; prefix match for
-     DECIDED(rationale) and REVISIT_WHEN(condition)).
-  3. Every Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE
-     (exact match for ACTIVE/SATURATED/DELEGATED/RETIRED).
-
-When matches() returns None, the value is not a recognized state of the
-canonical lifecycle; a Violation is fired naming the offending value and
-lifecycle slug.
+RULE (four sub-rules):
+  1. Every Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE.
+  2. Every Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE.
+  3. Every Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE.
+  4. Every Goal.lifecycle MUST be matched by GOAL_LIFECYCLE.
 
 WHY structural: status and lifecycle are hand-rolled string state machines;
-this invariant enforces that stored values belong to the canonical set,
-making the state machines structurally visible and checkable rather than
-only convention-held. References: R-lifecycle-abstraction,
+this invariant enforces canonical values. References: R-lifecycle-abstraction,
 R-statemachine-wellformedness.
+
+This is a THIN DELEGATOR — calls the four atomic per-entity sub-checks and
+concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
 ## From `spec/src/tensio/invariants.py::check_canonical_lifecycles_wellformed`
 

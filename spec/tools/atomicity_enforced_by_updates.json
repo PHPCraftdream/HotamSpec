@@ -1,0 +1,183 @@
+[
+  {
+    "kind": "Requirement",
+    "id": "R-decided-needs-human-signoff",
+    "claim": "A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) \u2014 enforced by a new invariant.",
+    "owner": "framework-reviewer",
+    "status": "SETTLED",
+    "why": "SETTLED (P3): Conflict.decided_by field added; check_decided_has_decided_by fires when lifecycle starts with DECIDED but decided_by is empty or owned by a member. Makes the hard boundary structural at the decision moment \u2014 the AI cannot silently write DECIDED without naming a human decider who is outside the conflict's members.",
+    "assumptions": [
+      "A-stakeholders-care"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_decided_has_nonempty_decided_by",
+      "check_decided_by_is_known_stakeholder",
+      "check_decided_by_not_member_owner"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-operator-is-frozen-dataclass",
+    "claim": "An Operator shall be a frozen dataclass in tensio.operator with typed anchor 'OP-'.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "Atom of R-operator-acting-facet (type identity concern). tensio.operator.Operator is a frozen dataclass; OP-director is the first instance.",
+    "assumptions": [
+      "A-finite-context-operators"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_typed_anchors_operator",
+      "test_operator.py"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-operator-references-stakeholder",
+    "claim": "An Operator.stakeholder shall reference an existing Stakeholder.id.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "Atom of R-operator-acting-facet (stakeholder reference concern). check_no_dangling_ids validates the reference.",
+    "assumptions": [
+      "A-finite-context-operators"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_no_dangling_operator_refs",
+      "test_operator.py"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-goal-is-first-class-type",
+    "claim": "Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'.",
+    "owner": "domain-user",
+    "status": "SETTLED",
+    "why": "Atom of R-goal-as-target-state (type identity concern). tensio/process.py defines Goal as a frozen dataclass with GOAL_LIFECYCLE. M19 resolved.",
+    "assumptions": [
+      "A-bootstrap-self-applies"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "test_goal.py",
+      "check_typed_anchors_goal"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-goal-owner-is-operator",
+    "claim": "Goal.owner shall reference an existing Operator.id.",
+    "owner": "domain-user",
+    "status": "SETTLED",
+    "why": "Atom of R-goal-as-target-state (ownership concern). check_goal_owner_is_operator and check_no_dangling_ids validate.",
+    "assumptions": [
+      "A-bootstrap-self-applies"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_goal_owner_is_operator",
+      "check_no_dangling_operator_refs"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-conflict-structurally-visible",
+    "claim": "Every Conflict node shall carry a non-empty axis, context, and steward.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "These three fields are the knowledge that makes the contradiction visible (R-conflict-is-connector-node). A Conflict missing any of them is an invisible contradiction. Atomized claim \u2014 one structural rule with three required fields, all enforced by the same check_*.",
+    "assumptions": [
+      "A-stakeholders-care"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_conflict_has_axis",
+      "check_conflict_has_context",
+      "check_conflict_has_steward"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-m-tag-format-valid",
+    "claim": "Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "The M-decision registry (DECISIONS.md) bijection depends on m_tag discipline. Was orphan policy; now claimed. Atomic \u2014 one concern (M-tag well-formedness) with three sub-rules all in one check_*; if we later split the check, this R splits with it.",
+    "assumptions": [
+      "A-prose-suffices"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_m_tag_valid_format",
+      "check_m_tag_unique",
+      "check_m_tag_open_only"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-lifecycle-validates-requirement",
+    "claim": "Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "Atom of R-lifecycle-abstraction (requirement validation concern). check_status_in_lifecycle validates Requirement statuses on every invariant run.",
+    "assumptions": [
+      "A-bootstrap-self-applies"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_requirement_status_in_lifecycle"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-lifecycle-validates-conflict",
+    "claim": "Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "Atom of R-lifecycle-abstraction (conflict validation concern). check_status_in_lifecycle validates Conflict lifecycles on every invariant run.",
+    "assumptions": [
+      "A-bootstrap-self-applies"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_conflict_lifecycle_in_lifecycle"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-process-typed-anchors-extended",
+    "claim": "check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "Atom of R-process-aspect-first (typed-anchors concern). Without prefix validation, Process and Goal nodes escape the anchoring discipline.",
+    "assumptions": [
+      "A-prose-suffices",
+      "A-bootstrap-self-applies"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_typed_anchors_process",
+      "check_typed_anchors_goal"
+    ]
+  },
+  {
+    "kind": "Requirement",
+    "id": "R-domain-has-manifest",
+    "claim": "Every `domains/<name>/` directory contains `manifest.py` defining top-level constants ID, DESCRIPTION, GOALS, DIRECTOR.",
+    "owner": "framework-author",
+    "status": "SETTLED",
+    "why": "The manifest is the machine-readable identity of the domain: it lets create_domain, gen_spec, and the root DOMAIN-MAP block discover a domain's metadata without loading its full graph. GOALS and DIRECTOR are required so any operator can reconstitute context from the manifest alone (R-agent-never-lost). ENFORCED via check_domain_manifest_valid (task #64).",
+    "assumptions": [
+      "A-python-stack"
+    ],
+    "enforcement": "ENFORCED",
+    "enforced_by": [
+      "check_domain_manifest_exists_and_importable",
+      "check_domain_manifest_id_matches_dirname",
+      "check_domain_manifest_description_nonempty",
+      "check_domain_manifest_goals_nonempty",
+      "check_domain_manifest_director_nonempty"
+    ]
+  }
+]

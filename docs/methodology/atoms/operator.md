@@ -102,7 +102,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-operator-acting-facet (type identity concern). tensio.operator.Operator is a frozen dataclass; OP-director is the first instance.
 
-**Enforced by:** `check_typed_anchors`, `test_operator.py`
+**Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
 
 ## `R-operator-may-have-parent` (STRUCTURAL)
 
@@ -132,7 +132,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-operator-acting-facet (stakeholder reference concern). check_no_dangling_ids validates the reference.
 
-**Enforced by:** `check_no_dangling_ids`, `test_operator.py`
+**Enforced by:** `check_no_dangling_operator_refs`, `test_operator.py`
 
 ## `R-prefer-tool-over-hand` (STRUCTURAL)
 

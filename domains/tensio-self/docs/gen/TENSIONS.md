@@ -192,6 +192,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-declares-purpose` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -233,6 +234,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-has-docs-dir` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -366,6 +368,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-is-recursive-director` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -405,6 +408,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-map-generated` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -452,6 +456,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-references-shared-docs` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -489,6 +494,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-scoped-constitution` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -524,6 +530,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-everything` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -557,6 +565,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-taxonomy` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -601,6 +611,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -699,6 +710,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-bijection-r-to-enforcer` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-bijection-r-to-enforcer` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-bijection-r-to-enforcer` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
 | `R-bijection-r-to-enforcer` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
@@ -740,6 +753,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-cite-in-first-sentence` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-cite-in-first-sentence` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-cite-in-first-sentence` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-cite-in-first-sentence` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -772,6 +787,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-boot-reload-three-facts` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-reload-three-facts` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-boot-reload-three-facts` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-boot-reload-three-facts` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -882,6 +899,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -913,6 +931,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-tree-of-crystals` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-claude-md-tree-of-crystals` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-claude-md-tree-of-crystals` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-claude-md-tree-of-crystals` | `R-operator-backend-protocol` | shares assumption(s): A-finite-context-operators |
@@ -969,6 +989,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-constituting-requirements-converge` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-constituting-requirements-converge` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-constituting-requirements-converge` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1011,6 +1033,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1044,6 +1067,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1076,6 +1100,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1095,6 +1120,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-layout-evolution` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1216,6 +1243,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-is-claude-md` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-is-claude-md` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-is-claude-md` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-is-claude-md` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1243,6 +1272,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-reload-by-reference` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-reload-by-reference` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-reload-by-reference` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-reload-by-reference` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1269,6 +1300,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystal-tree-hierarchy` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-crystal-tree-hierarchy` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-crystal-tree-hierarchy` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
 | `R-crystal-tree-hierarchy` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1407,6 +1440,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1437,6 +1471,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-director-agent-required-per-domain` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1466,6 +1501,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1494,6 +1530,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-declares-director` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1548,6 +1585,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-docs-dir` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1574,6 +1612,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-manifest` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1599,6 +1638,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-is-a-directory` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1623,6 +1663,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-map-generated` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1646,6 +1687,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-claude-md` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1668,6 +1710,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-docs-gen` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1689,6 +1732,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-graph-py` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1709,6 +1753,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-tools-and-agents` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1728,6 +1773,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1746,6 +1792,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1763,6 +1810,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1779,6 +1827,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-wellformed` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1809,6 +1858,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-claude-md-is-domain-free` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-framework-claude-md-is-domain-free` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1823,6 +1873,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-shared-docs-generated` | `R-glossary-generated` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
+| `R-framework-shared-docs-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -1839,6 +1890,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-glossary-drift-stable` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -1862,6 +1914,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-glossary-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -1884,6 +1937,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-dead` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -1905,6 +1959,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-history-generated-from-rejected` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-m-tag-format-valid` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-unused` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -1928,6 +1983,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-is-first-class-type` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-is-first-class-type` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-is-first-class-type` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-is-first-class-type` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1950,6 +2007,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-owner-is-operator` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-owner-is-operator` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-owner-is-operator` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-owner-is-operator` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1971,6 +2030,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-target-kind-known` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-target-kind-known` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-target-kind-known` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-target-kind-known` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -1991,6 +2052,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-goal-target-kind-known` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-lifecycle-type-exists` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-goal-type-vs-facet` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -2029,6 +2092,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-history-generated-from-rejected` | `R-process-types-exist` | shares assumption(s): A-prose-suffices |
 | `R-history-generated-from-rejected` | `R-requirement-claim-is-atomic` | shares assumption(s): A-prose-suffices |
 | `R-lifecycle-type-exists` | `R-lifecycle-validates-conflict` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-type-exists` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-type-exists` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -2047,6 +2112,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-type-exists` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-type-exists` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-conflict` | `R-lifecycle-validates-goal` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-conflict` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -2065,6 +2132,43 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-validates-conflict` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-conflict` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-lifecycle-validates-operator` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-goal` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-lifecycle-validates-requirement` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-lifecycle-wellformed-aspect` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-opt-in` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-roles-declared-aspect` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-typed-anchors-extended` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-process-types-exist` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-statemachine-reachable` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-statemachine-terminal-or-cyclic` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-validates-operator` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-operator-prompt-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-validates-requirement` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies |
@@ -2102,6 +2206,16 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-measure-context-size` | `R-tree-of-crystals-cognitive-trigger` | shares assumption(s): A-finite-context-operators |
 | `R-measure-context-size` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-measure-context-size` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-no-hand-edit-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-shared-thinking-doc-from-canon-sections` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-observation-evidence-scope` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-observation-evidence-scope` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-observation-evidence-scope` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |

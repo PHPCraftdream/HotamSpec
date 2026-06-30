@@ -194,9 +194,41 @@ assumption differently is the commonest hidden root of a real conflict
 deliberately stronger than "violated invariant" because it points at the
 not-yet-recorded. Real semantic detection is deferred (see CLAUDE.md / ROADMAP).
 
+## From `spec/src/tensio/invariants.py::check_conflict_has_axis`
+
+Canon: §Conflict — every Conflict carries a non-empty axis.
+
+RULE: Conflict.axis MUST be a non-empty string. An axis-less conflict is not
+a connector node — it does not name the tension dimension it mediates.
+
+WHY: the axis is what makes conflicts cluster into architectural choices;
+an axis-less conflict is invisible in any cluster view.
+
+## From `spec/src/tensio/invariants.py::check_conflict_has_context`
+
+Canon: §Conflict — every Conflict carries a non-empty context.
+
+RULE: Conflict.context MUST be a non-empty string describing the scenario
+where the two requirements collide. A context-less conflict has no scenario
+and cannot be communicated to a steward.
+
+WHY: without a context the conflict cannot be communicated to a steward or
+a domain user in a way that enables resolution.
+
+## From `spec/src/tensio/invariants.py::check_conflict_has_steward`
+
+Canon: §Conflict — every Conflict carries a non-empty steward.
+
+RULE: Conflict.steward MUST be a non-empty string. A stewardless conflict
+has no holder — the tension is invisible to the methodology.
+
+WHY: this is the structural definition of "the contradiction is visible". A
+stewardless conflict is exactly an invisible contradiction — the hard
+boundary (R-ai-presents-not-decides) requires a named outside party.
+
 ## From `spec/src/tensio/invariants.py::check_conflict_has_axis_context_steward`
 
-Canon: §Conflict — every Conflict carries a non-empty axis, context, steward.
+Canon: §Conflict — every Conflict carries a non-empty axis, context, steward (thin delegator).
 
 RULE: axis, context and steward MUST all be non-empty. These three are the
 knowledge that belongs to neither member; a conflict missing any of them is
@@ -204,6 +236,10 @@ not a connector node, it is the empty `conflicts_with` edge we reject.
 
 WHY: this is the structural definition of "the contradiction is visible". An
 axis-less or stewardless conflict is exactly an invisible contradiction.
+
+This is a THIN DELEGATOR — calls check_conflict_has_axis,
+check_conflict_has_context, check_conflict_has_steward and concatenates.
+The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
 ## From `spec/src/tensio/invariants.py::check_conflict_min_two_members`
 
@@ -250,27 +286,54 @@ WHY: the historian role depends on every decision carrying its rationale and
 (often) the requirement it spawned; without that the resolution is invisible
 and gets relitigated. This is the anti-relitigation marker made structural.
 
+## From `spec/src/tensio/invariants.py::check_decided_has_nonempty_decided_by`
+
+Canon: §Conflict — a DECIDED conflict carries a non-empty decided_by field.
+
+RULE: when Conflict.lifecycle starts with "DECIDED", `decided_by` MUST be
+non-empty. A DECIDED conflict without a named human decider is an
+AI-silently-closeable hole — exactly the invisibility the hard boundary forbids.
+
+WHY: R-decided-needs-human-signoff makes the closed loop's ACT half structurally
+visible. Without this lock, an AI could write lifecycle="DECIDED(...)" with
+decided_by="" and pass all other invariants.
+
+## From `spec/src/tensio/invariants.py::check_decided_by_is_known_stakeholder`
+
+Canon: §Conflict — a DECIDED conflict's decided_by resolves to a known Stakeholder.
+
+RULE: when Conflict.lifecycle starts with "DECIDED" and decided_by is non-empty,
+decided_by MUST be in stakeholder_ids(g). An unresolvable decider is a dangling
+reference that cannot be audited.
+
+WHY: check_no_dangling_conflict_refs also catches this, but naming it explicitly
+in the harness makes the missing signoff traceable to the decision moment.
+
+## From `spec/src/tensio/invariants.py::check_decided_by_not_member_owner`
+
+Canon: §Conflict — a DECIDED conflict's decided_by is not the owner of any member Requirement.
+
+RULE: when Conflict.lifecycle starts with "DECIDED", decided_by MUST NOT be
+the owner of any of the conflict's member Requirements. The decider must be
+outside the conflict's members (steward-distinct rule applied to the decider).
+
+WHY: if the decider owned one of the members, the hard boundary would be
+circumvented at the decision step. This is the structural twin of
+check_steward_not_a_member_owner applied at the moment of resolution.
+
 ## From `spec/src/tensio/invariants.py::check_decided_has_decided_by`
 
-Canon: §Conflict — a DECIDED conflict names a human decider outside its members.
+Canon: §Conflict — a DECIDED conflict names a human decider outside its members (thin delegator).
 
 RULE (R-decided-needs-human-signoff + §Proposal): when Conflict.lifecycle
 starts with "DECIDED", `decided_by` MUST satisfy three conditions:
-  1. Non-empty (a DECIDED conflict without a named human decider is an
-     AI-silently-closeable hole — exactly the invisibility the hard
-     boundary forbids).
-  2. Resolves to a known Stakeholder id (check_no_dangling_ids also
-     catches this; this check names it explicitly for the harness).
-  3. NOT the owner of any of the conflict's member Requirements (the
-     steward-distinct boundary applied to the decider, not just the
-     steward — the act of deciding must be distinct from owning a side).
+  1. Non-empty.
+  2. Resolves to a known Stakeholder id.
+  3. NOT the owner of any of the conflict's member Requirements.
 
-This is the structural twin of check_steward_not_a_member_owner applied
-at the moment of resolution: if the decider owned one of the members,
-the hard boundary would be circumvented at the decision step.
+This is a THIN DELEGATOR — calls check_decided_has_nonempty_decided_by,
+check_decided_by_is_known_stakeholder, check_decided_by_not_member_owner
+and concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
-WHY: R-decided-needs-human-signoff makes the closed loop's ACT half
-structurally visible. Without this lock, an AI could write
-lifecycle="DECIDED(...)" with decided_by="" and pass all other
-invariants. This invariant is the machine-checkable enforcement of
-"the human steward approves" (§Proposal — the closed loop's ACT half).
+WHY: R-decided-needs-human-signoff makes the closed loop's ACT half structurally
+visible (§Proposal — the closed loop's ACT half).
