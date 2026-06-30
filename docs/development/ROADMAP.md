@@ -99,9 +99,27 @@ mechanism and cadence await user confirmation.
 
 ## Open methodology decisions
 
-All seven defaulted framework decisions (package name, conflict identity, axis
-vocabulary admission, mandatory-distinct steward, trust anchor, latent-connector
-heuristic, critical-core scope) are catalogued with their `OPEN(question)` in the
-"OPEN methodology decisions" table of [`../../CLAUDE.md`](../../CLAUDE.md). They
-are implemented with sensible defaults and remain open until the user confirms or
-overrides — the framework practicing its own discipline of visible openness.
+M1–M31 are catalogued in the "OPEN methodology decisions" table of
+[`../../CLAUDE.md`](../../CLAUDE.md). The original M1–M9 cover the pre-operator
+core; the following new decision layers were crystallized as DRAFT requirements
+(UNBUILT per `C-06e2d84e`) during the operator/context dossiers:
+
+- **Operator/budget/delegation** (M17–M18, M20, M24–M25): `R-operator-acting-
+  facet`, `R-context-budget-rule`, `R-delegation-conclusions-only`,
+  `R-context-bounded-delegation`, `R-dependency-graph-parallelism`,
+  `R-operator-crystal-is-claude-md`.
+- **Goal/gap** (M19, M23): `R-goal-as-target-state`, `R-goal-type-vs-facet`.
+- **Lifecycle aspects** (M10–M13, M16): `R-lifecycle-abstraction`,
+  `R-process-aspect-first`, `R-task-vs-action-distinct-altitudes`,
+  `R-statemachine-wellformedness`.
+- **Crystallization + anchoring super-rules** (M22, M26–M31):
+  `R-crystallize-knowledge-to-code`, `R-anchor-everything`,
+  `R-speak-by-reference`, `R-crystallize-before-split`,
+  `R-working-vs-substrate-budget`, `R-enforcement-gradient`,
+  `R-requirement-enforced`, `R-uncrystallizable-is-missing-type`,
+  `R-stale-substrate`, `R-enforcement-first-class`, `R-anchor-taxonomy`,
+  `R-uncrystallizable-automated`.
+
+All decisions are implemented with sensible defaults and remain open until the
+user confirms or overrides — the framework practicing its own discipline of
+visible openness.

@@ -344,6 +344,59 @@ def check_decided_has_rationale_or_derived(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 6. Typed-anchor prefixes — every id carries the right kind prefix
+# ---------------------------------------------------------------------------
+
+
+def check_typed_anchors(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every id carries the prefix that matches its kind.
+
+    RULE: Requirement.id MUST start with 'R-'; Assumption.id MUST start with
+    'A-'; Conflict.id MUST start with 'C-'. An id with a wrong or missing prefix
+    breaks the typed-anchor discipline (R-anchor-everything) and makes cite-by-
+    reference unreliable (R-speak-by-reference).
+
+    WHY minimal: this check enforces the CURRENTLY USED prefixes (R-/A-/C-) that
+    are already discipline in the codebase; it does NOT yet encode the full M28
+    taxonomy (OP-/GOAL-/GAP-/DLG-/AX-) — that is still OPEN per R-anchor-taxonomy.
+
+    References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if not r.id.startswith("R-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors",
+                    r.id,
+                    f"Requirement id '{r.id}' must start with 'R-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    for a in g.assumptions:
+        if not a.id.startswith("A-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors",
+                    a.id,
+                    f"Assumption id '{a.id}' must start with 'A-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    for c in g.conflicts:
+        if not c.id.startswith("C-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors",
+                    c.id,
+                    f"Conflict id '{c.id}' must start with 'C-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -356,6 +409,7 @@ ALL_INVARIANTS = (
     check_steward_not_a_member_owner,
     check_open_has_question,
     check_decided_has_rationale_or_derived,
+    check_typed_anchors,
 )
 
 

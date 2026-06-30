@@ -23,6 +23,78 @@ label + a `WHY:` block (incl. anti-relitigation markers `RESOLVED — REPLACES �
 / `REJECTED …`). The human layer (`docs/gen/*.md`) is **generated**, never
 written by hand.
 
+## Director's map — the operator's crystal
+
+This CLAUDE.md is the director-operator's crystallized substrate
+(`R-operator-crystal-is-claude-md`) — an anchored map reloaded by reference, not
+re-carried; sub-operators carry their own CLAUDE.md for their sub-domains, while
+this one holds the overall graph and points to them.
+
+**Code handles (the substrate).**
+- Framework types — `spec/src/tensio/*.py` (`requirement.py`, `conflict.py`,
+  `assumption.py`, `axis.py`, `stakeholder.py`, `graph.py`, `invariants.py`).
+- Meta-domain, source of truth — `spec/content/graph.py:build_graph()`.
+- Harness (Diagnosis) — `spec/tools/what_now.py`.
+- Generator — `spec/tools/gen_spec.py`.
+- Generated map — `docs/gen/{REQUIREMENTS,TENSIONS,OPEN}.md`.
+- Decisions table M1–M31 — the "OPEN methodology decisions" section below.
+
+**The overall graph** (from `spec/content/graph.py`):
+- Stakeholders (4): `framework-author`, `ai-agent`, `domain-user`,
+  `framework-reviewer`.
+- Axes (9): `agent-autonomy-vs-human-control`, `framework-purity-vs-helpfulness`,
+  `core-vs-aspect`, `apparatus-weight-vs-coverage`, `formalization-vs-prose`,
+  `single-altitude-vs-multi-altitude`, `offload-vs-carry`,
+  `horizontal-vs-vertical-relief`, `sequential-vs-parallel`.
+- Requirements by status:
+  - SETTLED (13): `R-agent-never-lost`, `R-drift-structurally-impossible`,
+    `R-conflict-is-connector-node`, `R-content-free-framework`,
+    `R-deterministic-generation`, `R-ai-presents-not-decides`,
+    `R-steward-distinct-from-owners`, `R-empty-content-is-legitimate`,
+    `R-open-states-question`, `R-rejected-preserved-not-deleted`,
+    `R-axis-controlled-vocab`, `R-stable-conflict-identity`,
+    `R-two-altitude-ontology`.
+  - DRAFT (25): `R-active-loop-playbooks`, `R-decided-needs-human-signoff`,
+    `R-glossary-sync-test`, `R-history-from-rejected-markers`, `R-smoke-test`,
+    `R-lifecycle-abstraction`, `R-process-aspect-first`,
+    `R-task-vs-action-distinct-altitudes`, `R-operator-acting-facet`,
+    `R-context-budget-rule`, `R-delegation-conclusions-only`,
+    `R-goal-as-target-state`, `R-context-bounded-delegation`,
+    `R-dependency-graph-parallelism`, `R-operator-crystal-is-claude-md`,
+    `R-statemachine-wellformedness`, `R-crystallize-knowledge-to-code`,
+    `R-anchor-everything`, `R-speak-by-reference`, `R-crystallize-before-split`,
+    `R-working-vs-substrate-budget`, `R-enforcement-gradient`,
+    `R-requirement-enforced`, `R-uncrystallizable-is-missing-type`,
+    `R-stale-substrate`.
+  - OPEN (13): `R-trust-anchor-mechanism`, `R-critical-core-scope`,
+    `R-axis-gatekeeper-policy`, `R-content-layout-evolution`, `R-budget-measure`,
+    `R-partition-vs-border`, `R-goal-type-vs-facet`, `R-operator-type-vs-facet`,
+    `R-observation-evidence-scope`, `R-rules-as-data`,
+    `R-enforcement-first-class`, `R-anchor-taxonomy`,
+    `R-uncrystallizable-automated`.
+  - REJECTED (3): `R-seed-in-src`, `R-rdf-store`, `R-axes-as-module-constant`.
+- Conflicts (6):
+  - `C-186c4347` — `agent-autonomy-vs-human-control` — DECIDED.
+  - `C-c3911f28` — `framework-purity-vs-helpfulness` — DECIDED.
+  - `C-8600b1b8` — `core-vs-aspect` — **DETECTED** (the live P3 — the open front).
+  - `C-06e2d84e` — `apparatus-weight-vs-coverage` — DECIDED.
+  - `C-d210d6d0` — `horizontal-vs-vertical-relief` — DECIDED.
+  - `C-d4f3eadf` — `sequential-vs-parallel` — DECIDED.
+
+**The recursive structure.**
+- Delegation hierarchy = a tree of CLAUDE.md crystals, one per operator
+  (`R-operator-crystal-is-claude-md`), each bounded by its context budget
+  (`R-context-budget-rule`).
+- Dependency edges decide parallel vs sequential delegation
+  (`R-dependency-graph-parallelism`); split a domain along its lines of
+  independence.
+- Relieve overload by crystallizing first, splitting only if still over budget
+  (`R-crystallize-before-split`); the operator proposes, a steward approves
+  (`R-ai-presents-not-decides`).
+
+**Anchoring discipline.** Cite anchors (`R-`/`C-`/`A-`/`§`/`file:line`) in every
+reference — no ungrounded prose (`R-anchor-everything`, `R-speak-by-reference`).
+
 ## Framework vs content (content-free framework)
 
 The framework (`spec/src/tensio/`) ships ZERO business data — no example
@@ -47,7 +119,7 @@ uv run python tools/gen_spec.py                 # regen docs/gen/{REQUIREMENTS,T
 uv run python tools/what_now.py --demo          # diagnose the demo graph
 uv run python tools/gen_spec.py --demo          # write docs/demo/ (NOT docs/gen/)
 
-uv run pytest -q                                # tests (81 passed) incl. anti-drift meta-test
+uv run pytest -q                                # tests (the suite — incl. anti-drift meta-test)
 ```
 
 (If `uv` is unavailable: `python tools/what_now.py`, `python -m pytest -q` with
@@ -100,7 +172,7 @@ state runs `what_now` and deterministically derives the next correct action:
 graph LR
     S["State<br/>(graph + generated docs + test status)"] --> D["Diagnosis<br/>tools/what_now.py"]
     D --> N["Next-action<br/>(typed, prioritized)"]
-    N --> A["Action<br/>(edit src/tensio)"]
+    N --> A["Action<br/>(edit spec/content)"]
     A --> R["Regenerate<br/>tools/gen_spec.py"]
     R --> S
 ```
@@ -252,12 +324,34 @@ equivalent of dev-coin's genesis-number list.
 
 | # | Decision | Default (implemented) | `OPEN(question)` |
 |---|---|---|---|
-| M1 | Package name | `tensio` | OPEN(keep `tensio`, or `reqgraph`, or another name?) |
-| M2 | Conflict identity | `hash(axis, context)` (`conflict_identity`) — node survives member rename/split, only edges update | OPEN(is (axis, context) the right identity key, or should members participate?) |
-| M3 | Axis vocabulary location | per-graph (`TensionGraph.axes`); admission by manual edit of `build_graph()` | OPEN(when do we switch on the AI duplicate-gatekeeper for new axes? should some axes be cross-domain / framework-supplied?) |
-| M4 | Steward mandatory & distinct | every Conflict needs a `steward`, structurally barred from owning a member | OPEN(is mandatory-distinct-steward always feasible, or are there single-stakeholder tensions?) |
-| M5 | Trust anchor | periodic stakeholder cryptographic signature on the tension map per domain (described, not built — ROADMAP) | OPEN(what signature mechanism / cadence anchors the internal loop to a living human?) |
-| M6 | Latent-connector heuristic | "shares ≥1 assumption AND no existing C-node" (`graph.latent_connector_suspects`) | OPEN(is shared-assumption the right cheap signal, and does it over-flag derived requirements?) |
-| M7 | Critical-core scope for formal layers | none yet (all DEFERRED) | OPEN(which requirement domains are "critical core" warranting Z3/Quint/mutation?) |
-| M8 | Content layout | single file `spec/content/graph.py` exposing `build_graph()` (discovered by `load_content_graph()`) | OPEN(one file forever, or split per sub-domain into `spec/content/<domain>.py` and aggregate?) |
-| M9 | Multi-domain composition | a graph is one whole; multiple domains live in one `build_graph()` | OPEN(how does the methodology compose graphs across teams — federation, namespacing, or a single merged graph?) |
+| M1 | Package name | `tensio` | OPEN(keep `tensio`, or `reqgraph`, or another name?) (no req mirror yet) |
+| M2 | Conflict identity | `hash(axis, context)` (`conflict_identity`) — node survives member rename/split, only edges update | OPEN(is (axis, context) the right identity key, or should members participate?) (no req mirror yet) |
+| M3 | Axis vocabulary location | per-graph (`TensionGraph.axes`); admission by manual edit of `build_graph()` | OPEN(when do we switch on the AI duplicate-gatekeeper for new axes? should some axes be cross-domain / framework-supplied?) (see `R-axis-gatekeeper-policy`) |
+| M4 | Steward mandatory & distinct | every Conflict needs a `steward`, structurally barred from owning a member | OPEN(is mandatory-distinct-steward always feasible, or are there single-stakeholder tensions?) (no req mirror yet) |
+| M5 | Trust anchor | periodic stakeholder cryptographic signature on the tension map per domain (described, not built — ROADMAP) | OPEN(what signature mechanism / cadence anchors the internal loop to a living human?) (see `R-trust-anchor-mechanism`) |
+| M6 | Latent-connector heuristic | "shares ≥1 assumption AND no existing C-node" (`graph.latent_connector_suspects`) | OPEN(is shared-assumption the right cheap signal, and does it over-flag derived requirements?) (no req mirror yet) |
+| M7 | Critical-core scope for formal layers | none yet (all DEFERRED) | OPEN(which requirement domains are "critical core" warranting Z3/Quint/mutation?) (see `R-critical-core-scope`) |
+| M8 | Content layout | single file `spec/content/graph.py` exposing `build_graph()` (discovered by `load_content_graph()`) | OPEN(one file forever, or split per sub-domain into `spec/content/<domain>.py` and aggregate?) (see `R-content-layout-evolution`) |
+| M9 | Multi-domain composition | a graph is one whole; multiple domains live in one `build_graph()` | OPEN(how does the methodology compose graphs across teams — federation, namespacing, or a single merged graph?) (see `R-content-layout-evolution`) |
+| M10 | Task vs Action altitudes | both modeled, distinct | OPEN(ever unified?) (no req mirror yet) |
+| M11 | status/lifecycle via generic Lifecycle | keep stored string + validating invariant | OPEN(adopt generic Lifecycle?) (no req mirror yet) |
+| M12 | Entity/Process/Task core or aspect | lifecycle core, three opt-in aspects | OPEN(confirm?) (no req mirror yet) |
+| M13 | formalize guards/preconditions | prose + optional machine_check; Z3 only critical core | OPEN(how far?) (no req mirror yet) |
+| M14 | Conflict.members Requirement-only or behavioral ids | Requirement-only; behaviors via Requirement.subject | OPEN(widen?) (no req mirror yet) |
+| M15 | Role new type or Stakeholder facet | facet | OPEN(confirm?) (no req mirror yet) |
+| M16 | two-processes-one-entity incompatibility | structural where explicit else heuristic | OPEN(which?) (no req mirror yet) |
+| M17 | context budget measure | node-count | OPEN(node/token/complexity?) (see `R-budget-measure`) |
+| M18 | partition vs declared border | none | OPEN(partition or border-overlap?) (see `R-partition-vs-border`) |
+| M19 | Goal type vs facet | own type | OPEN(type or Requirement facet?) (see `R-goal-type-vs-facet`) |
+| M20 | Operator type vs facet | split (role vs acting) | OPEN(type or Stakeholder facet?) (see `R-operator-type-vs-facet`) |
+| M21 | Observation/Evidence scope | defer | OPEN(model belief↔reality drift?) (see `R-observation-evidence-scope`) |
+| M22 | rules-as-data | resist (code + meta-domain reqs) | OPEN(promote rules to data?) (see `R-rules-as-data`) |
+| M23 | goal-conflict reuse Conflict | reuse | OPEN(reuse Conflict or new GoalConflict?) (no req mirror yet) |
+| M24 | content split automatic vs steward-approved | steward-approved | OPEN(automate the split?) (no req mirror yet) |
+| M25 | working vs substrate measure | none | OPEN(what counts as working context?) (no req mirror yet) |
+| M26 | enforcement first-class field | yes | OPEN(field or derived report?) (see `R-enforcement-first-class`) |
+| M27 | context-debt detectability | structural for size, self-reported for working set | OPEN(trust which?) (no req mirror yet) |
+| M28 | anchor prefix taxonomy | none | OPEN(frozen prefix set?) (see `R-anchor-taxonomy`) |
+| M29 | prose-cite-anchor enforcement | discipline + optional resolvability check on structured why | OPEN(machine-check?) (no req mirror yet) |
+| M30 | uncrystallizable → missing-type | human judgment (operator records, steward decides) | OPEN(automate?) (see `R-uncrystallizable-automated`) |
+| M31 | crystallize-before-split enforcement | none | OPEN(enforced or advisory?) (no req mirror yet) |

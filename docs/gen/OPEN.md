@@ -4,7 +4,7 @@
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-Open requirements: **4**. Unresolved conflicts: **1**.
+Open requirements: **13**. Unresolved conflicts: **1**.
 
 ---
 
@@ -16,6 +16,15 @@ Open requirements: **4**. Unresolved conflicts: **1**.
 | `R-critical-core-scope` | `domain-user` | which requirement domains qualify as 'critical core' — money / access / SLA / workflow — vs run on graph + AI alone? |
 | `R-axis-gatekeeper-policy` | `ai-agent` | when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes? |
 | `R-content-layout-evolution` | `framework-author` | one file forever, or split per sub-domain with federation? thresholds for splitting? |
+| `R-budget-measure` | `framework-author` | how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set? |
+| `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
+| `R-goal-type-vs-facet` | `domain-user` | is Goal its own first-class type, or a facet/status of Requirement? |
+| `R-operator-type-vs-facet` | `framework-author` | is Operator a new type, or a capabilities+context+domain facet bolted onto Stakeholder? |
+| `R-observation-evidence-scope` | `framework-reviewer` | does the methodology model an operator's BELIEF about business state and its drift from reality (Observation/Evidence), or is that out of scope as epistemics-creep? |
+| `R-rules-as-data` | `framework-reviewer` | do the methodology's own rules/invariants become first-class data the methodology reasons about, or stay as code check_* plus meta-domain requirements? |
+| `R-enforcement-first-class` | `framework-author` | is the enforcement level (PROSE/STRUCTURAL/ENFORCED) a first-class Requirement field with enforced_by anchors, or a derived report? |
+| `R-anchor-taxonomy` | `framework-author` | what is the frozen typed-anchor prefix set (R-/C-/A-/§/OP-/GOAL-/GAP-/DLG-/AX-), and does Axis.slug get a prefix or stay bare? |
+| `R-uncrystallizable-automated` | `framework-reviewer` | is 'uncrystallizable knowledge = missing type' an automated signal or human judgment, and what records it? |
 
 ## Unresolved conflicts (no steward resolution yet)
 

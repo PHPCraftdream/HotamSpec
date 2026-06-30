@@ -77,7 +77,7 @@ whole graph and tells you what to do next:
 State (graph + generated docs + test status)
   → Diagnosis  (spec/tools/what_now.py)
   → Next-action (typed, prioritized)
-  → Action     (edit spec/src/tensio)
+  → Action     (edit spec/content)
   → regenerate (spec/tools/gen_spec.py)
   → State
 ```
@@ -104,7 +104,7 @@ hold conflict". **Weight of apparatus ∝ cost of an unnoticed conflict.**
 | Mutation testing of detectors | cosmic-ray | detectors are not phantom | DEFERRED |
 | Human layer + anti-drift | `gen_spec.py` + meta-test | generated text cannot drift | CORE |
 
-`cd spec && uv run pytest -q` → **81 passed**.
+`cd spec && uv run pytest -q` → **all tests pass**.
 
 ## Framework vs content (content-free by design)
 
@@ -147,7 +147,7 @@ uv run python tools/gen_spec.py --demo     # write docs/demo/ from the fixture
 
 ```bash
 cd spec
-uv run pytest -q                      # 81 passed
+uv run pytest -q                      # the suite is green
 uv run python tools/what_now.py       # "no content yet" until you populate
 uv run python tools/what_now.py --demo  # see the harness on the worked example
 ```
@@ -162,5 +162,23 @@ generator + anti-drift meta-test, and the `what_now` harness — all green
 against an empty content slot AND against the demo fixture's live working
 surface (an open requirement, a stalled conflict, a dead assumption with
 dependents, a latent suspect). Formal layers (Hypothesis, Z3, Quint, cosmic-ray)
-are DEFERRED for the critical core. Methodology decisions M1–M9 are flagged
-OPEN in [`CLAUDE.md`](CLAUDE.md) awaiting confirmation.
+are DEFERRED for the critical core.
+
+Methodology decisions M1–M31 are catalogued in [`CLAUDE.md`](CLAUDE.md).
+The following new requirement layers have been crystallized as DRAFT/UNBUILT
+per `C-06e2d84e` (apparatus-weight-vs-coverage DECIDED: record design as
+DRAFT requirements, not apparatus weight in src/tensio):
+- **Operator/budget/delegation** — `R-operator-acting-facet`,
+  `R-context-budget-rule`, `R-delegation-conclusions-only`,
+  `R-context-bounded-delegation`, `R-dependency-graph-parallelism`,
+  `R-operator-crystal-is-claude-md`.
+- **Goal/gap** — `R-goal-as-target-state`.
+- **Lifecycle aspects** — `R-lifecycle-abstraction`, `R-process-aspect-first`,
+  `R-task-vs-action-distinct-altitudes`, `R-statemachine-wellformedness`.
+- **Crystallization + anchoring super-rules** — `R-crystallize-knowledge-to-code`,
+  `R-anchor-everything`, `R-speak-by-reference`, `R-crystallize-before-split`,
+  `R-working-vs-substrate-budget`, `R-enforcement-gradient`,
+  `R-requirement-enforced`, `R-uncrystallizable-is-missing-type`,
+  `R-stale-substrate`.
+
+Open M-decisions M17–M31 await steward confirmation.

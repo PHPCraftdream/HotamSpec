@@ -106,17 +106,17 @@ def test_resolved_graph_says_not_lost() -> None:
         Stakeholder(id="c", name="C", domain="z"),
     )
     reqs = (
-        Requirement(id="R1", claim="c1", owner="a", status="SETTLED"),
-        Requirement(id="R2", claim="c2", owner="b", status="SETTLED"),
+        Requirement(id="R-1", claim="c1", owner="a", status="SETTLED"),
+        Requirement(id="R-2", claim="c2", owner="b", status="SETTLED"),
     )
     axis, ctx = "cost-vs-flexibility", "shared scenario"
     con = Conflict(
         id=conflict_identity(axis, ctx),
         axis=axis,
         context=ctx,
-        members=("R1", "R2"),
+        members=("R-1", "R-2"),
         steward="c",
-        lifecycle="DECIDED(picked R1; documented)",
+        lifecycle="DECIDED(picked R-1; documented)",
     )
     g = TensionGraph(
         axes=DEMO_AXES, stakeholders=sh, requirements=reqs, conflicts=(con,)
@@ -135,15 +135,15 @@ def test_structure_outranks_everything() -> None:
         Stakeholder(id="c", name="C", domain="z"),
     )
     reqs = (
-        Requirement(id="R1", claim="c1", owner="a", status="OPEN(what?)"),
-        Requirement(id="R2", claim="c2", owner="b", status="SETTLED"),
+        Requirement(id="R-1", claim="c1", owner="a", status="OPEN(what?)"),
+        Requirement(id="R-2", claim="c2", owner="b", status="SETTLED"),
     )
     axis, ctx = "cost-vs-flexibility", "shared scenario"
     con = Conflict(
         id=conflict_identity(axis, ctx),
         axis=axis,
         context=ctx,
-        members=("R1", "R_GHOST"),  # dangling
+        members=("R-1", "R-ghost"),  # dangling — R-ghost not in requirements
         steward="c",
         lifecycle="ACKNOWLEDGED",
     )

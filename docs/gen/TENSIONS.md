@@ -41,6 +41,38 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **lifecycle:** DETECTED
 - **shared assumption:** `A-prose-suffices`
 
+### Axis `apparatus-weight-vs-coverage` — 1 conflict(s), single tension
+
+#### `C-06e2d84e` — apparatus-weight-vs-coverage
+
+- **context:** crystallizing the full accumulated design into the methodology vs keeping the framework minimal
+- **members:** `R-crystallize-knowledge-to-code`, `R-content-free-framework`
+- **steward:** `framework-reviewer`
+- **lifecycle:** DECIDED(crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/tensio. The substrate grows; the framework code stays minimal.)
+- **shared assumption:** `A-content-free-honest`
+- **revisit marker:** REVISIT if the DRAFT backlog grows faster than it is built — then prune or promote.
+
+### Axis `horizontal-vs-vertical-relief` — 1 conflict(s), single tension
+
+#### `C-d210d6d0` — horizontal-vs-vertical-relief
+
+- **context:** an operator approaching its context budget must choose how to relieve pressure
+- **members:** `R-context-bounded-delegation`, `R-crystallize-knowledge-to-code`
+- **steward:** `domain-user`
+- **lifecycle:** DECIDED(crystallize-before-split — the operator crystallizes first and re-measures (see R-crystallize-before-split); delegation/splitting is the vertical lever of last resort, used only when knowledge is irreducible and the operator is still over budget.)
+- **shared assumption:** `A-finite-context-operators`
+- **spawned (lineage):** `R-crystallize-before-split`
+
+### Axis `sequential-vs-parallel` — 1 conflict(s), single tension
+
+#### `C-d4f3eadf` — sequential-vs-parallel
+
+- **context:** splitting an over-budget operator domain for parallel sub-operators when some sub-parts are coupled by dependencies
+- **members:** `R-context-bounded-delegation`, `R-dependency-graph-parallelism`
+- **steward:** `framework-reviewer`
+- **lifecycle:** DECIDED(the dependency graph decides — parallelize independent components, sequence coupled chains; cut the domain along lines of independence, never arbitrarily.)
+- **shared assumption:** `A-finite-context-operators`
+
 ## Tension map (Mermaid)
 
 ```mermaid
@@ -50,6 +82,10 @@ graph TD
     R_active_loop_playbooks["R-active-loop-playbooks"]
     R_content_free_framework["R-content-free-framework"]
     R_empty_content_is_legitimate["R-empty-content-is-legitimate"]
+    R_crystallize_knowledge_to_code["R-crystallize-knowledge-to-code"]
+    R_context_bounded_delegation["R-context-bounded-delegation"]
+    R_crystallize_before_split["R-crystallize-before-split"]
+    R_dependency_graph_parallelism["R-dependency-graph-parallelism"]
     C_186c4347{"C-186c4347\nagent-autonomy-vs-human-control"}
     R_agent_never_lost --> C_186c4347
     R_ai_presents_not_decides --> C_186c4347
@@ -60,6 +96,16 @@ graph TD
     C_8600b1b8{"C-8600b1b8\ncore-vs-aspect"}
     R_content_free_framework --> C_8600b1b8
     R_agent_never_lost --> C_8600b1b8
+    C_06e2d84e{"C-06e2d84e\napparatus-weight-vs-coverage"}
+    R_crystallize_knowledge_to_code --> C_06e2d84e
+    R_content_free_framework --> C_06e2d84e
+    C_d210d6d0{"C-d210d6d0\nhorizontal-vs-vertical-relief"}
+    R_context_bounded_delegation --> C_d210d6d0
+    R_crystallize_knowledge_to_code --> C_d210d6d0
+    C_d210d6d0 -.spawns.-> R_crystallize_before_split
+    C_d4f3eadf{"C-d4f3eadf\nsequential-vs-parallel"}
+    R_context_bounded_delegation --> C_d4f3eadf
+    R_dependency_graph_parallelism --> C_d4f3eadf
 ```
 
 ## Controlled vocabulary of axes (this domain)
@@ -72,6 +118,9 @@ graph TD
 | `apparatus-weight-vs-coverage` | Heavy formal machinery (Z3 / Quint / mutation testing) catches more contradictions but slows the loop. Calibration rule: weight of apparatus ∝ cost of an unnoticed conflict. |
 | `formalization-vs-prose` | Machine-checkable predicate (deterministic, narrow) vs EARS / free-prose claim (broad, ambiguous). Most claims are prose; the critical core is formalized. |
 | `single-altitude-vs-multi-altitude` | Conflating the methodology's own concepts with the modeled domain's (Task-vs-Action; Conflict-as-methodology-node vs Conflict-as-business-event). Two altitudes must stay separable. |
+| `offload-vs-carry` | Crystallize knowledge into the free substrate (graph + invariants + generated docs) vs hold it in expensive working context. Substrate knowledge is enforced/regenerable/addressable, so it does not count against an operator's context budget. |
+| `horizontal-vs-vertical-relief` | Relieve operator context pressure by delegating/splitting the domain (horizontal) vs by crystallizing knowledge into the substrate (vertical). Splitting is for irreducible size; crystallizing is for un-offloaded knowledge. |
+| `sequential-vs-parallel` | Coupled work (dependency edges between requirements/operators/entities) must be processed sequentially; independent sub-graphs can be delegated to parallel sub-operators. The dependency-graph topology — not a guess — decides which, and domains are split along lines of independence. |
 
 ## Latent-connector suspicions (heuristic, for AI review)
 
@@ -100,6 +149,33 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-ai-presents-not-decides` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-anchor-everything` | `R-anchor-taxonomy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-axis-controlled-vocab` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-critical-core-scope` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
@@ -111,19 +187,61 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-gatekeeper-policy` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-budget-measure` | `R-context-bounded-delegation` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-context-budget-rule` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-conflict-is-connector-node` | `R-content-free-framework` | shares assumption(s): A-content-free-honest |
 | `R-conflict-is-connector-node` | `R-empty-content-is-legitimate` | shares assumption(s): A-content-free-honest |
+| `R-content-layout-evolution` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-content-layout-evolution` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-content-layout-evolution` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-context-bounded-delegation` | `R-context-budget-rule` | shares assumption(s): A-finite-context-operators |
+| `R-context-bounded-delegation` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |
+| `R-context-bounded-delegation` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
+| `R-context-bounded-delegation` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-context-bounded-delegation` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-context-bounded-delegation` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-critical-core-scope` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-scope` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-scope` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-critical-core-scope` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-crystallize-before-split` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
+| `R-crystallize-before-split` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-crystallize-before-split` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-crystallize-before-split` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-crystallize-before-split` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-crystallize-knowledge-to-code` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-compaction-loses-working |
+| `R-crystallize-knowledge-to-code` | `R-stale-substrate` | shares assumption(s): A-compaction-loses-working |
 | `R-decided-needs-human-signoff` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-decided-needs-human-signoff` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-decided-needs-human-signoff` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-delegation-conclusions-only` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-delegation-conclusions-only` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-delegation-conclusions-only` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-delegation-conclusions-only` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-dependency-graph-parallelism` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-dependency-graph-parallelism` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-dependency-graph-parallelism` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-deterministic-generation` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-glossary-sync-test` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-smoke-test` | shares assumption(s): A-python-stack |
@@ -131,21 +249,100 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-glossary-sync-test` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-enforcement-first-class` | `R-enforcement-gradient` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-first-class` | `R-observation-evidence-scope` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-first-class` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-first-class` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-first-class` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-gradient` | `R-observation-evidence-scope` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-gradient` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-gradient` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-enforcement-gradient` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-glossary-sync-test` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-test` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-test` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-test` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-test` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-goal-as-target-state` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-as-target-state` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-goal-type-vs-facet` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-history-from-rejected-markers` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-history-from-rejected-markers` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-lifecycle-abstraction` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-abstraction` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-abstraction` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-abstraction` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-lifecycle-abstraction` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-observation-evidence-scope` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-observation-evidence-scope` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-observation-evidence-scope` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-open-states-question` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-operator-acting-facet` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-operator-acting-facet` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-operator-crystal-is-claude-md` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-stale-substrate` | shares assumption(s): A-compaction-loses-working |
+| `R-operator-crystal-is-claude-md` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-crystal-is-claude-md` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-type-vs-facet` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-partition-vs-border` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-process-aspect-first` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-aspect-first` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-aspect-first` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-aspect-first` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-process-aspect-first` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-process-aspect-first` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-rejected-preserved-not-deleted` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-rejected-preserved-not-deleted` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
+| `R-requirement-enforced` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-requirement-enforced` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-rules-as-data` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-rules-as-data` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-rules-as-data` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-rules-as-data` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-rules-as-data` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-smoke-test` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-speak-by-reference` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-speak-by-reference` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-speak-by-reference` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-speak-by-reference` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-wellformedness` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-wellformedness` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-statemachine-wellformedness` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-steward-distinct-from-owners` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-task-vs-action-distinct-altitudes` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-task-vs-action-distinct-altitudes` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-trust-anchor-mechanism` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-uncrystallizable-automated` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |

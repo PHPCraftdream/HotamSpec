@@ -38,6 +38,7 @@ from tensio.invariants import (  # noqa: E402
     check_no_dangling_ids,
     check_open_has_question,
     check_steward_not_a_member_owner,
+    check_typed_anchors,
     holds,
 )
 from tensio.requirement import Relation, Requirement  # noqa: E402
@@ -77,14 +78,14 @@ def _req(rid: str, owner: str, status: str = "SETTLED", **kw) -> Requirement:
 
 
 def _wellformed_conflict(**overrides) -> Conflict:
-    """A valid conflict (R1 owner=sa, R2 owner=sb, steward=outsider) to perturb."""
+    """A valid conflict (R-1 owner=sa, R-2 owner=sb, steward=outsider) to perturb."""
     axis = overrides.pop("axis", "cost-vs-flexibility")
     context = overrides.pop("context", "some shared scenario")
     base = dict(
         id=conflict_identity(axis, context),
         axis=axis,
         context=context,
-        members=("R1", "R2"),
+        members=("R-1", "R-2"),
         steward="outsider",
         lifecycle="ACKNOWLEDGED",
     )
@@ -101,7 +102,7 @@ def _graph_with(conflict: Conflict, reqs=None, assumptions=()) -> TensionGraph:
     graphs must declare the axes they use — otherwise check_axis_in_registry
     would (correctly) fire on "cost-vs-flexibility" etc.
     """
-    reqs = reqs if reqs is not None else (_req("R1", "sa"), _req("R2", "sb"))
+    reqs = reqs if reqs is not None else (_req("R-1", "sa"), _req("R-2", "sb"))
     return TensionGraph(
         axes=DEMO_AXES,
         stakeholders=(_S_OUT, _S_A, _S_B),
@@ -113,28 +114,28 @@ def _graph_with(conflict: Conflict, reqs=None, assumptions=()) -> TensionGraph:
 
 def test_dangling_member_fires() -> None:
     """check_no_dangling_ids fires when a conflict references a missing member."""
-    bad = _wellformed_conflict(members=("R1", "R_GHOST"))
+    bad = _wellformed_conflict(members=("R-1", "R-ghost"))
     v = check_no_dangling_ids(_graph_with(bad))
-    assert any(x.target == bad.id and "R_GHOST" in x.message for x in v)
+    assert any(x.target == bad.id and "R-ghost" in x.message for x in v)
 
 
 def test_dangling_owner_fires() -> None:
     """check_no_dangling_ids fires when a requirement owner is unknown."""
-    reqs = (_req("R1", "sa"), _req("R2", "no_such_owner"))
+    reqs = (_req("R-1", "sa"), _req("R-2", "no_such_owner"))
     g = _graph_with(_wellformed_conflict(), reqs=reqs)
     v = check_no_dangling_ids(g)
-    assert any(x.target == "R2" and "no_such_owner" in x.message for x in v)
+    assert any(x.target == "R-2" and "no_such_owner" in x.message for x in v)
 
 
 def test_dangling_relation_target_fires() -> None:
     """check_no_dangling_ids fires on a relation pointing to a missing requirement."""
     reqs = (
-        _req("R1", "sa", relations=(Relation(kind="supports", target="R_X"),)),
-        _req("R2", "sb"),
+        _req("R-1", "sa", relations=(Relation(kind="supports", target="R-missing"),)),
+        _req("R-2", "sb"),
     )
     g = _graph_with(_wellformed_conflict(), reqs=reqs)
     v = check_no_dangling_ids(g)
-    assert any(x.target == "R1" and "R_X" in x.message for x in v)
+    assert any(x.target == "R-1" and "R-missing" in x.message for x in v)
 
 
 def test_missing_axis_fires() -> None:
@@ -160,7 +161,7 @@ def test_missing_steward_fires() -> None:
 
 def test_single_member_fires() -> None:
     """check_conflict_min_two_members fires when a conflict has < 2 members."""
-    bad = _wellformed_conflict(members=("R1",))
+    bad = _wellformed_conflict(members=("R-1",))
     v = check_conflict_min_two_members(_graph_with(bad))
     assert any(x.target == bad.id for x in v)
 
@@ -182,7 +183,7 @@ def test_empty_axes_vocabulary_fires_on_any_axis() -> None:
     g = TensionGraph(
         axes=(),  # no vocabulary declared at all
         stakeholders=(_S_OUT, _S_A, _S_B),
-        requirements=(_req("R1", "sa"), _req("R2", "sb")),
+        requirements=(_req("R-1", "sa"), _req("R-2", "sb")),
         conflicts=(bad,),
     )
     v = check_axis_in_registry(g)
@@ -207,23 +208,23 @@ def test_steward_is_member_owner_fires() -> None:
 
 def test_open_without_question_fires() -> None:
     """check_open_has_question fires on a bare 'OPEN' with no question."""
-    reqs = (_req("R1", "sa", status="OPEN"), _req("R2", "sb"))
+    reqs = (_req("R-1", "sa", status="OPEN"), _req("R-2", "sb"))
     g = _graph_with(_wellformed_conflict(), reqs=reqs)
     v = check_open_has_question(g)
-    assert any(x.target == "R1" for x in v)
+    assert any(x.target == "R-1" for x in v)
 
 
 def test_open_empty_parens_fires() -> None:
     """check_open_has_question fires on 'OPEN()' (empty question)."""
-    reqs = (_req("R1", "sa", status="OPEN()"), _req("R2", "sb"))
+    reqs = (_req("R-1", "sa", status="OPEN()"), _req("R-2", "sb"))
     g = _graph_with(_wellformed_conflict(), reqs=reqs)
     v = check_open_has_question(g)
-    assert any(x.target == "R1" for x in v)
+    assert any(x.target == "R-1" for x in v)
 
 
 def test_open_with_question_does_not_fire() -> None:
     """check_open_has_question stays green on a proper OPEN(question)."""
-    reqs = (_req("R1", "sa", status="OPEN(which scope?)"), _req("R2", "sb"))
+    reqs = (_req("R-1", "sa", status="OPEN(which scope?)"), _req("R-2", "sb"))
     g = _graph_with(_wellformed_conflict(), reqs=reqs)
     assert holds(check_open_has_question(g))
 
@@ -237,8 +238,12 @@ def test_decided_without_justification_fires() -> None:
 
 def test_decided_with_derived_does_not_fire() -> None:
     """A DECIDED conflict justified by a derived requirement stays green."""
-    reqs = (_req("R1", "sa"), _req("R2", "sb"), _req("R3", "outsider", status="DRAFT"))
-    bad = _wellformed_conflict(lifecycle="DECIDED()", derived=("R3",))
+    reqs = (
+        _req("R-1", "sa"),
+        _req("R-2", "sb"),
+        _req("R-3", "outsider", status="DRAFT"),
+    )
+    bad = _wellformed_conflict(lifecycle="DECIDED()", derived=("R-3",))
     g = TensionGraph(
         axes=DEMO_AXES,
         stakeholders=(_S_OUT, _S_A, _S_B),
@@ -255,7 +260,7 @@ def test_dead_assumption_owner_dangling_fires() -> None:
         axes=DEMO_AXES,
         stakeholders=(_S_OUT, _S_A, _S_B),
         assumptions=(bad_assum,),
-        requirements=(_req("R1", "sa"), _req("R2", "sb")),
+        requirements=(_req("R-1", "sa"), _req("R-2", "sb")),
         conflicts=(_wellformed_conflict(),),
     )
     v = check_no_dangling_ids(g)
@@ -276,3 +281,59 @@ def test_empty_graph_is_wellformed() -> None:
     g = TensionGraph()
     assert g.is_empty()
     assert holds(all_violations(g)), "empty framework graph must be well-formed"
+
+
+# ---------------------------------------------------------------------------
+# 4. Typed-anchor checks (check_typed_anchors) — anti-phantom + real content
+# ---------------------------------------------------------------------------
+
+
+def test_typed_anchors_fires_on_bad_requirement_id() -> None:
+    """check_typed_anchors fires on a Requirement whose id lacks the 'R-' prefix."""
+    bad_req = _req("foo", "sa")  # id "foo" has no R- prefix
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=(bad_req, _req("R-2", "sb")),
+        conflicts=(),
+    )
+    v = check_typed_anchors(g)
+    assert any(x.target == "foo" and "R-" in x.message for x in v), (
+        "check_typed_anchors must fire on a Requirement with id 'foo'"
+    )
+
+
+def test_typed_anchors_fires_on_bad_assumption_id() -> None:
+    """check_typed_anchors fires on an Assumption whose id lacks the 'A-' prefix."""
+    from tensio.assumption import Assumption, HOLDS  # noqa: PLC0415
+
+    bad_assum = Assumption(id="assum-x", statement="x", status=HOLDS, owner="sa")
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        assumptions=(bad_assum,),
+        requirements=(_req("R1", "sa"), _req("R2", "sb")),
+        conflicts=(),
+    )
+    v = check_typed_anchors(g)
+    assert any(x.target == "assum-x" and "A-" in x.message for x in v), (
+        "check_typed_anchors must fire on an Assumption with id 'assum-x'"
+    )
+
+
+def test_typed_anchors_fires_on_bad_conflict_id() -> None:
+    """check_typed_anchors fires on a Conflict whose id lacks the 'C-' prefix."""
+    bad = _wellformed_conflict(id="CONFLICT-hand-written")
+    g = _graph_with(bad)
+    v = check_typed_anchors(g)
+    assert any(x.target == "CONFLICT-hand-written" and "C-" in x.message for x in v), (
+        "check_typed_anchors must fire on a Conflict with id 'CONFLICT-hand-written'"
+    )
+
+
+def test_typed_anchors_passes_on_seed_fixture() -> None:
+    """check_typed_anchors stays green on the well-formed seed fixture."""
+    g = seed_graph()
+    assert holds(check_typed_anchors(g)), (
+        "seed fixture must pass check_typed_anchors — all ids use correct prefixes"
+    )

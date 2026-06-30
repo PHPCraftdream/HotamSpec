@@ -110,7 +110,7 @@ deterministic question — *what now?* — answerable from any state:
 graph LR
     S["State<br/>graph + generated docs + tests"] --> D["Diagnosis<br/>what_now.py"]
     D --> N["Next-action<br/>typed + prioritized"]
-    N --> A["Action<br/>edit src/tensio"]
+    N --> A["Action<br/>edit spec/content"]
     A --> R["Regenerate<br/>gen_spec.py"]
     R --> S
 ```
