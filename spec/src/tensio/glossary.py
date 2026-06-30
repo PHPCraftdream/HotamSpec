@@ -264,6 +264,12 @@ TERMS: tuple[Term, ...] = (
         "CONCEPT",
         "The per-turn sequence that re-loads the operator from the substrate (pytest → what_now → tick → skim UNENFORCED/DECISIONS).",
     ),
+    # §Context section (P10a — honesty organ for working-context measurement)
+    Term(
+        "§Context",
+        "SECTION",
+        "The operator's working-context fullness measurement — MEASURED from a runtime stamp, never guessed (R-measure-context-size).",
+    ),
 )
 
 

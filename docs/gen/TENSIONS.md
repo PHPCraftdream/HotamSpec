@@ -212,10 +212,16 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-budget-measure` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-budget-measure` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-claude-md-live-state-generated` | `R-deterministic-generation` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-glossary-sync-test` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-conflict-is-connector-node` | `R-content-free-framework` | shares assumption(s): A-content-free-honest |
 | `R-conflict-is-connector-node` | `R-empty-content-is-legitimate` | shares assumption(s): A-content-free-honest |
 | `R-content-layout-evolution` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
@@ -233,6 +239,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-context-bounded-delegation` | `R-context-budget-rule` | shares assumption(s): A-finite-context-operators |
 | `R-context-bounded-delegation` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |
 | `R-context-bounded-delegation` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
+| `R-context-bounded-delegation` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-context-bounded-delegation` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
 | `R-context-bounded-delegation` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-context-bounded-delegation` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
@@ -240,6 +247,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-context-budget-rule` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |
 | `R-context-budget-rule` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
 | `R-context-budget-rule` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-context-budget-rule` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-context-budget-rule` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
 | `R-context-budget-rule` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-context-budget-rule` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
@@ -250,6 +258,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-critical-core-scope` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
 | `R-crystallize-before-split` | `R-delegation-conclusions-only` | shares assumption(s): A-finite-context-operators |
 | `R-crystallize-before-split` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-crystallize-before-split` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-crystallize-before-split` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
 | `R-crystallize-before-split` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-crystallize-before-split` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
@@ -261,10 +270,12 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-decided-needs-human-signoff` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-decided-needs-human-signoff` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-delegation-conclusions-only` | `R-dependency-graph-parallelism` | shares assumption(s): A-finite-context-operators |
+| `R-delegation-conclusions-only` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-delegation-conclusions-only` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
 | `R-delegation-conclusions-only` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-delegation-conclusions-only` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-delegation-conclusions-only` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-dependency-graph-parallelism` | `R-measure-context-size` | shares assumption(s): A-finite-context-operators |
 | `R-dependency-graph-parallelism` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
 | `R-dependency-graph-parallelism` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-dependency-graph-parallelism` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
@@ -322,6 +333,10 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-lifecycle-abstraction` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-abstraction` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-lifecycle-abstraction` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-measure-context-size` | `R-operator-acting-facet` | shares assumption(s): A-finite-context-operators |
+| `R-measure-context-size` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
+| `R-measure-context-size` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
+| `R-measure-context-size` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-observation-evidence-scope` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-observation-evidence-scope` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
 | `R-observation-evidence-scope` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |

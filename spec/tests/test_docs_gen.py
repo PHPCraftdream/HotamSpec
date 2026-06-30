@@ -196,6 +196,7 @@ REQUIRED_SECTIONS = [
     "§Reflection",
     "§Process",
     "§Goal",
+    "§Context",
 ]
 
 
@@ -211,6 +212,33 @@ def test_public_object_has_section_label(name: str, doc: str) -> None:
     """Every public object has a non-empty docstring carrying a `Canon:§` label."""
     assert doc.strip(), f"{name}: empty docstring"
     assert "§" in doc, f"{name}: docstring missing a `Canon:§N` label"
+
+
+# ---------------------------------------------------------------------------
+# 3b. CLAUDE.md LIVE-STATE block anti-drift
+# ---------------------------------------------------------------------------
+
+
+def test_claude_md_live_state_up_to_date() -> None:
+    """The LIVE-STATE block in CLAUDE.md matches build_live_state(g) (R-claude-md-live-state-generated).
+
+    Only the sentinel-delimited block is checked — the rest of CLAUDE.md is
+    legitimately hand-written and not subject to this test.
+    """
+    g = gen_spec.load_content_graph()
+    expected = gen_spec.build_live_state(g)
+
+    assert gen_spec.CLAUDE_MD.exists(), "CLAUDE.md not found at expected path."
+    raw = _read_normalized(gen_spec.CLAUDE_MD)
+    actual = gen_spec.extract_live_state_block(raw)
+
+    assert actual is not None, (
+        "CLAUDE.md is missing <!-- LIVE-STATE:BEGIN --> / <!-- LIVE-STATE:END --> "
+        "sentinels. Run `uv run python tools/gen_spec.py` to populate."
+    )
+    assert actual == expected, (
+        "CLAUDE.md LIVE-STATE block is stale: run `uv run python tools/gen_spec.py`."
+    )
 
 
 # ---------------------------------------------------------------------------

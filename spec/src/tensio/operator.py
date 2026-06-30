@@ -11,6 +11,10 @@ DRAFT-overhang, UNENFORCED-SETTLED debt, DEAD-assumption-on-ENFORCER, and
 derived-but-unbuilt debt. An operator that cannot see its own state is worse than
 a malformed graph (ranked P0, above §Invariants P1 STRUCTURE).
 
+Canon: §Context — the working-context fullness is MEASURED, not guessed; the
+three-cipher pulse cites it as the first cipher (tools/context.py reader;
+R-measure-context-size DRAFT).
+
 Canon: §Operator — every Operator:
   - carries a typed anchor starting with 'OP-' (R-anchor-everything);
   - references a Stakeholder.id (the accountability facet, §Stakeholder);

@@ -35,6 +35,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Reflection` | The operator self-diagnosis band (P0) — diagnoses the operator's OWN readiness: DRAFT-overhang, UNENFORCED-SETTLED debt, over-budget operators, dead-assumption-on-enforcer, derived-but-unbuilt. |
 | `§Process` | The opt-in behavioral aspect (M12): a Lifecycle + ordered Steps + roles_required + drives_entities — the richest contradiction surface. |
 | `§Goal` | A first-class target-state type (M19): distinct from a static Requirement because it carries a MOVING TARGET that yields a Gap driving a Process. |
+| `§Context` | The operator's working-context fullness measurement — MEASURED from a runtime stamp, never guessed (R-measure-context-size). |
 
 ## Lifecycle states
 | slug | definition |
