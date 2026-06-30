@@ -23,6 +23,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-axis-controlled-vocab` | SETTLED | `framework-author` | A-prose-suffices | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | SETTLED | `framework-author` | A-python-stack | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
 | `R-two-altitude-ontology` | SETTLED | `framework-author` | A-bootstrap-self-applies | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
+| `R-boot-from-substrate` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | The operator shall begin every new turn by re-loading three facts from the substrate — current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio — and cite at least one of them in the first sentence of any substantive reply. |
 | `R-trust-anchor-mechanism` | OPEN(what signature mechanism (PGP/SSH/web of trust) and cadence (quarterly/per-PR/on-domain-change) anchor the loop?) | `framework-author` | A-stakeholders-care, A-bootstrap-self-applies | The methodology shall be externally anchored by a periodic stakeholder cryptographic signature on the tension map per domain — to ground the internal loop in a living human. |
 | `R-critical-core-scope` | SETTLED | `domain-user` | A-prose-suffices | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-axis-gatekeeper-policy` | OPEN(when do we switch on the AI duplicate-gatekeeper — immediately, on first ambiguous slug, or only above N axes?) | `ai-agent` | A-prose-suffices | The admission policy for a new axis slug shall be machine-checked against duplicate detection by the AI gatekeeper. |
@@ -221,6 +222,11 @@ OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
   DRIFT_FALLOUT — a DEAD assumption with live dependents that must be revisited.
   latent connector — a requirement pair that SHOULD have a Conflict node but
              doesn't; the heuristic hunt lives in graph.latent_connector_suspects.
+  three-cipher pulse — the operator's per-turn vital-signs anchored in R-boot-from-substrate
+             (context % + top what_now action + unenforced-SETTLED+DRAFT debt count).
+  boot ritual — the per-turn sequence (CLAUDE.md§Operator boot ritual) that re-loads
+             the operator from the substrate so every reply is grounded in the live
+             substrate rather than session memory.
 
 ### 2. §Stakeholder — owners and stewards — `tensio.stakeholder`
 

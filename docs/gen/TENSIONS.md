@@ -153,6 +153,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-ai-presents-not-decides` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-anchor-everything` | `R-anchor-taxonomy` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-everything` | `R-boot-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -166,6 +167,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-everything` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-everything` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-anchor-taxonomy` | `R-boot-from-substrate` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
@@ -190,6 +192,21 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-axis-gatekeeper-policy` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
 | `R-axis-gatekeeper-policy` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
+| `R-boot-from-substrate` | `R-content-layout-evolution` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-crystallize-knowledge-to-code` | shares assumption(s): A-compaction-loses-working |
+| `R-boot-from-substrate` | `R-goal-as-target-state` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-goal-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-lifecycle-abstraction` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies, A-compaction-loses-working |
+| `R-boot-from-substrate` | `R-operator-type-vs-facet` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-stale-substrate` | shares assumption(s): A-compaction-loses-working |
+| `R-boot-from-substrate` | `R-statemachine-wellformedness` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
+| `R-boot-from-substrate` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
 | `R-budget-measure` | `R-context-bounded-delegation` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-context-budget-rule` | shares assumption(s): A-finite-context-operators |
 | `R-budget-measure` | `R-crystallize-before-split` | shares assumption(s): A-finite-context-operators |

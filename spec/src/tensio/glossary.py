@@ -253,6 +253,17 @@ TERMS: tuple[Term, ...] = (
         "CONCEPT",
         "The desired-state predicate carried by a Goal (kind in TARGET_KINDS: GRAPH_PROPERTY | BUSINESS_STATE | ENTITY_STATE).",
     ),
+    # §Boot section (P10 — operator boot ritual and three-cipher pulse)
+    Term(
+        "three-cipher pulse",
+        "CONCEPT",
+        "The operator's per-turn vital-signs: context % + top what_now action + unenforced-SETTLED+DRAFT debt count.",
+    ),
+    Term(
+        "boot ritual",
+        "CONCEPT",
+        "The per-turn sequence that re-loads the operator from the substrate (pytest → what_now → tick → skim UNENFORCED/DECISIONS).",
+    ),
 )
 
 

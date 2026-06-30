@@ -80,3 +80,5 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `Step` | One step in a Process — a verb requiring a declared role (requires_role must be in Process.roles_required). |
 | `Gap` | The distance between a Goal's target_state and the current state — drives Process execution and is the measurable work remaining. |
 | `Target state` | The desired-state predicate carried by a Goal (kind in TARGET_KINDS: GRAPH_PROPERTY \| BUSINESS_STATE \| ENTITY_STATE). |
+| `three-cipher pulse` | The operator's per-turn vital-signs: context % + top what_now action + unenforced-SETTLED+DRAFT debt count. |
+| `boot ritual` | The per-turn sequence that re-loads the operator from the substrate (pytest → what_now → tick → skim UNENFORCED/DECISIONS). |

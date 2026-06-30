@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 25 / SETTLED 40; DRAFT 1; OPEN 12; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 25 / SETTLED 41; DRAFT 1; OPEN 12; REJECTED 3.**
 
 ---
 
@@ -23,6 +23,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently. It presents, justifies, and asks; the decision and its recording stay with the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
+| `R-boot-from-substrate` | STRUCTURAL | `ai-agent` | The operator shall begin every new turn by re-loading three facts from the substrate — current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio — and cite at least one of them in the first sentence of any substantive reply. |
 | `R-task-vs-action-distinct-altitudes` | STRUCTURAL | `framework-author` | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
 | `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
 | `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |

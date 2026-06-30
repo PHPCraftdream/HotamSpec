@@ -105,4 +105,9 @@ OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
   DRIFT_FALLOUT — a DEAD assumption with live dependents that must be revisited.
   latent connector — a requirement pair that SHOULD have a Conflict node but
              doesn't; the heuristic hunt lives in graph.latent_connector_suspects.
+  three-cipher pulse — the operator's per-turn vital-signs anchored in R-boot-from-substrate
+             (context % + top what_now action + unenforced-SETTLED+DRAFT debt count).
+  boot ritual — the per-turn sequence (CLAUDE.md§Operator boot ritual) that re-loads
+             the operator from the substrate so every reply is grounded in the live
+             substrate rather than session memory.
 """
