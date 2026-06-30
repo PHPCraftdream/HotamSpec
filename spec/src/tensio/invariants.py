@@ -23,6 +23,7 @@ wants pass/fail.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from tensio.conflict import conflict_identity
@@ -33,7 +34,9 @@ from tensio.graph import (
     requirement_ids,
     stakeholder_ids,
 )
-from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, RELATION_KINDS
+from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, OPEN_PREFIX, RELATION_KINDS
+
+_M_TAG_RE = re.compile(r"^M[1-9][0-9]*$")
 
 
 @dataclass(frozen=True)
@@ -442,6 +445,73 @@ def check_enforced_names_invariant(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 8. M-tag format, uniqueness, and OPEN-only discipline
+# ---------------------------------------------------------------------------
+
+
+def check_m_tag_format(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — every non-empty m_tag is valid, unique, and OPEN-only.
+
+    RULE (three sub-rules):
+      1. FORMAT: a non-empty `m_tag` MUST match `^M[1-9][0-9]*$` — "M" followed
+         by a positive integer with no leading zeros (e.g. M3, M17, M26; not M01,
+         m17, M, Mfoo). This is the typed-anchor discipline applied to M-tags.
+      2. UNIQUE: no two Requirements in the graph may share the same `m_tag`. A
+         duplicate tag breaks the bijection that `docs/gen/DECISIONS.md` relies on:
+         one M-decision maps to exactly one Requirement.
+      3. OPEN-ONLY: an `m_tag` SHOULD appear only on an OPEN requirement. An M-tag
+         on a SETTLED, DRAFT, or REJECTED requirement fires a violation — the
+         M-registry tracks live open decisions, not resolved or proposed ones.
+
+    WHY: the M-tag field is the bridge between the graph and `docs/gen/DECISIONS.md`
+    (the generated canonical M-registry). Invalid format breaks parsing; duplicates
+    break the one-to-one mapping; non-OPEN tags would pollute the registry with
+    decisions that are no longer open (R-drift-structurally-impossible applied to the
+    M-registry itself — see U5).
+    """
+    out: list[Violation] = []
+    seen_tags: dict[str, str] = {}  # tag -> first requirement id
+
+    for r in g.requirements:
+        if not r.m_tag:
+            continue
+        # Rule 1: format
+        if not _M_TAG_RE.match(r.m_tag):
+            out.append(
+                Violation(
+                    "check_m_tag_format",
+                    r.id,
+                    f"m_tag '{r.m_tag}' does not match ^M[1-9][0-9]*$ "
+                    f"(must be 'M' followed by a positive integer, no leading zeros)",
+                )
+            )
+        # Rule 2: uniqueness
+        if r.m_tag in seen_tags:
+            out.append(
+                Violation(
+                    "check_m_tag_format",
+                    r.id,
+                    f"m_tag '{r.m_tag}' is already used by '{seen_tags[r.m_tag]}'; "
+                    f"each M-tag must be unique across the graph",
+                )
+            )
+        else:
+            seen_tags[r.m_tag] = r.id
+        # Rule 3: OPEN-only
+        if not r.status.startswith(OPEN_PREFIX):
+            out.append(
+                Violation(
+                    "check_m_tag_format",
+                    r.id,
+                    f"m_tag '{r.m_tag}' appears on a non-OPEN requirement (status={r.status!r}); "
+                    f"M-tags are only for OPEN requirements (the live M-decision registry)",
+                )
+            )
+
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -456,6 +526,7 @@ ALL_INVARIANTS = (
     check_decided_has_rationale_or_derived,
     check_typed_anchors,
     check_enforced_names_invariant,
+    check_m_tag_format,
 )
 
 

@@ -98,6 +98,16 @@ class Requirement:
     SETTLED requirement that is not ENFORCED is UNENFORCED — claimed-but-not-
     guaranteed, the burn-down meter measures this gap.
 
+    RULE (m_tag): an OPEN requirement that mirrors a CLAUDE.md M-decision MUST
+    carry its M-tag (e.g. `m_tag="M17"`). Non-OPEN requirements may leave it
+    empty (the default "").
+
+    WHY (m_tag): this field lets `docs/gen/DECISIONS.md` be generated as the
+    canonical home of the M-registry — retiring the hand-maintained M-table in
+    CLAUDE.md (the U5 anti-drift fix; the dev-coin Param.status + HOLES.md
+    pattern: one source of truth, generated mirror). Format enforced by
+    `invariants.check_m_tag_format`.
+
     Fields:
       id           — stable slug (e.g. "R-87"); the value edges and Conflicts carry.
       claim        — the requirement, machine-checkable predicate or EARS prose.
@@ -109,6 +119,8 @@ class Requirement:
       enforcement  — PROSE | STRUCTURAL | ENFORCED (default: PROSE).
       enforced_by  — tuple of check_*/test anchors; MUST be non-empty when
                      enforcement == ENFORCED.
+      m_tag        — M-decision tag (e.g. "M17"); non-empty only on OPEN
+                     requirements that mirror a CLAUDE.md M-decision.
 
     WHY frozen + id-stable: a requirement may be renamed, split, or refined; the
     Conflict node that mediates it has identity from (axis, context), so it
@@ -124,6 +136,7 @@ class Requirement:
     relations: tuple[Relation, ...] = field(default_factory=tuple)
     enforcement: str = PROSE
     enforced_by: tuple[str, ...] = field(default_factory=tuple)
+    m_tag: str = ""
 
     def is_open(self) -> bool:
         """Canon: §Requirement — True iff this requirement is an OPEN hole.

@@ -36,6 +36,7 @@ from tensio.invariants import (  # noqa: E402
     check_conflict_min_two_members,
     check_decided_has_rationale_or_derived,
     check_enforced_names_invariant,
+    check_m_tag_format,
     check_no_dangling_ids,
     check_open_has_question,
     check_steward_not_a_member_owner,
@@ -396,4 +397,83 @@ def test_settled_with_enforcer_passes() -> None:
     )
     assert holds(check_enforced_names_invariant(g)), (
         "ENFORCED requirement with non-empty enforced_by must pass"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 6. M-tag format invariant (check_m_tag_format)
+# ---------------------------------------------------------------------------
+
+
+def test_m_tag_bad_format_fires() -> None:
+    """check_m_tag_format fires on a badly-formatted m_tag (e.g. 'm17', 'M01', 'Mfoo')."""
+    bad_cases = ["m17", "M01", "M", "Mfoo", "m1", "M00", "17"]
+    for bad_tag in bad_cases:
+        reqs = (
+            _req("R-1", "sa", status="OPEN(question?)", m_tag=bad_tag),
+            _req("R-2", "sb"),
+        )
+        g = TensionGraph(
+            axes=DEMO_AXES,
+            stakeholders=(_S_OUT, _S_A, _S_B),
+            requirements=reqs,
+            conflicts=(),
+        )
+        v = check_m_tag_format(g)
+        assert any(x.target == "R-1" and "M[1-9]" in x.message for x in v), (
+            f"check_m_tag_format must fire on m_tag={bad_tag!r}"
+        )
+
+
+def test_m_tag_duplicate_fires() -> None:
+    """check_m_tag_format fires when two requirements share the same m_tag."""
+    reqs = (
+        _req("R-1", "sa", status="OPEN(q1?)", m_tag="M5"),
+        _req("R-2", "sb", status="OPEN(q2?)", m_tag="M5"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    v = check_m_tag_format(g)
+    assert any("M5" in x.message and "unique" in x.message for x in v), (
+        "check_m_tag_format must fire on duplicate m_tag M5"
+    )
+
+
+def test_m_tag_on_non_open_fires() -> None:
+    """check_m_tag_format fires when m_tag appears on a non-OPEN requirement."""
+    for bad_status in ("SETTLED", "DRAFT", "REJECTED"):
+        reqs = (
+            _req("R-1", "sa", status=bad_status, m_tag="M7"),
+            _req("R-2", "sb"),
+        )
+        g = TensionGraph(
+            axes=DEMO_AXES,
+            stakeholders=(_S_OUT, _S_A, _S_B),
+            requirements=reqs,
+            conflicts=(),
+        )
+        v = check_m_tag_format(g)
+        assert any(x.target == "R-1" and "non-OPEN" in x.message for x in v), (
+            f"check_m_tag_format must fire on m_tag on status={bad_status!r}"
+        )
+
+
+def test_m_tag_valid_open_does_not_fire() -> None:
+    """check_m_tag_format stays green on a properly-formatted m_tag on an OPEN req."""
+    reqs = (
+        _req("R-1", "sa", status="OPEN(which metric?)", m_tag="M17"),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    assert holds(check_m_tag_format(g)), (
+        "check_m_tag_format must not fire on a valid m_tag='M17' on OPEN req"
     )

@@ -318,6 +318,8 @@ build/cache artifacts in `.gitignore`, not committed. Do not bump versions.
 
 ## OPEN methodology decisions (we practice what we preach)
 
+**The canonical M-registry is generated as [`docs/gen/DECISIONS.md`](docs/gen/DECISIONS.md) from the graph's OPEN requirements (those carrying an `m_tag`). The table below is a HUMAN-FRIENDLY VIEW maintained for now to summarize each decision; the cross-anchor `(see R-…)` notes link each row to its canonical Requirement. The bijection is enforced by `test_decisions_bijection.py` — drift is structurally impossible.**
+
 These are the framework's own defaulted decisions — each is implemented but
 flagged OPEN until the user confirms or overrides. They are the methodology's
 equivalent of dev-coin's genesis-number list.
@@ -332,7 +334,7 @@ equivalent of dev-coin's genesis-number list.
 | M6 | Latent-connector heuristic | "shares ≥1 assumption AND no existing C-node" (`graph.latent_connector_suspects`) | OPEN(is shared-assumption the right cheap signal, and does it over-flag derived requirements?) (no req mirror yet) |
 | M7 | Critical-core scope for formal layers | none yet (all DEFERRED) | OPEN(which requirement domains are "critical core" warranting Z3/Quint/mutation?) (see `R-critical-core-scope`) |
 | M8 | Content layout | single file `spec/content/graph.py` exposing `build_graph()` (discovered by `load_content_graph()`) | OPEN(one file forever, or split per sub-domain into `spec/content/<domain>.py` and aggregate?) (see `R-content-layout-evolution`) |
-| M9 | Multi-domain composition | a graph is one whole; multiple domains live in one `build_graph()` | OPEN(how does the methodology compose graphs across teams — federation, namespacing, or a single merged graph?) (see `R-content-layout-evolution`) |
+| M9 | Multi-domain composition | a graph is one whole; multiple domains live in one `build_graph()` | OPEN(how does the methodology compose graphs across teams — federation, namespacing, or a single merged graph?) (absorbed into M8 / R-content-layout-evolution; no separate req mirror yet) |
 | M10 | Task vs Action altitudes | both modeled, distinct | OPEN(ever unified?) (no req mirror yet) |
 | M11 | status/lifecycle via generic Lifecycle | keep stored string + validating invariant | OPEN(adopt generic Lifecycle?) (no req mirror yet) |
 | M12 | Entity/Process/Task core or aspect | lifecycle core, three opt-in aspects | OPEN(confirm?) (no req mirror yet) |
