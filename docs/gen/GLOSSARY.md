@@ -37,6 +37,8 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Goal` | A first-class target-state type (M19): distinct from a static Requirement because it carries a MOVING TARGET that yields a Gap driving a Process. |
 | `§Context` | The operator's working-context fullness measurement — MEASURED from a runtime stamp, never guessed (R-measure-context-size). |
 | `§Atoms` | The atomized methodology docs generated under docs/methodology/atoms/ from SETTLED requirements grouped by topic. |
+| `§Agent` | A scoped sub-operator directory (spec/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories. |
+| `§Domain` | A self-contained business domain directory (domains/<name>/) with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md. |
 
 ## Lifecycle states
 | slug | definition |

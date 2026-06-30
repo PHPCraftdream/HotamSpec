@@ -14,11 +14,13 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `test_every_agent_declares_purpose`
 
-## `R-agent-has-docs-dir` (STRUCTURAL)
+## `R-agent-has-docs-dir` (ENFORCED)
 
 **Claim.** Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content.
 
-**Why.** Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs.
+**Why.** Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64).
+
+**Enforced by:** `check_agent_has_docs_subdir`
 
 ## `R-agent-has-own-crystal` (PROSE)
 
@@ -38,11 +40,13 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence.
 
-## `R-agent-is-recursive-director` (STRUCTURAL)
+## `R-agent-is-recursive-director` (ENFORCED)
 
 **Claim.** Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder.
 
-**Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit — a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one.
+**Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit — a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. ENFORCED via check_agent_has_agents_subdir (task #64).
+
+**Enforced by:** `check_agent_has_agents_subdir`
 
 ## `R-agent-map-generated` (ENFORCED)
 

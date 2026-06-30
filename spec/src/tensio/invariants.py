@@ -1202,6 +1202,210 @@ def check_bijection_r_to_enforcer(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# Domain and agent filesystem invariants (Concern 6 / P17 task #64)
+# These iterate the filesystem, not the graph; g is accepted for signature
+# compatibility with the check_* protocol but is not used.
+# ---------------------------------------------------------------------------
+
+_REPO_ROOT_FROM_INVARIANTS = Path(__file__).resolve().parents[3]  # .../HotamSpec
+_DOMAINS_ROOT = _REPO_ROOT_FROM_INVARIANTS / "domains"
+_SPEC_AGENTS_ROOT = Path(__file__).resolve().parents[3] / "spec" / "agents"
+
+
+def check_domain_manifest_valid(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Domain — every domains/<name>/manifest.py defines ID (matching dirname), DESCRIPTION, GOALS, DIRECTOR.
+
+    RULE: A domain without a valid manifest is invisible to the framework.
+    WHY: The manifest is the stable identity anchor for a domain; missing or
+    mismatched fields make the domain undiscoverable by gen_spec and
+    create_domain tooling (R-domain-has-manifest).
+    """
+    if not _DOMAINS_ROOT.exists():
+        return []
+    import importlib.util  # noqa: PLC0415
+
+    out: list[Violation] = []
+    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        manifest_py = domain_dir / "manifest.py"
+        if not manifest_py.exists():
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    f"domains/{domain_dir.name}/manifest.py is missing — "
+                    "every domain must declare ID, DESCRIPTION, GOALS, DIRECTOR",
+                )
+            )
+            continue
+        spec = importlib.util.spec_from_file_location(
+            f"_manifest_{domain_dir.name}", manifest_py
+        )
+        if spec is None or spec.loader is None:
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    f"Cannot load manifest.py for domain '{domain_dir.name}'",
+                )
+            )
+            continue
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        except Exception as exc:
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    f"manifest.py import error: {exc}",
+                )
+            )
+            continue
+        domain_id = getattr(mod, "ID", None)
+        description = getattr(mod, "DESCRIPTION", None)
+        goals = getattr(mod, "GOALS", None)
+        director = getattr(mod, "DIRECTOR", None)
+        if domain_id != domain_dir.name:
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    f"manifest.py ID '{domain_id}' does not match dirname '{domain_dir.name}'",
+                )
+            )
+        if not description:
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    "manifest.py DESCRIPTION is empty",
+                )
+            )
+        if not goals:
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    "manifest.py GOALS is empty or missing",
+                )
+            )
+        if not director:
+            out.append(
+                Violation(
+                    "check_domain_manifest_valid",
+                    domain_dir.name,
+                    "manifest.py DIRECTOR is empty or missing",
+                )
+            )
+    return out
+
+
+def check_domain_director_exists(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Domain — every domains/<name>/agents/<DIRECTOR>/scope.py must exist.
+
+    RULE: A domain whose declared director agent is missing is headless.
+    WHY: The director is the entry point for all domain-level operator delegation
+    (R-domain-declares-director). Missing scope.py means the agent is not
+    discoverable by gen_spec or invoke_agent.
+    """
+    if not _DOMAINS_ROOT.exists():
+        return []
+    import importlib.util  # noqa: PLC0415
+
+    out: list[Violation] = []
+    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        manifest_py = domain_dir / "manifest.py"
+        if not manifest_py.exists():
+            continue  # already caught by check_domain_manifest_valid
+        spec = importlib.util.spec_from_file_location(
+            f"_manifest_dir_{domain_dir.name}", manifest_py
+        )
+        if spec is None or spec.loader is None:
+            continue
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        except Exception:
+            continue
+        director = getattr(mod, "DIRECTOR", None)
+        if not director:
+            continue
+        scope_py = domain_dir / "agents" / director / "scope.py"
+        if not scope_py.exists():
+            out.append(
+                Violation(
+                    "check_domain_director_exists",
+                    domain_dir.name,
+                    f"domains/{domain_dir.name}/agents/{director}/scope.py is missing — "
+                    f"director agent '{director}' declared in manifest but not scaffolded",
+                )
+            )
+    return out
+
+
+def check_agent_has_agents_subdir(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Agent — every agent directory must contain an 'agents/' subdirectory.
+
+    RULE: Every agent is itself a potential director that can spawn sub-agents;
+    the agents/ subdir is the recursion slot (R-agent-is-recursive-director).
+    WHY: Without the subdir the recursive delegation pattern collapses —
+    create_agent.py always scaffolds it; its absence indicates manual corruption.
+    """
+    if not _SPEC_AGENTS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for agent_dir in sorted(_SPEC_AGENTS_ROOT.iterdir()):
+        if not agent_dir.is_dir():
+            continue
+        if not (agent_dir / "scope.py").exists():
+            continue  # not a valid agent dir
+        agents_subdir = agent_dir / "agents"
+        if not agents_subdir.exists():
+            out.append(
+                Violation(
+                    "check_agent_has_agents_subdir",
+                    agent_dir.name,
+                    f"spec/agents/{agent_dir.name}/agents/ is missing — "
+                    "every agent must have an agents/ subdir for recursive delegation",
+                )
+            )
+    return out
+
+
+def check_agent_has_docs_subdir(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Agent — every agent directory must contain a 'docs/' subdirectory.
+
+    RULE: Every agent carries its own docs/ for generated CLAUDE.md and thinking
+    fragments scoped to its domain (R-agent-has-docs-dir).
+    WHY: Without docs/ the agent cannot receive generated shared-docs links;
+    create_agent.py always scaffolds it; its absence indicates manual corruption.
+    """
+    if not _SPEC_AGENTS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for agent_dir in sorted(_SPEC_AGENTS_ROOT.iterdir()):
+        if not agent_dir.is_dir():
+            continue
+        if not (agent_dir / "scope.py").exists():
+            continue
+        docs_subdir = agent_dir / "docs"
+        if not docs_subdir.exists():
+            out.append(
+                Violation(
+                    "check_agent_has_docs_subdir",
+                    agent_dir.name,
+                    f"spec/agents/{agent_dir.name}/docs/ is missing — "
+                    "every agent must have a docs/ subdir for generated docs",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -1230,6 +1434,11 @@ ALL_INVARIANTS = (
     check_goal_owner_is_operator,
     check_section_anchors_known,
     check_bijection_r_to_enforcer,
+    # §Domain + §Agent filesystem invariants (P17 task #64)
+    check_domain_manifest_valid,
+    check_domain_director_exists,
+    check_agent_has_agents_subdir,
+    check_agent_has_docs_subdir,
 )
 
 # --- M7: the critical core ---

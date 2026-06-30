@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 56 / SETTLED 108; DRAFT 21; OPEN 13; REJECTED 18.**
+**Burn-down: SETTLED-ENFORCED 60 / SETTLED 108; DRAFT 21; OPEN 13; REJECTED 18.**
 
 ---
 
@@ -54,8 +54,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-tool-is-its-own-requirement` | STRUCTURAL | `framework-author` | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 | `R-domain-is-a-directory` | STRUCTURAL | `framework-author` | A business domain is represented as a directory at `domains/<name>/`. |
-| `R-domain-has-manifest` | STRUCTURAL | `framework-author` | Every `domains/<name>/` directory contains `manifest.py` defining top-level constants ID, DESCRIPTION, GOALS, DIRECTOR. |
-| `R-domain-declares-director` | STRUCTURAL | `framework-author` | Every domain's `manifest.py` DIRECTOR constant must resolve to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`. |
 | `R-domain-owns-graph-py` | STRUCTURAL | `framework-author` | Each `domains/<name>/` owns its `graph.py` defining `build_graph() -> TensionGraph`. |
 | `R-domain-owns-docs-gen` | STRUCTURAL | `framework-author` | Each `domains/<name>/docs/gen/` holds the markdown generated from that domain's graph; no cross-domain doc files. |
 | `R-domain-owns-tools-and-agents` | STRUCTURAL | `framework-author` | Each `domains/<name>/` owns its `tools/` (private tools) and its `agents/` (sub-operators); both directories MUST exist (may be empty). |
@@ -63,12 +61,10 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-framework-claude-md-is-domain-free` | STRUCTURAL | `framework-author` | The root `CLAUDE.md` contains framework-only content and references domains only through the DOMAIN-MAP block; no domain-specific atoms appear in it. |
 | `R-domain-map-generated` | STRUCTURAL | `framework-author` | The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count. |
 | `R-director-agent-required-per-domain` | STRUCTURAL | `framework-author` | Every domain must contain a `director` agent at `domains/<name>/agents/director/` as the entry point operator. |
-| `R-agent-is-recursive-director` | STRUCTURAL | `framework-author` | Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder. |
 | `R-framework-shared-docs-generated` | STRUCTURAL | `framework-author` | The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings plus argparse --help output. |
 | `R-shared-tool-doc-from-docstring-and-help` | STRUCTURAL | `framework-author` | Each spec/docs/tools/<basename>.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between sentinels. |
 | `R-shared-thinking-doc-from-canon-sections` | STRUCTURAL | `framework-author` | Each spec/docs/thinking/<topic-slug>.md shall aggregate all framework docstrings carrying Canon: §<Topic> markers; the file is the union of those sources, not hand-written. |
 | `R-agent-references-shared-docs` | STRUCTURAL | `framework-author` | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE); content is referenced, not duplicated (DRY). |
-| `R-agent-has-docs-dir` | STRUCTURAL | `framework-author` | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
 | `R-domain-has-docs-dir` | STRUCTURAL | `framework-author` | Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
@@ -131,6 +127,10 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-repo-map-generated` | test_repo_map_complete | CLAUDE.md shall contain a REPO-MAP block listing every spec/src/tensio/*.py, spec/tools/*.py, docs/gen/*.md, and spec/content/*.py with a one-line role from its module docstring or front matter. |
 | `R-agent-declares-purpose` | test_every_agent_declares_purpose | Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line. |
 | `R-agent-map-generated` | test_agent_map_complete | CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path. |
+| `R-domain-has-manifest` | check_domain_manifest_valid | Every `domains/<name>/` directory contains `manifest.py` defining top-level constants ID, DESCRIPTION, GOALS, DIRECTOR. |
+| `R-domain-declares-director` | check_domain_director_exists | Every domain's `manifest.py` DIRECTOR constant must resolve to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`. |
+| `R-agent-is-recursive-director` | check_agent_has_agents_subdir | Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` is a director of its SCOPE and contains its own `agents/` subdirectory for recursive sub-agents; the recursion's leaf is an empty `agents/` folder. |
+| `R-agent-has-docs-dir` | check_agent_has_docs_subdir | Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content. |
 
 ## DRAFT (not yet promoted)
 

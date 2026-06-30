@@ -276,6 +276,18 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "The atomized methodology docs generated under docs/methodology/atoms/ from SETTLED requirements grouped by topic.",
     ),
+    # §Agent section (P17 — domain isolation, recursive sub-operator directories)
+    Term(
+        "§Agent",
+        "SECTION",
+        "A scoped sub-operator directory (spec/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories.",
+    ),
+    # §Domain section (P17 — domain isolation, per-domain graph and docs)
+    Term(
+        "§Domain",
+        "SECTION",
+        "A self-contained business domain directory (domains/<name>/) with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.",
+    ),
 )
 
 
