@@ -22,8 +22,6 @@ from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SPEC_ROOT.parent
-AGENTS_ROOT = SPEC_ROOT / "agents"
-FRAMEWORK_AGENT_DIR = AGENTS_ROOT / "framework-agent"
 SPEC_DOCS_THINKING = SPEC_ROOT / "docs" / "thinking"
 SPEC_DOCS_TOOLS = SPEC_ROOT / "docs" / "tools"
 
@@ -32,6 +30,10 @@ _tools_str = str(SPEC_ROOT / "tools")
 if _tools_str not in sys.path:
     sys.path.insert(0, _tools_str)
 import gen_spec  # noqa: E402
+
+# After P17 migration, agents live inside the active domain; resolve from gen_spec.
+AGENTS_ROOT = gen_spec._AGENTS_ROOT
+FRAMEWORK_AGENT_DIR = AGENTS_ROOT / "framework-agent"
 
 
 # ---------------------------------------------------------------------------

@@ -22,10 +22,19 @@ import pytest
 # Paths
 # ---------------------------------------------------------------------------
 
+import sys as _sys_am
+
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
-AGENTS_ROOT = SPEC_ROOT / "agents"
+
+_tools_am = str(SPEC_ROOT / "tools")
+if _tools_am not in _sys_am.path:
+    _sys_am.path.insert(0, _tools_am)
+import gen_spec as _gen_spec_am  # noqa: E402
+
+# After P17 migration, agents_root is inside the active domain.
+AGENTS_ROOT = _gen_spec_am._AGENTS_ROOT
 
 _AGENT_MAP_BEGIN = "<!-- AGENT-MAP:BEGIN -->"
 _AGENT_MAP_END = "<!-- AGENT-MAP:END -->"
@@ -109,8 +118,14 @@ def test_agent_map_framework_agent_present() -> None:
     )
     assert "**tools**" in sub, "framework-agent tools line missing"
     assert "**crystal**" in sub, "framework-agent crystal line missing"
-    assert "spec/agents/framework-agent/CLAUDE.md" in sub, (
-        "framework-agent crystal path incorrect"
+    # Crystal path is relative to repo root; after P17 migration it lives in the domain.
+    fa_claude = AGENTS_ROOT / "framework-agent" / "CLAUDE.md"
+    try:
+        fa_crystal = str(fa_claude.relative_to(REPO_ROOT)).replace("\\", "/")
+    except ValueError:
+        fa_crystal = "spec/agents/framework-agent/CLAUDE.md"
+    assert fa_crystal in sub, (
+        f"framework-agent crystal path incorrect; expected '{fa_crystal}' in block"
     )
 
 

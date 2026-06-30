@@ -56,18 +56,42 @@ WHY processes and goals default to empty tuple: they are opt-in aspects (M12).
 A domain that does not model processes pays nothing — is_empty() still works
 correctly with the extended set.
 
+## From `spec/src/tensio/graph.py::_active_domain_graph_file`
+
+Canon: §Graph — return path to the active domain's graph.py, or None.
+
+RULE: check TENSIO_ACTIVE_DOMAIN env var first; then fall back to the first
+domains/<name>/graph.py alphabetically. Returns None if domains/ is absent
+or empty (legitimate state: the framework has no domain yet).
+
+WHY env-var first: allows CI / test harnesses to pin a specific domain
+without mutating the filesystem (R-deterministic-generation).
+
+## From `spec/src/tensio/graph.py::_load_graph_file`
+
+Canon: §Graph — load build_graph() from a graph file path.
+
+RULE: import the file, call build_graph(), validate the return type.
+WHY factored out: both load_content_graph() and _active_domain_graph_file()
+use the same import/validate pattern; one implementation avoids drift.
+
 ## From `spec/src/tensio/graph.py::load_content_graph`
 
-Canon: §Graph — load the user's graph from spec/content/, else empty.
+Canon: §Graph — load the user's graph from domains/<name>/ or spec/content/.
 
-RULE: import `spec/content/graph.py` and call its `build_graph()` if the file
-exists. If absent (a fresh framework with no domain populated yet), return an
-empty TensionGraph. Never raise just because nothing is populated yet —
-emptiness is a legitimate state.
+RULE: discovery order:
+  1. TENSIO_ACTIVE_DOMAIN env var → domains/<name>/graph.py
+  2. First domains/<name>/graph.py alphabetically.
+  3. Legacy fallback: spec/content/graph.py (backward-compat).
+  4. Nothing found → return empty TensionGraph (legitimate framework state).
 
-WHY a file-discovery loader (not a CLI arg / env var): the framework's
-"agent is never lost" property requires a deterministic location every tool
-agrees on. One slot, one convention; populating a domain is dropping a file.
+Never raise just because nothing is populated yet — emptiness is a legitimate
+state (R-empty-content-wellformed).
+
+WHY file-discovery with env-var override: the framework's "agent is never
+lost" property requires a deterministic location every tool agrees on; the
+env var lets CI pin a domain without filesystem mutation
+(R-deterministic-generation, R-agent-never-lost).
 
 ## From `spec/src/tensio/graph.py::stakeholder_ids`
 

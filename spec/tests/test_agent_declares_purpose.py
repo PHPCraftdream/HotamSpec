@@ -12,8 +12,17 @@ import sys
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_AGENTS_ROOT = _SPEC_ROOT / "agents"
 _TOOLS = _SPEC_ROOT / "tools"
+
+# After P17 migration, framework-agent lives under domains/tensio-self/agents/director/agents/.
+# Resolve from gen_spec so the path is always authoritative.
+import sys as _sys  # noqa: E402
+
+if str(_TOOLS) not in _sys.path:
+    _sys.path.insert(0, str(_TOOLS))
+import gen_spec as _gen_spec  # noqa: E402
+
+_AGENTS_ROOT = _gen_spec._AGENTS_ROOT
 
 
 def _load_scope(agent_dir: Path):

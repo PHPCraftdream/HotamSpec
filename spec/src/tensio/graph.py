@@ -98,32 +98,58 @@ class TensionGraph:
 
 
 # ---------------------------------------------------------------------------
-# Content loader — discovers spec/content/graph.py:build_graph(), else empty
+# Content loader — discovers domains/<name>/graph.py or spec/content/graph.py
 # ---------------------------------------------------------------------------
 
-#: Path to the user-content slot. Empty in a freshly cloned framework.
+#: Path to the user-content slot (legacy; used when no domains/ are present).
 # graph.py lives at spec/src/tensio/graph.py; parents[2] is `spec/`.
 CONTENT_DIR = Path(__file__).resolve().parents[2] / "content"
 CONTENT_GRAPH_FILE = CONTENT_DIR / "graph.py"
 CONTENT_BUILDER_NAME = "build_graph"
 
+#: Repo root (spec/src/tensio/graph.py -> parents[3] = repo root)
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_DOMAINS_ROOT = _REPO_ROOT / "domains"
 
-def load_content_graph() -> TensionGraph:
-    """Canon: §Graph — load the user's graph from spec/content/, else empty.
 
-    RULE: import `spec/content/graph.py` and call its `build_graph()` if the file
-    exists. If absent (a fresh framework with no domain populated yet), return an
-    empty TensionGraph. Never raise just because nothing is populated yet —
-    emptiness is a legitimate state.
+def _active_domain_graph_file() -> Path | None:
+    """Canon: §Graph — return path to the active domain's graph.py, or None.
 
-    WHY a file-discovery loader (not a CLI arg / env var): the framework's
-    "agent is never lost" property requires a deterministic location every tool
-    agrees on. One slot, one convention; populating a domain is dropping a file.
+    RULE: check TENSIO_ACTIVE_DOMAIN env var first; then fall back to the first
+    domains/<name>/graph.py alphabetically. Returns None if domains/ is absent
+    or empty (legitimate state: the framework has no domain yet).
+
+    WHY env-var first: allows CI / test harnesses to pin a specific domain
+    without mutating the filesystem (R-deterministic-generation).
     """
-    if not CONTENT_GRAPH_FILE.exists():
-        return TensionGraph()
+    import os  # noqa: PLC0415
+
+    env_domain = os.environ.get("TENSIO_ACTIVE_DOMAIN", "").strip()
+    if env_domain:
+        candidate = _DOMAINS_ROOT / env_domain / "graph.py"
+        if candidate.exists():
+            return candidate
+    if not _DOMAINS_ROOT.exists():
+        return None
+    domain_dirs = sorted(
+        d for d in _DOMAINS_ROOT.iterdir() if d.is_dir() and not d.name.startswith("_")
+    )
+    for d in domain_dirs:
+        gf = d / "graph.py"
+        if gf.exists():
+            return gf
+    return None
+
+
+def _load_graph_file(graph_file: Path) -> TensionGraph:
+    """Canon: §Graph — load build_graph() from a graph file path.
+
+    RULE: import the file, call build_graph(), validate the return type.
+    WHY factored out: both load_content_graph() and _active_domain_graph_file()
+    use the same import/validate pattern; one implementation avoids drift.
+    """
     spec = importlib.util.spec_from_file_location(
-        "tensio_user_content_graph", CONTENT_GRAPH_FILE
+        "tensio_user_content_graph", graph_file
     )
     if spec is None or spec.loader is None:  # pragma: no cover — defensive
         return TensionGraph()
@@ -136,16 +162,42 @@ def load_content_graph() -> TensionGraph:
     builder = getattr(module, CONTENT_BUILDER_NAME, None)
     if builder is None:
         raise RuntimeError(
-            f"{CONTENT_GRAPH_FILE} does not expose `{CONTENT_BUILDER_NAME}()`; "
+            f"{graph_file} does not expose `{CONTENT_BUILDER_NAME}()`; "
             f"see CLAUDE.md §How to populate."
         )
     g = builder()
     if not isinstance(g, TensionGraph):
         raise TypeError(
-            f"{CONTENT_GRAPH_FILE}:{CONTENT_BUILDER_NAME}() must return a "
+            f"{graph_file}:{CONTENT_BUILDER_NAME}() must return a "
             f"TensionGraph, got {type(g).__name__}"
         )
     return g
+
+
+def load_content_graph() -> TensionGraph:
+    """Canon: §Graph — load the user's graph from domains/<name>/ or spec/content/.
+
+    RULE: discovery order:
+      1. TENSIO_ACTIVE_DOMAIN env var → domains/<name>/graph.py
+      2. First domains/<name>/graph.py alphabetically.
+      3. Legacy fallback: spec/content/graph.py (backward-compat).
+      4. Nothing found → return empty TensionGraph (legitimate framework state).
+
+    Never raise just because nothing is populated yet — emptiness is a legitimate
+    state (R-empty-content-wellformed).
+
+    WHY file-discovery with env-var override: the framework's "agent is never
+    lost" property requires a deterministic location every tool agrees on; the
+    env var lets CI pin a domain without filesystem mutation
+    (R-deterministic-generation, R-agent-never-lost).
+    """
+    domain_graph = _active_domain_graph_file()
+    if domain_graph is not None:
+        return _load_graph_file(domain_graph)
+    # Legacy fallback: spec/content/graph.py
+    if CONTENT_GRAPH_FILE.exists():
+        return _load_graph_file(CONTENT_GRAPH_FILE)
+    return TensionGraph()
 
 
 # ---------------------------------------------------------------------------

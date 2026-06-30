@@ -1209,7 +1209,28 @@ def check_bijection_r_to_enforcer(g: TensionGraph) -> list[Violation]:
 
 _REPO_ROOT_FROM_INVARIANTS = Path(__file__).resolve().parents[3]  # .../HotamSpec
 _DOMAINS_ROOT = _REPO_ROOT_FROM_INVARIANTS / "domains"
-_SPEC_AGENTS_ROOT = Path(__file__).resolve().parents[3] / "spec" / "agents"
+
+
+def _resolve_spec_agents_root() -> Path:
+    """Return the active spec/agents root.
+
+    After P17 migration, agents live inside domains/<first>/agents/director/agents/.
+    Legacy fallback: spec/agents/ for pre-migration layouts.
+    """
+    if _DOMAINS_ROOT.exists():
+        domain_dirs = sorted(
+            d
+            for d in _DOMAINS_ROOT.iterdir()
+            if d.is_dir() and not d.name.startswith("_")
+        )
+        for domain_dir in domain_dirs:
+            director_agents = domain_dir / "agents" / "director" / "agents"
+            if director_agents.exists():
+                return director_agents
+    return Path(__file__).resolve().parents[3] / "spec" / "agents"
+
+
+_SPEC_AGENTS_ROOT = _resolve_spec_agents_root()
 
 
 def check_domain_manifest_valid(g: TensionGraph) -> list[Violation]:  # noqa: ARG001

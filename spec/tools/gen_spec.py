@@ -51,10 +51,54 @@ from pathlib import Path
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent  # .../HotamSpec
 SRC = SPEC_ROOT / "src" / "tensio"
-GEN_DIR = REPO_ROOT / "docs" / "gen"
 DEMO_DIR = REPO_ROOT / "docs" / "demo"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
-_AGENTS_ROOT = SPEC_ROOT / "agents"
+DOMAINS_ROOT = REPO_ROOT / "domains"
+
+
+def _resolve_active_gen_dir() -> Path:
+    """Return the active gen dir: domains/<first>/docs/gen/ or legacy docs/gen/.
+
+    Computed once at import time for backward-compat with tests that reference
+    gen_spec.REQUIREMENTS_MD etc. as module-level paths.
+    """
+    if DOMAINS_ROOT.exists():
+        domain_dirs = sorted(
+            d
+            for d in DOMAINS_ROOT.iterdir()
+            if d.is_dir() and not d.name.startswith("_")
+        )
+        if domain_dirs:
+            return domain_dirs[0] / "docs" / "gen"
+    return REPO_ROOT / "docs" / "gen"
+
+
+def _resolve_active_agents_root() -> Path:
+    """Return the active agents root for AGENT-MAP scanning.
+
+    Priority:
+      1. domains/<first>/agents/director/agents/ — nested sub-agents of the director.
+      2. Legacy spec/agents/ — pre-migration location.
+
+    WHY: after P17 migration the top-level agents live inside the domain's
+    director; the legacy spec/agents/ is gone. Returns a Path that may not
+    exist (callers guard with .exists()).
+    """
+    if DOMAINS_ROOT.exists():
+        domain_dirs = sorted(
+            d
+            for d in DOMAINS_ROOT.iterdir()
+            if d.is_dir() and not d.name.startswith("_")
+        )
+        for domain_dir in domain_dirs:
+            director_agents = domain_dir / "agents" / "director" / "agents"
+            if director_agents.exists():
+                return director_agents
+    return SPEC_ROOT / "agents"
+
+
+GEN_DIR = _resolve_active_gen_dir()
+_AGENTS_ROOT = _resolve_active_agents_root()
 
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
@@ -92,7 +136,6 @@ _DOMAIN_MAP_END = "<!-- DOMAIN-MAP:END -->"
 # φ-cap: 1_000_000 / φ ≈ 618033 tokens — the crystal must stay well below.
 _PHI_CAP = int(1_000_000 / 1.618033988749895)  # 618033
 
-DOMAINS_ROOT = REPO_ROOT / "domains"
 SPEC_DOCS_THINKING_DIR = SPEC_ROOT / "docs" / "thinking"
 SPEC_DOCS_TOOLS_DIR = SPEC_ROOT / "docs" / "tools"
 
@@ -1934,7 +1977,25 @@ def _regenerate_agent_constitutions(
 
 _CANON_ROLE_RE = re.compile(r"^Canon:\s+\S+\s+[—\-]\s+(.+)$")
 
-CONTENT_DIR = SPEC_ROOT / "content"
+
+def _resolve_active_content_dir() -> Path:
+    """Return the active content dir: domains/<first>/ or legacy spec/content/.
+
+    Computed once at import time for backward-compat (CONTENT_DIR used by
+    _scan_repo_map() and test_repo_map.py).
+    """
+    if DOMAINS_ROOT.exists():
+        domain_dirs = sorted(
+            d
+            for d in DOMAINS_ROOT.iterdir()
+            if d.is_dir() and not d.name.startswith("_")
+        )
+        if domain_dirs:
+            return domain_dirs[0]
+    return SPEC_ROOT / "content"
+
+
+CONTENT_DIR = _resolve_active_content_dir()
 
 
 def _docstring_role(path: Path) -> str:
@@ -1993,6 +2054,10 @@ def _scan_repo_map(
     _content = content_dir or CONTENT_DIR
     _gen = gen_dir or GEN_DIR
 
+    # Determine display labels for content and gen dirs (relative to repo root).
+    _content_rel = str(_content.relative_to(REPO_ROOT)).replace("\\", "/")
+    _gen_rel = str(_gen.relative_to(REPO_ROOT)).replace("\\", "/")
+
     # Pre-collect known tool requirement ids for cross-reference.
     tool_req_ids: set[str] = {
         tr.id for tr in _scan_tool_requirements(spec_tools_dir=_tools)
@@ -2028,7 +2093,7 @@ def _scan_repo_map(
     lines.append("")
 
     # --- Domain content -------------------------------------------------------
-    lines.append("**Domain content** (`spec/content/`)")
+    lines.append(f"**Domain content** (`{_content_rel}/`)")
     lines.append("")
     content_files = sorted(_content.glob("*.py"))
     if content_files:
@@ -2036,19 +2101,19 @@ def _scan_repo_map(
             if p.name.startswith("_"):
                 continue
             role = _docstring_role(p)
-            lines.append(f"- `spec/content/{p.name}` — {role}")
+            lines.append(f"- `{_content_rel}/{p.name}` — {role}")
     else:
         lines.append("- _(no content files yet)_")
     lines.append("")
 
     # --- Generated docs -------------------------------------------------------
-    lines.append("**Generated docs** (`docs/gen/`)")
+    lines.append(f"**Generated docs** (`{_gen_rel}/`)")
     lines.append("")
     gen_files = sorted(_gen.glob("*.md"))
     if gen_files:
         for p in gen_files:
             title = _md_title(p)
-            lines.append(f"- `docs/gen/{p.name}` — {title}")
+            lines.append(f"- `{_gen_rel}/{p.name}` — {title}")
     else:
         lines.append("- _(no generated docs yet)_")
     lines.append("")
@@ -2184,7 +2249,12 @@ def _scan_agent_map(
             private_tools_count = 0
 
         # Crystal path (relative to repo root).
-        crystal_path = f"spec/agents/{agent_dir.name}/CLAUDE.md"
+        try:
+            crystal_path = str(
+                (agent_dir / "CLAUDE.md").relative_to(REPO_ROOT)
+            ).replace("\\", "/")
+        except ValueError:
+            crystal_path = f"spec/agents/{agent_dir.name}/CLAUDE.md"
 
         # Scope display: prefixes joined by ` · `.
         scope_str = " · ".join(f"`{p}`" for p in scope) if scope else "_(none)_"
@@ -2855,6 +2925,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
     g = _load_graph(demo=args.demo)
+    # When a domain is active, write docs into its docs/gen/ rather than root docs/gen/.
     out_dir = DEMO_DIR if args.demo else GEN_DIR
     targets = {
         out_dir / "REQUIREMENTS.md": build_requirements(g),

@@ -14,7 +14,6 @@ from pathlib import Path
 SPEC_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SPEC_ROOT.parent
 TOOLS_DIR = SPEC_ROOT / "tools"
-GEN_DIR = REPO_ROOT / "docs" / "gen"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
 # Make gen_spec importable.
@@ -23,7 +22,11 @@ if str(TOOLS_DIR) not in sys.path:
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
 
+import gen_spec as _gen_spec_mod  # noqa: E402
 from gen_spec import _scan_tool_requirements  # noqa: E402
+
+# Use the gen dir resolved by gen_spec (may be in active domain after P17 migration).
+GEN_DIR = _gen_spec_mod.GEN_DIR
 
 
 def test_scan_returns_all_canon_tools() -> None:
