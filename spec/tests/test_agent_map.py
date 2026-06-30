@@ -1,7 +1,7 @@
 """Tests for the AGENT-MAP sentinel block in the domain CLAUDE.md (P17+).
 
 After the P17 domain-isolation migration, the AGENT-MAP block lives in
-`domains/tensio-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
+`domains/hotam-spec-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
 framework-only (LIVE-STATE + REPO-MAP + DOMAIN-MAP only).
 
 Verifies that:

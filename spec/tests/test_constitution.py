@@ -1,12 +1,12 @@
 """Tests for the CONSTITUTION block in the domain CLAUDE.md (P17+).
 
 After the P17 domain-isolation migration, the CONSTITUTION block lives in
-`domains/tensio-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
+`domains/hotam-spec-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
 framework-only (LIVE-STATE + REPO-MAP + DOMAIN-MAP only).
 
 Canon: §Constitution — the CONSTITUTION block in the domain CLAUDE.md lists all
 SETTLED requirements grouped by category, generated deterministically from
-domains/tensio-self/graph.py by tools/gen_spec.py. Anti-drift: regeneration must
+domains/hotam-spec-self/graph.py by tools/gen_spec.py. Anti-drift: regeneration must
 produce byte-identical output.
 """
 

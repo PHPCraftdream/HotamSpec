@@ -94,7 +94,7 @@ def test_root_claude_md_under_size_cap() -> None:
     char_count = len(text)
     assert char_count < _CHAR_CAP, (
         f"Root CLAUDE.md is {char_count} chars, exceeding cap of {_CHAR_CAP}. "
-        "Move prose to domains/tensio-self/CLAUDE.md or spec/docs/thinking/. "
+        "Move prose to domains/hotam-spec-self/CLAUDE.md or spec/docs/thinking/. "
         "Run: uv run python tools/gen_spec.py"
     )
 

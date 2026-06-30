@@ -29,7 +29,7 @@ _ACTIVE_DOMAIN = _gs._active_domain()
 _RECENTLY_REJECTED_BEGIN = "<!-- RECENTLY-REJECTED:BEGIN -->"
 _RECENTLY_REJECTED_END = "<!-- RECENTLY-REJECTED:END -->"
 
-# A REJECTED requirement with REPLACES known to exist in domains/tensio-self/graph.py.
+# A REJECTED requirement with REPLACES known to exist in domains/hotam-spec-self/graph.py.
 _KNOWN_REJECTED_ID = "R-axes-as-module-constant"
 
 

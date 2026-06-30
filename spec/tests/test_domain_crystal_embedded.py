@@ -27,9 +27,9 @@ DOMAIN_CLAUDE_MD = _ACTIVE_DOMAIN / "CLAUDE.md" if _ACTIVE_DOMAIN is not None el
 _DOMAIN_CRYSTAL_BEGIN = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
 _DOMAIN_CRYSTAL_END = "<!-- DOMAIN-CRYSTAL:END -->"
 
-# A stable substring known to live in domains/tensio-self/CLAUDE.md header prose.
+# A stable substring known to live in domains/hotam-spec-self/CLAUDE.md header prose.
 # This is hand-written prose, not generated — it is stable.
-_KNOWN_DOMAIN_SUBSTRING = "operator crystal for the `tensio-self` domain director"
+_KNOWN_DOMAIN_SUBSTRING = "operator crystal for the `hotam-spec-self` domain director"
 
 
 def _read(path: Path) -> str:

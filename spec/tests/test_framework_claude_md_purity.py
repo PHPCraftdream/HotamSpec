@@ -3,7 +3,7 @@
 After P17 migration:
 - Root CLAUDE.md is FRAMEWORK-ONLY: LIVE-STATE + REPO-MAP + DOMAIN-MAP.
   It must NOT contain CONSTITUTION, AGENT-MAP, or SHARED-DOCS sentinels.
-- domains/tensio-self/CLAUDE.md is the domain operator-prompt:
+- domains/hotam-spec-self/CLAUDE.md is the domain operator-prompt:
   it must contain ALL 5 blocks: LIVE-STATE + CONSTITUTION + REPO-MAP + AGENT-MAP + SHARED-DOCS.
 
 Canon: §Domain — R-framework-claude-md-is-domain-free, R-domain-owns-claude-md,
@@ -157,7 +157,7 @@ def test_framework_claude_md_has_live_state() -> None:
 
 
 def test_framework_claude_md_has_domain_map() -> None:
-    """Root CLAUDE.md must contain a populated DOMAIN-MAP block referencing tensio-self."""
+    """Root CLAUDE.md must contain a populated DOMAIN-MAP block referencing hotam-spec-self."""
     if _ACTIVE_DOMAIN is None:
         pytest.skip("No active domain — P17 not applicable")
     text = _read(ROOT_CLAUDE_MD)
@@ -166,7 +166,9 @@ def test_framework_claude_md_has_domain_map() -> None:
     )
     block = _extract_block(text, "<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->")
     assert block is not None, "DOMAIN-MAP block not found in root CLAUDE.md"
-    assert "tensio-self" in block, "DOMAIN-MAP block does not reference 'tensio-self'"
+    assert "hotam-spec-self" in block, (
+        "DOMAIN-MAP block does not reference 'hotam-spec-self'"
+    )
 
 
 def test_framework_claude_md_has_repo_map_scoped_to_spec() -> None:
@@ -220,7 +222,7 @@ def _require_domain_claude_md() -> Path:
 
 
 def test_domain_claude_md_has_all_5_blocks() -> None:
-    """domains/tensio-self/CLAUDE.md must contain all 5 sentinel block pairs."""
+    """domains/hotam-spec-self/CLAUDE.md must contain all 5 sentinel block pairs."""
     path = _require_domain_claude_md()
     text = _read(path)
     for sentinel in [

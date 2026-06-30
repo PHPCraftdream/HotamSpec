@@ -1,7 +1,7 @@
 """Tests for ENTITIES.md generation and check_entities_md_lists_all_types.
 
 Six tests covering:
-  1. ENTITIES.md is emitted for the active domain (tensio-self) with opt-in placeholder.
+  1. ENTITIES.md is emitted for the active domain (hotam-spec-self) with opt-in placeholder.
   2. ENTITIES.md regenerates byte-identical (deterministic).
   3. build_entities_md renders correctly for a synthetic graph with one EntityType.
   4. check_entities_md_lists_all_types returns [] for a domain with no entity_types.
@@ -24,19 +24,19 @@ for _p in (_TOOLS, _TESTS):
 import gen_spec  # noqa: E402
 
 # ---------------------------------------------------------------------------
-# 1. ENTITIES.md exists for active domain (tensio-self) with placeholder
+# 1. ENTITIES.md exists for active domain (hotam-spec-self) with placeholder
 # ---------------------------------------------------------------------------
 
 
 def test_entities_md_emitted_for_active_domain() -> None:
-    """domains/tensio-self/docs/gen/ENTITIES.md exists with the empty-state placeholder."""
+    """domains/hotam-spec-self/docs/gen/ENTITIES.md exists with the empty-state placeholder."""
     path = gen_spec.ENTITIES_MD
     assert path.exists(), (
         f"ENTITIES.md not found at {path}: run `uv run python tools/gen_spec.py`."
     )
     text = path.read_text(encoding="utf-8")
     assert "§Entity aspect is opt-in" in text, (
-        "ENTITIES.md for tensio-self must contain the opt-in placeholder "
+        "ENTITIES.md for hotam-spec-self must contain the opt-in placeholder "
         "(the domain has no entity_types)"
     )
 
@@ -127,7 +127,7 @@ def test_check_entities_md_lists_all_types_no_types() -> None:
     from hotam_spec.invariants import check_entities_md_lists_all_types  # noqa: PLC0415
 
     g = TensionGraph()  # no entity_types
-    # The check walks domains/ on disk; tensio-self has no entity_types, so [] expected.
+    # The check walks domains/ on disk; hotam-spec-self has no entity_types, so [] expected.
     violations = check_entities_md_lists_all_types(g)
     assert violations == [], (
         f"Expected no violations for empty domain, got: {violations}"

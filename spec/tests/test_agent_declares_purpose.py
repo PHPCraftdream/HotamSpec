@@ -14,7 +14,7 @@ from pathlib import Path
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _TOOLS = _SPEC_ROOT / "tools"
 
-# After P17 migration, framework-agent lives under domains/tensio-self/agents/director/agents/.
+# After P17 migration, framework-agent lives under domains/hotam-spec-self/agents/director/agents/.
 # Resolve from gen_spec so the path is always authoritative.
 import sys as _sys  # noqa: E402
 

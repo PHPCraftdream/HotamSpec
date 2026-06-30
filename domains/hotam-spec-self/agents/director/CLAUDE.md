@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Top-level director of the tensio-self domain: stewards the whole graph and delegates framework-invariants to framework-agent. Entry point for the operator-prompt.
+Top-level director of the hotam-spec-self domain: stewards the whole graph and delegates framework-invariants to framework-agent. Entry point for the operator-prompt.
 
 ## Scope
 

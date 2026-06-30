@@ -220,14 +220,14 @@ def test_r_tool_spawn_agent_in_constitution(tmp_path: Path) -> None:
     CONSTITUTION block of the domain CLAUDE.md (not into CONSTITUTION.md
     which only lists graph-SETTLED requirements).
     """
-    domain_claude_md = SPEC_ROOT.parent / "domains" / "tensio-self" / "CLAUDE.md"
+    domain_claude_md = SPEC_ROOT.parent / "domains" / "hotam-spec-self" / "CLAUDE.md"
     if not domain_claude_md.exists():
         pytest.skip(
-            "domains/tensio-self/CLAUDE.md not yet generated — run gen_spec.py first"
+            "domains/hotam-spec-self/CLAUDE.md not yet generated — run gen_spec.py first"
         )
     text = domain_claude_md.read_text(encoding="utf-8")
     assert "R-tool-spawn-agent" in text, (
-        "R-tool-spawn-agent must appear in domains/tensio-self/CLAUDE.md after gen_spec. "
+        "R-tool-spawn-agent must appear in domains/hotam-spec-self/CLAUDE.md after gen_spec. "
         "The Canon docstring in spawn_agent.py triggers auto-projection via "
         "R-tools-registry-generated (R-tool-is-its-own-requirement)."
     )

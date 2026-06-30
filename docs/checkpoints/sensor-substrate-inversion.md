@@ -95,7 +95,7 @@ The sensor-substrate-inversion is no longer aspirational. Five structural pieces
 1. **SessionStart hook** (.claude/settings.local.json) runs `tools/gen_spec.py` before any turn. Root CLAUDE.md is regenerated from substrate every boot.
 2. **PostCompact hook** runs the same regen so the post-compact reload reads fresh substrate state, not the pre-compact stale copy.
 3. **UserPromptSubmit hook** runs `tools/emit_cipher.py` to extract the three-cipher pulse from LIVE-STATE and inject it as `additionalContext` into every user turn — the pulse is now structurally present, not memory-dependent.
-4. **DOMAIN-CRYSTAL sentinel block** in root CLAUDE.md embeds the full content of `domains/tensio-self/CLAUDE.md` (the domain's canonical entry point and base for all sub-agents). When Claude Code auto-loads root CLAUDE.md, the operator boots from substrate — the inversion is physical.
+4. **DOMAIN-CRYSTAL sentinel block** in root CLAUDE.md embeds the full content of `domains/hotam-spec-self/CLAUDE.md` (the domain's canonical entry point and base for all sub-agents). When Claude Code auto-loads root CLAUDE.md, the operator boots from substrate — the inversion is physical.
 5. **spawn_agent.py** composes each sub-agent's task prompt by prepending its CLAUDE.md crystal. Sub-operators boot from their scoped substrate, not raw text.
 
 Anti-relitigation surface is also closed: **RECENTLY-REJECTED sentinel block** in root CLAUDE.md lists every REJECTED requirement with a `REPLACES` marker, sorted alphabetically. Before re-deriving an architectural claim, the operator sees previously-rejected proposals.

@@ -26,7 +26,7 @@ Usage:
   uv run python tools/spawn_agent.py <agent-path> --task "<task description>" --stamp <iso8601>
 
 Examples:
-  uv run python tools/spawn_agent.py domains/tensio-self/agents/director/agents/framework-agent \\
+  uv run python tools/spawn_agent.py domains/hotam-spec-self/agents/director/agents/framework-agent \\
       --task "audit all check_* for atomicity" --stamp 2026-06-29T12:00:00Z
 
   # Short form — trailing path segment resolved under active domain:

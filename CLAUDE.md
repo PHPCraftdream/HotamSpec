@@ -51,23 +51,23 @@ Read your domain's CLAUDE.md (listed in DOMAIN-MAP below) for the operator boot 
 - `spec/tools/tick.py` — the closed-loop diagnostic driver (advisory, M32 conservative).  →  R-tool-tick
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
-**Domain content** (`domains/tensio-self/`)
+**Domain content** (`domains/hotam-spec-self/`)
 
-- `domains/tensio-self/graph.py` — Tensio modeling itself — the meta-domain (the framework's own design).
-- `domains/tensio-self/manifest.py` — manifest of domain 'tensio-self'.
+- `domains/hotam-spec-self/graph.py` — Tensio modeling itself — the meta-domain (the framework's own design).
+- `domains/hotam-spec-self/manifest.py` — manifest of domain 'hotam-spec-self'.
 
-**Generated docs** (`domains/tensio-self/docs/gen/`)
+**Generated docs** (`domains/hotam-spec-self/docs/gen/`)
 
-- `domains/tensio-self/docs/gen/AUDIT.md` — Atomicity Audit
-- `domains/tensio-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
-- `domains/tensio-self/docs/gen/DECISIONS.md` — Open methodology decisions
-- `domains/tensio-self/docs/gen/ENTITIES.md` — Entities
-- `domains/tensio-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
-- `domains/tensio-self/docs/gen/HISTORY.md` — Methodology decision history
-- `domains/tensio-self/docs/gen/OPEN.md` — Open registry
-- `domains/tensio-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/tensio-self/docs/gen/TENSIONS.md` — The tension map
-- `domains/tensio-self/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit
+- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/hotam-spec-self/docs/gen/DECISIONS.md` — Open methodology decisions
+- `domains/hotam-spec-self/docs/gen/ENTITIES.md` — Entities
+- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
+- `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
+- `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
+- `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
+- `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter
 <!-- REPO-MAP:END -->
 
 <!-- DOMAIN-MAP:BEGIN -->
@@ -75,11 +75,11 @@ Read your domain's CLAUDE.md (listed in DOMAIN-MAP below) for the operator boot 
 
 ### Domain Map
 
-### tensio-self
-- **purpose** — The methodology modeling itself — Tensio about itself as a tension graph.
+### hotam-spec-self
+- **purpose** — The methodology modeling itself — Hotam-Spec about itself as a tension graph.
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
-- **path** — `domains/tensio-self/`
+- **path** — `domains/hotam-spec-self/`
 - **atoms-count** — 147 SETTLED
 <!-- DOMAIN-MAP:END -->
 
@@ -117,13 +117,13 @@ Read your domain's CLAUDE.md (listed in DOMAIN-MAP below) for the operator boot 
 
 ### Domain crystal (substrate-written operator prompt)
 
-_Below is the full content of the active domain's `CLAUDE.md` (`domains/tensio-self/CLAUDE.md`) — the canonical entry-point of the domain AND the base from which every sub-agent derives its scoped CLAUDE.md. When Claude Code auto-loads root CLAUDE.md, this section IS the operator's prompt; substrate writes operator (R-operator-prompt-from-substrate)._
+_Below is the full content of the active domain's `CLAUDE.md` (`domains/hotam-spec-self/CLAUDE.md`) — the canonical entry-point of the domain AND the base from which every sub-agent derives its scoped CLAUDE.md. When Claude Code auto-loads root CLAUDE.md, this section IS the operator's prompt; substrate writes operator (R-operator-prompt-from-substrate)._
 
 ---
 
-# tensio-self
+# hotam-spec-self
 
-> This file is the operator crystal for the `tensio-self` domain director.
+> This file is the operator crystal for the `hotam-spec-self` domain director.
 > Generated blocks (LIVE-STATE, CONSTITUTION, REPO-MAP, AGENT-MAP, SHARED-DOCS) are
 > updated by `uv run python tools/gen_spec.py` from `spec/`. Header prose is hand-written.
 
@@ -201,7 +201,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
 
 **Edit = data/docstring + tests + regen in one change.** Order: `ruff format` → `gen_spec.py` → `pytest`. `pytest` must stay green.
 
-**Do not edit generated files.** `docs/gen/*.md` are generated; the meta-test `test_docs_gen.py` fails on any divergence. Edit `domains/tensio-self/graph.py` (your domain) and/or framework docstrings, then regenerate.
+**Do not edit generated files.** `docs/gen/*.md` are generated; the meta-test `test_docs_gen.py` fails on any divergence. Edit `domains/hotam-spec-self/graph.py` (your domain) and/or framework docstrings, then regenerate.
 
 **A new requirement** = a `Requirement(...)` row in `build_graph()` with an owner, status, assumptions, and WHY. Run `what_now` — it flags latent connectors and structural gaps.
 
@@ -460,23 +460,23 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
 - `spec/tools/tick.py` — the closed-loop diagnostic driver (advisory, M32 conservative).  →  R-tool-tick
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
-**Domain content** (`domains/tensio-self/`)
+**Domain content** (`domains/hotam-spec-self/`)
 
-- `domains/tensio-self/graph.py` — Tensio modeling itself — the meta-domain (the framework's own design).
-- `domains/tensio-self/manifest.py` — manifest of domain 'tensio-self'.
+- `domains/hotam-spec-self/graph.py` — Tensio modeling itself — the meta-domain (the framework's own design).
+- `domains/hotam-spec-self/manifest.py` — manifest of domain 'hotam-spec-self'.
 
-**Generated docs** (`domains/tensio-self/docs/gen/`)
+**Generated docs** (`domains/hotam-spec-self/docs/gen/`)
 
-- `domains/tensio-self/docs/gen/AUDIT.md` — Atomicity Audit
-- `domains/tensio-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
-- `domains/tensio-self/docs/gen/DECISIONS.md` — Open methodology decisions
-- `domains/tensio-self/docs/gen/ENTITIES.md` — Entities
-- `domains/tensio-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
-- `domains/tensio-self/docs/gen/HISTORY.md` — Methodology decision history
-- `domains/tensio-self/docs/gen/OPEN.md` — Open registry
-- `domains/tensio-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/tensio-self/docs/gen/TENSIONS.md` — The tension map
-- `domains/tensio-self/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit
+- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/hotam-spec-self/docs/gen/DECISIONS.md` — Open methodology decisions
+- `domains/hotam-spec-self/docs/gen/ENTITIES.md` — Entities
+- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
+- `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
+- `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
+- `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
+- `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter
 <!-- REPO-MAP:END -->
 
 <!-- AGENT-MAP:BEGIN -->
@@ -489,7 +489,7 @@ uv run pytest -q                                # tests (incl. anti-drift meta-t
 - **scope** — `R-check-` · `R-bijection-` · `R-tool-` · `R-atomicity-` · `R-statemachine-` · `R-conflict-` · `R-decided-` · `R-m-tag-` · `R-typed-` · `R-axis-` · `R-anchor-` · `R-speak-`
 - **atoms** — 17 SETTLED in scope
 - **tools** — 0 private · 13 shared
-- **crystal** — `domains/tensio-self/agents/director/agents/framework-agent/CLAUDE.md`
+- **crystal** — `domains/hotam-spec-self/agents/director/agents/framework-agent/CLAUDE.md`
 <!-- AGENT-MAP:END -->
 
 <!-- CONCEPT-MAP:BEGIN -->

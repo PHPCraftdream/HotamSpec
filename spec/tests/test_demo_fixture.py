@@ -42,7 +42,7 @@ def _g():
 def test_demo_fixture_passes_structural_invariants():
     """all_violations(seed_graph()) must return [] for all entity checks EXCEPT
     check_entities_md_lists_all_types, which compares the demo fixture's entity
-    types against the active *domain's* ENTITIES.md (tensio-self has no entity
+    types against the active *domain's* ENTITIES.md (hotam-spec-self has no entity
     types — that doc does not list 'customer'). The demo ENTITIES.md path is a
     P21.4 concern (gen_spec.py --demo writes docs/demo/ENTITIES.md; the invariant
     looks at the domain path). All other entity-machine invariants must pass."""
