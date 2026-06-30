@@ -1,4 +1,4 @@
-"""Canon: §Agent — scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, and README.md.
+"""Canon: §Agent — scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.
 
 WHY: Spinning up a new sub-agent by hand is error-prone (forgotten sentinels,
 wrong scope.py shape, missing __init__.py). This tool guarantees a deterministic,
@@ -12,6 +12,7 @@ Created files and their roles:
   scope.py    — declares which R-id prefixes this agent's CONSTITUTION includes;
                  the Canon: §Agent marker makes it machine-readable.
   tools/      — private tools directory for this agent (starts empty).
+  agents/     — empty subdir for recursive sub-agents (R-agent-is-recursive-director).
   README.md   — human-readable rationale; what this agent stewards and why it
                  exists as a separate operator.
 
@@ -20,7 +21,7 @@ exact structural contracts (sentinel placement, scope.py shape). A hand-crafted
 directory will drift; this tool cannot.
 
 Exit codes:
-  0 — success (directory + 4 files created).
+  0 — success (directory + files created).
   1 — failure (name invalid, directory already exists, or write error).
 """
 
@@ -33,6 +34,9 @@ from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _AGENTS_ROOT = _SPEC_ROOT / "agents"
+
+# Sentinel used in tests to override the agents root
+_DEFAULT_AGENTS_ROOT = _AGENTS_ROOT
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
@@ -154,6 +158,11 @@ def scaffold(
     tools_dir.mkdir()
     (tools_dir / "__init__.py").write_text("", encoding="utf-8")
 
+    # agents/ — recursive sub-agents subdir (R-agent-is-recursive-director)
+    agents_subdir = agent_dir / "agents"
+    agents_subdir.mkdir()
+    (agents_subdir / "__init__.py").write_text("", encoding="utf-8")
+
     # README.md
     readme = _README_TEMPLATE.format(name=name, purpose=purpose)
     (agent_dir / "README.md").write_text(readme, encoding="utf-8")
@@ -182,6 +191,13 @@ def main(argv: list[str] | None = None) -> int:
         default="",
         help="One-line rationale written into scope.py, README.md and CLAUDE.md (required).",
     )
+    parser.add_argument(
+        "--parent",
+        default=None,
+        help="Path to the parent agents/ directory. "
+        "If given, the new agent is created at <parent>/<name>/. "
+        "Defaults to spec/agents/ (top-level).",
+    )
     args = parser.parse_args(argv)
 
     if not args.purpose.strip():
@@ -193,11 +209,17 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     scope_prefixes = [p.strip() for p in args.scope.split(",") if p.strip()]
+
+    if args.parent is not None:
+        agents_root = Path(args.parent)
+    else:
+        agents_root = _AGENTS_ROOT
+
     return scaffold(
         name=args.name,
         scope_prefixes=scope_prefixes,
         purpose=args.purpose,
-        agents_root=_AGENTS_ROOT,
+        agents_root=agents_root,
     )
 
 

@@ -125,3 +125,34 @@ def test_claude_md_has_constitution_sentinels(tmp_path: Path) -> None:
     )
     assert "<!-- CONSTITUTION:BEGIN -->" in claude_text
     assert "<!-- CONSTITUTION:END -->" in claude_text
+
+
+def test_creates_agents_subdir(tmp_path: Path) -> None:
+    """scaffold() creates an agents/ subdirectory for recursive nesting (R-agent-is-recursive-director)."""
+    rc = _scaffold(tmp_path, "recursive-agent", purpose="Has sub-agents.")
+    assert rc == 0
+
+    agent_dir = tmp_path / "recursive-agent"
+    agents_subdir = agent_dir / "agents"
+    assert agents_subdir.is_dir(), "agents/ subdir must exist for recursive nesting"
+    assert (agents_subdir / "__init__.py").is_file(), "agents/__init__.py must exist"
+
+
+def test_parent_flag_creates_nested_agent(tmp_path: Path) -> None:
+    """--parent flag places the new agent under the given parent directory."""
+    # Simulate a parent agent directory already having an agents/ subdir
+    parent_agents = tmp_path / "parent-agent" / "agents"
+    parent_agents.mkdir(parents=True)
+
+    rc = create_agent.scaffold(
+        name="child-agent",
+        scope_prefixes=[],
+        purpose="Nested child agent.",
+        agents_root=parent_agents,
+    )
+    assert rc == 0
+
+    child_dir = parent_agents / "child-agent"
+    assert (child_dir / "CLAUDE.md").is_file()
+    assert (child_dir / "scope.py").is_file()
+    assert (child_dir / "agents").is_dir(), "child also gets recursive agents/ subdir"
