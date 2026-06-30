@@ -29,7 +29,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-content-layout-evolution` | OPEN(one file forever, or split per sub-domain with federation? thresholds for splitting?) | `framework-author` | A-bootstrap-self-applies, A-graph-fits-memory | As a domain grows, spec/content/graph.py shall either stay a single file or split into spec/content/<sub-domain>.py with an aggregator. |
 | `R-active-loop-playbooks` | DRAFT | `ai-agent` | A-stakeholders-care, A-prose-suffices | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
 | `R-decided-needs-human-signoff` | DRAFT | `framework-reviewer` | A-stakeholders-care | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
-| `R-glossary-sync-test` | DRAFT | `framework-author` | A-prose-suffices, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
+| `R-glossary-sync-test` | SETTLED | `framework-author` | A-prose-suffices, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
 | `R-history-from-rejected-markers` | DRAFT | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-smoke-test` | DRAFT | `framework-author` | A-python-stack | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
 | `R-lifecycle-abstraction` | DRAFT | `framework-author` | A-bootstrap-self-applies | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
@@ -181,14 +181,22 @@ Package structure (module = ontology section / methodology chapter):
                 hold (a stewardless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 
-CANON-SECTION SCHEME (the `Canon: §N` labels every public object carries):
+CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Requirement, §Conflict, §Assumption, §Axis, §Stakeholder — the ontology;
   §Invariants — the structural rules;
   §Graph — the store and its traversal;
-  §Loop — the what_now operating procedure (documented, exercised by the harness).
+  §Loop — the what_now operating procedure (documented, exercised by the harness);
+  §Glossary — the controlled methodology vocabulary (tensio.glossary.TERMS).
 The generator (tools/gen_spec.py) walks modules in a fixed order and emits the
-human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md); the meta-test
+human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md); the meta-test
 (tests/test_docs_gen.py) makes regeneration == committed, byte-for-byte.
+
+OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
+  operator — an acting agent that owns a bounded sub-domain of the graph; its
+             crystallized substrate is the durable store free of context cost.
+  DRIFT_FALLOUT — a DEAD assumption with live dependents that must be revisited.
+  latent connector — a requirement pair that SHOULD have a Conflict node but
+             doesn't; the heuristic hunt lives in graph.latent_connector_suspects.
 
 ### 2. §Stakeholder — owners and stewards — `tensio.stakeholder`
 

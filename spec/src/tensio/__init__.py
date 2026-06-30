@@ -85,12 +85,20 @@ Package structure (module = ontology section / methodology chapter):
                 hold (a stewardless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 
-CANON-SECTION SCHEME (the `Canon: §N` labels every public object carries):
+CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Requirement, §Conflict, §Assumption, §Axis, §Stakeholder — the ontology;
   §Invariants — the structural rules;
   §Graph — the store and its traversal;
-  §Loop — the what_now operating procedure (documented, exercised by the harness).
+  §Loop — the what_now operating procedure (documented, exercised by the harness);
+  §Glossary — the controlled methodology vocabulary (tensio.glossary.TERMS).
 The generator (tools/gen_spec.py) walks modules in a fixed order and emits the
-human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md); the meta-test
+human layer (REQUIREMENTS.md, TENSIONS.md, OPEN.md, GLOSSARY.md); the meta-test
 (tests/test_docs_gen.py) makes regeneration == committed, byte-for-byte.
+
+OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
+  operator — an acting agent that owns a bounded sub-domain of the graph; its
+             crystallized substrate is the durable store free of context cost.
+  DRIFT_FALLOUT — a DEAD assumption with live dependents that must be revisited.
+  latent connector — a requirement pair that SHOULD have a Conflict node but
+             doesn't; the heuristic hunt lives in graph.latent_connector_suspects.
 """
