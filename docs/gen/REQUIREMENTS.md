@@ -35,8 +35,9 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-lifecycle-abstraction` | SETTLED | `framework-author` | A-bootstrap-self-applies | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
 | `R-process-aspect-first` | DRAFT | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | tensio.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
 | `R-task-vs-action-distinct-altitudes` | DRAFT | `framework-author` | A-bootstrap-self-applies | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
-| `R-operator-acting-facet` | DRAFT | `framework-author` | A-finite-context-operators | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
-| `R-context-budget-rule` | DRAFT | `framework-author` | A-finite-context-operators | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
+| `R-operator-acting-facet` | SETTLED | `framework-author` | A-finite-context-operators | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
+| `R-context-budget-rule` | SETTLED | `framework-author` | A-finite-context-operators | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
+| `R-operator-not-self-approve` | SETTLED | `framework-author` | A-stakeholders-care | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | `R-delegation-conclusions-only` | DRAFT | `framework-author` | A-finite-context-operators | When an operator delegates a sub-domain to a sub-operator, the sub-operator shall return CONCLUSIONS, not raw detail; shared objects are declared as an explicit border. |
 | `R-goal-as-target-state` | DRAFT | `domain-user` | A-bootstrap-self-applies | A Goal shall be a desired target-state predicate; the Gap = (Goal - current state) is the work that drives a Process. |
 | `R-context-bounded-delegation` | DRAFT | `framework-author` | A-finite-context-operators | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
@@ -87,6 +88,12 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `A-finite-context-operators` | HOLDS | `framework-author` | Operators are finite-context agents; an operator's problem domain must fit its context. |
 | `A-compaction-loses-working` | HOLDS | `ai-agent` | Knowledge living only in working context is lost on context auto-compaction; only the crystallized substrate survives. |
 | `A-most-knowledge-crystallizable` | UNCERTAIN | `framework-reviewer` | Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type. |
+
+## Operators
+
+| id | stakeholder | lifecycle | budget | parent |
+|---|---|---|---|---|
+| `OP-director` | `framework-author` | ACTIVE | 200 (NODE_COUNT) | — |
 
 ---
 
@@ -378,7 +385,66 @@ WHY traversal lives here as functions (not methods on a graph class doing logic)
 keeps the ontology dataclasses pure data and the queries in one auditable place,
 mirroring dev-coin where chain logic is module functions over frozen dataclasses.
 
-### 8. §Invariants — structural form — `tensio.invariants`
+### 8. §Lifecycle — the generic state-machine keystone — `tensio.lifecycle`
+
+Canon: §Lifecycle — the generic state-machine value-type (framework keystone).
+
+RULE: every modeled state machine (Requirement.status, Conflict.lifecycle,
+and future Operator/Process lifecycles) MUST validate against a framework-
+supplied Lifecycle constant via invariants.check_status_in_lifecycle.
+
+Canon: §Lifecycle — this module ships the SHAPE (State / Transition / Lifecycle)
+plus the two canonical framework instances (REQUIREMENT_STATUS_LIFECYCLE and
+CONFLICT_LIFECYCLE). It is content-free: no business data lives here.
+
+References:
+  R-lifecycle-abstraction — introduces this keystone abstraction (DRY the two
+    hand-rolled state machines; opens the door to behavioral aspects).
+  R-statemachine-wellformedness — every modeled state machine is reachable,
+    deterministic, and terminal (or explicitly cyclic); transition guards may
+    rest on an Assumption (the behavioral drift seam).
+
+WHY one module, two constants: Requirement.status and Conflict.lifecycle are
+BOTH hand-rolled prefix-test state machines with the same shape. Generalizing
+them into Lifecycle:
+  - makes the stored strings the single source of truth (no parallel storage),
+  - adds a structural invariant that validates stored values against canonical
+    states without changing how they are stored or compared,
+  - and establishes the keystone so that Operator.lifecycle / Goal.status /
+    Process.lifecycle in later phases can reuse it — no parallel machinery.
+
+### 9. §Operator — the acting facet of a Stakeholder — `tensio.operator`
+
+Canon: §Operator — the acting facet of a Stakeholder (M20: NEW TYPE).
+
+RULE: an Operator is the acting facet of a Stakeholder (§Stakeholder). Where a
+Stakeholder answers 'who is accountable', an Operator answers 'who can act,
+within what context, over which slice of the graph'. The two facets MUST stay
+separate — single-altitude-vs-multi-altitude.
+
+Canon: §Operator — every Operator:
+  - carries a typed anchor starting with 'OP-' (R-anchor-everything);
+  - references a Stakeholder.id (the accountability facet, §Stakeholder);
+  - has a lifecycle value matched by OPERATOR_LIFECYCLE (§Lifecycle);
+  - carries a ContextBudget (§ContextBudget) bounding its WORKING store;
+  - optionally has a parent Operator (the delegation hierarchy).
+
+Canon: §ContextBudget — bounds the working store only; the crystallized
+substrate (graph + generated docs) is FREE. See R-working-vs-substrate-budget.
+
+References:
+  R-operator-acting-facet — the acting facet is where context and capability live.
+  R-context-budget-rule   — size(domain) <= budget.limit is a structural check.
+  R-crystallize-before-split — crystallize first, split only if still over budget.
+  R-operator-crystal-is-claude-md — each operator's crystal is its CLAUDE.md.
+
+WHY a new type (M20 = new type, not a Stakeholder facet): separating them
+(Operator is a NEW TYPE referencing Stakeholder) preserves the steward-distinct
+boundary at the methodology altitude. A Stakeholder is an accountability node;
+the acting/context/domain facet lives on Operator. Conflating them would merge
+two things that the single-altitude-vs-multi-altitude axis explicitly separates.
+
+### 10. §Invariants — structural form — `tensio.invariants`
 
 Canon: §Invariants — structural form of the tension graph (the check_* layer).
 

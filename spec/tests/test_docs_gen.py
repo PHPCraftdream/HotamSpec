@@ -177,6 +177,8 @@ REQUIRED_SECTIONS = [
     "§Invariants",
     "§Graph",
     "§Lifecycle",
+    "§Operator",
+    "§ContextBudget",
 ]
 
 

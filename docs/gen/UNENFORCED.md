@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 14 / SETTLED 19; DRAFT 19; OPEN 13; REJECTED 3.**
+**Burn-down: SETTLED-ENFORCED 17 / SETTLED 22; DRAFT 17; OPEN 13; REJECTED 3.**
 
 ---
 
@@ -39,6 +39,9 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-glossary-sync-test` | test_glossary_sync.py, test_docs_gen.py::test_glossary_md_up_to_date | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
 | `R-history-from-rejected-markers` | test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-lifecycle-abstraction` | check_status_in_lifecycle, test_lifecycle.py | A generic tensio.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
+| `R-operator-acting-facet` | test_operator.py, check_no_dangling_ids, check_typed_anchors | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
+| `R-context-budget-rule` | check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget | An operator's owned domain shall not exceed its context budget: size(domain) <= budget.limit; exceeding it is a structural OVERLOADED contradiction the harness surfaces. |
+| `R-operator-not-self-approve` | check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | `R-statemachine-wellformedness` | check_canonical_lifecycles_wellformed, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_dangling_transition, test_lifecycle.py::test_check_lifecycle_wellformed_fires_on_no_initial | Every modeled state machine shall be reachable, deterministic, and terminal (or explicitly cyclic); a transition guard may rest on an Assumption (the behavioral drift seam). |
 | `R-enforcement-gradient` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
 | `R-requirement-enforced` | check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
@@ -52,8 +55,6 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-smoke-test` | `framework-author` |
 | `R-process-aspect-first` | `framework-author` |
 | `R-task-vs-action-distinct-altitudes` | `framework-author` |
-| `R-operator-acting-facet` | `framework-author` |
-| `R-context-budget-rule` | `framework-author` |
 | `R-delegation-conclusions-only` | `framework-author` |
 | `R-goal-as-target-state` | `domain-user` |
 | `R-context-bounded-delegation` | `framework-author` |

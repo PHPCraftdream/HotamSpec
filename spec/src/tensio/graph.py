@@ -28,6 +28,7 @@ from pathlib import Path
 from tensio.assumption import DEAD, Assumption
 from tensio.axis import Axis
 from tensio.conflict import Conflict
+from tensio.operator import Operator
 from tensio.requirement import Requirement
 from tensio.stakeholder import Stakeholder
 
@@ -46,6 +47,7 @@ class TensionGraph:
       assumptions  — tuple of Assumption.
       requirements — tuple of Requirement.
       conflicts    — tuple of Conflict.
+      operators    — tuple of Operator (§Operator — the acting facets; M20).
 
     WHY frozen + tuples: determinism. The generator emits docs in graph order and
     the meta-test demands byte-for-byte stability; a mutable/unordered store would
@@ -62,6 +64,7 @@ class TensionGraph:
     assumptions: tuple[Assumption, ...] = field(default_factory=tuple)
     requirements: tuple[Requirement, ...] = field(default_factory=tuple)
     conflicts: tuple[Conflict, ...] = field(default_factory=tuple)
+    operators: tuple[Operator, ...] = field(default_factory=tuple)
 
     def is_empty(self) -> bool:
         """Canon: §Graph — True iff no domain content has been loaded.
@@ -78,6 +81,7 @@ class TensionGraph:
             or self.assumptions
             or self.requirements
             or self.conflicts
+            or self.operators
         )
 
 
@@ -162,6 +166,15 @@ def assumption_ids(g: TensionGraph) -> frozenset[str]:
 def requirement_ids(g: TensionGraph) -> frozenset[str]:
     """Canon: §Graph — set of all Requirement ids (for dangling-ref checks)."""
     return frozenset(r.id for r in g.requirements)
+
+
+def operator_ids(g: TensionGraph) -> frozenset[str]:
+    """Canon: §Operator — set of all Operator ids (for dangling-ref checks).
+
+    RULE: used by check_no_dangling_ids to verify Operator.parent references
+    and by check_operator_steward_not_self to identify operator acting facets.
+    """
+    return frozenset(op.id for op in g.operators)
 
 
 def requirement_by_id(g: TensionGraph, rid: str) -> Requirement | None:

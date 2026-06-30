@@ -32,6 +32,7 @@ from tensio.graph import (
     TensionGraph,
     assumption_ids,
     axis_slugs,
+    operator_ids,
     requirement_ids,
     stakeholder_ids,
 )
@@ -40,6 +41,7 @@ from tensio.lifecycle import (
     REQUIREMENT_STATUS_LIFECYCLE,
     Lifecycle,
 )
+from tensio.operator import OPERATOR_LIFECYCLE
 from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, OPEN_PREFIX, RELATION_KINDS
 
 _M_TAG_RE = re.compile(r"^M[1-9][0-9]*$")
@@ -82,13 +84,15 @@ def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
 
     RULE: Requirement.owner, Requirement.assumptions[*], Relation.target,
     Conflict.steward, Conflict.members[*], Conflict.shared_assumption,
-    Conflict.derived[*] and Assumption.owner MUST each name an object that exists.
+    Conflict.derived[*], Assumption.owner, Operator.stakeholder, and
+    Operator.parent MUST each name an object that exists.
 
     WHY first and broadest: a dangling member is how a conflict silently loses a
     party; a dangling assumption is how drift hides. A dangling edge is an
     invisible hole, the cardinal sin of the methodology.
     """
     sids, aids, rids = stakeholder_ids(g), assumption_ids(g), requirement_ids(g)
+    oids = operator_ids(g)
     out: list[Violation] = []
 
     def fire(target: str, msg: str) -> None:
@@ -119,6 +123,14 @@ def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
         for did in c.derived:
             if did not in rids:
                 fire(c.id, f"derived '{did}' is not a known Requirement")
+    for op in g.operators:
+        if op.stakeholder not in sids:
+            fire(
+                op.id,
+                f"operator stakeholder '{op.stakeholder}' is not a known Stakeholder",
+            )
+        if op.parent is not None and op.parent not in oids:
+            fire(op.id, f"operator parent '{op.parent}' is not a known Operator")
     return out
 
 
@@ -361,13 +373,15 @@ def check_typed_anchors(g: TensionGraph) -> list[Violation]:
     """Canon: §Invariants — every id carries the prefix that matches its kind.
 
     RULE: Requirement.id MUST start with 'R-'; Assumption.id MUST start with
-    'A-'; Conflict.id MUST start with 'C-'. An id with a wrong or missing prefix
-    breaks the typed-anchor discipline (R-anchor-everything) and makes cite-by-
-    reference unreliable (R-speak-by-reference).
+    'A-'; Conflict.id MUST start with 'C-'; Operator.id MUST start with 'OP-'.
+    An id with a wrong or missing prefix breaks the typed-anchor discipline
+    (R-anchor-everything) and makes cite-by-reference unreliable
+    (R-speak-by-reference).
 
-    WHY minimal: this check enforces the CURRENTLY USED prefixes (R-/A-/C-) that
-    are already discipline in the codebase; it does NOT yet encode the full M28
-    taxonomy (OP-/GOAL-/GAP-/DLG-/AX-) — that is still OPEN per R-anchor-taxonomy.
+    WHY minimal: this check enforces the CURRENTLY USED prefixes (R-/A-/C-/OP-)
+    that are already discipline in the codebase; it does NOT yet encode the full
+    M28 taxonomy (GOAL-/GAP-/DLG-/AX-) — those are still OPEN per
+    R-anchor-taxonomy.
 
     References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
     """
@@ -399,6 +413,16 @@ def check_typed_anchors(g: TensionGraph) -> list[Violation]:
                     "check_typed_anchors",
                     c.id,
                     f"Conflict id '{c.id}' must start with 'C-' "
+                    f"(typed-anchor rule, R-anchor-everything)",
+                )
+            )
+    for op in g.operators:
+        if not op.id.startswith("OP-"):
+            out.append(
+                Violation(
+                    "check_typed_anchors",
+                    op.id,
+                    f"Operator id '{op.id}' must start with 'OP-' "
                     f"(typed-anchor rule, R-anchor-everything)",
                 )
             )
@@ -597,21 +621,23 @@ def check_lifecycle_wellformed(lc: Lifecycle) -> list[str]:
 def check_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
     """Canon: §Lifecycle / §Invariants — every status/lifecycle value matches a canonical Lifecycle.
 
-    RULE (two sub-rules):
+    RULE (three sub-rules):
       1. Every Requirement.status MUST be matched by REQUIREMENT_STATUS_LIFECYCLE
          (exact match for DRAFT/SETTLED/REJECTED; prefix match for OPEN(question)).
       2. Every Conflict.lifecycle MUST be matched by CONFLICT_LIFECYCLE
          (exact match for DETECTED/ACKNOWLEDGED; prefix match for
          DECIDED(rationale) and REVISIT_WHEN(condition)).
+      3. Every Operator.lifecycle MUST be matched by OPERATOR_LIFECYCLE
+         (exact match for ACTIVE/SATURATED/DELEGATED/RETIRED).
 
     When matches() returns None, the value is not a recognized state of the
     canonical lifecycle; a Violation is fired naming the offending value and
     lifecycle slug.
 
-    WHY structural: both status and lifecycle are hand-rolled string state
-    machines; this invariant enforces that stored values belong to the
-    canonical set, making the state machines structurally visible and checkable
-    rather than only convention-held. References: R-lifecycle-abstraction,
+    WHY structural: status and lifecycle are hand-rolled string state machines;
+    this invariant enforces that stored values belong to the canonical set,
+    making the state machines structurally visible and checkable rather than
+    only convention-held. References: R-lifecycle-abstraction,
     R-statemachine-wellformedness.
     """
     out: list[Violation] = []
@@ -637,24 +663,35 @@ def check_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
                     f"(valid: {sorted(CONFLICT_LIFECYCLE.state_names())})",
                 )
             )
+    for op in g.operators:
+        if OPERATOR_LIFECYCLE.matches(op.lifecycle) is None:
+            out.append(
+                Violation(
+                    "check_status_in_lifecycle",
+                    op.id,
+                    f"Operator.lifecycle '{op.lifecycle}' is not a valid state in "
+                    f"lifecycle '{OPERATOR_LIFECYCLE.slug}' "
+                    f"(valid: {sorted(OPERATOR_LIFECYCLE.state_names())})",
+                )
+            )
     return out
 
 
 def check_canonical_lifecycles_wellformed(g: TensionGraph) -> list[Violation]:
     """Canon: §Lifecycle / §Invariants — the framework's own lifecycle constants are well-formed.
 
-    RULE: REQUIREMENT_STATUS_LIFECYCLE and CONFLICT_LIFECYCLE MUST each pass
-    check_lifecycle_wellformed (no structural issues). This check runs on
-    every invocation of the full invariant suite — the framework checks its
-    own shipped state machines, not only user content.
+    RULE: REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE, and OPERATOR_LIFECYCLE
+    MUST each pass check_lifecycle_wellformed (no structural issues). This check
+    runs on every invocation of the full invariant suite — the framework checks
+    its own shipped state machines, not only user content.
 
-    WHY self-application: strong self-application is the methodology's
-    bootstrap test. If the framework's own lifecycles are malformed, all
-    downstream status validation is meaningless. References:
-    R-statemachine-wellformedness, R-lifecycle-abstraction.
+    WHY self-application: strong self-application is the methodology's bootstrap
+    test. If the framework's own lifecycles are malformed, all downstream status
+    validation is meaningless. References: R-statemachine-wellformedness,
+    R-lifecycle-abstraction.
     """
     out: list[Violation] = []
-    for lc in (REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE):
+    for lc in (REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE, OPERATOR_LIFECYCLE):
         for issue in check_lifecycle_wellformed(lc):
             out.append(
                 Violation(
@@ -663,6 +700,106 @@ def check_canonical_lifecycles_wellformed(g: TensionGraph) -> list[Violation]:
                     issue,
                 )
             )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 10. Operator steward-safety — M36: operator cannot self-approve (§Operator)
+# ---------------------------------------------------------------------------
+
+
+def check_operator_steward_not_self(g: TensionGraph) -> list[Violation]:
+    """Canon: §Operator / §Invariants — an Operator may not steward a Conflict that contains its own Stakeholder's requirement.
+
+    RULE (M36): For each Conflict in the graph, collect the set of Stakeholder
+    ids that own the conflict's member Requirements ('member-owners'). For each
+    Operator whose `stakeholder` field is in that set, if any such Operator id
+    equals the Conflict's `steward`, fire a Violation.
+
+    Plain-English: an Operator is the acting facet of a Stakeholder
+    (§Stakeholder); the steward-distinct boundary (check_steward_not_a_member_owner)
+    applies THROUGH that facet — an Operator cannot steward a Conflict in which
+    its own underlying Stakeholder owns one of the member Requirements.
+
+    WHY (R-ai-presents-not-decides + R-operator-not-self-approve): the hard
+    boundary that prevents an interested party from judging its own side extends
+    to the acting facet. If an Operator could steward a conflict its Stakeholder
+    has a stake in, the boundary would be defeated at the operator level while
+    formally satisfied at the Stakeholder level — structural invisibility.
+
+    This is the reflexive twin of check_steward_not_a_member_owner.
+    """
+    owner_of = {r.id: r.owner for r in g.requirements}
+    # Map from stakeholder id -> operator ids that are that stakeholder's acting facet
+    op_by_stakeholder: dict[str, list[str]] = {}
+    for op in g.operators:
+        op_by_stakeholder.setdefault(op.stakeholder, []).append(op.id)
+
+    out: list[Violation] = []
+    for c in g.conflicts:
+        member_owners = {owner_of[m] for m in c.members if m in owner_of}
+        for sid in member_owners:
+            for op_id in op_by_stakeholder.get(sid, []):
+                if c.steward == op_id:
+                    out.append(
+                        Violation(
+                            "check_operator_steward_not_self",
+                            c.id,
+                            f"Operator '{op_id}' (acting facet of stakeholder "
+                            f"'{sid}') cannot steward conflict '{c.id}' because "
+                            f"its underlying Stakeholder owns a member requirement; "
+                            f"M36 — operator must not self-approve "
+                            f"(R-operator-not-self-approve)",
+                        )
+                    )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 11. Operator budget — check_operator_within_budget (§ContextBudget, M17)
+# ---------------------------------------------------------------------------
+
+
+def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
+    """Canon: §ContextBudget / §Invariants — operator domain must not exceed its budget.
+
+    RULE: for each Operator with `context_budget.limit > 0`:
+      - If `measure == NODE_COUNT`, compute:
+          size = len(g.requirements) + len(g.conflicts) + len(g.assumptions)
+        (full-graph count; DomainScope narrowing is deferred to a later P-phase).
+      - If `size > limit`, fire a Violation with the imperative:
+          'crystallize first; if still over, spawn a sub-operator'
+          (R-crystallize-before-split, R-context-budget-rule).
+      - `limit == 0` means unbounded; the check is skipped for that operator.
+
+    WHY NODE_COUNT (M17): deterministic and computable without token-estimation
+    infrastructure; the TOKEN_ESTIMATE and COMPLEXITY measures are deferred
+    behind a seam for future phases. See R-budget-measure and R-context-budget-rule.
+
+    WHY fire (not warn): 'domain > context' is exactly the kind of measurable,
+    structural contradiction Tensio exists to surface. An over-budget operator
+    is a real conflict the graph holds visibly, not a soft warning.
+    """
+    from tensio.operator import NODE_COUNT  # noqa: PLC0415
+
+    out: list[Violation] = []
+    for op in g.operators:
+        limit = op.context_budget.limit
+        if limit <= 0:
+            continue  # unbounded; aspect off for this operator
+        if op.context_budget.measure == NODE_COUNT:
+            size = len(g.requirements) + len(g.conflicts) + len(g.assumptions)
+            if size > limit:
+                out.append(
+                    Violation(
+                        "check_operator_within_budget",
+                        op.id,
+                        f"operator '{op.id}' holds {size} nodes > budget {limit} "
+                        f"(NODE_COUNT measure); crystallize first "
+                        f"(R-crystallize-before-split); if still over, spawn a "
+                        f"sub-operator (R-context-bounded-delegation)",
+                    )
+                )
     return out
 
 
@@ -684,6 +821,8 @@ ALL_INVARIANTS = (
     check_m_tag_format,
     check_status_in_lifecycle,
     check_canonical_lifecycles_wellformed,
+    check_operator_steward_not_self,
+    check_operator_within_budget,
 )
 
 

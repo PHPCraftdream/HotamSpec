@@ -84,6 +84,8 @@ MODULE_ORDER: list[tuple[str, str]] = [
     ("requirement", "§Requirement — the requirement node"),
     ("conflict", "§Conflict — the connector node"),
     ("graph", "§Graph — the store, the loader, and traversal"),
+    ("lifecycle", "§Lifecycle — the generic state-machine keystone"),
+    ("operator", "§Operator — the acting facet of a Stakeholder"),
     ("invariants", "§Invariants — structural form"),
 ]
 
@@ -180,6 +182,25 @@ def build_requirements(g: TensionGraph) -> str:
         for a in g.assumptions:
             lines.append(
                 f"| `{a.id}` | {a.status} | `{a.owner}` | {_cell(a.statement)} |"
+            )
+        lines.append("")
+
+    # Roster: operators (§Operator).
+    if g.operators:
+        lines.append("## Operators")
+        lines.append("")
+        lines.append("| id | stakeholder | lifecycle | budget | parent |")
+        lines.append("|---|---|---|---|---|")
+        for op in g.operators:
+            budget = (
+                f"{op.context_budget.limit} ({op.context_budget.measure})"
+                if op.context_budget.limit
+                else "unbounded"
+            )
+            parent = f"`{op.parent}`" if op.parent else "—"
+            lines.append(
+                f"| `{op.id}` | `{op.stakeholder}` | {op.lifecycle} "
+                f"| {budget} | {parent} |"
             )
         lines.append("")
 

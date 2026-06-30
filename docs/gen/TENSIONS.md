@@ -137,15 +137,18 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-active-loop-playbooks` | `R-glossary-sync-test` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-playbooks` | `R-history-from-rejected-markers` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-playbooks` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-active-loop-playbooks` | `R-operator-not-self-approve` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-playbooks` | `R-process-aspect-first` | shares assumption(s): A-prose-suffices |
 | `R-active-loop-playbooks` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-playbooks` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-active-loop-playbooks` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-agent-never-lost` | `R-decided-needs-human-signoff` | shares assumption(s): A-stakeholders-care |
+| `R-agent-never-lost` | `R-operator-not-self-approve` | shares assumption(s): A-stakeholders-care |
 | `R-agent-never-lost` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-agent-never-lost` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-agent-never-lost` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-decided-needs-human-signoff` | shares assumption(s): A-stakeholders-care |
+| `R-ai-presents-not-decides` | `R-operator-not-self-approve` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-ai-presents-not-decides` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
@@ -232,6 +235,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-crystallize-before-split` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-crystallize-knowledge-to-code` | `R-operator-crystal-is-claude-md` | shares assumption(s): A-compaction-loses-working |
 | `R-crystallize-knowledge-to-code` | `R-stale-substrate` | shares assumption(s): A-compaction-loses-working |
+| `R-decided-needs-human-signoff` | `R-operator-not-self-approve` | shares assumption(s): A-stakeholders-care |
 | `R-decided-needs-human-signoff` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-decided-needs-human-signoff` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-decided-needs-human-signoff` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
@@ -310,6 +314,9 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-crystal-is-claude-md` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-crystal-is-claude-md` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-crystal-is-claude-md` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-not-self-approve` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
+| `R-operator-not-self-approve` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
+| `R-operator-not-self-approve` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
 | `R-operator-type-vs-facet` | `R-process-aspect-first` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-rules-as-data` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-type-vs-facet` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |

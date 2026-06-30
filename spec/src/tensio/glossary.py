@@ -66,6 +66,16 @@ TERMS: tuple[Term, ...] = (
         "The generic state-machine value-type — keystone for Requirement.status / Conflict.lifecycle / future Operator/Process lifecycles.",
     ),
     Term(
+        "§Operator",
+        "SECTION",
+        "The acting facet of a Stakeholder — owns a sub-domain, carries a context budget, and runs the closed loop.",
+    ),
+    Term(
+        "§ContextBudget",
+        "SECTION",
+        "The working-store ceiling of an Operator; the substrate is free.",
+    ),
+    Term(
         "§Loop",
         "SECTION",
         "The closed loop: State→Diagnosis→Next-action→Action→regenerate→State.",
