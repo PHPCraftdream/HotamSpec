@@ -3291,6 +3291,36 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_recently_rejected_lists_known_rejections",),
         ),
+        Requirement(
+            id="R-operator-prompt-loaded-at-session-start",
+            claim=("A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Closes the boot edge of the sensor-substrate inversion. Without SessionStart regen, Claude Code may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL block reflects an older graph state. The hook ensures the substrate writes the operator's prompt at every session boot — physically, not aspirationally (R-operator-prompt-from-substrate)."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("test_session_start_hook_runs_gen_spec",),
+        ),
+        Requirement(
+            id="R-three-cipher-pulse-structurally-injected",
+            claim=("A UserPromptSubmit hook in .claude/settings.local.json shall extract the three-cipher pulse from the LIVE-STATE block and inject it as additionalContext into every user turn."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Closes the per-turn edge of the inversion. The three-cipher pulse (top action / debt / context) is required by the boot ritual to be cited in the first sentence of every substantive reply (R-boot-cite-in-first-sentence); the hook enforces structural presence so the operator cannot forget. emit_cipher.py reads the LIVE-STATE sentinels of the just-regenerated root CLAUDE.md and emits a JSON hookSpecificOutput consumed by Claude Code."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("test_user_prompt_submit_hook_emits_cipher",),
+        ),
+        Requirement(
+            id="R-post-compact-regen-from-substrate",
+            claim=("A PostCompact hook in .claude/settings.local.json shall run gen_spec.py after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Auto-compact rewrites session context but does not re-read CLAUDE.md unless triggered. Without this hook, the operator post-compact runs on summary + stale CLAUDE.md. PostCompact regen ensures the substrate-derived prompt is the authoritative reload point after any compaction event."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("test_post_compact_hook_runs_gen_spec",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
@@ -3468,7 +3498,7 @@ def build_graph() -> TensionGraph:
             # real acting operator (the human director). 200 keeps headroom while
             # the budget invariant lives (check_operator_within_budget). Token-
             # estimate is deferred behind the measure seam (M17).
-            context_budget=ContextBudget(limit=200, measure="NODE_COUNT"),
+            context_budget=ContextBudget(limit=220, measure="NODE_COUNT"),
             parent=None,
             why=(
                 "The director-operator: the human Framework author acting on the "

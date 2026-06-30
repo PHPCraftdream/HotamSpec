@@ -209,6 +209,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-declares-purpose` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -220,6 +222,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-declares-purpose` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-declares-purpose` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-declares-purpose` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-agent-is-recursive-director` | shares assumption(s): A-python-stack |
@@ -261,6 +264,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-has-docs-dir` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -272,6 +277,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-has-docs-dir` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-has-docs-dir` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-has-docs-dir` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-agent-has-own-crystal` | `R-agent-has-own-tools-dir` | shares assumption(s): A-finite-context-operators |
@@ -405,6 +411,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-is-recursive-director` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -416,6 +424,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-is-recursive-director` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-is-recursive-director` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-is-recursive-director` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-agent-references-shared-docs` | shares assumption(s): A-python-stack |
@@ -455,6 +464,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-map-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -466,6 +477,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-map-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-map-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-map-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-agent-never-lost` | `R-conflict-min-two-members` | shares assumption(s): A-stakeholders-care |
@@ -513,6 +525,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-references-shared-docs` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -524,6 +538,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-references-shared-docs` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-references-shared-docs` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-references-shared-docs` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-audit-atomicity-tool` | shares assumption(s): A-python-stack |
@@ -561,6 +576,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-scoped-constitution` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -572,6 +589,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-agent-scoped-constitution` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-agent-scoped-constitution` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-agent-scoped-constitution` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-ai-presents-not-decides` | `R-conflict-min-two-members` | shares assumption(s): A-stakeholders-care |
@@ -706,6 +724,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -717,6 +737,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-audit-atomicity-tool` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-audit-atomicity-tool` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-axis-controlled-vocab` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
@@ -1038,6 +1059,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1049,6 +1072,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-claude-md-live-state-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-claude-md-live-state-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-claude-md-live-state-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-claude-md-tree-of-crystals` | `R-constituting-requirements-converge` | shares assumption(s): A-bootstrap-self-applies |
@@ -1200,6 +1224,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1211,6 +1237,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-business-data` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-content-free-no-business-data` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-business-data` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-content-free-no-seed-graph` | shares assumption(s): A-python-stack |
@@ -1244,6 +1271,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1255,6 +1284,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-examples` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-content-free-no-examples` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-examples` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-deterministic-generation` | shares assumption(s): A-python-stack |
@@ -1287,6 +1317,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1298,6 +1330,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-content-free-no-seed-graph` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-content-free-no-seed-graph` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-content-free-no-seed-graph` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-content-layout-evolution` | `R-crystal-is-claude-md` | shares assumption(s): A-bootstrap-self-applies |
@@ -1691,6 +1724,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1702,6 +1737,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-deterministic-generation` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-deterministic-generation` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-deterministic-generation` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-docs-generated-from-requirements` | shares assumption(s): A-python-stack |
@@ -1732,6 +1768,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-director-agent-required-per-domain` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1743,6 +1781,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-director-agent-required-per-domain` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-director-agent-required-per-domain` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-director-agent-required-per-domain` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-domain-declares-director` | shares assumption(s): A-python-stack |
@@ -1772,6 +1811,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1783,6 +1824,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-docs-generated-from-requirements` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-docs-generated-from-requirements` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-docs-generated-from-requirements` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-domain-has-docs-dir` | shares assumption(s): A-python-stack |
@@ -1811,6 +1853,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-declares-director` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1822,6 +1866,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-declares-director` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-declares-director` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-declares-director` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-delegation-as-node` | `R-domain-delegation-persists` | shares assumption(s): A-finite-context-operators |
@@ -1876,6 +1921,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-docs-dir` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1887,6 +1934,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-docs-dir` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-has-docs-dir` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-has-docs-dir` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-domain-is-a-directory` | shares assumption(s): A-python-stack |
@@ -1913,6 +1961,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-manifest` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1924,6 +1974,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-has-manifest` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-has-manifest` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-has-manifest` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-domain-map-generated` | shares assumption(s): A-python-stack |
@@ -1949,6 +2000,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-is-a-directory` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1960,6 +2013,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-is-a-directory` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-is-a-directory` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-is-a-directory` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-domain-owns-claude-md` | shares assumption(s): A-python-stack |
@@ -1984,6 +2038,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-map-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -1995,6 +2051,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-map-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-map-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-map-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-domain-owns-docs-gen` | shares assumption(s): A-python-stack |
@@ -2018,6 +2075,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-claude-md` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2029,6 +2088,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-claude-md` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-owns-claude-md` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-claude-md` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-domain-owns-graph-py` | shares assumption(s): A-python-stack |
@@ -2051,6 +2111,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-docs-gen` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2062,6 +2124,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-docs-gen` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-owns-docs-gen` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-docs-gen` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-domain-owns-tools-and-agents` | shares assumption(s): A-python-stack |
@@ -2083,6 +2146,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-graph-py` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2094,6 +2159,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-graph-py` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-owns-graph-py` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-graph-py` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
@@ -2114,6 +2180,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-tools-and-agents` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2125,6 +2193,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-domain-owns-tools-and-agents` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-domain-owns-tools-and-agents` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-domain-owns-tools-and-agents` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-empty-content-calm-banner` | shares assumption(s): A-python-stack |
@@ -2144,6 +2213,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2155,6 +2226,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-drift-structurally-impossible` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-drift-structurally-impossible` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-drift-structurally-impossible` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-empty-content-gen-notice` | shares assumption(s): A-python-stack |
@@ -2173,6 +2245,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2184,6 +2258,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-calm-banner` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-empty-content-calm-banner` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-calm-banner` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-empty-content-wellformed` | shares assumption(s): A-python-stack |
@@ -2201,6 +2276,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2212,6 +2289,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-gen-notice` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-empty-content-gen-notice` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-gen-notice` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-entities-md-generated` | shares assumption(s): A-python-stack |
@@ -2228,6 +2306,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-wellformed` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2239,6 +2319,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-empty-content-wellformed` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-empty-content-wellformed` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-empty-content-wellformed` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-enforced-names-enforcer` | `R-enforcement-first-class` | shares assumption(s): A-most-knowledge-crystallizable |
@@ -2269,6 +2350,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entities-md-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2280,6 +2363,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entities-md-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entities-md-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-entities-md-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-entity-derived-requirement` | shares assumption(s): A-python-stack |
@@ -2294,6 +2378,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-checks-by-iteration` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entity-checks-by-iteration` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-entity-checks-by-iteration` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2305,6 +2391,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-checks-by-iteration` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entity-checks-by-iteration` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-entity-checks-by-iteration` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-entity-is-declarative` | shares assumption(s): A-python-stack |
@@ -2318,6 +2405,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-derived-requirement` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2329,6 +2418,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-derived-requirement` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entity-derived-requirement` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-entity-derived-requirement` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-field-kind-known` | `R-entity-instance-id-prefix` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
@@ -2546,6 +2636,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-is-declarative` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entity-is-declarative` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-entity-is-declarative` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2557,6 +2649,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-is-declarative` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entity-is-declarative` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-entity-is-declarative` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-entity-state-conflict-surfaced` | shares assumption(s): A-python-stack |
@@ -2568,6 +2661,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-reuses-lifecycle` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entity-reuses-lifecycle` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-entity-reuses-lifecycle` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2579,6 +2674,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-reuses-lifecycle` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entity-reuses-lifecycle` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-entity-reuses-lifecycle` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-framework-claude-md-is-domain-free` | shares assumption(s): A-python-stack |
@@ -2589,6 +2685,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-state-conflict-surfaced` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-entity-state-conflict-surfaced` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-entity-state-conflict-surfaced` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2600,6 +2698,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-entity-state-conflict-surfaced` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-entity-state-conflict-surfaced` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-entity-state-conflict-surfaced` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-entity-type-lifecycle-wellformed` | `R-entity-typed-anchors` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
@@ -2684,6 +2783,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-claude-md-is-domain-free` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-framework-claude-md-is-domain-free` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-framework-claude-md-is-domain-free` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2695,6 +2796,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-claude-md-is-domain-free` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-framework-claude-md-is-domain-free` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-framework-claude-md-is-domain-free` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-glossary-drift-stable` | shares assumption(s): A-python-stack |
@@ -2703,6 +2805,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-shared-docs-generated` | `R-glossary-sync-fails-unused` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-framework-shared-docs-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-framework-shared-docs-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -2714,6 +2818,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-framework-shared-docs-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-framework-shared-docs-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-framework-shared-docs-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-glossary-generated` | shares assumption(s): A-prose-suffices, A-python-stack |
@@ -2725,6 +2830,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-glossary-drift-stable` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-glossary-drift-stable` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-drift-stable` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -2745,6 +2852,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-drift-stable` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
+| `R-glossary-drift-stable` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-drift-stable` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-glossary-sync-fails-dead` | shares assumption(s): A-prose-suffices, A-python-stack |
@@ -2755,6 +2863,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-glossary-generated` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-glossary-generated` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-generated` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -2775,6 +2885,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
+| `R-glossary-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-glossary-sync-fails-unused` | shares assumption(s): A-prose-suffices, A-python-stack |
@@ -2784,6 +2895,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-dead` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-dead` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-dead` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -2804,6 +2917,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-dead` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-dead` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-dead` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-history-generated-from-decided` | shares assumption(s): A-prose-suffices |
@@ -2812,6 +2926,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-method-matches-docstring` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-open-states-question` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-unused` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-glossary-sync-fails-unused` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-process-drives-existing-entities` | shares assumption(s): A-prose-suffices |
 | `R-glossary-sync-fails-unused` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-prose-suffices |
@@ -2832,6 +2948,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-glossary-sync-fails-unused` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
+| `R-glossary-sync-fails-unused` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-glossary-sync-fails-unused` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-goal-is-first-class-type` | `R-goal-owner-is-operator` | shares assumption(s): A-bootstrap-self-applies |
@@ -3087,6 +3204,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-measure-context-size` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-measure-context-size` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-method-matches-docstring` | `R-no-hand-edit-graph` | shares assumption(s): A-python-stack |
+| `R-method-matches-docstring` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-method-matches-docstring` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -3098,8 +3217,11 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-method-matches-docstring` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-method-matches-docstring` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-method-matches-docstring` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-operator-prompt-loaded-at-session-start` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
@@ -3111,6 +3233,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-no-hand-edit-graph` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-no-hand-edit-graph` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-no-hand-edit-graph` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-observation-evidence-scope` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
@@ -3186,6 +3309,21 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-operator-prompt-from-substrate` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-operator-prompt-from-substrate` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-operator-prompt-loaded-at-session-start` | `R-post-compact-regen-from-substrate` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-root-claude-md-is-sentinel-only` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-shared-thinking-doc-from-canon-sections` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-operator-prompt-loaded-at-session-start` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-operator-references-stakeholder` | `R-partition-vs-border` | shares assumption(s): A-finite-context-operators |
 | `R-operator-references-stakeholder` | `R-subagent-gets-its-claude-md` | shares assumption(s): A-finite-context-operators |
 | `R-operator-references-stakeholder` | `R-task-spawn-is-ephemeral` | shares assumption(s): A-finite-context-operators |
@@ -3216,6 +3354,20 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-partition-vs-border` | `R-tree-of-crystals-cognitive-trigger` | shares assumption(s): A-finite-context-operators |
 | `R-partition-vs-border` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-partition-vs-border` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
+| `R-post-compact-regen-from-substrate` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-recently-rejected-surfaced` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-repo-map-generated` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-root-claude-md-contains-domain-crystal` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-root-claude-md-is-sentinel-only` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-shared-thinking-doc-from-canon-sections` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-post-compact-regen-from-substrate` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-prefer-tool-over-hand` | `R-rejected-preserved-not-deleted` | shares assumption(s): A-stakeholders-care |
 | `R-prefer-tool-over-hand` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
 | `R-prefer-tool-over-hand` | `R-trust-anchor-mechanism` | shares assumption(s): A-stakeholders-care |
@@ -3229,6 +3381,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-private-tools-in-agent-folder` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-private-tools-in-agent-folder` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-private-tools-in-agent-folder` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-process-drives-existing-entities` | `R-process-goal-owner-is-operator-aspect` | shares assumption(s): A-bootstrap-self-applies, A-prose-suffices |
@@ -3338,6 +3491,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-recently-rejected-surfaced` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-recently-rejected-surfaced` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-recently-rejected-surfaced` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-rejected-preserved-not-deleted` | `R-steward-distinct-from-owners` | shares assumption(s): A-stakeholders-care |
@@ -3350,6 +3504,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-repo-map-generated` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-repo-map-generated` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-repo-map-generated` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-repo-map-generated` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-repo-map-generated` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-repo-map-generated` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-requirement-claim-is-atomic` | `R-step-invokes-known-transition` | shares assumption(s): A-prose-suffices |
@@ -3362,6 +3517,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-root-claude-md-contains-domain-crystal` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-contains-domain-crystal` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-contains-domain-crystal` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-root-claude-md-contains-domain-crystal` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-contains-domain-crystal` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-contains-domain-crystal` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-is-sentinel-only` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
@@ -3370,6 +3526,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-root-claude-md-is-sentinel-only` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-is-sentinel-only` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-is-sentinel-only` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-root-claude-md-is-sentinel-only` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-is-sentinel-only` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-root-claude-md-is-sentinel-only` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-rules-as-data` | `R-speak-by-reference` | shares assumption(s): A-bootstrap-self-applies |
@@ -3386,24 +3543,29 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-setup-claude-generates-settings` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-setup-claude-generates-settings` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-setup-claude-generates-settings` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-shared-thinking-doc-from-canon-sections` | `R-shared-tool-doc-from-docstring-and-help` | shares assumption(s): A-python-stack |
 | `R-shared-thinking-doc-from-canon-sections` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-shared-thinking-doc-from-canon-sections` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-shared-thinking-doc-from-canon-sections` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-shared-thinking-doc-from-canon-sections` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-shared-thinking-doc-from-canon-sections` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-shared-thinking-doc-from-canon-sections` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-shared-tool-doc-from-docstring-and-help` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
 | `R-shared-tool-doc-from-docstring-and-help` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-shared-tool-doc-from-docstring-and-help` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-shared-tool-doc-from-docstring-and-help` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-shared-tool-doc-from-docstring-and-help` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-shared-tool-doc-from-docstring-and-help` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-smoke-test` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-shared-tools-in-spec-tools` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-shared-tools-in-spec-tools` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-smoke-test` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-smoke-test` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-smoke-test` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-smoke-test` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-speak-by-reference` | `R-statemachine-deterministic` | shares assumption(s): A-bootstrap-self-applies |
@@ -3414,6 +3576,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-speak-by-reference` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-speak-by-reference` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-stable-conflict-identity` | `R-three-cipher-pulse-structurally-injected` | shares assumption(s): A-python-stack |
 | `R-stable-conflict-identity` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
 | `R-stable-conflict-identity` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-statemachine-deterministic` | `R-statemachine-guard-on-assumption` | shares assumption(s): A-bootstrap-self-applies |
@@ -3456,6 +3619,8 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-task-spawn-log-runtime` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |
 | `R-task-vs-action-distinct-altitudes` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-task-vs-action-distinct-altitudes` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-three-cipher-pulse-structurally-injected` | `R-tool-is-its-own-requirement` | shares assumption(s): A-python-stack |
+| `R-three-cipher-pulse-structurally-injected` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-tool-is-its-own-requirement` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-tree-of-crystals-cognitive-trigger` | `R-verify-closure-per-action` | shares assumption(s): A-finite-context-operators |
 | `R-tree-of-crystals-cognitive-trigger` | `R-working-vs-substrate-budget` | shares assumption(s): A-finite-context-operators |

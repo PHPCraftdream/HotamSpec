@@ -137,9 +137,11 @@
 | `R-operator-may-have-parent` | ATOMIC |  |
 | `R-operator-not-self-approve` | ATOMIC |  |
 | `R-operator-prompt-from-substrate` | ATOMIC |  |
+| `R-operator-prompt-loaded-at-session-start` | ATOMIC |  |
 | `R-operator-references-stakeholder` | ATOMIC |  |
 | `R-operator-type-vs-facet` | ATOMIC |  |
 | `R-partition-vs-border` | ATOMIC |  |
+| `R-post-compact-regen-from-substrate` | ATOMIC |  |
 | `R-prefer-tool-over-hand` | ATOMIC |  |
 | `R-private-tools-in-agent-folder` | ATOMIC |  |
 | `R-process-aspect-first` | ATOMIC |  |
@@ -151,10 +153,12 @@
 | `R-process-typed-anchors-extended` | ATOMIC |  |
 | `R-process-types-exist` | ATOMIC |  |
 | `R-rdf-store` | ATOMIC |  |
+| `R-recently-rejected-surfaced` | ATOMIC |  |
 | `R-rejected-preserved-not-deleted` | ATOMIC |  |
 | `R-repo-map-generated` | ATOMIC |  |
 | `R-requirement-claim-is-atomic` | ATOMIC |  |
 | `R-requirement-enforced` | ATOMIC |  |
+| `R-root-claude-md-contains-domain-crystal` | ATOMIC |  |
 | `R-root-claude-md-is-sentinel-only` | ATOMIC |  |
 | `R-rules-as-data` | ATOMIC |  |
 | `R-seed-in-src` | ATOMIC |  |
@@ -177,6 +181,7 @@
 | `R-task-spawn-is-ephemeral` | COMPOUND | 'and' connects clause with verb (and does) |
 | `R-task-spawn-log-runtime` | ATOMIC |  |
 | `R-task-vs-action-distinct-altitudes` | ATOMIC |  |
+| `R-three-cipher-pulse-structurally-injected` | ATOMIC |  |
 | `R-tool-is-its-own-requirement` | ATOMIC |  |
 | `R-tools-registry-generated` | ATOMIC |  |
 | `R-tree-of-crystals-cognitive-trigger` | ATOMIC |  |

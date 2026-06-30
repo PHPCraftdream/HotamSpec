@@ -87,3 +87,29 @@ STATE is the impossible direction.
 - `docs/checkpoints/phase11-atomization-wave.md` (session state).
 - `docs/checkpoints/atomicity-as-convergence.md` (why atomicity is the
   precondition for the substrate-generates-operator direction).
+
+## RESOLVED — P22 closes the gap (date: 2026-06-30)
+
+The sensor-substrate-inversion is no longer aspirational. Five structural pieces close the gap:
+
+1. **SessionStart hook** (.claude/settings.local.json) runs `tools/gen_spec.py` before any turn. Root CLAUDE.md is regenerated from substrate every boot.
+2. **PostCompact hook** runs the same regen so the post-compact reload reads fresh substrate state, not the pre-compact stale copy.
+3. **UserPromptSubmit hook** runs `tools/emit_cipher.py` to extract the three-cipher pulse from LIVE-STATE and inject it as `additionalContext` into every user turn — the pulse is now structurally present, not memory-dependent.
+4. **DOMAIN-CRYSTAL sentinel block** in root CLAUDE.md embeds the full content of `domains/tensio-self/CLAUDE.md` (the domain's canonical entry point and base for all sub-agents). When Claude Code auto-loads root CLAUDE.md, the operator boots from substrate — the inversion is physical.
+5. **spawn_agent.py** composes each sub-agent's task prompt by prepending its CLAUDE.md crystal. Sub-operators boot from their scoped substrate, not raw text.
+
+Anti-relitigation surface is also closed: **RECENTLY-REJECTED sentinel block** in root CLAUDE.md lists every REJECTED requirement with a `REPLACES` marker, sorted alphabetically. Before re-deriving an architectural claim, the operator sees previously-rejected proposals.
+
+The user's earlier framing "Мы делаем спеку, она делает тебя" is now realized: the operator is the effect of the substrate, not its cause. The substrate writes the prompt, Claude Code loads it, hooks keep it fresh, sub-operators inherit it. No manual loading step remains.
+
+Rules anchored:
+- R-operator-prompt-from-substrate (SETTLED, P10c)
+- R-root-claude-md-contains-domain-crystal (SETTLED/ENFORCED, P22.B)
+- R-recently-rejected-surfaced (SETTLED/ENFORCED, P22.B)
+- R-subagent-gets-its-claude-md (SETTLED/ENFORCED, P22.C)
+- R-task-spawn-log-runtime (SETTLED/ENFORCED, P22.C)
+- R-operator-prompt-loaded-at-session-start (SETTLED/ENFORCED, P22.D)
+- R-three-cipher-pulse-structurally-injected (SETTLED/ENFORCED, P22.D)
+- R-post-compact-regen-from-substrate (SETTLED/ENFORCED, P22.D)
+- R-tool-emit-cipher (auto-projected, P22.A)
+- R-tool-spawn-agent (auto-projected, P22.C)

@@ -132,6 +132,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `test_constitution_block_generated`
 
+## `R-operator-prompt-loaded-at-session-start` (ENFORCED)
+
+**Claim.** A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.
+
+**Why.** Closes the boot edge of the sensor-substrate inversion. Without SessionStart regen, Claude Code may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL block reflects an older graph state. The hook ensures the substrate writes the operator's prompt at every session boot — physically, not aspirationally (R-operator-prompt-from-substrate).
+
+**Enforced by:** `test_session_start_hook_runs_gen_spec`
+
 ## `R-operator-references-stakeholder` (ENFORCED)
 
 **Claim.** An Operator.stakeholder shall reference an existing Stakeholder.id.
