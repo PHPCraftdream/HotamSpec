@@ -142,10 +142,7 @@ def test_check_entities_md_lists_all_types_no_types() -> None:
 def test_check_entities_md_lists_all_types_missing_slug(tmp_path: Path) -> None:
     """When a domain's graph.py declares an entity type but ENTITIES.md lacks the section,
     check_entities_md_lists_all_types fires one Violation."""
-    import importlib.util  # noqa: PLC0415
     from tensio.invariants import (  # noqa: PLC0415
-        _DOMAINS_ROOT_FOR_ENTITY_CHECK,
-        Violation,
         check_entities_md_lists_all_types,
     )
     from tensio.graph import TensionGraph  # noqa: PLC0415
@@ -211,7 +208,9 @@ def test_entity_constitution_section_appears_when_types_present() -> None:
     assert "R-entity-test-widget" in block, (
         "CONSTITUTION block must include R-entity-test-widget when EntityType 'test-widget' exists"
     )
-    assert "§Entity" in block, "CONSTITUTION block must reference §Entity for entity-derived R"
+    assert "§Entity" in block, (
+        "CONSTITUTION block must reference §Entity for entity-derived R"
+    )
 
 
 def test_entity_constitution_section_absent_when_no_types() -> None:

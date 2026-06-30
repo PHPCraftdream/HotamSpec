@@ -186,6 +186,10 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-root-claude-md-is-sentinel-only` | SETTLED | `framework-author` | A-python-stack | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
 | `R-entities-md-generated` | SETTLED | `framework-author` | A-python-stack | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
 | `R-entity-derived-requirement` | SETTLED | `framework-author` | A-python-stack | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
+| `R-entity-is-declarative` | SETTLED | `framework-author` | A-python-stack | The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph(). |
+| `R-entity-reuses-lifecycle` | SETTLED | `framework-author` | A-python-stack | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
+| `R-entity-checks-by-iteration` | SETTLED | `framework-author` | A-python-stack | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
+| `R-entity-state-conflict-surfaced` | SETTLED | `framework-author` | A-python-stack | Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects(). |
 
 ## Stakeholders
 

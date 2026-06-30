@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 104 / SETTLED 136; DRAFT 14; OPEN 7; REJECTED 19.**
+**Burn-down: SETTLED-ENFORCED 105 / SETTLED 140; DRAFT 14; OPEN 7; REJECTED 19.**
 
 ---
 
@@ -50,6 +50,9 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-no-hand-edit-graph` | STRUCTURAL | `framework-author` | Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events. |
 | `R-entity-derived-requirement` | STRUCTURAL | `framework-author` | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
+| `R-entity-is-declarative` | STRUCTURAL | `framework-author` | The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph(). |
+| `R-entity-reuses-lifecycle` | STRUCTURAL | `framework-author` | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
+| `R-entity-checks-by-iteration` | STRUCTURAL | `framework-author` | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -159,6 +162,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in tensio.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
 | `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
 | `R-entities-md-generated` | check_entities_md_lists_all_types | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
+| `R-entity-state-conflict-surfaced` | test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict | Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects(). |
 
 ## DRAFT (not yet promoted)
 

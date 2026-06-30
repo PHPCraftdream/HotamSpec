@@ -52,8 +52,9 @@ def test_demo_fixture_passes_structural_invariants():
         for v in all_violations(g)
         if v.invariant != "check_entities_md_lists_all_types"
     ]
-    assert holds(violations), "demo fixture has unexpected structural violations:\n" + "\n".join(
-        f"  {v}" for v in violations
+    assert holds(violations), (
+        "demo fixture has unexpected structural violations:\n"
+        + "\n".join(f"  {v}" for v in violations)
     )
 
 
@@ -174,4 +175,28 @@ def test_demo_fixture_what_now_emits_p5_entity_state_conflict():
     target = p5_entity_actions[0].target
     assert (
         PR_AUTO_SUSPEND_FRAUD.id in target or PR_BILLING_CLOSE_DELINQUENT.id in target
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 8 — docs/demo/ENTITIES.md exists with a ## customer section (P21.7)
+# ---------------------------------------------------------------------------
+
+_DEMO_ENTITIES = Path(__file__).resolve().parents[2] / "docs" / "demo" / "ENTITIES.md"
+
+
+def test_demo_entities_md_has_customer_section():
+    """gen_spec.py --demo must write docs/demo/ENTITIES.md containing a
+    '## customer' section, a Mermaid diagram, and the fields table — proving
+    the full entity-to-doc pipeline runs on the seed fixture."""
+    assert _DEMO_ENTITIES.exists(), (
+        f"docs/demo/ENTITIES.md not found at {_DEMO_ENTITIES}; "
+        "run `uv run python tools/gen_spec.py --demo`."
+    )
+    content = _DEMO_ENTITIES.read_text(encoding="utf-8")
+    assert "## customer" in content, (
+        "docs/demo/ENTITIES.md must contain '## customer' section"
+    )
+    assert "```mermaid" in content, (
+        "docs/demo/ENTITIES.md must contain a Mermaid diagram"
     )

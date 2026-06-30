@@ -89,6 +89,19 @@
 | `R-enforcement-first-class` | ATOMIC |  |
 | `R-enforcement-gradient` | ATOMIC |  |
 | `R-enforcement-levels-declared` | ATOMIC |  |
+| `R-entities-md-generated` | ATOMIC |  |
+| `R-entity-checks-by-iteration` | ATOMIC |  |
+| `R-entity-derived-requirement` | ATOMIC |  |
+| `R-entity-field-kind-known` | ATOMIC |  |
+| `R-entity-instance-id-prefix` | ATOMIC |  |
+| `R-entity-instance-refs-resolve` | ATOMIC |  |
+| `R-entity-instance-required-fields` | ATOMIC |  |
+| `R-entity-instance-state-in-lifecycle` | ATOMIC |  |
+| `R-entity-is-declarative` | ATOMIC |  |
+| `R-entity-reuses-lifecycle` | ATOMIC |  |
+| `R-entity-state-conflict-surfaced` | ATOMIC |  |
+| `R-entity-type-lifecycle-wellformed` | ATOMIC |  |
+| `R-entity-typed-anchors` | ATOMIC |  |
 | `R-framework-claude-md-is-domain-free` | ATOMIC |  |
 | `R-framework-shared-docs-generated` | ATOMIC |  |
 | `R-glossary-drift-stable` | ATOMIC |  |
@@ -130,6 +143,7 @@
 | `R-prefer-tool-over-hand` | ATOMIC |  |
 | `R-private-tools-in-agent-folder` | ATOMIC |  |
 | `R-process-aspect-first` | ATOMIC |  |
+| `R-process-drives-existing-entities` | ATOMIC |  |
 | `R-process-goal-owner-is-operator-aspect` | ATOMIC |  |
 | `R-process-lifecycle-wellformed-aspect` | ATOMIC |  |
 | `R-process-opt-in` | ATOMIC |  |
@@ -157,6 +171,7 @@
 | `R-statemachine-reachable` | ATOMIC |  |
 | `R-statemachine-terminal-or-cyclic` | ATOMIC |  |
 | `R-statemachine-wellformedness` | COMPOUND | semicolon splits 2 segments |
+| `R-step-invokes-known-transition` | ATOMIC |  |
 | `R-steward-distinct-from-owners` | ATOMIC |  |
 | `R-subagent-gets-its-claude-md` | COMPOUND | 'and' connects clause with verb (and return) |
 | `R-task-spawn-is-ephemeral` | COMPOUND | 'and' connects clause with verb (and does) |
@@ -198,6 +213,13 @@
 | `check_domain_manifest_goals_nonempty` | ATOMIC |  |
 | `check_domain_manifest_id_matches_dirname` | ATOMIC |  |
 | `check_enforced_names_invariant` | ATOMIC |  |
+| `check_entities_md_lists_all_types` | ATOMIC |  |
+| `check_entity_field_kind_known` | ATOMIC |  |
+| `check_entity_instance_id_prefix` | ATOMIC |  |
+| `check_entity_instance_refs_resolve` | COMPOUND | loops over 2 entity types: entities, entity_types |
+| `check_entity_instance_required_fields` | COMPOUND | loops over 2 entity types: entities, entity_types |
+| `check_entity_instance_state_in_lifecycle` | COMPOUND | loops over 2 entity types: entities, entity_types |
+| `check_entity_type_lifecycle_wellformed` | ATOMIC |  |
 | `check_goal_lifecycle_in_lifecycle` | ATOMIC |  |
 | `check_goal_owner_is_operator` | ATOMIC |  |
 | `check_goal_target_kind_known` | ATOMIC |  |
@@ -215,13 +237,16 @@
 | `check_operator_lifecycle_in_lifecycle` | ATOMIC |  |
 | `check_operator_steward_not_self` | ATOMIC |  |
 | `check_operator_within_budget` | ATOMIC |  |
+| `check_process_drives_existing_entities` | ATOMIC |  |
 | `check_process_lifecycle_wellformed` | ATOMIC |  |
 | `check_process_roles_declared` | ATOMIC |  |
 | `check_requirement_status_in_lifecycle` | ATOMIC |  |
 | `check_section_anchors_known` | ATOMIC |  |
+| `check_step_invokes_known_transition` | COMPOUND | loops over 2 entity types: entity_types, processes; 3 distinct violation messages |
 | `check_steward_not_a_member_owner` | ATOMIC |  |
 | `check_typed_anchors_assumption` | ATOMIC |  |
 | `check_typed_anchors_conflict` | ATOMIC |  |
+| `check_typed_anchors_entity` | ATOMIC |  |
 | `check_typed_anchors_goal` | ATOMIC |  |
 | `check_typed_anchors_operator` | ATOMIC |  |
 | `check_typed_anchors_process` | ATOMIC |  |
