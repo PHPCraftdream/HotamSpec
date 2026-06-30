@@ -299,6 +299,17 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-anchor-taxonomy` | `R-task-vs-action-distinct-altitudes` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-trust-anchor-mechanism` | shares assumption(s): A-bootstrap-self-applies |
 | `R-anchor-taxonomy` | `R-two-altitude-ontology` | shares assumption(s): A-bootstrap-self-applies |
+| `R-audit-atomicity-tool` | `R-claude-md-live-state-generated` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-deterministic-generation` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-docs-generated-from-requirements` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-drift-structurally-impossible` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-glossary-sync-test` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-private-tools-in-agent-folder` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-setup-claude-generates-settings` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-shared-tools-in-spec-tools` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-smoke-test` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-stable-conflict-identity` | shares assumption(s): A-python-stack |
+| `R-audit-atomicity-tool` | `R-tools-registry-generated` | shares assumption(s): A-python-stack |
 | `R-axis-controlled-vocab` | `R-axis-gatekeeper-policy` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-bijection-r-to-enforcer` | shares assumption(s): A-prose-suffices |
 | `R-axis-controlled-vocab` | `R-check-method-is-atomic` | shares assumption(s): A-prose-suffices |

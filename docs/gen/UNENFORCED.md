@@ -10,7 +10,7 @@ i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
 growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 
-**Burn-down: SETTLED-ENFORCED 38 / SETTLED 59; DRAFT 24; OPEN 13; REJECTED 7.**
+**Burn-down: SETTLED-ENFORCED 38 / SETTLED 59; DRAFT 25; OPEN 13; REJECTED 7.**
 
 ---
 
@@ -110,4 +110,5 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-tree-of-crystals-cognitive-trigger` | `framework-author` |
 | `R-domain-delegation-as-node` | `framework-author` |
 | `R-setup-claude-generates-settings` | `framework-author` |
+| `R-audit-atomicity-tool` | `framework-author` |
 | `R-context-hook-piggybacks-cah-stamp` | `framework-author` |
