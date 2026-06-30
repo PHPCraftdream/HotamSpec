@@ -48,8 +48,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-speak-by-reference` | DRAFT | `ai-agent` | A-bootstrap-self-applies | An operator shall communicate by reference: every assertion cites >= 1 concrete anchor in the info-space; no ungrounded prose. |
 | `R-crystallize-before-split` | DRAFT | `ai-agent` | A-finite-context-operators | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
 | `R-working-vs-substrate-budget` | DRAFT | `framework-author` | A-finite-context-operators | The context budget shall bound only the WORKING store (active, uncrystallized knowledge); the crystallized substrate is free and unbounded. |
-| `R-enforcement-gradient` | DRAFT | `framework-author` | A-most-knowledge-crystallizable | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
-| `R-requirement-enforced` | DRAFT | `framework-reviewer` | A-most-knowledge-crystallizable | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
+| `R-enforcement-gradient` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | A requirement shall carry an enforcement level PROSE \| STRUCTURAL \| ENFORCED, and ENFORCED requirements shall name their enforcing invariant/test. |
+| `R-requirement-enforced` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | A SETTLED requirement should name an enforcing invariant or test; one that does not is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | `R-uncrystallizable-is-missing-type` | DRAFT | `framework-reviewer` | A-most-knowledge-crystallizable | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
 | `R-stale-substrate` | DRAFT | `framework-author` | A-compaction-loses-working | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 | `R-budget-measure` | OPEN(how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set?) | `framework-author` | A-finite-context-operators | The context budget shall be measured by a single declared metric so size(domain) <= budget.limit is computable. |
@@ -286,6 +286,22 @@ Lifecycle (source of truth is `status`, params.py-style):
                    non-empty (invariants.check_open_has_question). Surfaced by
                    the harness and listed in OPEN.md.
   REJECTED       — withdrawn; kept for history (anti-relitigation), not deleted.
+
+Enforcement gradient (R-enforcement-gradient / R-requirement-enforced):
+  PROSE      — the requirement is recorded only; no structural or automated check
+               enforces it. The promise is held by human discipline alone.
+  STRUCTURAL — the requirement is visible and addressable (surfaced by the
+               harness, listed in docs) but no check_* invariant or test fires
+               automatically on violation. Context-debt: cheaper than PROSE but
+               not a reflex.
+  ENFORCED   — an invariant (check_*) or test fires on violation; the guarantee
+               is automatic. The `enforced_by` field MUST name the enforcer(s)
+               so the guarantee is auditable. This is a crystallized reflex: the
+               system actively rejects the violation, not just records it.
+
+  The direction of progress is PROSE -> STRUCTURAL -> ENFORCED. UNENFORCED
+  (PROSE + STRUCTURAL on SETTLED requirements) is the burn-down meter: it is
+  the gap between what is claimed and what is guaranteed.
 
 ### 6. §Conflict — the connector node — `tensio.conflict`
 

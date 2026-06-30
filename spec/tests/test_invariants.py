@@ -35,12 +35,14 @@ from tensio.invariants import (  # noqa: E402
     check_conflict_id_matches_identity,
     check_conflict_min_two_members,
     check_decided_has_rationale_or_derived,
+    check_enforced_names_invariant,
     check_no_dangling_ids,
     check_open_has_question,
     check_steward_not_a_member_owner,
     check_typed_anchors,
     holds,
 )
+from tensio.requirement import ENFORCED  # noqa: E402
 from tensio.requirement import Relation, Requirement  # noqa: E402
 from tensio.stakeholder import Stakeholder  # noqa: E402
 
@@ -336,4 +338,62 @@ def test_typed_anchors_passes_on_seed_fixture() -> None:
     g = seed_graph()
     assert holds(check_typed_anchors(g)), (
         "seed fixture must pass check_typed_anchors — all ids use correct prefixes"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 5. Enforcement gradient (check_enforced_names_invariant)
+# ---------------------------------------------------------------------------
+
+
+def test_enforced_without_enforcer_fires() -> None:
+    """check_enforced_names_invariant fires when enforcement=ENFORCED but enforced_by is empty."""
+    reqs = (
+        _req("R-1", "sa", enforcement=ENFORCED, enforced_by=()),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    v = check_enforced_names_invariant(g)
+    assert any(x.target == "R-1" and "enforced_by is empty" in x.message for x in v), (
+        "must fire on ENFORCED requirement with empty enforced_by"
+    )
+
+
+def test_invalid_enforcement_level_fires() -> None:
+    """check_enforced_names_invariant fires on an unknown enforcement level."""
+    reqs = (
+        _req("R-1", "sa", enforcement="bogus"),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    v = check_enforced_names_invariant(g)
+    assert any(x.target == "R-1" and "ENFORCEMENT_LEVELS" in x.message for x in v), (
+        "must fire on unknown enforcement level"
+    )
+
+
+def test_settled_with_enforcer_passes() -> None:
+    """check_enforced_names_invariant stays green when enforcement=ENFORCED with an enforcer named."""
+    reqs = (
+        _req("R-1", "sa", enforcement=ENFORCED, enforced_by=("check_foo",)),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    assert holds(check_enforced_names_invariant(g)), (
+        "ENFORCED requirement with non-empty enforced_by must pass"
     )

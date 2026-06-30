@@ -26,6 +26,22 @@ Lifecycle (source of truth is `status`, params.py-style):
                    non-empty (invariants.check_open_has_question). Surfaced by
                    the harness and listed in OPEN.md.
   REJECTED       — withdrawn; kept for history (anti-relitigation), not deleted.
+
+Enforcement gradient (R-enforcement-gradient / R-requirement-enforced):
+  PROSE      — the requirement is recorded only; no structural or automated check
+               enforces it. The promise is held by human discipline alone.
+  STRUCTURAL — the requirement is visible and addressable (surfaced by the
+               harness, listed in docs) but no check_* invariant or test fires
+               automatically on violation. Context-debt: cheaper than PROSE but
+               not a reflex.
+  ENFORCED   — an invariant (check_*) or test fires on violation; the guarantee
+               is automatic. The `enforced_by` field MUST name the enforcer(s)
+               so the guarantee is auditable. This is a crystallized reflex: the
+               system actively rejects the violation, not just records it.
+
+  The direction of progress is PROSE -> STRUCTURAL -> ENFORCED. UNENFORCED
+  (PROSE + STRUCTURAL on SETTLED requirements) is the burn-down meter: it is
+  the gap between what is claimed and what is guaranteed.
 """
 
 from __future__ import annotations
@@ -36,6 +52,11 @@ DRAFT = "DRAFT"
 SETTLED = "SETTLED"
 REJECTED = "REJECTED"
 OPEN_PREFIX = "OPEN"  # status string begins "OPEN(" for an open requirement
+
+PROSE = "PROSE"
+STRUCTURAL = "STRUCTURAL"
+ENFORCED = "ENFORCED"
+ENFORCEMENT_LEVELS: frozenset[str] = frozenset({PROSE, STRUCTURAL, ENFORCED})
 
 
 @dataclass(frozen=True)
@@ -70,14 +91,24 @@ class Requirement:
     `owner` MUST be a Stakeholder id; every assumption id and every relation
     target MUST resolve in the graph (invariants.check_no_dangling_ids).
 
+    RULE (R-enforcement-gradient / R-requirement-enforced): `enforcement` MUST be
+    one of ENFORCEMENT_LEVELS (PROSE | STRUCTURAL | ENFORCED); when `enforcement`
+    is ENFORCED, `enforced_by` MUST be a non-empty tuple naming the check_* or
+    test that fires on violation (invariants.check_enforced_names_invariant). A
+    SETTLED requirement that is not ENFORCED is UNENFORCED — claimed-but-not-
+    guaranteed, the burn-down meter measures this gap.
+
     Fields:
-      id          — stable slug (e.g. "R-87"); the value edges and Conflicts carry.
-      claim       — the requirement, machine-checkable predicate or EARS prose.
-      assumptions — tuple of Assumption ids this claim rests on.
-      owner       — Stakeholder id that defends this claim.
-      relations   — tuple of typed SUPPORTIVE Relations to other Requirements.
-      status      — DRAFT | SETTLED | REJECTED | OPEN(question) (source of truth).
-      why         — rationale / EARS context (anti-relitigation prose).
+      id           — stable slug (e.g. "R-87"); the value edges and Conflicts carry.
+      claim        — the requirement, machine-checkable predicate or EARS prose.
+      assumptions  — tuple of Assumption ids this claim rests on.
+      owner        — Stakeholder id that defends this claim.
+      relations    — tuple of typed SUPPORTIVE Relations to other Requirements.
+      status       — DRAFT | SETTLED | REJECTED | OPEN(question) (source of truth).
+      why          — rationale / EARS context (anti-relitigation prose).
+      enforcement  — PROSE | STRUCTURAL | ENFORCED (default: PROSE).
+      enforced_by  — tuple of check_*/test anchors; MUST be non-empty when
+                     enforcement == ENFORCED.
 
     WHY frozen + id-stable: a requirement may be renamed, split, or refined; the
     Conflict node that mediates it has identity from (axis, context), so it
@@ -91,6 +122,8 @@ class Requirement:
     why: str = ""
     assumptions: tuple[str, ...] = field(default_factory=tuple)
     relations: tuple[Relation, ...] = field(default_factory=tuple)
+    enforcement: str = PROSE
+    enforced_by: tuple[str, ...] = field(default_factory=tuple)
 
     def is_open(self) -> bool:
         """Canon: §Requirement — True iff this requirement is an OPEN hole.

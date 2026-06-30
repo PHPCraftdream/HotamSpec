@@ -33,7 +33,7 @@ from tensio.graph import (
     requirement_ids,
     stakeholder_ids,
 )
-from tensio.requirement import RELATION_KINDS
+from tensio.requirement import ENFORCED, ENFORCEMENT_LEVELS, RELATION_KINDS
 
 
 @dataclass(frozen=True)
@@ -397,6 +397,51 @@ def check_typed_anchors(g: TensionGraph) -> list[Violation]:
 
 
 # ---------------------------------------------------------------------------
+# 7. Enforcement gradient — ENFORCED requirements must name their enforcer
+# ---------------------------------------------------------------------------
+
+
+def check_enforced_names_invariant(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — every ENFORCED requirement names its enforcer(s).
+
+    RULE (R-requirement-enforced): two conditions are checked for every
+    Requirement:
+      1. `enforcement` MUST be in ENFORCEMENT_LEVELS (PROSE | STRUCTURAL |
+         ENFORCED); any other value is a misconfiguration.
+      2. When `enforcement == ENFORCED`, `enforced_by` MUST be a non-empty
+         tuple; an ENFORCED requirement with no named enforcer is an
+         unverifiable claim — the guarantee cannot be audited.
+
+    WHY: naming the enforcer is what makes "ENFORCED" mean something beyond
+    PROSE; without the anchor the audit trail is broken and the burn-down
+    meter cannot distinguish real reflexes from aspirational labels.
+    An invalid enforcement level is rejected early so the UNENFORCED.md
+    report is never built on corrupt data.
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if r.enforcement not in ENFORCEMENT_LEVELS:
+            out.append(
+                Violation(
+                    "check_enforced_names_invariant",
+                    r.id,
+                    f"enforcement '{r.enforcement}' is not in ENFORCEMENT_LEVELS "
+                    f"(PROSE | STRUCTURAL | ENFORCED)",
+                )
+            )
+        elif r.enforcement == ENFORCED and not r.enforced_by:
+            out.append(
+                Violation(
+                    "check_enforced_names_invariant",
+                    r.id,
+                    "enforcement is ENFORCED but enforced_by is empty; "
+                    "name the check_* invariant or test that fires on violation",
+                )
+            )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Registry of all structural invariants (single source for tests + harness)
 # ---------------------------------------------------------------------------
 
@@ -410,6 +455,7 @@ ALL_INVARIANTS = (
     check_open_has_question,
     check_decided_has_rationale_or_derived,
     check_typed_anchors,
+    check_enforced_names_invariant,
 )
 
 
