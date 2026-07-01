@@ -252,6 +252,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 
 - **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: (none)]
+- **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
 - **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: (none)]
 - **R-tool-create-agent** — *scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_create_agent`]
