@@ -2,6 +2,12 @@
 
 Every spec/agents/<name>/scope.py must define a non-empty module-level
 constant PURPOSE describing what the agent stewards (one line).
+
+After P22.C consolidation, domains/hotam-spec-self/agents/ (director +
+framework-agent) was deleted — it was a dormant P21 dogfood scaffold, never
+actually spawned. No agent directories currently exist anywhere in the repo,
+so the "every agent declares purpose" check is vacuously satisfied (skips
+cleanly) until a real second agent is scaffolded via create_agent.py.
 """
 
 from __future__ import annotations
@@ -11,11 +17,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _TOOLS = _SPEC_ROOT / "tools"
 
-# After P17 migration, framework-agent lives under domains/hotam-spec-self/agents/director/agents/.
-# Resolve from gen_spec so the path is always authoritative.
 import sys as _sys  # noqa: E402
 
 if str(_TOOLS) not in _sys.path:
@@ -39,11 +45,16 @@ def _load_scope(agent_dir: Path):
 
 
 def test_every_agent_declares_purpose() -> None:
-    """Every spec/agents/*/scope.py defines a non-empty PURPOSE string."""
+    """Every agent scope.py (if any exist) defines a non-empty PURPOSE string.
+
+    Post-P22.C: no agents currently exist (domains/hotam-spec-self/agents/ was
+    deleted as an unused scaffold) — vacuously satisfied, skip cleanly.
+    """
+    if not _AGENTS_ROOT.exists():
+        pytest.skip("No agents root exists — no agents scaffolded yet (P22.C)")
     scope_files = list(_AGENTS_ROOT.glob("*/scope.py"))
-    assert scope_files, (
-        "No agent scope.py files found — at least framework-agent must exist."
-    )
+    if not scope_files:
+        pytest.skip("No agent scope.py files found — no agents scaffolded yet")
 
     for scope_path in scope_files:
         agent_name = scope_path.parent.name
@@ -60,18 +71,6 @@ def test_every_agent_declares_purpose() -> None:
             f"Agent '{agent_name}': PURPOSE must be non-empty "
             "(R-agent-declares-purpose)"
         )
-
-
-def test_framework_agent_has_purpose() -> None:
-    """framework-agent/scope.py has a PURPOSE that starts with 'Stewards'."""
-    fa_dir = _AGENTS_ROOT / "framework-agent"
-    assert fa_dir.is_dir(), "spec/agents/framework-agent/ must exist."
-
-    mod = _load_scope(fa_dir)
-    assert hasattr(mod, "PURPOSE"), "framework-agent/scope.py missing PURPOSE."
-    assert "Stewards" in mod.PURPOSE, (
-        f"Expected 'Stewards' in framework-agent PURPOSE, got: {mod.PURPOSE!r}"
-    )
 
 
 def test_create_agent_refuses_missing_purpose() -> None:

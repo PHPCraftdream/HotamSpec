@@ -252,7 +252,7 @@ def test_validates_state_machine() -> None:
 
 
 def test_r_tool_create_entity_type_in_constitution() -> None:
-    """After running gen_spec, the domain CLAUDE.md mentions R-tool-create-entity-type."""
+    """After running gen_spec, root CLAUDE.md mentions R-tool-create-entity-type (P22.C)."""
     # Run gen_spec to ensure the CLAUDE.md is up to date.
     result = subprocess.run(
         [sys.executable, str(_TOOLS / "gen_spec.py")],
@@ -262,20 +262,14 @@ def test_r_tool_create_entity_type_in_constitution() -> None:
     )
     assert result.returncode == 0, f"gen_spec.py failed: {result.stderr}"
 
-    # Check the domain CLAUDE.md (where tool-derived requirements are projected).
-    domains_root = _SPEC_ROOT.parent / "domains"
-    claude_md_paths = list(domains_root.glob("*/CLAUDE.md"))
-    assert claude_md_paths, "No domain CLAUDE.md found under domains/."
+    # Check root CLAUDE.md (the sole CLAUDE.md post-P22.C consolidation, where
+    # tool-derived requirements are projected into the CONSTITUTION block).
+    root_claude_md = _SPEC_ROOT.parent / "CLAUDE.md"
+    assert root_claude_md.exists(), "Root CLAUDE.md not found."
 
-    found = False
-    for claude_md in claude_md_paths:
-        text = claude_md.read_text(encoding="utf-8")
-        if "R-tool-create-entity-type" in text:
-            found = True
-            break
-
-    assert found, (
-        "R-tool-create-entity-type not found in any domains/*/CLAUDE.md. "
+    text = root_claude_md.read_text(encoding="utf-8")
+    assert "R-tool-create-entity-type" in text, (
+        "R-tool-create-entity-type not found in root CLAUDE.md. "
         "Check that create_entity_type.py's first docstring line matches "
         "'Canon: §Entity — <claim>'."
     )

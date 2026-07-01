@@ -1,15 +1,19 @@
-"""Tests for the AGENT-MAP sentinel block in the domain CLAUDE.md (P17+).
+"""Tests for the AGENT-MAP sentinel block in root CLAUDE.md (P22.C consolidation).
 
-After the P17 domain-isolation migration, the AGENT-MAP block lives in
-`domains/hotam-spec-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
-framework-only (LIVE-STATE + REPO-MAP + DOMAIN-MAP only).
+After P22.C, there is exactly ONE CLAUDE.md (repo root) and the
+domains/hotam-spec-self/agents/ scaffold (director + framework-agent) has been
+deleted — framework-agent was a dormant P21 dogfood demo, never actually
+spawned as a concurrent operator. AGENT-MAP now lives in root CLAUDE.md and
+renders the "no active sub-agents" placeholder since no agent directories
+exist. create_agent.py / spawn_agent.py remain fully functional for when a
+real second agent is scaffolded.
 
 Verifies that:
-1. Both AGENT-MAP sentinels are present in the domain CLAUDE.md.
-2. Every domain agent directory has a corresponding heading in the block.
-3. The framework-agent section has non-empty purpose, scope, atoms, tools, crystal.
-4. Regenerating gen_spec twice produces byte-identical output.
-5. An empty agents root yields the '_(no sub-operators yet)_' placeholder.
+1. Both AGENT-MAP sentinels are present in root CLAUDE.md.
+2. The block renders the "no active sub-agents" placeholder (no agents exist).
+3. Regenerating gen_spec twice produces byte-identical output.
+4. An empty agents root yields the '_(no sub-operators yet)_' placeholder
+   (direct unit test of _scan_agent_map).
 """
 
 from __future__ import annotations
@@ -20,38 +24,26 @@ import sys
 import tempfile
 from pathlib import Path
 
-import pytest
-
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
-
-import sys as _sys_am
-
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent
 ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
 _tools_am = str(SPEC_ROOT / "tools")
-if _tools_am not in _sys_am.path:
-    _sys_am.path.insert(0, _tools_am)
+if _tools_am not in sys.path:
+    sys.path.insert(0, _tools_am)
 import gen_spec as _gen_spec_am  # noqa: E402
 
-# After P17 migration, agents_root is inside the active domain.
+# After P22.C, no agents exist anywhere in the repo; _AGENTS_ROOT resolves to
+# an absent directory (SPEC_ROOT / "agents" fallback).
 AGENTS_ROOT = _gen_spec_am._AGENTS_ROOT
-_ACTIVE_DOMAIN = _gen_spec_am._active_domain()
-# P17: AGENT-MAP lives in the domain CLAUDE.md.
-CLAUDE_MD = (
-    _ACTIVE_DOMAIN / "CLAUDE.md" if _ACTIVE_DOMAIN is not None else ROOT_CLAUDE_MD
-)
 
 _AGENT_MAP_BEGIN = "<!-- AGENT-MAP:BEGIN -->"
 _AGENT_MAP_END = "<!-- AGENT-MAP:END -->"
 
 
 def _agent_map_block() -> str:
-    """Extract the AGENT-MAP block content from the domain CLAUDE.md."""
-    text = CLAUDE_MD.read_text(encoding="utf-8")
+    """Extract the AGENT-MAP block content from root CLAUDE.md."""
+    text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
     begin = text.find(_AGENT_MAP_BEGIN)
     end = text.find(_AGENT_MAP_END)
     assert begin != -1 and end != -1 and end > begin, "AGENT-MAP sentinels missing"
@@ -59,110 +51,44 @@ def _agent_map_block() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Test 1: sentinels present
+# Test 1: sentinels present in root CLAUDE.md
 # ---------------------------------------------------------------------------
 
 
 def test_agent_map_sentinels_present() -> None:
-    """Both AGENT-MAP sentinels shall exist in domain CLAUDE.md (not root in P17+)."""
-    text = CLAUDE_MD.read_text(encoding="utf-8")
-    assert _AGENT_MAP_BEGIN in text, f"Missing {_AGENT_MAP_BEGIN!r} in {CLAUDE_MD}"
-    assert _AGENT_MAP_END in text, f"Missing {_AGENT_MAP_END!r} in {CLAUDE_MD}"
-
-
-def test_root_claude_md_has_no_agent_map_sentinels() -> None:
-    """Root CLAUDE.md must NOT contain AGENT-MAP sentinels outside DOMAIN-CRYSTAL.
-
-    P22.B: root CLAUDE.md now embeds the domain's CLAUDE.md inside DOMAIN-CRYSTAL,
-    which legitimately contains AGENT-MAP sentinels. They must not appear outside
-    that block.
-    """
-    if _ACTIVE_DOMAIN is None:
-        return  # Legacy mode: skip.
-    root_text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
-    # Strip the DOMAIN-CRYSTAL block before checking.
-    dc_begin = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
-    dc_end = "<!-- DOMAIN-CRYSTAL:END -->"
-    bp = root_text.find(dc_begin)
-    ep = root_text.find(dc_end)
-    if bp != -1 and ep != -1 and ep > bp:
-        root_text = root_text[:bp] + root_text[ep + len(dc_end) :]
-    assert _AGENT_MAP_BEGIN not in root_text, (
-        "Root CLAUDE.md has AGENT-MAP:BEGIN outside DOMAIN-CRYSTAL block — "
-        "run gen_spec.py to fix"
-    )
+    """Both AGENT-MAP sentinels shall exist in root CLAUDE.md."""
+    text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
+    assert _AGENT_MAP_BEGIN in text, f"Missing {_AGENT_MAP_BEGIN!r} in {ROOT_CLAUDE_MD}"
+    assert _AGENT_MAP_END in text, f"Missing {_AGENT_MAP_END!r} in {ROOT_CLAUDE_MD}"
 
 
 # ---------------------------------------------------------------------------
-# Test 2: every agent directory has a heading in the block
+# Test 2: no active sub-agents -> placeholder rendered
 # ---------------------------------------------------------------------------
 
 
-def test_agent_map_complete() -> None:
-    """Every spec/agents/<name>/ with a scope.py shall appear in the AGENT-MAP block."""
-    if not AGENTS_ROOT.exists():
-        pytest.skip("No agents root found")
-
-    agent_names = [
-        d.name
-        for d in sorted(AGENTS_ROOT.iterdir())
-        if d.is_dir() and (d / "scope.py").exists()
-    ]
-    if not agent_names:
-        pytest.skip("No agent directories with scope.py found")
-
+def test_agent_map_shows_no_active_sub_agents() -> None:
+    """With no agent scaffolds present, AGENT-MAP must show the calm placeholder."""
     block = _agent_map_block()
-    for name in agent_names:
-        assert f"#### {name}" in block, (
-            f"Agent '{name}' not found as '#### {name}' in AGENT-MAP block"
-        )
-
-
-# ---------------------------------------------------------------------------
-# Test 3: framework-agent section has all required fields non-empty
-# ---------------------------------------------------------------------------
-
-
-def test_agent_map_framework_agent_present() -> None:
-    """The framework-agent section shall appear with non-empty purpose, scope, atoms, tools, crystal."""
-    block = _agent_map_block()
-    assert "#### framework-agent" in block, (
-        "framework-agent heading not found in AGENT-MAP block"
+    assert "no sub-operators yet" in block, (
+        f"Expected '_(no sub-operators yet)_' placeholder, got:\n{block}"
+    )
+    # Must not reference the deleted scaffold.
+    assert "framework-agent" not in block, (
+        "AGENT-MAP block still references deleted framework-agent scaffold"
     )
 
-    # Find the framework-agent sub-block (from its heading to the next #### or end).
-    start = block.index("#### framework-agent")
-    next_heading = block.find("#### ", start + 1)
-    sub = block[start : next_heading if next_heading != -1 else len(block)]
 
-    assert (
-        "**purpose**" in sub and len(sub.split("**purpose** —", 1)[-1].strip()) > 0
-    ), "framework-agent purpose is empty"
-    assert "**scope**" in sub, "framework-agent scope line missing"
-    # Scope must contain at least one prefix (backtick-quoted).
-    assert "`R-" in sub, "framework-agent scope prefixes are empty"
-    assert "**atoms**" in sub, "framework-agent atoms line missing"
-    # Atoms count must be a digit.
-    atoms_line = [ln for ln in sub.splitlines() if "**atoms**" in ln]
-    assert atoms_line, "framework-agent atoms line not found"
-    assert any(c.isdigit() for c in atoms_line[0]), (
-        "framework-agent atoms count contains no digit"
-    )
-    assert "**tools**" in sub, "framework-agent tools line missing"
-    assert "**crystal**" in sub, "framework-agent crystal line missing"
-    # Crystal path is relative to repo root; after P17 migration it lives in the domain.
-    fa_claude = AGENTS_ROOT / "framework-agent" / "CLAUDE.md"
-    try:
-        fa_crystal = str(fa_claude.relative_to(REPO_ROOT)).replace("\\", "/")
-    except ValueError:
-        fa_crystal = "spec/agents/framework-agent/CLAUDE.md"
-    assert fa_crystal in sub, (
-        f"framework-agent crystal path incorrect; expected '{fa_crystal}' in block"
+def test_agents_root_does_not_exist() -> None:
+    """domains/hotam-spec-self/agents/ was deleted (P22.C) — _AGENTS_ROOT is absent."""
+    assert not AGENTS_ROOT.exists(), (
+        f"Expected _AGENTS_ROOT ({AGENTS_ROOT}) to be absent after P22.C consolidation "
+        "— domains/hotam-spec-self/agents/ should have been deleted."
     )
 
 
 # ---------------------------------------------------------------------------
-# Test 4: regen is byte-identical (idempotency)
+# Test 3: regen is byte-identical (idempotency)
 # ---------------------------------------------------------------------------
 
 
@@ -180,24 +106,21 @@ def test_agent_map_regen_stable() -> None:
         assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
 
     run_gen()
-    text1 = CLAUDE_MD.read_bytes()
+    text1 = ROOT_CLAUDE_MD.read_bytes()
     run_gen()
-    text2 = CLAUDE_MD.read_bytes()
+    text2 = ROOT_CLAUDE_MD.read_bytes()
     assert text1 == text2, (
         "gen_spec.py is not idempotent: CLAUDE.md differs between two runs"
     )
 
 
 # ---------------------------------------------------------------------------
-# Test 5: empty agents root yields placeholder
+# Test 4: empty agents root yields placeholder (direct unit test)
 # ---------------------------------------------------------------------------
 
 
 def test_agent_map_empty_when_no_agents() -> None:
     """When agents_root is an empty directory, _scan_agent_map emits the placeholder."""
-    # Import _scan_agent_map from gen_spec via importlib.
-    # Register the module in sys.modules first so that dataclass string annotations
-    # resolve correctly (avoids AttributeError on cls.__module__ lookup).
     gen_spec_path = SPEC_ROOT / "tools" / "gen_spec.py"
     spec = importlib.util.spec_from_file_location("gen_spec_isolated", gen_spec_path)
     assert spec is not None and spec.loader is not None
@@ -208,7 +131,6 @@ def test_agent_map_empty_when_no_agents() -> None:
     finally:
         sys.modules.pop("gen_spec_isolated", None)
 
-    # Load the real graph.
     sys.path.insert(0, str(SPEC_ROOT / "src"))
     from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 

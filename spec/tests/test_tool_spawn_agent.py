@@ -214,20 +214,18 @@ def test_composite_prompt_deterministic(
 
 
 def test_r_tool_spawn_agent_in_constitution(tmp_path: Path) -> None:
-    """R-tool-spawn-agent appears in the domain CLAUDE.md after gen_spec.
+    """R-tool-spawn-agent appears in root CLAUDE.md after gen_spec (P22.C).
 
     Tool-derived requirements (Canon: §Agent — ...) are projected into the
-    CONSTITUTION block of the domain CLAUDE.md (not into CONSTITUTION.md
-    which only lists graph-SETTLED requirements).
+    CONSTITUTION block of root CLAUDE.md (the sole CLAUDE.md post-P22.C; not
+    into CONSTITUTION.md which only lists graph-SETTLED requirements).
     """
-    domain_claude_md = SPEC_ROOT.parent / "domains" / "hotam-spec-self" / "CLAUDE.md"
-    if not domain_claude_md.exists():
-        pytest.skip(
-            "domains/hotam-spec-self/CLAUDE.md not yet generated — run gen_spec.py first"
-        )
-    text = domain_claude_md.read_text(encoding="utf-8")
+    root_claude_md = SPEC_ROOT.parent / "CLAUDE.md"
+    if not root_claude_md.exists():
+        pytest.skip("Root CLAUDE.md not yet generated — run gen_spec.py first")
+    text = root_claude_md.read_text(encoding="utf-8")
     assert "R-tool-spawn-agent" in text, (
-        "R-tool-spawn-agent must appear in domains/hotam-spec-self/CLAUDE.md after gen_spec. "
+        "R-tool-spawn-agent must appear in root CLAUDE.md after gen_spec. "
         "The Canon docstring in spawn_agent.py triggers auto-projection via "
         "R-tools-registry-generated (R-tool-is-its-own-requirement)."
     )

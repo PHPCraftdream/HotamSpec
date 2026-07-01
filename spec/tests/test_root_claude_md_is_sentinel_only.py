@@ -32,17 +32,23 @@ _SENTINEL_PAIRS = [
     ("<!-- LIVE-STATE:BEGIN -->", "<!-- LIVE-STATE:END -->"),
     ("<!-- REPO-MAP:BEGIN -->", "<!-- REPO-MAP:END -->"),
     ("<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->"),
+    ("<!-- CONSTITUTION:BEGIN -->", "<!-- CONSTITUTION:END -->"),
+    ("<!-- AGENT-MAP:BEGIN -->", "<!-- AGENT-MAP:END -->"),
+    ("<!-- CONCEPT-MAP:BEGIN -->", "<!-- CONCEPT-MAP:END -->"),
     ("<!-- THINKING-INDEX:BEGIN -->", "<!-- THINKING-INDEX:END -->"),
-    ("<!-- DOMAIN-CRYSTAL:BEGIN -->", "<!-- DOMAIN-CRYSTAL:END -->"),
+    ("<!-- EMBEDDED-THINKING:BEGIN -->", "<!-- EMBEDDED-THINKING:END -->"),
+    ("<!-- EMBEDDED-TOOLS:BEGIN -->", "<!-- EMBEDDED-TOOLS:END -->"),
     ("<!-- RECENTLY-REJECTED:BEGIN -->", "<!-- RECENTLY-REJECTED:END -->"),
 ]
 
 _ACTIVE_DOMAIN = _gs._active_domain()
 
 # Character cap: header + sentinel blocks + padding.
-# DOMAIN-CRYSTAL embeds the full active domain's CLAUDE.md — cap is raised accordingly.
-# The shell outside sentinel blocks must remain thin.
-_CHAR_CAP = 200_000
+# P22.C consolidation: root CLAUDE.md now embeds the FULL methodology (thinking
+# docs) and FULL tool docs content directly (EMBEDDED-THINKING/EMBEDDED-TOOLS)
+# — there is only ONE CLAUDE.md file in the whole repo. Cap raised accordingly,
+# but still far under the phi-cap (~2.47M chars) enforced elsewhere.
+_CHAR_CAP = 1_000_000
 
 
 def _read(path: Path) -> str:
