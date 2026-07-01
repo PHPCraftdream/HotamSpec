@@ -13,7 +13,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 114 / SETTLED 149; closeable debt 26; inherent discipline 9; DRAFT 12; OPEN 7; REJECTED 19.**
+**Burn-down: SETTLED-ENFORCED 114 / SETTLED 150; closeable debt 27; inherent discipline 9; DRAFT 12; OPEN 7; REJECTED 19.**
 
 ---
 
@@ -47,6 +47,7 @@ judgment calls no check_* could ever verify.
 | `R-entity-reuses-lifecycle` | STRUCTURAL | `framework-author` | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
 | `R-entity-checks-by-iteration` | STRUCTURAL | `framework-author` | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
 | `R-project-name-hotam-spec` | STRUCTURAL | `framework-author` | The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1. |
+| `R-parallel-mutating-agents-use-worktree` | STRUCTURAL | `framework-author` | Parallel Agent-tool invocations that mutate tracked repository files shall use isolation:'worktree' unless their target files are provably disjoint and no history-rewriting git operation is planned during their execution window. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 

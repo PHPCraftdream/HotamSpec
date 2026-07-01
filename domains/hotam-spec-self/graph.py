@@ -3316,6 +3316,15 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_enforceability_kind_known",),
         ),
+        Requirement(
+            id="R-parallel-mutating-agents-use-worktree",
+            claim=("Parallel Agent-tool invocations that mutate tracked repository files shall use isolation:'worktree' unless their target files are provably disjoint and no history-rewriting git operation is planned during their execution window."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Incident 2026-06-30/07-01: two parallel sm-agents (P5-noise-fix and enforceability-flag tasks) both touched overlapping domains/hotam-spec-self/graph.py and spec/src/hotam_spec/invariants.py territory in one shared working tree. A subsequent git filter-repo hard-reset (run by the director to purge .idea/__pycache__ from committed history) wiped the P5-noise-fix agent's uncommitted work because it had not yet been committed and was not isolated in a worktree. The fix had to be redone from scratch. This requirement crystallizes the lesson: parallel mutating agents belong in isolated worktrees, or the director must guarantee no history-rewrite runs while their work is uncommitted."),
+            assumptions=("A-python-stack",),
+            enforcement=STRUCTURAL,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
