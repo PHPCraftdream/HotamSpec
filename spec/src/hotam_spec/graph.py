@@ -370,18 +370,49 @@ def members_pair_set(g: TensionGraph) -> frozenset[frozenset[str]]:
     return frozenset(pairs)
 
 
+GENERIC_ASSUMPTION_THRESHOLD = 8
+"""Canon: §Conflict — an assumption referenced by >= this many requirements is
+GENERIC (framework-wide scaffolding, e.g. A-python-stack), not a specific shared
+premise. Pairs sharing ONLY generic assumptions are noise, not suspects."""
+
+
+def assumption_reference_counts(g: TensionGraph) -> dict[str, int]:
+    """Canon: §Conflict — how many non-REJECTED requirements reference each assumption.
+
+    RULE: count, per assumption id, the number of distinct non-REJECTED
+    requirements naming it in Requirement.assumptions. Used to distinguish a
+    SPECIFIC assumption (referenced by a few requirements — a real shared
+    premise) from a GENERIC one (referenced by dozens — framework scaffolding
+    that any two requirements would trivially "share").
+    """
+    from hotam_spec.requirement import REJECTED  # noqa: PLC0415
+
+    counts: dict[str, int] = {}
+    for r in g.requirements:
+        if r.status == REJECTED:
+            continue
+        for a_id in r.assumptions:
+            counts[a_id] = counts.get(a_id, 0) + 1
+    return counts
+
+
 @dataclass(frozen=True)
 class LatentSuspect:
     """Canon: §Conflict — a requirement pair that SHOULD have a C-node but doesn't.
 
     RULE (HEURISTIC, not a proof): two SETTLED/OPEN requirements that share at
-    least one assumption and are NOT already mediated by any conflict are flagged
-    "for AI review". This is a stub for the deferred detector (spec-stack layer
-    4/5); it is explicitly a suspicion, never an auto-materialized conflict.
+    least one SPECIFIC assumption (referenced by fewer than
+    GENERIC_ASSUMPTION_THRESHOLD requirements) and are NOT already mediated by
+    any conflict are flagged "for AI review". Pairs whose ONLY shared
+    assumption(s) are GENERIC (framework-wide scaffolding referenced by many
+    requirements) are not flagged — sharing a generic assumption is not a
+    signal of hidden tension, it is noise. This is a stub for the deferred
+    detector (spec-stack layer 4/5); it is explicitly a suspicion, never an
+    auto-materialized conflict.
 
     Fields:
       left, right — the two Requirement ids (sorted for stable identity).
-      hint        — why they were flagged (the shared signal).
+      hint        — why they were flagged (the shared specific signal).
 
     WHY only a heuristic now: the real detector ("find the missing connector")
     needs Hypothesis-generated tuples / Z3 joint-violation models; both DEFERRED.
@@ -397,33 +428,51 @@ def latent_connector_suspects(g: TensionGraph) -> tuple[LatentSuspect, ...]:
     """Canon: §Conflict — HEURISTIC hunt for missing connector nodes.
 
     RULE: flag any pair of non-REJECTED requirements that (a) share >= 1
-    assumption id and (b) are not already mediated by a conflict
-    (members_pair_set). Output is sorted by (left, right) for determinism.
+    SPECIFIC assumption id (referenced by fewer than
+    GENERIC_ASSUMPTION_THRESHOLD requirements — see assumption_reference_counts)
+    and (b) are not already mediated by a conflict (members_pair_set). Pairs
+    whose only shared assumptions are GENERIC (>= threshold references) are
+    not flagged: sharing framework-wide scaffolding is not a hidden-tension
+    signal, it is O(n^2) noise. Output is sorted by specificity (lowest shared
+    reference count first, i.e. the rarest/most-suspicious pairs surface
+    first), then by (left, right) for determinism.
 
-    WHY share-an-assumption is the cheap signal: two requirements interpreting one
-    assumption differently is the commonest hidden root of a real conflict
-    (Conflict.shared_assumption). It is a SUSPICION the AI/steward must judge —
-    deliberately stronger than "violated invariant" because it points at the
-    not-yet-recorded. Real semantic detection is deferred (see CLAUDE.md / ROADMAP).
+    WHY share-a-specific-assumption is the cheap signal: two requirements
+    interpreting one RARE assumption differently is the commonest hidden root
+    of a real conflict (Conflict.shared_assumption). It is a SUSPICION the
+    AI/steward must judge — deliberately stronger than "violated invariant"
+    because it points at the not-yet-recorded. Real semantic detection is
+    deferred (see CLAUDE.md / ROADMAP).
     """
     from hotam_spec.requirement import REJECTED  # noqa: PLC0415
 
     already = members_pair_set(g)
+    ref_counts = assumption_reference_counts(g)
     reqs = [r for r in g.requirements if r.status != REJECTED]
-    suspects: list[LatentSuspect] = []
+    suspects: list[tuple[int, LatentSuspect]] = []
     for i in range(len(reqs)):
         for j in range(i + 1, len(reqs)):
             a, b = reqs[i], reqs[j]
             shared = set(a.assumptions) & set(b.assumptions)
             if not shared:
                 continue
+            specific = {
+                a_id
+                for a_id in shared
+                if ref_counts.get(a_id, 0) < GENERIC_ASSUMPTION_THRESHOLD
+            }
+            if not specific:
+                continue
             if frozenset({a.id, b.id}) in already:
                 continue
             left, right = sorted((a.id, b.id))
-            hint = "shares assumption(s): " + ", ".join(sorted(shared))
-            suspects.append(LatentSuspect(left=left, right=right, hint=hint))
-    suspects.sort(key=lambda s: (s.left, s.right))
-    return tuple(suspects)
+            min_count = min(ref_counts.get(a_id, 0) for a_id in specific)
+            hint = "shares assumption(s): " + ", ".join(sorted(specific))
+            suspects.append(
+                (min_count, LatentSuspect(left=left, right=right, hint=hint))
+            )
+    suspects.sort(key=lambda pair: (pair[0], pair[1].left, pair[1].right))
+    return tuple(s for _, s in suspects)
 
 
 def entity_type_slugs(g: TensionGraph) -> frozenset[str]:

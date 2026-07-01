@@ -154,7 +154,10 @@ def diagnose(g: TensionGraph) -> list[Action]:
         )
 
     # 2. UNENFORCED-SETTLED overhang (> 5 = generous threshold).
-    n_unenforced = sum(1 for r in settled_reqs if r.enforcement != ENFORCED)
+    # Only ENFORCEABLE requirements count as real debt; INHERENTLY_PROSE
+    # requirements are honestly-labeled permanent discipline, not debt
+    # (R-enforceability-kind-declared).
+    n_unenforced = sum(1 for r in settled_reqs if r.is_closeable_debt())
     if n_unenforced > 5:
         actions.append(
             Action(
@@ -363,11 +366,29 @@ _EMPTY_GRAPH_BANNER = (
 )
 
 
-def render(actions: list[Action], *, source_label: str = "content") -> str:
+DEFAULT_P5_LIMIT = 20
+"""Canon: §Harness — default cap on printed P5 LATENT_CONNECTOR lines.
+
+P5 is a HEURISTIC suspect list (share-a-specific-assumption), not a hard
+diagnosis; on a large graph it can still run to dozens of entries. Capping
+the printed list keeps `what_now` output scannable while an honest
+disclosure line reports the count suppressed, so the cap never silently
+hides debt (R-speak-by-reference)."""
+
+
+def render(
+    actions: list[Action],
+    *,
+    source_label: str = "content",
+    p5_limit: int = DEFAULT_P5_LIMIT,
+) -> str:
     """Render the action list as a deterministic, human-readable report (LF).
 
     `source_label` is shown in the header ('content' vs 'demo') so an agent
-    reading the output instantly sees which graph was diagnosed.
+    reading the output instantly sees which graph was diagnosed. `p5_limit`
+    caps the number of P5 LATENT_CONNECTOR lines printed; when truncated, an
+    honest disclosure line names the count suppressed and how to see the
+    full list (never silently drop debt — R-speak-by-reference).
     """
     lines: list[str] = []
     lines.append(f"== what_now: prioritized next actions ({source_label}) ==")
@@ -380,11 +401,23 @@ def render(actions: list[Action], *, source_label: str = "content") -> str:
     lines.append(f"{len(actions)} action(s). Lower priority number = more urgent.")
     lines.append("")
     current_band: int | None = None
+    p5_printed = 0
+    p5_total = sum(1 for a in actions if a.priority == P_LATENT_CONNECTOR)
     for a in actions:
+        if a.priority == P_LATENT_CONNECTOR:
+            if p5_printed >= p5_limit:
+                continue
+            p5_printed += 1
         if a.priority != current_band:
             current_band = a.priority
             lines.append(f"--- P{a.priority} {_BAND_LABEL[a.priority]} ---")
         lines.append(f"  [P{a.priority}] {a.target}: {a.imperative}")
+    if p5_total > p5_limit:
+        suppressed = p5_total - p5_limit
+        lines.append(
+            f"  ... {suppressed} more suppressed (run tools/audit_atomicity.py "
+            "or increase --p5-limit for full list)"
+        )
     lines.append("")
     lines.append(
         "Loop: pick the top action -> edit spec/content -> "
@@ -423,13 +456,22 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="diagnose the fixture demo graph instead of spec/content/.",
     )
+    parser.add_argument(
+        "--p5-limit",
+        type=int,
+        default=DEFAULT_P5_LIMIT,
+        help=(
+            "cap on printed P5 LATENT_CONNECTOR lines "
+            f"(default {DEFAULT_P5_LIMIT}); truncation is disclosed, never silent."
+        ),
+    )
     args = parser.parse_args(argv)
     g, label = _load_graph(demo=args.demo)
     if g.is_empty() and not args.demo:
         sys.stdout.write(_EMPTY_GRAPH_BANNER)
         return
     actions = diagnose(g)
-    sys.stdout.write(render(actions, source_label=label))
+    sys.stdout.write(render(actions, source_label=label, p5_limit=args.p5_limit))
 
 
 if __name__ == "__main__":
