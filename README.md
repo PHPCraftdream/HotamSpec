@@ -1,184 +1,114 @@
-# Hotam-Spec — requirements as a tension graph
+# Hotam-Spec
 
-> **A methodology whose centerpiece is: an AI agent dropped into the repo in any
-> state, at any moment, can deterministically derive the next correct action.**
-> "The agent is never lost" — the same way the reference project HotamChain makes
-> spec *drift* structurally impossible, Hotam-Spec makes *being lost* structurally
-> impossible.
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-green.svg)](https://www.python.org)
+[![Tests](https://img.shields.io/badge/tests-502%20passing-brightgreen.svg)](#testing)
 
-Hotam-Spec manages the lifecycle of **business requirements** that are many,
-constantly changing, and **mutually contradictory**. It is the deliberate
-INVERSE of a consistency specification. The companion project HotamChain (a
-docs-as-code blockchain spec) proves ONE non-contradictory canon and forbids
-drift, closing every conflict forever. Hotam-Spec reuses that exact machinery
-inverted: not to eliminate contradictions, but to guarantee **we never fail to
-see them**, and to keep them visible over time.
+> Executable methodology for contradictory business requirements, modeled as a tension graph.
 
-## The philosophy
+## What is Hotam-Spec?
 
-**Requirements are not a truth; they are a tension graph.** A requirement
-changes, contradicts its siblings, and rests on assumptions that can die. A
-contradiction is never silently fixed — it is a first-class, owned,
-history-bearing object that transitions through a lifecycle under a human
-steward.
+Hotam-Spec is a framework for managing the lifecycle of **contradictory business requirements**. Instead of pretending conflicts don't exist, it models them as first-class **tension nodes** in a graph -- visible, stewarded, and tracked through resolution.
 
-### Conflict is a connector NODE, not an edge
+### Key ideas
 
-A naive model makes a conflict an edge `conflicts_with` between two requirements.
-That edge holds nothing — remove it and the requirements fall back into
-isolation. Hotam-Spec makes a **Conflict a first-class NODE** (a mediator) through
-which two otherwise-unconnectable requirements first come to lie in one
-structure:
+- **Conflict is a connector node**, not an edge -- it carries axis, context, steward, and lifecycle
+- **Requirements contradict -- and that's expected** -- the methodology surfaces them, never hides them
+- **The AI presents, never decides** -- every resolution stays with a human steward
+- **Docs-as-code with structural anti-drift** -- generated docs must match the model byte-for-byte
+- **Substrate generates the operator** -- the spec writes the AI's own prompt, not the reverse
+
+### The tension graph
 
 ```
-R-87 (latency < 200ms)  ──►  C  ◄──  R-203 (full synchronous compliance check)
-                             │
-                       axis:    latency-vs-completeness
-                       context: approving a payment at checkout
-                       shared assumption: A-sync-budget
+Requirement A ──┐
+                ├── Conflict node (axis, context, steward)
+Requirement B ──┘
 ```
 
-The node `C` carries knowledge belonging to **neither** requirement: the
-**tension axis** (the dimension they diverge along, born only from their
-meeting), the **shared context** (the scenario where they actually collide), and
-the **shared assumption** they interpret differently (often the real root).
-Therefore *"to surface a contradiction"* technically means *"to materialize the
-missing connector node."* The detector's job is redefined: not "find conflicts"
-but **"find requirement pairs that should have a connector node but don't"** —
-latent connectors. That is stronger than checking violated invariants, because it
-catches the *invisible*, not the already-recorded.
-
-Three consequences fall out, and the node-graph (not an edge-list) makes each
-visible:
-
-- **Conflicts cluster.** Many conflict nodes on one axis = one unresolved
-  *architectural* choice, not ten local disputes.
-- **Conflicts spawn requirements.** Resolving a conflict is often not "pick A or
-  B" but the birth of a new requirement R-300 that dissolves the tension — so the
-  conflict is the *parent* of a new requirement, with recorded lineage.
-- **Conflicts inherit drift.** If a conflict rests on a shared assumption and that
-  assumption dies, the whole cluster under it revives at once.
-
-### The three invisibilities it surfaces
-
-1. **Direct contradictions** — two requirements that cannot both hold.
-2. **Hidden dependencies** — A silently relies on an assumption B negates;
-   a contradiction *through a chain* (needs a graph, not a list).
-3. **Context drift** — a requirement meaningful under assumption X, X long false,
-   nobody revisited it; a contradiction *with time* (catchable only because
-   assumptions carry their own lifecycle).
-
-## The closed loop (why the agent is never lost)
-
-The store is the Python code; the human layer is generated; the harness reads the
-whole graph and tells you what to do next:
-
-```
-State (graph + generated docs + test status)
-  → Diagnosis  (spec/tools/what_now.py)
-  → Next-action (typed, prioritized)
-  → Action     (edit spec/content)
-  → regenerate (spec/tools/gen_spec.py)
-  → State
-```
-
-`what_now` emits one priority-ordered list: failing structural invariants (P1),
-dead-assumption fallout (P2), conflicts stalled without a steward (P3), open
-questions (P4), and heuristic latent-connector suspects for AI review (P5). Run
-it from any state and the top line is the next correct action.
-
-## How it is checked (the inverted spec-stack)
-
-Same tools as HotamChain, purpose mirrored from "prove no conflict" to "detect &
-hold conflict". **Weight of apparatus ∝ cost of an unnoticed conflict.**
-
-| Level | Mechanism | Guarantees | Status |
-|---|---|---|---|
-| Frozen dataclass form | ruff | objects well-formed | CORE |
-| Structural graph invariants | `hotam_spec.invariants.check_*` | every conflict has axis+context+steward; no dangling refs; OPEN states its question; a decision justifies itself; steward ≠ member owner | CORE |
-| Visibility of the open | `OPEN(question)` → generated `OPEN.md` | open holes & unresolved conflicts cannot hide | CORE |
-| Latent-conflict property detector | Hypothesis (hunts missing connectors) | catches the invisible | DEFERRED |
-| Formal conflict detector | Z3 (model where two requirements jointly break) | machine proof a pair collides | DEFERRED |
-| Behavioral/temporal | Quint/Apalache | workflow contradiction | DEFERRED |
-| Stateful PBT of evolution | Hypothesis stateful | dead assumption revives dependents | DEFERRED |
-| Mutation testing of detectors | cosmic-ray | detectors are not phantom | DEFERRED |
-| Human layer + anti-drift | `gen_spec.py` + meta-test | generated text cannot drift | CORE |
-
-`cd spec && uv run pytest -q` → **all tests pass**.
-
-## Framework vs content (content-free by design)
-
-Hotam-Spec is a **blank kit**, not a project with example business data. The package
-`spec/src/hotam_spec/` ships ZERO business content: no example requirements, no
-example axes. A real domain populates a single file:
-
-```
-spec/content/graph.py   →   def build_graph() -> TensionGraph: ...
-```
-
-The tools (`what_now`, `gen_spec`) discover that file automatically; if it is
-absent (the legitimate ship state) the harness prints a calm "no content yet"
-banner and the generator emits the same notice into the documents. The worked
-example lives **outside** the framework under `spec/tests/fixtures/seed.py` and
-is loaded only via the explicit `--demo` flag.
-
-```bash
-uv run python tools/what_now.py            # diagnose YOUR domain (spec/content/)
-uv run python tools/what_now.py --demo     # explore the fixture demo graph
-uv run python tools/gen_spec.py            # regen docs/gen/ from YOUR domain
-uv run python tools/gen_spec.py --demo     # write docs/demo/ from the fixture
-```
-
-## Repository map
-
-| Layer | Where | What |
-|---|---|---|
-| **Framework (content-free)** | [`spec/src/hotam_spec/`](spec/src/hotam_spec/) | the ontology + traversal + content loader + structural invariants |
-| **Your domain's graph** | [`spec/content/graph.py`](spec/content/README.md) | `build_graph() -> TensionGraph` — empty by default |
-| Worked example (test fixture) | [`spec/tests/fixtures/seed.py`](spec/tests/fixtures/seed.py) | the demo graph used by tests and `--demo` |
-| The harness | [`spec/tools/what_now.py`](spec/tools/what_now.py) | derives the next action from any state |
-| Generator | [`spec/tools/gen_spec.py`](spec/tools/gen_spec.py) | deterministic human layer |
-| Generated human layer | [`docs/gen/`](docs/gen/) | `REQUIREMENTS.md`, `TENSIONS.md`, `OPEN.md` — **do not edit by hand** |
-| Methodology | [`docs/methodology/README.md`](docs/methodology/README.md) | philosophy + the loop |
-| Roadmap | [`docs/development/ROADMAP.md`](docs/development/ROADMAP.md) | deferred layers + trust-anchoring ritual |
-| Operating contract | [`CLAUDE.md`](CLAUDE.md) | how to work and never get lost |
+Two requirements that contradict on an axis (e.g. "latency vs completeness") are connected by a Conflict node. The conflict has a lifecycle (DETECTED -> ACKNOWLEDGED -> DECIDED), a steward who is NOT the owner of either side, and a rationale recorded for anti-relitigation.
 
 ## Quick start
 
 ```bash
-cd spec
-uv run pytest -q                      # the suite is green
-uv run python tools/what_now.py       # "no content yet" until you populate
-uv run python tools/what_now.py --demo  # see the harness on the worked example
+# Clone
+git clone https://github.com/PHPCraftdream/HotamSpec.git
+cd HotamSpec
+
+# Install dependencies
+cd spec && uv sync
+
+# Run tests
+uv run pytest -q
+
+# See what the harness recommends
+uv run python tools/what_now.py
+
+# Generate docs from the model
+uv run python tools/gen_spec.py
+
+# Audit atomicity
+uv run python tools/audit_atomicity.py
 ```
 
-Requires [uv](https://github.com/astral-sh/uv) (Python 3.12+). Dual-licensed
-**MIT OR Apache-2.0**.
+## Project structure
 
-## Status
+```
+spec/                          # Framework (shared, content-free)
+├── src/hotam_spec/            # Ontology: Requirement, Conflict, Lifecycle, Entity, ...
+├── tools/                     # Shared meta-tools (gen_spec, what_now, apply_proposal, ...)
+├── tests/                     # 502+ tests
+└── docs/                      # Generated thinking + tool docs (DRY source)
 
-CORE built: the ontology, structural invariants, the content loader, the
-generator + anti-drift meta-test, and the `what_now` harness — all green
-against an empty content slot AND against the demo fixture's live working
-surface (an open requirement, a stalled conflict, a dead assumption with
-dependents, a latent suspect). Formal layers (Hypothesis, Z3, Quint, cosmic-ray)
-are DEFERRED for the critical core.
+domains/                       # Per-business domain content
+└── hotam-spec-self/           # The framework modeling itself (meta-domain)
+    ├── graph.py               # The tension graph (build_graph() -> TensionGraph)
+    ├── manifest.py            # Domain identity (ID, description, goals, director)
+    ├── agents/                # Sub-operators with scoped CLAUDE.md crystals
+    └── docs/gen/              # Generated docs for this domain
+```
 
-Methodology decisions M1–M31 are catalogued in [`CLAUDE.md`](CLAUDE.md).
-The following new requirement layers have been crystallized as DRAFT/UNBUILT
-per `C-06e2d84e` (apparatus-weight-vs-coverage DECIDED: record design as
-DRAFT requirements, not apparatus weight in src/hotam_spec):
-- **Operator/budget/delegation** — `R-operator-acting-facet`,
-  `R-context-budget-rule`, `R-delegation-conclusions-only`,
-  `R-context-bounded-delegation`, `R-dependency-graph-parallelism`,
-  `R-operator-crystal-is-claude-md`.
-- **Goal/gap** — `R-goal-as-target-state`.
-- **Lifecycle aspects** — `R-lifecycle-abstraction`, `R-process-aspect-first`,
-  `R-task-vs-action-distinct-altitudes`, `R-statemachine-wellformedness`.
-- **Crystallization + anchoring super-rules** — `R-crystallize-knowledge-to-code`,
-  `R-anchor-everything`, `R-speak-by-reference`, `R-crystallize-before-split`,
-  `R-working-vs-substrate-budget`, `R-enforcement-gradient`,
-  `R-requirement-enforced`, `R-uncrystallizable-is-missing-type`,
-  `R-stale-substrate`.
+## Framework concepts
 
-Open M-decisions M17–M31 await steward confirmation.
+| Concept | What it is |
+|---------|-----------|
+| **Requirement** | A business claim with lifecycle (DRAFT -> SETTLED -> REJECTED) |
+| **Conflict** | A first-class connector node between contradicting requirements |
+| **Assumption** | A claim with its own lifecycle -- the root of context drift |
+| **EntityType** | A domain-declared business concept with lifecycle and fields |
+| **Process** | Ordered steps driving entity state transitions |
+| **Operator** | An acting facet with context budget; delegates via agent tree |
+| **Goal** | A target-state predicate the operator pursues |
+
+## Tools
+
+| Tool | Purpose |
+|------|---------|
+| `what_now.py` | Derives the prioritized next correct action from any graph state |
+| `gen_spec.py` | Regenerates all docs from the executable model |
+| `apply_proposal.py` | Mechanically applies steward-approved changes to the graph |
+| `audit_atomicity.py` | Surfaces compound claims and compound check_* functions |
+| `create_domain.py` | Scaffolds a new business domain |
+| `create_agent.py` | Scaffolds a new sub-operator agent |
+| `create_entity_type.py` | Declares a new EntityType with lifecycle and fields |
+
+## Testing
+
+```bash
+cd spec && uv run pytest -q
+```
+
+The test suite includes:
+- Structural invariants (50+ check_* functions)
+- Anti-drift meta-tests (regenerated docs == committed bytes)
+- Property tests via Hypothesis (critical-core conscience boundary)
+- Entity/Process coupling tests
+- Tool integration tests
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+Dual-licensed under [MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE), at your option.

@@ -3,3 +3,8 @@
 *.py text eol=lf
 *.md text eol=lf
 *.toml text eol=lf
+
+# Explicitly mark binary files
+*.png binary
+*.jpg binary
+*.ico binary
