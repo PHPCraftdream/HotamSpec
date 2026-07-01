@@ -1,13 +1,19 @@
-"""Locking tests for framework/domain CLAUDE.md separation (P17 domain isolation).
+"""Locking tests for framework/domain CLAUDE.md content (post R-claude-md-template-driven).
 
-After P17 migration:
-- Root CLAUDE.md is FRAMEWORK-ONLY: LIVE-STATE + REPO-MAP + DOMAIN-MAP.
-  It must NOT contain CONSTITUTION, AGENT-MAP, or SHARED-DOCS sentinels.
-- domains/hotam-spec-self/CLAUDE.md is the domain operator-prompt:
-  it must contain ALL 5 blocks: LIVE-STATE + CONSTITUTION + REPO-MAP + AGENT-MAP + SHARED-DOCS.
+Historical note (P17 domain isolation, superseded): root CLAUDE.md used to be
+FRAMEWORK-ONLY (LIVE-STATE + REPO-MAP + DOMAIN-MAP) with CONSTITUTION/AGENT-MAP/
+SHARED-DOCS nested one level down inside a DOMAIN-CRYSTAL block that embedded a
+full second copy of domains/<active>/CLAUDE.md. R-claude-md-template-driven
+replaced that split: root CLAUDE.md is now the single unified crystal, generated
+directly from CLAUDE.md.template.txt, and legitimately contains CONSTITUTION/
+AGENT-MAP/CONCEPT-MAP once each, directly (no nested DOMAIN-CRYSTAL).
 
-Canon: §Domain — R-framework-claude-md-is-domain-free, R-domain-owns-claude-md,
-       R-domain-map-generated.
+- domains/hotam-spec-self/CLAUDE.md remains the domain's OWN operator-prompt
+  (used directly by per-domain tooling and sub-agents): it still must contain
+  ALL 5 blocks: LIVE-STATE + CONSTITUTION + REPO-MAP + AGENT-MAP + SHARED-DOCS.
+
+Canon: §Domain — R-domain-owns-claude-md, R-domain-map-generated,
+       R-claude-md-template-driven.
 """
 
 from __future__ import annotations
@@ -75,61 +81,45 @@ def _strip_recently_rejected(text: str) -> str:
     return text[:bp] + text[ep + len(end) :]
 
 
-def test_framework_claude_md_constitution_only_inside_domain_crystal() -> None:
-    """CONSTITUTION:BEGIN may appear in root CLAUDE.md ONLY inside DOMAIN-CRYSTAL sentinels.
+def test_framework_claude_md_constitution_exactly_once() -> None:
+    """CONSTITUTION:BEGIN must appear exactly once in root CLAUDE.md (no nested duplicate).
 
-    The domain's CLAUDE.md is legitimately embedded in DOMAIN-CRYSTAL, and that file
-    contains CONSTITUTION sentinels. They must not appear outside that block.
+    Post-R-claude-md-template-driven: CONSTITUTION is rendered directly into
+    root's BUSINESS bucket by render_business_content() -- there is no longer
+    a second copy nested inside a DOMAIN-CRYSTAL-embedded file.
     """
     if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P17 not applicable")
+        pytest.skip("No active domain — not applicable")
     text = _read(ROOT_CLAUDE_MD)
-    text_without_crystal = _strip_domain_crystal(text)
-    assert "<!-- CONSTITUTION:BEGIN -->" not in text_without_crystal, (
-        "Root CLAUDE.md has CONSTITUTION:BEGIN outside DOMAIN-CRYSTAL block — "
-        "must be inside DOMAIN-CRYSTAL only. "
+    assert text.count("<!-- CONSTITUTION:BEGIN -->") == 1, (
+        "Root CLAUDE.md must contain exactly one CONSTITUTION:BEGIN sentinel. "
         "Run: uv run python tools/gen_spec.py"
     )
 
 
-def test_framework_claude_md_agent_map_only_inside_domain_crystal() -> None:
-    """AGENT-MAP:BEGIN may appear in root CLAUDE.md ONLY inside DOMAIN-CRYSTAL sentinels."""
+def test_framework_claude_md_agent_map_exactly_once() -> None:
+    """AGENT-MAP:BEGIN must appear exactly once in root CLAUDE.md (no nested duplicate)."""
     if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P17 not applicable")
+        pytest.skip("No active domain — not applicable")
     text = _read(ROOT_CLAUDE_MD)
-    text_without_crystal = _strip_domain_crystal(text)
-    assert "<!-- AGENT-MAP:BEGIN -->" not in text_without_crystal, (
-        "Root CLAUDE.md has AGENT-MAP:BEGIN outside DOMAIN-CRYSTAL block — "
-        "must be inside DOMAIN-CRYSTAL only. "
+    assert text.count("<!-- AGENT-MAP:BEGIN -->") == 1, (
+        "Root CLAUDE.md must contain exactly one AGENT-MAP:BEGIN sentinel. "
         "Run: uv run python tools/gen_spec.py"
     )
 
 
-def test_framework_claude_md_shared_docs_only_inside_domain_crystal() -> None:
-    """SHARED-DOCS:BEGIN may appear in root CLAUDE.md ONLY inside DOMAIN-CRYSTAL sentinels."""
+def test_framework_claude_md_has_no_domain_crystal_sentinels() -> None:
+    """Root CLAUDE.md must NOT contain DOMAIN-CRYSTAL sentinels (retired by template model)."""
     if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P17 not applicable")
+        pytest.skip("No active domain — not applicable")
     text = _read(ROOT_CLAUDE_MD)
-    text_without_crystal = _strip_domain_crystal(text)
-    assert "<!-- SHARED-DOCS:BEGIN -->" not in text_without_crystal, (
-        "Root CLAUDE.md has SHARED-DOCS:BEGIN outside DOMAIN-CRYSTAL block — "
-        "must be inside DOMAIN-CRYSTAL only. "
-        "Run: uv run python tools/gen_spec.py"
+    assert "<!-- DOMAIN-CRYSTAL:BEGIN -->" not in text, (
+        "Root CLAUDE.md still has a DOMAIN-CRYSTAL:BEGIN sentinel — this nested-embedding "
+        "mechanism was retired by R-claude-md-template-driven."
     )
-
-
-def test_framework_claude_md_has_domain_crystal_sentinels() -> None:
-    """Root CLAUDE.md must contain DOMAIN-CRYSTAL:BEGIN and DOMAIN-CRYSTAL:END sentinels."""
-    if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P22.B not applicable")
-    text = _read(ROOT_CLAUDE_MD)
-    assert "<!-- DOMAIN-CRYSTAL:BEGIN -->" in text, (
-        "Root CLAUDE.md missing DOMAIN-CRYSTAL:BEGIN sentinel. "
-        "Run: uv run python tools/gen_spec.py"
-    )
-    assert "<!-- DOMAIN-CRYSTAL:END -->" in text, (
-        "Root CLAUDE.md missing DOMAIN-CRYSTAL:END sentinel. "
-        "Run: uv run python tools/gen_spec.py"
+    assert "<!-- DOMAIN-CRYSTAL:END -->" not in text, (
+        "Root CLAUDE.md still has a DOMAIN-CRYSTAL:END sentinel — this nested-embedding "
+        "mechanism was retired by R-claude-md-template-driven."
     )
 
 
@@ -182,30 +172,35 @@ def test_framework_claude_md_has_repo_map_scoped_to_spec() -> None:
     assert "spec/tools/" in block, "REPO-MAP missing tools section"
 
 
-def test_framework_claude_md_no_domain_atoms() -> None:
-    """Root CLAUDE.md body (outside sentinel blocks) must not list R-id atom bullets.
+def test_framework_claude_md_domain_atoms_not_duplicated() -> None:
+    """Root CLAUDE.md's CONSTITUTION-style R-id bullets must appear only within its
+    single CONSTITUTION block (plus legitimate mentions in RECENTLY-REJECTED).
 
-    'atoms-count' references like '108 SETTLED' in DOMAIN-MAP are fine.
-    CONSTITUTION-style bullets inside DOMAIN-CRYSTAL and anti-relitigation bullets
-    inside RECENTLY-REJECTED are also legitimate.
-    What is forbidden is CONSTITUTION-style R-id bullets in the raw root body.
+    Post-R-claude-md-template-driven: domain atoms legitimately live directly in
+    root CLAUDE.md's CONSTITUTION block (there is no longer a separate
+    domain-only vs. framework-only split at the root level). What this test
+    guards against is DUPLICATION -- e.g. a stray leftover second CONSTITUTION
+    rendering outside the one CONSTITUTION:BEGIN/END pair.
     """
     if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P17 not applicable")
+        pytest.skip("No active domain — not applicable")
     text = _read(ROOT_CLAUDE_MD)
 
-    # Strip blocks that legitimately contain R-id atom bullets.
-    text = _strip_domain_crystal(text)
+    # Strip the one legitimate CONSTITUTION block and the RECENTLY-REJECTED block.
+    const_begin, const_end = "<!-- CONSTITUTION:BEGIN -->", "<!-- CONSTITUTION:END -->"
+    bp, ep = text.find(const_begin), text.find(const_end)
+    if bp != -1 and ep != -1 and ep > bp:
+        text = text[:bp] + text[ep + len(const_end) :]
     text = _strip_recently_rejected(text)
 
     # The CONSTITUTION-style bullet pattern is "- **R-<id>** — *<claim>*".
     constitution_bullet_pattern = re.compile(
-        r"^\s*-\s+\*\*R-[a-z][a-zA-Z0-9-]+\*\*\s+[—\-]", re.MULTILINE
+        r"^\s*-\s+\*\*R-[a-z][a-zA-Z0-9-]+\*\*\s+[—\-]\s+\*", re.MULTILINE
     )
     matches = constitution_bullet_pattern.findall(text)
     assert not matches, (
         f"Root CLAUDE.md contains {len(matches)} CONSTITUTION-style R-id bullet(s) "
-        "outside DOMAIN-CRYSTAL/RECENTLY-REJECTED — domain atoms must live in domain CLAUDE.md. "
+        "outside its single CONSTITUTION/RECENTLY-REJECTED blocks — looks duplicated. "
         f"First match: {matches[0]!r}"
     )
 

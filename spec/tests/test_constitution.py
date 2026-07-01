@@ -58,25 +58,20 @@ def test_constitution_sentinels_present() -> None:
     assert _CONST_END in text, f"{DOMAIN_CLAUDE_MD} missing CONSTITUTION:END sentinel"
 
 
-def test_root_claude_md_has_no_constitution_sentinels() -> None:
-    """Root CLAUDE.md must NOT contain CONSTITUTION sentinels outside DOMAIN-CRYSTAL.
+def test_root_claude_md_has_exactly_one_constitution_block() -> None:
+    """Root CLAUDE.md must contain the CONSTITUTION sentinel pair exactly once.
 
-    P22.B: root CLAUDE.md now embeds the domain's CLAUDE.md inside DOMAIN-CRYSTAL,
-    which legitimately contains CONSTITUTION sentinels. They must not appear outside
-    that block.
+    Post-R-claude-md-template-driven (supersedes P22.B's DOMAIN-CRYSTAL
+    embedding): root CLAUDE.md is generated directly from
+    CLAUDE.md.template.txt via render_business_content(), which includes
+    CONSTITUTION once. The guarantee that matters is "not duplicated" —
+    root no longer nests a second copy of the domain's CLAUDE.md.
     """
     if _ACTIVE_DOMAIN is None:
         return  # Legacy mode: skip.
     root_text = _read_normalized(gen_spec.CLAUDE_MD)
-    # Strip the DOMAIN-CRYSTAL block before checking.
-    dc_begin = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
-    dc_end = "<!-- DOMAIN-CRYSTAL:END -->"
-    bp = root_text.find(dc_begin)
-    ep = root_text.find(dc_end)
-    if bp != -1 and ep != -1 and ep > bp:
-        root_text = root_text[:bp] + root_text[ep + len(dc_end) :]
-    assert _CONST_BEGIN not in root_text, (
-        "Root CLAUDE.md has CONSTITUTION:BEGIN outside DOMAIN-CRYSTAL block — "
+    assert root_text.count(_CONST_BEGIN) == 1, (
+        "Root CLAUDE.md must contain exactly one CONSTITUTION:BEGIN sentinel — "
         "run gen_spec.py to fix"
     )
 

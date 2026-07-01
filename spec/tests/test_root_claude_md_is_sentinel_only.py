@@ -33,16 +33,23 @@ _SENTINEL_PAIRS = [
     ("<!-- REPO-MAP:BEGIN -->", "<!-- REPO-MAP:END -->"),
     ("<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->"),
     ("<!-- THINKING-INDEX:BEGIN -->", "<!-- THINKING-INDEX:END -->"),
-    ("<!-- DOMAIN-CRYSTAL:BEGIN -->", "<!-- DOMAIN-CRYSTAL:END -->"),
     ("<!-- RECENTLY-REJECTED:BEGIN -->", "<!-- RECENTLY-REJECTED:END -->"),
+    # Post-R-claude-md-template-driven: these blocks are now rendered directly
+    # into root CLAUDE.md (no longer nested one level down inside DOMAIN-CRYSTAL).
+    ("<!-- CONSTITUTION:BEGIN -->", "<!-- CONSTITUTION:END -->"),
+    ("<!-- AGENT-MAP:BEGIN -->", "<!-- AGENT-MAP:END -->"),
+    ("<!-- CONCEPT-MAP:BEGIN -->", "<!-- CONCEPT-MAP:END -->"),
+    ("<!-- EMBEDDED-THINKING:BEGIN -->", "<!-- EMBEDDED-THINKING:END -->"),
+    ("<!-- EMBEDDED-TOOLS:BEGIN -->", "<!-- EMBEDDED-TOOLS:END -->"),
 ]
 
 _ACTIVE_DOMAIN = _gs._active_domain()
 
 # Character cap: header + sentinel blocks + padding.
-# DOMAIN-CRYSTAL embeds the full active domain's CLAUDE.md — cap is raised accordingly.
-# The shell outside sentinel blocks must remain thin.
-_CHAR_CAP = 200_000
+# Post-template-driven model, root CLAUDE.md embeds the full methodology +
+# tool reference text (EMBEDDED-THINKING/EMBEDDED-TOOLS) directly — cap is
+# raised accordingly. The shell outside sentinel blocks must remain thin.
+_CHAR_CAP = 400_000
 
 
 def _read(path: Path) -> str:

@@ -1,6 +1,18 @@
-"""Tests: DOMAIN-CRYSTAL block embeds the active domain's CLAUDE.md in root CLAUDE.md (P22.B).
+"""Tests: root CLAUDE.md carries the domain's operator-facing content directly (post-P22.B).
 
-Canon: R-root-claude-md-contains-domain-crystal.
+Historical note: P22.B introduced a DOMAIN-CRYSTAL sentinel block that embedded
+the FULL text of domains/<active>/CLAUDE.md (including a nested copy of
+CONSTITUTION/AGENT-MAP/SHARED-DOCS) inside root CLAUDE.md. R-claude-md-template-driven
+(supersedes R-root-claude-md-contains-domain-crystal) replaced that nested-embedding
+model: root CLAUDE.md is now generated directly from CLAUDE.md.template.txt via
+render_business_content()/render_mind_content(), which render CONSTITUTION, AGENT-MAP,
+etc. ONCE, in root, with no second embedded copy of another CLAUDE.md.
+
+These tests assert the DOMAIN-CRYSTAL sentinel is gone (the old mechanism was
+retired, not merely relocated) and that the SETTLED constitutional content it used
+to carry indirectly is directly present in root CLAUDE.md.
+
+Canon: R-claude-md-template-driven.
 """
 
 from __future__ import annotations
@@ -22,70 +34,55 @@ import gen_spec as _gs  # noqa: E402
 
 ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 _ACTIVE_DOMAIN = _gs._active_domain()
-DOMAIN_CLAUDE_MD = _ACTIVE_DOMAIN / "CLAUDE.md" if _ACTIVE_DOMAIN is not None else None
 
 _DOMAIN_CRYSTAL_BEGIN = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
 _DOMAIN_CRYSTAL_END = "<!-- DOMAIN-CRYSTAL:END -->"
 
-# A stable substring known to live in domains/hotam-spec-self/CLAUDE.md header prose.
-# This is hand-written prose, not generated — it is stable.
-_KNOWN_DOMAIN_SUBSTRING = "operator crystal for the `hotam-spec-self` domain director"
+# A stable substring known to live in the CONSTITUTION digest, sourced from
+# domains/hotam-spec-self/graph.py — proves domain content reaches root directly.
+_KNOWN_DOMAIN_SUBSTRING = "R-operator-prompt-from-substrate"
 
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
 
-def _extract_block(text: str, begin: str, end: str) -> str | None:
-    bp = text.find(begin)
-    ep = text.find(end)
-    if bp == -1 or ep == -1 or ep <= bp:
-        return None
-    return text[bp + len(begin) : ep]
-
-
 # ===========================================================================
-# Test 1: sentinels present
+# Test 1: DOMAIN-CRYSTAL sentinel retired (not relocated -- removed)
 # ===========================================================================
 
 
-def test_domain_crystal_sentinels_present() -> None:
-    """Root CLAUDE.md must contain DOMAIN-CRYSTAL:BEGIN and DOMAIN-CRYSTAL:END sentinels."""
+def test_domain_crystal_sentinel_no_longer_emitted() -> None:
+    """Root CLAUDE.md must NOT contain DOMAIN-CRYSTAL sentinels (retired by template model)."""
     if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P22.B not applicable")
+        pytest.skip("No active domain — not applicable")
     text = _read(ROOT_CLAUDE_MD)
-    assert _DOMAIN_CRYSTAL_BEGIN in text, (
-        "Root CLAUDE.md missing DOMAIN-CRYSTAL:BEGIN sentinel. "
-        "Run: uv run python tools/gen_spec.py"
-    )
-    assert _DOMAIN_CRYSTAL_END in text, (
-        "Root CLAUDE.md missing DOMAIN-CRYSTAL:END sentinel. "
-        "Run: uv run python tools/gen_spec.py"
+    assert _DOMAIN_CRYSTAL_BEGIN not in text, (
+        "Root CLAUDE.md still has a DOMAIN-CRYSTAL:BEGIN sentinel — the nested-embedding "
+        "model was retired by R-claude-md-template-driven. CONSTITUTION/AGENT-MAP/etc. "
+        "should be rendered directly by render_business_content(), not embedded via "
+        "a second copy of domains/<active>/CLAUDE.md."
     )
 
 
 # ===========================================================================
-# Test 2: domain CLAUDE.md content embedded
+# Test 2: domain constitutional content reaches root directly
 # ===========================================================================
 
 
-def test_domain_crystal_contains_domains_claude_md_content() -> None:
-    """DOMAIN-CRYSTAL block in root CLAUDE.md must contain content from the domain's CLAUDE.md.
+def test_domain_constitution_content_reaches_root_directly() -> None:
+    """Root CLAUDE.md's own CONSTITUTION block must carry domain-graph content directly.
 
-    Source: domains/<active>/CLAUDE.md (NOT the director's agents/director/CLAUDE.md).
+    No nested crystal required: the same SETTLED requirement id that used to be
+    reachable only inside the embedded domain CLAUDE.md is now present in root's
+    single CONSTITUTION block.
     """
     if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P22.B not applicable")
+        pytest.skip("No active domain — not applicable")
     text = _read(ROOT_CLAUDE_MD)
-    block = _extract_block(text, _DOMAIN_CRYSTAL_BEGIN, _DOMAIN_CRYSTAL_END)
-    assert block is not None, (
-        "DOMAIN-CRYSTAL block not found in root CLAUDE.md. "
-        "Run: uv run python tools/gen_spec.py"
-    )
-    assert _KNOWN_DOMAIN_SUBSTRING in block, (
-        f"DOMAIN-CRYSTAL block does not contain expected domain CLAUDE.md content. "
+    assert _KNOWN_DOMAIN_SUBSTRING in text, (
+        f"Root CLAUDE.md does not contain expected domain content. "
         f"Expected substring: {_KNOWN_DOMAIN_SUBSTRING!r}. "
-        "Ensure gen_spec.py embeds domains/<active>/CLAUDE.md (not the director's). "
         "Run: uv run python tools/gen_spec.py"
     )
 
@@ -95,10 +92,8 @@ def test_domain_crystal_contains_domains_claude_md_content() -> None:
 # ===========================================================================
 
 
-def test_domain_crystal_regen_byte_identical() -> None:
+def test_root_claude_md_regen_byte_identical() -> None:
     """Running gen_spec.py again must not change root CLAUDE.md (idempotency)."""
-    if _ACTIVE_DOMAIN is None:
-        pytest.skip("No active domain — P22.B not applicable")
     before = _read(ROOT_CLAUDE_MD)
     result = subprocess.run(
         [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
@@ -109,6 +104,6 @@ def test_domain_crystal_regen_byte_identical() -> None:
     assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
     after = _read(ROOT_CLAUDE_MD)
     assert before == after, (
-        "Root CLAUDE.md changed on re-regen — DOMAIN-CRYSTAL block is not idempotent. "
-        "Check _render_domain_crystal_block() for non-determinism."
+        "Root CLAUDE.md changed on re-regen — template rendering is not idempotent. "
+        "Check render_claude_md_from_template() for non-determinism."
     )

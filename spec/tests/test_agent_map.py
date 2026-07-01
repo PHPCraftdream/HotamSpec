@@ -70,25 +70,20 @@ def test_agent_map_sentinels_present() -> None:
     assert _AGENT_MAP_END in text, f"Missing {_AGENT_MAP_END!r} in {CLAUDE_MD}"
 
 
-def test_root_claude_md_has_no_agent_map_sentinels() -> None:
-    """Root CLAUDE.md must NOT contain AGENT-MAP sentinels outside DOMAIN-CRYSTAL.
+def test_root_claude_md_has_exactly_one_agent_map_block() -> None:
+    """Root CLAUDE.md must contain the AGENT-MAP sentinel pair exactly once.
 
-    P22.B: root CLAUDE.md now embeds the domain's CLAUDE.md inside DOMAIN-CRYSTAL,
-    which legitimately contains AGENT-MAP sentinels. They must not appear outside
-    that block.
+    Post-R-claude-md-template-driven (supersedes P22.B's DOMAIN-CRYSTAL
+    embedding): root CLAUDE.md is generated directly from
+    CLAUDE.md.template.txt via render_business_content(), which includes
+    AGENT-MAP once. The guarantee that matters is "not duplicated" —
+    root no longer nests a second copy of the domain's CLAUDE.md.
     """
     if _ACTIVE_DOMAIN is None:
         return  # Legacy mode: skip.
     root_text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
-    # Strip the DOMAIN-CRYSTAL block before checking.
-    dc_begin = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
-    dc_end = "<!-- DOMAIN-CRYSTAL:END -->"
-    bp = root_text.find(dc_begin)
-    ep = root_text.find(dc_end)
-    if bp != -1 and ep != -1 and ep > bp:
-        root_text = root_text[:bp] + root_text[ep + len(dc_end) :]
-    assert _AGENT_MAP_BEGIN not in root_text, (
-        "Root CLAUDE.md has AGENT-MAP:BEGIN outside DOMAIN-CRYSTAL block — "
+    assert root_text.count(_AGENT_MAP_BEGIN) == 1, (
+        "Root CLAUDE.md must contain exactly one AGENT-MAP:BEGIN sentinel — "
         "run gen_spec.py to fix"
     )
 
