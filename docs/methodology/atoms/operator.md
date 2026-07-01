@@ -22,12 +22,6 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `check_agent_has_docs_subdir`
 
-## `R-agent-has-own-crystal` (PROSE)
-
-**Claim.** Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal.
-
-**Why.** The agent's prompt is independent of the director's. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/CLAUDE.md generated and populated.
-
 ## `R-agent-has-own-tools-dir` (PROSE)
 
 **Claim.** Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
@@ -91,6 +85,22 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Why.** Atom of R-boot-from-substrate (WHAT to load). Without re-loading from the substrate, the operator lives in session memory and drifts from the graph's live state.
 
 **Enforced by:** `test_reflection.py`
+
+## `R-operator-crystal-embeds-thinking` (ENFORCED)
+
+**Claim.** The operator's CLAUDE.md shall embed the full content of its scope-relevant thinking documentation inline, not as markdown links, so the operator holds the methodology itself rather than a table of contents.
+
+**Why.** A link the operator must separately fetch is a re-derivation tax on every turn; inlining the methodology content means it is present in the loaded substrate from the first token (R-operator-prompt-from-substrate). Task #98 (A1) built the EMBEDDED-THINKING block; ENFORCED by test_embedded_thinking_sentinels_present (sentinels exist) and test_embedded_thinking_contains_full_topic_content (content is the full topic text, not a link).
+
+**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_thinking_sentinels_present`, `test_embedded_thinking_tools.py::test_embedded_thinking_contains_full_topic_content`
+
+## `R-operator-crystal-embeds-tools` (ENFORCED)
+
+**Claim.** The operator's CLAUDE.md shall embed the full content of its scope-relevant tool documentation inline, not as markdown links.
+
+**Why.** Same rationale as R-operator-crystal-embeds-thinking applied to tool docs: an operator deciding whether to invoke apply_proposal.py should not have to fetch a separate file to learn its contract. ENFORCED by test_embedded_tools_sentinels_present (sentinels exist) and test_embedded_tools_contains_full_tool_content (content is the full tool doc text, not a link); test_embedded_blocks_regen_byte_identical guards against drift between the embedded copy and the regenerated source.
+
+**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_tools_sentinels_present`, `test_embedded_thinking_tools.py::test_embedded_tools_contains_full_tool_content`, `test_embedded_thinking_tools.py::test_embedded_blocks_regen_byte_identical`
 
 ## `R-operator-has-context-budget` (ENFORCED)
 

@@ -37,6 +37,7 @@
 | `R-budget-measure` | ATOMIC |  |
 | `R-check-method-is-atomic` | ATOMIC |  |
 | `R-claude-md-budget-phi-cap` | COMPOUND | semicolon splits 2 segments |
+| `R-claude-md-consolidates-when-single-agent` | ATOMIC |  |
 | `R-claude-md-live-state-generated` | ATOMIC |  |
 | `R-claude-md-tree-of-crystals` | COMPOUND | 'and' connects clause with verb (and keep) |
 | `R-conflict-is-connector-node` | ATOMIC |  |
@@ -85,6 +86,7 @@
 | `R-empty-content-gen-notice` | ATOMIC |  |
 | `R-empty-content-is-legitimate` | COMPOUND | semicolon splits 2 segments |
 | `R-empty-content-wellformed` | ATOMIC |  |
+| `R-enforceability-kind-declared` | ATOMIC |  |
 | `R-enforced-names-enforcer` | ATOMIC |  |
 | `R-enforcement-first-class` | ATOMIC |  |
 | `R-enforcement-gradient` | ATOMIC |  |
@@ -131,6 +133,8 @@
 | `R-open-states-question` | ATOMIC |  |
 | `R-operator-acting-facet` | COMPOUND | 'and' connects clause with verb (, and may) |
 | `R-operator-backend-protocol` | ATOMIC |  |
+| `R-operator-crystal-embeds-thinking` | ATOMIC |  |
+| `R-operator-crystal-embeds-tools` | ATOMIC |  |
 | `R-operator-crystal-is-claude-md` | COMPOUND | semicolon splits 2 segments |
 | `R-operator-has-context-budget` | ATOMIC |  |
 | `R-operator-is-frozen-dataclass` | ATOMIC |  |
@@ -140,6 +144,7 @@
 | `R-operator-prompt-loaded-at-session-start` | ATOMIC |  |
 | `R-operator-references-stakeholder` | ATOMIC |  |
 | `R-operator-type-vs-facet` | ATOMIC |  |
+| `R-parallel-mutating-agents-use-worktree` | ATOMIC |  |
 | `R-partition-vs-border` | ATOMIC |  |
 | `R-post-compact-regen-from-substrate` | ATOMIC |  |
 | `R-prefer-tool-over-hand` | ATOMIC |  |
@@ -152,6 +157,7 @@
 | `R-process-roles-declared-aspect` | ATOMIC |  |
 | `R-process-typed-anchors-extended` | ATOMIC |  |
 | `R-process-types-exist` | ATOMIC |  |
+| `R-project-name-hotam-spec` | ATOMIC |  |
 | `R-rdf-store` | ATOMIC |  |
 | `R-recently-rejected-surfaced` | ATOMIC |  |
 | `R-rejected-preserved-not-deleted` | ATOMIC |  |
@@ -177,6 +183,7 @@
 | `R-statemachine-wellformedness` | COMPOUND | semicolon splits 2 segments |
 | `R-step-invokes-known-transition` | ATOMIC |  |
 | `R-steward-distinct-from-owners` | ATOMIC |  |
+| `R-sub-agent-crystal-triad` | ATOMIC |  |
 | `R-subagent-gets-its-claude-md` | COMPOUND | 'and' connects clause with verb (and return) |
 | `R-task-spawn-is-ephemeral` | COMPOUND | 'and' connects clause with verb (and does) |
 | `R-task-spawn-log-runtime` | ATOMIC |  |
@@ -217,6 +224,7 @@
 | `check_domain_manifest_exists_and_importable` | ATOMIC |  |
 | `check_domain_manifest_goals_nonempty` | ATOMIC |  |
 | `check_domain_manifest_id_matches_dirname` | ATOMIC |  |
+| `check_enforceability_kind_known` | ATOMIC |  |
 | `check_enforced_names_invariant` | ATOMIC |  |
 | `check_entities_md_lists_all_types` | ATOMIC |  |
 | `check_entity_field_kind_known` | ATOMIC |  |
