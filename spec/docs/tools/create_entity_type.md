@@ -30,10 +30,10 @@ Exit codes:
 
 ```
 Traceback (most recent call last):
-  File "D:\dev\HotamSpec\spec\tools\create_entity_type.py", line 286, in <module>
+  File "D:\dev\HotamSpec\.claude\worktrees\agent-a488a322399a9d139\spec\tools\create_entity_type.py", line 286, in <module>
     sys.exit(main())
              ^^^^^^
-  File "D:\dev\HotamSpec\spec\tools\create_entity_type.py", line 273, in main
+  File "D:\dev\HotamSpec\.claude\worktrees\agent-a488a322399a9d139\spec\tools\create_entity_type.py", line 273, in main
     args = parser.parse_args(argv)
            ^^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Users\Computer\AppData\Local\Programs\Python\Python312\Lib\argparse.py", line 1896, in parse_args

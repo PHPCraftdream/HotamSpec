@@ -3,11 +3,16 @@
 Covers:
 - check_domain_manifest_valid (empty-domains + with-domain cases)
 - check_domain_director_exists (empty-domains + with-domain cases)
-- check_agent_has_agents_subdir (real spec/agents/framework-agent/)
-- check_agent_has_docs_subdir (real spec/agents/framework-agent/)
 - build_shared_thinking_docs generates >= 1 §Topic file
 - build_shared_tool_docs generates >= 1 tool file
-- SHARED-DOCS block present in spec/agents/framework-agent/CLAUDE.md after regen
+
+After P22.C consolidation, domains/hotam-spec-self/agents/director/agents/ (the
+former framework-agent scaffold) was deleted — it was a dormant P21 dogfood
+demo, never actually spawned. Only a minimal director/scope.py identity marker
+remains (to satisfy check_domain_director_exists / R-domain-declares-director);
+there is no director CLAUDE.md, no nested agents/, no docs/. Tests that
+asserted the deleted scaffold's filesystem shape have been removed — see
+test_domain_crystal_embedded... (deleted) and task #101's report.
 """
 
 from __future__ import annotations
@@ -31,9 +36,7 @@ if _tools_str not in sys.path:
     sys.path.insert(0, _tools_str)
 import gen_spec  # noqa: E402
 
-# After P17 migration, agents live inside the active domain; resolve from gen_spec.
 AGENTS_ROOT = gen_spec._AGENTS_ROOT
-FRAMEWORK_AGENT_DIR = AGENTS_ROOT / "framework-agent"
 
 
 # ---------------------------------------------------------------------------
@@ -137,48 +140,48 @@ def test_check_domain_director_exists_with_domain(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Filesystem invariants — real framework-agent
+# Filesystem invariants — no agents currently scaffolded (P22.C)
 # ---------------------------------------------------------------------------
 
 
-def test_agent_has_agents_subdir():
-    """spec/agents/framework-agent/agents/ must exist (R-agent-is-recursive-director)."""
-    agents_subdir = FRAMEWORK_AGENT_DIR / "agents"
-    assert agents_subdir.exists(), (
-        "spec/agents/framework-agent/agents/ must exist; got absent. "
-        "Create it or run the create_agent scaffold."
-    )
-    assert agents_subdir.is_dir(), "agents/ must be a directory"
+def test_no_agents_root_check_agent_has_agents_subdir_passes_vacuously():
+    """check_agent_has_agents_subdir returns no violations when no agents exist.
 
-
-def test_agent_has_docs_subdir():
-    """spec/agents/framework-agent/docs/ must exist (R-agent-has-docs-dir)."""
-    docs_subdir = FRAMEWORK_AGENT_DIR / "docs"
-    assert docs_subdir.exists(), (
-        "spec/agents/framework-agent/docs/ must exist; got absent. "
-        "Create it or run the create_agent scaffold."
-    )
-    assert docs_subdir.is_dir(), "docs/ must be a directory"
-
-
-def test_check_agent_has_agents_subdir_passes_on_real_agents():
-    """check_agent_has_agents_subdir returns no violations for the real agents root."""
+    Post-P22.C: _SPEC_AGENTS_ROOT resolves to an absent directory (no
+    domains/hotam-spec-self/agents/director/agents/), so the check is
+    vacuously satisfied.
+    """
     from hotam_spec.invariants import check_agent_has_agents_subdir
     from hotam_spec.graph import TensionGraph
 
     g = TensionGraph()
     viols = check_agent_has_agents_subdir(g)
-    assert viols == [], f"real agents must have agents/ subdir, violations: {viols}"
+    assert viols == [], f"expected no violations with no agents scaffolded: {viols}"
 
 
-def test_check_agent_has_docs_subdir_passes_on_real_agents():
-    """check_agent_has_docs_subdir returns no violations for the real agents root."""
+def test_no_agents_root_check_agent_has_docs_subdir_passes_vacuously():
+    """check_agent_has_docs_subdir returns no violations when no agents exist."""
     from hotam_spec.invariants import check_agent_has_docs_subdir
     from hotam_spec.graph import TensionGraph
 
     g = TensionGraph()
     viols = check_agent_has_docs_subdir(g)
-    assert viols == [], f"real agents must have docs/ subdir, violations: {viols}"
+    assert viols == [], f"expected no violations with no agents scaffolded: {viols}"
+
+
+def test_domain_director_exists_check_passes_with_scope_only():
+    """check_domain_director_exists is satisfied by a director/scope.py identity marker.
+
+    P22.C: the director has no CLAUDE.md/agents/docs of its own (it operates
+    directly through root CLAUDE.md); only scope.py is required to satisfy
+    R-domain-declares-director.
+    """
+    from hotam_spec.invariants import check_domain_director_exists
+    from hotam_spec.graph import TensionGraph
+
+    g = TensionGraph()
+    viols = check_domain_director_exists(g)
+    assert viols == [], f"expected no violations, got: {viols}"
 
 
 # ---------------------------------------------------------------------------
@@ -234,19 +237,12 @@ def test_shared_tool_docs_content():
 
 
 # ---------------------------------------------------------------------------
-# SHARED-DOCS block in agent CLAUDE.md
+# SHARED-DOCS block — no agents exist post-P22.C (no-op)
 # ---------------------------------------------------------------------------
 
 
-def test_agent_shared_docs_block_present():
-    """spec/agents/framework-agent/CLAUDE.md must have SHARED-DOCS sentinel block."""
-    claude_md = FRAMEWORK_AGENT_DIR / "CLAUDE.md"
-    assert claude_md.exists(), "framework-agent/CLAUDE.md must exist"
-    text = claude_md.read_text(encoding="utf-8")
-    assert "<!-- SHARED-DOCS:BEGIN -->" in text, (
-        "framework-agent/CLAUDE.md must have SHARED-DOCS:BEGIN sentinel after regen. "
-        "Run `uv run python tools/gen_spec.py`."
-    )
-    assert "<!-- SHARED-DOCS:END -->" in text, (
-        "framework-agent/CLAUDE.md must have SHARED-DOCS:END sentinel after regen."
+def test_no_agent_claude_md_files_exist():
+    """No agent CLAUDE.md files exist anywhere — AGENTS_ROOT itself is absent (P22.C)."""
+    assert not AGENTS_ROOT.exists(), (
+        f"Expected AGENTS_ROOT ({AGENTS_ROOT}) to be absent post-P22.C consolidation."
     )

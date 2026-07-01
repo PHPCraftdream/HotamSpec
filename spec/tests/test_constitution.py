@@ -1,13 +1,13 @@
-"""Tests for the CONSTITUTION block in the domain CLAUDE.md (P17+).
+"""Tests for the CONSTITUTION block in root CLAUDE.md (P22.C consolidation).
 
-After the P17 domain-isolation migration, the CONSTITUTION block lives in
-`domains/hotam-spec-self/CLAUDE.md`, not the root CLAUDE.md. Root CLAUDE.md is
-framework-only (LIVE-STATE + REPO-MAP + DOMAIN-MAP only).
+After P22.C, there is exactly ONE CLAUDE.md file (repo root). The CONSTITUTION
+block — all SETTLED requirements grouped by category — renders directly into
+root CLAUDE.md's own sentinels (no more domain-file indirection).
 
-Canon: §Constitution — the CONSTITUTION block in the domain CLAUDE.md lists all
-SETTLED requirements grouped by category, generated deterministically from
-domains/hotam-spec-self/graph.py by tools/gen_spec.py. Anti-drift: regeneration must
-produce byte-identical output.
+Canon: §Constitution — the CONSTITUTION block lists all SETTLED requirements
+grouped by category, generated deterministically from
+domains/hotam-spec-self/graph.py by tools/gen_spec.py. Anti-drift: regeneration
+must produce byte-identical output.
 """
 
 from __future__ import annotations
@@ -22,11 +22,7 @@ if str(_TOOLS) not in sys.path:
 import gen_spec  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# P17: constitution block is in the active domain's CLAUDE.md.
-_ACTIVE_DOMAIN = gen_spec._active_domain()
-DOMAIN_CLAUDE_MD = (
-    _ACTIVE_DOMAIN / "CLAUDE.md" if _ACTIVE_DOMAIN is not None else gen_spec.CLAUDE_MD
-)
+ROOT_CLAUDE_MD = gen_spec.CLAUDE_MD
 
 _CONST_BEGIN = gen_spec._CONST_BEGIN
 _CONST_END = gen_spec._CONST_END
@@ -45,40 +41,15 @@ def _extract_constitution_block(text: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# 1. Sentinels present in the domain CLAUDE.md
+# 1. Sentinels present in root CLAUDE.md
 # ---------------------------------------------------------------------------
 
 
 def test_constitution_sentinels_present() -> None:
-    """Domain CLAUDE.md contains both CONSTITUTION sentinels (P17: not root CLAUDE.md)."""
-    text = _read_normalized(DOMAIN_CLAUDE_MD)
-    assert _CONST_BEGIN in text, (
-        f"{DOMAIN_CLAUDE_MD} missing CONSTITUTION:BEGIN sentinel"
-    )
-    assert _CONST_END in text, f"{DOMAIN_CLAUDE_MD} missing CONSTITUTION:END sentinel"
-
-
-def test_root_claude_md_has_no_constitution_sentinels() -> None:
-    """Root CLAUDE.md must NOT contain CONSTITUTION sentinels outside DOMAIN-CRYSTAL.
-
-    P22.B: root CLAUDE.md now embeds the domain's CLAUDE.md inside DOMAIN-CRYSTAL,
-    which legitimately contains CONSTITUTION sentinels. They must not appear outside
-    that block.
-    """
-    if _ACTIVE_DOMAIN is None:
-        return  # Legacy mode: skip.
-    root_text = _read_normalized(gen_spec.CLAUDE_MD)
-    # Strip the DOMAIN-CRYSTAL block before checking.
-    dc_begin = "<!-- DOMAIN-CRYSTAL:BEGIN -->"
-    dc_end = "<!-- DOMAIN-CRYSTAL:END -->"
-    bp = root_text.find(dc_begin)
-    ep = root_text.find(dc_end)
-    if bp != -1 and ep != -1 and ep > bp:
-        root_text = root_text[:bp] + root_text[ep + len(dc_end) :]
-    assert _CONST_BEGIN not in root_text, (
-        "Root CLAUDE.md has CONSTITUTION:BEGIN outside DOMAIN-CRYSTAL block — "
-        "run gen_spec.py to fix"
-    )
+    """Root CLAUDE.md contains both CONSTITUTION sentinels."""
+    text = _read_normalized(ROOT_CLAUDE_MD)
+    assert _CONST_BEGIN in text, f"{ROOT_CLAUDE_MD} missing CONSTITUTION:BEGIN sentinel"
+    assert _CONST_END in text, f"{ROOT_CLAUDE_MD} missing CONSTITUTION:END sentinel"
 
 
 # ---------------------------------------------------------------------------
@@ -87,18 +58,16 @@ def test_root_claude_md_has_no_constitution_sentinels() -> None:
 
 
 def test_constitution_block_generated() -> None:
-    """Regenerating gen_spec produces byte-identical CONSTITUTION block in domain CLAUDE.md."""
+    """Regenerating gen_spec produces byte-identical CONSTITUTION block in root CLAUDE.md."""
     g = gen_spec.load_content_graph()
     expected_block = gen_spec._render_constitution_block(g)
 
-    text = _read_normalized(DOMAIN_CLAUDE_MD)
+    text = _read_normalized(ROOT_CLAUDE_MD)
     actual_block = _extract_constitution_block(text)
 
-    assert actual_block is not None, (
-        f"CONSTITUTION block not found in {DOMAIN_CLAUDE_MD}"
-    )
+    assert actual_block is not None, f"CONSTITUTION block not found in {ROOT_CLAUDE_MD}"
     assert actual_block == expected_block, (
-        "CONSTITUTION block in domain CLAUDE.md has drifted from gen_spec output. "
+        "CONSTITUTION block in root CLAUDE.md has drifted from gen_spec output. "
         "Run: uv run python tools/gen_spec.py"
     )
 
@@ -111,7 +80,7 @@ def test_constitution_block_generated() -> None:
 def test_constitution_lists_all_settled() -> None:
     """Every SETTLED requirement id appears in the CONSTITUTION block."""
     g = gen_spec.load_content_graph()
-    text = _read_normalized(DOMAIN_CLAUDE_MD)
+    text = _read_normalized(ROOT_CLAUDE_MD)
     block = _extract_constitution_block(text)
     assert block is not None, "CONSTITUTION block not found"
 
