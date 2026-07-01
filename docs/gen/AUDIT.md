@@ -39,6 +39,7 @@
 | `R-claude-md-budget-phi-cap` | COMPOUND | semicolon splits 2 segments |
 | `R-claude-md-consolidates-when-single-agent` | ATOMIC |  |
 | `R-claude-md-live-state-generated` | ATOMIC |  |
+| `R-claude-md-template-driven` | ATOMIC |  |
 | `R-claude-md-tree-of-crystals` | COMPOUND | 'and' connects clause with verb (and keep) |
 | `R-conflict-is-connector-node` | ATOMIC |  |
 | `R-conflict-min-two-members` | ATOMIC |  |

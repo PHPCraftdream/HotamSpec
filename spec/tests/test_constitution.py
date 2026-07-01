@@ -52,6 +52,22 @@ def test_constitution_sentinels_present() -> None:
     assert _CONST_END in text, f"{ROOT_CLAUDE_MD} missing CONSTITUTION:END sentinel"
 
 
+def test_root_claude_md_has_exactly_one_constitution_block() -> None:
+    """Root CLAUDE.md must contain the CONSTITUTION sentinel pair exactly once.
+
+    Post-R-claude-md-template-driven: root CLAUDE.md is generated directly
+    from CLAUDE.md.template.txt via render_business_content(), which
+    includes CONSTITUTION once. The guarantee that matters is "not
+    duplicated" — there is exactly one CLAUDE.md file in the whole repo
+    (P22.C consolidation, tasks #101/#102).
+    """
+    root_text = _read_normalized(gen_spec.CLAUDE_MD)
+    assert root_text.count(_CONST_BEGIN) == 1, (
+        "Root CLAUDE.md must contain exactly one CONSTITUTION:BEGIN sentinel — "
+        "run gen_spec.py to fix"
+    )
+
+
 # ---------------------------------------------------------------------------
 # 2. Anti-drift: regeneration produces identical block
 # ---------------------------------------------------------------------------

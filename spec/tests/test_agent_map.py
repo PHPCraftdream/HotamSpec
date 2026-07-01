@@ -62,6 +62,23 @@ def test_agent_map_sentinels_present() -> None:
     assert _AGENT_MAP_END in text, f"Missing {_AGENT_MAP_END!r} in {ROOT_CLAUDE_MD}"
 
 
+def test_root_claude_md_has_exactly_one_agent_map_block() -> None:
+    """Root CLAUDE.md must contain the AGENT-MAP sentinel pair exactly once.
+
+    Post-R-claude-md-template-driven: root CLAUDE.md is generated directly
+    from CLAUDE.md.template.txt via render_business_content(), which
+    includes AGENT-MAP once. The guarantee that matters is "not
+    duplicated" — there is exactly one CLAUDE.md file in the whole repo
+    (P22.C consolidation, tasks #101/#102), so no nested second copy can
+    reintroduce a duplicate block.
+    """
+    root_text = ROOT_CLAUDE_MD.read_text(encoding="utf-8")
+    assert root_text.count(_AGENT_MAP_BEGIN) == 1, (
+        "Root CLAUDE.md must contain exactly one AGENT-MAP:BEGIN sentinel — "
+        "run gen_spec.py to fix"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Test 2: no active sub-agents -> placeholder rendered
 # ---------------------------------------------------------------------------

@@ -5,9 +5,12 @@ It contains everything: LIVE-STATE, DOMAIN-MAP, REPO-MAP, CONSTITUTION,
 AGENT-MAP, CONCEPT-MAP, THINKING-INDEX, EMBEDDED-THINKING, EMBEDDED-TOOLS,
 RECENTLY-REJECTED. The domains/hotam-spec-self/CLAUDE.md file and the
 domains/hotam-spec-self/agents/ scaffold tree (director + framework-agent)
-have been deleted — see task #101.
+have been deleted — see task #101. Root CLAUDE.md is now generated directly
+from CLAUDE.md.template.txt via <!-- mind --> / <!-- business --> placeholder
+substitution (R-claude-md-template-driven, task #103).
 
-Canon: §Domain — R-domain-map-generated, R-crystal-is-claude-md.
+Canon: §Domain — R-domain-map-generated, R-crystal-is-claude-md,
+       R-claude-md-template-driven.
 """
 
 from __future__ import annotations
