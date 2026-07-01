@@ -3,36 +3,32 @@
 # UNENFORCED.md — Burn-down meter (Hotam-Spec)
 
 Generated mirror of the enforcement gradient. Every requirement carries
-`enforcement: PROSE | STRUCTURAL | ENFORCED` (R-enforcement-gradient). This
-report lists every SETTLED requirement whose enforcement is NOT yet ENFORCED —
-i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced).
+`enforcement: PROSE | STRUCTURAL | ENFORCED` (R-enforcement-gradient) and an
+`enforceability: ENFORCEABLE | INHERENTLY_PROSE` kind (R-enforceability-kind-declared).
+This report lists every SETTLED requirement whose enforcement is NOT yet ENFORCED,
+split into real closeable debt vs permanent discipline.
 
 The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED
-growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
+growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
+INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
+judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 113 / SETTLED 148; DRAFT 12; OPEN 7; REJECTED 19.**
+**Burn-down: SETTLED-ENFORCED 114 / SETTLED 149; closeable debt 26; inherent discipline 9; DRAFT 12; OPEN 7; REJECTED 19.**
 
 ---
 
-## SETTLED but UNENFORCED
+## Closeable debt (ENFORCEABLE, no enforcer yet)
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-agent-never-lost` | PROSE | `ai-agent` | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
 | `R-conflict-is-connector-node` | STRUCTURAL | `framework-author` | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
-| `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward. |
 | `R-rejected-preserved-not-deleted` | PROSE | `framework-author` | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
-| `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
 | `R-active-loop-playbook-doc` | STRUCTURAL | `ai-agent` | At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band. |
-| `R-task-vs-action-distinct-altitudes` | STRUCTURAL | `framework-author` | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
-| `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail. |
 | `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
 | `R-statemachine-guard-on-assumption` | STRUCTURAL | `framework-author` | A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced. |
-| `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context. |
-| `R-crystallize-before-split` | STRUCTURAL | `ai-agent` | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
 | `R-uncrystallizable-is-missing-type` | STRUCTURAL | `framework-reviewer` | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
 | `R-uncrystallizable-automated` | STRUCTURAL | `framework-reviewer` | Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type. |
-| `R-prefer-tool-over-hand` | STRUCTURAL | `ai-agent` | The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events. |
 | `R-shared-tools-in-spec-tools` | STRUCTURAL | `framework-author` | Tools available to all agents shall live in `spec/tools/`. |
 | `R-constituting-requirements-converge` | STRUCTURAL | `framework-reviewer` | The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden. |
 | `R-requirement-claim-is-atomic` | STRUCTURAL | `framework-reviewer` | Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements. |
@@ -42,17 +38,29 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-agent-has-own-tools-dir` | PROSE | `ai-agent` | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
 | `R-tools-registry-generated` | STRUCTURAL | `framework-author` | The list of available tools shall be generated by scanning `spec/tools/*.py` (and per-agent `spec/agents/<name>/tools/*.py`), never hand-maintained. |
 | `R-audit-atomicity-tool` | STRUCTURAL | `framework-author` | An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation. |
-| `R-boot-cite-in-first-sentence` | PROSE | `ai-agent` | The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply. |
 | `R-dependency-drives-parallel` | STRUCTURAL | `framework-author` | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
 | `R-dependency-drives-sequential` | STRUCTURAL | `framework-author` | Dependency chains in the network shall be processed sequentially. |
 | `R-crystal-is-claude-md` | STRUCTURAL | `ai-agent` | Each operator's crystallized substrate shall be its own CLAUDE.md file. |
 | `R-crystal-reload-by-reference` | STRUCTURAL | `ai-agent` | An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context. |
-| `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-entity-derived-requirement` | STRUCTURAL | `framework-author` | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
 | `R-entity-is-declarative` | STRUCTURAL | `framework-author` | The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph(). |
 | `R-entity-reuses-lifecycle` | STRUCTURAL | `framework-author` | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
 | `R-entity-checks-by-iteration` | STRUCTURAL | `framework-author` | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
 | `R-project-name-hotam-spec` | STRUCTURAL | `framework-author` | The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1. |
+
+## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
+
+| id | enforcement | owner | claim |
+|---|---|---|---|
+| `R-ai-presents-not-decides` | STRUCTURAL | `ai-agent` | The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward. |
+| `R-two-altitude-ontology` | PROSE | `framework-author` | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
+| `R-task-vs-action-distinct-altitudes` | STRUCTURAL | `framework-author` | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
+| `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail. |
+| `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context. |
+| `R-crystallize-before-split` | STRUCTURAL | `ai-agent` | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
+| `R-prefer-tool-over-hand` | STRUCTURAL | `ai-agent` | The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events. |
+| `R-boot-cite-in-first-sentence` | PROSE | `ai-agent` | The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply. |
+| `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -171,6 +179,7 @@ growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks.
 | `R-operator-prompt-loaded-at-session-start` | test_session_start_hook_runs_gen_spec | A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state. |
 | `R-three-cipher-pulse-structurally-injected` | test_user_prompt_submit_hook_emits_cipher | A UserPromptSubmit hook in .claude/settings.local.json shall extract the three-cipher pulse from the LIVE-STATE block and inject it as additionalContext into every user turn. |
 | `R-post-compact-regen-from-substrate` | test_post_compact_hook_runs_gen_spec | A PostCompact hook in .claude/settings.local.json shall run gen_spec.py after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version. |
+| `R-enforceability-kind-declared` | check_enforceability_kind_known | A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline. |
 
 ## DRAFT (not yet promoted)
 

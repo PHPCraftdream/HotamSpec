@@ -639,20 +639,25 @@ def build_unenforced(g: TensionGraph) -> str:
 
     settled_enforced = [r for r in settled if r.enforcement == ENFORCED]
     settled_unenforced = [r for r in settled if r.enforcement != ENFORCED]
+    closeable_debt = [r for r in settled_unenforced if r.is_closeable_debt()]
+    inherent_prose = [r for r in settled_unenforced if not r.is_closeable_debt()]
 
     lines: list[str] = [BANNER, ""]
     lines.append("# UNENFORCED.md — Burn-down meter (Hotam-Spec)")
     lines.append("")
     lines.append(
         "Generated mirror of the enforcement gradient. Every requirement carries\n"
-        "`enforcement: PROSE | STRUCTURAL | ENFORCED` (R-enforcement-gradient). This\n"
-        "report lists every SETTLED requirement whose enforcement is NOT yet ENFORCED —\n"
-        "i.e. claimed but not guaranteed, soft context-debt (R-requirement-enforced)."
+        "`enforcement: PROSE | STRUCTURAL | ENFORCED` (R-enforcement-gradient) and an\n"
+        "`enforceability: ENFORCEABLE | INHERENTLY_PROSE` kind (R-enforceability-kind-declared).\n"
+        "This report lists every SETTLED requirement whose enforcement is NOT yet ENFORCED,\n"
+        "split into real closeable debt vs permanent discipline."
     )
     lines.append("")
     lines.append(
         "The ratio line below IS the burn-down meter: a healthy direction is SETTLED-ENFORCED\n"
-        "growing while UNENFORCED (PROSE+STRUCTURAL of SETTLED) shrinks."
+        "growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.\n"
+        "INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled\n"
+        "judgment calls no check_* could ever verify."
     )
     lines.append("")
 
@@ -663,21 +668,38 @@ def build_unenforced(g: TensionGraph) -> str:
 
     lines.append(
         f"**Burn-down: SETTLED-ENFORCED {len(settled_enforced)} / SETTLED {len(settled)}; "
+        f"closeable debt {len(closeable_debt)}; inherent discipline {len(inherent_prose)}; "
         f"DRAFT {len(draft)}; OPEN {len(open_reqs)}; REJECTED {len(rejected)}.**"
     )
     lines.append("")
     lines.append("---")
     lines.append("")
 
-    lines.append("## SETTLED but UNENFORCED")
+    lines.append("## Closeable debt (ENFORCEABLE, no enforcer yet)")
     lines.append("")
-    if not settled_unenforced:
-        lines.append("_None — all SETTLED requirements are ENFORCED._")
+    if not closeable_debt:
+        lines.append("_None — all ENFORCEABLE SETTLED requirements are ENFORCED._")
         lines.append("")
     else:
         lines.append("| id | enforcement | owner | claim |")
         lines.append("|---|---|---|---|")
-        for r in settled_unenforced:
+        for r in closeable_debt:
+            lines.append(
+                f"| `{r.id}` | {r.enforcement} | `{r.owner}` | {_cell(r.claim)} |"
+            )
+        lines.append("")
+
+    lines.append(
+        "## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)"
+    )
+    lines.append("")
+    if not inherent_prose:
+        lines.append("_None yet tagged._")
+        lines.append("")
+    else:
+        lines.append("| id | enforcement | owner | claim |")
+        lines.append("|---|---|---|---|")
+        for r in inherent_prose:
             lines.append(
                 f"| `{r.id}` | {r.enforcement} | `{r.owner}` | {_cell(r.claim)} |"
             )
@@ -1604,7 +1626,9 @@ def build_live_state(g: TensionGraph) -> str:
     open_reqs = [r for r in g.requirements if r.is_open()]
     settled_enforced = sum(1 for r in settled if r.enforcement == ENFORCED)
     settled_total = len(settled)
-    unenforced = settled_total - settled_enforced
+    # Real closeable debt only (ENFORCEABLE, not yet enforced); INHERENTLY_PROSE
+    # requirements are permanent discipline, not debt (R-enforceability-kind-declared).
+    unenforced = sum(1 for r in settled if r.is_closeable_debt())
 
     nodes = len(g.requirements) + len(g.conflicts) + len(g.assumptions)
     op_budget = 0

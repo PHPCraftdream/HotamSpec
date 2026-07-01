@@ -204,6 +204,7 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
         raise ValueError("'enforced_by' must be a list of strings.")
     enforced_by = tuple(str(x) for x in enforced_by_raw)
     m_tag = raw.get("m_tag", "")
+    enforceability = raw.get("enforceability", "ENFORCEABLE").strip()
     return ProposedRequirement(
         id=req_id,
         claim=claim,
@@ -215,6 +216,7 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
         enforcement=enforcement,
         enforced_by=enforced_by,
         m_tag=m_tag if isinstance(m_tag, str) else "",
+        enforceability=enforceability,
     )
 
 
@@ -423,6 +425,22 @@ def _find_conflict_call(tree: ast.AST, conflict_id: str) -> ast.Call | None:
 # ---------------------------------------------------------------------------
 
 
+def _byte_col_to_char_col(line: str, byte_col: int) -> int:
+    """Canon: §Proposal — convert an ast col_offset (UTF-8 bytes) to a char index.
+
+    `ast` node col_offset/end_col_offset values are UTF-8 BYTE offsets into the
+    source line, but Python string slicing (`line[:col]`) indexes by CHARACTER.
+    For an ASCII-only line the two coincide; a line containing any multi-byte
+    character (e.g. an em-dash '—', 3 bytes in UTF-8) makes byte_col overshoot
+    the character index, corrupting any downstream `line[:col]` / `line[col:]`
+    slice. This walks the line encoding prefixes until the byte-length matches.
+    """
+    encoded = line.encode("utf-8")
+    if byte_col >= len(encoded):
+        return len(line)
+    return len(encoded[:byte_col].decode("utf-8", errors="ignore"))
+
+
 def _kwarg_line_col(call: ast.Call, field: str) -> tuple[int, int] | None:
     """Canon: §Proposal — return (lineno, col_offset) of a keyword arg's VALUE node.
 
@@ -462,17 +480,22 @@ def _replace_or_insert_field(
         val_node = kw.value
         lineno = val_node.lineno - 1  # 0-indexed
         line = lines[lineno]
-        col = val_node.col_offset
+        # ast col_offset is a UTF-8 BYTE offset; convert to a character index
+        # before slicing the (character-indexed) Python string (see
+        # _byte_col_to_char_col — non-ASCII source, e.g. em-dashes, would
+        # otherwise corrupt the slice).
+        col = _byte_col_to_char_col(line, val_node.col_offset)
 
         # Find the end of the value on this line (handle simple strings and tuples)
         # We use a "find the comma or close-paren after the value" heuristic.
         # For simplicity: rebuild from col to end of line, then re-glue.
         # We need the end col of the old value — check end_lineno/end_col_offset.
         end_lineno = getattr(val_node, "end_lineno", None)
-        end_col = getattr(val_node, "end_col_offset", None)
-        if end_lineno is not None and end_col is not None:
+        end_col_bytes = getattr(val_node, "end_col_offset", None)
+        if end_lineno is not None and end_col_bytes is not None:
             if end_lineno - 1 == lineno:
                 # Single-line value: replace col..end_col
+                end_col = _byte_col_to_char_col(line, end_col_bytes)
                 new_repr = _python_repr(new_value)
                 lines[lineno] = line[:col] + new_repr + line[end_col:]
             else:
@@ -480,6 +503,7 @@ def _replace_or_insert_field(
                 new_repr = _python_repr(new_value)
                 # Grab the suffix after the value on the end line (e.g. ",\n")
                 end_line = lines[end_lineno - 1]
+                end_col = _byte_col_to_char_col(end_line, end_col_bytes)
                 suffix = end_line[end_col:]
                 # Remove from the line after start through the end line (inclusive)
                 del lines[lineno + 1 : end_lineno - 1 + 1]
@@ -595,6 +619,8 @@ def _render_requirement_source(proposal: ProposedRequirement, indent: str) -> st
         lines.append(f"{inner}enforced_by=({items},),")
     if proposal.m_tag:
         lines.append(f'{inner}m_tag="{proposal.m_tag}",')
+    if proposal.enforceability and proposal.enforceability != "ENFORCEABLE":
+        lines.append(f'{inner}enforceability="{proposal.enforceability}",')
     lines.append(f"{indent}),")
     return "\n".join(lines) + "\n"
 
@@ -623,11 +649,20 @@ def _apply_requirement_to_source(
             ("assumptions", proposal.assumptions),
             ("enforcement", proposal.enforcement),
             ("enforced_by", proposal.enforced_by),
+            ("enforceability", proposal.enforceability),
         ]:
             # Skip empty optional fields not already present
             if field_name in ("assumptions", "enforced_by") and not new_value:
                 if _kwarg_line_col(call_node, field_name) is None:
                     continue
+            # Skip the default enforceability value when the field isn't
+            # already present in source (keep terse output for the common case).
+            if (
+                field_name == "enforceability"
+                and new_value == "ENFORCEABLE"
+                and _kwarg_line_col(call_node, field_name) is None
+            ):
+                continue
             lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
             new_src = "".join(lines)
             tree = ast.parse(new_src)

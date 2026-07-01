@@ -38,6 +38,7 @@ class ProposedRequirement:
     enforcement: str = "PROSE"
     enforced_by: tuple[str, ...] = field(default_factory=tuple)
     m_tag: str = ""
+    enforceability: str = "ENFORCEABLE"
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.

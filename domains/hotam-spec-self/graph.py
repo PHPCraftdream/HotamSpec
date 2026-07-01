@@ -334,6 +334,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement="STRUCTURAL",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-steward-distinct-from-owners",
@@ -440,22 +441,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-two-altitude-ontology",
             claim=(
-                "The methodology shall use ONE ontology at two altitudes: operator "
-                "is to the methodology as actor is to the business (the methodology "
-                "plane is the business plane applied reflexively)."
+                "The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively)."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Realized in THIS meta-domain — Hotam-Spec modeling its own design IS "
-                "the proof that one ontology serves both altitudes. "
-                "D3 (decided by domain-user 2026-06-30): downgraded "
-                "STRUCTURAL→PROSE — no structural enforcer exists; the claim is "
-                "discipline, not check."
+                "Realized in THIS meta-domain — Hotam-Spec modeling its own design IS the proof that one ontology serves both altitudes. D3 (decided by domain-user 2026-06-30): downgraded STRUCTURAL→PROSE — no structural enforcer exists; the claim is discipline, not check."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            enforcement=PROSE,
+            enforcement="PROSE",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-boot-from-substrate",
@@ -743,28 +739,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-task-vs-action-distinct-altitudes",
             claim=(
-                "The methodology's Task node type (a modeled work item) and "
-                "the harness's Action (a fix-the-graph instruction) shall "
-                "remain distinct types at distinct altitudes — never merged."
+                "The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (P9): the discipline is structural by omission. "
-                "Hotam-Spec's framework has NO Task type — only the harness Action "
-                "(hotam_spec.what_now.Action). Process.steps carry a forward-compat "
-                "prose `invokes` field (not a Task type) so the behavioral "
-                "altitude stays separable from the harness altitude. The two "
-                "are typed differently by construction: Action is the harness's "
-                "typed instruction; any future Task would be a domain-modeled "
-                "work item under the §Process aspect. The altitudes cannot "
-                "collapse because they live in different namespaces. "
-                "Implementation: hotam_spec.what_now.Action + docs/gen/CONSTITUTION.md + "
-                "docs/playbooks/."
+                "SETTLED (P9): the discipline is structural by omission. Hotam-Spec's framework has NO Task type — only the harness Action (hotam_spec.what_now.Action). Process.steps carry a forward-compat prose `invokes` field (not a Task type) so the behavioral altitude stays separable from the harness altitude. The two are typed differently by construction: Action is the harness's typed instruction; any future Task would be a domain-modeled work item under the §Process aspect. The altitudes cannot collapse because they live in different namespaces. Implementation: hotam_spec.what_now.Action + docs/gen/CONSTITUTION.md + docs/playbooks/."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         # --- DRAFT — operators / budget / delegation / goals (dossier 2) -----
         Requirement(
@@ -898,6 +883,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="STRUCTURAL",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-goal-as-target-state",
@@ -1122,6 +1108,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working",),
             enforcement="STRUCTURAL",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-verify-closure-per-action",
@@ -1203,25 +1190,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-crystallize-before-split",
             claim=(
-                "On overload, an operator shall crystallize first, re-measure, and "
-                "delegate (split) only if still over budget."
+                "On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "SETTLED (P7): the order discipline is structurally bound. The "
-                "apply_proposal protocol crystallizes via Proposal types; the closure "
-                "check verifies advancement before any split is even considered; the "
-                "constitution §4 (super-rules) names the ORDER explicitly. Splitting "
-                "is for irreducible size, crystallizing is for un-offloaded knowledge; "
-                "delegation is the lever of last resort. Splitting before crystallizing "
-                "fragments knowledge that could have been freed in place. "
-                "Implementation: tools/apply_proposal.py + tools/closure.py + "
-                "docs/gen/CONSTITUTION.md."
+                "SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies advancement before any split is even considered; the constitution §4 (super-rules) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. Implementation: tools/apply_proposal.py + tools/closure.py + docs/gen/CONSTITUTION.md."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-working-vs-substrate-budget",
@@ -1662,18 +1641,12 @@ def build_graph() -> TensionGraph:
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "Today's third architectural principle. Cannot be algorithmically "
-                "enforced (no AST detection of 'you did it by hand'); STRUCTURAL via "
-                "prose discipline in the operator-prompt + a generated discipline doc. "
-                "Use SETTLED (not DRAFT) — the principle is now in force; the "
-                "structural enforcement is the prose."
+                "Today's third architectural principle. Cannot be algorithmically enforced (no AST detection of 'you did it by hand'); STRUCTURAL via prose discipline in the operator-prompt + a generated discipline doc. Use SETTLED (not DRAFT) — the principle is now in force; the structural enforcement is the prose."
             ),
             assumptions=("A-stakeholders-care",),
-            enforcement=STRUCTURAL,
-            enforced_by=(
-                "CLAUDE.md§Operator boot ritual",
-                "docs/methodology/discipline.md",
-            ),
+            enforcement="STRUCTURAL",
+            enforced_by=("CLAUDE.md§Operator boot ritual", "docs/methodology/discipline.md"),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-shared-tools-in-spec-tools",
@@ -2320,6 +2293,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement="PROSE",
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-glossary-generated",
@@ -2848,6 +2822,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-prose-suffices",),
             enforcement="PROSE",
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-bijection-r-to-enforcer",
@@ -3330,6 +3305,16 @@ def build_graph() -> TensionGraph:
             why=("M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name and the user's chosen identity. Convention: 'Hotam-Spec' in prose (capitalized hyphen), 'hotam_spec' snake_case in Python source (imports/identifiers), 'hotam-spec' kebab-case for filesystem and PyPI. Renames completed in three sequential passes (#89 package, #90 domain, #91 prose)."),
             assumptions=("A-python-stack",),
             enforcement=STRUCTURAL,
+        ),
+        Requirement(
+            id="R-enforceability-kind-declared",
+            claim=("A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The enforcement-gradient P0 REFLECTION conflated two categories: requirements that could have a check_* but don't yet (real debt) and requirements that are fundamentally judgment calls no check_* could ever verify (permanent discipline). Without this distinction the debt metric never converges -- inherent-prose rules were counted as debt forever. Splitting the two makes the P0 REFLECTION an honest, closeable signal."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("check_enforceability_kind_known",),
         ),
     )
 

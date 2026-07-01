@@ -57,6 +57,7 @@ from hotam_spec.lifecycle import (
 from hotam_spec.operator import OPERATOR_LIFECYCLE
 from hotam_spec.process import GOAL_LIFECYCLE, TARGET_KINDS
 from hotam_spec.requirement import (
+    ENFORCEABILITY_KINDS,
     ENFORCED,
     ENFORCEMENT_LEVELS,
     OPEN_PREFIX,
@@ -934,6 +935,32 @@ def check_enforced_names_invariant(g: TensionGraph) -> list[Violation]:
                     r.id,
                     "enforcement is ENFORCED but enforced_by is empty; "
                     "name the check_* invariant or test that fires on violation",
+                )
+            )
+    return out
+
+
+def check_enforceability_kind_known(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement / §Invariants — every Requirement.enforceability is a known kind.
+
+    RULE: enforceability MUST be in ENFORCEABILITY_KINDS (ENFORCEABLE |
+    INHERENTLY_PROSE). An invalid value corrupts the enforcement-gradient
+    debt calculation.
+
+    WHY: the enforceability kind is what lets the P0 REFLECTION debt count
+    distinguish real closeable debt (ENFORCEABLE, no enforcer yet) from
+    permanent discipline (INHERENTLY_PROSE, never checkable by nature). An
+    unknown value would silently misclassify a requirement in that count.
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if r.enforceability not in ENFORCEABILITY_KINDS:
+            out.append(
+                Violation(
+                    "check_enforceability_kind_known",
+                    r.id,
+                    f"enforceability '{r.enforceability}' is not in "
+                    f"ENFORCEABILITY_KINDS (ENFORCEABLE | INHERENTLY_PROSE)",
                 )
             )
     return out
@@ -2642,6 +2669,7 @@ ALL_INVARIANTS = (
     check_typed_anchors_goal,
     # §Enforcement gradient
     check_enforced_names_invariant,
+    check_enforceability_kind_known,
     # §M-tag (atomized; check_m_tag_format is thin delegator)
     check_m_tag_valid_format,
     check_m_tag_unique,

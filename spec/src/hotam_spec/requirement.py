@@ -58,6 +58,10 @@ STRUCTURAL = "STRUCTURAL"
 ENFORCED = "ENFORCED"
 ENFORCEMENT_LEVELS: frozenset[str] = frozenset({PROSE, STRUCTURAL, ENFORCED})
 
+ENFORCEABLE = "ENFORCEABLE"
+INHERENTLY_PROSE = "INHERENTLY_PROSE"
+ENFORCEABILITY_KINDS: frozenset[str] = frozenset({ENFORCEABLE, INHERENTLY_PROSE})
+
 
 @dataclass(frozen=True)
 class Relation:
@@ -121,6 +125,12 @@ class Requirement:
                      enforcement == ENFORCED.
       m_tag        — M-decision tag (e.g. "M17"); non-empty only on OPEN
                      requirements that mirror a CLAUDE.md M-decision.
+      enforceability — ENFORCEABLE | INHERENTLY_PROSE (default: ENFORCEABLE).
+                     ENFORCEABLE means a check_* or test COULD exist (real
+                     closeable debt when enforcement is PROSE/STRUCTURAL).
+                     INHERENTLY_PROSE means the claim is a disposition or
+                     judgment call no check_* could ever verify — permanent
+                     discipline, not debt (R-enforceability-kind-declared).
 
     WHY frozen + id-stable: a requirement may be renamed, split, or refined; the
     Conflict node that mediates it has identity from (axis, context), so it
@@ -137,6 +147,24 @@ class Requirement:
     enforcement: str = PROSE
     enforced_by: tuple[str, ...] = field(default_factory=tuple)
     m_tag: str = ""
+    enforceability: str = ENFORCEABLE
+
+    def is_closeable_debt(self) -> bool:
+        """Canon: §Requirement — True iff this is REAL enforcement-gradient debt.
+
+        RULE: a requirement is closeable debt iff its enforcement is NOT
+        ENFORCED (PROSE or STRUCTURAL) AND its enforceability is ENFORCEABLE
+        (a check_* or test COULD exist). A requirement whose enforceability
+        is INHERENTLY_PROSE is honestly-labeled permanent discipline — it is
+        NOT debt, no matter its enforcement level.
+
+        WHY a method (not inline filtering): the enforcement-gradient debt
+        count (P0 REFLECTION, docs/gen/UNENFORCED.md) previously conflated
+        "no enforcer yet" with "no enforcer possible", so it could never
+        converge to zero. This predicate is the single source of truth for
+        that count, used by tools/what_now.py and tools/gen_spec.py alike.
+        """
+        return self.enforcement != ENFORCED and self.enforceability == ENFORCEABLE
 
     def is_open(self) -> bool:
         """Canon: §Requirement — True iff this requirement is an OPEN hole.

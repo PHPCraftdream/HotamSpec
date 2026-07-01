@@ -196,6 +196,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-three-cipher-pulse-structurally-injected` | SETTLED | `framework-author` | A-python-stack | A UserPromptSubmit hook in .claude/settings.local.json shall extract the three-cipher pulse from the LIVE-STATE block and inject it as additionalContext into every user turn. |
 | `R-post-compact-regen-from-substrate` | SETTLED | `framework-author` | A-python-stack | A PostCompact hook in .claude/settings.local.json shall run gen_spec.py after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version. |
 | `R-project-name-hotam-spec` | SETTLED | `framework-author` | A-python-stack | The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1. |
+| `R-enforceability-kind-declared` | SETTLED | `framework-author` | A-python-stack | A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline. |
 
 ## Stakeholders
 

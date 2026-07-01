@@ -56,12 +56,15 @@ Dependency-light (stdlib + the hotam_spec package). Deterministic ordering.
 ## CLI usage
 
 ```
-usage: what_now.py [-h] [--demo]
+usage: what_now.py [-h] [--demo] [--p5-limit P5_LIMIT]
 
 Canon: Â§Harness â€” derives the prioritized next correct action from any graph
 state, making being-lost structurally impossible.
 
 options:
-  -h, --help  show this help message and exit
-  --demo      diagnose the fixture demo graph instead of spec/content/.
+  -h, --help           show this help message and exit
+  --demo               diagnose the fixture demo graph instead of
+                       spec/content/.
+  --p5-limit P5_LIMIT  cap on printed P5 LATENT_CONNECTOR lines (default 20);
+                       truncation is disclosed, never silent.
 ```

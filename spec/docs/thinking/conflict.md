@@ -163,18 +163,33 @@ C-node), hunting only pairs that SHOULD have one but don't.
 WHY pairs (not whole member tuples): a latent suspect is a 2-requirement
 tension; a conflict with 3 members already mediates all 3 of its pairs.
 
+## From `spec/src/hotam_spec/graph.py::assumption_reference_counts`
+
+Canon: §Conflict — how many non-REJECTED requirements reference each assumption.
+
+RULE: count, per assumption id, the number of distinct non-REJECTED
+requirements naming it in Requirement.assumptions. Used to distinguish a
+SPECIFIC assumption (referenced by a few requirements — a real shared
+premise) from a GENERIC one (referenced by dozens — framework scaffolding
+that any two requirements would trivially "share").
+
 ## From `spec/src/hotam_spec/graph.py::LatentSuspect`
 
 Canon: §Conflict — a requirement pair that SHOULD have a C-node but doesn't.
 
 RULE (HEURISTIC, not a proof): two SETTLED/OPEN requirements that share at
-least one assumption and are NOT already mediated by any conflict are flagged
-"for AI review". This is a stub for the deferred detector (spec-stack layer
-4/5); it is explicitly a suspicion, never an auto-materialized conflict.
+least one SPECIFIC assumption (referenced by fewer than
+GENERIC_ASSUMPTION_THRESHOLD requirements) and are NOT already mediated by
+any conflict are flagged "for AI review". Pairs whose ONLY shared
+assumption(s) are GENERIC (framework-wide scaffolding referenced by many
+requirements) are not flagged — sharing a generic assumption is not a
+signal of hidden tension, it is noise. This is a stub for the deferred
+detector (spec-stack layer 4/5); it is explicitly a suspicion, never an
+auto-materialized conflict.
 
 Fields:
   left, right — the two Requirement ids (sorted for stable identity).
-  hint        — why they were flagged (the shared signal).
+  hint        — why they were flagged (the shared specific signal).
 
 WHY only a heuristic now: the real detector ("find the missing connector")
 needs Hypothesis-generated tuples / Z3 joint-violation models; both DEFERRED.
@@ -185,14 +200,21 @@ The hard boundary holds — a suspect is presented to a human, never resolved.
 Canon: §Conflict — HEURISTIC hunt for missing connector nodes.
 
 RULE: flag any pair of non-REJECTED requirements that (a) share >= 1
-assumption id and (b) are not already mediated by a conflict
-(members_pair_set). Output is sorted by (left, right) for determinism.
+SPECIFIC assumption id (referenced by fewer than
+GENERIC_ASSUMPTION_THRESHOLD requirements — see assumption_reference_counts)
+and (b) are not already mediated by a conflict (members_pair_set). Pairs
+whose only shared assumptions are GENERIC (>= threshold references) are
+not flagged: sharing framework-wide scaffolding is not a hidden-tension
+signal, it is O(n^2) noise. Output is sorted by specificity (lowest shared
+reference count first, i.e. the rarest/most-suspicious pairs surface
+first), then by (left, right) for determinism.
 
-WHY share-an-assumption is the cheap signal: two requirements interpreting one
-assumption differently is the commonest hidden root of a real conflict
-(Conflict.shared_assumption). It is a SUSPICION the AI/steward must judge —
-deliberately stronger than "violated invariant" because it points at the
-not-yet-recorded. Real semantic detection is deferred (see CLAUDE.md / ROADMAP).
+WHY share-a-specific-assumption is the cheap signal: two requirements
+interpreting one RARE assumption differently is the commonest hidden root
+of a real conflict (Conflict.shared_assumption). It is a SUSPICION the
+AI/steward must judge — deliberately stronger than "violated invariant"
+because it points at the not-yet-recorded. Real semantic detection is
+deferred (see CLAUDE.md / ROADMAP).
 
 ## From `spec/src/hotam_spec/invariants.py::check_conflict_has_axis`
 
