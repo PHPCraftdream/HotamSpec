@@ -71,7 +71,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-uncrystallizable-is-missing-type` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
 | `R-stale-substrate` | SETTLED | `framework-author` | A-compaction-loses-working | Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit). |
 | `R-budget-measure` | SETTLED | `framework-author` | A-finite-context-operators | An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts. |
-| `R-partition-vs-border` | OPEN(do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders?) | `framework-author` | A-finite-context-operators | Operator sub-domains shall relate to the parent graph by a single declared discipline (strict partition or declared-border overlap). |
+| `R-partition-vs-border` | REJECTED | `framework-author` | A-finite-context-operators | Operator sub-domains shall relate to the parent graph by a single declared discipline (strict partition or declared-border overlap). |
 | `R-goal-type-vs-facet` | SETTLED | `domain-user` | A-bootstrap-self-applies | Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE. |
 | `R-operator-type-vs-facet` | SETTLED | `framework-author` | A-bootstrap-self-applies | Operator shall be its own first-class frozen-dataclass type in hotam_spec.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference. |
 | `R-observation-evidence-scope` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request; Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types. |
@@ -238,6 +238,9 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-held-carries-variants` | SETTLED | `framework-reviewer` | A-bootstrap-self-applies | A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes. |
 | `R-variant-choice-is-decision` | SETTLED | `framework-reviewer` | A-stakeholders-care | A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED. |
 | `R-unresolvable-classified-by-human` | SETTLED | `framework-reviewer` | A-stakeholders-care | Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference. |
+| `R-scope-is-projection` | SETTLED | `framework-author` | A-finite-context-operators | An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node. |
+| `R-scope-overlap-generated` | SETTLED | `framework-author` | A-finite-context-operators | When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged. |
+| `R-overlap-single-presenter` | SETTLED | `framework-author` | A-finite-context-operators | Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter. |
 
 ## Stakeholders
 

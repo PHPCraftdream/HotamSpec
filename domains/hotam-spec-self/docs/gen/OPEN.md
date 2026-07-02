@@ -5,15 +5,13 @@ reader: ai-agent
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-Open requirements: **1**. Unresolved conflicts: **0**.
+Open requirements: **0**. Unresolved conflicts: **0**.
 
 ---
 
 ## OPEN requirements
 
-| id | owner | question |
-|---|---|---|
-| `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
+_None._
 
 ## Unresolved conflicts (no steward resolution yet)
 

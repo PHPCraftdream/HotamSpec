@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 161 / SETTLED 189; closeable debt 10; inherent discipline 18; DRAFT 7; OPEN 1; REJECTED 30.**
+**Burn-down: SETTLED-ENFORCED 164 / SETTLED 192; closeable debt 10; inherent discipline 18; DRAFT 7; OPEN 0; REJECTED 31.**
 
 ---
 
@@ -221,6 +221,9 @@ judgment calls no check_* could ever verify.
 | `R-atomicity-ratchet-no-growth` | test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline | The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json. |
 | `R-conflict-held-state` | check_conflict_lifecycle_in_lifecycle, check_canonical_lifecycles_wellformed | Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements. |
 | `R-held-carries-variants` | check_held_has_min_two_variants, check_typed_anchors_variant, check_held_has_nonempty_decided_by, check_held_by_is_known_stakeholder, check_held_by_not_member_owner | A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes. |
+| `R-scope-is-projection` | test_scope_projection.py::test_project_scope_selects_by_prefix, test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly | An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node. |
+| `R-scope-overlap-generated` | test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption, test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty | When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged. |
+| `R-overlap-single-presenter` | check_scoped_node_has_single_presenter, test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter | Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter. |
 
 ## DRAFT (not yet promoted)
 

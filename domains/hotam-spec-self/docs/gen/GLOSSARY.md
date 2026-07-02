@@ -28,6 +28,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§ContextBudget` | The working-store ceiling of an Operator; the substrate is free. |
 | `§Loop` | The closed loop: State→Diagnosis→Next-action→Action→regenerate→State. |
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
+| `§Scope` | An operator's sub-domain as a PROJECTION (id-set view) over the shared graph, not a copy; overlaps with another operator's projection are computed and rendered, never hidden. |
 | `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
 | `§Closure` | Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed. |
 | `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |

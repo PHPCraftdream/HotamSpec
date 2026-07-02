@@ -83,6 +83,11 @@ TERMS: tuple[Term, ...] = (
     Term(
         "§Glossary", "SECTION", "The methodology's controlled vocabulary (this module)."
     ),
+    Term(
+        "§Scope",
+        "SECTION",
+        "An operator's sub-domain as a PROJECTION (id-set view) over the shared graph, not a copy; overlaps with another operator's projection are computed and rendered, never hidden.",
+    ),
     # Lifecycle states (kind=LIFECYCLE_STATE)
     Term(
         "DETECTED",

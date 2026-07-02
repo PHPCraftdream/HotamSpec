@@ -1250,21 +1250,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-partition-vs-border",
             claim=(
-                "Operator sub-domains shall relate to the parent graph by a single "
-                "declared discipline (strict partition or declared-border overlap)."
+                "Operator sub-domains shall relate to the parent graph by a single declared discipline (strict partition or declared-border overlap)."
             ),
             owner="framework-author",
             status=(
-                "OPEN(do operator sub-domains strictly partition the graph, or "
-                "overlap on explicitly-declared delegation borders?)"
+                "REJECTED"
             ),
             why=(
-                "M18. Delegation (R-context-bounded-delegation) needs to know "
-                "whether shared objects are forbidden (partition) or first-class "
-                "borders; the two give different drift behavior."
+                "REJECTED -- REPLACES R-scope-is-projection + R-scope-overlap-generated + R-overlap-single-presenter. The open question ('strict partition, or overlap on explicitly-declared delegation borders?') presupposed a binary; the actual answer is a third option -- a PROJECTION. Operator sub-domains are neither a strict partition (which would forbid any shared node) nor an ad-hoc declared-border overlap (which would need hand-maintained edge lists); they are a computed, always-current id-set VIEW over the one shared graph (hotam_spec.scope_projection.project_scope), and any overlap between two operators' views is itself computed and rendered visibly (scope_overlap + the generator's OVERLAP block) rather than declared by hand or forbidden outright. A contested node under such an overlap resolves to exactly one deterministic presenter (R-overlap-single-presenter), closing the ambiguity the OPEN question was protecting against without adopting either extreme it named. -- (was: M18. Delegation (R-context-bounded-delegation) needs to know whether shared objects are forbidden (partition) or first-class borders; the two give different drift behavior.)"
             ),
             assumptions=("A-finite-context-operators",),
-            m_tag="M18",
+            enforcement="PROSE",
         ),
         Requirement(
             id="R-goal-type-vs-facet",
@@ -3572,6 +3568,36 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
+        ),
+        Requirement(
+            id="R-scope-is-projection",
+            claim=("An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("M18/P-scope. Resolves R-partition-vs-border's open question by rejecting both extremes: a strict partition forbids any shared object (loses the ability to model deliberate cross-cutting delegation); an ad-hoc declared-border overlap invites hand-maintained edge lists that drift from the graph. hotam_spec.scope_projection.project_scope(g, prefixes) computes a ScopeView (sorted id-tuples for Requirements/Conflicts/Assumptions/Axes) purely from the graph, on demand, with the exact prefix-match discipline tools/gen_spec.py already uses for per-agent CONSTITUTION digests (id.startswith(p) for any p in prefixes) -- so the projection can never fork from the single writer (R-no-hand-edit-graph). Evidence: spec/src/hotam_spec/scope_projection.py:ScopeView/project_scope; Operator.scope field (hotam_spec/operator.py) carries the declaring prefix tuple."),
+            assumptions=("A-finite-context-operators",),
+            enforcement="ENFORCED",
+            enforced_by=("test_scope_projection.py::test_project_scope_selects_by_prefix", "test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly"),
+        ),
+        Requirement(
+            id="R-scope-overlap-generated",
+            claim=("When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("M18/P-scope. hotam_spec.scope_projection.scope_overlap(view_a, view_b) computes the sorted set-intersection of two ScopeViews; tools/gen_spec.py::_regenerate_agent_constitutions renders one OVERLAP block per agent (via _render_overlap_block) against every OTHER discovered agent's SCOPE, written between OVERLAP:BEGIN/END sentinels immediately after CONSTITUTION:END. With the CURRENT meta-domain (one OP-director, SCOPE=()), the OVERLAP block is legitimately empty on every agent -- R-empty-content-wellformed's calm-empty discipline, not suppression: the sentinel pair is always present so the state ('no scope overlap') is visible rather than omitted. Evidence: spec/src/hotam_spec/scope_projection.py:scope_overlap/overlap_node_ids; spec/tools/gen_spec.py:_render_overlap_block/_regenerate_agent_constitutions (OVERLAP sentinels)."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=ENFORCED,
+            enforced_by=("test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption", "test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty",),
+        ),
+        Requirement(
+            id="R-overlap-single-presenter",
+            claim=("Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("M18/P-scope. hotam_spec.scope_projection.presenter_for_node(node_id, operator_ids) returns the LEXICOGRAPHICALLY FIRST operator id among the operators contesting a node -- a stable, total, deterministic rule that does not depend on graph declaration order (which shifts under unrelated source reformatting) or on an arbitrary parent-hierarchy walk. invariants.check_scoped_node_has_single_presenter walks every pair of operators with a non-empty `scope`, computes their overlap via scope_projection, and would fire a Violation only if presenter_for_node ever returned None for a non-empty contesting set -- which cannot happen, making single-presentership PROVABLE rather than merely asserted. Evidence: spec/src/hotam_spec/scope_projection.py:presenter_for_node; spec/src/hotam_spec/invariants.py:check_scoped_node_has_single_presenter (registered in ALL_INVARIANTS + RULES_AS_DATA_TABLE as BESPOKE)."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=ENFORCED,
+            enforced_by=("check_scoped_node_has_single_presenter", "test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter",),
         ),
     )
 

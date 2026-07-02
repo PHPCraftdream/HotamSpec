@@ -19,9 +19,7 @@ methodology-altitude decisions.
 
 ## Open decisions (sorted by M-tag)
 
-| M-tag | requirement | owner | question |
-|---|---|---|---|
-| M18 | `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
+_No OPEN requirements carry an M-tag yet._
 
 ## Notes
 

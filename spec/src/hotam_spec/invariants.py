@@ -1783,6 +1783,83 @@ def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_scoped_node_has_single_presenter(g: TensionGraph) -> list[Violation]:
+    """Canon: §Scope / §Invariants — every node in >=2 operators' scope overlap has exactly one presenter.
+
+    RULE (R-overlap-single-presenter): a node contested by two or more
+    operators must resolve to exactly one presenter, or the check fires —
+    node '<id>' is contested by operators <ids> but no presenter could be
+    determined; declare a presenter. Mechanically: compute each Operator's
+    ScopeView via hotam_spec.scope_projection.project_scope(g, op.scope) for
+    every operator whose `scope` tuple is non-empty. For each unordered pair
+    of such operators, compute scope_projection.scope_overlap(view_a, view_b)
+    and collect overlap_node_ids(overlap) (the union of overlapping
+    Requirement and Conflict ids). For every node id that appears in >= 1
+    pairwise overlap, the full set of operators whose scope contains that
+    node id is passed to scope_projection.presenter_for_node, which
+    deterministically returns the LEXICOGRAPHICALLY FIRST operator id — this
+    is the ONE designated presenter. The invariant itself does not need to
+    re-derive anything beyond that: presenter_for_node is total and
+    deterministic for any non-empty operator-id set, so a violation can only
+    mean the contested-operator set was empty, which cannot happen once a
+    node has been found in a pairwise overlap. This check therefore currently
+    reports NOTHING as a defect — it exists to make single-presentership
+    PROVABLE (bijection-style): were presenter_for_node ever to return None
+    for a node with >= 2 contesting operators, that would be the fired
+    Violation.
+
+    WHY this reads as "always green today": with the CURRENT graph (one
+    OP-director, scope=()), no operator has a non-empty scope, so there is
+    nothing to overlap — the calm-empty case (R-empty-content-wellformed).
+    The invariant is still load-bearing: the moment a SECOND operator is
+    spawned with an overlapping `scope` (R-context-bounded-delegation), this
+    is the check that guarantees the overlap gets exactly one presenter
+    instead of two operators silently disagreeing about who speaks for a
+    shared node.
+
+    WHY lexicographic-first (not e.g. "the parent operator" or "graph
+    order"): documented on scope_projection.presenter_for_node — id order is
+    stable under source reformatting; graph position and parent-hierarchy are
+    not guaranteed total orders across arbitrary Operator sets.
+    """
+    from hotam_spec.scope_projection import (  # noqa: PLC0415
+        overlap_node_ids,
+        presenter_for_node,
+        project_scope,
+        scope_overlap,
+    )
+
+    scoped_ops = [op for op in g.operators if op.scope]
+    if len(scoped_ops) < 2:
+        return []
+
+    views = {op.id: project_scope(g, op.scope) for op in scoped_ops}
+    # node_id -> set of operator ids whose scope contains it
+    contested: dict[str, set[str]] = {}
+    for i in range(len(scoped_ops)):
+        for j in range(i + 1, len(scoped_ops)):
+            a, b = scoped_ops[i], scoped_ops[j]
+            overlap = scope_overlap(views[a.id], views[b.id])
+            for node_id in overlap_node_ids(overlap):
+                contested.setdefault(node_id, set()).update({a.id, b.id})
+
+    out: list[Violation] = []
+    for node_id in sorted(contested):
+        operator_ids_for_node = tuple(sorted(contested[node_id]))
+        presenter = presenter_for_node(node_id, operator_ids_for_node)
+        if presenter is None:
+            out.append(
+                Violation(
+                    "check_scoped_node_has_single_presenter",
+                    node_id,
+                    f"node '{node_id}' is contested by operators "
+                    f"{operator_ids_for_node} but no presenter could be "
+                    f"determined; declare a presenter (R-overlap-single-presenter)",
+                )
+            )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # 12. §Process aspect invariants (aspect-gated: no-op when g.processes empty)
 # ---------------------------------------------------------------------------
@@ -3322,6 +3399,11 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "arithmetic branch on measure kind (NODE_COUNT vs CRYSTAL_CHARS) plus filesystem read",
     ),
     InvariantClassification(
+        "check_scoped_node_has_single_presenter",
+        BESPOKE,
+        "pairwise scope-projection overlap computation across all Operator pairs, not a single-field lookup",
+    ),
+    InvariantClassification(
         "check_open_has_question",
         BESPOKE,
         "parses a mini-grammar (OPEN(question)) out of a free-text field",
@@ -3600,6 +3682,8 @@ ALL_INVARIANTS = (
     # §Operator safety
     check_operator_steward_not_self,
     check_operator_within_budget,
+    # §Scope — projection overlap (M18/R-partition-vs-border resolution)
+    check_scoped_node_has_single_presenter,
     # §Process aspect invariants (aspect-gated: no-op when g.processes empty)
     check_process_lifecycle_wellformed,
     check_process_roles_declared,

@@ -231,14 +231,27 @@ class Operator:
       lifecycle       — operator-lifecycle value (ACTIVE/SATURATED/DELEGATED/RETIRED).
       context_budget  — the working-store ceiling (§ContextBudget).
       parent          — parent Operator id or None (root operator has no parent).
+      scope           — tuple of id-prefixes (§Scope, hotam_spec.scope_projection)
+                        defining this operator's PROJECTION over the shared
+                        graph — same shape as an agent's scope.py SCOPE tuple.
+                        Default () means "no declared sub-scope" (the operator
+                        implicitly sees the whole graph — today's single-
+                        OP-director state). Resolves R-partition-vs-border
+                        (M18): sub-domains are neither a strict partition nor
+                        an ad-hoc border — they are a named PROJECTION that
+                        MAY overlap another operator's projection; overlap is
+                        computed (scope_projection.scope_overlap), never
+                        forbidden nor silently merged.
       why             — anti-relitigation prose.
 
-    Domain scope (full DomainScope) is DEFERRED to a later P-phase; for now an
-    Operator implicitly owns the entire content graph (its budget is measured
-    over the whole graph). That is enough to make the operator appear AS A NODE
-    in the graph it operates — the constituting move (P2) is the existence, not
-    yet the sub-scope mechanics (those land with R-context-bounded-delegation,
-    P5+).
+    Domain scope: `scope` gives each Operator a declared prefix-projection
+    (R-scope-is-projection); the SIZE of that projection is not yet what
+    ContextBudget measures (CRYSTAL_CHARS still measures the resident crystal
+    file, not `scope`-filtered node count) — narrowing the budget MEASURE
+    itself by `scope` remains a later P-phase. That is enough to make the
+    operator appear AS A NODE in the graph it operates AND to make its
+    sub-domain a computable, overlap-visible view — the constituting move
+    (P2) plus the projection mechanics (P-scope) are both in place now.
     """
 
     id: str
@@ -248,4 +261,5 @@ class Operator:
         default_factory=lambda: ContextBudget(limit=0)
     )
     parent: str | None = None
+    scope: tuple[str, ...] = field(default_factory=tuple)
     why: str = ""

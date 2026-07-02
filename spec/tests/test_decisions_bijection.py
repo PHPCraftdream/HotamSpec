@@ -68,10 +68,17 @@ def _read_claude_m_rows() -> dict[str, list[str]]:
 
 
 def test_every_m_tag_req_appears_in_decisions_md() -> None:
-    """Every Requirement with a non-empty m_tag appears as a row in DECISIONS.md."""
+    """Every Requirement with a non-empty m_tag appears as a row in DECISIONS.md.
+
+    An empty `tagged` set is legitimate once every M-tagged OPEN item has been
+    resolved to SETTLED/REJECTED (m_tag is OPEN-only per check_m_tag_open_only)
+    -- e.g. R-partition-vs-border (M18) was the last OPEN M-tag; once REJECTED
+    with REPLACES, the graph carries zero m_tags. That is the calm "no open
+    M-decisions remain" state, not vacuous coverage -- the loop below still
+    proves the bijection holds for whatever IS tagged (0 or more).
+    """
     g = load_content_graph()
     tagged = [r for r in g.requirements if r.m_tag]
-    assert tagged, "no requirements carry m_tags — annotate graph.py per the M-table"
 
     decisions_text = gen_spec.build_decisions(g)
     missing: list[str] = []
