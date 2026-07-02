@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from hotam_spec.conflict import conflict_identity
+from hotam_spec.conflict import Variant, conflict_identity
 
 
 @dataclass(frozen=True)
@@ -64,11 +64,14 @@ class ProposedConflictTransition:
 
     conflict_id: str  # the C-… anchor being moved
     new_lifecycle: str  # the new value (e.g. "DECIDED(... rationale text ...)")
-    decided_by: str = ""  # required when new_lifecycle starts with DECIDED
+    decided_by: str = ""  # required when new_lifecycle starts with DECIDED or HELD
     revisit_marker: str = ""
     derived: tuple[str, ...] = field(
         default_factory=tuple
     )  # R-ids spawned by this decision
+    variants: tuple[Variant, ...] = field(default_factory=tuple)
+    # ^ Variant payloads; required (>=2) when new_lifecycle starts with HELD
+    # (§Conflict — Variant, check_held_has_min_two_variants).
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.

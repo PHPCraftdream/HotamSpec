@@ -229,6 +229,23 @@ def diagnose(g: TensionGraph) -> list[Action]:
                 )
             )
 
+    # P4 OPEN_ITEM (continued) — HELD conflicts: not resolvable by amending
+    # their members, held open carrying elaborated variants; the steward must
+    # choose one (§Conflict — Variant / HELD, R-held-carries-variants).
+    for c in g.conflicts:
+        if c.is_held():
+            for v in c.variants:
+                actions.append(
+                    Action(
+                        priority=P_OPEN_ITEM,
+                        kind=_BAND_LABEL[P_OPEN_ITEM],
+                        target=c.id,
+                        imperative=(
+                            f"choose a variant: '{v.id}' — {c.axis}"
+                        ),
+                    )
+                )
+
     # P5 LATENT_CONNECTOR — heuristic missing-connector suspects (for AI
     # review), CLUSTERED by shared-assumption signature: one action per
     # cluster, not C(n,2) pair lines (R-latent-connectors-cluster-by-assumption;

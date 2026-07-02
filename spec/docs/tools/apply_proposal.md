@@ -52,6 +52,19 @@ The JSON shapes:
     "derived": ["R-foo"]
   }
 
+  ProposedConflictTransition HELD (not resolvable by amending the members;
+  requires the same human signoff as DECIDED, plus >=2 elaborated variants):
+  {
+    "kind": "ConflictTransition",
+    "conflict_id": "C-8600b1b8",
+    "new_lifecycle": "HELD(... reason it cannot be resolved by amending members ...)",
+    "decided_by": "domain-user",
+    "variants": [
+      {"id": "V-foo", "behavior": "...", "implies": "...", "costs": "..."},
+      {"id": "V-bar", "behavior": "...", "implies": "...", "costs": "..."}
+    ]
+  }
+
   ProposedRequirement (add or update):
   {
     "kind": "Requirement",

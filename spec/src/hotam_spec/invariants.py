@@ -794,6 +794,170 @@ def check_decided_by_not_member_owner(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_held_has_min_two_variants(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a HELD conflict carries at least two elaborated Variants.
+
+    RULE: when Conflict.lifecycle starts with "HELD", `variants` MUST contain
+    at least two distinct Variant ids. A HELD tension with fewer than two
+    variants gives the steward nothing to choose between -- exactly the
+    invisible-contradiction-in-a-new-costume the hard boundary forbids.
+
+    WHY: mirrors check_conflict_min_two_members -- a HELD conflict connects
+    at least two SIDES of a live tension the same way a Conflict connects at
+    least two member requirements.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_held():
+            continue
+        if len({v.id for v in c.variants}) < 2:
+            out.append(
+                Violation(
+                    "check_held_has_min_two_variants",
+                    c.id,
+                    "HELD conflict must carry >= 2 distinct Variant ids "
+                    "(the steward needs at least two sides to choose between)",
+                )
+            )
+    return out
+
+
+def check_held_has_nonempty_decided_by(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a HELD conflict carries a non-empty decided_by field.
+
+    RULE: when Conflict.lifecycle starts with "HELD", `decided_by` MUST be
+    non-empty. Entering HELD is a human act (R-decided-needs-human-signoff's
+    signoff lock applied at the moment a tension is classified unresolvable
+    by its members) -- without this lock an AI could silently write
+    lifecycle="HELD(...)" with decided_by="".
+
+    WHY: the structural twin of check_decided_has_nonempty_decided_by applied
+    to HELD instead of DECIDED.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_held():
+            continue
+        if not c.decided_by:
+            out.append(
+                Violation(
+                    "check_held_has_nonempty_decided_by",
+                    c.id,
+                    "HELD conflict must carry a non-empty decided_by "
+                    "(the Stakeholder.id of the human who classified this "
+                    "tension unresolvable-by-members; R-decided-needs-human-signoff)",
+                )
+            )
+    return out
+
+
+def check_held_by_is_known_stakeholder(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a HELD conflict's decided_by resolves to a known Stakeholder.
+
+    RULE: when Conflict.lifecycle starts with "HELD" and decided_by is
+    non-empty, decided_by MUST be in stakeholder_ids(g).
+
+    WHY: mirrors check_decided_by_is_known_stakeholder applied to HELD.
+    """
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_held():
+            continue
+        if not c.decided_by:
+            continue  # caught by check_held_has_nonempty_decided_by
+        if c.decided_by not in sids:
+            out.append(
+                Violation(
+                    "check_held_by_is_known_stakeholder",
+                    c.id,
+                    f"decided_by '{c.decided_by}' is not a known Stakeholder",
+                )
+            )
+    return out
+
+
+def check_held_by_not_member_owner(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a HELD conflict's decided_by is not the owner of any member Requirement.
+
+    RULE: when Conflict.lifecycle starts with "HELD", decided_by MUST NOT be
+    the owner of any of the conflict's member Requirements -- the
+    steward-distinct rule applied to the human who holds the tension open.
+
+    WHY: mirrors check_decided_by_not_member_owner applied to HELD; if the
+    signoff owned a member, the hard boundary would be circumvented at the
+    hold step exactly as it would at the decide step.
+    """
+    owner_of = _requirement_owner_map(g)
+    sids = stakeholder_ids(g)
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_held():
+            continue
+        if not c.decided_by or c.decided_by not in sids:
+            continue  # caught by prior atomic checks
+        member_owners = {owner_of[m] for m in c.members if m in owner_of}
+        if c.decided_by in member_owners:
+            out.append(
+                Violation(
+                    "check_held_by_not_member_owner",
+                    c.id,
+                    f"decided_by '{c.decided_by}' also owns a member requirement; "
+                    f"the human who holds this tension open must be outside the "
+                    f"conflict's members (steward-distinct rule applied to HELD)",
+                )
+            )
+    return out
+
+
+def check_held_has_decided_by(g: TensionGraph) -> list[Violation]:
+    """Canon: §Conflict — a HELD conflict names a human decider outside its members (thin delegator).
+
+    RULE (R-decided-needs-human-signoff applied to HELD): when
+    Conflict.lifecycle starts with "HELD", `decided_by` MUST satisfy three
+    conditions: (1) non-empty, (2) resolves to a known Stakeholder id, (3)
+    NOT the owner of any of the conflict's member Requirements.
+
+    This is a THIN DELEGATOR — calls check_held_has_nonempty_decided_by,
+    check_held_by_is_known_stakeholder, check_held_by_not_member_owner and
+    concatenates. The atomic sub-checks are registered individually in
+    ALL_INVARIANTS.
+    """
+    out: list[Violation] = []
+    out.extend(check_held_has_nonempty_decided_by(g))
+    out.extend(check_held_by_is_known_stakeholder(g))
+    out.extend(check_held_by_not_member_owner(g))
+    return out
+
+
+def check_typed_anchors_variant(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Variant.id (on every Conflict) starts with 'V-'.
+
+    RULE: for each Conflict, every Variant in its `variants` tuple MUST have
+    an id starting with 'V-'. An id with the wrong prefix breaks the
+    typed-anchor discipline (R-anchor-everything) for the new Variant payload
+    type introduced alongside HELD.
+
+    WHY: Variant is not a graph node (anti-RDF, payload on Conflict), but it
+    IS a typed anchor a steward or agent may cite by reference
+    (R-speak-by-reference) -- the same discipline that governs R-/C-/A-/OP-
+    ids applies to V- ids.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        for v in c.variants:
+            if not v.id.startswith("V-"):
+                out.append(
+                    Violation(
+                        "check_typed_anchors_variant",
+                        f"{c.id}:{v.id}",
+                        f"Variant id '{v.id}' on conflict '{c.id}' must start "
+                        f"with 'V-' (typed-anchor rule, R-anchor-everything)",
+                    )
+                )
+    return out
+
+
 def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
     """Canon: §Conflict — a DECIDED conflict names a human decider outside its members (thin delegator).
 
@@ -3110,6 +3274,31 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         TABLE_DRIVEN,
         "shape: for each DECIDED Conflict, decided_by must not be in the computed member-owner set",
     ),
+    InvariantClassification(
+        "check_held_has_min_two_variants",
+        TABLE_DRIVEN,
+        "shape: for each HELD Conflict, len(set(variant ids)) must satisfy a >= 2 relation",
+    ),
+    InvariantClassification(
+        "check_held_has_nonempty_decided_by",
+        TABLE_DRIVEN,
+        "shape: for each HELD Conflict, decided_by field must be non-empty",
+    ),
+    InvariantClassification(
+        "check_held_by_is_known_stakeholder",
+        TABLE_DRIVEN,
+        "shape: for each HELD Conflict, decided_by must resolve in stakeholder_ids(g)",
+    ),
+    InvariantClassification(
+        "check_held_by_not_member_owner",
+        TABLE_DRIVEN,
+        "shape: for each HELD Conflict, decided_by must not be in the computed member-owner set",
+    ),
+    InvariantClassification(
+        "check_typed_anchors_variant",
+        TABLE_DRIVEN,
+        "shape: for each Conflict, each Variant in variants[*] must have id starting with prefix 'V-'",
+    ),
     # --- BESPOKE: identity derivation, cross-entity bijection, arithmetic,
     # filesystem walks, meta-coherence — each irreducibly its own shape ---
     InvariantClassification(
@@ -3381,6 +3570,11 @@ ALL_INVARIANTS = (
     check_decided_has_nonempty_decided_by,
     check_decided_by_is_known_stakeholder,
     check_decided_by_not_member_owner,
+    # §HELD state + variants (atomized; check_held_has_decided_by is thin delegator)
+    check_held_has_min_two_variants,
+    check_held_has_nonempty_decided_by,
+    check_held_by_is_known_stakeholder,
+    check_held_by_not_member_owner,
     # §Typed anchors (atomized; check_typed_anchors is thin delegator)
     check_typed_anchors_requirement,
     check_typed_anchors_assumption,
@@ -3388,6 +3582,7 @@ ALL_INVARIANTS = (
     check_typed_anchors_operator,
     check_typed_anchors_process,
     check_typed_anchors_goal,
+    check_typed_anchors_variant,
     # §Enforcement gradient
     check_enforced_names_invariant,
     check_enforceability_kind_known,

@@ -142,6 +142,20 @@ invisible hole, the cardinal sin of the methodology.
 This is a THIN DELEGATOR — it calls the atomic sub-checks and concatenates
 their results. The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
+## From `spec/src/hotam_spec/invariants.py::check_typed_anchors_variant`
+
+Canon: §Invariants — every Variant.id (on every Conflict) starts with 'V-'.
+
+RULE: for each Conflict, every Variant in its `variants` tuple MUST have
+an id starting with 'V-'. An id with the wrong prefix breaks the
+typed-anchor discipline (R-anchor-everything) for the new Variant payload
+type introduced alongside HELD.
+
+WHY: Variant is not a graph node (anti-RDF, payload on Conflict), but it
+IS a typed anchor a steward or agent may cite by reference
+(R-speak-by-reference) -- the same discipline that governs R-/C-/A-/OP-
+ids applies to V- ids.
+
 ## From `spec/src/hotam_spec/invariants.py::check_typed_anchors_requirement`
 
 Canon: §Invariants — every Requirement.id starts with 'R-'.

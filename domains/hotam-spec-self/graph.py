@@ -54,7 +54,7 @@ from __future__ import annotations
 
 from hotam_spec.assumption import HOLDS, UNCERTAIN, Assumption
 from hotam_spec.axis import Axis
-from hotam_spec.conflict import Conflict, conflict_identity
+from hotam_spec.conflict import Conflict, conflict_identity, Variant
 from hotam_spec.graph import TensionGraph
 from hotam_spec.operator import ContextBudget, Operator
 from hotam_spec.process import (
@@ -3466,8 +3466,8 @@ def build_graph() -> TensionGraph:
             id="R-unresolvable-conflict-carries-variants",
             claim=("A Conflict unresolvable by amending its member requirements shall carry at least two elaborated behavior variants; the operator presents the variants, the steward chooses."),
             owner="framework-reviewer",
-            status="OPEN(how do variants attach to the Conflict node -- payload field vs derived Proposed* pair -- and when is a conflict classified unresolvable-by-members?)",
-            why=("Steward-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test)."),
+            status="REJECTED",
+            why=("REJECTED -- REPLACES split+answered by R-conflict-held-state + R-held-carries-variants + R-variant-choice-is-decision + R-unresolvable-classified-by-human (Wave 3, decided by framework-reviewer 2026-07-02). Both OPEN design questions are now answered: (1) attachment shape -- Variant is a payload field on Conflict.variants (frozen dataclass, anti-RDF, NOT a new graph node), landed via R-held-carries-variants; (2) when a conflict is classified unresolvable-by-members -- this is a human judgment recorded via the HELD lifecycle's decided_by signoff lock (check_held_has_decided_by family), never an AI inference, landed via R-unresolvable-classified-by-human. The original claim's three concerns (variants attach to Conflict; operator presents; steward chooses) are now separately atomized: R-held-carries-variants (the payload shape), R-conflict-held-state (the lifecycle state that carries it), and R-variant-choice-is-decision (the steward's choice moving HELD to DECIDED). REJECTED rather than promoted to SETTLED because the original claim's own OPEN(question) is a compound design-question node whose answer is now four separate, atomic, honestly-graded requirements -- keeping the original as a live SETTLED atom would duplicate their claims (R-requirement-claim-is-atomic). — (was: Steward-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test).)"),
             enforcement=PROSE,
         ),
         Requirement(
@@ -3522,6 +3522,56 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-requirement-claim-is-atomic"), Relation("refines", "R-check-method-is-atomic"),),
             enforcement=ENFORCED,
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline", "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline",),
+        ),
+        Requirement(
+            id="R-framework-owned-by-no-agent",
+            claim=("The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework (ENFORCED via test_agent_import_direction.py). No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that hotam_spec/ has exactly one owner field (framework-author, the framework's own steward) and no agent directory declares or claims exclusive ownership of any hotam_spec module. Landed as the missing REPLACES target flagged in the Wave 2 review (a REJECTED atom pointed at this id before it existed)."),
+            assumptions=("A-content-free-honest",),
+            enforcement=STRUCTURAL,
+            enforceability="INHERENTLY_PROSE",
+        ),
+        Requirement(
+            id="R-conflict-held-state",
+            claim=("Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements."),
+            owner="framework-reviewer",
+            status="SETTLED",
+            why=("Closes the design question in R-unresolvable-conflict-carries-variants (steward verdict, verbatim 2026-07-02): the axis 'turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties'. HELD is that resting point, added to CONFLICT_LIFECYCLE as a QUIESCENT state (mirrors DECIDED/REVISIT_WHEN's shape exactly -- prefix-parsed, cyclic back to DETECTED on condition-fires) rather than a new node type -- the conflict itself does not change identity, only its lifecycle value. Entry requires the same signoff lock as DECIDED (check_held_has_decided_by, R-decided-needs-human-signoff applied to HELD) so an AI cannot silently classify a tension as unresolvable-by-members."),
+            assumptions=("A-bootstrap-self-applies",),
+            enforcement=ENFORCED,
+            enforced_by=("check_conflict_lifecycle_in_lifecycle", "check_canonical_lifecycles_wellformed",),
+        ),
+        Requirement(
+            id="R-held-carries-variants",
+            claim=("A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes."),
+            owner="framework-reviewer",
+            status="SETTLED",
+            why=("Answers the attachment-shape half of R-unresolvable-conflict-carries-variants's open question ('payload field vs derived Proposed* pair'): Variant is a frozen dataclass living in Conflict.variants (payload), never a graph.py node -- anti-RDF, mirrors why axis/context/shared_assumption are Conflict fields and not their own node types. check_held_has_min_two_variants enforces len(set(variant ids)) >= 2 whenever lifecycle starts with HELD; check_typed_anchors_variant enforces the V- prefix on every Variant id (R-anchor-everything extended to the new payload type) so a variant can be cited by reference (R-speak-by-reference) exactly like any other typed anchor."),
+            assumptions=("A-bootstrap-self-applies",),
+            enforcement=ENFORCED,
+            enforced_by=("check_held_has_min_two_variants", "check_typed_anchors_variant", "check_held_has_nonempty_decided_by", "check_held_by_is_known_stakeholder", "check_held_by_not_member_owner",),
+        ),
+        Requirement(
+            id="R-variant-choice-is-decision",
+            claim=("A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED."),
+            owner="framework-reviewer",
+            status="SETTLED",
+            why=("The HELD to DECIDED transition (steward-choose-variant, guard: 'rationale names the chosen variant') is where R-decided-needs-human-signoff and R-ai-presents-not-decides meet the variant machinery: the AI presents N elaborated variants, but ONLY the steward's DECIDED rationale selects which one becomes real (a derived= requirement). This is honestly STRUCTURAL, not fully mechanically checkable -- no check_* can verify the DECIDED rationale prose actually names one of the HELD conflict's variant ids (that is a semantic match, not a structural one); check_decided_has_rationale_or_derived enforces only that SOME rationale or derived requirement exists, the narrower claim that it names the chosen variant is carried by prose discipline and steward review, same honesty pattern as R-task-spawn-is-a-hand."),
+            assumptions=("A-stakeholders-care",),
+            enforcement=STRUCTURAL,
+            enforceability="INHERENTLY_PROSE",
+        ),
+        Requirement(
+            id="R-unresolvable-classified-by-human",
+            claim=("Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference."),
+            owner="framework-reviewer",
+            status="SETTLED",
+            why=("Answers the second open design question in R-unresolvable-conflict-carries-variants ('when is a conflict classified unresolvable-by-members?'): there is no proposed heuristic or detector for this -- it is the steward's call, made structural exactly the way R-uncrystallizable-automated makes 'missing type' detection a recorded human judgment rather than an algorithm. The AI's role is limited to PRESENTING elaborated variants once the steward has already decided the tension will not yield to amending R-a or R-b (R-ai-presents-not-decides); the ConflictTransition to HELD requires decided_by (check_held_has_decided_by) precisely so this classification act itself is never silent or AI-authored."),
+            assumptions=("A-stakeholders-care",),
+            enforcement=STRUCTURAL,
+            enforceability="INHERENTLY_PROSE",
         ),
     )
 
@@ -3688,6 +3738,16 @@ def build_graph() -> TensionGraph:
             shared_assumption="A-finite-context-operators",
             derived=(),
             revisit_marker="",
+        ),
+        Conflict(
+            id=conflict_identity("core-vs-aspect", "R-speculative-aspects-frozen freezes the Entity aspect (no inward development until a real business domain demonstrates concrete need), while R-entity-derived-requirement's own enforcement expects EntityType declarations to keep projecting into the domain's CLAUDE.md CONSTITUTION block -- new domain content under the Entity aspect is exactly the kind of inward development the freeze forbids, yet the aspect's enforceability claim presumes it stays live enough to receive new EntityType projections as domains populate it."),
+            axis="core-vs-aspect",
+            context="R-speculative-aspects-frozen freezes the Entity aspect (no inward development until a real business domain demonstrates concrete need), while R-entity-derived-requirement's own enforcement expects EntityType declarations to keep projecting into the domain's CLAUDE.md CONSTITUTION block -- new domain content under the Entity aspect is exactly the kind of inward development the freeze forbids, yet the aspect's enforceability claim presumes it stays live enough to receive new EntityType projections as domains populate it.",
+            members=("R-speculative-aspects-frozen", "R-entity-derived-requirement"),
+            steward="framework-reviewer",
+            lifecycle="HELD(not resolvable by amending R-speculative-aspects-frozen or R-entity-derived-requirement themselves -- the freeze is a blanket policy over the whole Entity aspect and R-entity-derived-requirement's enforceability claim is inherent to what an EntityType IS, so the tension is architectural, not a wording fix on either side -- per explicit campaign delegation 2026-07-02: 'все вопросы решай в сторону совершенства')",
+            decided_by="domain-user",
+            variants=(Variant(id="V-unfreeze-entity-projection", behavior="Unfreeze the Entity->CLAUDE.md CONSTITUTION projection specifically (not the whole Entity aspect): allow new EntityType declarations to keep generating R-entity-<slug> constitution rows and enforced_by coverage, while the REST of the Entity aspect (create_entity_type.py inward edits, entity.py machinery growth) stays frozen under R-speculative-aspects-frozen's baseline hash guard.", implies="R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the steward signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.", costs="The freeze's hash-baseline test (test_frozen_aspects_snapshot.py) currently covers src/hotam_spec/entity.py wholesale; carving out the projection path requires either a narrower baseline or a second frozen-surface declaration, adding one more piece of frozen-aspect bookkeeping. Slightly weakens the freeze's simplicity (one clean boundary becomes two)."), Variant(id="V-keep-freeze-defer-enforce", behavior="Keep R-speculative-aspects-frozen exactly as-is (the whole Entity aspect frozen, zero inward development) and demote R-entity-derived-requirement's enforcement from its current STRUCTURAL/claimed-guarantee posture to an explicitly conditional claim: 'this SHALL hold once the Entity aspect unfreezes; until then it is dormant-by-construction (0 entity_types in the graph makes the claim vacuously true, not falsely enforced).'", implies="R-entity-derived-requirement's why= is amended to state its own dormancy explicitly (mirrors how R-entity-is-declarative and the other frozen-aspect atoms already read after being relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing). No code changes; a prose-honesty amendment only.", costs="The domain stays unable to actually USE the Entity aspect until a real business domain triggers the unfreeze (Phase 5) -- burn-down of this particular architectural choice is deferred indefinitely rather than resolved now. The tension itself does not go away, it is just named honestly and left HELD/parked rather than acted on.")),
         ),
     )
 

@@ -51,6 +51,12 @@ Lifecycle (source of truth is the `lifecycle` field, params.py-style):
                         MUST carry a non-empty decided_by (the human who approved).
   REVISIT_WHEN(cond)  — parked with an explicit revisit condition (anti-relitigation:
                         the historian re-opens it when the condition triggers).
+  HELD(reason)        — not resolvable by amending the member requirements; held
+                        open carrying >=2 elaborated behavior Variants
+                        (invariants.check_held_has_min_two_variants) for the
+                        steward to choose between. MUST carry a non-empty
+                        decided_by, the same signoff lock as DECIDED
+                        (invariants.check_held_has_decided_by).
 """
 
 from __future__ import annotations
@@ -63,6 +69,7 @@ DETECTED = "DETECTED"
 ACKNOWLEDGED = "ACKNOWLEDGED"
 DECIDED_PREFIX = "DECIDED"  # "DECIDED(<rationale>)"
 REVISIT_PREFIX = "REVISIT_WHEN"  # "REVISIT_WHEN(<condition>)"
+HELD_PREFIX = "HELD"  # "HELD(<reason>)"
 
 #: Lifecycle states in which a conflict is still OPEN (no steward resolution yet).
 UNRESOLVED_LIFECYCLE: frozenset[str] = frozenset({DETECTED, ACKNOWLEDGED})
@@ -87,6 +94,33 @@ def conflict_identity(axis: str, context: str) -> str:
     normctx = re.sub(r"\s+", " ", context.strip().lower())
     digest = hashlib.sha256(f"{axis}\x00{normctx}".encode()).hexdigest()
     return "C-" + digest[:8]
+
+
+@dataclass(frozen=True)
+class Variant:
+    """Canon: §Conflict — one elaborated behavior variant attached to a HELD Conflict.
+
+    RULE: `id` MUST start with 'V-' (typed-anchor discipline,
+    R-anchor-everything, check_typed_anchors_variant). `behavior` is the
+    concrete elaborated behavior this variant would produce; `implies` names
+    what accepting this variant commits the graph to (prose, human-readable);
+    `costs` names what accepting this variant gives up.
+
+    WHY a payload dataclass, not a new graph-node type: the steward's own
+    framing (2026-07-02) is that the axis becomes a live tension with two (or
+    more) SIDES to choose between -- it is not a new kind of thing in the
+    ontology, it is elaborated content ON the Conflict that is already
+    unresolvable by amending its members. A new node type would be RDF-style
+    over-modeling (anti-RDF) for what is, structurally, just richer payload on
+    an existing connector node -- exactly the same reasoning that keeps axis/
+    context/shared_assumption as Conflict fields rather than nodes of their
+    own.
+    """
+
+    id: str
+    behavior: str
+    implies: str
+    costs: str
 
 
 @dataclass(frozen=True)
@@ -140,6 +174,9 @@ class Conflict:
     derived: tuple[str, ...] = field(default_factory=tuple)
     revisit_marker: str = ""
     decided_by: str = ""  # Stakeholder.id of the human who approved DECIDED; required when lifecycle starts with DECIDED
+    variants: tuple[Variant, ...] = field(default_factory=tuple)
+    # ^ elaborated behavior variants; required (>=2) when lifecycle is HELD
+    # (check_held_has_min_two_variants). Empty for every other lifecycle.
 
     def is_unresolved(self) -> bool:
         """Canon: §Conflict — True iff no steward resolution has landed yet.
@@ -165,3 +202,18 @@ class Conflict:
         invariant, harness and generator agree.
         """
         return self.lifecycle.startswith(DECIDED_PREFIX)
+
+    def is_held(self) -> bool:
+        """Canon: §Conflict — True iff lifecycle records the HELD state.
+
+        RULE: held iff lifecycle starts with "HELD". A held conflict is not
+        resolvable by amending its members; it carries >=2 elaborated
+        behavior variants for the steward to choose between
+        (check_held_has_min_two_variants) and requires the same human-signoff
+        lock as DECIDED (check_held_has_decided_by).
+
+        WHY a prefix test: mirrors is_decided() -- the reason travels inline
+        as "HELD(<reason>)", the anti-relitigation record of why this tension
+        could not be resolved through its members.
+        """
+        return self.lifecycle.startswith(HELD_PREFIX)

@@ -39,6 +39,19 @@ The JSON shapes:
     "derived": ["R-foo"]
   }
 
+  ProposedConflictTransition HELD (not resolvable by amending the members;
+  requires the same human signoff as DECIDED, plus >=2 elaborated variants):
+  {
+    "kind": "ConflictTransition",
+    "conflict_id": "C-8600b1b8",
+    "new_lifecycle": "HELD(... reason it cannot be resolved by amending members ...)",
+    "decided_by": "domain-user",
+    "variants": [
+      {"id": "V-foo", "behavior": "...", "implies": "...", "costs": "..."},
+      {"id": "V-bar", "behavior": "...", "implies": "...", "costs": "..."}
+    ]
+  }
+
   ProposedRequirement (add or update):
   {
     "kind": "Requirement",
@@ -106,7 +119,7 @@ if str(_SRC) not in sys.path:
 
 import re as _re  # noqa: E402
 
-from hotam_spec.conflict import conflict_identity  # noqa: E402
+from hotam_spec.conflict import Variant, conflict_identity  # noqa: E402
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
 from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
@@ -215,6 +228,33 @@ def _validate_conflict_transition(raw: dict) -> ProposedConflictTransition:
             "A DECIDED transition requires a human decider "
             "(R-decided-needs-human-signoff)."
         )
+    variants_raw = raw.get("variants", [])
+    if not isinstance(variants_raw, list):
+        raise ValueError(
+            "'variants' must be a list of {id, behavior, implies, costs} objects."
+        )
+    variants = tuple(
+        Variant(
+            id=str(v.get("id", "")),
+            behavior=str(v.get("behavior", "")),
+            implies=str(v.get("implies", "")),
+            costs=str(v.get("costs", "")),
+        )
+        for v in variants_raw
+    )
+    if new_lifecycle.startswith("HELD"):
+        if not decided_by:
+            raise ValueError(
+                "new_lifecycle starts with HELD but decided_by is empty. "
+                "A HELD transition requires a human signoff, the same lock "
+                "as DECIDED (R-decided-needs-human-signoff)."
+            )
+        if len({v.id for v in variants}) < 2:
+            raise ValueError(
+                "new_lifecycle starts with HELD but fewer than 2 distinct "
+                "Variant ids were supplied (check_held_has_min_two_variants "
+                "requires >= 2)."
+            )
     revisit_marker = raw.get("revisit_marker", "")
     derived_raw = raw.get("derived", [])
     if not isinstance(derived_raw, list):
@@ -226,6 +266,7 @@ def _validate_conflict_transition(raw: dict) -> ProposedConflictTransition:
         decided_by=decided_by,
         revisit_marker=revisit_marker if isinstance(revisit_marker, str) else "",
         derived=derived,
+        variants=variants,
     )
 
 
@@ -788,12 +829,24 @@ def _python_repr(value: object) -> str:
     """Canon: §Proposal — produce a Python-literal repr suitable for source insertion.
 
     Strings → double-quoted; empty tuples → (); tuples of strings → ("a", "b");
-    empty string → "".
+    empty string → ""; Variant(...) payloads → a
+    `Variant(id=..., behavior=..., implies=..., costs=...)` constructor call
+    (mirrors how Conflict itself round-trips through source text).
     """
+    from hotam_spec.conflict import Variant  # noqa: PLC0415
+
     if isinstance(value, str):
         # Use double quotes, escape internal double quotes
         escaped = value.replace("\\", "\\\\").replace('"', '\\"')
         return f'"{escaped}"'
+    if isinstance(value, Variant):
+        return (
+            "Variant("
+            f"id={_python_repr(value.id)}, "
+            f"behavior={_python_repr(value.behavior)}, "
+            f"implies={_python_repr(value.implies)}, "
+            f"costs={_python_repr(value.costs)})"
+        )
     if isinstance(value, tuple):
         if not value:
             return "()"
@@ -1049,12 +1102,13 @@ def _apply_conflict_transition(
         ("decided_by", proposal.decided_by),
         ("revisit_marker", proposal.revisit_marker),
         ("derived", proposal.derived),
+        ("variants", proposal.variants),
     ]:
         if field_name in ("revisit_marker",) and not new_value:
             existing = _kwarg_line_col(call_node, field_name)
             if existing is None:
                 continue
-        if field_name == "derived" and not new_value:
+        if field_name in ("derived", "variants") and not new_value:
             existing = _kwarg_line_col(call_node, field_name)
             if existing is None:
                 continue
@@ -1067,7 +1121,41 @@ def _apply_conflict_transition(
                 f"Lost track of conflict '{proposal.conflict_id}' after "
                 f"replacing field '{field_name}'."
             )
+    if proposal.variants:
+        result = "".join(lines)
+        result = _ensure_conflict_import(result, ["Variant"])
+        lines = result.splitlines(keepends=True)
     return list(lines)
+
+
+def _ensure_conflict_import(source_text: str, needed: list[str]) -> str:
+    """Ensure `from hotam_spec.conflict import ...` names every symbol in `needed`.
+
+    Shared by the ConflictTransition writer (variants introduce `Variant`)
+    and the new-Conflict writer (`Conflict`, `conflict_identity`). Appends
+    any missing names to an existing import line, or inserts a fresh import
+    line after `from __future__ import annotations` if none exists yet.
+    """
+    m = _re.search(r"^from hotam_spec\.conflict import ([^\n]+)", source_text, _re.MULTILINE)
+    if m:
+        existing = m.group(1)
+        existing_names = [n.strip() for n in existing.split(",")]
+        missing = [n for n in needed if n not in existing_names]
+        if missing:
+            new_import = existing.rstrip() + ", " + ", ".join(missing)
+            source_text = source_text.replace(
+                f"from hotam_spec.conflict import {existing}",
+                f"from hotam_spec.conflict import {new_import}",
+                1,
+            )
+    else:
+        source_text = source_text.replace(
+            "from __future__ import annotations\n",
+            "from __future__ import annotations\n\n"
+            f"from hotam_spec.conflict import {', '.join(needed)}\n",
+            1,
+        )
+    return source_text
 
 
 # ---------------------------------------------------------------------------
@@ -1244,25 +1332,7 @@ def _apply_conflict_to_source(source_text: str, proposal: ProposedConflict) -> s
     result = "".join(lines)
 
     # Ensure Conflict + conflict_identity are imported.
-    m = _re.search(r"^from hotam_spec\.conflict import ([^\n]+)", result, _re.MULTILINE)
-    if m:
-        existing = m.group(1)
-        needed = ["Conflict", "conflict_identity"]
-        missing = [n for n in needed if n not in existing.split(", ")]
-        if missing:
-            new_import = existing.rstrip() + ", " + ", ".join(missing)
-            result = result.replace(
-                f"from hotam_spec.conflict import {existing}",
-                f"from hotam_spec.conflict import {new_import}",
-                1,
-            )
-    else:
-        result = result.replace(
-            "from __future__ import annotations\n",
-            "from __future__ import annotations\n\n"
-            "from hotam_spec.conflict import Conflict, conflict_identity\n",
-            1,
-        )
+    result = _ensure_conflict_import(result, ["Conflict", "conflict_identity"])
     return result
 
 

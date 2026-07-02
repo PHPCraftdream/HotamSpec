@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 159 / SETTLED 184; closeable debt 10; inherent discipline 15; DRAFT 7; OPEN 2; REJECTED 29.**
+**Burn-down: SETTLED-ENFORCED 161 / SETTLED 189; closeable debt 10; inherent discipline 18; DRAFT 7; OPEN 1; REJECTED 30.**
 
 ---
 
@@ -52,6 +52,9 @@ judgment calls no check_* could ever verify.
 | `R-tiered-gate-not-a-commit-gate` | STRUCTURAL | `framework-author` | The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries; the T1 targeted-enforcer tier applies ONLY to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing. |
 | `R-initiator-supplies-domain-content` | STRUCTURAL | `domain-user` | An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec. |
 | `R-task-spawn-is-a-hand` | STRUCTURAL | `ai-agent` | A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator. |
+| `R-framework-owned-by-no-agent` | STRUCTURAL | `framework-author` | The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import. |
+| `R-variant-choice-is-decision` | STRUCTURAL | `framework-reviewer` | A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED. |
+| `R-unresolvable-classified-by-human` | STRUCTURAL | `framework-reviewer` | Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -216,6 +219,8 @@ judgment calls no check_* could ever verify.
 | `R-core-imports-stdlib-or-hotam-spec-only` | test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only | Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency. |
 | `R-agent-code-imports-framework` | test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir | An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory. |
 | `R-atomicity-ratchet-no-growth` | test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline | The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json. |
+| `R-conflict-held-state` | check_conflict_lifecycle_in_lifecycle, check_canonical_lifecycles_wellformed | Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements. |
+| `R-held-carries-variants` | check_held_has_min_two_variants, check_typed_anchors_variant, check_held_has_nonempty_decided_by, check_held_by_is_known_stakeholder, check_held_by_not_member_owner | A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes. |
 
 ## DRAFT (not yet promoted)
 

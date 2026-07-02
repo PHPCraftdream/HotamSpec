@@ -60,6 +60,12 @@ Lifecycle (source of truth is the `lifecycle` field, params.py-style):
                         MUST carry a non-empty decided_by (the human who approved).
   REVISIT_WHEN(cond)  — parked with an explicit revisit condition (anti-relitigation:
                         the historian re-opens it when the condition triggers).
+  HELD(reason)        — not resolvable by amending the member requirements; held
+                        open carrying >=2 elaborated behavior Variants
+                        (invariants.check_held_has_min_two_variants) for the
+                        steward to choose between. MUST carry a non-empty
+                        decided_by, the same signoff lock as DECIDED
+                        (invariants.check_held_has_decided_by).
 
 ## From `spec/src/hotam_spec/conflict.py::conflict_identity`
 
@@ -77,6 +83,26 @@ WHY (axis, context) and not members: the same two requirements can collide on
 different axes/contexts (distinct conflicts); and one conflict can outlive any
 particular pair of member requirements as they are reorganized. Identity must
 track the TENSION, which is (axis, context), not the parties.
+
+## From `spec/src/hotam_spec/conflict.py::Variant`
+
+Canon: §Conflict — one elaborated behavior variant attached to a HELD Conflict.
+
+RULE: `id` MUST start with 'V-' (typed-anchor discipline,
+R-anchor-everything, check_typed_anchors_variant). `behavior` is the
+concrete elaborated behavior this variant would produce; `implies` names
+what accepting this variant commits the graph to (prose, human-readable);
+`costs` names what accepting this variant gives up.
+
+WHY a payload dataclass, not a new graph-node type: the steward's own
+framing (2026-07-02) is that the axis becomes a live tension with two (or
+more) SIDES to choose between -- it is not a new kind of thing in the
+ontology, it is elaborated content ON the Conflict that is already
+unresolvable by amending its members. A new node type would be RDF-style
+over-modeling (anti-RDF) for what is, structurally, just richer payload on
+an existing connector node -- exactly the same reasoning that keeps axis/
+context/shared_assumption as Conflict fields rather than nodes of their
+own.
 
 ## From `spec/src/hotam_spec/conflict.py::Conflict`
 
@@ -140,6 +166,20 @@ MUST justify itself (rationale in the marker or a derived requirement).
 WHY a prefix test: the rationale travels inline as "DECIDED(<why>)", the
 anti-relitigation record of the resolution; membership is by prefix so
 invariant, harness and generator agree.
+
+## From `spec/src/hotam_spec/conflict.py::is_held`
+
+Canon: §Conflict — True iff lifecycle records the HELD state.
+
+RULE: held iff lifecycle starts with "HELD". A held conflict is not
+resolvable by amending its members; it carries >=2 elaborated
+behavior variants for the steward to choose between
+(check_held_has_min_two_variants) and requires the same human-signoff
+lock as DECIDED (check_held_has_decided_by).
+
+WHY a prefix test: mirrors is_decided() -- the reason travels inline
+as "HELD(<reason>)", the anti-relitigation record of why this tension
+could not be resolved through its members.
 
 ## From `spec/src/hotam_spec/graph.py::conflicts_by_axis`
 
@@ -380,6 +420,67 @@ outside the conflict's members (steward-distinct rule applied to the decider).
 WHY: if the decider owned one of the members, the hard boundary would be
 circumvented at the decision step. This is the structural twin of
 check_steward_not_a_member_owner applied at the moment of resolution.
+
+## From `spec/src/hotam_spec/invariants.py::check_held_has_min_two_variants`
+
+Canon: §Conflict — a HELD conflict carries at least two elaborated Variants.
+
+RULE: when Conflict.lifecycle starts with "HELD", `variants` MUST contain
+at least two distinct Variant ids. A HELD tension with fewer than two
+variants gives the steward nothing to choose between -- exactly the
+invisible-contradiction-in-a-new-costume the hard boundary forbids.
+
+WHY: mirrors check_conflict_min_two_members -- a HELD conflict connects
+at least two SIDES of a live tension the same way a Conflict connects at
+least two member requirements.
+
+## From `spec/src/hotam_spec/invariants.py::check_held_has_nonempty_decided_by`
+
+Canon: §Conflict — a HELD conflict carries a non-empty decided_by field.
+
+RULE: when Conflict.lifecycle starts with "HELD", `decided_by` MUST be
+non-empty. Entering HELD is a human act (R-decided-needs-human-signoff's
+signoff lock applied at the moment a tension is classified unresolvable
+by its members) -- without this lock an AI could silently write
+lifecycle="HELD(...)" with decided_by="".
+
+WHY: the structural twin of check_decided_has_nonempty_decided_by applied
+to HELD instead of DECIDED.
+
+## From `spec/src/hotam_spec/invariants.py::check_held_by_is_known_stakeholder`
+
+Canon: §Conflict — a HELD conflict's decided_by resolves to a known Stakeholder.
+
+RULE: when Conflict.lifecycle starts with "HELD" and decided_by is
+non-empty, decided_by MUST be in stakeholder_ids(g).
+
+WHY: mirrors check_decided_by_is_known_stakeholder applied to HELD.
+
+## From `spec/src/hotam_spec/invariants.py::check_held_by_not_member_owner`
+
+Canon: §Conflict — a HELD conflict's decided_by is not the owner of any member Requirement.
+
+RULE: when Conflict.lifecycle starts with "HELD", decided_by MUST NOT be
+the owner of any of the conflict's member Requirements -- the
+steward-distinct rule applied to the human who holds the tension open.
+
+WHY: mirrors check_decided_by_not_member_owner applied to HELD; if the
+signoff owned a member, the hard boundary would be circumvented at the
+hold step exactly as it would at the decide step.
+
+## From `spec/src/hotam_spec/invariants.py::check_held_has_decided_by`
+
+Canon: §Conflict — a HELD conflict names a human decider outside its members (thin delegator).
+
+RULE (R-decided-needs-human-signoff applied to HELD): when
+Conflict.lifecycle starts with "HELD", `decided_by` MUST satisfy three
+conditions: (1) non-empty, (2) resolves to a known Stakeholder id, (3)
+NOT the owner of any of the conflict's member Requirements.
+
+This is a THIN DELEGATOR — calls check_held_has_nonempty_decided_by,
+check_held_by_is_known_stakeholder, check_held_by_not_member_owner and
+concatenates. The atomic sub-checks are registered individually in
+ALL_INVARIANTS.
 
 ## From `spec/src/hotam_spec/invariants.py::check_decided_has_decided_by`
 

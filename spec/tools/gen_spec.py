@@ -483,6 +483,13 @@ def _conflict_block(c: Conflict) -> list[str]:
         )
     if c.revisit_marker:
         lines.append(f"- **revisit marker:** {c.revisit_marker}")
+    if c.variants:
+        lines.append("- **variants** (steward chooses one):")
+        for v in c.variants:
+            lines.append(f"  - `{v.id}`")
+            lines.append(f"    - behavior: {v.behavior}")
+            lines.append(f"    - implies: {v.implies}")
+            lines.append(f"    - costs: {v.costs}")
     lines.append("")
     return lines
 

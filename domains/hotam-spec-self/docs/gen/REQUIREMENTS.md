@@ -227,12 +227,17 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-commit-boundary-checkable` | SETTLED | `framework-author` | A-python-stack | tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline. |
 | `R-unmeasured-cipher-names-user-action` | SETTLED | `ai-agent` | A-finite-context-operators | While the context cipher is UNMEASURED, the generated LIVE-STATE shall name the exact user-run command that activates measurement. |
 | `R-trust-anchor-delegation-explicit-only` | SETTLED | `framework-author` | A-stakeholders-care, A-bootstrap-self-applies | Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default. |
-| `R-unresolvable-conflict-carries-variants` | OPEN(how do variants attach to the Conflict node -- payload field vs derived Proposed* pair -- and when is a conflict classified unresolvable-by-members?) | `framework-reviewer` | — | A Conflict unresolvable by amending its member requirements shall carry at least two elaborated behavior variants; the operator presents the variants, the steward chooses. |
+| `R-unresolvable-conflict-carries-variants` | REJECTED | `framework-reviewer` | — | A Conflict unresolvable by amending its member requirements shall carry at least two elaborated behavior variants; the operator presents the variants, the steward chooses. |
 | `R-no-observation-type` | SETTLED | `framework-reviewer` | A-most-knowledge-crystallizable | hotam_spec shall define no Observation or Evidence class anywhere in its package -- Assumption remains the ontology's sole belief-carrying node type. |
 | `R-core-imports-stdlib-or-hotam-spec-only` | SETTLED | `framework-author` | A-finite-context-operators | Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency. |
 | `R-agent-code-imports-framework` | SETTLED | `framework-author` | A-content-free-honest | An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory. |
 | `R-task-spawn-is-a-hand` | SETTLED | `ai-agent` | A-finite-context-operators | A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator. |
 | `R-atomicity-ratchet-no-growth` | SETTLED | `framework-reviewer` | A-prose-suffices | The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json. |
+| `R-framework-owned-by-no-agent` | SETTLED | `framework-author` | A-content-free-honest | The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import. |
+| `R-conflict-held-state` | SETTLED | `framework-reviewer` | A-bootstrap-self-applies | Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements. |
+| `R-held-carries-variants` | SETTLED | `framework-reviewer` | A-bootstrap-self-applies | A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes. |
+| `R-variant-choice-is-decision` | SETTLED | `framework-reviewer` | A-stakeholders-care | A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED. |
+| `R-unresolvable-classified-by-human` | SETTLED | `framework-reviewer` | A-stakeholders-care | Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference. |
 
 ## Stakeholders
 
@@ -591,6 +596,12 @@ Lifecycle (source of truth is the `lifecycle` field, params.py-style):
                         MUST carry a non-empty decided_by (the human who approved).
   REVISIT_WHEN(cond)  — parked with an explicit revisit condition (anti-relitigation:
                         the historian re-opens it when the condition triggers).
+  HELD(reason)        — not resolvable by amending the member requirements; held
+                        open carrying >=2 elaborated behavior Variants
+                        (invariants.check_held_has_min_two_variants) for the
+                        steward to choose between. MUST carry a non-empty
+                        decided_by, the same signoff lock as DECIDED
+                        (invariants.check_held_has_decided_by).
 
 ### 7. §Graph — the store, the loader, and traversal — `hotam_spec.graph`
 

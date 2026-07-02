@@ -32,7 +32,7 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **shared assumption:** `A-content-free-honest`
 - **revisit marker:** REVISIT if a fresh framework clone needs the meta-domain to self-bootstrap (cf. M8 content-layout evolution).
 
-### Axis `core-vs-aspect` — 1 conflict(s), single tension
+### Axis `core-vs-aspect` — 2 conflict(s), ARCHITECTURAL CHOICE (cluster)
 
 #### `C-8600b1b8` — core-vs-aspect
 
@@ -43,6 +43,22 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **shared assumption:** `A-prose-suffices`
 - **spawned (lineage):** `R-initiator-supplies-domain-content`
 - **revisit marker:** REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided.
+
+#### `C-be22cdd1` — core-vs-aspect
+
+- **context:** R-speculative-aspects-frozen freezes the Entity aspect (no inward development until a real business domain demonstrates concrete need), while R-entity-derived-requirement's own enforcement expects EntityType declarations to keep projecting into the domain's CLAUDE.md CONSTITUTION block -- new domain content under the Entity aspect is exactly the kind of inward development the freeze forbids, yet the aspect's enforceability claim presumes it stays live enough to receive new EntityType projections as domains populate it.
+- **members:** `R-speculative-aspects-frozen`, `R-entity-derived-requirement`
+- **steward:** `framework-reviewer`
+- **lifecycle:** HELD(not resolvable by amending R-speculative-aspects-frozen or R-entity-derived-requirement themselves -- the freeze is a blanket policy over the whole Entity aspect and R-entity-derived-requirement's enforceability claim is inherent to what an EntityType IS, so the tension is architectural, not a wording fix on either side -- per explicit campaign delegation 2026-07-02: 'все вопросы решай в сторону совершенства')
+- **variants** (steward chooses one):
+  - `V-unfreeze-entity-projection`
+    - behavior: Unfreeze the Entity->CLAUDE.md CONSTITUTION projection specifically (not the whole Entity aspect): allow new EntityType declarations to keep generating R-entity-<slug> constitution rows and enforced_by coverage, while the REST of the Entity aspect (create_entity_type.py inward edits, entity.py machinery growth) stays frozen under R-speculative-aspects-frozen's baseline hash guard.
+    - implies: R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the steward signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.
+    - costs: The freeze's hash-baseline test (test_frozen_aspects_snapshot.py) currently covers src/hotam_spec/entity.py wholesale; carving out the projection path requires either a narrower baseline or a second frozen-surface declaration, adding one more piece of frozen-aspect bookkeeping. Slightly weakens the freeze's simplicity (one clean boundary becomes two).
+  - `V-keep-freeze-defer-enforce`
+    - behavior: Keep R-speculative-aspects-frozen exactly as-is (the whole Entity aspect frozen, zero inward development) and demote R-entity-derived-requirement's enforcement from its current STRUCTURAL/claimed-guarantee posture to an explicitly conditional claim: 'this SHALL hold once the Entity aspect unfreezes; until then it is dormant-by-construction (0 entity_types in the graph makes the claim vacuously true, not falsely enforced).'
+    - implies: R-entity-derived-requirement's why= is amended to state its own dormancy explicitly (mirrors how R-entity-is-declarative and the other frozen-aspect atoms already read after being relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing). No code changes; a prose-honesty amendment only.
+    - costs: The domain stays unable to actually USE the Entity aspect until a real business domain triggers the unfreeze (Phase 5) -- burn-down of this particular architectural choice is deferred indefinitely rather than resolved now. The tension itself does not go away, it is just named honestly and left HELD/parked rather than acted on.
 
 ### Axis `apparatus-weight-vs-coverage` — 1 conflict(s), single tension
 
@@ -90,6 +106,8 @@ graph TD
     R_context_bounded_delegation["R-context-bounded-delegation"]
     R_crystallize_before_split["R-crystallize-before-split"]
     R_dependency_graph_parallelism["R-dependency-graph-parallelism"]
+    R_speculative_aspects_frozen["R-speculative-aspects-frozen"]
+    R_entity_derived_requirement["R-entity-derived-requirement"]
     C_186c4347{"C-186c4347\nagent-autonomy-vs-human-control"}
     R_agent_never_lost --> C_186c4347
     R_ai_presents_not_decides --> C_186c4347
@@ -111,6 +129,9 @@ graph TD
     C_d4f3eadf{"C-d4f3eadf\nsequential-vs-parallel"}
     R_context_bounded_delegation --> C_d4f3eadf
     R_dependency_graph_parallelism --> C_d4f3eadf
+    C_be22cdd1{"C-be22cdd1\ncore-vs-aspect"}
+    R_speculative_aspects_frozen --> C_be22cdd1
+    R_entity_derived_requirement --> C_be22cdd1
 ```
 
 ## Controlled vocabulary of axes (this domain)
@@ -134,3 +155,5 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | left | right | hint |
 |---|---|---|
 | `R-agent-code-imports-framework` | `R-conflict-is-connector-node` | shares assumption(s): A-content-free-honest |
+| `R-agent-code-imports-framework` | `R-framework-owned-by-no-agent` | shares assumption(s): A-content-free-honest |
+| `R-conflict-is-connector-node` | `R-framework-owned-by-no-agent` | shares assumption(s): A-content-free-honest |

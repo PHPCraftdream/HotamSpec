@@ -242,6 +242,16 @@ CONFLICT_LIFECYCLE = Lifecycle(
             kind=QUIESCENT,
             why="Parked with an explicit revisit condition (anti-relitigation).",
         ),
+        State(
+            "HELD",
+            kind=QUIESCENT,
+            why=(
+                "Not resolvable by amending the member requirements; held open "
+                "as a live tension carrying >=2 elaborated behavior variants for "
+                "the steward to choose between. Entered only by human signoff "
+                "(decided_by), mirroring DECIDED's signoff lock."
+            ),
+        ),
     ),
     transitions=(
         Transition(
@@ -265,6 +275,16 @@ CONFLICT_LIFECYCLE = Lifecycle(
             why="Parked until the condition fires.",
         ),
         Transition(
+            "ACKNOWLEDGED",
+            "HELD",
+            event="steward-hold",
+            guard="decided_by recorded and >=2 variants attached",
+            why=(
+                "Steward records that the tension cannot be resolved by "
+                "amending the members and holds it open with variants."
+            ),
+        ),
+        Transition(
             "DECIDED",
             "DETECTED",
             event="condition-fires",
@@ -278,7 +298,14 @@ CONFLICT_LIFECYCLE = Lifecycle(
             guard="parked condition holds",
             why="The parked condition triggered.",
         ),
+        Transition(
+            "HELD",
+            "DECIDED",
+            event="steward-choose-variant",
+            guard="rationale names the chosen variant",
+            why="Steward chooses one held variant; the tension resolves.",
+        ),
     ),
-    prefix_states=("DECIDED", "REVISIT_WHEN"),
-    cyclic=True,  # DECIDED/REVISIT_WHEN ↔ DETECTED allowed
+    prefix_states=("DECIDED", "REVISIT_WHEN", "HELD"),
+    cyclic=True,  # DECIDED/REVISIT_WHEN/HELD ↔ DETECTED allowed
 )
