@@ -1381,23 +1381,18 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-rules-as-data",
             claim=(
-                "The methodology's own rules/invariants shall be either first-class "
-                "data it reasons about or remain code checks plus meta-domain "
-                "requirements — one stance, declared."
+                "Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data (RULES_AS_DATA_TABLE) with a coherence invariant distinguishing them from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic); derivation of check_* function bodies from the table is deferred until it can coexist with R-method-matches-docstring's per-function inspectable-source requirement."
             ),
             owner="framework-reviewer",
             status=(
-                "OPEN(do the methodology's own rules/invariants become first-class "
-                "data the methodology reasons about, or stay as code check_* plus "
-                "meta-domain requirements?)"
+                "SETTLED"
             ),
             why=(
-                "M22. Promoting rules to data deepens the reflexive bootstrap "
-                "(R-two-altitude-ontology) but risks an infinite regress; staying "
-                "as code keeps the framework grounded."
+                "M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classify every check_* by family; the check_* bodies themselves remain hand-written, NOT derived from the table. Empirically verified blocker to body-derivation: check_method_matches_docstring (R-method-matches-docstring) calls inspect.getsource(fn) on every check_* to enforce literal, inspectable Violation(...) messages -- functions produced by a table-driven factory are closures, and inspect.getsource raises OSError on them (no source file to point at). The alternative, exec()-based codegen from the table, would satisfy inspect.getsource mechanically but produce opaque, non-diffable bodies -- LESS convenient for an agent auditing behavior, which is the steward's own stated criterion. So classification-as-data landed; derivation-of-bodies is deliberately deferred, not abandoned, until a mechanism exists that keeps generated check_* functions individually inspectable."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            m_tag="M22",
+            enforcement="ENFORCED",
+            enforced_by=("check_rules_as_data_classification_coherent",),
         ),
         Requirement(
             id="R-enforcement-first-class",
@@ -3488,6 +3483,15 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_doc_reader_resolves_to_stakeholder", "test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered", "test_invariants.py::test_check_doc_reader_green_when_all_roles_resolve", "test_invariants.py::test_check_doc_reader_fires_on_partial_adoption", "test_docs_gen.py::test_generated_docs_carry_reader_header"),
         ),
+        Requirement(
+            id="R-initiator-supplies-domain-content",
+            claim=("An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec."),
+            owner="domain-user",
+            status="SETTLED",
+            why=("Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. Honest enforcement: no automated check yet verifies 'initiator supplied content at boot' as a runtime event -- this is STRUCTURAL (visible/addressable via the mediation loop and closure discipline) not ENFORCED; do not fabricate an enforcer."),
+            assumptions=("A-prose-suffices",),
+            enforcement=STRUCTURAL,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
@@ -3585,13 +3589,13 @@ def build_graph() -> TensionGraph:
             context=c3_ctx,
             members=("R-content-free-framework", "R-agent-never-lost"),
             steward="domain-user",
-            lifecycle="ACKNOWLEDGED",
+            lifecycle="DECIDED(The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.)",
             shared_assumption="A-prose-suffices",
             revisit_marker=(
-                "REVISIT when a second opt-in behavioral aspect (Entity or Task) "
-                "is proposed — at that point the core-vs-aspect boundary must be "
-                "formally decided."
+                "REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided."
             ),
+            decided_by="domain-user",
+            derived=("R-initiator-supplies-domain-content",),
         ),
         Conflict(
             id=conflict_identity(c4_axis, c4_ctx),

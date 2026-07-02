@@ -287,6 +287,47 @@ The Jaccard threshold (0.05) is heuristic and chosen to catch obvious mismatches
 without over-flagging terse-but-correct docstrings that use different but
 semantically related vocabulary (R-method-matches-docstring).
 
+## From `spec/src/hotam_spec/invariants.py::InvariantClassification`
+
+Canon: §Invariants — one row: a check_* name, its family kind, and why.
+
+RULE: `kind` MUST be in RULES_AS_DATA_KINDS. `name` MUST be a function name
+present in ALL_INVARIANTS (enforced by check_rules_as_data_classification_
+coherent). TABLE_DRIVEN marks a homogeneous per-entity structural check
+(dangling-refs, typed-anchors, lifecycle-membership) whose RULE is 'for
+each node of kind K, field F must satisfy relation R against set S' — the
+kind of repetition an agent should read as one row, not N near-duplicate
+functions. BESPOKE marks a check whose logic cannot be reduced to that
+shape (identity derivation, cross-entity bijection, docstring/body
+coherence, filesystem walks, arithmetic branching).
+
+WHY a table over the functions rather than the functions THEMSELVES being
+generated from a table: check_method_matches_docstring extracts literal
+Violation(...) string-literal messages via inspect.getsource(fn); a
+function assigned from a shared closure/functools.partial has no
+individually inspectable source (verified: inspect.getsource raises OSError
+on such closures), so message-literal auditing would silently stop
+working for every "generated" check. Declaring the CLASSIFICATION as data
+(this table) gets the agent-convenience win — read the family, read one
+representative row, extend by adding a row plus one small function that
+follows the family's established shape — without paying that price.
+
+## From `spec/src/hotam_spec/invariants.py::check_rules_as_data_classification_coherent`
+
+Canon: §Invariants — RULES_AS_DATA_TABLE and ALL_INVARIANTS name exactly the same functions.
+
+RULE (R-rules-as-data, M22 HYBRID): every function in ALL_INVARIANTS MUST
+have exactly one row in RULES_AS_DATA_TABLE (no missing classification, no
+duplicate row), and every row's `name` MUST resolve to a function in
+ALL_INVARIANTS (no stale row surviving a rename/removal). Every row's
+`kind` MUST be in RULES_AS_DATA_KINDS.
+
+WHY: the classification table is the DATA half of the HYBRID verdict — if
+it silently drifts out of sync with ALL_INVARIANTS (a check added without a
+row, or a row surviving a check's removal), the table stops being a
+trustworthy map an agent can read instead of re-deriving the classification
+by hand, defeating the whole point of declaring it as data.
+
 ## From `spec/src/hotam_spec/invariants.py::all_violations`
 
 Canon: §Invariants — run every structural invariant, concatenate violations.

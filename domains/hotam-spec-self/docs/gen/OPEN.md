@@ -5,7 +5,7 @@ reader: ai-agent
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-Open requirements: **8**. Unresolved conflicts: **1**.
+Open requirements: **7**. Unresolved conflicts: **0**.
 
 ---
 
@@ -18,12 +18,9 @@ Open requirements: **8**. Unresolved conflicts: **1**.
 | `R-budget-measure` | `framework-author` | how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set? |
 | `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
 | `R-observation-evidence-scope` | `framework-reviewer` | does the methodology model an operator's BELIEF about business state and its drift from reality (Observation/Evidence), or is that out of scope as epistemics-creep? |
-| `R-rules-as-data` | `framework-reviewer` | do the methodology's own rules/invariants become first-class data the methodology reasons about, or stay as code check_* plus meta-domain requirements? |
 | `R-backend-scope` | `framework-author` | which backends beyond Claude Code are real targets — CI runner / a different coding agent / a programmatic or human steward — so the protocol is designed against concrete cases, not hypotheticals? |
 | `R-presented-pending-decision-type` | `framework-reviewer` | does 'operator presented X; steward has not yet answered' deserve a first-class node type — a Presented/Pending state between the PRESENT and LAND steps of the mediation loop — or is the spec/.runtime/proposals/ drop-folder plus the spawn-log the honest home for this transient state? |
 
 ## Unresolved conflicts (no steward resolution yet)
 
-| id | axis | lifecycle | steward | members |
-|---|---|---|---|---|
-| `C-8600b1b8` | `core-vs-aspect` | ACKNOWLEDGED | `domain-user` | R-content-free-framework, R-agent-never-lost |
+_None._

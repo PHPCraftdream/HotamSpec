@@ -163,6 +163,16 @@ substrate (R-history-from-rejected-markers).
 - **shared assumption:** `A-content-free-honest`
 - **revisit when:** REVISIT if a fresh framework clone needs the meta-domain to self-bootstrap (cf. M8 content-layout evolution).
 
+### `C-8600b1b8` — axis `core-vs-aspect`
+
+- **context:** extending the framework to surface behavioral contradictions (dead states, two processes one entity)
+- **members:** `R-content-free-framework`, `R-agent-never-lost`
+- **steward:** `domain-user`
+- **rationale:** The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.
+- **shared assumption:** `A-prose-suffices`
+- **spawned (derived):** `R-initiator-supplies-domain-content`
+- **revisit when:** REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided.
+
 ### `C-06e2d84e` — axis `apparatus-weight-vs-coverage`
 
 - **context:** crystallizing the full accumulated design into the methodology vs keeping the framework minimal

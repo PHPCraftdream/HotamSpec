@@ -26,7 +26,6 @@ methodology-altitude decisions.
 | M17 | `R-budget-measure` | `framework-author` | how is context budget measured — node-count, token-estimate, complexity, or operator-self-reported working set? |
 | M18 | `R-partition-vs-border` | `framework-author` | do operator sub-domains strictly partition the graph, or overlap on explicitly-declared delegation borders? |
 | M21 | `R-observation-evidence-scope` | `framework-reviewer` | does the methodology model an operator's BELIEF about business state and its drift from reality (Observation/Evidence), or is that out of scope as epistemics-creep? |
-| M22 | `R-rules-as-data` | `framework-reviewer` | do the methodology's own rules/invariants become first-class data the methodology reasons about, or stay as code check_* plus meta-domain requirements? |
 | M37 | `R-backend-scope` | `framework-author` | which backends beyond Claude Code are real targets — CI runner / a different coding agent / a programmatic or human steward — so the protocol is designed against concrete cases, not hypotheticals? |
 
 ## Notes

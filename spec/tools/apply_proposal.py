@@ -734,6 +734,35 @@ def _replace_or_insert_field(
     return lines
 
 
+def _remove_kwarg_line(
+    source_lines: list[str],
+    call: ast.Call,
+    field: str,
+) -> list[str]:
+    """Canon: §Proposal — remove a keyword arg's line(s) entirely from a call.
+
+    Used when a proposal clears an optional field (e.g. m_tag) that must be
+    ABSENT (not empty-valued) once its guarding condition no longer holds
+    (R-m-tag-open-only: m_tag only appears on an OPEN requirement). Mirrors
+    _replace_or_insert_field's line/col strategy but deletes the kwarg's
+    line span instead of replacing the value, handling both single-line and
+    multi-line values.
+    """
+    lines = list(source_lines)
+    for kw in call.keywords:
+        if kw.arg != field:
+            continue
+        val_node = kw.value
+        lineno = val_node.lineno - 1  # 0-indexed, start line of the kwarg
+        end_lineno = getattr(val_node, "end_lineno", lineno + 1)
+        # Delete the whole line range the kwarg occupies (start..end inclusive,
+        # 0-indexed) — the kwarg begins at column 0 of its own line in this
+        # codebase's rendering convention (one kwarg per line).
+        del lines[lineno : end_lineno]
+        return lines
+    return lines
+
+
 def _python_repr(value: object) -> str:
     """Canon: §Proposal — produce a Python-literal repr suitable for source insertion.
 
@@ -845,11 +874,29 @@ def _apply_requirement_to_source(
             ("enforcement", proposal.enforcement),
             ("enforced_by", proposal.enforced_by),
             ("enforceability", proposal.enforceability),
+            ("m_tag", proposal.m_tag),
         ]:
             # Skip empty optional fields not already present
             if field_name in ("assumptions", "enforced_by") and not new_value:
                 if _kwarg_line_col(call_node, field_name) is None:
                     continue
+            # m_tag: if the proposal clears it (e.g. status leaves OPEN) and a
+            # m_tag= kwarg is already present in source, remove the kwarg line
+            # entirely rather than writing m_tag="" (R-m-tag-open-only expects
+            # the field ABSENT, not empty-valued, on non-OPEN requirements).
+            if field_name == "m_tag" and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
+                lines = _remove_kwarg_line(lines, call_node, field_name)
+                new_src = "".join(lines)
+                tree = ast.parse(new_src)
+                call_node = _find_requirement_call(tree, proposal.id)
+                if call_node is None:
+                    raise RuntimeError(
+                        f"Lost track of requirement '{proposal.id}' after "
+                        f"removing field '{field_name}'."
+                    )
+                continue
             # Skip the default enforceability value when the field isn't
             # already present in source (keep terse output for the common case).
             if (

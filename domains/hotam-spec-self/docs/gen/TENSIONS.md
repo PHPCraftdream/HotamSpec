@@ -39,8 +39,9 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **context:** extending the framework to surface behavioral contradictions (dead states, two processes one entity)
 - **members:** `R-content-free-framework`, `R-agent-never-lost`
 - **steward:** `domain-user`
-- **lifecycle:** ACKNOWLEDGED
+- **lifecycle:** DECIDED(The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.)
 - **shared assumption:** `A-prose-suffices`
+- **spawned (lineage):** `R-initiator-supplies-domain-content`
 - **revisit marker:** REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided.
 
 ### Axis `apparatus-weight-vs-coverage` — 1 conflict(s), single tension
@@ -84,6 +85,7 @@ graph TD
     R_active_loop_playbooks["R-active-loop-playbooks"]
     R_content_free_framework["R-content-free-framework"]
     R_empty_content_is_legitimate["R-empty-content-is-legitimate"]
+    R_initiator_supplies_domain_content["R-initiator-supplies-domain-content"]
     R_crystallize_knowledge_to_code["R-crystallize-knowledge-to-code"]
     R_context_bounded_delegation["R-context-bounded-delegation"]
     R_crystallize_before_split["R-crystallize-before-split"]
@@ -98,6 +100,7 @@ graph TD
     C_8600b1b8{"C-8600b1b8\ncore-vs-aspect"}
     R_content_free_framework --> C_8600b1b8
     R_agent_never_lost --> C_8600b1b8
+    C_8600b1b8 -.spawns.-> R_initiator_supplies_domain_content
     C_06e2d84e{"C-06e2d84e\napparatus-weight-vs-coverage"}
     R_crystallize_knowledge_to_code --> C_06e2d84e
     R_content_free_framework --> C_06e2d84e
