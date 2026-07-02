@@ -1854,6 +1854,41 @@ def check_entity_type_lifecycle_wellformed(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_transition_guard_assumption_resolves(g: TensionGraph) -> list[Violation]:
+    """Canon: §Lifecycle / §Invariants — every non-empty Transition.guard_assumption resolves.
+
+    RULE: for every EntityType.lifecycle.transitions[*], when guard_assumption is
+    non-empty it MUST name an Assumption id present in assumption_ids(g). A
+    dangling guard_assumption is the behavioral-drift-seam analogue of a
+    dangling Requirement.assumptions[*] reference — the drift machinery
+    (R-stale-substrate / dead-assumption fallout) can only surface a guard as
+    stale if the id it names actually resolves. No-ops when g.entity_types is
+    empty (§Entity aspect not loaded).
+
+    WHY part of the dangling-ref family: this is a shape check — for each
+    Transition, guard_assumption must resolve in assumption_ids(g) — the exact
+    homogeneous per-entity referential-integrity pattern check_no_dangling_ids'
+    atoms already cover for Requirement/Conflict/Operator/Assumption edges;
+    Transition.guard_assumption is the one remaining edge of that family that
+    had no enforcer.
+    """
+    aids = assumption_ids(g)
+    out: list[Violation] = []
+    for et in g.entity_types:
+        for t in et.lifecycle.transitions:
+            if t.guard_assumption and t.guard_assumption not in aids:
+                out.append(
+                    Violation(
+                        "check_transition_guard_assumption_resolves",
+                        et.slug,
+                        f"transition '{t.src}->{t.dst}' guard_assumption "
+                        f"'{t.guard_assumption}' does not resolve to a known "
+                        f"Assumption id",
+                    )
+                )
+    return out
+
+
 def check_entity_instance_state_in_lifecycle(g: TensionGraph) -> list[Violation]:
     """Canon: §Entity / §Invariants — every EntityInstance.state is valid in its EntityType.lifecycle.
 
@@ -3163,6 +3198,11 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "delegates to check_lifecycle_wellformed's BFS, not a set-membership test",
     ),
     InvariantClassification(
+        "check_transition_guard_assumption_resolves",
+        TABLE_DRIVEN,
+        "shape: for each EntityType.lifecycle.transitions[*], guard_assumption must resolve in assumption_ids(g)",
+    ),
+    InvariantClassification(
         "check_process_lifecycle_wellformed",
         BESPOKE,
         "delegates to check_lifecycle_wellformed's BFS, not a set-membership test",
@@ -3375,6 +3415,7 @@ ALL_INVARIANTS = (
     check_goal_owner_is_operator,
     # §Entity aspect invariants (aspect-gated: no-op when g.entity_types/entities empty)
     check_entity_type_lifecycle_wellformed,
+    check_transition_guard_assumption_resolves,
     check_entity_instance_state_in_lifecycle,
     check_entity_instance_required_fields,
     check_entity_instance_id_prefix,

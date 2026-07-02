@@ -23,7 +23,14 @@ from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict, conflict_identity
 from hotam_spec.entity import EntityField, EntityInstance, EntityType  # noqa: F401
 from hotam_spec.graph import TensionGraph
-from hotam_spec.lifecycle import INITIAL, QUIESCENT, Lifecycle, State, Transition
+from hotam_spec.lifecycle import (
+    INITIAL,
+    NORMAL,
+    QUIESCENT,
+    Lifecycle,
+    State,
+    Transition,
+)
 from hotam_spec.process import PROCESS_LIFECYCLE, Process, Step
 from hotam_spec.requirement import Relation, Requirement
 from hotam_spec.stakeholder import Stakeholder
@@ -98,6 +105,62 @@ CUSTOMER_ACME = EntityInstance(
         ("email", "billing@acme.com"),
         ("tier", "gold"),
         ("owner", "finance"),
+    ),
+)
+
+# --- Second entity type: invoice (proves check_entity_* covers MULTIPLE
+# EntityTypes by iterating g.entity_types, not one hand-wired type -- see
+# R-entity-checks-by-iteration / R-entity-reuses-lifecycle). -----------------
+
+INVOICE_LIFECYCLE = Lifecycle(
+    slug="invoice-lifecycle",
+    states=(
+        State("DRAFT", kind=INITIAL, why="Invoice line items assembled, not sent."),
+        State("SENT", kind=NORMAL, why="Invoice delivered to the customer."),
+        State("PAID", kind=QUIESCENT, why="Invoice settled in full."),
+        State("VOID", kind=QUIESCENT, why="Invoice cancelled before payment."),
+    ),
+    transitions=(
+        Transition("DRAFT", "SENT", event="send", why="Billing dispatches the invoice."),
+        Transition("SENT", "PAID", event="pay", why="Payment received in full."),
+        Transition("SENT", "VOID", event="void", why="Invoice cancelled after sending."),
+    ),
+    cyclic=False,
+)
+
+INVOICE_ENTITY = EntityType(
+    slug="invoice",
+    description="A billing document owed by a customer, DRAFT through PAID/VOID.",
+    lifecycle=INVOICE_LIFECYCLE,
+    fields=(
+        EntityField(name="amount_cents", kind="number", required=True),
+        EntityField(
+            name="customer",
+            kind="reference",
+            required=True,
+            ref_target="customer",
+        ),
+    ),
+    why=(
+        "Second worked-example EntityType (P-wave1-move3): proves the "
+        "check_entity_* invariant family and the demo fixture's harness "
+        "wiring cover MULTIPLE declared EntityTypes by iterating "
+        "g.entity_types, with no per-type code added -- the mechanical "
+        "content of R-entity-checks-by-iteration and R-entity-reuses-"
+        "lifecycle. A distinct reference kind (ref_target='invoice's "
+        "own type is 'customer', exercising the entity-to-entity reference "
+        "branch of check_entity_instance_refs_resolve, not only the "
+        "stakeholder-reference branch CUSTOMER_ENTITY already covers)."
+    ),
+)
+
+INVOICE_ACME_001 = EntityInstance(
+    id="ENT-invoice-acme-001",
+    entity_type="invoice",
+    state="SENT",
+    field_values=(
+        ("amount_cents", "12500"),
+        ("customer", "ENT-customer-acme"),
     ),
 )
 
@@ -341,7 +404,7 @@ def seed_graph() -> TensionGraph:
         assumptions=assumptions,
         requirements=requirements,
         conflicts=conflicts,
-        entity_types=(CUSTOMER_ENTITY,),
-        entities=(CUSTOMER_ACME,),
+        entity_types=(CUSTOMER_ENTITY, INVOICE_ENTITY),
+        entities=(CUSTOMER_ACME, INVOICE_ACME_001),
         processes=(PR_AUTO_SUSPEND_FRAUD, PR_BILLING_CLOSE_DELINQUENT),
     )

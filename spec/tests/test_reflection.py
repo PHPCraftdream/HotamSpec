@@ -622,6 +622,48 @@ def test_reflect_over_budget_operators_crystal_chars_green_when_under() -> None:
     )
 
 
+def test_reflect_over_budget_operators_names_crystallize_then_delegate() -> None:
+    """R-context-bounded-delegation, ENFORCED: on a synthetic over-budget
+    Operator (both NODE_COUNT and CRYSTAL_CHARS measures), the finding's
+    imperative must name the two-step relief sequence in order --
+    'crystallize' (R-crystallize-before-split) BEFORE 'delegate'
+    (R-context-bounded-delegation) -- proving the delegate path is not a
+    silent/implicit fallback but a named, ordered instruction the harness
+    actually renders."""
+    reqs = tuple(_settled_req(f"R-r{i}") for i in range(5))
+    over_node_count = Operator(
+        id="OP-over-node-count",
+        stakeholder="s-a",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=1, measure="NODE_COUNT"),
+    )
+    over_crystal_chars = Operator(
+        id="OP-over-crystal-chars",
+        stakeholder="s-b",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=1, measure="CRYSTAL_CHARS"),
+    )
+    g = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=reqs,
+        operators=(over_node_count, over_crystal_chars),
+    )
+    found = reflection.reflect_over_budget_operators(g)
+    assert len(found) == 2, f"expected both over-budget operators to fire, got {found}"
+    for finding in found:
+        assert finding.condition == "reflect_over_budget_operators"
+        imperative = finding.imperative
+        assert "crystallize first" in imperative
+        assert "R-crystallize-before-split" in imperative
+        assert "delegate" in imperative
+        assert "R-context-bounded-delegation" in imperative
+        # order: crystallize is instructed BEFORE delegate is even considered
+        assert imperative.index("crystallize first") < imperative.index(
+            "delegate"
+        ), "imperative must name crystallize-first BEFORE delegate (R-crystallize-before-split, R-context-bounded-delegation)"
+
+
 def test_reflect_dead_assumption_on_enforcer_fires_direct() -> None:
     """reflect_dead_assumption_on_enforcer fires per ENFORCED-req×DEAD-assumption pair."""
     dead_a = Assumption(id="A-x", statement="dead", status=DEAD, owner="s-a")

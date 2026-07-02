@@ -10,13 +10,14 @@ Plus an aspect-gating sanity test (empty entity_types/entities → all six retur
 from __future__ import annotations
 
 
+from hotam_spec.assumption import DEAD, HOLDS, Assumption
 from hotam_spec.entity import (
     ENTITY_FIELD_KINDS,
     EntityField,
     EntityInstance,
     EntityType,
 )
-from hotam_spec.graph import TensionGraph
+from hotam_spec.graph import TensionGraph, dead_assumptions
 from hotam_spec.invariants import (
     check_entity_field_kind_known,
     check_entity_instance_id_prefix,
@@ -24,6 +25,7 @@ from hotam_spec.invariants import (
     check_entity_instance_required_fields,
     check_entity_instance_state_in_lifecycle,
     check_entity_type_lifecycle_wellformed,
+    check_transition_guard_assumption_resolves,
     check_typed_anchors_entity,
 )
 from hotam_spec.lifecycle import (
@@ -389,3 +391,119 @@ def test_typed_anchors_entity_wrong_prefix():
 def test_typed_anchors_entity_empty_entities():
     g = _graph(entity_types=(CUSTOMER_TYPE,), entities=())
     assert check_typed_anchors_entity(g) == []
+
+
+# ---------------------------------------------------------------------------
+# check_transition_guard_assumption_resolves
+# ---------------------------------------------------------------------------
+
+_A_FRAUD_WINDOW = Assumption(
+    id="A-fraud-window-30d",
+    statement="A fraud signal is actionable for 30 days from detection.",
+    status=HOLDS,
+    owner="s-product",
+)
+
+
+def test_transition_guard_assumption_resolves_clean():
+    """A guard_assumption naming a real Assumption id is not a violation."""
+    lc = Lifecycle(
+        slug="customer-lifecycle-guarded",
+        states=(
+            State("ACTIVE", kind=INITIAL),
+            State("SUSPENDED", kind=QUIESCENT),
+        ),
+        transitions=(
+            Transition(
+                "ACTIVE",
+                "SUSPENDED",
+                event="suspend",
+                guard_assumption="A-fraud-window-30d",
+            ),
+        ),
+        cyclic=False,
+    )
+    et = EntityType(slug="customer", description=".", lifecycle=lc)
+    g = _graph(entity_types=(et,), stakeholders=(_STAKEHOLDER,))
+    g = TensionGraph(
+        stakeholders=g.stakeholders,
+        assumptions=(_A_FRAUD_WINDOW,),
+        entity_types=g.entity_types,
+        entities=g.entities,
+    )
+    assert check_transition_guard_assumption_resolves(g) == []
+
+
+def test_transition_guard_assumption_resolves_dangling_fires():
+    """A guard_assumption naming a nonexistent Assumption id fires exactly one
+    Violation targeting the EntityType slug."""
+    lc = Lifecycle(
+        slug="customer-lifecycle-dangling",
+        states=(
+            State("ACTIVE", kind=INITIAL),
+            State("SUSPENDED", kind=QUIESCENT),
+        ),
+        transitions=(
+            Transition(
+                "ACTIVE",
+                "SUSPENDED",
+                event="suspend",
+                guard_assumption="A-does-not-exist",
+            ),
+        ),
+        cyclic=False,
+    )
+    et = EntityType(slug="customer", description=".", lifecycle=lc)
+    g = _graph(entity_types=(et,))
+    violations = check_transition_guard_assumption_resolves(g)
+    assert len(violations) == 1
+    assert violations[0].target == "customer"
+    assert "A-does-not-exist" in violations[0].message
+
+
+def test_transition_guard_assumption_empty_is_not_a_violation():
+    """guard_assumption defaults to None/empty — no reference to check, no fire."""
+    g = _graph(entity_types=(CUSTOMER_TYPE,))
+    assert check_transition_guard_assumption_resolves(g) == []
+
+
+def test_transition_guard_assumption_dead_assumption_still_visible_in_dependents():
+    """R-stale-substrate drift-fallout: a DEAD Assumption referenced ONLY via a
+    Transition.guard_assumption must still be discoverable through
+    graph.dead_assumptions() — the guard is a real edge, not an invisible one,
+    so the harness's dead-assumption fallout machinery can surface it even
+    though Requirement/Conflict-scoped helpers (requirements_on_assumption,
+    conflicts_on_assumption) do not know about Transition edges."""
+    dead_a = Assumption(
+        id="A-fraud-window-30d",
+        statement="A fraud signal is actionable for 30 days from detection.",
+        status=DEAD,
+        owner="s-product",
+    )
+    lc = Lifecycle(
+        slug="customer-lifecycle-dead-guard",
+        states=(
+            State("ACTIVE", kind=INITIAL),
+            State("SUSPENDED", kind=QUIESCENT),
+        ),
+        transitions=(
+            Transition(
+                "ACTIVE",
+                "SUSPENDED",
+                event="suspend",
+                guard_assumption="A-fraud-window-30d",
+            ),
+        ),
+        cyclic=False,
+    )
+    et = EntityType(slug="customer", description=".", lifecycle=lc)
+    g = TensionGraph(
+        stakeholders=(_STAKEHOLDER,),
+        assumptions=(dead_a,),
+        entity_types=(et,),
+    )
+    # The guard's referential integrity still holds (id resolves) ...
+    assert check_transition_guard_assumption_resolves(g) == []
+    # ... but the assumption it rests on is DEAD and visible to the harness's
+    # dead-assumption fallout scan, so the guard's staleness is not hidden.
+    assert dead_a.id in {a.id for a in dead_assumptions(g)}

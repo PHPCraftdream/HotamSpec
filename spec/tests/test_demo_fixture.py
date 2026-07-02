@@ -20,6 +20,8 @@ for _p in (_SRC, _TOOLS):
         sys.path.insert(0, str(_p))
 
 from fixtures.seed import (  # noqa: E402
+    INVOICE_ACME_001,
+    INVOICE_ENTITY,
     PR_AUTO_SUSPEND_FRAUD,
     PR_BILLING_CLOSE_DELINQUENT,
     seed_graph,
@@ -183,6 +185,63 @@ def test_demo_fixture_what_now_emits_p5_entity_state_conflict():
 # ---------------------------------------------------------------------------
 
 _DEMO_ENTITIES = Path(__file__).resolve().parents[2] / "docs" / "demo" / "ENTITIES.md"
+
+
+# ---------------------------------------------------------------------------
+# Test 9 — R-entity-checks-by-iteration / R-entity-reuses-lifecycle: the
+# check_entity_* family covers BOTH declared EntityTypes (customer AND
+# invoice) with no per-type code, and each reuses the §Lifecycle keystone.
+# ---------------------------------------------------------------------------
+
+
+def test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks():
+    """The fixture declares two distinct EntityTypes (customer, invoice). The
+    full check_entity_* invariant family must return zero violations for
+    BOTH -- proof the family iterates g.entity_types generically rather than
+    being hand-wired to one type (R-entity-checks-by-iteration), and that
+    invoice's Lifecycle validates through the exact same §Lifecycle machinery
+    as customer's, with no parallel state machinery (R-entity-reuses-
+    lifecycle)."""
+    from hotam_spec.invariants import (  # noqa: PLC0415
+        check_entity_field_kind_known,
+        check_entity_instance_id_prefix,
+        check_entity_instance_refs_resolve,
+        check_entity_instance_required_fields,
+        check_entity_instance_state_in_lifecycle,
+        check_entity_type_lifecycle_wellformed,
+        check_typed_anchors_entity,
+    )
+
+    g = _g()
+    slugs = {et.slug for et in g.entity_types}
+    assert slugs == {"customer", "invoice"}, (
+        f"expected both customer and invoice EntityTypes in the fixture, got {slugs}"
+    )
+    assert INVOICE_ENTITY.slug in slugs
+    assert INVOICE_ACME_001 in g.entities
+
+    for check in (
+        check_entity_type_lifecycle_wellformed,
+        check_entity_instance_state_in_lifecycle,
+        check_entity_instance_required_fields,
+        check_entity_instance_id_prefix,
+        check_entity_instance_refs_resolve,
+        check_entity_field_kind_known,
+        check_typed_anchors_entity,
+    ):
+        violations = check(g)
+        assert holds(violations), (
+            f"{check.__name__} fired on the two-entity-type fixture:\n"
+            + "\n".join(f"  {v}" for v in violations)
+        )
+
+    # The invoice's own Lifecycle transitions must be reachable/deterministic/
+    # terminal via the SAME check_lifecycle_wellformed the customer type uses
+    # -- no parallel state machinery introduced for the second type.
+    from hotam_spec.invariants import check_lifecycle_wellformed  # noqa: PLC0415
+
+    invoice_type = next(et for et in g.entity_types if et.slug == "invoice")
+    assert check_lifecycle_wellformed(invoice_type.lifecycle) == []
 
 
 def test_demo_entities_md_has_customer_section():
