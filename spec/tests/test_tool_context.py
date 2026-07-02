@@ -37,7 +37,8 @@ def test_absent_stamp_reads_unmeasured(tmp_path: Path, monkeypatch) -> None:
     assert s.pct is None
     line = context.render_line()
     assert line.startswith("context: UNMEASURED")
-    assert "R-measure-context-size" in line
+    assert "R-unmeasured-cipher-names-user-action" in line
+    assert "tools/setup_context_hook.py --patch-global --apply" in line
 
 
 def test_valid_stamp_reads_measured(tmp_path: Path, monkeypatch) -> None:

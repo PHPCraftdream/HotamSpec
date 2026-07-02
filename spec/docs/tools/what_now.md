@@ -52,6 +52,12 @@ It aggregates, in priority order:
                         TENSIONS.md). Lowest priority because it is a suspicion,
                         not a proven defect, and the AI never acts on it
                         unilaterally.
+  P6 PENDING_PROPOSAL — a proposal JSON file sits under spec/.runtime/proposals/
+                        (or its pending/ sub-folder) awaiting the steward's
+                        verdict; not landed yet, so not in applied/. Pure file
+                        surfacing, NOT a graph diagnosis — no new node type
+                        (R-presented-pending-decision-type). Lowest priority:
+                        ephemeral tooling state, not a defect in the graph.
 
 Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)

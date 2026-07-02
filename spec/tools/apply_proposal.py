@@ -145,6 +145,25 @@ _CONTENT_GRAPH = _resolve_content_graph()
 _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
 _RUNTIME_DIR = _SPEC_ROOT / ".runtime"
 _LAND_LOG_NAME = "land-log.jsonl"
+_PROPOSALS_DIR = _RUNTIME_DIR / "proposals"
+_PROPOSALS_APPLIED_DIR = _PROPOSALS_DIR / "applied"
+"""Canon: §Proposal — the applied/ sub-folder a landed proposal file is moved
+into (R-presented-pending-decision-type).
+
+RULE: a proposal file that lives directly under spec/.runtime/proposals/ (or
+under proposals/pending/) is PRESENTED-AWAITING-DECISION; once apply_proposal.py
+lands it successfully (write + regen + verify tier all green, and closure
+advanced when --triggering-kind was supplied), the file is moved into
+proposals/applied/ — same filename, stamped by mtime. Files directly under
+proposals/ (the historical flat layout) are treated as pending for backward
+compatibility; nothing under proposals/ is ever deleted.
+
+WHY a folder, not a graph node type: the steward's verdict (2026-07-02) was
+'да, нужно. наверно такие вещи нужно вести в отдельной папке' — the
+PRESENT-awaiting-decision state is transient tooling ephemera, not a business
+tension; giving it a node type would put process bookkeeping in the same
+ontology as Requirement/Conflict. See R-presented-pending-decision-type.
+"""
 
 # ---------------------------------------------------------------------------
 # Validation helpers
@@ -1632,6 +1651,87 @@ def _append_land_log(
         )
 
 
+def pending_proposal_files(proposals_dir: Path | None = None) -> list[Path]:
+    """Canon: §Proposal — list proposal JSON files still awaiting a steward decision.
+
+    RULE (R-presented-pending-decision-type): a file is PENDING iff it is a
+    `*.json` file that lives directly under `proposals_dir` (backward-compat:
+    the historical flat layout, pre-dating the pending/applied split) or under
+    `proposals_dir/pending/`. Files under `proposals_dir/applied/` are landed,
+    not pending, and are excluded. Sorted oldest-mtime-first (the longest-
+    waiting proposal surfaces first — R-speak-by-reference: age is disclosed,
+    not hidden).
+
+    WHY both the flat layout and pending/ count as pending: this tool's own
+    history (spec/.runtime/proposals/*.json, pre-existing this feature) never
+    used a pending/ sub-folder; treating those flat files as pending (rather
+    than requiring a one-time migration) is the honest reading of their actual
+    state — they were presented and, as far as the graph can tell, most were
+    later hand-landed without ever passing through this archiving path.
+    """
+    base = proposals_dir if proposals_dir is not None else _PROPOSALS_DIR
+    if not base.exists():
+        return []
+    out: list[Path] = []
+    for p in base.glob("*.json"):
+        if p.is_file():
+            out.append(p)
+    pending_sub = base / "pending"
+    if pending_sub.exists():
+        for p in pending_sub.glob("*.json"):
+            if p.is_file():
+                out.append(p)
+    out.sort(key=lambda p: (p.stat().st_mtime, p.name))
+    return out
+
+
+def _archive_proposal_file(
+    proposal_path: Path | None, *, applied_dir: Path | None = None
+) -> Path | None:
+    """Canon: §Proposal — move a landed proposal file into proposals/applied/.
+
+    RULE (R-presented-pending-decision-type): called ONLY after apply() returns
+    0 (write + regen + verify tier all green, and closure — if requested —
+    advanced). Moves `proposal_path` into `applied_dir` (default
+    spec/.runtime/proposals/applied/), creating the directory if needed. On a
+    filename collision, a numeric suffix is appended so no landed proposal is
+    ever silently overwritten.
+
+    Returns the new path, or None if `proposal_path` is None, does not exist,
+    or the move failed (best-effort — mirrors _append_land_log: a filesystem
+    hiccup here must never turn a successful land into a reported failure).
+
+    WHY move (not delete, not copy): the pending/ vs applied/ folder split IS
+    the state the steward asked for ('вести в отдельной папке') — a file
+    living in applied/ IS the record that it landed; nothing under proposals/
+    is ever deleted (history is preserved, mirrors R-rejected-preserved-not-deleted).
+    """
+    if proposal_path is None:
+        return None
+    try:
+        if not proposal_path.exists():
+            return None
+        target_dir = applied_dir if applied_dir is not None else _PROPOSALS_APPLIED_DIR
+        target_dir.mkdir(parents=True, exist_ok=True)
+        dest = target_dir / proposal_path.name
+        if dest.exists() and dest != proposal_path:
+            stem, suffix = proposal_path.stem, proposal_path.suffix
+            n = 2
+            while dest.exists():
+                dest = target_dir / f"{stem}-{n}{suffix}"
+                n += 1
+        proposal_path.replace(dest)
+        print(f"Archived proposal: {dest}")
+        return dest
+    except Exception as exc:  # noqa: BLE001 — best-effort, never breaks apply
+        print(
+            f"WARNING: could not archive proposal file ({exc}); continuing "
+            f"(archiving is best-effort, never a correctness gate).",
+            file=sys.stderr,
+        )
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Main apply logic
 # ---------------------------------------------------------------------------
@@ -1644,6 +1744,7 @@ def apply(
     triggering_kind: str | None = None,
     content_graph: Path | None = None,
     full_suite: bool = False,
+    proposal_file: Path | None = None,
 ) -> int:
     """Canon: §Proposal — apply a validated Proposal to the graph.
 
@@ -1667,6 +1768,12 @@ def apply(
     was meant to close (e.g. "CONFLICT_STALLED", "OPEN_ITEM", "STRUCTURE",
     "DRIFT_FALLOUT"). If None, the closure check is skipped (backward-compat for
     P3 unit tests that do not supply a triggering kind).
+
+    `proposal_file`, if supplied, is the path to the JSON proposal file that was
+    read for this call; on a successful land (return 0) it is moved into
+    proposals/applied/ (R-presented-pending-decision-type). None (the default)
+    skips archiving — used by unit tests that construct a Proposal in-process
+    without a backing file.
 
     `full_suite` forces the T2 (full pytest) verify tier even when the T1
     targeted-enforcer selector (tools/gate.py) would otherwise be confident.
@@ -1886,6 +1993,7 @@ def apply(
         )
     if triggering_kind is not None:
         print(f"  closure: ADVANCED (action {summary_target!r} closed)")
+    _archive_proposal_file(proposal_file)
     return 0
 
 
@@ -1985,6 +2093,9 @@ def main(argv: list[str] | None = None) -> int:
                 dry_run=args.dry_run,
                 triggering_kind=args.triggering_kind,
                 full_suite=args.full,
+                # A --batch file holds MANY proposals; the file itself is not
+                # 1:1 with any single one, so it is not archived per-item.
+                proposal_file=None,
             )
             if rc != 0:
                 print(
@@ -2006,6 +2117,7 @@ def main(argv: list[str] | None = None) -> int:
         dry_run=args.dry_run,
         triggering_kind=args.triggering_kind,
         full_suite=args.full,
+        proposal_file=None if args.dry_run else proposal_path,
     )
 
 

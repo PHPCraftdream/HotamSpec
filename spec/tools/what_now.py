@@ -39,6 +39,12 @@ It aggregates, in priority order:
                         TENSIONS.md). Lowest priority because it is a suspicion,
                         not a proven defect, and the AI never acts on it
                         unilaterally.
+  P6 PENDING_PROPOSAL — a proposal JSON file sits under spec/.runtime/proposals/
+                        (or its pending/ sub-folder) awaiting the steward's
+                        verdict; not landed yet, so not in applied/. Pure file
+                        surfacing, NOT a graph diagnosis — no new node type
+                        (R-presented-pending-decision-type). Lowest priority:
+                        ephemeral tooling state, not a defect in the graph.
 
 Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)
@@ -81,6 +87,7 @@ P_DRIFT_FALLOUT = 2
 P_CONFLICT_STALLED = 3
 P_OPEN_ITEM = 4
 P_LATENT_CONNECTOR = 5
+P_PENDING_PROPOSAL = 6
 
 _BAND_LABEL = {
     P_REFLECTION: "REFLECTION",
@@ -89,6 +96,7 @@ _BAND_LABEL = {
     P_CONFLICT_STALLED: "CONFLICT_STALLED",
     P_OPEN_ITEM: "OPEN_ITEM",
     P_LATENT_CONNECTOR: "LATENT_CONNECTOR",
+    P_PENDING_PROPOSAL: "PENDING_PROPOSAL",
 }
 
 
@@ -258,6 +266,44 @@ def diagnose(g: TensionGraph) -> list[Action]:
     return actions
 
 
+def pending_proposal_actions(*, now: float | None = None) -> list[Action]:
+    """Canon: §Harness — P6 PENDING_PROPOSAL band: proposal files awaiting a verdict.
+
+    RULE (R-presented-pending-decision-type): NOT part of diagnose(g) — this
+    reads the FILESYSTEM (spec/.runtime/proposals/), not the graph, and its
+    'N days' age is wall-clock-relative, so it is NON-DETERMINISTIC across
+    runs. gen_spec.py's generated docs must be byte-stable
+    (R-deterministic-generation), so this band is surfaced ONLY by the
+    interactive CLI (main(), below) and is never fed into diagnose() or any
+    generated doc.
+
+    `now` (unix seconds) defaults to time.time(); tests pass a fixed value for
+    determinism of THIS function's own unit tests.
+    """
+    import time as _time  # noqa: PLC0415
+
+    _tools = Path(__file__).resolve().parent
+    if str(_tools) not in sys.path:
+        sys.path.insert(0, str(_tools))
+    import apply_proposal as _apply_proposal  # noqa: PLC0415
+
+    ref_time = now if now is not None else _time.time()
+    actions: list[Action] = []
+    for p in _apply_proposal.pending_proposal_files():
+        age_days = max(0, int((ref_time - p.stat().st_mtime) // 86400))
+        actions.append(
+            Action(
+                priority=P_PENDING_PROPOSAL,
+                kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+                target=p.name,
+                imperative=(
+                    f"presented, awaiting steward: {p.name}, {age_days} day(s)"
+                ),
+            )
+        )
+    return actions
+
+
 # --- Rendering --------------------------------------------------------------
 
 _EMPTY_GRAPH_BANNER = (
@@ -381,6 +427,15 @@ def main(argv: list[str] | None = None) -> None:
         return
     actions = diagnose(g)
     sys.stdout.write(render(actions, source_label=label, p5_limit=args.p5_limit))
+    # P6 PENDING_PROPOSAL — CLI-only, filesystem-sourced, non-deterministic
+    # (age-in-days); never fed into diagnose()/render() so generated docs
+    # (which call diagnose() via gen_spec.py) stay byte-stable. See
+    # pending_proposal_actions() docstring / R-presented-pending-decision-type.
+    pending = pending_proposal_actions()
+    if pending:
+        sys.stdout.write(f"\n--- P{P_PENDING_PROPOSAL} PENDING_PROPOSAL ---\n")
+        for a in pending:
+            sys.stdout.write(f"  [P{a.priority}] {a.target}: {a.imperative}\n")
 
 
 if __name__ == "__main__":

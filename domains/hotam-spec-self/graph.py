@@ -463,22 +463,18 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-trust-anchor-mechanism",
             claim=(
-                "The methodology shall be externally anchored by a periodic "
-                "stakeholder cryptographic signature on the tension map per "
-                "domain — to ground the internal loop in a living human."
+                "Every decision shall be personally signed by the human steward -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship."
             ),
             owner="framework-author",
             status=(
-                "OPEN(what signature mechanism (PGP/SSH/web of trust) and "
-                "cadence (quarterly/per-PR/on-domain-change) anchor the loop?)"
+                "SETTLED"
             ),
             why=(
-                "M5. The internal loop is self-referential; without an external "
-                "anchor, the graph eventually drifts from the real organization. "
-                "Mechanism and cadence pending."
+                "M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the DEFAULT (personal signature) half: R-decided-needs-human-signoff's decided_by field plus git commit authorship (the repo's own author trail) already implement the mechanism the OPEN question asked about (PGP/SSH/web-of-trust cadence) -- the steward's answer is that the existing decided_by + commit-author pairing IS the anchor; no additional cryptographic layer is required today. Cadence is 'per decision' (every DECIDED Conflict), not periodic -- the steward signs each contradiction resolution as it happens, which is stronger than 'quarterly/per-PR' polling. CORRECTION: enforced_by originally cited check_decided_has_decided_by, a thin non-registered delegator wrapping atomic sub-checks (see hotam_spec/invariants.py ~line 3415); the bijection check requires a real ALL_INVARIANTS member, so enforced_by is corrected to the two atomic checks that actually guard decided_by presence and validity."
             ),
             assumptions=("A-stakeholders-care", "A-bootstrap-self-applies"),
-            m_tag="M5",
+            enforcement="ENFORCED",
+            enforced_by=("check_decided_has_nonempty_decided_by", "check_decided_by_is_known_stakeholder"),
         ),
         Requirement(
             id="R-critical-core-scope",
@@ -499,21 +495,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-axis-gatekeeper-policy",
             claim=(
-                "The admission policy for a new axis slug shall be machine-"
-                "checked against duplicate detection by the AI gatekeeper."
+                "Axis-duplicate gatekeeping shall be a mandatory part of the future axis-creation path (confront-style similarity check at creation time), not a separately-switched feature; until an axis-creation tool exists, the hand-curated axes tuple is the gate."
             ),
             owner="ai-agent",
             status=(
-                "OPEN(when do we switch on the AI duplicate-gatekeeper — "
-                "immediately, on first ambiguous slug, or only above N axes?)"
+                "SETTLED"
             ),
             why=(
-                "M3. Manual editing scales until two stewards add near-duplicate "
-                "axes that fragment a cluster. Then the gatekeeper earns its "
-                "place."
+                "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- i.e. it is not an optional toggle to switch on later (immediately / on first ambiguous slug / above N axes were the three options posed by the OPEN question), it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. Until an axis-creation tool is built, the axes tuple on each domain's TensionGraph is hand-curated by the steward directly editing spec/content (or domains/*/graph.py) via apply_proposal, which already IS the gate -- no axis is admitted without a human writing it."
             ),
-            assumptions=("A-prose-suffices",),
-            m_tag="M3",
+            assumptions=(),
+            enforcement="STRUCTURAL",
         ),
         Requirement(
             id="R-content-layout-evolution",
@@ -1255,21 +1247,18 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-budget-measure",
             claim=(
-                "The context budget shall be measured by a single declared metric "
-                "so size(domain) <= budget.limit is computable."
+                "An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts."
             ),
             owner="framework-author",
             status=(
-                "OPEN(how is context budget measured — node-count, token-estimate, "
-                "complexity, or operator-self-reported working set?)"
+                "SETTLED"
             ),
             why=(
-                "M17. The budget rule (R-context-budget-rule) is only structural "
-                "once the metric is fixed; until then 'over budget' is a judgment, "
-                "not a check."
+                "M17. Steward verdict 2026-07-02 (verbatim): «наверно, это размер бизнес-требований. Лучше в байтах или в токенах» (English: 'probably it's the size of the business requirements. Better in bytes or in tokens'). Landed reality already matches: hotam_spec.operator.CRYSTAL_CHARS ('measure = len(root CLAUDE.md) in characters') is the current byte-approximation of resident business content, wired into check_operator_within_budget and used by the live meta-domain operator (context_budget=ContextBudget(limit=150000, measure=\"CRYSTAL_CHARS\")). TOKEN_ESTIMATE is declared in BUDGET_MEASURES as the token-exact seam the steward names ('в токенах') for when the host exposes token counts, but is deferred (not measured yet) since no host API is wired. NODE_COUNT (the original M17 default, size = |requirements|+|conflicts|+|assumptions|) is DEMOTED to a legacy/backward-compat measure: it counts the crystallized SUBSTRATE, which R-working-vs-substrate-budget declares free, so it over-penalizes crystallizing; it remains selectable only for operators/tests that opted into it before CRYSTAL_CHARS existed. No wording change needed elsewhere: check_operator_within_budget's docstring already states this hierarchy verbatim."
             ),
             assumptions=("A-finite-context-operators",),
-            m_tag="M17",
+            enforcement="ENFORCED",
+            enforced_by=("check_operator_within_budget", "test_operator.py"),
         ),
         Requirement(
             id="R-partition-vs-border",
@@ -1341,23 +1330,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-observation-evidence-scope",
             claim=(
-                "The methodology shall decide whether an operator's BELIEF about "
-                "business state and its drift from reality (Observation/Evidence) "
-                "is in scope."
+                "Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request; Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types."
             ),
             owner="framework-reviewer",
             status=(
-                "OPEN(does the methodology model an operator's BELIEF about "
-                "business state and its drift from reality (Observation/Evidence), "
-                "or is that out of scope as epistemics-creep?)"
+                "SETTLED"
             ),
             why=(
-                "M21. Modeling belief-vs-reality drift would extend the drift "
-                "machinery to epistemics; it may be powerful or it may be scope "
-                "creep beyond requirement contradiction."
+                "M21. Steward verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). Assumption (hotam_spec/assumption.py) remains the sole belief-carrying node type in the ontology; no Observation/Evidence type is added -- this was the scope-creep risk the OPEN question named, and the steward closed it toward the narrower ontology."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
-            m_tag="M21",
+            enforcement="STRUCTURAL",
         ),
         Requirement(
             id="R-rules-as-data",
@@ -1561,20 +1544,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-backend-scope",
             claim=(
-                "Which alternative operator backends are real enough to design the "
-                "OperatorBackend protocol against?"
+                "The framework names no target backends: the core (graph/JSON proposals/CLI/pytest) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern."
             ),
             owner="framework-author",
-            status="OPEN(which backends beyond Claude Code are real targets — CI runner / a different coding agent / a programmatic or human steward — so the protocol is designed against concrete cases, not hypotheticals?)",
+            status="SETTLED",
             why=(
-                "Gates R-operator-backend-protocol. The protocol must be shaped by real "
-                "backends or it over-engineers. Steward names the targets; until then "
-                "the protocol stays DRAFT and unbuilt."
+                "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=PROSE,
+            enforcement="PROSE",
             enforced_by=(),
-            m_tag="M37",
         ),
         # --- SETTLED — P11 new: convergence, atomicity, agent-directory, tools, docs ---
         Requirement(
@@ -2020,18 +1999,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-context-hook-piggybacks-cah-stamp",
             claim=(
-                "The PostToolUse + Stop hook in `.claude/settings.json` shall read "
-                "the global cah-stamp cache and write `spec/.runtime/context.json`."
+                "The project-local hook (context_producer.py, wired via PostToolUse + Stop in .claude/settings.local.json) shall read a context-cache.json written by the global statusline script and write spec/.runtime/context.json."
             ),
             owner="framework-author",
             status="DRAFT",
             why=(
-                "Honest ctx_pct stays null (deferred); the 5h/weekly/effort fields "
-                "from cah-stamp are populated. BUILD-TRIGGER: "
-                "R-setup-claude-generates-settings has landed."
+                "Design refined by the 2026-07-02 --patch-global investigation: the global cah-stamp/cah-status pipeline had NO existing on-disk cache for ctx_pct (rate-limits.json holds only 5h/weekly/effort, never context %) -- so this cannot honestly 'read the global cah-stamp cache' as originally worded. Instead spec/tools/setup_context_hook.py --patch-global (a separate, user-run, opt-in tool -- never applied automatically) surgically patches the global cah-status.js to ALSO write a sibling ~/.claude/cah-bin/cache/context-cache.json = {ctx_pct, model, stamp}; context_producer.py now reads that path (CAH_CONTEXT_CACHE override) as a fallback when its stdin payload lacks ctx_pct. Stays DRAFT: the patch exists and is tested hermetically, but no user has yet run --patch-global --apply against the real global script, so the end-to-end chain is not yet proven live. BUILD-TRIGGER unchanged: R-setup-claude-generates-settings has landed."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=PROSE,
+            enforcement="PROSE",
             enforced_by=(),
         ),
         # --- REJECTED — design dead-ends preserved for history ---------------
@@ -3408,11 +3384,12 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-presented-pending-decision-type",
-            claim=("The methodology shall decide whether 'operator presented, steward has not yet decided' deserves a first-class Presented/Pending node type."),
+            claim=("The presented-awaiting-decision state shall live in a dedicated folder (spec/.runtime/proposals/pending/ vs applied/), surfaced by the harness -- not as a new graph node type."),
             owner="framework-reviewer",
-            status="OPEN(does 'operator presented X; steward has not yet answered' deserve a first-class node type — a Presented/Pending state between the PRESENT and LAND steps of the mediation loop — or is the spec/.runtime/proposals/ drop-folder plus the spawn-log the honest home for this transient state?)",
-            why=("Recorded per R-uncrystallizable-is-missing-type: the PRESENT step (mediation loop step 5) produces knowledge — 'a proposal exists and awaits the steward' — that today lives only in gitignored runtime ephemera (spec/.runtime/proposals/*.json) and in session context. An operator interrupted between PRESENT and LAND loses the fact-of-presentation entirely; the graph cannot distinguish 'never proposed' from 'proposed, awaiting decision'. This OPEN node is the candidate-missing-type record itself — no code, no new type until the steward answers (R-uncrystallizable-automated). Precedent: R-observation-evidence-scope. Raised during the 2026-07-02 three-wave implementation (Wave 3)."),
-            enforcement=PROSE,
+            status="SETTLED",
+            why=("Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). Landed: spec/.runtime/proposals/ now splits into pending/ (proposal awaiting steward verdict) and applied/ (landed proposal, moved there by tools/apply_proposal.py's apply() on a successful land -- write+regen+verify-tier green, closure advanced when --triggering-kind supplied). Backward compat preserved: files directly under proposals/ (the historical flat layout predating this split) are still treated as pending by pending_proposal_files(). tools/what_now.py gains a P6 PENDING_PROPOSAL band (pending_proposal_actions()) that lists each pending file with its age in days -- CLI-only (main()), deliberately NOT wired into diagnose(g) because diagnose() is pure-over-the-graph and gen_spec.py's generated docs must stay byte-stable (R-deterministic-generation); a filesystem-mtime-derived 'N days' figure would break that. No new graph node type was added -- Presented/Pending stays tooling ephemera in .runtime/ (gitignored), never crystallized substrate."),
+            enforcement="ENFORCED",
+            enforced_by=("tests/test_pending_proposal_archive.py::test_pending_sees_flat_layout_files", "tests/test_pending_proposal_archive.py::test_pending_sees_pending_subfolder", "tests/test_pending_proposal_archive.py::test_pending_excludes_applied_subfolder", "tests/test_pending_proposal_archive.py::test_apply_success_archives_proposal_file", "tests/test_pending_proposal_archive.py::test_apply_failure_does_not_archive", "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_one_per_file", "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_age_in_days", "tests/test_pending_proposal_archive.py::test_diagnose_never_includes_pending_band"),
         ),
         Requirement(
             id="R-land-gate-tier-selector",
@@ -3498,6 +3475,33 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-tiered-gate-not-a-commit-gate"), Relation("refines", "R-land-tier-trace"),),
             enforcement=ENFORCED,
             enforced_by=("test_tool_gate_status.py::test_t1_then_t2_is_satisfied", "test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied", "test_tool_gate_status.py::test_only_t1_records_never_t2_is_not_satisfied", "test_tool_gate_status.py::test_only_t2_records_is_satisfied", "test_tool_gate_status.py::test_mixed_only_t1_after_last_t2_are_unverified", "test_tool_gate_status.py::test_cli_exit_0_on_satisfied", "test_tool_gate_status.py::test_cli_exit_1_on_not_satisfied",),
+        ),
+        Requirement(
+            id="R-unmeasured-cipher-names-user-action",
+            claim=("While the context cipher is UNMEASURED, the generated LIVE-STATE shall name the exact user-run command that activates measurement."),
+            owner="ai-agent",
+            status="SETTLED",
+            why=("R-ai-presents-not-decides means the operator cannot self-install a hook that touches the user's GLOBAL ~/.claude config -- that is a steward decision (spec/tools/setup_context_hook.py --patch-global --apply). Leaving the UNMEASURED cipher as a bare status word made the gap invisible: the operator knew context was unmeasured but never told the user what to run to fix it, so the gap persisted turn after turn with no forcing function. tools/context.py's render_line() now embeds the exact command in the UNMEASURED line itself, and gen_spec's LIVE-STATE + emit_cipher's pulse both surface it verbatim (R-boot-cite-in-first-sentence then forces the operator to cite it every turn until the user runs the command and the cipher measures for real)."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=ENFORCED,
+            enforced_by=("test_tool_context.py::test_absent_stamp_reads_unmeasured", "test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line",),
+        ),
+        Requirement(
+            id="R-trust-anchor-delegation-explicit-only",
+            claim=("Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the EXCEPTION half: delegation is not the default and is not implicit from e.g. an agent being given repo write access -- it requires an explicit steward grant, scoped either to one case or to a named campaign declared in advance. No new machinery yet checks this structurally (there is no standing 'delegation grant' object in the graph today); it is recorded as a live discipline constraint on any future delegation feature (see R-context-bounded-delegation, R-delegation-conclusions-only) rather than a currently-enforced check, honestly PROSE."),
+            assumptions=("A-stakeholders-care", "A-bootstrap-self-applies",),
+            enforcement=PROSE,
+        ),
+        Requirement(
+            id="R-unresolvable-conflict-carries-variants",
+            claim=("A Conflict unresolvable by amending its member requirements shall carry at least two elaborated behavior variants; the operator presents the variants, the steward chooses."),
+            owner="framework-reviewer",
+            status="OPEN(how do variants attach to the Conflict node -- payload field vs derived Proposed* pair -- and when is a conflict classified unresolvable-by-members?)",
+            why=("Steward-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test)."),
+            enforcement=PROSE,
         ),
     )
 

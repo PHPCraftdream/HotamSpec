@@ -25,27 +25,43 @@ tests/test_tool_context.py:
       "stamp":   "<iso8601>"       # optional
     }
 
-HONESTY NOTE (2026-07-02 investigation): the globally-installed `clock` skill
-(cah-stamp, ~/.claude/cah-bin/bin/cah-stamp.js) computes its context-usage
-percentage LIVE from the session transcript on every hook invocation and
-NEVER persists it to any cache file — ~/.claude/cah-bin/cache/rate-limits.json
+HONESTY NOTE, UPDATED (2026-07-02): the globally-installed `clock` skill
+(cah-stamp, ~/.claude/cah-bin/bin/cah-stamp.js and cah-status.js) computes its
+context-usage percentage LIVE from the statusLine envelope on every render
+but historically never persisted it — ~/.claude/cah-bin/cache/rate-limits.json
 holds only {fiveHour, sevenDay, effort, capturedAt} (5h/weekly quota, not
-context %), and ~/.claude/cah-bin/cache/last-stamp.json holds only a
-{lastStampedAt, lastStampedRequestId} throttle marker. There is therefore NO
-existing on-disk cache this producer can honestly "read" for a ctx_pct value.
+context %). `spec/tools/setup_context_hook.py --patch-global --apply` is the
+STEWARD-RUN tool that closes this gap: it patches the user's global
+cah-status.js to also write ~/.claude/cah-bin/cache/context-cache.json =
+{"ctx_pct", "model", "stamp"} (CACHE CONTRACT below). That patch is opt-in
+and outside this framework's write authority — this producer only READS the
+cache path if it exists; it never assumes the patch has been applied.
 
-This producer instead reads the SAME transcript-derived signal a project-local
-hook payload would carry on stdin, computed independently here (not by
-piggy-backing on a nonexistent cah-stamp cache file). It looks for a
-top-level numeric `ctx_pct` (0..100) on the incoming JSON payload itself —
-the honest, minimal contract a caller (or a future project-local hook wrapper)
-can satisfy without this tool depending on cah-stamp's private cache layout.
-If no such field is present, the producer WRITES NOTHING (fail-silent,
-matching the reader's honest-UNMEASURED default) rather than guessing.
+CACHE CONTRACT (what --patch-global writes, if applied):
+    ~/.claude/cah-bin/cache/context-cache.json = {
+      "ctx_pct": <float 0..100>,
+      "model":   "<display name>",
+      "stamp":   "<iso8601>"
+    }
+Overridable via env var CAH_CONTEXT_CACHE (mirrors cah-status.js's own
+CAH_CONTEXT_CACHE env override, so tests can redirect both sides to the same
+tmp fixture).
+
+This producer looks for a usable `ctx_pct` in TWO places, in order:
+  1. the incoming hook JSON payload itself (top-level numeric `ctx_pct`) —
+     the honest, minimal contract a caller can satisfy directly on stdin;
+  2. if absent, the global context-cache.json (see CACHE CONTRACT above),
+     read ONLY if it exists and parses — never assumed present.
+If neither yields a usable 0..100 float, the producer WRITES NOTHING
+(fail-silent, matching the reader's honest-UNMEASURED default) rather than
+guessing.
 
 Run:
   echo '{"ctx_pct": 42.5, "model": "claude-sonnet-5"}' | uv run python tools/context_producer.py
   uv run python tools/context_producer.py --stdin-file payload.json
+  # or, with no payload at all, after the user has run
+  # `setup_context_hook.py --patch-global --apply`:
+  echo '{}' | uv run python tools/context_producer.py   # falls back to the global cache
 
 ## CLI usage
 

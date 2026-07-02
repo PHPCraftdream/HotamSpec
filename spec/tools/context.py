@@ -64,10 +64,26 @@ def read_context() -> ContextState:
     )
 
 
+_UNMEASURED_ACTION = (
+    "context: UNMEASURED — user action needed: "
+    "uv run python tools/setup_context_hook.py --patch-global --apply "
+    "(then restart statusline) — R-unmeasured-cipher-names-user-action"
+)
+
+
 def render_line() -> str:
-    """One-line context cipher for the LIVE-STATE block / tick."""
+    """One-line context cipher for the LIVE-STATE block / tick.
+
+    R-unmeasured-cipher-names-user-action: while UNMEASURED, this line names
+    the EXACT command the user must run to activate measurement (the bridge
+    is a two-step opt-in: `setup_context_hook.py` installs the project-local
+    hook by default, but the global statusline patch is a SEPARATE explicit
+    `--patch-global --apply` step that touches ~/.claude and is never run
+    automatically). Once measured, the instruction disappears — it is only
+    useful while the gap it describes still exists.
+    """
     s = read_context()
     if not s.measured or s.pct is None:
-        return "context: UNMEASURED (R-measure-context-size; hook deferred)"
+        return _UNMEASURED_ACTION
     suffix = f"{s.model} @ {s.stamp}" if s.stamp else s.model
     return f"context: {s.pct:.0f}% ({suffix})"
