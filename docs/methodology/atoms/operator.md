@@ -7,6 +7,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ---
 
+## `R-agent-code-imports-framework` (ENFORCED)
+
+**Claim.** An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory.
+
+**Why.** First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt.
+
+**Enforced by:** `test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir`, `test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir`
+
 ## `R-agent-declares-purpose` (ENFORCED)
 
 **Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.

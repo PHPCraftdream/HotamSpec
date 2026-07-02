@@ -103,6 +103,25 @@ test. If the framework's own lifecycles are malformed, all downstream status
 validation is meaningless. References: R-statemachine-wellformedness,
 R-lifecycle-abstraction, R-process-aspect-first.
 
+## From `spec/src/hotam_spec/invariants.py::check_transition_guard_assumption_resolves`
+
+Canon: §Lifecycle / §Invariants — every non-empty Transition.guard_assumption resolves.
+
+RULE: for every EntityType.lifecycle.transitions[*], when guard_assumption is
+non-empty it MUST name an Assumption id present in assumption_ids(g). A
+dangling guard_assumption is the behavioral-drift-seam analogue of a
+dangling Requirement.assumptions[*] reference — the drift machinery
+(R-stale-substrate / dead-assumption fallout) can only surface a guard as
+stale if the id it names actually resolves. No-ops when g.entity_types is
+empty (§Entity aspect not loaded).
+
+WHY part of the dangling-ref family: this is a shape check — for each
+Transition, guard_assumption must resolve in assumption_ids(g) — the exact
+homogeneous per-entity referential-integrity pattern check_no_dangling_ids'
+atoms already cover for Requirement/Conflict/Operator/Assumption edges;
+Transition.guard_assumption is the one remaining edge of that family that
+had no enforcer.
+
 ## From `spec/src/hotam_spec/lifecycle.py` (module)
 
 Canon: §Lifecycle — the generic state-machine value-type (framework keystone).

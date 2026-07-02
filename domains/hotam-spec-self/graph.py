@@ -928,27 +928,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-context-bounded-delegation",
             claim=(
-                "The methodology shall relieve an over-budget operator by splitting "
-                "its domain into a bounded sub-domain owned by a spawned "
-                "sub-operator (the horizontal lever)."
+                "The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever)."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (P8): the P8 REFLECTION band fires 'over-budget' → "
-                "crystallize first → if still over, delegate. The signal path is "
-                "structural: check_operator_within_budget (P1) detects the breach; "
-                "the REFLECTION band (P0, tools/what_now.py::P_REFLECTION) names "
-                "the path; docs/playbooks/ documents the procedure. DomainScope "
-                "narrowing (per-operator sub-graph) remains a later phase but the "
-                "SIGNAL — over-budget → delegate — exists today. Makes the "
-                "methodology scale-free; generalizes 'agent never lost' to 'agent "
-                "never overloaded'. Implementation: tools/what_now.py::P_REFLECTION + "
-                "docs/playbooks/."
+                "SETTLED (P8): the P8 REFLECTION band fires 'over-budget' → crystallize first → if still over, delegate. The signal path is structural: check_operator_within_budget (P1) detects the breach; the REFLECTION band (P0, tools/what_now.py::P_REFLECTION) names the path; docs/playbooks/ documents the procedure. DomainScope narrowing (per-operator sub-graph) remains a later phase but the SIGNAL — over-budget → delegate — exists today. Makes the methodology scale-free; generalizes 'agent never lost' to 'agent never overloaded'. Implementation: tools/what_now.py::P_REFLECTION + docs/playbooks/. Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- reflect_over_budget_operators (hotam_spec.reflection) already names the crystallize-then-delegate sequence in its Finding.imperative; a new synthetic-graph unit test (test_reflect_over_budget_operators_names_crystallize_then_delegate) proves the ordered sequence is actually rendered, not merely claimed in prose."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=STRUCTURAL,
-            enforced_by=("check_operator_within_budget",),
+            enforcement="ENFORCED",
+            enforced_by=("check_operator_within_budget", "test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate"),
         ),
         Requirement(
             id="R-dependency-graph-parallelism",
@@ -1059,18 +1048,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-statemachine-guard-on-assumption",
             claim=(
-                "A Transition.guard may name an Assumption it rests on (drift "
-                "seam) — when that Assumption dies, the guard is surfaced."
+                "A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of R-statemachine-wellformedness (guard-on-assumption concern). "
-                "Structural via Transition.guard_assumption field."
+                "Atom of R-statemachine-wellformedness (guard-on-assumption concern). Structural via Transition.guard_assumption field. Wave 1 mechanical-honesty pass (2026-07-02): promoted to ENFORCED by the new check_transition_guard_assumption_resolves invariant, which fires when a non-empty guard_assumption fails to resolve in assumption_ids(g) (dangling-ref family, RULES_AS_DATA_TABLE: TABLE_DRIVEN) -- plus a drift-fallout unit test proving a DEAD assumption referenced only via guard_assumption is still discoverable through graph.dead_assumptions(), never invisibly stale."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            enforcement=STRUCTURAL,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_transition_guard_assumption_resolves", "test_entity_invariants.py::test_transition_guard_assumption_resolves_clean", "test_entity_invariants.py::test_transition_guard_assumption_resolves_dangling_fires", "test_entity_invariants.py::test_transition_guard_assumption_dead_assumption_still_visible_in_dependents"),
         ),
         # --- DRAFT — crystallization + anchoring super-rules (dossier 3) -----
         Requirement(
@@ -1472,14 +1459,9 @@ def build_graph() -> TensionGraph:
                 "coding-agent or model drives it."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "Today tools/ implicitly assume Claude Code (Agent tool, Bash, chat-"
-                "steward). BUILD-TRIGGER: a SECOND concrete backend becomes real (CI "
-                "runner, a different coding agent, or a programmatic steward). Until "
-                "then, abstracting for hypothetical backends is the big-bang-up-front "
-                "antipattern (weight ∝ cost of an unnoticed conflict). See OPEN "
-                "R-backend-scope (which backends are real?)."
+                "REJECTED -- REPLACES by R-backend-scope (SETTLED). M37 steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). The steward explicitly declined to build a designed OperatorBackend protocol (get_context_state / request_steward_approval / delegate): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime and stays backend-neutral BY CONSTRUCTION, not by an abstraction layer built ahead of a second real backend. Building the protocol now would be exactly the speculative-engineering-against-hypothetical-backends R-speculative-aspects-frozen already warns against. R-backend-scope (SETTLED, PROSE) already carries this verdict verbatim in its why and is the surviving atom; R-operator-backend-protocol is rejected rather than left DRAFT so the graph does not carry a dead aspiration as open debt. — (was: Today tools/ implicitly assume Claude Code (Agent tool, Bash, chat-steward). BUILD-TRIGGER: a SECOND concrete backend becomes real (CI runner, a different coding agent, or a programmatic steward). Until then, abstracting for hypothetical backends is the big-bang-up-front antipattern (weight ∝ cost of an unnoticed conflict). See OPEN R-backend-scope (which backends are real?).)"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
@@ -1493,14 +1475,9 @@ def build_graph() -> TensionGraph:
                 "than letting the crystal swell."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "The context-bounded-delegation law (R-context-bounded-delegation) "
-                "applied to the operator's OWN body, not just the graph. BUILD-TRIGGER: "
-                "CLAUDE.md crosses ~50% of the φ-cap (~309K tokens) — today it is ~7K "
-                "(~1%), so a budget CHECK now would be machinery guarding a condition "
-                "that cannot fire. The LIVE-STATE block already reports φ-headroom; the "
-                "check + the REFLECTION P0 wiring land when headroom actually narrows."
+                "REJECTED -- REPLACES by R-budget-measure + R-working-vs-substrate-budget (both SETTLED/ENFORCED) via CRYSTAL_CHARS. The phi-cap claim hardcoded a numeric ceiling (1_000_000 / phi ~= 618033 tokens) picked before the operator had any real measure of its own crystal size, and it named TOKENS while the operator's actual context arithmetic (check_operator_within_budget) counts CHARS against a host cap -- a unit mismatch that would have silently lied the moment anyone tried to wire a check against it. R-budget-measure already settles the honest unit (bytes/chars, not node counts, not a borrowed-constant token cap) and R-working-vs-substrate-budget already settles what the budget bounds (the WORKING store, leaving crystallized substrate free). check_operator_within_budget's CRYSTAL_CHARS measure (root CLAUDE.md char-length vs a declared host cap, currently 150000) is the real, live, already-ENFORCED mechanism; the phi-cap was a speculative alternate arithmetic that never had an enforcer and would have required reconciling two different budget units had it ever been built. R-claude-md-tree-of-crystals's trigger is retargeted from this dead cap onto the CRYSTAL_CHARS warn threshold in a separate proposal. — (was: The context-bounded-delegation law (R-context-bounded-delegation) applied to the operator's OWN body, not just the graph. BUILD-TRIGGER: CLAUDE.md crosses ~50% of the φ-cap (~309K tokens) — today it is ~7K (~1%), so a budget CHECK now would be machinery guarding a condition that cannot fire. The LIVE-STATE block already reports φ-headroom; the check + the REFLECTION P0 wiring land when headroom actually narrows.)"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
@@ -1509,22 +1486,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-claude-md-tree-of-crystals",
             claim=(
-                "When the root CLAUDE.md approaches its φ-cap, the operator shall move "
-                "sections into nested <subdir>/CLAUDE.md crystals and keep only a "
-                "heading + a when-to-read pointer in the root — a tree of crystals, one "
-                "per sub-domain."
+                "When the root CLAUDE.md's resident CRYSTAL_CHARS size approaches the operator's declared host cap, the operator shall move sections into nested <subdir>/CLAUDE.md crystals and keep only a heading + a when-to-read pointer in the root -- a tree of crystals, one per sub-domain."
             ),
             owner="framework-author",
             status="DRAFT",
             why=(
-                "R-operator-crystal-is-claude-md made recursive: the delegation "
-                "hierarchy is a tree of CLAUDE.md crystals (Claude Code natively loads "
-                "nested CLAUDE.md by directory). BUILD-TRIGGER: R-claude-md-budget-phi-"
-                "cap fires (the root crystal nears the cap). Blocked-by that trigger; "
-                "premature today."
+                "R-operator-crystal-is-claude-md made recursive: the delegation hierarchy is a tree of CLAUDE.md crystals (Claude Code natively loads nested CLAUDE.md by directory). Retargeted 2026-07-02 (Wave 2 burn-down): the original BUILD-TRIGGER named R-claude-md-budget-phi-cap, which is now REJECTED (dead hardcoded token ceiling, wrong unit -- see its rejection reason). The real, live, already-ENFORCED measure is check_operator_within_budget's CRYSTAL_CHARS arithmetic (root CLAUDE.md char-length vs the declared host cap, currently 150000 chars per LIVE-STATE) -- R-budget-measure + R-working-vs-substrate-budget. BUILD-TRIGGER (retargeted): the CRYSTAL_CHARS warn threshold in gen_spec's LIVE-STATE narrows meaningfully (today's resident crystal is well under half the cap) -- premature to build the splitting mechanism until headroom actually narrows against the SAME measure the operator already checks every turn."
             ),
             assumptions=("A-finite-context-operators", "A-bootstrap-self-applies"),
-            enforcement=PROSE,
+            enforcement="PROSE",
             enforced_by=(),
         ),
         Requirement(
@@ -1832,10 +1802,9 @@ def build_graph() -> TensionGraph:
                 "shared infrastructure; the framework body is owned by no single agent."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "Keeps the framework content-free (R-content-free-framework) while "
-                "letting agents specialize. BUILD-TRIGGER: same as R-agent-is-a-directory."
+                "REJECTED -- REPLACES split into R-agent-code-imports-framework + R-framework-owned-by-no-agent (Wave 2 burn-down, decided by framework-author 2026-07-02) per atomicity discipline (R-requirement-claim-is-atomic). audit_atomicity.py flagged this claim COMPOUND (semicolon splits 2 segments): (1) an agent's code shall import hotam_spec.* as shared infrastructure, and (2) the framework body is owned by no single agent. These are two distinct concerns -- (1) is a mechanically checkable import-direction fact about agent source files, (2) is a non-code ownership/governance stance about the framework body. Splitting lets (1) reach a real enforcer (a static AST import-direction scan, mirroring R-core-imports-stdlib-or-hotam-spec-only's pattern) without diluting it with the unenforceable ownership half. — (was: Keeps the framework content-free (R-content-free-framework) while letting agents specialize. BUILD-TRIGGER: same as R-agent-is-a-directory.)"
             ),
             assumptions=("A-content-free-honest",),
             enforcement=PROSE,
@@ -1848,11 +1817,9 @@ def build_graph() -> TensionGraph:
                 "returns conclusions and does not persist between invocations."
             ),
             owner="ai-agent",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "The user's distinction today: hands vs agents. BUILD-TRIGGER: "
-                "D3's spawn-log writer exists — the log is the structural recording "
-                "of this ephemeral act."
+                "REJECTED -- REPLACES split into R-task-spawn-is-a-hand + R-task-spawn-no-cross-invocation-persistence (Wave 2 burn-down, decided by ai-agent 2026-07-02) per atomicity discipline (R-requirement-claim-is-atomic). audit_atomicity.py flagged this claim COMPOUND ('and' connects clause with verb, 'and does'): (1) a task-agent invocation IS a hand (a classification claim), and (2) it returns conclusions and does not persist between invocations (a behavioral claim). Splitting separates the naming/classification half from the persistence-behavior half so each can be honestly graded on its own enforceability -- the classification is discipline/naming, the non-persistence half is closer to (but not fully) checkable via the spawn-log's structure. — (was: The user's distinction today: hands vs agents. BUILD-TRIGGER: D3's spawn-log writer exists — the log is the structural recording of this ephemeral act.)"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
@@ -1911,19 +1878,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-private-tools-in-agent-folder",
             claim=(
-                "Tools available only to one agent shall live under that agent's "
-                "`tools/` subdirectory."
+                "Tools available only to one agent shall live under that agent's tools/ subdirectory."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="SETTLED",
             why=(
-                "Counterpart to R-shared-tools-in-spec-tools — private scope. "
-                "BUILD-TRIGGER: R-agent-is-a-directory and R-agent-has-own-tools-dir "
-                "have landed; a real agent has private tools."
+                "Counterpart to R-shared-tools-in-spec-tools -- private scope. BUILD-TRIGGER fired: R-agent-is-a-directory and R-agent-has-own-tools-dir have both landed ENFORCED and create_agent.py always scaffolds a tools/ subdir per agent. Promoted DRAFT->SETTLED reusing check_agent_has_tools_subdir (the same structural check already proves every agent directory carries its own tools/ subdir, which IS the location this claim requires private tools to live in) rather than fabricating a second near-duplicate check -- the location constraint and the subdir-existence constraint are the same structural fact viewed from two requirement angles."
             ),
             assumptions=("A-python-stack",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_agent_has_tools_subdir",),
         ),
         Requirement(
             id="R-tree-of-crystals-cognitive-trigger",
@@ -3108,19 +3072,20 @@ def build_graph() -> TensionGraph:
             claim=("Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced."),
             owner="framework-author",
             status="SETTLED",
-            why=("The §Lifecycle keystone was introduced precisely so that every stateful aspect (Process, Entity, Goal, Operator) reuses one mechanism. Parallel state machinery would fracture the invariant surface and double the maintenance burden for each new aspect."),
+            why=("The §Lifecycle keystone was introduced precisely so that every stateful aspect (Process, Entity, Goal, Operator) reuses one mechanism. Parallel state machinery would fracture the invariant surface and double the maintenance burden for each new aspect. Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- the demo fixture's second EntityType (invoice, tests/fixtures/seed.py) validates through the exact same check_lifecycle_wellformed BFS machinery as the first (customer), proven directly by test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks, which asserts check_lifecycle_wellformed(invoice_type.lifecycle) == [] using the shared §Lifecycle keystone, no parallel state machinery."),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
-            enforced_by=("check_entity_type_lifecycle_wellformed",),
+            enforcement="ENFORCED",
+            enforced_by=("check_entity_type_lifecycle_wellformed", "test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks"),
         ),
         Requirement(
             id="R-entity-checks-by-iteration",
             claim=("The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type."),
             owner="framework-author",
             status="SETTLED",
-            why=("Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the check surface linearly and force framework edits on every domain addition — the inverse of the content-free design."),
+            why=("Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the check surface linearly and force framework edits on every domain addition — the inverse of the content-free design. Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- the demo fixture (tests/fixtures/seed.py) now declares a SECOND EntityType (invoice, alongside customer), and test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks runs the full check_entity_* family against both types with zero per-type code changes needed, proving the iteration claim end-to-end rather than by inspection of the source alone."),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks",),
         ),
         Requirement(
             id="R-entity-state-conflict-surfaced",
@@ -3342,8 +3307,9 @@ def build_graph() -> TensionGraph:
             claim=("The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need."),
             owner="framework-author",
             status="SETTLED",
-            why=("Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.'"),
-            enforcement="STRUCTURAL",
+            why=("Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) now makes an inward edit to any frozen file (src/hotam_spec/entity.py; tools/create_agent.py, spawn_agent.py, invoke_agent.py; tools/create_domain.py) fail RED, with the failure message stating explicitly that unfreezing requires a recorded steward act (regenerating the baseline). Prose discipline alone could not detect a silent violation; the hash guard can."),
+            enforcement="ENFORCED",
+            enforced_by=("test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline", "test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_named_frozen_surfaces"),
         ),
         Requirement(
             id="R-reflection-predicates-first-class",
@@ -3440,9 +3406,10 @@ def build_graph() -> TensionGraph:
             claim=("An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec."),
             owner="domain-user",
             status="SETTLED",
-            why=("Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. Honest enforcement: no automated check yet verifies 'initiator supplied content at boot' as a runtime event -- this is STRUCTURAL (visible/addressable via the mediation loop and closure discipline) not ENFORCED; do not fabricate an enforcer."),
+            why=("Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."),
             assumptions=("A-prose-suffices",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-enforced-by-resolvable",
@@ -3502,6 +3469,59 @@ def build_graph() -> TensionGraph:
             status="OPEN(how do variants attach to the Conflict node -- payload field vs derived Proposed* pair -- and when is a conflict classified unresolvable-by-members?)",
             why=("Steward-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test)."),
             enforcement=PROSE,
+        ),
+        Requirement(
+            id="R-no-observation-type",
+            claim=("hotam_spec shall define no Observation or Evidence class anywhere in its package -- Assumption remains the ontology's sole belief-carrying node type."),
+            owner="framework-reviewer",
+            status="SETTLED",
+            why=("Wave 1 mechanical-honesty pass (2026-07-02): R-observation-evidence-scope (STRUCTURAL, M21 steward verdict) makes a broader claim -- operator epistemics live in the working dialogue, crystallized only on request -- that is not fully machine-checkable (no static scan can verify 'lives in the dialogue'). But its NEGATIVE half -- no separate Observation/Evidence type exists -- IS mechanically checkable: a static AST scan of spec/src/hotam_spec/*.py for a class named Observation or Evidence. Split out as its own atom (R-commit-boundary-checkable's slice-of-a-broader-claim pattern) so the mechanical slice can honestly reach ENFORCED while the parent claim (R-observation-evidence-scope) stays STRUCTURAL, undiluted by a partial enforcer."),
+            assumptions=("A-most-knowledge-crystallizable",),
+            relations=(Relation("refines", "R-observation-evidence-scope"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec", "test_no_observation_type_scope.py::test_assumption_is_the_only_belief_carrying_dataclass_by_convention",),
+        ),
+        Requirement(
+            id="R-core-imports-stdlib-or-hotam-spec-only",
+            claim=("Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 steward verdict) makes the broader design-stance claim that the core stays backend-neutral 'by construction' and names no target backends -- a claim that is largely a prose non-decision (declining to build an OperatorBackend protocol), not itself machine-checkable end-to-end. But the CONSTRUCTION half of 'by construction' IS mechanically checkable: an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core. Split out as its own atom (same slice pattern as R-no-observation-type / R-commit-boundary-checkable) so this narrow, mechanical guarantee can honestly reach ENFORCED while R-backend-scope itself remains PROSE."),
+            assumptions=("A-finite-context-operators",),
+            relations=(Relation("refines", "R-backend-scope"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only",),
+        ),
+        Requirement(
+            id="R-agent-code-imports-framework",
+            claim=("An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt."),
+            assumptions=("A-content-free-honest",),
+            enforcement=ENFORCED,
+            enforced_by=("test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir", "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir",),
+        ),
+        Requirement(
+            id="R-task-spawn-is-a-hand",
+            claim=("A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator."),
+            owner="ai-agent",
+            status="SETTLED",
+            why=("First half of the split R-task-spawn-is-ephemeral (R-requirement-claim-is-atomic). The user's distinction (hands vs agents): a hand executes one task and reports back, distinct from a domain-delegation sub-operator (R-context-bounded-delegation) which owns a persistent sub-domain. This is a naming/classification discipline -- no check_* can verify 'this call was conceptually a hand', so it stays STRUCTURAL, carried by the spawn-log's own shape (one entry per invocation, no operator-id field implying persistence) rather than a dedicated enforcer."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=STRUCTURAL,
+            enforceability="INHERENTLY_PROSE",
+        ),
+        Requirement(
+            id="R-atomicity-ratchet-no-growth",
+            claim=("The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json."),
+            owner="framework-reviewer",
+            status="SETTLED",
+            why=("R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human judgment no check_* can force wholesale, and burning down the 27 pre-existing compound atoms (21 requirements + 6 check_*) in one wave is out of scope. But the DIRECTION of the debt (is it growing or merely being carried) IS mechanically checkable via a ratchet: test_atomicity_ratchet.py re-derives the live COMPOUND set from audit_atomicity's own _audit_claim/_audit_invariant functions and fails RED the instant a COMPOUND id appears that is not already in the frozen baseline. This is the R-commit-boundary-checkable slice-of-a-broader-claim pattern applied to atomicity: the parents stay STRUCTURAL (the full claim -- eventually zero compound atoms -- is not machine-verifiable end to end), while this narrower atom (no NEW compound debt) has a real, always-green-until-violated enforcer landing in the same wave."),
+            assumptions=("A-prose-suffices",),
+            relations=(Relation("refines", "R-requirement-claim-is-atomic"), Relation("refines", "R-check-method-is-atomic"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline", "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline",),
         ),
     )
 

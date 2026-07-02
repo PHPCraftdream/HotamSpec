@@ -133,25 +133,4 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 
 | left | right | hint |
 |---|---|---|
-| `R-agent-imports-framework` | `R-conflict-is-connector-node` | shares assumption(s): A-content-free-honest |
-| `R-enforced-names-enforcer` | `R-enforcement-first-class` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforced-names-enforcer` | `R-enforcement-levels-declared` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforced-names-enforcer` | `R-observation-evidence-scope` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforced-names-enforcer` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforced-names-enforcer` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforced-names-enforcer` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-first-class` | `R-enforcement-levels-declared` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-first-class` | `R-observation-evidence-scope` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-first-class` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-first-class` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-first-class` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-levels-declared` | `R-observation-evidence-scope` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-levels-declared` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-levels-declared` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-enforcement-levels-declared` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-observation-evidence-scope` | `R-requirement-enforced` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-observation-evidence-scope` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-observation-evidence-scope` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-requirement-enforced` | `R-uncrystallizable-automated` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-requirement-enforced` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
-| `R-uncrystallizable-automated` | `R-uncrystallizable-is-missing-type` | shares assumption(s): A-most-knowledge-crystallizable |
+| `R-agent-code-imports-framework` | `R-conflict-is-connector-node` | shares assumption(s): A-content-free-honest |

@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 149 / SETTLED 178; closeable debt 16; inherent discipline 13; DRAFT 12; OPEN 2; REJECTED 25.**
+**Burn-down: SETTLED-ENFORCED 159 / SETTLED 184; closeable debt 10; inherent discipline 15; DRAFT 7; OPEN 2; REJECTED 29.**
 
 ---
 
@@ -23,8 +23,6 @@ judgment calls no check_* could ever verify.
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-axis-gatekeeper-policy` | STRUCTURAL | `ai-agent` | Axis-duplicate gatekeeping shall be a mandatory part of the future axis-creation path (confront-style similarity check at creation time), not a separately-switched feature; until an axis-creation tool exists, the hand-curated axes tuple is the gate. |
-| `R-context-bounded-delegation` | STRUCTURAL | `framework-author` | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
-| `R-statemachine-guard-on-assumption` | STRUCTURAL | `framework-author` | A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced. |
 | `R-observation-evidence-scope` | STRUCTURAL | `framework-reviewer` | Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request; Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types. |
 | `R-backend-scope` | PROSE | `framework-author` | The framework names no target backends: the core (graph/JSON proposals/CLI/pytest) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern. |
 | `R-constituting-requirements-converge` | STRUCTURAL | `framework-reviewer` | The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden. |
@@ -33,10 +31,6 @@ judgment calls no check_* could ever verify.
 | `R-dependency-drives-parallel` | STRUCTURAL | `framework-author` | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
 | `R-dependency-drives-sequential` | STRUCTURAL | `framework-author` | Dependency chains in the network shall be processed sequentially. |
 | `R-entity-derived-requirement` | STRUCTURAL | `framework-author` | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
-| `R-entity-reuses-lifecycle` | STRUCTURAL | `framework-author` | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
-| `R-entity-checks-by-iteration` | STRUCTURAL | `framework-author` | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
-| `R-speculative-aspects-frozen` | STRUCTURAL | `framework-author` | The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need. |
-| `R-initiator-supplies-domain-content` | STRUCTURAL | `domain-user` | An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec. |
 | `R-trust-anchor-delegation-explicit-only` | PROSE | `framework-author` | Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
@@ -56,6 +50,8 @@ judgment calls no check_* could ever verify.
 | `R-critical-core-per-domain` | PROSE | `domain-user` | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-parallel-mutating-agents-use-worktree` | STRUCTURAL | `framework-author` | Parallel Agent-tool invocations that mutate tracked repository files shall use isolation:'worktree' unless their target files are provably disjoint and no history-rewriting git operation is planned during their execution window. |
 | `R-tiered-gate-not-a-commit-gate` | STRUCTURAL | `framework-author` | The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries; the T1 targeted-enforcer tier applies ONLY to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing. |
+| `R-initiator-supplies-domain-content` | STRUCTURAL | `domain-user` | An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec. |
+| `R-task-spawn-is-a-hand` | STRUCTURAL | `ai-agent` | A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 
@@ -86,9 +82,11 @@ judgment calls no check_* could ever verify.
 | `R-goal-is-first-class-type` | test_goal.py, check_typed_anchors_goal | Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'. |
 | `R-goal-target-kind-known` | check_goal_target_kind_known | Goal.target_state.kind shall be one of the declared TARGET_KINDS. |
 | `R-goal-owner-is-operator` | check_goal_owner_is_operator, check_no_dangling_operator_refs | Goal.owner shall reference an existing Operator.id. |
+| `R-context-bounded-delegation` | check_operator_within_budget, test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate | The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever). |
 | `R-statemachine-reachable` | check_canonical_lifecycles_wellformed | Every state in a canonical Lifecycle shall be reachable from the initial state. |
 | `R-statemachine-deterministic` | check_canonical_lifecycles_wellformed | A Lifecycle's transitions shall be deterministic — no two transitions with the same (src, event) and overlapping guards. |
 | `R-statemachine-terminal-or-cyclic` | check_canonical_lifecycles_wellformed | Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state. |
+| `R-statemachine-guard-on-assumption` | check_transition_guard_assumption_resolves, test_entity_invariants.py::test_transition_guard_assumption_resolves_clean, test_entity_invariants.py::test_transition_guard_assumption_resolves_dangling_fires, test_entity_invariants.py::test_transition_guard_assumption_dead_assumption_still_visible_in_dependents | A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced. |
 | `R-verify-closure-per-action` | test_closure.py | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
 | `R-anchor-everything` | check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_process, check_typed_anchors_goal, check_typed_anchors_entity, check_section_anchors_known, test_glossary_sync.py | Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...). |
 | `R-speak-by-reference` | test_glossary_sync.py, check_section_anchors_known, test_playbooks_doc.py | An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space. |
@@ -114,6 +112,7 @@ judgment calls no check_* could ever verify.
 | `R-agent-has-own-tools-dir` | check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
 | `R-task-spawn-log-runtime` | test_spawn_log_written | Task-agent invocations shall be appended to `spec/.runtime/spawn-log.jsonl` with parent, child kind, task subject, and stamp. |
 | `R-tools-registry-generated` | test_repo_map.py::test_repo_map_complete, test_repo_map.py::test_repo_map_tool_xref_present | The list of available tools shall be generated by scanning `spec/tools/*.py` (and per-agent `spec/agents/<name>/tools/*.py`), never hand-maintained. |
+| `R-private-tools-in-agent-folder` | check_agent_has_tools_subdir | Tools available only to one agent shall live under that agent's tools/ subdirectory. |
 | `R-audit-atomicity-tool` | test_tool_audit_atomicity.py | An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation. |
 | `R-content-free-no-business-data` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
 | `R-content-free-no-examples` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo. |
@@ -181,6 +180,8 @@ judgment calls no check_* could ever verify.
 | `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only.py | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
 | `R-entities-md-generated` | check_entities_md_lists_all_types | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
 | `R-entity-is-declarative` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph(). |
+| `R-entity-reuses-lifecycle` | check_entity_type_lifecycle_wellformed, test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
+| `R-entity-checks-by-iteration` | test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |
 | `R-entity-state-conflict-surfaced` | test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict | Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects(). |
 | `R-recently-rejected-surfaced` | test_recently_rejected_lists_known_rejections | Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every REJECTED requirement whose why contains 'REJECTED — REPLACES' to surface anti-relitigation evidence before re-derivation. |
 | `R-operator-prompt-loaded-at-session-start` | test_session_start_hook_runs_gen_spec | A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state. |
@@ -198,6 +199,7 @@ judgment calls no check_* could ever verify.
 | `R-crystal-carries-recursion-seed` | test_operator_seed.py::test_recursion_block_names_spawn_path | Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope, naming the create_agent → gen_spec → spawn_agent path. |
 | `R-constitution-is-index` | test_constitution.py::test_constitution_is_index, test_constitution.py::test_constitution_lists_all_settled | The CONSTITUTION block in root CLAUDE.md shall render each SETTLED requirement as a one-line index entry — id, claim truncated to at most 96 characters, single-character enforcement flag — with a block-level pointer to the full roster in the domain's docs/gen/REQUIREMENTS.md. |
 | `R-constitution-separates-plumbing` | test_constitution.py::test_constitution_partitions_all_settled, test_constitution.py::test_constitution_pointer_to_framework_invariants, test_constitution.py::test_framework_invariants_md_up_to_date | The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms. |
+| `R-speculative-aspects-frozen` | test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline, test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_named_frozen_surfaces | The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need. |
 | `R-reflection-predicates-first-class` | test_reflection.py::test_what_now_sources_reflection_predicates_from_module, test_reflection.py::test_diagnose_p0_equals_reflection_findings | The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined in tool code. |
 | `R-conflict-addressing-resolves-variables` | test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs, test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addressable, test_apply_proposal.py::test_all_real_domain_conflicts_are_addressable | tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when locating the Conflict node a proposal addresses. |
 | `R-proposed-conflict-kind-exists` | test_apply_proposal.py::test_apply_conflict_creates_detected_node, test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape, test_proposal.py::test_proposed_conflict_target_anchor_is_computed_identity | The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via tools/apply_proposal.py. |
@@ -210,19 +212,18 @@ judgment calls no check_* could ever verify.
 | `R-land-tier-trace` | test_apply_proposal_land_log.py::test_land_log_record_shape_t1, test_apply_proposal_land_log.py::test_land_log_record_shape_t2, test_apply_proposal_land_log.py::test_land_log_records_closure_exit, test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced, test_apply_proposal_land_log.py::test_dry_run_writes_no_log, test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort | Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran; dry-run proposals shall never write a record, and a broken/unwritable log location shall never fail an otherwise-green apply (best-effort, warn only). |
 | `R-commit-boundary-checkable` | test_tool_gate_status.py::test_t1_then_t2_is_satisfied, test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied, test_tool_gate_status.py::test_only_t1_records_never_t2_is_not_satisfied, test_tool_gate_status.py::test_only_t2_records_is_satisfied, test_tool_gate_status.py::test_mixed_only_t1_after_last_t2_are_unverified, test_tool_gate_status.py::test_cli_exit_0_on_satisfied, test_tool_gate_status.py::test_cli_exit_1_on_not_satisfied | tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline. |
 | `R-unmeasured-cipher-names-user-action` | test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line | While the context cipher is UNMEASURED, the generated LIVE-STATE shall name the exact user-run command that activates measurement. |
+| `R-no-observation-type` | test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec, test_no_observation_type_scope.py::test_assumption_is_the_only_belief_carrying_dataclass_by_convention | hotam_spec shall define no Observation or Evidence class anywhere in its package -- Assumption remains the ontology's sole belief-carrying node type. |
+| `R-core-imports-stdlib-or-hotam-spec-only` | test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only | Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency. |
+| `R-agent-code-imports-framework` | test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir | An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory. |
+| `R-atomicity-ratchet-no-growth` | test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline | The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json. |
 
 ## DRAFT (not yet promoted)
 
 | id | owner |
 |---|---|
 | `R-measure-context-size` | `ai-agent` |
-| `R-operator-backend-protocol` | `framework-author` |
-| `R-claude-md-budget-phi-cap` | `framework-author` |
 | `R-claude-md-tree-of-crystals` | `framework-author` |
-| `R-agent-imports-framework` | `framework-author` |
-| `R-task-spawn-is-ephemeral` | `ai-agent` |
 | `R-domain-delegation-persists` | `framework-author` |
-| `R-private-tools-in-agent-folder` | `framework-author` |
 | `R-tree-of-crystals-cognitive-trigger` | `framework-author` |
 | `R-domain-delegation-as-node` | `framework-author` |
 | `R-setup-claude-generates-settings` | `framework-author` |
