@@ -424,6 +424,43 @@ class LatentSuspect:
     hint: str
 
 
+def _latent_pair_records(
+    g: TensionGraph,
+) -> list[tuple[int, tuple[str, ...], str, str]]:
+    """Shared pair scan behind latent_connector_suspects / latent_connector_clusters.
+
+    Returns (min_ref_count, specific-assumption signature (sorted), left, right)
+    per unmediated pair, sorted by (min_ref_count, left, right). One
+    implementation keeps the suspect list and its clustering byte-consistent.
+    """
+    from hotam_spec.requirement import REJECTED  # noqa: PLC0415
+
+    already = members_pair_set(g)
+    ref_counts = assumption_reference_counts(g)
+    reqs = [r for r in g.requirements if r.status != REJECTED]
+    records: list[tuple[int, tuple[str, ...], str, str]] = []
+    for i in range(len(reqs)):
+        for j in range(i + 1, len(reqs)):
+            a, b = reqs[i], reqs[j]
+            shared = set(a.assumptions) & set(b.assumptions)
+            if not shared:
+                continue
+            specific = {
+                a_id
+                for a_id in shared
+                if ref_counts.get(a_id, 0) < GENERIC_ASSUMPTION_THRESHOLD
+            }
+            if not specific:
+                continue
+            if frozenset({a.id, b.id}) in already:
+                continue
+            left, right = sorted((a.id, b.id))
+            min_count = min(ref_counts.get(a_id, 0) for a_id in specific)
+            records.append((min_count, tuple(sorted(specific)), left, right))
+    records.sort(key=lambda rec: (rec[0], rec[2], rec[3]))
+    return records
+
+
 def latent_connector_suspects(g: TensionGraph) -> tuple[LatentSuspect, ...]:
     """Canon: §Conflict — HEURISTIC hunt for missing connector nodes.
 
@@ -444,35 +481,88 @@ def latent_connector_suspects(g: TensionGraph) -> tuple[LatentSuspect, ...]:
     because it points at the not-yet-recorded. Real semantic detection is
     deferred (see CLAUDE.md / ROADMAP).
     """
-    from hotam_spec.requirement import REJECTED  # noqa: PLC0415
+    return tuple(
+        LatentSuspect(
+            left=left,
+            right=right,
+            hint="shares assumption(s): " + ", ".join(signature),
+        )
+        for _, signature, left, right in _latent_pair_records(g)
+    )
 
-    already = members_pair_set(g)
-    ref_counts = assumption_reference_counts(g)
-    reqs = [r for r in g.requirements if r.status != REJECTED]
-    suspects: list[tuple[int, LatentSuspect]] = []
-    for i in range(len(reqs)):
-        for j in range(i + 1, len(reqs)):
-            a, b = reqs[i], reqs[j]
-            shared = set(a.assumptions) & set(b.assumptions)
-            if not shared:
-                continue
-            specific = {
-                a_id
-                for a_id in shared
-                if ref_counts.get(a_id, 0) < GENERIC_ASSUMPTION_THRESHOLD
-            }
-            if not specific:
-                continue
-            if frozenset({a.id, b.id}) in already:
-                continue
-            left, right = sorted((a.id, b.id))
-            min_count = min(ref_counts.get(a_id, 0) for a_id in specific)
-            hint = "shares assumption(s): " + ", ".join(sorted(specific))
-            suspects.append(
-                (min_count, LatentSuspect(left=left, right=right, hint=hint))
+
+@dataclass(frozen=True)
+class LatentCluster:
+    """Canon: §Conflict — latent suspects grouped by their shared-assumption signature.
+
+    RULE: cluster key = the exact set of SPECIFIC assumptions a suspect pair
+    shares (its signature). All pairs carrying one signature are ONE review
+    item: N requirements standing on one specific assumption with no mediating
+    conflict is one architectural question (usually: is that assumption really
+    two assumptions?), not C(N,2) independent pair disputes.
+
+    Fields:
+      assumptions  — the signature, sorted for stable identity.
+      requirements — sorted union of the member requirement ids of all pairs.
+      pairs        — the pair-level detail (LatentSuspect records), preserved
+                     for the verbose path (TENSIONS.md renders pairs).
+
+    WHY clustering, not a threshold shift: raising
+    GENERIC_ASSUMPTION_THRESHOLD only moves the noise cliff; grouping by
+    signature keeps every suspect pair visible while the review surface
+    matches the size of the actual decision space.
+    """
+
+    assumptions: tuple[str, ...]
+    requirements: tuple[str, ...]
+    pairs: tuple[LatentSuspect, ...]
+
+
+def latent_connector_clusters(g: TensionGraph) -> tuple[LatentCluster, ...]:
+    """Canon: §Conflict — group latent-connector suspects by shared-assumption signature.
+
+    RULE: every suspect pair from latent_connector_suspects belongs to exactly
+    ONE cluster, keyed by its specific-shared-assumption signature; the cluster
+    carries the sorted union of its pairs' requirement ids plus the pair
+    records themselves. Clusters are sorted by (min reference count across the
+    cluster, signature) — rarest/most-suspicious first — and pairs inside a
+    cluster keep the suspect ordering. Deterministic: same graph, same tuple.
+
+    WHY: 21 pair lines over one shared assumption drown the one real question
+    ('split this assumption?') and any genuinely distinct suspect next to
+    them; the harness renders ONE P5 action per cluster (tools/what_now.py)
+    while TENSIONS.md keeps the full pair table.
+    """
+    records = _latent_pair_records(g)
+    grouped: dict[tuple[str, ...], list[tuple[int, str, str]]] = {}
+    for min_count, signature, left, right in records:
+        grouped.setdefault(signature, []).append((min_count, left, right))
+    clusters: list[tuple[int, LatentCluster]] = []
+    for signature, entries in grouped.items():
+        member_ids: set[str] = set()
+        pairs: list[LatentSuspect] = []
+        for _, left, right in entries:
+            member_ids.update((left, right))
+            pairs.append(
+                LatentSuspect(
+                    left=left,
+                    right=right,
+                    hint="shares assumption(s): " + ", ".join(signature),
+                )
             )
-    suspects.sort(key=lambda pair: (pair[0], pair[1].left, pair[1].right))
-    return tuple(s for _, s in suspects)
+        cluster_min = min(mc for mc, _, _ in entries)
+        clusters.append(
+            (
+                cluster_min,
+                LatentCluster(
+                    assumptions=signature,
+                    requirements=tuple(sorted(member_ids)),
+                    pairs=tuple(pairs),
+                ),
+            )
+        )
+    clusters.sort(key=lambda pair: (pair[0], pair[1].assumptions))
+    return tuple(c for _, c in clusters)
 
 
 def entity_type_slugs(g: TensionGraph) -> frozenset[str]:

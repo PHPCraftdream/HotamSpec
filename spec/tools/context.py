@@ -6,9 +6,22 @@ by a harness hook — DEFERRED, the hook lives in the user's global settings
 and is a steward decision, not part of the framework body). If the file is
 absent, returns UNMEASURED — honestly, rather than faking a number.
 
-R-measure-context-size (DRAFT): the reader exists; the producing hook is
-proposed but not installed (it touches the user's global ~/.claude config,
-outside the framework body).
+PRODUCER CONTRACT (what a future hook must write, verified by
+tests/test_tool_context.py):
+
+    spec/.runtime/context.json = {
+      "ctx_pct": <float 0..100>,   # working-context fullness — REQUIRED
+      "model":   "<model id>",     # optional
+      "stamp":   "<iso8601>"       # optional — when the measurement was taken
+    }
+
+R-measure-context-size (DRAFT): the reader + schema + LIVE-STATE bridge exist
+(gen_spec renders render_line()); the PRODUCING hook is still deferred —
+project-local hook events (SessionStart / UserPromptSubmit / PostToolUse /
+Stop) do not receive context-window usage on stdin today; only the global
+statusline pipeline sees it, and the user's global ~/.claude config is outside
+the framework body. The requirement stays DRAFT until a hook can honestly
+write this stamp.
 """
 
 from __future__ import annotations
@@ -26,6 +39,7 @@ class ContextState:
     measured: bool
     pct: float | None = None  # 0..100 working-context fullness
     model: str = ""
+    stamp: str = ""  # iso8601 of the measurement (staleness visibility)
     note: str = ""
 
 
@@ -45,6 +59,7 @@ def read_context() -> ContextState:
         measured=True,
         pct=float(data.get("ctx_pct")) if data.get("ctx_pct") is not None else None,
         model=str(data.get("model", "")),
+        stamp=str(data.get("stamp", "")),
         note="",
     )
 
@@ -54,4 +69,5 @@ def render_line() -> str:
     s = read_context()
     if not s.measured or s.pct is None:
         return "context: UNMEASURED (R-measure-context-size; hook deferred)"
-    return f"context: {s.pct:.0f}% ({s.model})"
+    suffix = f"{s.model} @ {s.stamp}" if s.stamp else s.model
+    return f"context: {s.pct:.0f}% ({suffix})"

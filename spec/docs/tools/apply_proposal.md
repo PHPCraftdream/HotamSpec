@@ -26,6 +26,8 @@ this tool to mechanically land the change. No free-text editing of the graph.
 
 Supported proposal kinds:
   - ConflictTransition — move a Conflict lifecycle (DETECTED → DECIDED etc.)
+  - Conflict — materialize a NEW Conflict node (lifecycle starts DETECTED;
+    id computed via conflict_identity(axis, context), never caller-supplied)
   - Requirement — add or update a Requirement in the graph
   - Rejection — reject an existing Requirement (status → REJECTED)
   - EntityType — add a new EntityType to the active domain's graph
@@ -67,6 +69,17 @@ The JSON shapes:
     "kind": "Rejection",
     "requirement_id": "R-foo",
     "reason": "REJECTED — REPLACES R-bar; see R-new"
+  }
+
+  ProposedConflict (materialize a new Conflict node, lifecycle DETECTED):
+  {
+    "kind": "Conflict",
+    "axis": "core-vs-aspect",
+    "context": "the scenario in which the members actually collide",
+    "members": ["R-foo", "R-bar"],
+    "steward": "framework-reviewer",
+    "shared_assumption": "A-baz",
+    "note": "presentation-only context for the steward (not written to the graph)"
   }
 
   ProposedOperatorBudget:

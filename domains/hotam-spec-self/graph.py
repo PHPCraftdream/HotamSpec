@@ -237,19 +237,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-agent-never-lost",
             claim=(
-                "The system shall let an agent dropped into the repo in any state, "
-                "at any moment, deterministically derive the next correct action "
-                "via tools/what_now.py."
+                "The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "The centerpiece. Generalizes dev-coin's 'drift is structurally "
-                "impossible' to 'being lost is structurally impossible'."
+                "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'."
             ),
             assumptions=("A-stakeholders-care",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("test_what_now.py",),
         ),
         Requirement(
             id="R-drift-structurally-impossible",
@@ -275,21 +272,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-conflict-is-connector-node",
             claim=(
-                "A contradiction shall be modeled as a first-class Conflict NODE "
-                "carrying axis + context + shared_assumption + steward, never as "
-                "a `conflicts_with` edge between requirements."
+                "A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "The central ontological insight. An edge holds nothing; a node "
-                "holds knowledge belonging to neither party (the axis, the "
-                "context, the shared root) — that is what makes contradictions "
-                "first-class and clusterable."
+                "The central ontological insight. An edge holds nothing; a node holds knowledge belonging to neither party (the axis, the context, the shared root) — that is what makes contradictions first-class and clusterable."
             ),
             assumptions=("A-content-free-honest",),
-            enforcement=STRUCTURAL,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_conflict_has_axis", "check_conflict_has_context", "check_conflict_has_steward", "test_invariants.py::test_conflicts_with_is_not_a_relation_kind"),
         ),
         Requirement(
             id="R-content-free-framework",
@@ -391,19 +383,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-rejected-preserved-not-deleted",
             claim=(
-                "Requirements that are rejected shall be marked REJECTED and "
-                "kept in the graph for history, never deleted."
+                "Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Anti-relitigation. Without preserved REJECTED, the same dead "
-                "ideas re-surface every quarter. The historian role depends on "
-                "this preservation."
+                "Anti-relitigation. Without preserved REJECTED, the same dead ideas re-surface every quarter. The historian role depends on this preservation."
             ),
             assumptions=("A-stakeholders-care",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("test_rejected_preserved.py",),
         ),
         Requirement(
             id="R-axis-controlled-vocab",
@@ -603,18 +592,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-active-loop-playbook-doc",
             claim=(
-                "At least one band-specific playbook shall exist under "
-                "docs/playbooks/ describing the agent's role for that band."
+                "At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "Atom of R-active-loop-playbooks (documentation concern). "
-                "docs/playbooks/P4-OPEN-ITEM.md is the first band playbook."
+                "Atom of R-active-loop-playbooks (documentation concern). docs/playbooks/P4-OPEN-ITEM.md is the first band playbook."
             ),
             assumptions=(),
-            enforcement=STRUCTURAL,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("test_playbooks_doc.py",),
         ),
         Requirement(
             id="R-decided-needs-human-signoff",
@@ -1257,24 +1244,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-uncrystallizable-is-missing-type",
             claim=(
-                "Knowledge an operator cannot crystallize as any existing node "
-                "shall be RECORDED as a candidate missing ontology type for steward "
-                "review (not auto-acted)."
+                "Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted)."
             ),
             owner="framework-reviewer",
             status="SETTLED",
             why=(
-                "SETTLED (P6): the meta-signal surface exists — when the "
-                "§Conscience Hypothesis property-sweep finds a class of "
-                "contradictions that no existing critical-core invariant can "
-                "express, the property-test failure IS the recording mechanism "
-                "(a clear, machine-visible meta-signal that a new type is needed). "
-                "The steward still decides whether to add the type; the recording "
-                "itself is now structural, not manual."
+                "SETTLED (P6): the meta-signal surface exists — when the §Conscience Hypothesis property-sweep finds a class of contradictions that no existing critical-core invariant can express, the property-test failure IS the recording mechanism (a clear, machine-visible meta-signal that a new type is needed). The steward still decides whether to add the type; the recording itself is now structural, not manual."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=("test_conscience.py", "CRITICAL_CORE_INVARIANTS"),
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-stale-substrate",
@@ -1472,29 +1452,17 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-uncrystallizable-automated",
             claim=(
-                "Detection of 'uncrystallizable knowledge = missing type' is human "
-                "judgment: the operator records the candidate in the graph as an OPEN "
-                "requirement (or a DRAFT), and the steward decides whether to add "
-                "the ontology type."
+                "Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type."
             ),
             owner="framework-reviewer",
             status="SETTLED",
             why=(
-                "M30. DECIDED 2026-06-30: human judgment, not automated. Rationale: "
-                "R-uncrystallizable-is-missing-type (SETTLED P6) already establishes "
-                "that the operator records the signal as a node; the §Conscience "
-                "property-sweep (test_conscience.py) surfaces the meta-signal "
-                "structurally when a class of contradictions cannot be expressed by "
-                "existing critical-core invariants. Automating the type-creation "
-                "decision would violate R-ai-presents-not-decides. The whole "
-                "audit-backlog-residue checkpoint pattern + the DRAFT queue IS the "
-                "recording mechanism. The steward is the decider; the graph is the "
-                "recorder. Evidence: R-uncrystallizable-is-missing-type SETTLED "
-                "STRUCTURAL; test_conscience.py; R-ai-presents-not-decides SETTLED."
+                "M30. DECIDED 2026-06-30: human judgment, not automated. Rationale: R-uncrystallizable-is-missing-type (SETTLED P6) already establishes that the operator records the signal as a node; the §Conscience property-sweep (test_conscience.py) surfaces the meta-signal structurally when a class of contradictions cannot be expressed by existing critical-core invariants. Automating the type-creation decision would violate R-ai-presents-not-decides. The whole audit-backlog-residue checkpoint pattern + the DRAFT queue IS the recording mechanism. The steward is the decider; the graph is the recorder. Evidence: R-uncrystallizable-is-missing-type SETTLED STRUCTURAL; test_conscience.py; R-ai-presents-not-decides SETTLED."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
             enforced_by=("test_conscience.py", "CRITICAL_CORE_INVARIANTS"),
+            enforceability="INHERENTLY_PROSE",
         ),
         # --- P10a: generated LIVE-STATE block in CLAUDE.md -------------------
         Requirement(
@@ -1654,12 +1622,11 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Scoping rule, structurally enforced by file layout. SETTLED — "
-                "already true today."
+                "Scoping rule, structurally enforced by file layout. SETTLED — already true today."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
-            enforced_by=("file layout", "docs/methodology/discipline.md"),
+            enforcement="ENFORCED",
+            enforced_by=("test_shared_tools_location.py",),
         ),
         Requirement(
             id="R-docs-generated-from-requirements",
@@ -1869,21 +1836,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-agent-is-a-directory",
             claim=(
-                "A domain-agent shall be represented as a directory at "
-                "`spec/agents/<name>/`."
+                "A domain-agent shall be represented as a directory at `spec/agents/<name>/`."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "The user's clarification today: agent = folder with own logic, "
-                "not sh-invocation. BUILD-TRIGGER: a real second operator (beyond "
-                "OP-director) needs to be instantiated. "
-                "Promoted DRAFT→SETTLED on first instantiation: "
-                "spec/agents/framework-agent/ exists as concrete evidence."
+                "The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_agent_has_agents_subdir", "check_agent_has_docs_subdir", "test_tool_create_agent.py"),
         ),
         Requirement(
             id="R-agent-has-own-crystal",
@@ -1903,20 +1865,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-agent-has-own-tools-dir",
             claim=(
-                "Each domain-agent shall carry a `tools/` subdirectory holding its "
-                "private tools."
+                "Each domain-agent shall carry a `tools/` subdirectory holding its private tools."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "Scoping the agent's available actions — private tools are not "
-                "exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. "
-                "Promoted DRAFT→SETTLED on first instantiation: "
-                "spec/agents/framework-agent/tools/ exists as concrete evidence."
+                "Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/tools/ exists as concrete evidence."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=PROSE,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_agent_has_tools_subdir", "test_tool_create_agent.py::test_creates_required_files", "test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools"),
         ),
         Requirement(
             id="R-agent-imports-framework",
@@ -1990,24 +1948,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-tools-registry-generated",
             claim=(
-                "The list of available tools shall be generated by scanning "
-                "`spec/tools/*.py` (and per-agent `spec/agents/<name>/tools/*.py`), "
-                "never hand-maintained."
+                "The list of available tools shall be generated by scanning `spec/tools/*.py` (and per-agent `spec/agents/<name>/tools/*.py`), never hand-maintained."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (BUILD-TRIGGER fired): gen_spec.py auto-projects R-tool-* "
-                "requirements from Canon docstrings in spec/tools/*.py (lines ~220-266 "
-                "and ~1614-1789 in gen_spec.py). The REPO-MAP and AGENT-MAP blocks in "
-                "CLAUDE.md include tool entries generated from the filesystem scan, "
-                "never hand-maintained. The docs-as-code pattern applied to tool "
-                "inventories — a new tool without a Canon docstring simply won't "
-                "appear, making drift structurally visible."
+                "SETTLED (BUILD-TRIGGER fired): gen_spec.py auto-projects R-tool-* requirements from Canon docstrings in spec/tools/*.py (lines ~220-266 and ~1614-1789 in gen_spec.py). The REPO-MAP and AGENT-MAP blocks in CLAUDE.md include tool entries generated from the filesystem scan, never hand-maintained. The docs-as-code pattern applied to tool inventories — a new tool without a Canon docstring simply won't appear, making drift structurally visible."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
-            enforced_by=("test_repo_map_complete",),
+            enforcement="ENFORCED",
+            enforced_by=("test_repo_map.py::test_repo_map_complete", "test_repo_map.py::test_repo_map_tool_xref_present"),
         ),
         Requirement(
             id="R-private-tools-in-agent-folder",
@@ -2086,27 +2036,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-audit-atomicity-tool",
             claim=(
-                "An audit of substrate atomicity (compound requirements + "
-                "compound check_* invariants + R↔enforcer bijection + orphan "
-                "analysis) shall be performed by a deterministic tool "
-                "`spec/tools/audit_atomicity.py`, not by a one-off hand "
-                "invocation."
+                "An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "SETTLED (BUILD-TRIGGER fired): spec/tools/audit_atomicity.py "
-                "exists and was used in atomization waves 1-3, emitting "
-                "docs/gen/AUDIT.md deterministically. The verdict checkpoint "
-                "(docs/checkpoints/framework-agent-audit-verdict.md) is now "
-                "superseded by the tool's output. R-prefer-tool-over-hand is "
-                "now honored for atomicity audits. STRUCTURAL because the "
-                "tool's output is advisory (P0 REFLECTION); no blocking "
-                "invariant yet."
+                "SETTLED (BUILD-TRIGGER fired): spec/tools/audit_atomicity.py exists and was used in atomization waves 1-3, emitting docs/gen/AUDIT.md deterministically. The verdict checkpoint (docs/checkpoints/framework-agent-audit-verdict.md) is now superseded by the tool's output. R-prefer-tool-over-hand is now honored for atomicity audits. STRUCTURAL because the tool's output is advisory (P0 REFLECTION); no blocking invariant yet."
             ),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
-            enforced_by=("tools/audit_atomicity.py",),
+            enforcement="ENFORCED",
+            enforced_by=("test_tool_audit_atomicity.py",),
         ),
         Requirement(
             id="R-context-hook-piggybacks-cah-stamp",
@@ -2726,7 +2665,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-operator-crystal-is-claude-md (identity concern). CLAUDE.md is auto-loaded by the harness, making it the natural crystal location."
             ),
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo",),
         ),
         Requirement(
             id="R-crystal-reload-by-reference",
@@ -2739,7 +2679,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-operator-crystal-is-claude-md (reload-by-reference concern). Re-carrying wastes context budget; reloading by reference is the offload instrument."
             ),
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("test_embedded_thinking_tools.py",),
         ),
         Requirement(
             id="R-crystal-tree-hierarchy",
@@ -3213,7 +3154,8 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("The content-free contract (R-content-free-no-business-data) extends to the entity layer: entity types are domain knowledge, not framework knowledge. Supplying built-in types would violate the blank-kit invariant and couple the framework to a particular domain model."),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
         ),
         Requirement(
             id="R-entity-reuses-lifecycle",
@@ -3301,7 +3243,8 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name and the user's chosen identity. Convention: 'Hotam-Spec' in prose (capitalized hyphen), 'hotam_spec' snake_case in Python source (imports/identifiers), 'hotam-spec' kebab-case for filesystem and PyPI. Renames completed in three sequential passes (#89 package, #90 domain, #91 prose)."),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="ENFORCED",
+            enforced_by=("test_project_name.py",),
         ),
         Requirement(
             id="R-enforceability-kind-declared",
@@ -3320,7 +3263,8 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("Incident 2026-06-30/07-01: two parallel sm-agents (P5-noise-fix and enforceability-flag tasks) both touched overlapping domains/hotam-spec-self/graph.py and spec/src/hotam_spec/invariants.py territory in one shared working tree. A subsequent git filter-repo hard-reset (run by the director to purge .idea/__pycache__ from committed history) wiped the P5-noise-fix agent's uncommitted work because it had not yet been committed and was not isolated in a worktree. The fix had to be redone from scratch. This requirement crystallizes the lesson: parallel mutating agents belong in isolated worktrees, or the director must guarantee no history-rewrite runs while their work is uncommitted."),
             assumptions=("A-python-stack",),
-            enforcement=STRUCTURAL,
+            enforcement="STRUCTURAL",
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-claude-md-consolidates-when-single-agent",
@@ -3358,8 +3302,9 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=("Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can reason like any operator, (2) a connection to its senior/parent agent so it knows where to escalate and whose scope it is bounded within, and (3) its own scope-filtered domain business so it acts only within its delegated concern. create_agent.py and gen_spec.py already implement this triad (SCOPE-filtered CONSTITUTION generation, AGENT-MAP parent linkage, embedded thinking/tools) — this rule is recorded now, while zero sub-agents are actively spawned, so agent-spawning stays disciplined later. Sibling rule R-claude-md-consolidates-when-single-agent governs WHEN this per-file triad model activates: only once N>1 concurrently-active agents exist; until then the triad content lives merged inside the single root CLAUDE.md."),
-            assumptions=("A-python-stack", "A-finite-context-operators",),
-            enforcement=STRUCTURAL,
+            assumptions=("A-python-stack", "A-finite-context-operators"),
+            enforcement="ENFORCED",
+            enforced_by=("test_agent_scoped_constitution.py", "test_tool_spawn_agent.py"),
         ),
         Requirement(
             id="R-claude-md-template-driven",
@@ -3453,6 +3398,51 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("Built ahead of demand — 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed') but tools/apply_proposal.py's _find_conflict_call only matches Conflict(axis=<literal>, context=<literal>) calls via AST; all six Conflict nodes in this graph pass axis/context as local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so no existing Conflict can currently be moved by ConflictTransition proposals without a tool change. Left untouched pending steward decision on extending apply_proposal to resolve variable-bound kwargs."),
             enforcement=STRUCTURAL,
+        ),
+        Requirement(
+            id="R-reflection-predicates-first-class",
+            claim=("The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined in tool code."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Concept-Map gap closed: §Reflection was the one core concept with no home in src/ — the five P0 self-diagnosis conditions (draft-overhang, unenforced-settled, over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt) lived inline in tools/what_now.py:diagnose(), important-yet-invisible substrate (generative law). Extraction mirrors the §Invariants pattern: reflect_* predicates return Finding records (condition/target/imperative) and the harness composes hotam_spec.reflection.all_findings() exactly as it composes invariants.all_violations() — the substrate owns the diagnosis vocabulary, the tool only renders. Behavior-preserving: what_now CLI output byte-identical before/after extraction."),
+            relations=(Relation("supports", "R-agent-never-lost"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_reflection.py::test_what_now_sources_reflection_predicates_from_module", "test_reflection.py::test_diagnose_p0_equals_reflection_findings",),
+        ),
+        Requirement(
+            id="R-conflict-addressing-resolves-variables",
+            claim=("tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when locating the Conflict node a proposal addresses."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The C-8600b1b8 lesson: all six Conflict nodes in domains/hotam-spec-self/graph.py bind axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so _find_conflict_call's literal-only matching made every existing Conflict unaddressable and the standing P3 CONFLICT_STALLED action mechanically unlandable. Fixed by folding module/function-level `name = \"literal\"` assignments (_collect_string_assignments) with ambiguous rebindings dropped conservatively; literal support unchanged. This repairs the ACT half of the mediation loop for conflict transitions (R-active-loop-apply-tool)."),
+            enforcement=ENFORCED,
+            enforced_by=("test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs", "test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addressable", "test_apply_proposal.py::test_all_real_domain_conflicts_are_addressable",),
+        ),
+        Requirement(
+            id="R-proposed-conflict-kind-exists",
+            claim=("The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via tools/apply_proposal.py."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Closes recorded spec-tool drift: C-186c4347's DECIDED rationale already promised 'ProposedConflict' while only transitions existed, leaving surfaced tensions without a mechanical creation path (the loop could move conflicts but never materialize one). The writer computes id via conflict_identity(axis, context), never caller-supplied (R-stable-conflict-identity); requires the axis to already exist in the graph's axes tuple (R-axis-controlled-vocab; admitting a new axis is a separate act); requires >= 2 distinct existing members (R-conflict-min-two-members); refuses a steward who owns any member (R-steward-distinct-from-owners); lifecycle always starts DETECTED. Extends R-active-loop-protocol's floor exactly as EntityType and OperatorBudget did."),
+            enforcement=ENFORCED,
+            enforced_by=("test_apply_proposal.py::test_apply_conflict_creates_detected_node", "test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape", "test_proposal.py::test_proposed_conflict_target_anchor_is_computed_identity",),
+        ),
+        Requirement(
+            id="R-latent-connectors-cluster-by-assumption",
+            claim=("The what_now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Verified noise shape: 22 P5 lines were 21 pairs sharing A-most-knowledge-crystallizable (functional ref-count 7, just under GENERIC_ASSUMPTION_THRESHOLD=8 because the 8th referencing requirement is REJECTED) plus 1 genuinely distinct candidate (the A-content-free-honest pair) drowned by them. Clustering by the pairs' specific-shared-assumption signature (graph.latent_connector_clusters) renders the review surface at the size of the decision space while keeping every pair visible (LatentCluster.pairs; TENSIONS.md table). A threshold shift was rejected: it only moves the noise cliff (see test_latent_connector_noise_fix.py history)."),
+            enforcement=ENFORCED,
+            enforced_by=("test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster", "test_latent_connector_noise_fix.py::test_clusters_partition_suspects", "test_latent_connector_noise_fix.py::test_real_graph_p5_count_equals_cluster_count",),
+        ),
+        Requirement(
+            id="R-presented-pending-decision-type",
+            claim=("The methodology shall decide whether 'operator presented, steward has not yet decided' deserves a first-class Presented/Pending node type."),
+            owner="framework-reviewer",
+            status="OPEN(does 'operator presented X; steward has not yet answered' deserve a first-class node type — a Presented/Pending state between the PRESENT and LAND steps of the mediation loop — or is the spec/.runtime/proposals/ drop-folder plus the spawn-log the honest home for this transient state?)",
+            why=("Recorded per R-uncrystallizable-is-missing-type: the PRESENT step (mediation loop step 5) produces knowledge — 'a proposal exists and awaits the steward' — that today lives only in gitignored runtime ephemera (spec/.runtime/proposals/*.json) and in session context. An operator interrupted between PRESENT and LAND loses the fact-of-presentation entirely; the graph cannot distinguish 'never proposed' from 'proposed, awaiting decision'. This OPEN node is the candidate-missing-type record itself — no code, no new type until the steward answers (R-uncrystallizable-automated). Precedent: R-observation-evidence-scope. Raised during the 2026-07-02 three-wave implementation (Wave 3)."),
+            enforcement=PROSE,
         ),
     )
 

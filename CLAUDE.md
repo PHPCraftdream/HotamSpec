@@ -9,7 +9,7 @@ Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/doc
 
 ### Role (the resident seed)
 
-Operator of `hotam-spec-self` (157 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
+Operator of `hotam-spec-self` (161 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
 
 Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).
 
@@ -87,12 +87,6 @@ RULE: the graph is structurally well-formed iff this returns []. The harness (to
 
 _(full text: spec/docs/thinking/conscience.md)_
 
-#### context
-
-RULE: an Operator is the acting facet of a Stakeholder (§Stakeholder). Where a Stakeholder answers 'who is accountable', an Operator answers 'who can act, within what context, over which slice of the graph'. The two facets MUST stay separate — single-altitude-vs-multi-altitude. WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing Stakeholder) preserves the steward-distinct boundary at the methodology altitude. A Stakeholder is an accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge two things that the single-altitude-vs-multi-altitude axis explicitly separates.
-
-_(full text: spec/docs/thinking/context.md)_
-
 #### contextbudget
 
 RULE: for each operator whose budget measure (NODE_COUNT nodes or CRYSTAL_CHARS resident crystal chars) exceeds its budget limit, fire — crystallize first; if still over, spawn a sub-operator: - If `measure == NODE_COUNT`, compute: size = len(g.requirements) + len(g.conflicts) + len(g.assumptions) (full-graph count; DomainScope narrowing is deferred to a later P-phase). NOTE: this measure counts t… WHY CRYSTAL_CHARS (replacing NODE_COUNT-as-substrate-proxy): NODE_COUNT measured the crystallized substrate itself, which R-working-vs-substrate-budget declares FREE — this falsely flagged operators as near-OVERLOADED for the very act of crystallizing or keeping REJECTED history. CRYSTAL_CHARS measures the one thing that costs real working context: the resident crystal (root CLAUDE.md) against the…
@@ -161,7 +155,7 @@ _(full text: spec/docs/thinking/proposal.md)_
 
 #### reflection
 
-RULE: an Operator is the acting facet of a Stakeholder (§Stakeholder). Where a Stakeholder answers 'who is accountable', an Operator answers 'who can act, within what context, over which slice of the graph'. The two facets MUST stay separate — single-altitude-vs-multi-altitude. WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing Stakeholder) preserves the steward-distinct boundary at the methodology altitude. A Stakeholder is an accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge two things that the single-altitude-vs-multi-altitude axis explicitly separates.
+RULE: every P0 REFLECTION condition the harness can raise MUST be a named, pure, graph-only predicate in this module — draft-overhang, unenforced-settled, over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt — composed by tools/what_now.py via all_findings() in REFLECTION_PREDICATES order, never re-inlined in tool code (R-reflection-predicates-first-class). WHY a first-class module (mirror of §Invariants): the check_* layer diagnoses the domain graph's structural form, but the operator's own readiness lived as tool-inlined code — important-yet-invisible. Named predicates give each self-diagnosis condition a stable, testable anchor and keep the harness a thin renderer over substrate, for Findings exactly as for Violations.
 
 _(full text: spec/docs/thinking/reflection.md)_
 
@@ -205,6 +199,12 @@ _(full text: spec/docs/tools/claude_md_diff_watch.md)_
 Canon: §Closure — per-action verify: did the proposal remove its diagnosis?
 
 _(full text: spec/docs/tools/closure.md)_
+
+#### confront
+
+Canon: §Loop — the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.
+
+_(full text: spec/docs/tools/confront.md)_
 
 #### context
 
@@ -288,7 +288,6 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - [§Closure](spec/docs/thinking/closure.md)
 - [§Conflict](spec/docs/thinking/conflict.md)
 - [§Conscience](spec/docs/thinking/conscience.md)
-- [§Context](spec/docs/thinking/context.md)
 - [§Contextbudget](spec/docs/thinking/contextbudget.md)
 - [§Domain](spec/docs/thinking/domain.md)
 - [§Entity](spec/docs/thinking/entity.md)
@@ -323,6 +322,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/src/hotam_spec/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
 - `spec/src/hotam_spec/process.py` — opt-in behavioral aspect (M12).
 - `spec/src/hotam_spec/proposal.py` — structured operator-→-steward change proposals.
+- `spec/src/hotam_spec/reflection.py` — the operator's P0 self-diagnosis conditions as named predicates.
 - `spec/src/hotam_spec/requirement.py` — a business requirement as a node in the tension graph.
 - `spec/src/hotam_spec/stakeholder.py` — who owns requirements and stewards conflicts.
 
@@ -332,6 +332,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/tools/audit_atomicity.py` — surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.  →  R-tool-audit-atomicity
 - `spec/tools/claude_md_diff_watch.py` — auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.  →  R-tool-claude-md-diff-watch
 - `spec/tools/closure.py` — per-action verify: did the proposal remove its diagnosis?  →  R-tool-closure
+- `spec/tools/confront.py` — the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.  →  R-tool-confront
 - `spec/tools/context.py` — the operator's working-context measurement (reader).  →  R-tool-context
 - `spec/tools/create_agent.py` — scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.  →  R-tool-create-agent
 - `spec/tools/create_domain.py` — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.  →  R-tool-create-domain
@@ -366,9 +367,9 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 <!-- LIVE-STATE:BEGIN -->
 ### Live state (autogenerated by tools/gen_spec.py — do not hand-edit)
 
-- **top action:** [P0] REFLECTION on `enforcement-gradient` — 28 SETTLED requirements are PROSE/STRUCTURAL — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
-- **debt:** 120/157 SETTLED ENFORCED · 12 DRAFT · 7 OPEN · 28 SETTLED-unenforced
-- **graph:** 216 nodes (req+conflict+assumption); OP-director budget 150000 (headroom 149784)
+- **top action:** [P0] REFLECTION on `enforcement-gradient` — 11 SETTLED requirements are PROSE/STRUCTURAL — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
+- **debt:** 138/161 SETTLED ENFORCED · 12 DRAFT · 8 OPEN · 11 SETTLED-unenforced
+- **graph:** 221 nodes (req+conflict+assumption); OP-director budget 150000 (headroom 149779)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED (R-measure-context-size; hook deferred)
 <!-- LIVE-STATE:END -->
@@ -382,7 +383,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 157 SETTLED
+- **atoms-count** — 161 SETTLED
 <!-- DOMAIN-MAP:END -->
 <!-- CONSTITUTION:BEGIN -->
 <!-- (generated by tools/gen_spec.py — do not hand-edit) -->
@@ -396,7 +397,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 **Operator**
 
-- R-agent-never-lost — The system shall let an agent dropped into the repo in any state, at any moment, deterministical… [P]
+- R-agent-never-lost — The system shall let an agent dropped into the repo in any state, at any moment, deterministical… [E]
 - R-context-bounded-delegation — The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub… [S]
 - R-operator-prompt-from-substrate — The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirement… [E]
 
@@ -409,13 +410,13 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 **Discipline**
 
 - R-active-loop-apply-tool — A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply t… [E]
-- R-active-loop-playbook-doc — At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's rol… [S]
+- R-active-loop-playbook-doc — At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's rol… [E]
 - R-active-loop-protocol — Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedReject… [E]
 - R-crystallize-before-split — On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still… [S]
 - R-crystallize-knowledge-to-code — An operator shall continuously crystallize working knowledge into requirement-code (the substrat… [S]
 - R-delegation-conclusions-only — When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with sha… [S]
 - R-prefer-tool-over-hand — The operator shall prefer a reusable tool over performing the same action by hand, with one-off… [S]
-- R-shared-tools-in-spec-tools — Tools available to all agents shall live in `spec/tools/`. [S]
+- R-shared-tools-in-spec-tools — Tools available to all agents shall live in `spec/tools/`. [E]
 - R-task-spawn-log-runtime — Task-agent invocations shall be appended to `spec/.runtime/spawn-log.jsonl` with parent, child k… [E]
 - R-task-vs-action-distinct-altitudes — The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph… [S]
 - R-verify-closure-per-action — After an applied proposal lands (write + regen + pytest pass), the system shall verify the actio… [E]
@@ -424,7 +425,8 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 **Check / Invariant**
 
 - R-axis-controlled-vocab — Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. [E]
-- R-conflict-is-connector-node — A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared… [S]
+- R-conflict-addressing-resolves-variables — tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string… [E]
+- R-conflict-is-connector-node — A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared… [E]
 - R-conflict-min-two-members — Every Conflict node shall contain at least two distinct Requirement ids in its members tuple. [E]
 - R-conflict-structurally-visible — Every Conflict node shall carry a non-empty axis, context, and steward. [E]
 - R-decided-conflict-justifies-itself — Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or… [E]
@@ -437,7 +439,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 **Framework Self**
 
-- R-rejected-preserved-not-deleted — Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never… [P]
+- R-rejected-preserved-not-deleted — Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never… [E]
 - R-two-altitude-ontology — The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor… [P]
 
 **Lifecycle / Process / Goal**
@@ -456,7 +458,10 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - R-constituting-requirements-converge — The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on de… [S]
 - R-critical-core-methodology — The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, pro… [E]
 - R-critical-core-per-domain — Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, n… [P]
+- R-latent-connectors-cluster-by-assumption — The what_now harness shall render latent-connector suspects as one P5 action per shared-assumpti… [E]
 - R-no-hand-edit-graph — Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct ha… [E]
+- R-proposed-conflict-kind-exists — The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes… [E]
+- R-reflection-predicates-first-class — The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflec… [E]
 - R-smoke-test — spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy… [E]
 - R-speculative-aspects-frozen — The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no i… [S]
 - R-uncrystallizable-automated — Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records… [S]
@@ -476,8 +481,8 @@ _(no sub-operators yet)_
 
 - **§Agent**
   - defined: `_(not yet mapped)_`
-  - enforced: `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`
-  - tested: `spec/tests/test_agent_scoped_constitution.py`, `spec/tests/test_domain_isolation_p17.py`, `spec/tests/test_tool_spawn_agent.py`
+  - enforced: `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`, `check_agent_has_tools_subdir`
+  - tested: `spec/tests/test_agent_scoped_constitution.py`, `spec/tests/test_domain_isolation_p17.py`, `spec/tests/test_invariants.py`, `spec/tests/test_tool_spawn_agent.py`
 - **§Assumption**
   - defined: `spec/src/hotam_spec/assumption.py`
   - enforced: _(none)_
@@ -497,7 +502,7 @@ _(no sub-operators yet)_
 - **§Conflict**
   - defined: `spec/src/hotam_spec/conflict.py`
   - enforced: `check_conflict_has_axis`, `check_conflict_has_axis_context_steward`, `check_conflict_has_context`, `check_conflict_has_steward`, `check_conflict_id_matches_identity`, `check_conflict_min_two_members`, `check_decided_by_is_known_stakeholder`, `check_decided_by_not_member_owner`, `check_decided_has_decided_by`, `check_decided_has_nonempty_decided_by`, `check_decided_has_rationale_or_derived`, `check_steward_not_a_member_owner`
-  - tested: `spec/tests/test_claude_md_template.py`, `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_latent_connector_noise_fix.py`
+  - tested: `spec/tests/test_apply_proposal.py`, `spec/tests/test_claude_md_template.py`, `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_latent_connector_noise_fix.py`
 - **§Conscience**
   - defined: `_(not yet mapped)_`
   - enforced: _(none)_
@@ -559,9 +564,9 @@ _(no sub-operators yet)_
   - enforced: `check_decided_has_decided_by`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`
 - **§Reflection**
-  - defined: `_(not yet mapped)_`
+  - defined: `spec/src/hotam_spec/reflection.py`
   - enforced: _(none)_
-  - tested: `spec/tests/test_docs_gen.py`
+  - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_reflection.py`
 - **§Requirement**
   - defined: `spec/src/hotam_spec/requirement.py`
   - enforced: `check_enforceability_kind_known`, `check_enforced_names_invariant`, `check_m_tag_format`, `check_m_tag_open_only`, `check_m_tag_unique`, `check_m_tag_valid_format`, `check_open_has_question`, `check_section_anchors_known`
@@ -569,7 +574,7 @@ _(no sub-operators yet)_
 - **§Stakeholder**
   - defined: `spec/src/hotam_spec/stakeholder.py`
   - enforced: `check_operator_steward_not_self`, `check_steward_not_a_member_owner`
-  - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_operator.py`
+  - tested: `spec/tests/test_apply_proposal.py`, `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_operator.py`
 - **§Tick**
   - defined: `_(not yet mapped)_`
   - enforced: _(none)_

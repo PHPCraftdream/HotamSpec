@@ -27,6 +27,13 @@ Used by closure.check_closure to verify the triggering action was removed.
 
 ## From `spec/src/hotam_spec/proposal.py::target_anchor`
 
+Canon: §Closure — the computed C-… id this proposal will materialize.
+
+Derived via conflict_identity(axis, context), never caller-supplied
+(R-stable-conflict-identity).
+
+## From `spec/src/hotam_spec/proposal.py::target_anchor`
+
 Canon: §Closure — the Operator id this proposal is meant to change.
 
 ## From `spec/src/hotam_spec/proposal.py::target_anchor`

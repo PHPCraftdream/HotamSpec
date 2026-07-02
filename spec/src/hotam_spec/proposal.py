@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from hotam_spec.conflict import conflict_identity
+
 
 @dataclass(frozen=True)
 class ProposedRequirement:
@@ -98,6 +100,46 @@ class ProposedRejection:
 
 
 @dataclass(frozen=True)
+class ProposedConflict:
+    """Canon: §Proposal — propose MATERIALIZING a new Conflict node (kind="Conflict").
+
+    The creation half of the conflict pipeline (§Conflict): the AI operator
+    surfaces a tension as a typed proposal, the steward approves, and
+    tools/apply_proposal.py writes a Conflict(...) into the domain graph with
+    lifecycle DETECTED. Moving it further is a separate
+    ProposedConflictTransition — creation and transition stay distinct acts.
+
+    RULE: the node id is NEVER caller-supplied — the writer emits
+    id=conflict_identity(axis, context) (R-stable-conflict-identity). axis MUST
+    already be a slug in the graph's axes tuple (R-axis-controlled-vocab;
+    admitting a NEW axis is a separate act, out of this kind's scope). members
+    MUST name >= 2 distinct existing Requirements
+    (R-conflict-min-two-members). steward MUST NOT own any member
+    (R-steward-distinct-from-owners; re-checked graph-side by
+    check_steward_not_a_member_owner after the write).
+
+    `note` is presentation-only context for the steward's review; it is NOT
+    written to the graph — the Conflict node itself carries axis, context and
+    shared_assumption, which hold the tension's knowledge.
+    """
+
+    axis: str
+    context: str
+    members: tuple[str, ...]
+    steward: str
+    shared_assumption: str = ""
+    note: str = ""
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the computed C-… id this proposal will materialize.
+
+        Derived via conflict_identity(axis, context), never caller-supplied
+        (R-stable-conflict-identity).
+        """
+        return conflict_identity(self.axis, self.context)
+
+
+@dataclass(frozen=True)
 class ProposedOperatorBudget:
     """Canon: §Proposal / §ContextBudget — propose a new ContextBudget for an existing Operator.
 
@@ -150,6 +192,7 @@ class ProposedEntityType:
 Proposal = (
     ProposedRequirement
     | ProposedConflictTransition
+    | ProposedConflict
     | ProposedRejection
     | ProposedEntityType
     | ProposedOperatorBudget

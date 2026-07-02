@@ -540,3 +540,80 @@ def test_section_anchors_known_passes_on_real_graph() -> None:
         "Fix: add the unknown §-token to hotam_spec/glossary.py TERMS or "
         "correct the docstring typo."
     )
+
+
+# ---------------------------------------------------------------------------
+# 9. Conflict is a NODE, never an edge (R-conflict-is-connector-node)
+# ---------------------------------------------------------------------------
+
+
+def test_conflicts_with_is_not_a_relation_kind() -> None:
+    """R-conflict-is-connector-node: the requirement-edge vocabulary must not
+    admit 'conflicts_with' — a contradiction is a first-class Conflict NODE
+    (axis + context + steward), never a bare edge between requirements."""
+    from hotam_spec.requirement import RELATION_KINDS  # noqa: PLC0415
+
+    assert "conflicts_with" not in RELATION_KINDS
+    # The connector-node invariants exist and are registered (the node's three
+    # knowledge fields are individually enforced).
+    from hotam_spec.invariants import (  # noqa: PLC0415
+        check_conflict_has_axis,
+        check_conflict_has_context,
+        check_conflict_has_steward,
+    )
+
+    for fn in (
+        check_conflict_has_axis,
+        check_conflict_has_context,
+        check_conflict_has_steward,
+    ):
+        assert fn in ALL_INVARIANTS
+
+
+# ---------------------------------------------------------------------------
+# 10. check_agent_has_tools_subdir (R-agent-has-own-tools-dir)
+# ---------------------------------------------------------------------------
+
+
+def test_check_agent_has_tools_subdir_fires_on_missing_tools(
+    tmp_path, monkeypatch
+) -> None:
+    """check_agent_has_tools_subdir fires for an agent dir without tools/."""
+    import hotam_spec.invariants as inv  # noqa: PLC0415
+
+    agent = tmp_path / "worker"
+    agent.mkdir()
+    (agent / "scope.py").write_text("PURPOSE = 'x'\n", encoding="utf-8")
+    (agent / "agents").mkdir()
+    (agent / "docs").mkdir()
+    monkeypatch.setattr(inv, "_SPEC_AGENTS_ROOT", tmp_path)
+
+    violations = inv.check_agent_has_tools_subdir(TensionGraph())
+    assert violations, "missing tools/ subdir must fire a violation"
+    assert violations[0].target == "worker"
+    assert "tools/" in violations[0].message
+
+
+def test_check_agent_has_tools_subdir_clean_when_present(
+    tmp_path, monkeypatch
+) -> None:
+    """check_agent_has_tools_subdir is clean when the agent has tools/."""
+    import hotam_spec.invariants as inv  # noqa: PLC0415
+
+    agent = tmp_path / "worker"
+    agent.mkdir()
+    (agent / "scope.py").write_text("PURPOSE = 'x'\n", encoding="utf-8")
+    (agent / "tools").mkdir()
+    monkeypatch.setattr(inv, "_SPEC_AGENTS_ROOT", tmp_path)
+
+    assert inv.check_agent_has_tools_subdir(TensionGraph()) == []
+
+
+def test_check_agent_has_tools_subdir_noop_without_agents_root(
+    tmp_path, monkeypatch
+) -> None:
+    """check_agent_has_tools_subdir no-ops when no agents root exists (aspect-gated)."""
+    import hotam_spec.invariants as inv  # noqa: PLC0415
+
+    monkeypatch.setattr(inv, "_SPEC_AGENTS_ROOT", tmp_path / "nope")
+    assert inv.check_agent_has_tools_subdir(TensionGraph()) == []

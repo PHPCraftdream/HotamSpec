@@ -28,11 +28,23 @@ if str(_SRC) not in sys.path:
 from hotam_spec.assumption import Assumption  # noqa: E402
 from hotam_spec.axis import Axis  # noqa: E402
 from hotam_spec.conflict import Conflict  # noqa: E402
+from hotam_spec.entity import EntityInstance, EntityType  # noqa: E402
 from hotam_spec.graph import TensionGraph  # noqa: E402
 from hotam_spec.requirement import Requirement  # noqa: E402
 from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
-_INSTANCE_TYPES = (TensionGraph, Requirement, Conflict, Axis, Stakeholder, Assumption)
+# EntityType/EntityInstance included per R-entity-is-declarative: the framework
+# supplies NO built-in entity types — all are declared by domains in build_graph().
+_INSTANCE_TYPES = (
+    TensionGraph,
+    Requirement,
+    Conflict,
+    Axis,
+    Stakeholder,
+    Assumption,
+    EntityType,
+    EntityInstance,
+)
 _TENSIO_SRC = _SRC / "hotam_spec"
 
 

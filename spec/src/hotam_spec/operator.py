@@ -5,14 +5,15 @@ Stakeholder answers 'who is accountable', an Operator answers 'who can act,
 within what context, over which slice of the graph'. The two facets MUST stay
 separate — single-altitude-vs-multi-altitude.
 
-Canon: §Reflection — the P0 operator self-diagnosis band observes Operator nodes
-directly: it checks context_budget.limit vs graph size (over-budget), and flags
-DRAFT-overhang, UNENFORCED-SETTLED debt, DEAD-assumption-on-ENFORCER, and
-derived-but-unbuilt debt. An operator that cannot see its own state is worse than
-a malformed graph (ranked P0, above §Invariants P1 STRUCTURE).
+The §Reflection P0 self-diagnosis band (canonical home: hotam_spec/reflection.py)
+observes Operator nodes directly: it checks context_budget.limit vs graph size
+(over-budget), and flags DRAFT-overhang, UNENFORCED-SETTLED debt,
+DEAD-assumption-on-ENFORCER, and derived-but-unbuilt debt. An operator that
+cannot see its own state is worse than a malformed graph (ranked P0, above
+§Invariants P1 STRUCTURE).
 
-Canon: §Context — the working-context fullness is MEASURED, not guessed; the
-three-cipher pulse cites it as the first cipher (tools/context.py reader;
+The §Context concern — the working-context fullness is MEASURED, not guessed;
+the three-cipher pulse cites it as the first cipher (tools/context.py reader;
 R-measure-context-size DRAFT).
 
 Canon: §Operator — every Operator:

@@ -21,3 +21,13 @@ RULE: Every agent carries its own docs/ for generated CLAUDE.md and thinking
 fragments scoped to its domain (R-agent-has-docs-dir).
 WHY: Without docs/ the agent cannot receive generated shared-docs links;
 create_agent.py always scaffolds it; its absence indicates manual corruption.
+
+## From `spec/src/hotam_spec/invariants.py::check_agent_has_tools_subdir`
+
+Canon: §Agent — every agent directory must contain a 'tools/' subdirectory.
+
+RULE: Every agent carries its own tools/ subdir for its private tools
+(R-agent-has-own-tools-dir), separate from the shared spec/tools/
+(R-shared-tools-in-spec-tools).
+WHY: Without tools/ the private/shared tool boundary is invisible;
+create_agent.py always scaffolds it; its absence indicates manual corruption.

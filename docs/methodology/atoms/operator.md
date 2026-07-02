@@ -22,17 +22,21 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `check_agent_has_docs_subdir`
 
-## `R-agent-has-own-tools-dir` (PROSE)
+## `R-agent-has-own-tools-dir` (ENFORCED)
 
 **Claim.** Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
 
 **Why.** Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/tools/ exists as concrete evidence.
 
-## `R-agent-is-a-directory` (PROSE)
+**Enforced by:** `check_agent_has_tools_subdir`, `test_tool_create_agent.py::test_creates_required_files`, `test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools`
+
+## `R-agent-is-a-directory` (ENFORCED)
 
 **Claim.** A domain-agent shall be represented as a directory at `spec/agents/<name>/`.
 
 **Why.** The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence.
+
+**Enforced by:** `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`, `test_tool_create_agent.py`
 
 ## `R-agent-is-recursive-director` (ENFORCED)
 
@@ -50,11 +54,13 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `test_agent_map_complete`
 
-## `R-agent-never-lost` (PROSE)
+## `R-agent-never-lost` (ENFORCED)
 
 **Claim.** The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.
 
 **Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
+
+**Enforced by:** `test_what_now.py`
 
 ## `R-agent-references-shared-docs` (ENFORCED)
 

@@ -26,10 +26,12 @@ for _p in (_SRC, _TOOLS):
 from hotam_spec.graph import (  # noqa: E402
     GENERIC_ASSUMPTION_THRESHOLD,
     TensionGraph,
+    latent_connector_clusters,
     latent_connector_suspects,
     load_content_graph,
 )
 from hotam_spec.requirement import SETTLED, Requirement  # noqa: E402
+from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 import what_now  # noqa: E402
 
@@ -183,3 +185,107 @@ def test_what_now_p5_output_no_disclosure_when_under_cap() -> None:
     ]
     out = what_now.render(actions, source_label="content", p5_limit=20)
     assert "suppressed" not in out
+
+
+# ---------------------------------------------------------------------------
+# Clustering by shared-assumption signature
+# (R-latent-connectors-cluster-by-assumption)
+# ---------------------------------------------------------------------------
+
+
+def _cluster_graph() -> TensionGraph:
+    """Well-formed graph: 3 reqs share A-rare-x (3 pairs, 1 cluster) + 2 reqs
+    share A-rare-y (1 pair, 1 cluster)."""
+    sh = (Stakeholder(id="ST-owner", name="Owner", domain="d"),)
+    reqs_x = tuple(
+        Requirement(
+            id=f"R-x{i}",
+            claim=f"claim x{i}",
+            owner="ST-owner",
+            status=SETTLED,
+            assumptions=("A-rare-x",),
+        )
+        for i in range(3)
+    )
+    reqs_y = tuple(
+        Requirement(
+            id=f"R-y{i}",
+            claim=f"claim y{i}",
+            owner="ST-owner",
+            status=SETTLED,
+            assumptions=("A-rare-y",),
+        )
+        for i in range(2)
+    )
+    return TensionGraph(stakeholders=sh, requirements=(*reqs_x, *reqs_y))
+
+
+def test_clusters_group_pairs_by_signature() -> None:
+    """3 requirements on one rare assumption = 3 pairs but exactly ONE cluster."""
+    g = _cluster_graph()
+    suspects = latent_connector_suspects(g)
+    clusters = latent_connector_clusters(g)
+
+    assert len(suspects) == 4  # C(3,2)=3 pairs on A-rare-x + 1 pair on A-rare-y
+    assert len(clusters) == 2
+
+    by_sig = {cl.assumptions: cl for cl in clusters}
+    cx = by_sig[("A-rare-x",)]
+    assert cx.requirements == ("R-x0", "R-x1", "R-x2")
+    assert len(cx.pairs) == 3
+    cy = by_sig[("A-rare-y",)]
+    assert cy.requirements == ("R-y0", "R-y1")
+    assert len(cy.pairs) == 1
+
+
+def test_clusters_partition_suspects() -> None:
+    """Every suspect pair lands in exactly one cluster (pair detail preserved)."""
+    for g in (_cluster_graph(), load_content_graph()):
+        suspects = latent_connector_suspects(g)
+        clusters = latent_connector_clusters(g)
+        cluster_pairs = [
+            (p.left, p.right) for cl in clusters for p in cl.pairs
+        ]
+        assert sorted(cluster_pairs) == sorted((s.left, s.right) for s in suspects)
+        assert len(cluster_pairs) == len(set(cluster_pairs))
+
+
+def test_clusters_deterministic() -> None:
+    """Same graph → identical cluster tuple (ordering is stable)."""
+    g = _cluster_graph()
+    assert latent_connector_clusters(g) == latent_connector_clusters(g)
+
+
+def test_what_now_p5_one_line_per_cluster() -> None:
+    """diagnose() emits ONE P5 latent-connector action per cluster, not per pair."""
+    g = _cluster_graph()
+    actions = what_now.diagnose(g)
+    p5 = [
+        a
+        for a in actions
+        if a.priority == what_now.P_LATENT_CONNECTOR
+        and "[HEURISTIC, for AI review]" in a.imperative
+    ]
+    assert len(p5) == 2, f"expected one action per cluster, got {p5}"
+    targets = {a.target for a in p5}
+    assert targets == {"A-rare-x", "A-rare-y"}
+    x_action = next(a for a in p5 if a.target == "A-rare-x")
+    assert "3 requirements" in x_action.imperative
+    assert "review the cluster" in x_action.imperative
+
+
+def test_real_graph_p5_count_equals_cluster_count() -> None:
+    """On the real domain graph the P5 band size is the cluster count (plus any
+    entity-state suspects), not the pair count."""
+    from hotam_spec.graph import entity_state_conflict_suspects
+
+    g = load_content_graph()
+    clusters = latent_connector_clusters(g)
+    suspects = latent_connector_suspects(g)
+    actions = what_now.diagnose(g)
+    p5 = [a for a in actions if a.priority == what_now.P_LATENT_CONNECTOR]
+    assert len(p5) == len(clusters) + len(entity_state_conflict_suspects(g))
+    if len(suspects) > len(clusters):
+        assert len(p5) < len(suspects), (
+            "clustering must compress the P5 band when pairs share a signature"
+        )

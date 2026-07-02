@@ -20,7 +20,9 @@ It aggregates, in priority order:
                         UNENFORCED-SETTLED debt, over-budget operators, dead-
                         assumption-on-enforcer, derived-but-unbuilt. Ranked ABOVE
                         P1 STRUCTURE because an operator that cannot see its own
-                        state is worse than a malformed graph. (§Reflection, M35)
+                        state is worse than a malformed graph. The conditions are
+                        named predicates in hotam_spec.reflection
+                        (R-reflection-predicates-first-class). (§Reflection, M35)
   P1 STRUCTURE        — failing structural invariants (malformed form / dangling
                         refs / conflict missing axis|context|steward). A malformed
                         graph makes all softer diagnosis unreliable.
@@ -32,8 +34,11 @@ It aggregates, in priority order:
   P4 OPEN_ITEM        — OPEN(question) requirements awaiting a steward decision.
   P5 LATENT_CONNECTOR — HEURISTIC: requirement pairs that SHOULD have a C-node but
                         don't, flagged "for AI review" (the deferred detector's
-                        stub). Lowest priority because it is a suspicion, not a
-                        proven defect, and the AI never acts on it unilaterally.
+                        stub), rendered ONE action per shared-assumption CLUSTER
+                        (graph.latent_connector_clusters; pair detail stays in
+                        TENSIONS.md). Lowest priority because it is a suspicion,
+                        not a proven defect, and the AI never acts on it
+                        unilaterally.
 
 Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)
@@ -54,7 +59,6 @@ _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from hotam_spec.assumption import DEAD as _DEAD  # noqa: E402
 from hotam_spec.conflict import ACKNOWLEDGED, DETECTED  # noqa: E402
 from hotam_spec.graph import (  # noqa: E402
     CONTENT_GRAPH_FILE,
@@ -62,13 +66,12 @@ from hotam_spec.graph import (  # noqa: E402
     conflicts_on_assumption,
     dead_assumptions,
     entity_state_conflict_suspects,
-    latent_connector_suspects,
+    latent_connector_clusters,
     load_content_graph,
-    requirement_by_id,
     requirements_on_assumption,
 )
 from hotam_spec.invariants import all_violations  # noqa: E402
-from hotam_spec.requirement import DRAFT, ENFORCED, SETTLED  # noqa: E402
+from hotam_spec.reflection import all_findings  # noqa: E402
 
 # --- Priority bands (lower number = more urgent) ----------------------------
 
@@ -110,18 +113,6 @@ class Action:
     imperative: str
 
 
-def _graph_size(g: TensionGraph) -> int:
-    """Canon: §Reflection — NODE_COUNT for the operator budget check.
-
-    RULE: size = |requirements| + |conflicts| + |assumptions|. This is the
-    same metric used by check_operator_within_budget (R-context-budget-rule)
-    — the Reflection band reuses identical logic but surfaces it as a P0
-    advisory, not a P1 structural violation, so over-budget operators appear
-    at the TOP of the action list before any structural noise.
-    """
-    return len(g.requirements) + len(g.conflicts) + len(g.assumptions)
-
-
 def diagnose(g: TensionGraph) -> list[Action]:
     """Derive the full prioritized next-action list from a graph state.
 
@@ -132,108 +123,18 @@ def diagnose(g: TensionGraph) -> list[Action]:
     actions: list[Action] = []
 
     # P0 REFLECTION — operator self-readiness (§Reflection, M35).
-    # Five conditions, all observable from g alone — no I/O, no test runs.
-    settled_reqs = [r for r in g.requirements if r.status == SETTLED]
-    draft_reqs = [r for r in g.requirements if r.status == DRAFT]
-    settled_n = len(settled_reqs)
-    draft_n = len(draft_reqs)
-
-    # 1. DRAFT-overhang — burn-down meter (M35: SETTLED:DRAFT ratio).
-    if settled_n > 0 and draft_n >= settled_n / 2:
+    # The five conditions live as named predicates in hotam_spec.reflection
+    # (R-reflection-predicates-first-class); the harness maps each Finding
+    # into a P0 Action exactly as it maps invariants Violations into P1 below.
+    for f in all_findings(g):
         actions.append(
             Action(
                 priority=P_REFLECTION,
                 kind=_BAND_LABEL[P_REFLECTION],
-                target="burn-down",
-                imperative=(
-                    f"DRAFT-overhang: {draft_n} DRAFT vs {settled_n} SETTLED"
-                    " — promote DRAFTs toward ENFORCED before crystallizing"
-                    " more (R-crystallize-before-split, C-06e2d84e)."
-                ),
+                target=f.target,
+                imperative=f.imperative,
             )
         )
-
-    # 2. UNENFORCED-SETTLED overhang (> 5 = generous threshold).
-    # Only ENFORCEABLE requirements count as real debt; INHERENTLY_PROSE
-    # requirements are honestly-labeled permanent discipline, not debt
-    # (R-enforceability-kind-declared).
-    n_unenforced = sum(1 for r in settled_reqs if r.is_closeable_debt())
-    if n_unenforced > 5:
-        actions.append(
-            Action(
-                priority=P_REFLECTION,
-                kind=_BAND_LABEL[P_REFLECTION],
-                target="enforcement-gradient",
-                imperative=(
-                    f"{n_unenforced} SETTLED requirements are PROSE/STRUCTURAL"
-                    " — claimed but not guaranteed, soft context-debt."
-                    " See docs/gen/UNENFORCED.md."
-                ),
-            )
-        )
-
-    # 3. Over-budget operators.
-    graph_size = _graph_size(g)
-    for op in g.operators:
-        limit = op.context_budget.limit
-        if limit > 0 and graph_size > limit:
-            actions.append(
-                Action(
-                    priority=P_REFLECTION,
-                    kind=_BAND_LABEL[P_REFLECTION],
-                    target=op.id,
-                    imperative=(
-                        f"Operator '{op.id}' holds {graph_size} nodes"
-                        f" > budget {limit}; crystallize first"
-                        " (R-crystallize-before-split); if still over, delegate"
-                        " a sub-domain (R-context-bounded-delegation)."
-                    ),
-                )
-            )
-
-    # 4. DEAD-assumption-on-ENFORCER — an enforced requirement resting on a dead
-    #    assumption: the enforcer may be enforcing a now-wrong premise.
-    dead_ids = {a.id for a in g.assumptions if a.status == _DEAD}
-    if dead_ids:
-        for r in g.requirements:
-            if r.enforcement != ENFORCED:
-                continue
-            for aid in r.assumptions:
-                if aid in dead_ids:
-                    actions.append(
-                        Action(
-                            priority=P_REFLECTION,
-                            kind=_BAND_LABEL[P_REFLECTION],
-                            target=r.id,
-                            imperative=(
-                                f"R-stale-substrate signal: enforced requirement"
-                                f" '{r.id}' rests on DEAD assumption '{aid}';"
-                                " its enforcer may be enforcing a now-wrong premise."
-                            ),
-                        )
-                    )
-
-    # 5. Derived-but-unbuilt — DECIDED conflict whose derived tuple names a DRAFT
-    #    (or absent) requirement.
-    draft_ids = {r.id for r in g.requirements if r.status == DRAFT}
-    for c in g.conflicts:
-        if not c.lifecycle.startswith("DECIDED"):
-            continue
-        for derived_id in c.derived:
-            derived_req = requirement_by_id(g, derived_id)
-            if derived_req is None or derived_req.id in draft_ids:
-                actions.append(
-                    Action(
-                        priority=P_REFLECTION,
-                        kind=_BAND_LABEL[P_REFLECTION],
-                        target=derived_id,
-                        imperative=(
-                            f"DECIDED conflict '{c.id}' spawned '{derived_id}'"
-                            " but it remains DRAFT/unbuilt"
-                            " — derived-but-unbuilt debt."
-                        ),
-                    )
-                )
 
     # P1 STRUCTURE — failing structural invariants.
     for v in all_violations(g):
@@ -320,17 +221,25 @@ def diagnose(g: TensionGraph) -> list[Action]:
                 )
             )
 
-    # P5 LATENT_CONNECTOR — heuristic missing-connector suspects (for AI review).
-    for s in latent_connector_suspects(g):
+    # P5 LATENT_CONNECTOR — heuristic missing-connector suspects (for AI
+    # review), CLUSTERED by shared-assumption signature: one action per
+    # cluster, not C(n,2) pair lines (R-latent-connectors-cluster-by-assumption;
+    # pair-level detail lives in latent_connector_clusters(...).pairs and in
+    # the TENSIONS.md suspect table).
+    for cl in latent_connector_clusters(g):
+        sig = ", ".join(cl.assumptions)
         actions.append(
             Action(
                 priority=P_LATENT_CONNECTOR,
                 kind=_BAND_LABEL[P_LATENT_CONNECTOR],
-                target=f"{s.left}~{s.right}",
+                target=",".join(cl.assumptions),
                 imperative=(
-                    f"[HEURISTIC, for AI review] '{s.left}' and '{s.right}' "
-                    f"{s.hint} but have no Conflict node; consider materializing "
-                    f"a connector (or confirm they do not collide)"
+                    f"[HEURISTIC, for AI review] assumption(s) {sig} shared by "
+                    f"{len(cl.requirements)} requirements "
+                    f"({', '.join(cl.requirements)}) with no mediating Conflict "
+                    f"node — review the cluster as ONE item: consider splitting "
+                    f"the assumption or materializing a connector "
+                    f"({len(cl.pairs)} pair(s); detail: docs/gen/TENSIONS.md)"
                 ),
             )
         )

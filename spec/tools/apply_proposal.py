@@ -14,6 +14,8 @@ this tool to mechanically land the change. No free-text editing of the graph.
 
 Supported proposal kinds:
   - ConflictTransition — move a Conflict lifecycle (DETECTED → DECIDED etc.)
+  - Conflict — materialize a NEW Conflict node (lifecycle starts DETECTED;
+    id computed via conflict_identity(axis, context), never caller-supplied)
   - Requirement — add or update a Requirement in the graph
   - Rejection — reject an existing Requirement (status → REJECTED)
   - EntityType — add a new EntityType to the active domain's graph
@@ -55,6 +57,17 @@ The JSON shapes:
     "kind": "Rejection",
     "requirement_id": "R-foo",
     "reason": "REJECTED — REPLACES R-bar; see R-new"
+  }
+
+  ProposedConflict (materialize a new Conflict node, lifecycle DETECTED):
+  {
+    "kind": "Conflict",
+    "axis": "core-vs-aspect",
+    "context": "the scenario in which the members actually collide",
+    "members": ["R-foo", "R-bar"],
+    "steward": "framework-reviewer",
+    "shared_assumption": "A-baz",
+    "note": "presentation-only context for the steward (not written to the graph)"
   }
 
   ProposedOperatorBudget:
@@ -99,6 +112,7 @@ from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
 from hotam_spec.proposal import (  # noqa: E402
     Proposal,
+    ProposedConflict,
     ProposedConflictTransition,
     ProposedEntityType,
     ProposedOperatorBudget,
@@ -138,15 +152,18 @@ _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
 def _validate_proposal(raw: dict) -> Proposal:
     """Canon: §Proposal — parse and validate a JSON dict into a Proposal variant.
 
-    RULE: 'kind' must be one of 'ConflictTransition', 'Requirement', 'Rejection',
-    'EntityType', or 'OperatorBudget'. Each kind has its own required fields.
+    RULE: 'kind' must be one of 'ConflictTransition', 'Conflict', 'Requirement',
+    'Rejection', 'EntityType', or 'OperatorBudget'. Each kind has its own
+    required fields.
 
-    Returns a Proposal (one of the five dataclass variants) or raises
+    Returns a Proposal (one of the six dataclass variants) or raises
     ValueError with a clear message.
     """
     kind = raw.get("kind", "")
     if kind == "ConflictTransition":
         return _validate_conflict_transition(raw)
+    if kind == "Conflict":
+        return _validate_conflict(raw)
     if kind == "Requirement":
         return _validate_requirement(raw)
     if kind == "Rejection":
@@ -157,8 +174,8 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_operator_budget(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
-        f"Supported: 'ConflictTransition', 'Requirement', 'Rejection', "
-        f"'EntityType', 'OperatorBudget'."
+        f"Supported: 'ConflictTransition', 'Conflict', 'Requirement', "
+        f"'Rejection', 'EntityType', 'OperatorBudget'."
     )
 
 
@@ -247,6 +264,61 @@ def _validate_rejection(raw: dict) -> ProposedRejection:
     return ProposedRejection(
         requirement_id=requirement_id,
         reason=reason,
+    )
+
+
+def _validate_conflict(raw: dict) -> ProposedConflict:
+    """Parse and validate a Conflict (creation) proposal.
+
+    RULE: axis, context, steward non-empty; members >= 2 distinct R-… ids;
+    no caller-supplied id/conflict_id (the writer computes
+    conflict_identity(axis, context) — R-stable-conflict-identity); no
+    caller-supplied lifecycle (a new Conflict starts DETECTED; moving it is a
+    separate ConflictTransition proposal).
+    """
+    if "id" in raw or "conflict_id" in raw:
+        raise ValueError(
+            "a Conflict proposal must not supply an id — the writer computes "
+            "conflict_identity(axis, context) (R-stable-conflict-identity)."
+        )
+    if "lifecycle" in raw:
+        raise ValueError(
+            "a Conflict proposal must not supply a lifecycle — a new Conflict "
+            "starts DETECTED; transitions are a separate ConflictTransition "
+            "proposal."
+        )
+    axis = raw.get("axis", "").strip()
+    if not axis:
+        raise ValueError("'axis' is required and must be non-empty.")
+    context = raw.get("context", "").strip()
+    if not context:
+        raise ValueError("'context' is required and must be non-empty.")
+    members_raw = raw.get("members", [])
+    if not isinstance(members_raw, list):
+        raise ValueError("'members' must be a list of R-id strings.")
+    members = tuple(str(x).strip() for x in members_raw)
+    if len(set(members)) < 2:
+        raise ValueError(
+            "'members' must contain at least two DISTINCT requirement ids "
+            "(R-conflict-min-two-members)."
+        )
+    for m in members:
+        if not m.startswith("R-"):
+            raise ValueError(f"member '{m}' must be an R-… requirement id.")
+    steward = raw.get("steward", "").strip()
+    if not steward:
+        raise ValueError("'steward' is required and must be non-empty.")
+    shared_assumption = raw.get("shared_assumption", "")
+    note = raw.get("note", "")
+    return ProposedConflict(
+        axis=axis,
+        context=context,
+        members=members,
+        steward=steward,
+        shared_assumption=(
+            shared_assumption.strip() if isinstance(shared_assumption, str) else ""
+        ),
+        note=note if isinstance(note, str) else "",
     )
 
 
@@ -432,13 +504,66 @@ def _find_requirements_tuple_end(tree: ast.AST, source_lines: list[str]) -> int 
 # ---------------------------------------------------------------------------
 
 
+def _collect_string_assignments(tree: ast.AST) -> dict[str, str]:
+    """Canon: §Proposal — fold simple `name = "literal"` assignments for kwarg resolution.
+
+    RULE: collect every ast.Assign whose single target is a bare Name and whose
+    value is a string Constant (parenthesized implicit concatenations are folded
+    into one Constant by the parser, so they resolve too). A name bound more
+    than once with DIFFERENT string values is ambiguous and is DROPPED from the
+    map — an ambiguous binding must never silently resolve to the wrong tension.
+
+    WHY: domain graphs bind axis/context prose to local variables for
+    readability (c1_axis = "…"; Conflict(axis=c1_axis, …)). Without folding,
+    no such Conflict node is addressable by ConflictTransition proposals — the
+    C-8600b1b8 lesson (R-conflict-addressing-resolves-variables).
+    """
+    values: dict[str, str] = {}
+    ambiguous: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        if not (
+            isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+        ):
+            continue
+        name = target.id
+        if name in values and values[name] != node.value.value:
+            ambiguous.add(name)
+        values[name] = node.value.value
+    for name in ambiguous:
+        values.pop(name, None)
+    return values
+
+
+def _resolve_str_kwarg(value: ast.expr, assignments: dict[str, str]) -> str | None:
+    """Canon: §Proposal — resolve a kwarg value node to a string, or None.
+
+    RULE: an ast.Constant string resolves to itself; an ast.Name resolves
+    through the folded simple-assignment map (see _collect_string_assignments);
+    anything else (f-strings, calls, attribute lookups) is unresolvable and
+    returns None.
+    """
+    if isinstance(value, ast.Constant) and isinstance(value.value, str):
+        return value.value
+    if isinstance(value, ast.Name):
+        return assignments.get(value.id)
+    return None
+
+
 def _find_conflict_call(tree: ast.AST, conflict_id: str) -> ast.Call | None:
     """Canon: §Proposal — locate the Conflict(...) AST call whose computed id matches.
 
     Walks the AST looking for ast.Call nodes whose function is 'Conflict'. For
-    each, extracts 'axis' and 'context' keyword args (string literals only) and
-    computes conflict_identity(axis, context). Returns the matching node or None.
+    each, resolves the 'axis' and 'context' keyword args — string literals OR
+    simple string-variable references folded via _collect_string_assignments
+    (R-conflict-addressing-resolves-variables) — and computes
+    conflict_identity(axis, context). Returns the matching node or None.
     """
+    assignments = _collect_string_assignments(tree)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
@@ -448,13 +573,13 @@ def _find_conflict_call(tree: ast.AST, conflict_id: str) -> ast.Call | None:
             continue
         if isinstance(func, ast.Attribute) and func.attr != "Conflict":
             continue
-        if isinstance(func, ast.Name) and func.id != "Conflict":
-            continue
-        # Extract axis= and context= kwargs
+        # Resolve axis= and context= kwargs (literal or folded variable)
         kwargs: dict[str, str] = {}
         for kw in node.keywords:
-            if kw.arg in ("axis", "context") and isinstance(kw.value, ast.Constant):
-                kwargs[kw.arg] = kw.value.value
+            if kw.arg in ("axis", "context"):
+                resolved = _resolve_str_kwarg(kw.value, assignments)
+                if resolved is not None:
+                    kwargs[kw.arg] = resolved
         if "axis" not in kwargs or "context" not in kwargs:
             continue
         computed = conflict_identity(kwargs["axis"], kwargs["context"])
@@ -878,6 +1003,202 @@ def _apply_conflict_transition(
 
 
 # ---------------------------------------------------------------------------
+# Apply: Conflict (materialize a new connector node)
+# ---------------------------------------------------------------------------
+
+
+def _find_conflicts_tuple_end(tree: ast.AST) -> int | None:
+    """Find the line number (1-indexed) of the closing ')' of `conflicts = (...)`.
+
+    Looks for an assignment `conflicts = (...)` inside `build_graph()` and
+    returns the end_lineno of the Tuple node (the line with the closing paren).
+    Mirrors _find_requirements_tuple_end.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == "conflicts":
+                    return getattr(stmt.value, "end_lineno", None)
+    return None
+
+
+def _collect_call_kwarg_literals(tree: ast.AST, func_name: str, kwarg: str) -> set[str]:
+    """Collect the set of string values of `kwarg=` across all `func_name(...)` calls.
+
+    Only ast.Constant string values are collected (declaration sites use
+    literals). Used to pre-validate a Conflict proposal against the axes
+    vocabulary (Axis.slug) and the stakeholder roster (Stakeholder.id).
+    """
+    out: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = (
+            func.id
+            if isinstance(func, ast.Name)
+            else (func.attr if isinstance(func, ast.Attribute) else "")
+        )
+        if name != func_name:
+            continue
+        for kw in node.keywords:
+            if kw.arg == kwarg and isinstance(kw.value, ast.Constant):
+                if isinstance(kw.value.value, str):
+                    out.add(kw.value.value)
+    return out
+
+
+def _requirement_owner_literal(tree: ast.AST, req_id: str) -> str | None:
+    """Return the owner= string literal of the Requirement call with id `req_id`.
+
+    None when the requirement is absent or its owner is not a plain literal.
+    """
+    call = _find_requirement_call(tree, req_id)
+    if call is None:
+        return None
+    for kw in call.keywords:
+        if kw.arg == "owner" and isinstance(kw.value, ast.Constant):
+            if isinstance(kw.value.value, str):
+                return kw.value.value
+    return None
+
+
+def _render_conflict_source(proposal: ProposedConflict, indent: str) -> str:
+    """Render a Conflict(...) constructor call as source text.
+
+    The id is emitted as a conflict_identity(axis, context) CALL — the source
+    itself computes the identity, so the node can never drift from its tension
+    (R-stable-conflict-identity; validated graph-side by
+    check_conflict_id_matches_identity). Lifecycle always starts DETECTED.
+    """
+    inner = indent + "    "
+    axis_repr = _python_repr(proposal.axis)
+    ctx_repr = _python_repr(proposal.context)
+    lines: list[str] = []
+    lines.append(f"{indent}Conflict(")
+    lines.append(f"{inner}id=conflict_identity({axis_repr}, {ctx_repr}),")
+    lines.append(f"{inner}axis={axis_repr},")
+    lines.append(f"{inner}context={ctx_repr},")
+    lines.append(f"{inner}members={_python_repr(proposal.members)},")
+    lines.append(f"{inner}steward={_python_repr(proposal.steward)},")
+    lines.append(f'{inner}lifecycle="DETECTED",')
+    if proposal.shared_assumption:
+        lines.append(
+            f"{inner}shared_assumption={_python_repr(proposal.shared_assumption)},"
+        )
+    lines.append(f"{indent}),")
+    return "\n".join(lines) + "\n"
+
+
+def _apply_conflict_to_source(source_text: str, proposal: ProposedConflict) -> str:
+    """Apply a ProposedConflict: insert a new Conflict into `conflicts = (...)`.
+
+    Pre-write validation (all failures raise RuntimeError, nothing written):
+      - no Conflict with the same conflict_identity(axis, context) may exist;
+      - axis MUST be a declared Axis slug (R-axis-controlled-vocab; admitting
+        a new axis is out of this kind's scope);
+      - every member MUST be an existing Requirement id;
+      - steward MUST NOT be the owner of any member
+        (R-steward-distinct-from-owners);
+      - steward MUST be a declared Stakeholder id (when the source declares
+        stakeholders at all).
+    The graph-side invariants re-check all of this after the write (pytest
+    gate); this pre-validation just fails earlier with a clearer message.
+    """
+    tree = ast.parse(source_text)
+    new_id = conflict_identity(proposal.axis, proposal.context)
+
+    if _find_conflict_call(tree, new_id) is not None:
+        raise RuntimeError(
+            f"Conflict '{new_id}' (axis={proposal.axis!r}, same normalized "
+            f"context) already exists — the tension is already materialized. "
+            f"Move it with a ConflictTransition proposal instead."
+        )
+
+    axis_slugs = _collect_call_kwarg_literals(tree, "Axis", "slug")
+    if proposal.axis not in axis_slugs:
+        raise RuntimeError(
+            f"axis '{proposal.axis}' is not a declared Axis slug in the graph "
+            f"(R-axis-controlled-vocab). Declared: {sorted(axis_slugs)}. "
+            f"Admitting a new axis is a separate steward act, out of the "
+            f"Conflict proposal's scope."
+        )
+
+    for m in proposal.members:
+        owner = _requirement_owner_literal(tree, m)
+        if _find_requirement_call(tree, m) is None:
+            raise RuntimeError(
+                f"member '{m}' is not an existing Requirement in the graph — "
+                f"a Conflict may only connect existing requirements."
+            )
+        if owner is not None and owner == proposal.steward:
+            raise RuntimeError(
+                f"steward '{proposal.steward}' owns member '{m}' — the steward "
+                f"must not own any member (R-steward-distinct-from-owners)."
+            )
+
+    stakeholder_ids = _collect_call_kwarg_literals(tree, "Stakeholder", "id")
+    if stakeholder_ids and proposal.steward not in stakeholder_ids:
+        raise RuntimeError(
+            f"steward '{proposal.steward}' is not a declared Stakeholder id. "
+            f"Declared: {sorted(stakeholder_ids)}."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    tuple_end = _find_conflicts_tuple_end(tree)
+    if tuple_end is None:
+        raise RuntimeError(
+            "Cannot find `conflicts = (...)` tuple in build_graph(). "
+            "Is the domain graph.py well-formed?"
+        )
+
+    # Determine indentation from existing Conflict calls (default 8 spaces)
+    indent = "        "
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "Conflict":
+            line_text = lines[node.lineno - 1]
+            stripped = line_text.lstrip()
+            indent = line_text[: len(line_text) - len(stripped)]
+            break
+
+    new_conflict = _render_conflict_source(proposal, indent)
+    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
+    lines.insert(insert_at, new_conflict)
+    result = "".join(lines)
+
+    # Ensure Conflict + conflict_identity are imported.
+    m = _re.search(r"^from hotam_spec\.conflict import ([^\n]+)", result, _re.MULTILINE)
+    if m:
+        existing = m.group(1)
+        needed = ["Conflict", "conflict_identity"]
+        missing = [n for n in needed if n not in existing.split(", ")]
+        if missing:
+            new_import = existing.rstrip() + ", " + ", ".join(missing)
+            result = result.replace(
+                f"from hotam_spec.conflict import {existing}",
+                f"from hotam_spec.conflict import {new_import}",
+                1,
+            )
+    else:
+        result = result.replace(
+            "from __future__ import annotations\n",
+            "from __future__ import annotations\n\n"
+            "from hotam_spec.conflict import Conflict, conflict_identity\n",
+            1,
+        )
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Apply: OperatorBudget
 # ---------------------------------------------------------------------------
 
@@ -1217,6 +1538,7 @@ def apply(
 
     Dispatches to the appropriate handler based on proposal type:
       - ProposedConflictTransition: locate Conflict node, replace fields
+      - ProposedConflict: insert a new Conflict node (lifecycle DETECTED)
       - ProposedRequirement: add new or update existing Requirement
       - ProposedRejection: set status to REJECTED, prepend reason
       - ProposedEntityType: insert new EntityType into entity_types=()
@@ -1242,6 +1564,9 @@ def apply(
     try:
         if isinstance(proposal, ProposedConflictTransition):
             lines = _apply_conflict_transition(source_text, proposal)
+        elif isinstance(proposal, ProposedConflict):
+            new_source = _apply_conflict_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedRequirement):
             new_source = _apply_requirement_to_source(source_text, proposal)
             lines = new_source.splitlines(keepends=True)
@@ -1374,6 +1699,10 @@ def main(argv: list[str] | None = None) -> int:
       1 — failure (validation, missing id, or pytest red).
       2 — not advanced (write+tests green, but triggering action STILL in diagnosis).
     """
+    if hasattr(sys.stdout, "reconfigure"):
+        # The graph prose is UTF-8 (em-dashes, arrows); a redirected Windows
+        # stdout defaults to cp1252 and would crash the dry-run diff print.
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(
         description=(
             "Mechanically apply a steward-approved JSON proposal to spec/content/graph.py. "

@@ -29,6 +29,7 @@ for _p in (_SRC, _TOOLS):
 import apply_proposal  # noqa: E402
 from hotam_spec.conflict import conflict_identity  # noqa: E402
 from hotam_spec.proposal import (  # noqa: E402
+    ProposedConflict,
     ProposedConflictTransition,
     ProposedOperatorBudget,
 )
@@ -106,6 +107,143 @@ def test_find_conflict_call_returns_none_for_unknown_id() -> None:
     tree = ast.parse(_SAMPLE_SOURCE)
     node = apply_proposal._find_conflict_call(tree, "C-deadbeef")
     assert node is None
+
+
+# ---------------------------------------------------------------------------
+# 2b. _find_conflict_call — variable-bound axis/context resolution
+#     (R-conflict-addressing-resolves-variables)
+# ---------------------------------------------------------------------------
+
+# Mirrors the REAL domain graph pattern: axis/context bound to local variables
+# inside build_graph() (c3_axis/c3_ctx), not inline string literals.
+_VARBOUND_AXIS = "core-vs-aspect"
+_VARBOUND_CTX = (
+    "extending the framework to surface behavioral contradictions "
+    "(dead states, two processes one entity)"
+)
+_VARBOUND_CID = conflict_identity(_VARBOUND_AXIS, _VARBOUND_CTX)
+
+_VARBOUND_SOURCE = f'''\
+from hotam_spec.conflict import Conflict, conflict_identity
+
+
+def build_graph():
+    c3_axis = "{_VARBOUND_AXIS}"
+    c3_ctx = (
+        "extending the framework to surface behavioral contradictions "
+        "(dead states, two processes one entity)"
+    )
+    conflicts = (
+        Conflict(
+            id=conflict_identity(c3_axis, c3_ctx),
+            axis=c3_axis,
+            context=c3_ctx,
+            members=("R-content-free-framework", "R-agent-never-lost"),
+            steward="domain-user",
+            lifecycle="ACKNOWLEDGED",
+            shared_assumption="A-prose-suffices",
+        ),
+    )
+    return conflicts
+'''
+
+
+def test_find_conflict_call_resolves_variable_bound_kwargs() -> None:
+    """_find_conflict_call resolves axis/context passed as simple local variables.
+
+    This mirrors the real domain graph pattern (c1_axis..c6_axis / c1_ctx..c6_ctx)
+    that previously made every existing Conflict node unaddressable
+    (R-conflict-addressing-resolves-variables).
+    """
+    import ast
+
+    tree = ast.parse(_VARBOUND_SOURCE)
+    node = apply_proposal._find_conflict_call(tree, _VARBOUND_CID)
+    assert node is not None, (
+        f"Expected variable-bound conflict {_VARBOUND_CID!r} to be addressable"
+    )
+
+
+def test_find_conflict_call_variable_bound_unknown_id_still_none() -> None:
+    """Folding does not over-match: an unknown id still resolves to None."""
+    import ast
+
+    tree = ast.parse(_VARBOUND_SOURCE)
+    assert apply_proposal._find_conflict_call(tree, "C-deadbeef") is None
+
+
+def test_find_conflict_call_ambiguous_rebinding_not_resolved() -> None:
+    """A name rebound to DIFFERENT strings is ambiguous — dropped, never guessed."""
+    import ast
+
+    src = (
+        "from hotam_spec.conflict import Conflict\n"
+        'axis_var = "axis-one"\n'
+        'axis_var = "axis-two"\n'
+        "conflicts = (\n"
+        "    Conflict(\n"
+        '        id="C-whatever",\n'
+        "        axis=axis_var,\n"
+        '        context="some context",\n'
+        '        members=("R-a", "R-b"),\n'
+        '        steward="s",\n'
+        '        lifecycle="DETECTED",\n'
+        "    ),\n"
+        ")\n"
+    )
+    tree = ast.parse(src)
+    for candidate_axis in ("axis-one", "axis-two"):
+        cid = conflict_identity(candidate_axis, "some context")
+        assert apply_proposal._find_conflict_call(tree, cid) is None, (
+            f"ambiguous binding must not resolve (matched via {candidate_axis!r})"
+        )
+
+
+def test_real_domain_conflict_c8600b1b8_is_addressable() -> None:
+    """The standing P3 target C-8600b1b8 resolves in the REAL domain graph source.
+
+    Before the fix, all six Conflict nodes in domains/hotam-spec-self/graph.py
+    were unaddressable (axis/context passed as local variables), so the P3
+    CONFLICT_STALLED action was mechanically unlandable. Addressing only — the
+    transition itself remains the steward's separate act.
+    """
+    import ast
+
+    domain_graph = (
+        Path(__file__).resolve().parents[2]
+        / "domains"
+        / "hotam-spec-self"
+        / "graph.py"
+    )
+    tree = ast.parse(domain_graph.read_text(encoding="utf-8"))
+    node = apply_proposal._find_conflict_call(tree, "C-8600b1b8")
+    assert node is not None, (
+        "C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED) must be addressable in the "
+        "real domain graph"
+    )
+
+
+def test_all_real_domain_conflicts_are_addressable() -> None:
+    """Every Conflict node in the real domain graph is addressable by its C-id."""
+    import ast
+
+    domain_graph = (
+        Path(__file__).resolve().parents[2]
+        / "domains"
+        / "hotam-spec-self"
+        / "graph.py"
+    )
+    src = domain_graph.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+
+    # Load the graph for the authoritative list of conflict ids.
+    import hotam_spec.graph as hs_graph
+
+    g = hs_graph._load_graph_file(domain_graph)
+    assert g.conflicts, "the meta-domain declares conflicts"
+    for c in g.conflicts:
+        node = apply_proposal._find_conflict_call(tree, c.id)
+        assert node is not None, f"conflict {c.id} is not addressable"
 
 
 # ---------------------------------------------------------------------------
@@ -421,3 +559,235 @@ def test_apply_operator_budget_unknown_operator_id_returns_error(
         apply_proposal._CONTENT_GRAPH = real_graph
 
     assert result == 1
+
+
+# ---------------------------------------------------------------------------
+# 9. ProposedConflict — validation, writer (R-proposed-conflict-kind-exists)
+# ---------------------------------------------------------------------------
+
+_CONFLICT_GRAPH_SOURCE = '''\
+from __future__ import annotations
+
+from hotam_spec.axis import Axis
+from hotam_spec.conflict import Conflict, conflict_identity
+from hotam_spec.graph import TensionGraph
+from hotam_spec.requirement import Requirement
+from hotam_spec.stakeholder import Stakeholder
+
+
+def build_graph() -> TensionGraph:
+    stakeholders = (
+        Stakeholder(id="owner-a", name="Owner A", domain="a"),
+        Stakeholder(id="owner-b", name="Owner B", domain="b"),
+        Stakeholder(id="neutral-steward", name="Neutral", domain="c"),
+    )
+    axes = (
+        Axis(slug="speed-vs-safety", description="fast delivery vs careful checks"),
+    )
+    requirements = (
+        Requirement(id="R-fast", claim="ship fast", owner="owner-a", status="SETTLED"),
+        Requirement(id="R-safe", claim="ship safe", owner="owner-b", status="SETTLED"),
+    )
+    conflicts = (
+        Conflict(
+            id=conflict_identity("speed-vs-safety", "existing tension"),
+            axis="speed-vs-safety",
+            context="existing tension",
+            members=("R-fast", "R-safe"),
+            steward="neutral-steward",
+            lifecycle="DETECTED",
+        ),
+    )
+    return TensionGraph(
+        axes=axes,
+        stakeholders=stakeholders,
+        requirements=requirements,
+        conflicts=conflicts,
+    )
+'''
+
+
+def test_validate_conflict_ok() -> None:
+    """_validate_proposal accepts a well-formed Conflict creation proposal."""
+    raw = {
+        "kind": "Conflict",
+        "axis": "speed-vs-safety",
+        "context": "release week crunch",
+        "members": ["R-fast", "R-safe"],
+        "steward": "neutral-steward",
+        "shared_assumption": "A-deadline",
+        "note": "steward context only",
+    }
+    proposal = apply_proposal._validate_proposal(raw)
+    assert isinstance(proposal, ProposedConflict)
+    assert proposal.members == ("R-fast", "R-safe")
+    assert proposal.target_anchor() == conflict_identity(
+        "speed-vs-safety", "release week crunch"
+    )
+
+
+def test_validate_conflict_rejects_caller_supplied_id() -> None:
+    """A Conflict proposal with a caller-supplied id is refused (R-stable-conflict-identity)."""
+    raw = {
+        "kind": "Conflict",
+        "id": "C-12345678",
+        "axis": "speed-vs-safety",
+        "context": "release week crunch",
+        "members": ["R-fast", "R-safe"],
+        "steward": "neutral-steward",
+    }
+    with pytest.raises(ValueError, match="conflict_identity"):
+        apply_proposal._validate_proposal(raw)
+
+
+def test_validate_conflict_rejects_caller_supplied_lifecycle() -> None:
+    """A Conflict proposal with a lifecycle is refused (new conflicts start DETECTED)."""
+    raw = {
+        "kind": "Conflict",
+        "axis": "speed-vs-safety",
+        "context": "release week crunch",
+        "members": ["R-fast", "R-safe"],
+        "steward": "neutral-steward",
+        "lifecycle": "DECIDED(shortcut)",
+    }
+    with pytest.raises(ValueError, match="DETECTED"):
+        apply_proposal._validate_proposal(raw)
+
+
+def test_validate_conflict_rejects_single_member() -> None:
+    """Fewer than two distinct members is refused (R-conflict-min-two-members)."""
+    raw = {
+        "kind": "Conflict",
+        "axis": "speed-vs-safety",
+        "context": "release week crunch",
+        "members": ["R-fast", "R-fast"],
+        "steward": "neutral-steward",
+    }
+    with pytest.raises(ValueError, match="DISTINCT"):
+        apply_proposal._validate_proposal(raw)
+
+
+def test_apply_conflict_creates_detected_node() -> None:
+    """_apply_conflict_to_source inserts a Conflict with computed id + DETECTED lifecycle."""
+    import ast
+
+    proposal = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+        shared_assumption="",
+    )
+    new_source = apply_proposal._apply_conflict_to_source(
+        _CONFLICT_GRAPH_SOURCE, proposal
+    )
+    # The id is emitted as a conflict_identity(...) CALL, never a hand-written literal.
+    assert 'id=conflict_identity("speed-vs-safety", "release week crunch"),' in new_source
+    assert 'lifecycle="DETECTED",' in new_source
+    # The new node is addressable by its computed id.
+    new_id = conflict_identity("speed-vs-safety", "release week crunch")
+    tree = ast.parse(new_source)
+    assert apply_proposal._find_conflict_call(tree, new_id) is not None
+    # The existing node is untouched and still addressable.
+    old_id = conflict_identity("speed-vs-safety", "existing tension")
+    assert apply_proposal._find_conflict_call(tree, old_id) is not None
+
+
+def test_apply_conflict_refuses_duplicate_tension() -> None:
+    """Creating a Conflict whose (axis, context) already exists is refused."""
+    proposal = ProposedConflict(
+        axis="speed-vs-safety",
+        context="EXISTING   tension",  # normalization: case/whitespace-insensitive
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+    )
+    with pytest.raises(RuntimeError, match="already exists"):
+        apply_proposal._apply_conflict_to_source(_CONFLICT_GRAPH_SOURCE, proposal)
+
+
+def test_apply_conflict_refuses_unknown_axis() -> None:
+    """An axis not declared in the graph's axes is refused (R-axis-controlled-vocab)."""
+    proposal = ProposedConflict(
+        axis="brand-new-axis",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+    )
+    with pytest.raises(RuntimeError, match="R-axis-controlled-vocab"):
+        apply_proposal._apply_conflict_to_source(_CONFLICT_GRAPH_SOURCE, proposal)
+
+
+def test_apply_conflict_refuses_member_owner_steward() -> None:
+    """A steward who owns a member is refused (R-steward-distinct-from-owners)."""
+    proposal = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="owner-a",  # owns R-fast
+    )
+    with pytest.raises(RuntimeError, match="R-steward-distinct-from-owners"):
+        apply_proposal._apply_conflict_to_source(_CONFLICT_GRAPH_SOURCE, proposal)
+
+
+def test_apply_conflict_refuses_missing_member() -> None:
+    """A member that is not an existing Requirement id is refused."""
+    proposal = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-ghost"),
+        steward="neutral-steward",
+    )
+    with pytest.raises(RuntimeError, match="R-ghost"):
+        apply_proposal._apply_conflict_to_source(_CONFLICT_GRAPH_SOURCE, proposal)
+
+
+def test_apply_conflict_written_graph_loads_and_passes_shape(tmp_path: Path) -> None:
+    """The post-write source still builds a TensionGraph whose new node is well-formed."""
+    proposal = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+    )
+    new_source = apply_proposal._apply_conflict_to_source(
+        _CONFLICT_GRAPH_SOURCE, proposal
+    )
+    graph_file = tmp_path / "graph.py"
+    graph_file.write_text(new_source, encoding="utf-8")
+
+    import hotam_spec.graph as hs_graph
+    from hotam_spec.invariants import (
+        check_conflict_id_matches_identity,
+        check_steward_not_a_member_owner,
+    )
+
+    g = hs_graph._load_graph_file(graph_file)
+    new_id = conflict_identity("speed-vs-safety", "release week crunch")
+    added = [c for c in g.conflicts if c.id == new_id]
+    assert len(added) == 1
+    assert added[0].lifecycle == "DETECTED"
+    assert added[0].members == ("R-fast", "R-safe")
+    assert check_conflict_id_matches_identity(g) == []
+    assert check_steward_not_a_member_owner(g) == []
+
+
+def test_apply_conflict_dry_run_does_not_write(tmp_path: Path) -> None:
+    """apply(..., dry_run=True) on a Conflict proposal does not write the file."""
+    sample_file = tmp_path / "graph.py"
+    sample_file.write_text(_CONFLICT_GRAPH_SOURCE, encoding="utf-8")
+
+    real_graph = apply_proposal._CONTENT_GRAPH
+    apply_proposal._CONTENT_GRAPH = sample_file
+    try:
+        proposal = ProposedConflict(
+            axis="speed-vs-safety",
+            context="release week crunch",
+            members=("R-fast", "R-safe"),
+            steward="neutral-steward",
+        )
+        result = apply_proposal.apply(proposal, dry_run=True)
+    finally:
+        apply_proposal._CONTENT_GRAPH = real_graph
+
+    assert sample_file.read_text(encoding="utf-8") == _CONFLICT_GRAPH_SOURCE
+    assert result == 0

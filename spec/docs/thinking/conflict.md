@@ -216,6 +216,43 @@ AI/steward must judge — deliberately stronger than "violated invariant"
 because it points at the not-yet-recorded. Real semantic detection is
 deferred (see CLAUDE.md / ROADMAP).
 
+## From `spec/src/hotam_spec/graph.py::LatentCluster`
+
+Canon: §Conflict — latent suspects grouped by their shared-assumption signature.
+
+RULE: cluster key = the exact set of SPECIFIC assumptions a suspect pair
+shares (its signature). All pairs carrying one signature are ONE review
+item: N requirements standing on one specific assumption with no mediating
+conflict is one architectural question (usually: is that assumption really
+two assumptions?), not C(N,2) independent pair disputes.
+
+Fields:
+  assumptions  — the signature, sorted for stable identity.
+  requirements — sorted union of the member requirement ids of all pairs.
+  pairs        — the pair-level detail (LatentSuspect records), preserved
+                 for the verbose path (TENSIONS.md renders pairs).
+
+WHY clustering, not a threshold shift: raising
+GENERIC_ASSUMPTION_THRESHOLD only moves the noise cliff; grouping by
+signature keeps every suspect pair visible while the review surface
+matches the size of the actual decision space.
+
+## From `spec/src/hotam_spec/graph.py::latent_connector_clusters`
+
+Canon: §Conflict — group latent-connector suspects by shared-assumption signature.
+
+RULE: every suspect pair from latent_connector_suspects belongs to exactly
+ONE cluster, keyed by its specific-shared-assumption signature; the cluster
+carries the sorted union of its pairs' requirement ids plus the pair
+records themselves. Clusters are sorted by (min reference count across the
+cluster, signature) — rarest/most-suspicious first — and pairs inside a
+cluster keep the suspect ordering. Deterministic: same graph, same tuple.
+
+WHY: 21 pair lines over one shared assumption drown the one real question
+('split this assumption?') and any genuinely distinct suspect next to
+them; the harness renders ONE P5 action per cluster (tools/what_now.py)
+while TENSIONS.md keeps the full pair table.
+
 ## From `spec/src/hotam_spec/invariants.py::check_conflict_has_axis`
 
 Canon: §Conflict — every Conflict carries a non-empty axis.

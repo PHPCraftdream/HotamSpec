@@ -42,13 +42,13 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Enforced by:** `CLAUDE.md§Operator boot ritual`, `docs/methodology/discipline.md`
 
-## `R-shared-tools-in-spec-tools` (STRUCTURAL)
+## `R-shared-tools-in-spec-tools` (ENFORCED)
 
 **Claim.** Tools available to all agents shall live in `spec/tools/`.
 
 **Why.** Scoping rule, structurally enforced by file layout. SETTLED — already true today.
 
-**Enforced by:** `file layout`, `docs/methodology/discipline.md`
+**Enforced by:** `test_shared_tools_location.py`
 
 ## `R-speak-by-reference` (ENFORCED)
 

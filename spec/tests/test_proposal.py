@@ -19,7 +19,9 @@ for _p in (_SRC, _TOOLS):
 
 import pytest  # noqa: E402
 
+from hotam_spec.conflict import conflict_identity  # noqa: E402
 from hotam_spec.proposal import (  # noqa: E402
+    ProposedConflict,
     ProposedConflictTransition,
     ProposedRejection,
     ProposedRequirement,
@@ -110,6 +112,44 @@ def test_proposed_rejection_fields() -> None:
     )
     assert pr.requirement_id == "R-old"
     assert "REPLACES" in pr.reason
+
+
+def test_proposed_conflict_is_frozen() -> None:
+    """ProposedConflict is a frozen dataclass."""
+    pc = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+    )
+    with pytest.raises((AttributeError, TypeError)):
+        pc.axis = "other"  # type: ignore[misc]
+
+
+def test_proposed_conflict_defaults() -> None:
+    """ProposedConflict defaults: shared_assumption and note empty."""
+    pc = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+    )
+    assert pc.shared_assumption == ""
+    assert pc.note == ""
+
+
+def test_proposed_conflict_target_anchor_is_computed_identity() -> None:
+    """target_anchor() is conflict_identity(axis, context) — never caller-supplied."""
+    pc = ProposedConflict(
+        axis="speed-vs-safety",
+        context="release week crunch",
+        members=("R-fast", "R-safe"),
+        steward="neutral-steward",
+    )
+    assert pc.target_anchor() == conflict_identity(
+        "speed-vs-safety", "release week crunch"
+    )
+    assert pc.target_anchor().startswith("C-")
 
 
 # ---------------------------------------------------------------------------

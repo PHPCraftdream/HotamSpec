@@ -1,4 +1,4 @@
-"""Tests for the P0 REFLECTION band in tools/what_now.py (P8).
+"""Tests for the P0 REFLECTION band (hotam_spec.reflection + tools/what_now.py).
 
 Guarantees:
   1. P_REFLECTION < P_STRUCTURE (ranked above all other bands).
@@ -10,6 +10,10 @@ Guarantees:
   7. The live meta-domain REFLECTION action count is 0–5 (reasonable range); today
      the DRAFT/SETTLED ratio is healthy (DRAFT 4 < SETTLED/2), so burn-down does
      NOT fire. We assert the specific conditions that fire today.
+  8. R-reflection-predicates-first-class (§Reflection): the conditions are
+     named predicate functions in hotam_spec.reflection composed by the
+     what_now harness — never inlined in tool code — and each predicate fires
+     in isolation on a synthetic graph violating it.
 """
 
 from __future__ import annotations
@@ -23,6 +27,7 @@ for _p in (_SRC, _TOOLS):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from hotam_spec import reflection  # noqa: E402
 from hotam_spec.assumption import DEAD, Assumption  # noqa: E402
 from hotam_spec.axis import Axis  # noqa: E402
 from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
@@ -31,6 +36,7 @@ from hotam_spec.operator import ContextBudget, Operator  # noqa: E402
 from hotam_spec.requirement import DRAFT, ENFORCED, PROSE, SETTLED, Requirement  # noqa: E402
 from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
+import what_now  # noqa: E402
 from what_now import P_REFLECTION, P_STRUCTURE, diagnose  # noqa: E402
 
 # ---------------------------------------------------------------------------
@@ -379,3 +385,245 @@ def test_real_meta_domain_reflection_today() -> None:
     assert not enforcer_dead, (
         f"No DEAD assumptions today; enforcer-dead must not fire; got {enforcer_dead}"
     )
+
+
+# ---------------------------------------------------------------------------
+# 7. R-reflection-predicates-first-class — the self-diagnosis conditions are
+#    substrate: named predicates in hotam_spec.reflection composed by the
+#    harness, never inlined in tool code.
+# ---------------------------------------------------------------------------
+
+_PREDICATE_NAMES = [
+    "reflect_draft_overhang",
+    "reflect_unenforced_settled",
+    "reflect_over_budget_operators",
+    "reflect_dead_assumption_on_enforcer",
+    "reflect_derived_but_unbuilt",
+]
+
+
+def test_what_now_sources_reflection_predicates_from_module() -> None:
+    """diagnose() composes hotam_spec.reflection — the conditions are not tool code.
+
+    Enforcer of R-reflection-predicates-first-class (together with
+    test_diagnose_p0_equals_reflection_findings): the harness imports the
+    module's single entry point by reference, the registry names exactly the
+    five canonical predicates, and no reflection imperative text remains
+    inlined in tools/what_now.py source.
+    """
+    assert what_now.all_findings is reflection.all_findings, (
+        "what_now must compose hotam_spec.reflection.all_findings by reference"
+    )
+    names = [fn.__name__ for fn in reflection.REFLECTION_PREDICATES]
+    assert names == _PREDICATE_NAMES, (
+        f"REFLECTION_PREDICATES registry drifted: {names}"
+    )
+    src = Path(what_now.__file__).read_text(encoding="utf-8")
+    for inlined_fragment in (
+        "DRAFT-overhang:",
+        "R-stale-substrate signal",
+        "derived-but-unbuilt debt",
+        "soft context-debt",
+    ):
+        assert inlined_fragment not in src, (
+            f"reflection imperative {inlined_fragment!r} is inlined in "
+            "tools/what_now.py — it must live in hotam_spec.reflection "
+            "(R-reflection-predicates-first-class)"
+        )
+
+
+def _all_conditions_violating_graph() -> TensionGraph:
+    """One synthetic graph that violates ALL five reflection conditions at once."""
+    dead_a = Assumption(
+        id="A-dead-all", statement="was true, now dead", status=DEAD, owner="s-a"
+    )
+    closeable = tuple(_settled_req(f"R-u{i}", enforcement=PROSE) for i in range(6))
+    stale = Requirement(
+        id="R-stale-all",
+        claim="enforced claim on a dead premise",
+        owner="s-b",
+        status=SETTLED,
+        assumptions=("A-dead-all",),
+        enforcement=ENFORCED,
+        enforced_by=("test_stale_all",),
+    )
+    parents = (_settled_req("R-pa"), _settled_req("R-pb"))
+    drafts = tuple(_draft_req(f"R-d{i}") for i in range(4)) + (
+        _draft_req("R-unbuilt-all"),
+    )
+    ax, ctx = "ax-one", "all-conditions context"
+    c = Conflict(
+        id=conflict_identity(ax, ctx),
+        axis=ax,
+        context=ctx,
+        members=("R-pa", "R-pb"),
+        steward="s-c",
+        lifecycle="DECIDED(chose R-pa; derived R-unbuilt-all)",
+        decided_by="s-c",
+        derived=("R-unbuilt-all",),
+    )
+    op = Operator(
+        id="OP-over-all",
+        stakeholder="s-a",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=2, measure="NODE_COUNT"),
+    )
+    return TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=closeable + (stale,) + parents + drafts,
+        conflicts=(c,),
+        assumptions=(dead_a,),
+        operators=(op,),
+    )
+
+
+def test_diagnose_p0_equals_reflection_findings() -> None:
+    """The P0 band of diagnose() IS reflection.all_findings — no more, no less.
+
+    Enforcer of R-reflection-predicates-first-class: on a graph violating all
+    five conditions, the (target, imperative) pairs the harness emits at
+    P_REFLECTION equal the module's findings exactly, and every predicate in
+    the registry contributed at least one finding.
+    """
+    g = _all_conditions_violating_graph()
+    findings = reflection.all_findings(g)
+    assert sorted({f.condition for f in findings}) == sorted(_PREDICATE_NAMES), (
+        "the synthetic graph must fire every predicate in the registry"
+    )
+    p0_pairs = [
+        (a.target, a.imperative) for a in diagnose(g) if a.priority == P_REFLECTION
+    ]
+    finding_pairs = [(f.target, f.imperative) for f in findings]
+    assert sorted(p0_pairs) == sorted(finding_pairs), (
+        "diagnose()'s P0 band must be exactly hotam_spec.reflection.all_findings"
+    )
+
+
+def test_reflect_draft_overhang_fires_direct() -> None:
+    """reflect_draft_overhang fires on 10 DRAFT vs 3 SETTLED; quiet when healthy."""
+    settled = tuple(_settled_req(f"R-s{i}") for i in range(3))
+    drafts = tuple(_draft_req(f"R-d{i}") for i in range(10))
+    g = TensionGraph(
+        axes=_DUMMY_AXES, stakeholders=_SH, requirements=settled + drafts
+    )
+    found = reflection.reflect_draft_overhang(g)
+    assert len(found) == 1
+    assert found[0].condition == "reflect_draft_overhang"
+    assert found[0].target == "burn-down"
+    assert "DRAFT-overhang: 10 DRAFT vs 3 SETTLED" in found[0].imperative
+    healthy = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=tuple(_settled_req(f"R-s{i}") for i in range(20)),
+    )
+    assert reflection.reflect_draft_overhang(healthy) == []
+
+
+def test_reflect_unenforced_settled_fires_direct() -> None:
+    """reflect_unenforced_settled fires above the >5 closeable-debt threshold."""
+    debt6 = tuple(_settled_req(f"R-u{i}", enforcement=PROSE) for i in range(6))
+    g = TensionGraph(axes=_DUMMY_AXES, stakeholders=_SH, requirements=debt6)
+    found = reflection.reflect_unenforced_settled(g)
+    assert len(found) == 1
+    assert found[0].condition == "reflect_unenforced_settled"
+    assert found[0].target == "enforcement-gradient"
+    assert "6 SETTLED requirements are PROSE/STRUCTURAL" in found[0].imperative
+    debt5 = tuple(_settled_req(f"R-u{i}", enforcement=PROSE) for i in range(5))
+    at_threshold = TensionGraph(
+        axes=_DUMMY_AXES, stakeholders=_SH, requirements=debt5
+    )
+    assert reflection.reflect_unenforced_settled(at_threshold) == []
+
+
+def test_reflect_over_budget_operators_fires_direct() -> None:
+    """reflect_over_budget_operators fires per operator over its positive limit."""
+    reqs = tuple(_settled_req(f"R-r{i}") for i in range(5))
+    over = Operator(
+        id="OP-o",
+        stakeholder="s-a",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=2, measure="NODE_COUNT"),
+    )
+    unbounded = Operator(
+        id="OP-free",
+        stakeholder="s-b",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=0, measure="NODE_COUNT"),
+    )
+    g = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=reqs,
+        operators=(over, unbounded),
+    )
+    found = reflection.reflect_over_budget_operators(g)
+    assert [f.target for f in found] == ["OP-o"], (
+        "only the positive-limit, over-budget operator fires (limit=0 is unbounded)"
+    )
+    assert found[0].condition == "reflect_over_budget_operators"
+    assert "holds 5 nodes > budget 2" in found[0].imperative
+
+
+def test_reflect_dead_assumption_on_enforcer_fires_direct() -> None:
+    """reflect_dead_assumption_on_enforcer fires per ENFORCED-req×DEAD-assumption pair."""
+    dead_a = Assumption(id="A-x", statement="dead", status=DEAD, owner="s-a")
+    enforced_r = Requirement(
+        id="R-e",
+        claim="enforced on dead",
+        owner="s-b",
+        status=SETTLED,
+        assumptions=("A-x",),
+        enforcement=ENFORCED,
+        enforced_by=("test_e",),
+    )
+    prose_r = Requirement(
+        id="R-p",
+        claim="prose on dead",
+        owner="s-b",
+        status=SETTLED,
+        assumptions=("A-x",),
+        enforcement=PROSE,
+    )
+    g = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        assumptions=(dead_a,),
+        requirements=(enforced_r, prose_r),
+    )
+    found = reflection.reflect_dead_assumption_on_enforcer(g)
+    assert [f.target for f in found] == ["R-e"], (
+        "only the ENFORCED requirement fires; PROSE is P2 DRIFT_FALLOUT territory"
+    )
+    assert found[0].condition == "reflect_dead_assumption_on_enforcer"
+    assert "'R-e' rests on DEAD assumption 'A-x'" in found[0].imperative
+
+
+def test_reflect_derived_but_unbuilt_fires_direct() -> None:
+    """reflect_derived_but_unbuilt fires for DRAFT and for ABSENT derived ids."""
+    parents = (_settled_req("R-m1"), _settled_req("R-m2"))
+    draft_derived = _draft_req("R-still-draft")
+    ax, ctx = "ax-one", "direct derived-unbuilt context"
+    c = Conflict(
+        id=conflict_identity(ax, ctx),
+        axis=ax,
+        context=ctx,
+        members=("R-m1", "R-m2"),
+        steward="s-c",
+        lifecycle="DECIDED(chose R-m1)",
+        decided_by="s-c",
+        derived=("R-still-draft", "R-never-created"),
+    )
+    g = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=parents + (draft_derived,),
+        conflicts=(c,),
+    )
+    found = reflection.reflect_derived_but_unbuilt(g)
+    assert [f.target for f in found] == ["R-still-draft", "R-never-created"], (
+        "both the DRAFT derived id and the absent derived id must fire"
+    )
+    for f in found:
+        assert f.condition == "reflect_derived_but_unbuilt"
+        assert "derived-but-unbuilt debt" in f.imperative

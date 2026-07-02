@@ -211,6 +211,11 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-constitution-is-index` | SETTLED | `framework-author` | A-finite-context-operators, A-compaction-loses-working | The CONSTITUTION block in root CLAUDE.md shall render each SETTLED requirement as a one-line index entry — id, claim truncated to at most 96 characters, single-character enforcement flag — with a block-level pointer to the full roster in the domain's docs/gen/REQUIREMENTS.md. |
 | `R-constitution-separates-plumbing` | SETTLED | `framework-author` | — | The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms. |
 | `R-speculative-aspects-frozen` | SETTLED | `framework-author` | — | The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need. |
+| `R-reflection-predicates-first-class` | SETTLED | `framework-author` | — | The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined in tool code. |
+| `R-conflict-addressing-resolves-variables` | SETTLED | `framework-author` | — | tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when locating the Conflict node a proposal addresses. |
+| `R-proposed-conflict-kind-exists` | SETTLED | `framework-author` | — | The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via tools/apply_proposal.py. |
+| `R-latent-connectors-cluster-by-assumption` | SETTLED | `framework-author` | — | The what_now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair. |
+| `R-presented-pending-decision-type` | OPEN(does 'operator presented X; steward has not yet answered' deserve a first-class node type — a Presented/Pending state between the PRESENT and LAND steps of the mediation loop — or is the spec/.runtime/proposals/ drop-folder plus the spawn-log the honest home for this transient state?) | `framework-reviewer` | — | The methodology shall decide whether 'operator presented, steward has not yet decided' deserves a first-class Presented/Pending node type. |
 
 ## Stakeholders
 
@@ -260,10 +265,11 @@ Generated from the executable model: the methodology narrative comes from `spec/
 Projected from `spec/tools/*.py` module docstrings whose first line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). The docstring IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R.
 
 - **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
-- **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: (none)]
+- **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
 - **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
-- **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: (none)]
+- **R-tool-confront** — *the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_confront`]
+- **R-tool-context** — *the operator's working-context measurement (reader).* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_context`]
 - **R-tool-create-agent** — *scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_create_agent`]
 - **R-tool-create-domain** — *scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.* [STRUCTURAL·tool · §Domain] [enforcer: `test_tool_create_domain`]
 - **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
@@ -623,14 +629,15 @@ Stakeholder answers 'who is accountable', an Operator answers 'who can act,
 within what context, over which slice of the graph'. The two facets MUST stay
 separate — single-altitude-vs-multi-altitude.
 
-Canon: §Reflection — the P0 operator self-diagnosis band observes Operator nodes
-directly: it checks context_budget.limit vs graph size (over-budget), and flags
-DRAFT-overhang, UNENFORCED-SETTLED debt, DEAD-assumption-on-ENFORCER, and
-derived-but-unbuilt debt. An operator that cannot see its own state is worse than
-a malformed graph (ranked P0, above §Invariants P1 STRUCTURE).
+The §Reflection P0 self-diagnosis band (canonical home: hotam_spec/reflection.py)
+observes Operator nodes directly: it checks context_budget.limit vs graph size
+(over-budget), and flags DRAFT-overhang, UNENFORCED-SETTLED debt,
+DEAD-assumption-on-ENFORCER, and derived-but-unbuilt debt. An operator that
+cannot see its own state is worse than a malformed graph (ranked P0, above
+§Invariants P1 STRUCTURE).
 
-Canon: §Context — the working-context fullness is MEASURED, not guessed; the
-three-cipher pulse cites it as the first cipher (tools/context.py reader;
+The §Context concern — the working-context fullness is MEASURED, not guessed;
+the three-cipher pulse cites it as the first cipher (tools/context.py reader;
 R-measure-context-size DRAFT).
 
 Canon: §Operator — every Operator:

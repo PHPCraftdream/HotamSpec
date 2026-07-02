@@ -2468,6 +2468,36 @@ def check_agent_has_docs_subdir(g: TensionGraph) -> list[Violation]:  # noqa: AR
     return out
 
 
+def check_agent_has_tools_subdir(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Agent — every agent directory must contain a 'tools/' subdirectory.
+
+    RULE: Every agent carries its own tools/ subdir for its private tools
+    (R-agent-has-own-tools-dir), separate from the shared spec/tools/
+    (R-shared-tools-in-spec-tools).
+    WHY: Without tools/ the private/shared tool boundary is invisible;
+    create_agent.py always scaffolds it; its absence indicates manual corruption.
+    """
+    if not _SPEC_AGENTS_ROOT.exists():
+        return []
+    out: list[Violation] = []
+    for agent_dir in sorted(_SPEC_AGENTS_ROOT.iterdir()):
+        if not agent_dir.is_dir():
+            continue
+        if not (agent_dir / "scope.py").exists():
+            continue
+        tools_subdir = agent_dir / "tools"
+        if not tools_subdir.exists():
+            out.append(
+                Violation(
+                    "check_agent_has_tools_subdir",
+                    agent_dir.name,
+                    f"spec/agents/{agent_dir.name}/tools/ is missing — "
+                    "every agent must have a tools/ subdir for its private tools",
+                )
+            )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # 16. Meta-invariant — each check_*'s docstring RULE matches its body's Violations
 # ---------------------------------------------------------------------------
@@ -2737,6 +2767,7 @@ ALL_INVARIANTS = (
     check_domain_director_exists,
     check_agent_has_agents_subdir,
     check_agent_has_docs_subdir,
+    check_agent_has_tools_subdir,
     # §Meta-invariant — docstring/body coherence
     check_method_matches_docstring,
 )

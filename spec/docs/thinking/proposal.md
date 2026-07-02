@@ -44,6 +44,29 @@ Canon: §Proposal — propose REJECTING a Requirement (status → REJECTED).
 Preserves the anti-relitigation discipline: REJECTED is kept in the graph
 (R-rejected-preserved-not-deleted), never deleted.
 
+## From `spec/src/hotam_spec/proposal.py::ProposedConflict`
+
+Canon: §Proposal — propose MATERIALIZING a new Conflict node (kind="Conflict").
+
+The creation half of the conflict pipeline (§Conflict): the AI operator
+surfaces a tension as a typed proposal, the steward approves, and
+tools/apply_proposal.py writes a Conflict(...) into the domain graph with
+lifecycle DETECTED. Moving it further is a separate
+ProposedConflictTransition — creation and transition stay distinct acts.
+
+RULE: the node id is NEVER caller-supplied — the writer emits
+id=conflict_identity(axis, context) (R-stable-conflict-identity). axis MUST
+already be a slug in the graph's axes tuple (R-axis-controlled-vocab;
+admitting a NEW axis is a separate act, out of this kind's scope). members
+MUST name >= 2 distinct existing Requirements
+(R-conflict-min-two-members). steward MUST NOT own any member
+(R-steward-distinct-from-owners; re-checked graph-side by
+check_steward_not_a_member_owner after the write).
+
+`note` is presentation-only context for the steward's review; it is NOT
+written to the graph — the Conflict node itself carries axis, context and
+shared_assumption, which hold the tension's knowledge.
+
 ## From `spec/src/hotam_spec/proposal.py::ProposedOperatorBudget`
 
 Canon: §Proposal / §ContextBudget — propose a new ContextBudget for an existing Operator.

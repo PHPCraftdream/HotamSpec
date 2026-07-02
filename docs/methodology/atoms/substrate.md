@@ -78,8 +78,10 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 **Enforced by:** `test_docs_gen.py::test_requirements_md_up_to_date`, `test_docs_gen.py::test_tensions_md_up_to_date`, `test_docs_gen.py::test_open_md_up_to_date`, `test_docs_gen.py::test_unenforced_md_up_to_date`
 
-## `R-rejected-preserved-not-deleted` (PROSE)
+## `R-rejected-preserved-not-deleted` (ENFORCED)
 
 **Claim.** Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted.
 
 **Why.** Anti-relitigation. Without preserved REJECTED, the same dead ideas re-surface every quarter. The historian role depends on this preservation.
+
+**Enforced by:** `test_rejected_preserved.py`

@@ -32,7 +32,9 @@ It aggregates, in priority order:
                         UNENFORCED-SETTLED debt, over-budget operators, dead-
                         assumption-on-enforcer, derived-but-unbuilt. Ranked ABOVE
                         P1 STRUCTURE because an operator that cannot see its own
-                        state is worse than a malformed graph. (§Reflection, M35)
+                        state is worse than a malformed graph. The conditions are
+                        named predicates in hotam_spec.reflection
+                        (R-reflection-predicates-first-class). (§Reflection, M35)
   P1 STRUCTURE        — failing structural invariants (malformed form / dangling
                         refs / conflict missing axis|context|steward). A malformed
                         graph makes all softer diagnosis unreliable.
@@ -44,8 +46,11 @@ It aggregates, in priority order:
   P4 OPEN_ITEM        — OPEN(question) requirements awaiting a steward decision.
   P5 LATENT_CONNECTOR — HEURISTIC: requirement pairs that SHOULD have a C-node but
                         don't, flagged "for AI review" (the deferred detector's
-                        stub). Lowest priority because it is a suspicion, not a
-                        proven defect, and the AI never acts on it unilaterally.
+                        stub), rendered ONE action per shared-assumption CLUSTER
+                        (graph.latent_connector_clusters; pair detail stays in
+                        TENSIONS.md). Lowest priority because it is a suspicion,
+                        not a proven defect, and the AI never acts on it
+                        unilaterally.
 
 Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)

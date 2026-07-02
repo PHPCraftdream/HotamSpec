@@ -116,9 +116,9 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | anchor | enforcement | claim |
 |---|---|---|
 | **Closed loop & operator role** | | |
-| `R-agent-never-lost` | PROSE | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
+| `R-agent-never-lost` | ENFORCED | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
 | `R-drift-structurally-impossible` | ENFORCED | The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte. |
-| `R-conflict-is-connector-node` | STRUCTURAL | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
+| `R-conflict-is-connector-node` | ENFORCED | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
 | `R-deterministic-generation` | ENFORCED | tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes. |
 | `R-empty-content-is-legitimate` | ENFORCED | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
 | `R-two-altitude-ontology` | PROSE | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
@@ -126,7 +126,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | `R-ai-presents-not-decides` | STRUCTURAL | The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward. |
 | `R-steward-distinct-from-owners` | ENFORCED | Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members. |
 | `R-open-states-question` | ENFORCED | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
-| `R-rejected-preserved-not-deleted` | PROSE | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
+| `R-rejected-preserved-not-deleted` | ENFORCED | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
 | `R-axis-controlled-vocab` | ENFORCED | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | ENFORCED | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
 | `R-decided-needs-human-signoff` | ENFORCED | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
