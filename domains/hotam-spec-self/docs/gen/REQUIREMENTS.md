@@ -241,6 +241,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-scope-is-projection` | SETTLED | `framework-author` | A-finite-context-operators | An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node. |
 | `R-scope-overlap-generated` | SETTLED | `framework-author` | A-finite-context-operators | When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged. |
 | `R-overlap-single-presenter` | SETTLED | `framework-author` | A-finite-context-operators | Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter. |
+| `R-spawn-log-carries-isolation` | SETTLED | `ai-agent` | A-finite-context-operators | Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree\|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating. |
+| `R-boot-cite-measured` | SETTLED | `ai-agent` | A-finite-context-operators | A Stop hook shall lexically check whether the first sentence of the operator's last reply in the transcript contains a typed anchor (R-/C-/A-/OP-/GOAL-/section-sign), logging the result to spec/.runtime/boot-cite-log.jsonl, checked as a form-level (not substance-level) signal. |
 
 ## Stakeholders
 
@@ -291,6 +293,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 
 - **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
+- **R-tool-boot-cite-status** — *Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_boot_cite_status`]
 - **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
 - **R-tool-confront** — *the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_confront`]
@@ -306,6 +309,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
 - **R-tool-setup-context-hook** — *installs/removes the project-local hook that feeds tools/context_producer.py.* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_setup_context_hook`]
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]
+- **R-tool-spawn-log-isolation-status** — *reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_log_isolation_status`]
 - **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
 - **R-tool-what-now** — *derives the prioritized next correct action from any graph state, making being-lost structurally impossible.* [STRUCTURAL·tool · §Harness] [enforcer: (none)]
 

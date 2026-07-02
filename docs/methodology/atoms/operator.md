@@ -93,6 +93,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-boot-from-substrate (WHEN to cite). Citing anchors the reply in the live substrate, proving the operator actually loaded it and is not parroting from memory.
 
+## `R-boot-cite-measured` (ENFORCED)
+
+**Claim.** A Stop hook shall lexically check whether the first sentence of the operator's last reply in the transcript contains a typed anchor (R-/C-/A-/OP-/GOAL-/section-sign), logging the result to spec/.runtime/boot-cite-log.jsonl, checked as a form-level (not substance-level) signal.
+
+**Why.** R-boot-cite-in-first-sentence (PROSE) has never had any mechanical trace of compliance. tools/boot_cite_status.py's writer half reads the Stop hook's transcript_path payload, extracts the last assistant text block's first sentence, and lexically tests it for an anchor token; the reader half (compute_boot_cite_status) answers what fraction of the last N logged replies complied. HONESTY BOUNDARY, explicit in the tool docstring: this measures the citation RITUAL (a token-shaped string appears), never the citation's TRUTH (that the anchor is relevant or that graph reality was actually confronted) -- R-boot-cite-in-first-sentence itself stays PROSE/STRUCTURAL; this atom only claims the measurable slice exists and is tested.
+
+**Enforced by:** `test_tool_boot_cite_status.py::test_write_from_payload_cited_true`, `test_tool_boot_cite_status.py::test_compute_status_mixed_and_windowed`
+
 ## `R-boot-reload-three-facts` (ENFORCED)
 
 **Claim.** The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio.

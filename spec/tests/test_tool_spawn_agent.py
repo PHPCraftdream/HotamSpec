@@ -179,6 +179,48 @@ def test_spawn_log_written(
     assert isinstance(entry["prompt_chars"], int)
     assert entry["prompt_chars"] > 0
     assert "agent" in entry
+    # R-spawn-log-carries-isolation: default fields when --isolation/--mutating omitted.
+    assert entry["isolation"] == "shared"
+    assert entry["mutating"] is False
+
+
+def test_spawn_log_carries_isolation_and_mutating_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+) -> None:
+    """--isolation/--mutating flags are recorded verbatim on the log entry
+    (R-spawn-log-carries-isolation)."""
+    import spawn_agent
+
+    agent_dir = _make_agent(tmp_path, "iso-agent")
+    runtime_dir = tmp_path / ".runtime"
+
+    monkeypatch.setattr(spawn_agent, "_DOMAINS_ROOT", tmp_path)
+    monkeypatch.setattr(spawn_agent, "_LEGACY_AGENTS_ROOT", tmp_path / "agents")
+    monkeypatch.setattr(spawn_agent, "_RUNTIME_DIR", runtime_dir)
+
+    rc = spawn_agent.main(
+        [
+            str(agent_dir),
+            "--task",
+            "mutating task",
+            "--stamp",
+            "2026-07-02T00:00:00Z",
+            "--isolation",
+            "worktree",
+            "--mutating",
+        ]
+    )
+    assert rc == 0
+
+    log_path = runtime_dir / "spawn-log.jsonl"
+    entries = [
+        json.loads(line)
+        for line in log_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(entries) == 1
+    assert entries[0]["isolation"] == "worktree"
+    assert entries[0]["mutating"] is True
 
 
 def test_composite_prompt_deterministic(

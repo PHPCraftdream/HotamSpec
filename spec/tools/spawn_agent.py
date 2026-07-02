@@ -17,6 +17,17 @@ The composite is printed to stdout. Additionally, a JSONL entry is appended to
 spec/.runtime/spawn-log.jsonl for runtime observability (the directory and file
 are created on first use; they are gitignored, not committed substrate).
 
+Each entry also carries isolation ("worktree" | "shared", default "shared")
+and mutating (bool, default false) fields (R-spawn-log-carries-isolation),
+settable via --isolation/--mutating. This records ONLY what the caller
+declared at spawn time -- it is not a mechanical proof that a "worktree"
+isolation value corresponds to a real git worktree, nor that "mutating"
+correctly predicts file writes. The stronger claim (parallel mutating agents
+actually use worktree isolation in practice) is a separate, honestly-scoped
+atom: R-parallel-mutating-agents-use-worktree (see
+tools/spawn_log_isolation_status.py for its structural reader, which can only
+check the log's internal consistency, not runtime truth).
+
 DETERMINISM: no timestamps are produced inside the tool. The caller MUST pass
 --stamp (an ISO 8601 string from outside) so that successive runs over the same
 inputs produce identical stdout bytes (R-deterministic-generation). The tool
@@ -139,8 +150,19 @@ def _append_spawn_log(
     agent_path: Path,
     task: str,
     prompt: str,
+    *,
+    isolation: str = "shared",
+    mutating: bool = False,
 ) -> None:
-    """Append a JSON line to <runtime_dir>/spawn-log.jsonl."""
+    """Append a JSON line to <runtime_dir>/spawn-log.jsonl.
+
+    isolation/mutating (R-spawn-log-carries-isolation): every entry records
+    whether the spawned agent ran in an isolated worktree ("worktree") or the
+    shared working tree ("shared"), and whether the caller declared the task
+    as mutating (touches tracked files) or not. Defaults (shared/false) match
+    the pre-existing behavior for callers that do not pass the new flags, so
+    this is additive, not a breaking format change.
+    """
     runtime_dir.mkdir(parents=True, exist_ok=True)
     log_path = runtime_dir / "spawn-log.jsonl"
     first_line = task.splitlines()[0] if task.strip() else ""
@@ -149,6 +171,8 @@ def _append_spawn_log(
         "agent": agent_path.as_posix(),
         "task_first_line": first_line,
         "prompt_chars": len(prompt),
+        "isolation": isolation,
+        "mutating": mutating,
     }
     with log_path.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -187,6 +211,24 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "ISO 8601 timestamp for the spawn-log entry. REQUIRED for "
             "deterministic output (R-deterministic-generation)."
+        ),
+    )
+    parser.add_argument(
+        "--isolation",
+        choices=("shared", "worktree"),
+        default="shared",
+        help=(
+            "Whether the spawned agent runs in an isolated worktree or the "
+            "shared working tree (R-spawn-log-carries-isolation). Default: shared."
+        ),
+    )
+    parser.add_argument(
+        "--mutating",
+        action="store_true",
+        default=False,
+        help=(
+            "Declare that this task is expected to mutate tracked files "
+            "(R-spawn-log-carries-isolation). Default: false."
         ),
     )
     args = parser.parse_args(argv)
@@ -245,7 +287,15 @@ def main(argv: list[str] | None = None) -> int:
     print(prompt, end="")
 
     # --- Write spawn log ---
-    _append_spawn_log(_RUNTIME_DIR, args.stamp, agent_dir, args.task, prompt)
+    _append_spawn_log(
+        _RUNTIME_DIR,
+        args.stamp,
+        agent_dir,
+        args.task,
+        prompt,
+        isolation=args.isolation,
+        mutating=args.mutating,
+    )
 
     return 0
 

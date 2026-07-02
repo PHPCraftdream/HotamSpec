@@ -3599,6 +3599,26 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_scoped_node_has_single_presenter", "test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter",),
         ),
+        Requirement(
+            id="R-spawn-log-carries-isolation",
+            claim=("Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating."),
+            owner="ai-agent",
+            status="SETTLED",
+            why=("Wave 5 (measurable slices of discipline): the spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-runtime) but not the isolation posture under which a sub-agent ran, so a parallel-mutating-agent hazard had no trace at all. spawn_agent.py's freeze under R-speculative-aspects-frozen was PARTIALLY lifted by explicit steward act (GO given for Wave 5) to add these two additive CLI flags (--isolation, --mutating) and log fields, backward-compatible with every pre-existing caller. This is the writer half; the honest reader half (R-parallel-mutating-agents-use-worktree) is a separate atom because it can only check log-internal consistency, not runtime concurrency."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=ENFORCED,
+            enforced_by=("test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields",),
+        ),
+        Requirement(
+            id="R-boot-cite-measured",
+            claim=("A Stop hook shall lexically check whether the first sentence of the operator's last reply in the transcript contains a typed anchor (R-/C-/A-/OP-/GOAL-/section-sign), logging the result to spec/.runtime/boot-cite-log.jsonl, checked as a form-level (not substance-level) signal."),
+            owner="ai-agent",
+            status="SETTLED",
+            why=("R-boot-cite-in-first-sentence (PROSE) has never had any mechanical trace of compliance. tools/boot_cite_status.py's writer half reads the Stop hook's transcript_path payload, extracts the last assistant text block's first sentence, and lexically tests it for an anchor token; the reader half (compute_boot_cite_status) answers what fraction of the last N logged replies complied. HONESTY BOUNDARY, explicit in the tool docstring: this measures the citation RITUAL (a token-shaped string appears), never the citation's TRUTH (that the anchor is relevant or that graph reality was actually confronted) -- R-boot-cite-in-first-sentence itself stays PROSE/STRUCTURAL; this atom only claims the measurable slice exists and is tested."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=ENFORCED,
+            enforced_by=("test_tool_boot_cite_status.py::test_write_from_payload_cited_true", "test_tool_boot_cite_status.py::test_compute_status_mixed_and_windowed",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

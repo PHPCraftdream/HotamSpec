@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 164 / SETTLED 192; closeable debt 10; inherent discipline 18; DRAFT 7; OPEN 0; REJECTED 31.**
+**Burn-down: SETTLED-ENFORCED 166 / SETTLED 194; closeable debt 10; inherent discipline 18; DRAFT 7; OPEN 0; REJECTED 31.**
 
 ---
 
@@ -224,6 +224,8 @@ judgment calls no check_* could ever verify.
 | `R-scope-is-projection` | test_scope_projection.py::test_project_scope_selects_by_prefix, test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly | An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node. |
 | `R-scope-overlap-generated` | test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption, test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty | When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged. |
 | `R-overlap-single-presenter` | check_scoped_node_has_single_presenter, test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter | Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter. |
+| `R-spawn-log-carries-isolation` | test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields | Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree\|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating. |
+| `R-boot-cite-measured` | test_tool_boot_cite_status.py::test_write_from_payload_cited_true, test_tool_boot_cite_status.py::test_compute_status_mixed_and_windowed | A Stop hook shall lexically check whether the first sentence of the operator's last reply in the transcript contains a typed anchor (R-/C-/A-/OP-/GOAL-/section-sign), logging the result to spec/.runtime/boot-cite-log.jsonl, checked as a form-level (not substance-level) signal. |
 
 ## DRAFT (not yet promoted)
 

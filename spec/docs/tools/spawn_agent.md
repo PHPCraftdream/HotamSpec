@@ -30,6 +30,17 @@ The composite is printed to stdout. Additionally, a JSONL entry is appended to
 spec/.runtime/spawn-log.jsonl for runtime observability (the directory and file
 are created on first use; they are gitignored, not committed substrate).
 
+Each entry also carries isolation ("worktree" | "shared", default "shared")
+and mutating (bool, default false) fields (R-spawn-log-carries-isolation),
+settable via --isolation/--mutating. This records ONLY what the caller
+declared at spawn time -- it is not a mechanical proof that a "worktree"
+isolation value corresponds to a real git worktree, nor that "mutating"
+correctly predicts file writes. The stronger claim (parallel mutating agents
+actually use worktree isolation in practice) is a separate, honestly-scoped
+atom: R-parallel-mutating-agents-use-worktree (see
+tools/spawn_log_isolation_status.py for its structural reader, which can only
+check the log's internal consistency, not runtime truth).
+
 DETERMINISM: no timestamps are produced inside the tool. The caller MUST pass
 --stamp (an ISO 8601 string from outside) so that successive runs over the same
 inputs produce identical stdout bytes (R-deterministic-generation). The tool
@@ -49,19 +60,27 @@ Examples:
 ## CLI usage
 
 ```
-usage: spawn_agent [-h] --task TASK [--stamp STAMP] agent_path
+usage: spawn_agent [-h] --task TASK [--stamp STAMP]
+                   [--isolation {shared,worktree}] [--mutating]
+                   agent_path
 
 Compose a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal,
 so the subagent boots from substrate.
 
 positional arguments:
-  agent_path     Path to the agent directory (absolute, relative from repo
-                 root, or a trailing path suffix like 'director/framework-
-                 agent').
+  agent_path            Path to the agent directory (absolute, relative from
+                        repo root, or a trailing path suffix like
+                        'director/framework-agent').
 
 options:
-  -h, --help     show this help message and exit
-  --task TASK    The task description to append after the crystal.
-  --stamp STAMP  ISO 8601 timestamp for the spawn-log entry. REQUIRED for
-                 deterministic output (R-deterministic-generation).
+  -h, --help            show this help message and exit
+  --task TASK           The task description to append after the crystal.
+  --stamp STAMP         ISO 8601 timestamp for the spawn-log entry. REQUIRED
+                        for deterministic output (R-deterministic-generation).
+  --isolation {shared,worktree}
+                        Whether the spawned agent runs in an isolated worktree
+                        or the shared working tree (R-spawn-log-carries-
+                        isolation). Default: shared.
+  --mutating            Declare that this task is expected to mutate tracked
+                        files (R-spawn-log-carries-isolation). Default: false.
 ```

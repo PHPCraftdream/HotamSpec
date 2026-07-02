@@ -1,10 +1,10 @@
 {
-  "_comment": "Canon: §Invariants -- baseline sha256 hashes for the R-speculative-aspects-frozen file set (Entity aspect, multi-domain federation, sub-agent recursion machinery). Enforced by test_frozen_aspects_snapshot.py. Changing a file below requires an explicit steward act: review the change, then regenerate this baseline (see test module docstring for the exact regen command). This file is the unfreezing ritual's paper trail -- a red test here means 'inward development happened on a frozen surface without a recorded steward decision', not 'something is broken'.",
+  "_comment": "Canon: §Invariants -- hash-baseline guard for R-speculative-aspects-frozen. UPDATED 2026-07-02 (Wave 5): tools/spawn_agent.py partially unfrozen by explicit steward act (GO given: \"delai vse bez ostanovki v storonu sovershenstva\") to add isolation/mutating fields to spawn-log entries per R-spawn-log-carries-isolation -- a narrow, additive CLI-flag change (new --isolation/--mutating args, default shared/false, backward compatible), not general inward development on the sub-agent recursion machinery. The freeze on spawn_agent.py otherwise continues to hold for its core agent-resolution/prompt-composition logic.",
   "files": {
     "src/hotam_spec/entity.py": "c859f43180db20e9bc785901e073886dcfefbb70a6e3038f047c744109fa3efe",
     "tools/create_agent.py": "71bc7c93a93ef081edb4de51130769aa78258bae156214a5376b02f423722c46",
     "tools/create_domain.py": "57307c7df674f618dc0b735824148b7774e6b3634c4c8908f3254f60962f6079",
     "tools/invoke_agent.py": "e74b194056056e24d96163386f10648e8e81487a844b01d347dac1f958ba7a07",
-    "tools/spawn_agent.py": "39929b3e996d54a5bc05598884fde5050646465014542fe13e00cb6692a8e63f"
+    "tools/spawn_agent.py": "7591bcdeec325b78876564803a63bffd272c2868029826e3014b7514aecdf174"
   }
 }
