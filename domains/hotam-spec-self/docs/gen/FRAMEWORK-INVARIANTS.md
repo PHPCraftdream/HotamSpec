@@ -115,7 +115,7 @@ Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of
 - R-enforced-names-enforcer — An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. [E]
 - R-entities-md-generated — domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spe… [E]
 - R-entity-checks-by-iteration — The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_… [E]
-- R-entity-derived-requirement — Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain… [S]
+- R-entity-derived-requirement — Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain… [E]
 - R-entity-field-kind-known — Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string | number | enum | reference | stat… [E]
 - R-entity-instance-id-prefix — Every EntityInstance.id shall start with 'ENT-<entity_type>-' (typed-anchor discipline). [E]
 - R-entity-instance-refs-resolve — Every EntityInstance reference field shall resolve in the graph according to its ref_target. [E]

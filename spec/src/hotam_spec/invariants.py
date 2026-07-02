@@ -2414,6 +2414,93 @@ def check_entities_md_lists_all_types(g: TensionGraph) -> list[Violation]:  # no
     return out
 
 
+def check_entity_type_constitution_projection(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
+    """Canon: §Entity / §Invariants — every declared EntityType appears as R-entity-<slug> in FRAMEWORK-INVARIANTS.md.
+
+    RULE: for each domain in domains/<name>/ whose graph.py declares entity_types,
+    the corresponding domains/<name>/docs/gen/FRAMEWORK-INVARIANTS.md MUST contain
+    a row naming 'R-entity-<slug>' for every EntityType slug in that domain's
+    graph. A new EntityType without a projected R-entity-<slug> row in
+    FRAMEWORK-INVARIANTS.md would silently disappear from the operator's boot
+    sequence — the same R-drift-structurally-impossible guarantee
+    check_entities_md_lists_all_types gives ENTITIES.md, applied to
+    FRAMEWORK-INVARIANTS.md instead. NOTE: entity-derived requirements project
+    into FRAMEWORK-INVARIANTS.md, NOT the root CONSTITUTION.md block — they are
+    framework-plumbing, relocated out of CONSTITUTION.md by gen_spec.py's
+    build_framework_invariants/_render_constitution_block split (see
+    test_entity_constitution_section_appears_when_types_present, which asserts
+    R-entity-<slug> is ABSENT from the root CONSTITUTION block).
+
+    WHY a sibling check, not a merge into check_entities_md_lists_all_types:
+    the two checks cover two DISTINCT generated docs (ENTITIES.md vs
+    FRAMEWORK-INVARIANTS.md) driven by two distinct requirements
+    (R-entities-md-generated vs R-entity-derived-requirement) —
+    R-requirement-claim-is-atomic forbids one check verifying two unrelated
+    claims.
+
+    WHY walks domains (not the passed graph): filesystem-coherence check on
+    the committed generated docs, same shape as check_entities_md_lists_all_types
+    (see that function's WHY for the full rationale on graph-argument unused).
+    """
+    domains_root = _DOMAINS_ROOT_FOR_ENTITY_CHECK
+    if not domains_root.exists():
+        return []
+
+    import importlib.util as _ilu  # noqa: PLC0415
+
+    out: list[Violation] = []
+
+    for domain_dir in sorted(domains_root.iterdir()):
+        if not domain_dir.is_dir() or domain_dir.name.startswith("_"):
+            continue
+
+        domain_graph_py = domain_dir / "graph.py"
+        if not domain_graph_py.exists():
+            continue
+        try:
+            _spec = _ilu.spec_from_file_location(
+                f"_entity_ctor_check_domain_{domain_dir.name}_graph", domain_graph_py
+            )
+            if _spec is None or _spec.loader is None:
+                continue
+            _mod = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_mod)  # type: ignore[union-attr]
+            dg: TensionGraph = _mod.build_graph()
+        except Exception:
+            continue  # Malformed graph — handled by other domain-manifest checks.
+
+        if not dg.entity_types:
+            continue  # §Entity aspect not activated in this domain.
+
+        framework_invariants_md = domain_dir / "docs" / "gen" / "FRAMEWORK-INVARIANTS.md"
+        if not framework_invariants_md.exists():
+            for et in dg.entity_types:
+                out.append(
+                    Violation(
+                        "check_entity_type_constitution_projection",
+                        et.slug,
+                        f"EntityType '{et.slug}' in domain '{domain_dir.name}' not "
+                        f"projected as R-entity-{et.slug} in FRAMEWORK-INVARIANTS.md "
+                        f"(file does not exist — run gen_spec.py)",
+                    )
+                )
+            continue
+
+        content = framework_invariants_md.read_text(encoding="utf-8")
+        for et in dg.entity_types:
+            if f"R-entity-{et.slug}" not in content:
+                out.append(
+                    Violation(
+                        "check_entity_type_constitution_projection",
+                        et.slug,
+                        f"EntityType '{et.slug}' in domain '{domain_dir.name}' has no "
+                        f"'R-entity-{et.slug}' row in FRAMEWORK-INVARIANTS.md "
+                        f"(run gen_spec.py to regenerate — R-drift-structurally-impossible)",
+                    )
+                )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # 15. Section-anchor coherence — every §-token in framework docstrings is known
 # ---------------------------------------------------------------------------
@@ -3454,6 +3541,11 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "filesystem walk across all domains' generated docs, not a graph-field check",
     ),
     InvariantClassification(
+        "check_entity_type_constitution_projection",
+        BESPOKE,
+        "filesystem walk across all domains' generated CONSTITUTION.md, not a graph-field check",
+    ),
+    InvariantClassification(
         "check_entity_instance_required_fields",
         BESPOKE,
         "iterates the EntityType's own field schema per instance, not a fixed field/registry pair",
@@ -3702,6 +3794,7 @@ ALL_INVARIANTS = (
     check_entity_field_kind_known,
     check_typed_anchors_entity,
     check_entities_md_lists_all_types,
+    check_entity_type_constitution_projection,
     check_section_anchors_known,
     check_bijection_r_to_enforcer,
     # §Domain + §Agent filesystem invariants (P17 task #64)

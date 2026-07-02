@@ -229,6 +229,13 @@ substrate (R-history-from-rejected-markers).
 - **rationale:** the dependency graph decides — parallelize independent components, sequence coupled chains; cut the domain along lines of independence, never arbitrarily.
 - **shared assumption:** `A-finite-context-operators`
 
+### `C-be22cdd1` — axis `core-vs-aspect`
+
+- **context:** R-speculative-aspects-frozen freezes the Entity aspect (no inward development until a real business domain demonstrates concrete need), while R-entity-derived-requirement's own enforcement expects EntityType declarations to keep projecting into the domain's CLAUDE.md CONSTITUTION block -- new domain content under the Entity aspect is exactly the kind of inward development the freeze forbids, yet the aspect's enforceability claim presumes it stays live enough to receive new EntityType projections as domains populate it.
+- **members:** `R-speculative-aspects-frozen`, `R-entity-derived-requirement`
+- **steward:** `framework-reviewer`
+- **rationale:** chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 ("все вопросы решай в сторону совершенства")
+
 ## Parked decisions (REVISIT_WHEN)
 
 _None._

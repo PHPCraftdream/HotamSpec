@@ -236,3 +236,135 @@ def test_entity_constitution_section_absent_when_no_types() -> None:
     assert "Entity-derived requirements" not in block, (
         "root CONSTITUTION block must never include entity-derived section"
     )
+
+
+# ---------------------------------------------------------------------------
+# 7. check_entity_type_constitution_projection — no types → []; missing row fires;
+#    projected row (in FRAMEWORK-INVARIANTS.md, NOT CONSTITUTION.md) passes.
+# ---------------------------------------------------------------------------
+
+
+def test_check_entity_type_constitution_projection_no_types() -> None:
+    """A domain with no entity_types -> check_entity_type_constitution_projection returns []."""
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.invariants import (  # noqa: PLC0415
+        check_entity_type_constitution_projection,
+    )
+
+    g = TensionGraph()  # no entity_types
+    violations = check_entity_type_constitution_projection(g)
+    assert violations == [], (
+        f"Expected no violations for empty domain, got: {violations}"
+    )
+
+
+def _write_synthetic_entity_domain(tmp_path: Path) -> Path:
+    """Write domains/test-domain/graph.py declaring one EntityType('foo', ...)."""
+    domain_dir = tmp_path / "domains" / "test-domain"
+    gen_dir = domain_dir / "docs" / "gen"
+    gen_dir.mkdir(parents=True)
+
+    graph_src = """\
+from hotam_spec.axis import Axis
+from hotam_spec.entity import EntityType
+from hotam_spec.graph import TensionGraph
+from hotam_spec.lifecycle import Lifecycle, State, Transition
+from hotam_spec.stakeholder import Stakeholder
+
+def build_graph():
+    lc = Lifecycle(
+        slug='foo-lc',
+        states=(State('ACTIVE', 'initial'), State('CLOSED', 'terminal')),
+        transitions=(Transition('ACTIVE', 'CLOSED', 'close'),),
+    )
+    et = EntityType(slug='foo', description='Foo entity.', lifecycle=lc)
+    return TensionGraph(
+        axes=(Axis(slug='s-vs-q', description='speed vs quality'),),
+        stakeholders=(Stakeholder(id='owner', name='Owner', domain='test'),),
+        entity_types=(et,),
+    )
+"""
+    (domain_dir / "graph.py").write_text(graph_src, encoding="utf-8")
+    return domain_dir
+
+
+def test_check_entity_type_constitution_projection_missing_row_fires(
+    tmp_path: Path,
+) -> None:
+    """EntityType declared but R-entity-foo absent from FRAMEWORK-INVARIANTS.md -> 1 Violation.
+
+    Regression guard: this check must inspect FRAMEWORK-INVARIANTS.md (where
+    gen_spec.py's build_framework_invariants actually projects R-entity-<slug>
+    rows — see test_entity_constitution_section_appears_when_types_present,
+    which asserts R-entity-<slug> is projected to FRAMEWORK-INVARIANTS.md and
+    explicitly ABSENT from the root CONSTITUTION block). A version of this
+    check that inspected CONSTITUTION.md instead would never see a
+    passing case once entity_types are populated, silently mis-diagnosing
+    a correctly-projected domain as a violation forever (false-negative on
+    the honesty guarantee R-entity-derived-requirement exists to provide).
+    """
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.invariants import (  # noqa: PLC0415
+        check_entity_type_constitution_projection,
+    )
+
+    domain_dir = _write_synthetic_entity_domain(tmp_path)
+    gen_dir = domain_dir / "docs" / "gen"
+
+    # FRAMEWORK-INVARIANTS.md exists but has no R-entity-foo row.
+    (gen_dir / "FRAMEWORK-INVARIANTS.md").write_text(
+        "# Framework Invariants\n\n_(nothing here)_\n", encoding="utf-8"
+    )
+
+    import hotam_spec.invariants as _inv  # noqa: PLC0415
+
+    orig = _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK
+    try:
+        _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK = tmp_path / "domains"
+        violations = check_entity_type_constitution_projection(TensionGraph())
+    finally:
+        _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK = orig
+
+    assert len(violations) == 1, f"Expected 1 violation, got: {violations}"
+    assert violations[0].target == "foo"
+    assert "R-entity-foo" in violations[0].message
+    assert "FRAMEWORK-INVARIANTS.md" in violations[0].message
+
+
+def test_check_entity_type_constitution_projection_row_present_passes(
+    tmp_path: Path,
+) -> None:
+    """EntityType declared AND R-entity-foo present in FRAMEWORK-INVARIANTS.md -> [].
+
+    Positive counterpart to the missing-row test: proves the check is not
+    vacuously green — it can both fire and pass once entity_types are
+    non-empty, against the correct file.
+    """
+    from hotam_spec.graph import TensionGraph  # noqa: PLC0415
+    from hotam_spec.invariants import (  # noqa: PLC0415
+        check_entity_type_constitution_projection,
+    )
+
+    domain_dir = _write_synthetic_entity_domain(tmp_path)
+    gen_dir = domain_dir / "docs" / "gen"
+
+    (gen_dir / "FRAMEWORK-INVARIANTS.md").write_text(
+        "# Framework Invariants\n\n- R-entity-foo — Foo entity. [E]\n",
+        encoding="utf-8",
+    )
+    # A CONSTITUTION.md that does NOT contain the row must NOT cause a
+    # false failure — the check must not be looking at this file.
+    (gen_dir / "CONSTITUTION.md").write_text(
+        "# Constitution\n\n_(no entity rows here by design)_\n", encoding="utf-8"
+    )
+
+    import hotam_spec.invariants as _inv  # noqa: PLC0415
+
+    orig = _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK
+    try:
+        _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK = tmp_path / "domains"
+        violations = check_entity_type_constitution_projection(TensionGraph())
+    finally:
+        _inv._DOMAINS_ROOT_FOR_ENTITY_CHECK = orig
+
+    assert violations == [], f"Expected no violations, got: {violations}"

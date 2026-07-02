@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 166 / SETTLED 194; closeable debt 10; inherent discipline 18; DRAFT 7; OPEN 0; REJECTED 31.**
+**Burn-down: SETTLED-ENFORCED 167 / SETTLED 194; closeable debt 9; inherent discipline 18; DRAFT 7; OPEN 0; REJECTED 31.**
 
 ---
 
@@ -30,7 +30,6 @@ judgment calls no check_* could ever verify.
 | `R-check-method-is-atomic` | STRUCTURAL | `framework-reviewer` | Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions. |
 | `R-dependency-drives-parallel` | STRUCTURAL | `framework-author` | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
 | `R-dependency-drives-sequential` | STRUCTURAL | `framework-author` | Dependency chains in the network shall be processed sequentially. |
-| `R-entity-derived-requirement` | STRUCTURAL | `framework-author` | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
 | `R-trust-anchor-delegation-explicit-only` | PROSE | `framework-author` | Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
@@ -182,6 +181,7 @@ judgment calls no check_* could ever verify.
 | `R-method-matches-docstring` | check_method_matches_docstring | Each check_* function in hotam_spec.invariants.ALL_INVARIANTS shall have a docstring whose RULE line shares non-trivial lexical overlap with its body's Violation messages. |
 | `R-root-claude-md-is-sentinel-only` | test_root_claude_md_is_sentinel_only.py | The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels. |
 | `R-entities-md-generated` | check_entities_md_lists_all_types | domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
+| `R-entity-derived-requirement` | check_entity_type_constitution_projection | Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it. |
 | `R-entity-is-declarative` | test_content_free.py::test_no_domain_instances_in_tensio_src | The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph(). |
 | `R-entity-reuses-lifecycle` | check_entity_type_lifecycle_wellformed, test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks | Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced. |
 | `R-entity-checks-by-iteration` | test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks | The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type. |

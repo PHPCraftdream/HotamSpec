@@ -157,3 +157,32 @@ the invariant is run against an in-memory fixture (e.g. seed_graph()).
 
 WHY aspect-gated per domain: a domain with no entity_types need not have any
 ## type sections in its ENTITIES.md.
+
+## From `spec/src/hotam_spec/invariants.py::check_entity_type_constitution_projection`
+
+Canon: §Entity / §Invariants — every declared EntityType appears as R-entity-<slug> in FRAMEWORK-INVARIANTS.md.
+
+RULE: for each domain in domains/<name>/ whose graph.py declares entity_types,
+the corresponding domains/<name>/docs/gen/FRAMEWORK-INVARIANTS.md MUST contain
+a row naming 'R-entity-<slug>' for every EntityType slug in that domain's
+graph. A new EntityType without a projected R-entity-<slug> row in
+FRAMEWORK-INVARIANTS.md would silently disappear from the operator's boot
+sequence — the same R-drift-structurally-impossible guarantee
+check_entities_md_lists_all_types gives ENTITIES.md, applied to
+FRAMEWORK-INVARIANTS.md instead. NOTE: entity-derived requirements project
+into FRAMEWORK-INVARIANTS.md, NOT the root CONSTITUTION.md block — they are
+framework-plumbing, relocated out of CONSTITUTION.md by gen_spec.py's
+build_framework_invariants/_render_constitution_block split (see
+test_entity_constitution_section_appears_when_types_present, which asserts
+R-entity-<slug> is ABSENT from the root CONSTITUTION block).
+
+WHY a sibling check, not a merge into check_entities_md_lists_all_types:
+the two checks cover two DISTINCT generated docs (ENTITIES.md vs
+FRAMEWORK-INVARIANTS.md) driven by two distinct requirements
+(R-entities-md-generated vs R-entity-derived-requirement) —
+R-requirement-claim-is-atomic forbids one check verifying two unrelated
+claims.
+
+WHY walks domains (not the passed graph): filesystem-coherence check on
+the committed generated docs, same shape as check_entities_md_lists_all_types
+(see that function's WHY for the full rationale on graph-argument unused).
