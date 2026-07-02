@@ -106,6 +106,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os as _os
 import subprocess
 import sys
 from pathlib import Path
@@ -135,13 +136,28 @@ from hotam_spec.proposal import (  # noqa: E402
 
 _SLUG_RE = _re.compile(r"^[a-z][a-z0-9-]*$")
 _DOMAINS_ROOT = _SPEC_ROOT.parent / "domains"
+#: Pin file naming the default active domain when HOTAM_SPEC_ACTIVE_DOMAIN is
+#: unset. Lives at domains/.active-domain — COMMITTED (unlike spec/.runtime/,
+#: which is gitignored ephemera) so the default is a deliberate, versioned
+#: decision. Same repo path as gen_spec.py::_ACTIVE_DOMAIN_PIN_FILE and
+#: hotam_spec.graph._ACTIVE_DOMAIN_PIN_FILE (R-active-domain-pin-not-alphabetical).
+_ACTIVE_DOMAIN_PIN_FILE = _SPEC_ROOT.parent / "domains" / ".active-domain"
 
 
 def _resolve_content_graph() -> "Path":
-    """Return the active graph.py: domains/<first>/graph.py or legacy spec/content/graph.py.
+    """Return the active graph.py: domains/<active>/graph.py or legacy spec/content/graph.py.
 
-    Mirrors gen_spec.py::_resolve_active_content_dir() so both tools target
-    the same file when a domain is present.
+    RULE: resolution order is (1) HOTAM_SPEC_ACTIVE_DOMAIN env var (must name
+    an existing domains/<name>/ dir), (2) spec/.runtime/active-domain pin
+    file (must name an existing domains/<name>/ dir), (3) the first domain
+    alphabetically. Mirrors hotam_spec.graph._active_domain_graph_file()'s
+    and gen_spec.py::_select_active_domain_dir()'s resolution order exactly,
+    so all three tools agree on which domain is active when more than one
+    domain exists (previously this function ignored the env var entirely and
+    always wrote to the alphabetically-first domain's graph.py, silently
+    mis-targeting proposals when a second domain sorted first; the pin file
+    closes the follow-up gap where even the env-var-aware version still fell
+    back to a silent alphabetical default with no committed record of intent).
     """
     if _DOMAINS_ROOT.exists():
         domain_dirs = sorted(
@@ -150,6 +166,17 @@ def _resolve_content_graph() -> "Path":
             if d.is_dir() and not d.name.startswith("_")
         )
         if domain_dirs:
+            env_domain = _os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN", "").strip()
+            if env_domain:
+                for d in domain_dirs:
+                    if d.name == env_domain:
+                        return d / "graph.py"
+            if _ACTIVE_DOMAIN_PIN_FILE.exists():
+                pinned = _ACTIVE_DOMAIN_PIN_FILE.read_text(encoding="utf-8").strip()
+                if pinned:
+                    for d in domain_dirs:
+                        if d.name == pinned:
+                            return d / "graph.py"
             return domain_dirs[0] / "graph.py"
     return _SPEC_ROOT / "content" / "graph.py"
 

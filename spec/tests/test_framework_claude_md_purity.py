@@ -42,14 +42,73 @@ def _extract_block(text: str, begin: str, end: str) -> str | None:
 
 
 def test_exactly_one_claude_md_in_repo() -> None:
-    """Exactly one CLAUDE.md file shall exist in the whole repo (repo root)."""
+    """CLAUDE.md consolidation is CONDITIONAL on domain count, not absolute.
+
+    RULE + WHY (R-claude-md-consolidates-when-single-agent, see
+    domains/hotam-spec-self/docs/gen/REQUIREMENTS.md for the exact claim
+    text): the requirement itself is conditional -- "one domain, zero active
+    sub-agents -> exactly ONE CLAUDE.md" -- not an unconditional repo-wide
+    ban on more than one CLAUDE.md file. That condition held when this test
+    was first written (single domain, hotam-spec-self, P22.C consolidation)
+    but stopped holding the moment a second domain (hotam-dev) was seated:
+    RECENTLY-REJECTED already records two prior attempts to make this claim
+    unconditional (R-domain-owns-claude-md, R-framework-claude-md-is-domain-
+    free) -- both rejected as replaced by the consolidates-when-single-agent
+    condition. Re-asserting an absolute one-CLAUDE.md-in-the-repo rule here
+    would just be a third attempt at the same rejected claim wearing a test
+    instead of a requirement.
+
+    With exactly one domain: the old strict rule holds unchanged -- exactly
+    one CLAUDE.md, at repo root.
+
+    With >= 2 domains: legitimate crystals are root CLAUDE.md (the active
+    domain, R-crystal-is-claude-md) plus, per domain, domains/<name>/CLAUDE.md
+    and domains/<name>/agents/director/CLAUDE.md (the create_domain.py /
+    create_agent.py scaffold outputs -- see spec/tools/create_domain.py and
+    spec/tools/create_agent.py). Anything else (in particular a CLAUDE.md
+    anywhere under spec/) remains forbidden -- spec/ is the content-free
+    framework body and must never carry a domain-specific crystal
+    (R-content-free-no-business-data).
+    """
     found = [
         p
         for p in REPO_ROOT.rglob("CLAUDE.md")
         if ".venv" not in p.parts and "node_modules" not in p.parts
     ]
-    assert found == [ROOT_CLAUDE_MD], (
-        f"Expected exactly one CLAUDE.md at {ROOT_CLAUDE_MD}, found: {found}"
+
+    domains_root = REPO_ROOT / "domains"
+    domain_dirs = sorted(
+        d for d in domains_root.iterdir() if d.is_dir() and not d.name.startswith("_")
+    ) if domains_root.exists() else []
+
+    # Forbidden everywhere, regardless of domain count: spec/ is content-free.
+    spec_root = REPO_ROOT / "spec"
+    stray = [p for p in found if spec_root in p.parents]
+    assert stray == [], (
+        f"CLAUDE.md must never live under spec/ (content-free framework body): {stray}"
+    )
+
+    if len(domain_dirs) <= 1:
+        assert found == [ROOT_CLAUDE_MD], (
+            f"Single-domain state: expected exactly one CLAUDE.md at "
+            f"{ROOT_CLAUDE_MD}, found: {found}"
+        )
+        return
+
+    allowed = {ROOT_CLAUDE_MD}
+    for d in domain_dirs:
+        allowed.add(d / "CLAUDE.md")
+        allowed.add(d / "agents" / "director" / "CLAUDE.md")
+
+    unexpected = [p for p in found if p not in allowed]
+    assert unexpected == [], (
+        f"Multi-domain state ({[d.name for d in domain_dirs]}): found CLAUDE.md "
+        f"files outside the legitimate set (root + per-domain + per-domain "
+        f"director): {unexpected}"
+    )
+    assert ROOT_CLAUDE_MD in found, (
+        f"Root CLAUDE.md ({ROOT_CLAUDE_MD}) must always be present as the "
+        f"active-domain crystal."
     )
 
 

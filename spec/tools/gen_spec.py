@@ -57,20 +57,74 @@ CLAUDE_MD_TEMPLATE = REPO_ROOT / "CLAUDE.md.template.txt"
 DOMAINS_ROOT = REPO_ROOT / "domains"
 
 
+def _sorted_domain_dirs() -> list[Path]:
+    """Return domains/*/ dirs sorted alphabetically (helper, no env resolution)."""
+    if not DOMAINS_ROOT.exists():
+        return []
+    return sorted(
+        d for d in DOMAINS_ROOT.iterdir() if d.is_dir() and not d.name.startswith("_")
+    )
+
+
+#: Pin file naming the default active domain when HOTAM_SPEC_ACTIVE_DOMAIN is
+#: unset. Lives at domains/.active-domain (sibling to the domain dirs it
+#: chooses between) rather than under spec/.runtime/, because spec/.runtime/
+#: is gitignored ephemera (R-task-spawn-log-runtime) and the whole point of
+#: the pin is to be a COMMITTED, version-controlled decision, not a local
+#: transient. Mirrors hotam_spec.graph._ACTIVE_DOMAIN_PIN_FILE exactly (same
+#: repo path) so every resolver in the repo agrees on the same deterministic
+#: default (R-active-domain-pin-not-alphabetical).
+_ACTIVE_DOMAIN_PIN_FILE = REPO_ROOT / "domains" / ".active-domain"
+
+
+def _select_active_domain_dir(domain_dirs: list[Path]) -> Path | None:
+    """Pick the active domain dir from an already-sorted list.
+
+    RULE: resolution order is (1) HOTAM_SPEC_ACTIVE_DOMAIN env var (must name
+    one of the given dirs), (2) spec/.runtime/active-domain pin file (must
+    name one of the given dirs), (3) the first domain alphabetically. Shared
+    by every _resolve_active_*() helper below so GEN_DIR / CONTENT_DIR / the
+    agents root and the ROLE-block scope_label never disagree about which
+    domain is active (mirrors hotam_spec.graph._active_domain_graph_file()'s
+    order).
+
+    WHY a pin file ahead of the alphabetical fallback: with exactly one
+    domain, "first alphabetically" and "the intended domain" always coincide
+    and the fallback is invisible. With >= 2 domains it stops being harmless:
+    a newly-created domain can sort before the long-lived one and silently
+    become "active" for anyone who forgot to export the env var, clobbering
+    the root CLAUDE.md and the AGENT-MAP/gen targets (observed: hotam-dev
+    sorts before hotam-spec-self). The pin file makes the default an
+    explicit, committed, version-controlled decision instead of an accident
+    of string ordering; alphabetical remains the last-resort fallback for a
+    fresh repo with no pin file yet (R-agent-never-lost still holds — there
+    is always SOME deterministic answer).
+    """
+    if not domain_dirs:
+        return None
+    env_domain = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN", "").strip()
+    if env_domain:
+        for d in domain_dirs:
+            if d.name == env_domain:
+                return d
+    if _ACTIVE_DOMAIN_PIN_FILE.exists():
+        pinned = _ACTIVE_DOMAIN_PIN_FILE.read_text(encoding="utf-8").strip()
+        if pinned:
+            for d in domain_dirs:
+                if d.name == pinned:
+                    return d
+    return domain_dirs[0]
+
+
 def _resolve_active_gen_dir() -> Path:
-    """Return the active gen dir: domains/<first>/docs/gen/ or legacy docs/gen/.
+    """Return the active gen dir: domains/<active>/docs/gen/ or legacy docs/gen/.
 
     Computed once at import time for backward-compat with tests that reference
     gen_spec.REQUIREMENTS_MD etc. as module-level paths.
     """
-    if DOMAINS_ROOT.exists():
-        domain_dirs = sorted(
-            d
-            for d in DOMAINS_ROOT.iterdir()
-            if d.is_dir() and not d.name.startswith("_")
-        )
-        if domain_dirs:
-            return domain_dirs[0] / "docs" / "gen"
+    active = _select_active_domain_dir(_sorted_domain_dirs())
+    if active is not None:
+        return active / "docs" / "gen"
     return REPO_ROOT / "docs" / "gen"
 
 
@@ -78,19 +132,21 @@ def _resolve_active_agents_root() -> Path:
     """Return the active agents root for AGENT-MAP scanning.
 
     Priority:
-      1. domains/<first>/agents/director/agents/ — nested sub-agents of the director.
+      1. domains/<active>/agents/director/agents/ — nested sub-agents of the director.
       2. Legacy spec/agents/ — pre-migration location.
 
     WHY: after P17 migration the top-level agents live inside the domain's
     director; the legacy spec/agents/ is gone. Returns a Path that may not
     exist (callers guard with .exists()).
     """
-    if DOMAINS_ROOT.exists():
-        domain_dirs = sorted(
-            d
-            for d in DOMAINS_ROOT.iterdir()
-            if d.is_dir() and not d.name.startswith("_")
-        )
+    domain_dirs = _sorted_domain_dirs()
+    active = _select_active_domain_dir(domain_dirs)
+    if active is not None:
+        director_agents = active / "agents" / "director" / "agents"
+        if director_agents.exists():
+            return director_agents
+        # Fall back to scanning all domains for backward-compat with the
+        # pre-active-domain-aware behavior (first domain carrying agents/).
         for domain_dir in domain_dirs:
             director_agents = domain_dir / "agents" / "director" / "agents"
             if director_agents.exists():
@@ -2701,19 +2757,14 @@ _CANON_ROLE_RE = re.compile(r"^Canon:\s+\S+\s+[—\-]\s+(.+)$")
 
 
 def _resolve_active_content_dir() -> Path:
-    """Return the active content dir: domains/<first>/ or legacy spec/content/.
+    """Return the active content dir: domains/<active>/ or legacy spec/content/.
 
     Computed once at import time for backward-compat (CONTENT_DIR used by
     _scan_repo_map() and test_repo_map.py).
     """
-    if DOMAINS_ROOT.exists():
-        domain_dirs = sorted(
-            d
-            for d in DOMAINS_ROOT.iterdir()
-            if d.is_dir() and not d.name.startswith("_")
-        )
-        if domain_dirs:
-            return domain_dirs[0]
+    active = _select_active_domain_dir(_sorted_domain_dirs())
+    if active is not None:
+        return active
     return SPEC_ROOT / "content"
 
 
@@ -3041,18 +3092,24 @@ def _update_claude_md_agent_map(g: TensionGraph) -> None:
 
 
 def _active_domain() -> Path | None:
-    """Return the first domains/<name>/ dir (alphabetical) or None if domains/ is empty.
+    """Return the active domains/<name>/ dir, or None if domains/ is empty.
+
+    RULE: check HOTAM_SPEC_ACTIVE_DOMAIN env var first (must name an existing
+    domains/<name>/ dir); then fall back to the first domain alphabetically
+    (delegates to _select_active_domain_dir(), the SAME resolution helper
+    used by _resolve_active_gen_dir() / _resolve_active_content_dir() /
+    _resolve_active_agents_root()). Mirrors
+    hotam_spec.graph._active_domain_graph_file()'s resolution order exactly,
+    so the ROLE-block scope_label and the loaded graph content (which DOES
+    honor the env var) never disagree about which domain is active (a
+    mismatch previously showed e.g. "Operator of `hotam-dev`" next to a
+    SETTLED count that was actually hotam-spec-self's).
 
     When None, all generation falls back to spec/content/graph.py (current state).
     When non-None, the active graph lives in domains/<name>/graph.py and the
     domain's docs go into domains/<name>/docs/gen/.
     """
-    if not DOMAINS_ROOT.exists():
-        return None
-    domain_dirs = sorted(
-        d for d in DOMAINS_ROOT.iterdir() if d.is_dir() and not d.name.startswith("_")
-    )
-    return domain_dirs[0] if domain_dirs else None
+    return _select_active_domain_dir(_sorted_domain_dirs())
 
 
 # ---------------------------------------------------------------------------

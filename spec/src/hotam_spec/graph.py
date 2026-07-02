@@ -124,16 +124,33 @@ CONTENT_BUILDER_NAME = "build_graph"
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOMAINS_ROOT = _REPO_ROOT / "domains"
 
+#: Pin file naming the default active domain when HOTAM_SPEC_ACTIVE_DOMAIN is
+#: unset. Lives at domains/.active-domain — a COMMITTED, version-controlled
+#: file (unlike spec/.runtime/, which is gitignored ephemera per
+#: R-task-spawn-log-runtime) so the default is a deliberate, auditable
+#: decision, not a local-only override. Mirrors gen_spec.py's
+#: _ACTIVE_DOMAIN_PIN_FILE and apply_proposal.py's resolver exactly (same
+#: repo path) so every tool that discovers the active domain agrees on the
+#: same deterministic default (R-active-domain-pin-not-alphabetical).
+_ACTIVE_DOMAIN_PIN_FILE = _REPO_ROOT / "domains" / ".active-domain"
+
 
 def _active_domain_graph_file() -> Path | None:
     """Canon: §Graph — return path to the active domain's graph.py, or None.
 
-    RULE: check HOTAM_SPEC_ACTIVE_DOMAIN env var first; then fall back to the first
-    domains/<name>/graph.py alphabetically. Returns None if domains/ is absent
-    or empty (legitimate state: the framework has no domain yet).
+    RULE: resolution order is (1) HOTAM_SPEC_ACTIVE_DOMAIN env var, (2)
+    spec/.runtime/active-domain pin file, (3) the first
+    domains/<name>/graph.py alphabetically. Returns None if domains/ is
+    absent or empty (legitimate state: the framework has no domain yet).
 
-    WHY env-var first: allows CI / test harnesses to pin a specific domain
-    without mutating the filesystem (R-deterministic-generation).
+    WHY env-var first, pin file second: the env var lets CI / test harnesses
+    override the domain without mutating the filesystem
+    (R-deterministic-generation); the pin file is the committed, deliberate
+    default for everyday use — with >= 2 domains present, "first
+    alphabetically" is an accident of naming, not a decision (see
+    gen_spec.py::_select_active_domain_dir for the full WHY). Alphabetical
+    stays as the last-resort fallback so a fresh repo with no pin file yet is
+    never "lost" (R-agent-never-lost).
     """
     import os  # noqa: PLC0415
 
@@ -147,6 +164,12 @@ def _active_domain_graph_file() -> Path | None:
     domain_dirs = sorted(
         d for d in _DOMAINS_ROOT.iterdir() if d.is_dir() and not d.name.startswith("_")
     )
+    if _ACTIVE_DOMAIN_PIN_FILE.exists():
+        pinned = _ACTIVE_DOMAIN_PIN_FILE.read_text(encoding="utf-8").strip()
+        if pinned:
+            candidate = _DOMAINS_ROOT / pinned / "graph.py"
+            if candidate.exists():
+                return candidate
     for d in domain_dirs:
         gf = d / "graph.py"
         if gf.exists():
@@ -232,9 +255,10 @@ def load_content_graph() -> TensionGraph:
 
     RULE: discovery order:
       1. HOTAM_SPEC_ACTIVE_DOMAIN env var → domains/<name>/graph.py
-      2. First domains/<name>/graph.py alphabetically.
-      3. Legacy fallback: spec/content/graph.py (backward-compat).
-      4. Nothing found → return empty TensionGraph (legitimate framework state).
+      2. spec/.runtime/active-domain pin file → domains/<name>/graph.py
+      3. First domains/<name>/graph.py alphabetically.
+      4. Legacy fallback: spec/content/graph.py (backward-compat).
+      5. Nothing found → return empty TensionGraph (legitimate framework state).
 
     Never raise just because nothing is populated yet — emptiness is a legitimate
     state (R-empty-content-wellformed).

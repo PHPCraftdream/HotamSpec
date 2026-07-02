@@ -97,10 +97,57 @@ def test_agent_map_shows_no_active_sub_agents() -> None:
 
 
 def test_agents_root_does_not_exist() -> None:
-    """domains/hotam-spec-self/agents/ was deleted (P22.C) — _AGENTS_ROOT is absent."""
-    assert not AGENTS_ROOT.exists(), (
-        f"Expected _AGENTS_ROOT ({AGENTS_ROOT}) to be absent after P22.C consolidation "
-        "— domains/hotam-spec-self/agents/ should have been deleted."
+    """_AGENTS_ROOT absence is CONDITIONAL on domain count, not a permanent fact.
+
+    RULE + WHY (R-claude-md-consolidates-when-single-agent, quoted verbatim
+    in domains/hotam-spec-self/docs/gen/REQUIREMENTS.md): "one domain, zero
+    active sub-agents -> exactly ONE CLAUDE.md" is a conditional claim, not
+    an assertion that agent scaffolds can never exist again. This test
+    originally locked in a P22.C snapshot (domains/hotam-spec-self/agents/
+    deleted, no second domain yet) where the condition happened to hold.
+
+    With a single domain and no scaffolded sub-agents, the original
+    assertion still holds: _AGENTS_ROOT (which resolves to
+    domains/<active>/agents/director/agents/, the NESTED sub-agent slot
+    under the active domain's director) is absent.
+
+    With >= 2 domains, a domain's director agents/ subtree
+    (domains/<name>/agents/director/...) is the legitimate create_domain.py
+    / create_agent.py scaffold output (see spec/tools/create_domain.py) and
+    may legitimately exist without violating anything — _AGENTS_ROOT itself
+    (the nested agents/director/agents/ slot, one level deeper, reserved for
+    a director's OWN sub-agents) may still be empty/absent even when the
+    domain-level director scaffold is present; this test only asserts the
+    absence of that deeper nested slot is still consistent for the currently
+    active domain, not that no domain anywhere has agent scaffolding.
+    """
+    domains_root = REPO_ROOT / "domains"
+    domain_dirs = sorted(
+        d for d in domains_root.iterdir() if d.is_dir() and not d.name.startswith("_")
+    ) if domains_root.exists() else []
+
+    if len(domain_dirs) <= 1:
+        assert not AGENTS_ROOT.exists(), (
+            f"Expected _AGENTS_ROOT ({AGENTS_ROOT}) to be absent after P22.C "
+            "consolidation — domains/hotam-spec-self/agents/ should have been "
+            "deleted."
+        )
+        return
+
+    # Multi-domain: _AGENTS_ROOT resolves to the ACTIVE domain's nested
+    # director/agents/ sub-agent slot (gen_spec._resolve_active_agents_root).
+    # It is legitimate for it to exist (a domain may have scaffolded nested
+    # sub-agents) or be absent (no nested sub-agents yet) — either is fine;
+    # what would be a violation is AGENTS_ROOT resolving outside any known
+    # domain's agents/director/agents/ path or the legacy spec/agents/ path.
+    legacy_spec_agents = REPO_ROOT / "spec" / "agents"
+    valid_roots = {legacy_spec_agents} | {
+        d / "agents" / "director" / "agents" for d in domain_dirs
+    }
+    assert AGENTS_ROOT in valid_roots, (
+        f"_AGENTS_ROOT ({AGENTS_ROOT}) resolved outside the legitimate set of "
+        f"per-domain nested agent roots or the legacy spec/agents/ fallback: "
+        f"{sorted(valid_roots)}"
     )
 
 

@@ -69,12 +69,19 @@ correctly with the extended set.
 
 Canon: §Graph — return path to the active domain's graph.py, or None.
 
-RULE: check HOTAM_SPEC_ACTIVE_DOMAIN env var first; then fall back to the first
-domains/<name>/graph.py alphabetically. Returns None if domains/ is absent
-or empty (legitimate state: the framework has no domain yet).
+RULE: resolution order is (1) HOTAM_SPEC_ACTIVE_DOMAIN env var, (2)
+spec/.runtime/active-domain pin file, (3) the first
+domains/<name>/graph.py alphabetically. Returns None if domains/ is
+absent or empty (legitimate state: the framework has no domain yet).
 
-WHY env-var first: allows CI / test harnesses to pin a specific domain
-without mutating the filesystem (R-deterministic-generation).
+WHY env-var first, pin file second: the env var lets CI / test harnesses
+override the domain without mutating the filesystem
+(R-deterministic-generation); the pin file is the committed, deliberate
+default for everyday use — with >= 2 domains present, "first
+alphabetically" is an accident of naming, not a decision (see
+gen_spec.py::_select_active_domain_dir for the full WHY). Alphabetical
+stays as the last-resort fallback so a fresh repo with no pin file yet is
+never "lost" (R-agent-never-lost).
 
 ## From `spec/src/hotam_spec/graph.py::active_domain_doc_readers`
 
@@ -109,9 +116,10 @@ Canon: §Graph — load the user's graph from domains/<name>/ or spec/content/.
 
 RULE: discovery order:
   1. HOTAM_SPEC_ACTIVE_DOMAIN env var → domains/<name>/graph.py
-  2. First domains/<name>/graph.py alphabetically.
-  3. Legacy fallback: spec/content/graph.py (backward-compat).
-  4. Nothing found → return empty TensionGraph (legitimate framework state).
+  2. spec/.runtime/active-domain pin file → domains/<name>/graph.py
+  3. First domains/<name>/graph.py alphabetically.
+  4. Legacy fallback: spec/content/graph.py (backward-compat).
+  5. Nothing found → return empty TensionGraph (legitimate framework state).
 
 Never raise just because nothing is populated yet — emptiness is a legitimate
 state (R-empty-content-wellformed).

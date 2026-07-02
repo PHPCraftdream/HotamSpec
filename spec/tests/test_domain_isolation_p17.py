@@ -242,7 +242,44 @@ def test_shared_tool_docs_content():
 
 
 def test_no_agent_claude_md_files_exist():
-    """No agent CLAUDE.md files exist anywhere — AGENTS_ROOT itself is absent (P22.C)."""
-    assert not AGENTS_ROOT.exists(), (
-        f"Expected AGENTS_ROOT ({AGENTS_ROOT}) to be absent post-P22.C consolidation."
+    """AGENTS_ROOT absence is CONDITIONAL on domain count (R-claude-md-consolidates-when-single-agent).
+
+    RULE + WHY: the P22.C consolidation claim this test locks in is itself
+    conditional — "one domain, zero active sub-agents -> exactly ONE
+    CLAUDE.md" (domains/hotam-spec-self/docs/gen/REQUIREMENTS.md). It held
+    when there was exactly one domain and no scaffolded agents. It no longer
+    universally holds once a second domain (hotam-dev) legitimately
+    scaffolds its own domains/hotam-dev/agents/director/CLAUDE.md via
+    create_domain.py / create_agent.py (see RECENTLY-REJECTED:
+    R-domain-owns-claude-md and R-framework-claude-md-is-domain-free were
+    both rejected attempts to make a stronger unconditional claim — the
+    condition, not the absoluteness, is what's load-bearing).
+
+    Single domain: unchanged strict rule — AGENTS_ROOT (nested
+    director/agents/ sub-agent slot) is absent.
+
+    >= 2 domains: AGENTS_ROOT must still resolve to either the legacy
+    spec/agents/ fallback or one of the known domains' nested
+    agents/director/agents/ slot — never anything outside that set.
+    """
+    domains_root = REPO_ROOT / "domains"
+    domain_dirs = sorted(
+        d for d in domains_root.iterdir() if d.is_dir() and not d.name.startswith("_")
+    ) if domains_root.exists() else []
+
+    if len(domain_dirs) <= 1:
+        assert not AGENTS_ROOT.exists(), (
+            f"Expected AGENTS_ROOT ({AGENTS_ROOT}) to be absent post-P22.C "
+            "consolidation."
+        )
+        return
+
+    legacy_spec_agents = SPEC_ROOT / "agents"
+    valid_roots = {legacy_spec_agents} | {
+        d / "agents" / "director" / "agents" for d in domain_dirs
+    }
+    assert AGENTS_ROOT in valid_roots, (
+        f"AGENTS_ROOT ({AGENTS_ROOT}) resolved outside the legitimate set of "
+        f"per-domain nested agent roots or the legacy spec/agents/ fallback: "
+        f"{sorted(valid_roots)}"
     )
