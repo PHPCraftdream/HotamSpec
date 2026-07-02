@@ -39,6 +39,9 @@ _SENTINEL_PAIRS = [
     ("<!-- EMBEDDED-THINKING:BEGIN -->", "<!-- EMBEDDED-THINKING:END -->"),
     ("<!-- EMBEDDED-TOOLS:BEGIN -->", "<!-- EMBEDDED-TOOLS:END -->"),
     ("<!-- RECENTLY-REJECTED:BEGIN -->", "<!-- RECENTLY-REJECTED:END -->"),
+    ("<!-- OPERATOR-ROLE:BEGIN -->", "<!-- OPERATOR-ROLE:END -->"),
+    ("<!-- MEDIATION-LOOP:BEGIN -->", "<!-- MEDIATION-LOOP:END -->"),
+    ("<!-- OPERATOR-RECURSION:BEGIN -->", "<!-- OPERATOR-RECURSION:END -->"),
 ]
 
 _ACTIVE_DOMAIN = _gs._active_domain()

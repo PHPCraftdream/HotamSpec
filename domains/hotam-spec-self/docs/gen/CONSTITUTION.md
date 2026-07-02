@@ -133,7 +133,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | `R-operator-not-self-approve` | ENFORCED | An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members. |
 | **Self + delegation** | | |
 | `R-operator-acting-facet` | PROSE | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
-| `R-context-budget-rule` | ENFORCED | An operator's owned domain shall not exceed its context budget (size(domain) <= budget.limit), with any excess flagged as a structural OVERLOADED contradiction by the harness. |
+| `R-context-budget-rule` | ENFORCED | An operator's RESIDENT working set shall not exceed its context budget (measured by budget.measure — for CRYSTAL_CHARS the char-length of root CLAUDE.md vs the host cap), with any excess flagged as a structural OVERLOADED contradiction by the harness. |
 | `R-operator-crystal-is-claude-md` | STRUCTURAL | Each operator's crystallized substrate shall be its own CLAUDE.md — an anchored map of its bounded sub-domain that it reloads BY REFERENCE rather than re-carrying; the director-operator's CLAUDE.md holds the overall graph and references each sub-operator's CLAUDE.md. |
 | **Super-rules (crystallize + anchor)** | | |
 | `R-crystallize-knowledge-to-code` | STRUCTURAL | An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context. |

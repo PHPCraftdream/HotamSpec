@@ -16,6 +16,8 @@ Supported proposal kinds:
   - ConflictTransition — move a Conflict lifecycle (DETECTED → DECIDED etc.)
   - Requirement — add or update a Requirement in the graph
   - Rejection — reject an existing Requirement (status → REJECTED)
+  - EntityType — add a new EntityType to the active domain's graph
+  - OperatorBudget — replace an existing Operator's ContextBudget (limit/measure)
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
@@ -55,6 +57,15 @@ The JSON shapes:
     "reason": "REJECTED — REPLACES R-bar; see R-new"
   }
 
+  ProposedOperatorBudget:
+  {
+    "kind": "OperatorBudget",
+    "operator_id": "OP-director",
+    "new_limit": 150000,
+    "new_measure": "CRYSTAL_CHARS",
+    "why": "..."
+  }
+
 Exit codes:
   0 — success (write landed, tests green, and if --triggering-kind was supplied:
       closure confirmed — the action is no longer in the post-apply diagnosis).
@@ -85,10 +96,12 @@ import re as _re  # noqa: E402
 from hotam_spec.conflict import conflict_identity  # noqa: E402
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
 from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
+from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
 from hotam_spec.proposal import (  # noqa: E402
     Proposal,
     ProposedConflictTransition,
     ProposedEntityType,
+    ProposedOperatorBudget,
     ProposedRejection,
     ProposedRequirement,
 )
@@ -126,9 +139,9 @@ def _validate_proposal(raw: dict) -> Proposal:
     """Canon: §Proposal — parse and validate a JSON dict into a Proposal variant.
 
     RULE: 'kind' must be one of 'ConflictTransition', 'Requirement', 'Rejection',
-    or 'EntityType'. Each kind has its own required fields.
+    'EntityType', or 'OperatorBudget'. Each kind has its own required fields.
 
-    Returns a Proposal (one of the four dataclass variants) or raises
+    Returns a Proposal (one of the five dataclass variants) or raises
     ValueError with a clear message.
     """
     kind = raw.get("kind", "")
@@ -140,9 +153,12 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_rejection(raw)
     if kind == "EntityType":
         return _validate_entity_type(raw)
+    if kind == "OperatorBudget":
+        return _validate_operator_budget(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
-        f"Supported: 'ConflictTransition', 'Requirement', 'Rejection', 'EntityType'."
+        f"Supported: 'ConflictTransition', 'Requirement', 'Rejection', "
+        f"'EntityType', 'OperatorBudget'."
     )
 
 
@@ -231,6 +247,33 @@ def _validate_rejection(raw: dict) -> ProposedRejection:
     return ProposedRejection(
         requirement_id=requirement_id,
         reason=reason,
+    )
+
+
+def _validate_operator_budget(raw: dict) -> ProposedOperatorBudget:
+    """Parse and validate an OperatorBudget proposal."""
+    operator_id = raw.get("operator_id", "").strip()
+    if not operator_id:
+        raise ValueError("'operator_id' is required for an OperatorBudget proposal.")
+    if not operator_id.startswith("OP-"):
+        raise ValueError(f"'operator_id' must start with 'OP-'; got '{operator_id}'.")
+    new_limit = raw.get("new_limit")
+    if not isinstance(new_limit, int) or isinstance(new_limit, bool):
+        raise ValueError("'new_limit' is required and must be an int.")
+    if new_limit < 0:
+        raise ValueError(f"'new_limit' must be >= 0; got {new_limit}.")
+    new_measure = raw.get("new_measure", "").strip()
+    if new_measure not in BUDGET_MEASURES:
+        raise ValueError(
+            f"'new_measure' must be one of {sorted(BUDGET_MEASURES)}; "
+            f"got '{new_measure}'."
+        )
+    why = raw.get("why", "")
+    return ProposedOperatorBudget(
+        operator_id=operator_id,
+        new_limit=new_limit,
+        new_measure=new_measure,
+        why=why if isinstance(why, str) else "",
     )
 
 
@@ -417,6 +460,33 @@ def _find_conflict_call(tree: ast.AST, conflict_id: str) -> ast.Call | None:
         computed = conflict_identity(kwargs["axis"], kwargs["context"])
         if computed == conflict_id:
             return node  # type: ignore[return-value]
+    return None
+
+
+# ---------------------------------------------------------------------------
+# AST-based operator locator
+# ---------------------------------------------------------------------------
+
+
+def _find_operator_call(tree: ast.AST, operator_id: str) -> ast.Call | None:
+    """Canon: §Proposal — locate the Operator(...) AST call whose id matches.
+
+    Walks the AST looking for ast.Call nodes whose function is 'Operator'. For
+    each, extracts the 'id' keyword arg (string literal only). Returns the
+    matching node or None.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id != "Operator":
+            continue
+        if isinstance(func, ast.Attribute) and func.attr != "Operator":
+            continue
+        for kw in node.keywords:
+            if kw.arg == "id" and isinstance(kw.value, ast.Constant):
+                if kw.value.value == operator_id:
+                    return node  # type: ignore[return-value]
     return None
 
 
@@ -703,16 +773,21 @@ def _apply_requirement_to_source(
 
     result = "".join(lines)
 
-    # Ensure Relation import exists if relations are used
+    # Ensure Relation import exists if relations are used. Match the actual
+    # import statement (not any occurrence of the word "Relation", which can
+    # appear in unrelated prose inside requirement claim/why strings).
     if proposal.relations:
-        if "Relation" not in result.split("import")[0]:
-            # Check if Relation is already imported
-            if "Relation" not in source_text:
-                result = result.replace(
-                    "from hotam_spec.requirement import",
-                    "from hotam_spec.requirement import Relation,",
-                    1,
-                )
+        already_imported = _re.search(
+            r"^from hotam_spec\.requirement import\b.*\bRelation\b",
+            source_text,
+            _re.MULTILINE,
+        )
+        if not already_imported:
+            result = result.replace(
+                "from hotam_spec.requirement import",
+                "from hotam_spec.requirement import Relation,",
+                1,
+            )
     return result
 
 
@@ -800,6 +875,60 @@ def _apply_conflict_transition(
                 f"replacing field '{field_name}'."
             )
     return list(lines)
+
+
+# ---------------------------------------------------------------------------
+# Apply: OperatorBudget
+# ---------------------------------------------------------------------------
+
+
+def _apply_operator_budget(
+    source_text: str, proposal: ProposedOperatorBudget
+) -> list[str]:
+    """Apply an OperatorBudget proposal to graph source. Returns modified lines.
+
+    Replaces the context_budget=ContextBudget(...) kwarg value on the matching
+    Operator(...) call with a freshly-rendered ContextBudget(limit=..., measure=...)
+    source expression — a raw source-text substitution (NOT _python_repr, which
+    only knows literals), since the new value is itself a constructor call.
+    """
+    tree = ast.parse(source_text)
+    call_node = _find_operator_call(tree, proposal.operator_id)
+    if call_node is None:
+        raise RuntimeError(
+            f"operator_id '{proposal.operator_id}' not found in "
+            f"{_CONTENT_GRAPH}. No changes made."
+        )
+
+    budget_kw = next(
+        (kw for kw in call_node.keywords if kw.arg == "context_budget"), None
+    )
+    if budget_kw is None:
+        raise RuntimeError(
+            f"Operator '{proposal.operator_id}' has no context_budget= kwarg "
+            f"to replace. No changes made."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    val_node = budget_kw.value
+    lineno = val_node.lineno - 1  # 0-indexed
+    end_lineno = getattr(val_node, "end_lineno", val_node.lineno)
+    line = lines[lineno]
+    col = _byte_col_to_char_col(line, val_node.col_offset)
+    new_repr = f'ContextBudget(limit={proposal.new_limit}, measure="{proposal.new_measure}")'
+
+    if end_lineno - 1 == lineno:
+        end_col = _byte_col_to_char_col(line, val_node.end_col_offset)
+        lines[lineno] = line[:col] + new_repr + line[end_col:]
+    else:
+        end_line = lines[end_lineno - 1]
+        end_col = _byte_col_to_char_col(end_line, val_node.end_col_offset)
+        suffix = end_line[end_col:]
+        del lines[lineno + 1 : end_lineno - 1 + 1]
+        line = lines[lineno]
+        lines[lineno] = line[:col] + new_repr + suffix
+
+    return lines
 
 
 # ---------------------------------------------------------------------------
@@ -1091,6 +1220,7 @@ def apply(
       - ProposedRequirement: add new or update existing Requirement
       - ProposedRejection: set status to REJECTED, prepend reason
       - ProposedEntityType: insert new EntityType into entity_types=()
+      - ProposedOperatorBudget: locate Operator node, replace context_budget=
 
     Steps:
       1. Read spec/content/graph.py.
@@ -1123,6 +1253,8 @@ def apply(
                 source_text, proposal, active_graph
             )
             lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedOperatorBudget):
+            lines = _apply_operator_budget(source_text, proposal)
         else:
             print(
                 f"ERROR: unhandled proposal type {type(proposal).__name__}",

@@ -140,3 +140,21 @@ def test_recently_rejected_empty_when_none() -> None:
     assert "**R-" not in block, (
         "Calm placeholder should not contain any R-id bullet entries."
     )
+
+
+# ===========================================================================
+# Test 5: Phase 2 compression bound
+# ===========================================================================
+
+
+def test_recently_rejected_bounded() -> None:
+    """RECENTLY-REJECTED block stays under 8,000 chars after Phase 2 compression."""
+    if _ACTIVE_DOMAIN is None:
+        pytest.skip("No active domain — P22.B not applicable")
+    text = _read(ROOT_CLAUDE_MD)
+    block = _extract_block(text, _RECENTLY_REJECTED_BEGIN, _RECENTLY_REJECTED_END)
+    assert block is not None
+    assert len(block) < 8_000, (
+        f"RECENTLY-REJECTED block is {len(block)} chars — expected < 8,000 "
+        "after Phase 2 compression (dropped duplicate italic why-tail)."
+    )

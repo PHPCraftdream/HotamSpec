@@ -98,6 +98,28 @@ class ProposedRejection:
 
 
 @dataclass(frozen=True)
+class ProposedOperatorBudget:
+    """Canon: §Proposal / §ContextBudget — propose a new ContextBudget for an existing Operator.
+
+    RULE: kind="OperatorBudget"; the apply_proposal tool locates the
+    Operator(...) call whose id matches operator_id and replaces its
+    context_budget= kwarg with ContextBudget(limit=new_limit,
+    measure=new_measure). Used to move an operator off a stale/mismeasured
+    budget (e.g. NODE_COUNT counting the free substrate) onto a measure that
+    actually reflects R-working-vs-substrate-budget (e.g. CRYSTAL_CHARS).
+    """
+
+    operator_id: str  # the OP-… anchor being re-budgeted
+    new_limit: int
+    new_measure: str  # one of hotam_spec.operator.BUDGET_MEASURES
+    why: str = ""
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the Operator id this proposal is meant to change."""
+        return self.operator_id
+
+
+@dataclass(frozen=True)
 class ProposedEntityType:
     """Canon: §Proposal — propose a new EntityType to add to the active domain's graph.
 
@@ -130,4 +152,5 @@ Proposal = (
     | ProposedConflictTransition
     | ProposedRejection
     | ProposedEntityType
+    | ProposedOperatorBudget
 )

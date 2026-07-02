@@ -93,15 +93,118 @@ def test_constitution_block_generated() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_constitution_lists_all_settled() -> None:
-    """Every SETTLED requirement id appears in the CONSTITUTION block."""
+def _partition_check() -> None:
+    """Shared body: every SETTLED id appears in exactly ONE of the two
+    generated locations — the root CONSTITUTION index (business + discipline)
+    or docs/gen/FRAMEWORK-INVARIANTS.md (framework-plumbing) — and the union
+    of both equals the full SETTLED set (nothing lost by the relocation).
+
+    Two test names call this: test_constitution_lists_all_settled (the
+    pre-Phase-3 name, kept so the pre-existing R-constitution-is-index
+    enforced_by reference stays resolvable — R-bijection-r-to-enforcer) and
+    test_constitution_partitions_all_settled (the Phase-3 name naming the
+    partition explicitly, referenced by R-constitution-separates-plumbing).
+    """
     g = gen_spec.load_content_graph()
     text = _read_normalized(ROOT_CLAUDE_MD)
     block = _extract_constitution_block(text)
     assert block is not None, "CONSTITUTION block not found"
 
+    domain = gen_spec._active_domain()
+    domain_name = domain.name if domain else "hotam-spec-self"
+    invariants_path = (
+        REPO_ROOT / "domains" / domain_name / "docs" / "gen" / "FRAMEWORK-INVARIANTS.md"
+    )
+    invariants_text = _read_normalized(invariants_path)
+
     settled = [r for r in g.requirements if r.status == gen_spec.SETTLED]
+    in_constitution: list[str] = []
+    in_invariants: list[str] = []
+    in_neither: list[str] = []
+    in_both: list[str] = []
     for r in settled:
-        assert r.id in block, (
-            f"SETTLED requirement {r.id} missing from CONSTITUTION block"
-        )
+        c = r.id in block
+        i = r.id in invariants_text
+        if c and i:
+            in_both.append(r.id)
+        elif c:
+            in_constitution.append(r.id)
+        elif i:
+            in_invariants.append(r.id)
+        else:
+            in_neither.append(r.id)
+
+    assert not in_neither, f"SETTLED ids missing from BOTH locations: {in_neither}"
+    assert not in_both, f"SETTLED ids duplicated in BOTH locations: {in_both}"
+    assert len(in_constitution) + len(in_invariants) == len(settled)
+
+
+def test_constitution_lists_all_settled() -> None:
+    """Pre-Phase-3 name, kept resolvable for R-constitution-is-index.enforced_by.
+
+    See _partition_check docstring: the assertion now checks the two-location
+    partition rather than single-block membership, since Phase 3 relocated
+    framework-plumbing atoms out of the root CONSTITUTION block.
+    """
+    _partition_check()
+
+
+def test_constitution_partitions_all_settled() -> None:
+    """Phase 3 (task #9) name for _partition_check, referenced by
+    R-constitution-separates-plumbing.enforced_by."""
+    _partition_check()
+
+
+def test_constitution_pointer_to_framework_invariants() -> None:
+    """The CONSTITUTION index carries an in-block pointer to FRAMEWORK-INVARIANTS.md."""
+    text = _read_normalized(ROOT_CLAUDE_MD)
+    block = _extract_constitution_block(text)
+    assert block is not None, "CONSTITUTION block not found"
+    assert "FRAMEWORK-INVARIANTS.md" in block, (
+        "CONSTITUTION index must point to the relocated framework-plumbing "
+        "index at docs/gen/FRAMEWORK-INVARIANTS.md"
+    )
+
+
+def test_framework_invariants_md_up_to_date() -> None:
+    """docs/gen/FRAMEWORK-INVARIANTS.md matches regeneration from the graph."""
+    g = gen_spec.load_content_graph()
+    domain = gen_spec._active_domain()
+    domain_name = domain.name if domain else "hotam-spec-self"
+    invariants_path = (
+        REPO_ROOT / "domains" / domain_name / "docs" / "gen" / "FRAMEWORK-INVARIANTS.md"
+    )
+    assert invariants_path.exists(), (
+        f"{invariants_path} does not exist — run `uv run python tools/gen_spec.py`."
+    )
+    expected = gen_spec.build_framework_invariants(g)
+    actual = _read_normalized(invariants_path)
+    assert expected == actual, (
+        "FRAMEWORK-INVARIANTS.md is stale: run `uv run python tools/gen_spec.py`."
+    )
+
+
+# ---------------------------------------------------------------------------
+# 4. Phase 2: CONSTITUTION is an index, not a catalog (R-constitution-is-index)
+# ---------------------------------------------------------------------------
+
+
+def test_constitution_is_index() -> None:
+    """CONSTITUTION block is a compact index: roster pointer present, bounded,
+    and no longer carries full '[ENFORCED·...]' enforcer chains inline."""
+    text = _read_normalized(ROOT_CLAUDE_MD)
+    block = _extract_constitution_block(text)
+    assert block is not None, "CONSTITUTION block not found"
+
+    assert "docs/gen/REQUIREMENTS.md" in block, (
+        "CONSTITUTION index must point to the full roster in "
+        "docs/gen/REQUIREMENTS.md"
+    )
+    assert len(block) < 26_000, (
+        f"CONSTITUTION index block is {len(block)} chars — expected < 26,000 "
+        "chars for an index format. Run: uv run python tools/gen_spec.py"
+    )
+    assert "[ENFORCED·" not in block, (
+        "CONSTITUTION block still contains full '[ENFORCED·...]' enforcer "
+        "chains — expected the compact index format ([E]/[S]/[P] flags only)."
+    )

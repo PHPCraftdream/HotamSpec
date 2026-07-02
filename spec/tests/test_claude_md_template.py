@@ -146,10 +146,16 @@ def test_mind_content_present_in_output() -> None:
     assert "<!-- EMBEDDED-TOOLS:BEGIN -->" in text, (
         "Generated CLAUDE.md missing EMBEDDED-TOOLS:BEGIN sentinel"
     )
-    # Full-text embedding: a known thinking-doc heading must appear, not just a link.
-    assert "Canon — §Conflict" in text, (
-        "Generated CLAUDE.md does not contain the full body of a thinking doc "
-        "(expected 'Canon — §Conflict' heading from spec/docs/thinking/conflict.md)"
+    # Tier-1 distillation: a known thinking topic must appear with a RULE
+    # distillate and its Tier-3 full-text pointer, not the full doc body verbatim
+    # (R-crystal-is-tiered; see test_embedded_thinking_tools.py for the detailed
+    # per-block assertions).
+    assert "#### conflict" in text, (
+        "Generated CLAUDE.md does not contain the distilled §Conflict topic "
+        "(expected '#### conflict' heading)"
+    )
+    assert "spec/docs/thinking/conflict.md" in text, (
+        "Generated CLAUDE.md does not point at the full text of spec/docs/thinking/conflict.md"
     )
 
 
@@ -167,6 +173,6 @@ def test_business_content_present_in_output() -> None:
     assert "<!-- DOMAIN-MAP:BEGIN -->" in text, (
         "Generated CLAUDE.md missing DOMAIN-MAP:BEGIN sentinel"
     )
-    assert "Constitutional Digest" in text, (
-        "Generated CLAUDE.md does not contain the CONSTITUTION digest heading"
+    assert "Constitution index" in text, (
+        "Generated CLAUDE.md does not contain the CONSTITUTION index heading"
     )

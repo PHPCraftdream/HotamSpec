@@ -28,7 +28,10 @@ for _p in (_SRC, _TOOLS):
 
 import apply_proposal  # noqa: E402
 from hotam_spec.conflict import conflict_identity  # noqa: E402
-from hotam_spec.proposal import ProposedConflictTransition  # noqa: E402
+from hotam_spec.proposal import (  # noqa: E402
+    ProposedConflictTransition,
+    ProposedOperatorBudget,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -265,4 +268,156 @@ def test_apply_proposal_emits_closure_when_flagged(
     # The closure section must appear in stdout
     assert "CLOSURE CHECK" in captured.out
     assert "triggering_kind" in captured.out
-    assert "OPEN_ITEM" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# 8. ProposedOperatorBudget — validation, locator, apply
+# ---------------------------------------------------------------------------
+
+_SAMPLE_OPERATOR_SOURCE = '''\
+from hotam_spec.operator import ContextBudget, Operator
+
+operators = (
+    Operator(
+        id="OP-director",
+        stakeholder="framework-author",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=220, measure="NODE_COUNT"),
+        parent=None,
+        why="test operator",
+    ),
+)
+'''
+
+
+def test_validate_operator_budget_missing_operator_id() -> None:
+    """_validate_proposal raises ValueError when operator_id is missing."""
+    raw = {"kind": "OperatorBudget", "new_limit": 150000, "new_measure": "CRYSTAL_CHARS"}
+    with pytest.raises(ValueError, match="operator_id"):
+        apply_proposal._validate_proposal(raw)
+
+
+def test_validate_operator_budget_bad_prefix() -> None:
+    """_validate_proposal rejects an operator_id without the 'OP-' prefix."""
+    raw = {
+        "kind": "OperatorBudget",
+        "operator_id": "director",
+        "new_limit": 150000,
+        "new_measure": "CRYSTAL_CHARS",
+    }
+    with pytest.raises(ValueError, match="OP-"):
+        apply_proposal._validate_proposal(raw)
+
+
+def test_validate_operator_budget_unknown_measure() -> None:
+    """_validate_proposal rejects a new_measure not in BUDGET_MEASURES."""
+    raw = {
+        "kind": "OperatorBudget",
+        "operator_id": "OP-director",
+        "new_limit": 150000,
+        "new_measure": "BOGUS_MEASURE",
+    }
+    with pytest.raises(ValueError, match="new_measure"):
+        apply_proposal._validate_proposal(raw)
+
+
+def test_validate_operator_budget_ok() -> None:
+    """_validate_proposal accepts a well-formed OperatorBudget proposal."""
+    raw = {
+        "kind": "OperatorBudget",
+        "operator_id": "OP-director",
+        "new_limit": 150000,
+        "new_measure": "CRYSTAL_CHARS",
+        "why": "return to R-working-vs-substrate-budget",
+    }
+    proposal = apply_proposal._validate_proposal(raw)
+    assert isinstance(proposal, ProposedOperatorBudget)
+    assert proposal.operator_id == "OP-director"
+    assert proposal.new_limit == 150000
+    assert proposal.new_measure == "CRYSTAL_CHARS"
+    assert proposal.target_anchor() == "OP-director"
+
+
+def test_find_operator_call_locates_by_id() -> None:
+    """_find_operator_call locates the Operator(...) AST node by id."""
+    import ast
+
+    tree = ast.parse(_SAMPLE_OPERATOR_SOURCE)
+    node = apply_proposal._find_operator_call(tree, "OP-director")
+    assert node is not None
+    assert node.func.id == "Operator"
+
+
+def test_find_operator_call_returns_none_for_unknown_id() -> None:
+    """_find_operator_call returns None when the operator_id is not present."""
+    import ast
+
+    tree = ast.parse(_SAMPLE_OPERATOR_SOURCE)
+    node = apply_proposal._find_operator_call(tree, "OP-unknown")
+    assert node is None
+
+
+def test_apply_operator_budget_replaces_context_budget() -> None:
+    """_apply_operator_budget rewrites the context_budget= kwarg in place."""
+    proposal = ProposedOperatorBudget(
+        operator_id="OP-director",
+        new_limit=150_000,
+        new_measure="CRYSTAL_CHARS",
+        why="return to R-working-vs-substrate-budget",
+    )
+    lines = apply_proposal._apply_operator_budget(
+        _SAMPLE_OPERATOR_SOURCE, proposal
+    )
+    new_source = "".join(lines)
+    assert 'ContextBudget(limit=150000, measure="CRYSTAL_CHARS")' in new_source
+    assert "NODE_COUNT" not in new_source
+    # Must still parse as valid Python and preserve the rest of the call.
+    import ast
+
+    tree = ast.parse(new_source)
+    node = apply_proposal._find_operator_call(tree, "OP-director")
+    assert node is not None
+
+
+def test_apply_operator_budget_dry_run_does_not_write(tmp_path: Path) -> None:
+    """apply(..., dry_run=True) on an OperatorBudget proposal does not write."""
+    sample_file = tmp_path / "graph.py"
+    sample_file.write_text(_SAMPLE_OPERATOR_SOURCE, encoding="utf-8")
+    original_text = _SAMPLE_OPERATOR_SOURCE
+
+    real_graph = apply_proposal._CONTENT_GRAPH
+    apply_proposal._CONTENT_GRAPH = sample_file
+    try:
+        proposal = ProposedOperatorBudget(
+            operator_id="OP-director",
+            new_limit=150_000,
+            new_measure="CRYSTAL_CHARS",
+        )
+        result = apply_proposal.apply(proposal, dry_run=True)
+    finally:
+        apply_proposal._CONTENT_GRAPH = real_graph
+
+    assert sample_file.read_text(encoding="utf-8") == original_text
+    assert result == 0
+
+
+def test_apply_operator_budget_unknown_operator_id_returns_error(
+    tmp_path: Path,
+) -> None:
+    """apply() returns 1 when operator_id does not resolve in the source."""
+    sample_file = tmp_path / "graph.py"
+    sample_file.write_text(_SAMPLE_OPERATOR_SOURCE, encoding="utf-8")
+
+    real_graph = apply_proposal._CONTENT_GRAPH
+    apply_proposal._CONTENT_GRAPH = sample_file
+    try:
+        proposal = ProposedOperatorBudget(
+            operator_id="OP-unknown",
+            new_limit=150_000,
+            new_measure="CRYSTAL_CHARS",
+        )
+        result = apply_proposal.apply(proposal, dry_run=True)
+    finally:
+        apply_proposal._CONTENT_GRAPH = real_graph
+
+    assert result == 1

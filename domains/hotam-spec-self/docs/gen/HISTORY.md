@@ -131,6 +131,16 @@ substrate (R-history-from-rejected-markers).
 - **owner:** `framework-author`
 - **why:** REJECTED — REPLACES R-claude-md-consolidates-when-single-agent. This claim described embedding a SEPARATE domains/hotam-spec-self/CLAUDE.md inside root CLAUDE.md via a DOMAIN-CRYSTAL sentinel block. That separate file no longer exists (deleted in task #101's consolidation) — there is nothing left to embed, since the domain content is generated directly into the single root CLAUDE.md rather than composed from a nested crystal. The two-file DOMAIN-CRYSTAL composition pattern returns only when a second domain is created and root CLAUDE.md can no longer hold all domains inline. — (was: Closes the sensor-substrate gap: Claude Code auto-loads root CLAUDE.md on session start; embedding the domain's CLAUDE.md (the canonical entry point of the domain, and the base from which all sub-agents derive scoped versions) means the operator boots from substrate (R-operator-prompt-from-substrate) rather than from raw weights + session memory. The substrate writes the operator's prompt physically, not aspirationally.)
 
+### `R-operator-crystal-embeds-thinking` — The operator's CLAUDE.md shall embed the full content of its scope-relevant thinking documentation inline, not as markdown links, so the operator holds the methodology itself rather than a table of contents.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES by R-operator-crystal-embeds-thinking-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY distillate + Tier-3 pointer instead. — (was: A link the operator must separately fetch is a re-derivation tax on every turn; inlining the methodology content means it is present in the loaded substrate from the first token (R-operator-prompt-from-substrate). Task #98 (A1) built the EMBEDDED-THINKING block; ENFORCED by test_embedded_thinking_sentinels_present (sentinels exist) and test_embedded_thinking_contains_full_topic_content (content is the full topic text, not a link).)
+
+### `R-operator-crystal-embeds-tools` — The operator's CLAUDE.md shall embed the full content of its scope-relevant tool documentation inline, not as markdown links.
+
+- **owner:** `framework-author`
+- **why:** REJECTED — REPLACES by R-operator-crystal-embeds-tools-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY distillate + Tier-3 pointer instead. — (was: Same rationale as R-operator-crystal-embeds-thinking applied to tool docs: an operator deciding whether to invoke apply_proposal.py should not have to fetch a separate file to learn its contract. ENFORCED by test_embedded_tools_sentinels_present (sentinels exist) and test_embedded_tools_contains_full_tool_content (content is the full tool doc text, not a link); test_embedded_blocks_regen_byte_identical guards against drift between the embedded copy and the regenerated source.)
+
 ## DECIDED conflicts (resolutions on record)
 
 ### `C-186c4347` — axis `agent-autonomy-vs-human-control`

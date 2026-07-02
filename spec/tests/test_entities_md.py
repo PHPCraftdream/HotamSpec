@@ -201,24 +201,38 @@ def build_graph():
 
 
 def test_entity_constitution_section_appears_when_types_present() -> None:
-    """_render_constitution_block appends R-entity-<slug> entries when entity_types exist."""
+    """build_framework_invariants appends R-entity-<slug> entries when entity_types exist.
+
+    Phase 3 (task #9): entity-derived requirements are framework-plumbing —
+    they relocated from the root CONSTITUTION block to
+    docs/gen/FRAMEWORK-INVARIANTS.md (build_framework_invariants). The root
+    CONSTITUTION block no longer carries this section.
+    """
     g = _make_synthetic_graph_with_entity()
-    # Render the constitution block directly.
-    block = gen_spec._render_constitution_block(g)
-    assert "R-entity-test-widget" in block, (
-        "CONSTITUTION block must include R-entity-test-widget when EntityType 'test-widget' exists"
+    invariants = gen_spec.build_framework_invariants(g)
+    assert "R-entity-test-widget" in invariants, (
+        "FRAMEWORK-INVARIANTS.md must include R-entity-test-widget when EntityType 'test-widget' exists"
     )
-    assert "§Entity" in block, (
-        "CONSTITUTION block must reference §Entity for entity-derived R"
+    assert "§Entity" in invariants, (
+        "FRAMEWORK-INVARIANTS.md must reference §Entity for entity-derived R"
+    )
+    block = gen_spec._render_constitution_block(g)
+    assert "R-entity-test-widget" not in block, (
+        "root CONSTITUTION block must NOT include entity-derived entries — "
+        "they are framework-plumbing (relocated to FRAMEWORK-INVARIANTS.md)"
     )
 
 
 def test_entity_constitution_section_absent_when_no_types() -> None:
-    """_render_constitution_block omits Entity-derived section when entity_types is empty."""
+    """build_framework_invariants omits Entity-derived section when entity_types is empty."""
     from hotam_spec.graph import TensionGraph  # noqa: PLC0415
 
     g = TensionGraph()
+    invariants = gen_spec.build_framework_invariants(g)
+    assert "Entity-derived requirements" not in invariants, (
+        "FRAMEWORK-INVARIANTS.md must not include entity-derived section for empty entity_types"
+    )
     block = gen_spec._render_constitution_block(g)
     assert "Entity-derived requirements" not in block, (
-        "CONSTITUTION block must not include entity-derived section for empty entity_types"
+        "root CONSTITUTION block must never include entity-derived section"
     )

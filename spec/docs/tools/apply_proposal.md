@@ -28,6 +28,8 @@ Supported proposal kinds:
   - ConflictTransition — move a Conflict lifecycle (DETECTED → DECIDED etc.)
   - Requirement — add or update a Requirement in the graph
   - Rejection — reject an existing Requirement (status → REJECTED)
+  - EntityType — add a new EntityType to the active domain's graph
+  - OperatorBudget — replace an existing Operator's ContextBudget (limit/measure)
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
@@ -65,6 +67,15 @@ The JSON shapes:
     "kind": "Rejection",
     "requirement_id": "R-foo",
     "reason": "REJECTED — REPLACES R-bar; see R-new"
+  }
+
+  ProposedOperatorBudget:
+  {
+    "kind": "OperatorBudget",
+    "operator_id": "OP-director",
+    "new_limit": 150000,
+    "new_measure": "CRYSTAL_CHARS",
+    "why": "..."
   }
 
 Exit codes:

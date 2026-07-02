@@ -65,7 +65,7 @@ from hotam_spec.process import (
     TARGET_KIND_GRAPH_PROPERTY,
     PROCESS_LIFECYCLE,
 )
-from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL, Requirement
+from hotam_spec.requirement import Relation, ENFORCED, PROSE, STRUCTURAL, Requirement
 from hotam_spec.stakeholder import Stakeholder
 
 
@@ -837,16 +837,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-context-budget-rule",
             claim=(
-                "An operator's owned domain shall not exceed its context budget (size(domain) <= budget.limit), with any excess flagged as a structural OVERLOADED contradiction by the harness."
+                "An operator's RESIDENT working set shall not exceed its context budget (measured by budget.measure — for CRYSTAL_CHARS the char-length of root CLAUDE.md vs the host cap), with any excess flagged as a structural OVERLOADED contradiction by the harness."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Built (P2): check_operator_within_budget fires when NODE_COUNT exceeds limit. OP-director budget set to 200 to cover the meta-domain. DomainScope narrowing deferred to P5+."
+                "Built (P2): check_operator_within_budget fires when the operator's budget.measure exceeds limit. History: NODE_COUNT originally measured the crystallized SUBSTRATE (requirements+conflicts+assumptions), which R-working-vs-substrate-budget declares free — this falsely flagged operators as near-OVERLOADED for the very act of crystallizing or keeping REJECTED history. OP-director moved to CRYSTAL_CHARS (limit=150000, the observed host char cap) — the RESIDENT crystal (root CLAUDE.md) is now the thing actually metered, per R-working-vs-substrate-budget. DomainScope narrowing deferred to P5+."
             ),
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
-            enforced_by=("check_operator_within_budget", "test_operator.py::test_check_operator_within_budget_fires", "test_operator.py::test_director_within_budget"),
+            enforced_by=("check_operator_within_budget", "test_operator.py::test_check_operator_within_budget_fires", "test_operator.py::test_director_within_budget", "test_operator.py::test_check_operator_within_budget_crystal_chars_fires", "test_operator.py::test_check_operator_within_budget_crystal_chars_green_when_under"),
         ),
         Requirement(
             id="R-operator-not-self-approve",
@@ -3336,8 +3336,8 @@ def build_graph() -> TensionGraph:
             id="R-operator-crystal-embeds-thinking",
             claim=("The operator's CLAUDE.md shall embed the full content of its scope-relevant thinking documentation inline, not as markdown links, so the operator holds the methodology itself rather than a table of contents."),
             owner="framework-author",
-            status="SETTLED",
-            why=("A link the operator must separately fetch is a re-derivation tax on every turn; inlining the methodology content means it is present in the loaded substrate from the first token (R-operator-prompt-from-substrate). Task #98 (A1) built the EMBEDDED-THINKING block; ENFORCED by test_embedded_thinking_sentinels_present (sentinels exist) and test_embedded_thinking_contains_full_topic_content (content is the full topic text, not a link)."),
+            status="REJECTED",
+            why=("REJECTED — REPLACES by R-operator-crystal-embeds-thinking-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY distillate + Tier-3 pointer instead. — (was: A link the operator must separately fetch is a re-derivation tax on every turn; inlining the methodology content means it is present in the loaded substrate from the first token (R-operator-prompt-from-substrate). Task #98 (A1) built the EMBEDDED-THINKING block; ENFORCED by test_embedded_thinking_sentinels_present (sentinels exist) and test_embedded_thinking_contains_full_topic_content (content is the full topic text, not a link).)"),
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_embedded_thinking_tools.py::test_embedded_thinking_sentinels_present", "test_embedded_thinking_tools.py::test_embedded_thinking_contains_full_topic_content",),
@@ -3346,8 +3346,8 @@ def build_graph() -> TensionGraph:
             id="R-operator-crystal-embeds-tools",
             claim=("The operator's CLAUDE.md shall embed the full content of its scope-relevant tool documentation inline, not as markdown links."),
             owner="framework-author",
-            status="SETTLED",
-            why=("Same rationale as R-operator-crystal-embeds-thinking applied to tool docs: an operator deciding whether to invoke apply_proposal.py should not have to fetch a separate file to learn its contract. ENFORCED by test_embedded_tools_sentinels_present (sentinels exist) and test_embedded_tools_contains_full_tool_content (content is the full tool doc text, not a link); test_embedded_blocks_regen_byte_identical guards against drift between the embedded copy and the regenerated source."),
+            status="REJECTED",
+            why=("REJECTED — REPLACES by R-operator-crystal-embeds-tools-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY distillate + Tier-3 pointer instead. — (was: Same rationale as R-operator-crystal-embeds-thinking applied to tool docs: an operator deciding whether to invoke apply_proposal.py should not have to fetch a separate file to learn its contract. ENFORCED by test_embedded_tools_sentinels_present (sentinels exist) and test_embedded_tools_contains_full_tool_content (content is the full tool doc text, not a link); test_embedded_blocks_regen_byte_identical guards against drift between the embedded copy and the regenerated source.)"),
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_embedded_thinking_tools.py::test_embedded_tools_sentinels_present", "test_embedded_thinking_tools.py::test_embedded_tools_contains_full_tool_content", "test_embedded_thinking_tools.py::test_embedded_blocks_regen_byte_identical",),
@@ -3370,6 +3370,89 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_hand_written_note_in_template_survives_regen", "test_regen_byte_identical",),
+        ),
+        Requirement(
+            id="R-operator-crystal-embeds-thinking-distilled",
+            claim=("The operator's CLAUDE.md shall embed a compressed RULE+WHY distillation of each scope-relevant thinking topic inline (Tier 1), each with a pointer to its full text at spec/docs/thinking/<slug>.md (Tier 3), not the full body carried verbatim in working context."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("REPLACES R-operator-crystal-embeds-thinking: full-text embedding contradicted R-crystal-reload-by-reference (an operator shall reload its crystal by reference rather than re-carrying it in working context) -- it re-carried the entire verbatim thinking corpus in working context instead of referencing it -- and it breached the 150k-char host limit (root CLAUDE.md measured ~197,916 chars with all 22 spec/docs/thinking/*.md and 14 spec/docs/tools/*.md embedded verbatim). The distillate keeps the reasoning that matters (RULE + WHY, not a bare table of contents) small enough to carry for every scope-relevant topic, while the full text stays on disk and is Tier-3-referenced by path, loaded only when actually needed."),
+            assumptions=("A-python-stack",),
+            relations=(Relation("refines", "R-crystal-reload-by-reference"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content", "test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference", "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded",),
+        ),
+        Requirement(
+            id="R-operator-crystal-embeds-tools-distilled",
+            claim=("The operator's CLAUDE.md shall embed a compressed RULE+WHY distillation of each scope-relevant tool's documentation inline (Tier 1), each with a pointer to its full text at spec/docs/tools/<basename>.md (Tier 3), not the full body carried verbatim in working context."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("REPLACES R-operator-crystal-embeds-tools: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k-char host limit (root CLAUDE.md measured ~197,916 chars with the full tool-doc corpus embedded verbatim). The distillate keeps the RULE + WHY reasoning for every scope-relevant tool while the full doc stays on disk, Tier-3-referenced by path."),
+            assumptions=("A-python-stack",),
+            relations=(Relation("refines", "R-crystal-reload-by-reference"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content", "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded",),
+        ),
+        Requirement(
+            id="R-crystal-carries-role-seed",
+            claim=("Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (everything important-yet-invisible becomes a typed anchored node under a steward; tension is held, never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad)."),
+            assumptions=("A-bootstrap-self-applies",),
+            relations=(Relation("refines", "R-crystal-is-claude-md"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_operator_seed.py::test_role_block_states_scope_and_law",),
+        ),
+        Requirement(
+            id="R-crystal-carries-mediation-loop",
+            claim=("Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop — ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND — each step naming its real tool command."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist — what_now.py (ORIENT), the Constitution index and generated docs (LOCATE), RECENTLY-REJECTED anti-relitigation scan (CONFRONT), Proposed* JSON (TRANSLATE), steward decision (PRESENT, R-ai-presents-not-decides), apply_proposal → gen_spec → pytest → closure (LAND, R-verify-closure-per-action). Naming real commands keeps the loop executable rather than aspirational; a pass that writes nothing is a valid conclusion."),
+            assumptions=("A-bootstrap-self-applies",),
+            relations=(Relation("refines", "R-agent-never-lost"), Relation("supports", "R-ai-presents-not-decides"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_operator_seed.py::test_mediation_loop_names_real_tools",),
+        ),
+        Requirement(
+            id="R-crystal-carries-recursion-seed",
+            claim=("Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope, naming the create_agent → gen_spec → spawn_agent path."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, zero active sub-agents), agent crystals must not exist, so the crystal carries the description of HOW to spawn — the same Role/Loop seed with a narrower scope filter (R-sub-agent-crystal-triad) — plus the real machinery path (create_agent.py, gen_spec.py, spawn_agent.py with --stamp, spawn-log per R-task-spawn-log-runtime) and the conclusions-only return contract (R-delegation-conclusions-only)."),
+            assumptions=("A-finite-context-operators",),
+            relations=(Relation("refines", "R-context-bounded-delegation"), Relation("supports", "R-sub-agent-crystal-triad"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_operator_seed.py::test_recursion_block_names_spawn_path",),
+        ),
+        Requirement(
+            id="R-constitution-is-index",
+            claim=("The CONSTITUTION block in root CLAUDE.md shall render each SETTLED requirement as a one-line index entry — id, claim truncated to at most 96 characters, single-character enforcement flag — with a block-level pointer to the full roster in the domain's docs/gen/REQUIREMENTS.md."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The crystal is a seed plus indexes, not a catalog (R-crystal-reload-by-reference): full claims already live in the generated roster (docs/gen/REQUIREMENTS.md) and enforcement detail in docs/gen/UNENFORCED.md, so carrying them verbatim doubled the block (~38k chars of the 85k crystal). The index keeps every SETTLED anchor plus enough claim text resident for the CONFRONT scan while cutting ~16k chars, and is orthogonal to Phase 3: relocating framework-plumbing atoms changes WHICH ids are listed, not the line format. R-operator-prompt-from-substrate stays true — all SETTLED requirements, grouped by category, generated deterministically."),
+            assumptions=("A-finite-context-operators", "A-compaction-loses-working",),
+            relations=(Relation("refines", "R-operator-prompt-from-substrate"), Relation("refines", "R-crystal-reload-by-reference"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_constitution.py::test_constitution_is_index", "test_constitution.py::test_constitution_lists_all_settled",),
+        ),
+        Requirement(
+            id="R-constitution-separates-plumbing",
+            claim=("The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("hotam-spec-self is the framework modeling itself, so a majority of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery) rather than business claims the operator mediates as reality. Phase 3 (task #9) relocates those atoms out of the resident CONSTITUTION index into a generated FRAMEWORK-INVARIANTS.md, reachable by pointer, so the operator's resident index reflects what it actually mediates. This is presentational only: no atom's status changes and no atom is dropped from the full REQUIREMENTS.md roster (kept, not deleted, mirroring R-rejected-preserved-not-deleted's anti-loss discipline)."),
+            enforcement=ENFORCED,
+            enforced_by=("test_constitution.py::test_constitution_partitions_all_settled", "test_constitution.py::test_constitution_pointer_to_framework_invariants", "test_constitution.py::test_framework_invariants_md_up_to_date",),
+        ),
+        Requirement(
+            id="R-speculative-aspects-frozen",
+            claim=("The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Built ahead of demand — 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed') but tools/apply_proposal.py's _find_conflict_call only matches Conflict(axis=<literal>, context=<literal>) calls via AST; all six Conflict nodes in this graph pass axis/context as local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so no existing Conflict can currently be moved by ConflictTransition proposals without a tool change. Left untouched pending steward decision on extending apply_proposal to resolve variable-bound kwargs."),
+            enforcement=STRUCTURAL,
         ),
     )
 
@@ -3548,7 +3631,7 @@ def build_graph() -> TensionGraph:
             # real acting operator (the human director). 200 keeps headroom while
             # the budget invariant lives (check_operator_within_budget). Token-
             # estimate is deferred behind the measure seam (M17).
-            context_budget=ContextBudget(limit=220, measure="NODE_COUNT"),
+            context_budget=ContextBudget(limit=150000, measure="CRYSTAL_CHARS"),
             parent=None,
             why=(
                 "The director-operator: the human Framework author acting on the "

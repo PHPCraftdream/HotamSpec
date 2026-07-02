@@ -58,7 +58,26 @@ from hotam_spec.lifecycle import (
 NODE_COUNT = "NODE_COUNT"
 TOKEN_ESTIMATE = "TOKEN_ESTIMATE"  # deferred seam, not measured yet
 COMPLEXITY = "COMPLEXITY"  # deferred seam, not measured yet
-BUDGET_MEASURES: frozenset[str] = frozenset({NODE_COUNT, TOKEN_ESTIMATE, COMPLEXITY})
+CRYSTAL_CHARS = "CRYSTAL_CHARS"
+"""Canon: §ContextBudget — measure = len(root CLAUDE.md) in characters.
+
+RULE: size(operator.domain) under CRYSTAL_CHARS is the character-length of
+the resident crystal (root CLAUDE.md), NOT the crystallized substrate (the
+content graph). The substrate is FREE (R-working-vs-substrate-budget); only
+what the operator must hold RESIDENT in its working context — the crystal it
+re-reads at boot — competes against the host's real ceiling.
+
+WHY this measure exists (replacing the NODE_COUNT-as-substrate-proxy
+mistake): NODE_COUNT counted requirements+conflicts+assumptions — the
+crystallized substrate itself — and so punished the very act of
+crystallizing and of keeping REJECTED history, exactly what
+R-working-vs-substrate-budget declares free. CRYSTAL_CHARS measures the one
+thing that actually costs working context: the size of the file the
+operator re-loads by reference each boot (R-context-budget-rule).
+"""
+BUDGET_MEASURES: frozenset[str] = frozenset(
+    {NODE_COUNT, TOKEN_ESTIMATE, COMPLEXITY, CRYSTAL_CHARS}
+)
 
 
 # ---------------------------------------------------------------------------

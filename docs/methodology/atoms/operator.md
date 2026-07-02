@@ -86,21 +86,21 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `test_reflection.py`
 
-## `R-operator-crystal-embeds-thinking` (ENFORCED)
+## `R-operator-crystal-embeds-thinking-distilled` (ENFORCED)
 
-**Claim.** The operator's CLAUDE.md shall embed the full content of its scope-relevant thinking documentation inline, not as markdown links, so the operator holds the methodology itself rather than a table of contents.
+**Claim.** The operator's CLAUDE.md shall embed a compressed RULE+WHY distillation of each scope-relevant thinking topic inline (Tier 1), each with a pointer to its full text at spec/docs/thinking/<slug>.md (Tier 3), not the full body carried verbatim in working context.
 
-**Why.** A link the operator must separately fetch is a re-derivation tax on every turn; inlining the methodology content means it is present in the loaded substrate from the first token (R-operator-prompt-from-substrate). Task #98 (A1) built the EMBEDDED-THINKING block; ENFORCED by test_embedded_thinking_sentinels_present (sentinels exist) and test_embedded_thinking_contains_full_topic_content (content is the full topic text, not a link).
+**Why.** REPLACES R-operator-crystal-embeds-thinking: full-text embedding contradicted R-crystal-reload-by-reference (an operator shall reload its crystal by reference rather than re-carrying it in working context) -- it re-carried the entire verbatim thinking corpus in working context instead of referencing it -- and it breached the 150k-char host limit (root CLAUDE.md measured ~197,916 chars with all 22 spec/docs/thinking/*.md and 14 spec/docs/tools/*.md embedded verbatim). The distillate keeps the reasoning that matters (RULE + WHY, not a bare table of contents) small enough to carry for every scope-relevant topic, while the full text stays on disk and is Tier-3-referenced by path, loaded only when actually needed.
 
-**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_thinking_sentinels_present`, `test_embedded_thinking_tools.py::test_embedded_thinking_contains_full_topic_content`
+**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded`
 
-## `R-operator-crystal-embeds-tools` (ENFORCED)
+## `R-operator-crystal-embeds-tools-distilled` (ENFORCED)
 
-**Claim.** The operator's CLAUDE.md shall embed the full content of its scope-relevant tool documentation inline, not as markdown links.
+**Claim.** The operator's CLAUDE.md shall embed a compressed RULE+WHY distillation of each scope-relevant tool's documentation inline (Tier 1), each with a pointer to its full text at spec/docs/tools/<basename>.md (Tier 3), not the full body carried verbatim in working context.
 
-**Why.** Same rationale as R-operator-crystal-embeds-thinking applied to tool docs: an operator deciding whether to invoke apply_proposal.py should not have to fetch a separate file to learn its contract. ENFORCED by test_embedded_tools_sentinels_present (sentinels exist) and test_embedded_tools_contains_full_tool_content (content is the full tool doc text, not a link); test_embedded_blocks_regen_byte_identical guards against drift between the embedded copy and the regenerated source.
+**Why.** REPLACES R-operator-crystal-embeds-tools: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k-char host limit (root CLAUDE.md measured ~197,916 chars with the full tool-doc corpus embedded verbatim). The distillate keeps the RULE + WHY reasoning for every scope-relevant tool while the full doc stays on disk, Tier-3-referenced by path.
 
-**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_tools_sentinels_present`, `test_embedded_thinking_tools.py::test_embedded_tools_contains_full_tool_content`, `test_embedded_thinking_tools.py::test_embedded_blocks_regen_byte_identical`
+**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded`
 
 ## `R-operator-has-context-budget` (ENFORCED)
 

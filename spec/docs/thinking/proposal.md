@@ -44,6 +44,17 @@ Canon: §Proposal — propose REJECTING a Requirement (status → REJECTED).
 Preserves the anti-relitigation discipline: REJECTED is kept in the graph
 (R-rejected-preserved-not-deleted), never deleted.
 
+## From `spec/src/hotam_spec/proposal.py::ProposedOperatorBudget`
+
+Canon: §Proposal / §ContextBudget — propose a new ContextBudget for an existing Operator.
+
+RULE: kind="OperatorBudget"; the apply_proposal tool locates the
+Operator(...) call whose id matches operator_id and replaces its
+context_budget= kwarg with ContextBudget(limit=new_limit,
+measure=new_measure). Used to move an operator off a stale/mismeasured
+budget (e.g. NODE_COUNT counting the free substrate) onto a measure that
+actually reflects R-working-vs-substrate-budget (e.g. CRYSTAL_CHARS).
+
 ## From `spec/src/hotam_spec/proposal.py::ProposedEntityType`
 
 Canon: §Proposal — propose a new EntityType to add to the active domain's graph.

@@ -1373,26 +1373,38 @@ def check_operator_steward_not_self(g: TensionGraph) -> list[Violation]:
 
 
 def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
-    """Canon: §ContextBudget / §Invariants — operator domain must not exceed its budget.
+    """Canon: §ContextBudget / §Invariants — operator budget measure (NODE_COUNT nodes or CRYSTAL_CHARS resident crystal) must not exceed its budget limit, else crystallize first or spawn a sub-operator.
 
-    RULE: for each Operator with `context_budget.limit > 0`:
+    RULE: for each operator whose budget measure (NODE_COUNT nodes or CRYSTAL_CHARS resident crystal chars) exceeds its budget limit, fire — crystallize first; if still over, spawn a sub-operator:
       - If `measure == NODE_COUNT`, compute:
           size = len(g.requirements) + len(g.conflicts) + len(g.assumptions)
         (full-graph count; DomainScope narrowing is deferred to a later P-phase).
+        NOTE: this measure counts the crystallized SUBSTRATE, which
+        R-working-vs-substrate-budget declares free — kept only for backward
+        compatibility with existing operators/tests that opted into it.
+      - If `measure == CRYSTAL_CHARS`, compute:
+          size = character-length of the resident crystal (root CLAUDE.md)
+        This is the RESIDENT working set the operator actually re-loads by
+        reference each boot (R-working-vs-substrate-budget) — the substrate
+        (the content graph itself) is NOT counted. If CLAUDE.md is absent,
+        size is 0 (nothing resident yet; not a violation).
       - If `size > limit`, fire a Violation with the imperative:
           'crystallize first; if still over, spawn a sub-operator'
           (R-crystallize-before-split, R-context-budget-rule).
       - `limit == 0` means unbounded; the check is skipped for that operator.
 
-    WHY NODE_COUNT (M17): deterministic and computable without token-estimation
-    infrastructure; the TOKEN_ESTIMATE and COMPLEXITY measures are deferred
-    behind a seam for future phases. See R-budget-measure and R-context-budget-rule.
+    WHY CRYSTAL_CHARS (replacing NODE_COUNT-as-substrate-proxy): NODE_COUNT
+    measured the crystallized substrate itself, which R-working-vs-substrate-budget
+    declares FREE — this falsely flagged operators as near-OVERLOADED for the very
+    act of crystallizing or keeping REJECTED history. CRYSTAL_CHARS measures the
+    one thing that costs real working context: the resident crystal (root
+    CLAUDE.md) against the host's actual character ceiling. See R-context-budget-rule.
 
     WHY fire (not warn): 'domain > context' is exactly the kind of measurable,
     structural contradiction Hotam-Spec exists to surface. An over-budget operator
     is a real conflict the graph holds visibly, not a soft warning.
     """
-    from hotam_spec.operator import NODE_COUNT  # noqa: PLC0415
+    from hotam_spec.operator import CRYSTAL_CHARS, NODE_COUNT  # noqa: PLC0415
 
     out: list[Violation] = []
     for op in g.operators:
@@ -1410,6 +1422,20 @@ def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
                         f"(NODE_COUNT measure); crystallize first "
                         f"(R-crystallize-before-split); if still over, spawn a "
                         f"sub-operator (R-context-bounded-delegation)",
+                    )
+                )
+        elif op.context_budget.measure == CRYSTAL_CHARS:
+            claude_md = _REPO_ROOT_FROM_INVARIANTS / "CLAUDE.md"
+            size = len(claude_md.read_text(encoding="utf-8")) if claude_md.exists() else 0
+            if size > limit:
+                out.append(
+                    Violation(
+                        "check_operator_within_budget",
+                        op.id,
+                        f"operator '{op.id}' resident crystal is {size} chars > "
+                        f"budget {limit} (CRYSTAL_CHARS measure); crystallize "
+                        f"first (R-crystallize-before-split); if still over, "
+                        f"spawn a sub-operator (R-context-bounded-delegation)",
                     )
                 )
     return out

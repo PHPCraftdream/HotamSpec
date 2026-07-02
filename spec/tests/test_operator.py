@@ -277,3 +277,66 @@ def test_check_operator_within_budget_green_when_under() -> None:
     # 1 req + 0 conflicts + 0 assumptions = 1 <= 100
     v = check_operator_within_budget(g)
     assert holds(v), "operator within budget must not fire"
+
+
+# ---------------------------------------------------------------------------
+# 4. check_operator_within_budget — CRYSTAL_CHARS measure
+# ---------------------------------------------------------------------------
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_ROOT_CLAUDE_MD_SIZE = len(
+    (_REPO_ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+)
+
+
+def test_check_operator_within_budget_crystal_chars_fires() -> None:
+    """CRYSTAL_CHARS measure fires when root CLAUDE.md exceeds the limit.
+
+    Limit is deliberately set below the real, currently-committed root
+    CLAUDE.md character count so the check must fire.
+    """
+    op = Operator(
+        id="OP-crystal-tight",
+        stakeholder="framework-author",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=1, measure="CRYSTAL_CHARS"),
+    )
+    g = TensionGraph(
+        axes=(),
+        stakeholders=(_S_AUTHOR, _S_REVIEWER),
+        assumptions=(),
+        requirements=(),
+        conflicts=(),
+        operators=(op,),
+    )
+    v = check_operator_within_budget(g)
+    assert v, "CRYSTAL_CHARS measure must fire when crystal exceeds limit"
+    assert any("OP-crystal-tight" in x.target for x in v), (
+        "violation must target OP-crystal-tight"
+    )
+    assert any("CRYSTAL_CHARS" in x.message for x in v), (
+        "violation message must name the CRYSTAL_CHARS measure"
+    )
+
+
+def test_check_operator_within_budget_crystal_chars_green_when_under() -> None:
+    """CRYSTAL_CHARS measure stays green when the limit comfortably covers
+    the real, currently-committed root CLAUDE.md character count."""
+    op = Operator(
+        id="OP-crystal-ok",
+        stakeholder="framework-author",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(
+            limit=_ROOT_CLAUDE_MD_SIZE + 1_000_000, measure="CRYSTAL_CHARS"
+        ),
+    )
+    g = TensionGraph(
+        axes=(),
+        stakeholders=(_S_AUTHOR, _S_REVIEWER),
+        assumptions=(),
+        requirements=(),
+        conflicts=(),
+        operators=(op,),
+    )
+    v = check_operator_within_budget(g)
+    assert holds(v), "CRYSTAL_CHARS measure must not fire when comfortably under limit"
