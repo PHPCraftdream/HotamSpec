@@ -1533,6 +1533,7 @@ def apply(
     dry_run: bool = False,
     triggering_kind: str | None = None,
     content_graph: Path | None = None,
+    full_suite: bool = False,
 ) -> int:
     """Canon: §Proposal — apply a validated Proposal to the graph.
 
@@ -1548,7 +1549,7 @@ def apply(
       1. Read spec/content/graph.py.
       2. Apply the proposal (type-dispatched).
       3. If dry_run: print diff and return 0 without writing.
-      4. Write the file, run gen_spec.py, run pytest -q.
+      4. Write the file, run gen_spec.py, run the LAND-gate verify tier.
       5. If triggering_kind supplied: run closure.check_closure; return 2 if not advanced.
       6. Return 0 on success, 1 on any non-closure failure.
 
@@ -1556,10 +1557,38 @@ def apply(
     was meant to close (e.g. "CONFLICT_STALLED", "OPEN_ITEM", "STRUCTURE",
     "DRIFT_FALLOUT"). If None, the closure check is skipped (backward-compat for
     P3 unit tests that do not supply a triggering kind).
+
+    `full_suite` forces the T2 (full pytest) verify tier even when the T1
+    targeted-enforcer selector (tools/gate.py) would otherwise be confident.
+    R-land-gate-tier-selector: when False (the default), apply() asks
+    gate.select_tier1(proposal.target_anchor()) for a targeted node-id subset;
+    if the selector is confident, ONLY that subset (+ ALWAYS_RUN) is run. Any
+    selector uncertainty (new node, empty/unresolvable enforced_by, Conflict
+    target) falls back to the full suite automatically — the gate never
+    silently narrows verification below full coverage; it only ever narrows
+    when it can name the exact enforcers a full run would have exercised for
+    this target anyway. R-tiered-gate-not-a-commit-gate: this tiering applies
+    ONLY to the per-proposal LAND step; wave/commit boundaries remain governed
+    by the unabridged full suite (`uv run pytest -q` from spec/), never T1.
     """
     active_graph = content_graph if content_graph is not None else _CONTENT_GRAPH
     source_text = active_graph.read_text(encoding="utf-8")
     original_lines = source_text.splitlines(keepends=True)
+
+    # R-land-gate-tier-selector-fails-closed: determine, from the PRE-write
+    # source, whether this proposal's target node already existed. A
+    # ProposedConflict always creates (Conflict has no update path — see
+    # _apply_conflict_to_source, which errors if the id already exists); a
+    # ProposedRequirement may ADD (new node, target_preexisting=False) or
+    # UPDATE (existing node, target_preexisting=True). This flag — not the
+    # accidental emptiness of a fresh node's enforced_by tuple — is what
+    # drives the T1/T2 tier decision below (fail closed on any creation).
+    target_preexisting = True
+    if isinstance(proposal, ProposedConflict):
+        target_preexisting = False
+    elif isinstance(proposal, ProposedRequirement):
+        pre_tree = ast.parse(source_text)
+        target_preexisting = _find_requirement_call(pre_tree, proposal.id) is not None
 
     try:
         if isinstance(proposal, ProposedConflictTransition):
@@ -1624,9 +1653,43 @@ def apply(
         return 1
     print("gen_spec.py: OK")
 
-    # Verify
+    # Verify — T1 targeted-enforcer gate by default, T2 full suite on --full,
+    # on a ProposedRejection (removal blast radius is not bounded by the
+    # rejected atom's own enforced_by — R-land-gate-tier-selector-fails-closed),
+    # on a node CREATION (new Requirement or new Conflict — a brand-new node's
+    # blast radius cannot be known from its own enforced_by, which is either
+    # absent or steward-supplied and unverified), or whenever the gate fails
+    # closed (R-land-gate-tier-selector).
+    pytest_args = [sys.executable, "-m", "pytest", "-q"]
+    gate_tier = "T2 (full suite, --full requested)"
+    if full_suite:
+        pytest_args.append(str(_SPEC_ROOT / "tests"))
+    elif isinstance(proposal, ProposedRejection):
+        gate_tier = (
+            "T2 (full suite, ProposedRejection: a rejected atom's own "
+            "enforced_by does not bound its removal blast radius)"
+        )
+        pytest_args.append(str(_SPEC_ROOT / "tests"))
+    elif not target_preexisting:
+        gate_tier = (
+            "T2 (full suite, new node creation: no pre-existing enforced_by "
+            "can be trusted to bound a brand-new node's blast radius)"
+        )
+        pytest_args.append(str(_SPEC_ROOT / "tests"))
+    else:
+        import gate as _gate  # noqa: PLC0415  (lives in tools/, not a package)
+
+        gate_result = _gate.select_tier1(proposal.target_anchor())
+        if gate_result.confident:
+            gate_tier = f"T1 (targeted, {len(gate_result.node_ids)} node-id(s))"
+            pytest_args.extend(gate_result.node_ids)
+        else:
+            gate_tier = f"T2 (full suite, gate fell back closed: {gate_result.reason})"
+            pytest_args.append(str(_SPEC_ROOT / "tests"))
+    print(f"verify tier: {gate_tier}")
+
     pytest_result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", str(_SPEC_ROOT / "tests")],
+        pytest_args,
         capture_output=True,
         text=True,
         cwd=str(_SPEC_ROOT),
@@ -1736,6 +1799,17 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--full",
+        action="store_true",
+        help=(
+            "Force the T2 full pytest suite as the LAND verify step, even when "
+            "tools/gate.py's T1 targeted-enforcer selector would be confident. "
+            "T1 is the default (R-land-gate-tier-selector); the selector itself "
+            "falls back to full-suite automatically on any uncertainty, so "
+            "--full is for explicit wave/commit-boundary or steward-requested runs."
+        ),
+    )
+    parser.add_argument(
         "proposal_file",
         help="Path to the steward-approved JSON proposal file.",
     )
@@ -1770,6 +1844,7 @@ def main(argv: list[str] | None = None) -> int:
                 proposal,
                 dry_run=args.dry_run,
                 triggering_kind=args.triggering_kind,
+                full_suite=args.full,
             )
             if rc != 0:
                 print(
@@ -1786,7 +1861,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: invalid proposal: {exc}", file=sys.stderr)
         return 1
 
-    return apply(proposal, dry_run=args.dry_run, triggering_kind=args.triggering_kind)
+    return apply(
+        proposal,
+        dry_run=args.dry_run,
+        triggering_kind=args.triggering_kind,
+        full_suite=args.full,
+    )
 
 
 if __name__ == "__main__":

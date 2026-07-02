@@ -528,7 +528,7 @@ def test_reflect_unenforced_settled_fires_direct() -> None:
     assert len(found) == 1
     assert found[0].condition == "reflect_unenforced_settled"
     assert found[0].target == "enforcement-gradient"
-    assert "6 SETTLED requirements are PROSE/STRUCTURAL" in found[0].imperative
+    assert "6 SETTLED requirements are closeable debt" in found[0].imperative
     debt5 = tuple(_settled_req(f"R-u{i}", enforcement=PROSE) for i in range(5))
     at_threshold = TensionGraph(
         axes=_DUMMY_AXES, stakeholders=_SH, requirements=debt5
@@ -562,7 +562,64 @@ def test_reflect_over_budget_operators_fires_direct() -> None:
         "only the positive-limit, over-budget operator fires (limit=0 is unbounded)"
     )
     assert found[0].condition == "reflect_over_budget_operators"
-    assert "holds 5 nodes > budget 2" in found[0].imperative
+    assert "holds 5 nodes (NODE_COUNT measure) > budget 2" in found[0].imperative
+
+
+_REPO_ROOT_FOR_REFLECTION = Path(__file__).resolve().parents[2]
+_ROOT_CLAUDE_MD_SIZE_FOR_REFLECTION = len(
+    (_REPO_ROOT_FOR_REFLECTION / "CLAUDE.md").read_text(encoding="utf-8")
+)
+
+
+def test_reflect_over_budget_operators_crystal_chars_fires_direct() -> None:
+    """reflect_over_budget_operators dispatches to CRYSTAL_CHARS measure,
+    firing when root CLAUDE.md exceeds the limit (mirrors
+    check_operator_within_budget's CRYSTAL_CHARS branch, R-context-budget-rule)."""
+    op = Operator(
+        id="OP-crystal-tight",
+        stakeholder="s-a",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(limit=1, measure="CRYSTAL_CHARS"),
+    )
+    g = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=(),
+        operators=(op,),
+    )
+    found = reflection.reflect_over_budget_operators(g)
+    assert found, "CRYSTAL_CHARS measure must fire when crystal exceeds limit"
+    assert found[0].target == "OP-crystal-tight"
+    assert found[0].condition == "reflect_over_budget_operators"
+    assert "CRYSTAL_CHARS measure" in found[0].imperative
+
+
+def test_reflect_over_budget_operators_crystal_chars_green_when_under() -> None:
+    """CRYSTAL_CHARS measure stays green when the limit comfortably covers
+    the real, currently-committed root CLAUDE.md character count — even
+    though the graph itself has far more than `limit` nodes, proving the
+    predicate is NOT blind to the operator's declared measure."""
+    reqs = tuple(_settled_req(f"R-r{i}") for i in range(50))
+    op = Operator(
+        id="OP-crystal-ok",
+        stakeholder="s-a",
+        lifecycle="ACTIVE",
+        context_budget=ContextBudget(
+            limit=_ROOT_CLAUDE_MD_SIZE_FOR_REFLECTION + 1_000_000,
+            measure="CRYSTAL_CHARS",
+        ),
+    )
+    g = TensionGraph(
+        axes=_DUMMY_AXES,
+        stakeholders=_SH,
+        requirements=reqs,
+        operators=(op,),
+    )
+    found = reflection.reflect_over_budget_operators(g)
+    assert not found, (
+        "CRYSTAL_CHARS operator must not fire from node count alone "
+        f"(50 nodes >> limit would fire under NODE_COUNT); got {found}"
+    )
 
 
 def test_reflect_dead_assumption_on_enforcer_fires_direct() -> None:

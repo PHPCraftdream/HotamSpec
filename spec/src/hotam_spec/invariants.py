@@ -331,6 +331,62 @@ def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_doc_reader_resolves_to_stakeholder(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — every generated doc's reader resolves to a known Stakeholder.
+
+    RULE (aspect-gated): for every doc kind declared in
+    `hotam_spec.doc_readers.DOC_READER_ROLES`,
+    `doc_readers.resolve_reader(kind, stakeholder_ids(g))` MUST return an id
+    present in `stakeholder_ids(g)` — never `UNRESOLVED_READER`. A dangling
+    reader (a generated doc naming a reader nobody is accountable for) is the
+    same invisibility the dangling-ref family already forbids for edges — this
+    is that family applied to doc plumbing (R-doc-names-reader). No-ops when
+    NO stakeholder in the graph resolves ANY role — a domain that has not
+    opted into the ROLE_* naming convention (e.g. a business domain with
+    stakeholders named "finance"/"platform") has not adopted this aspect yet,
+    mirroring the Process/Goal/Entity aspect-gating precedent (no-op when the
+    aspect's substrate is empty).
+
+    WHY graph-scoped, not filesystem-scoped: the reader MAPPING is framework
+    code (doc_readers.DOC_READER_ROLES); what varies per domain is which
+    Stakeholder ids exist to satisfy it. Passing the already-loaded `g` (mirrors
+    check_axis_in_registry) keeps this check pure and avoids re-importing a
+    domain graph from disk, unlike the filesystem-coherence checks
+    (check_entities_md_lists_all_types) that must walk domains/ because they
+    validate committed generated files against EVERY domain, not just the
+    active one.
+    """
+    from hotam_spec.doc_readers import (  # noqa: PLC0415
+        DOC_READER_ROLES,
+        UNRESOLVED_READER,
+        resolve_reader,
+    )
+
+    if not g.stakeholders:
+        return []
+    sids = stakeholder_ids(g)
+    resolutions = {
+        doc_kind: resolve_reader(doc_kind, sids) for doc_kind in DOC_READER_ROLES
+    }
+    if all(r == UNRESOLVED_READER for r in resolutions.values()):
+        return []  # aspect not adopted by this domain — legitimate no-op
+    out: list[Violation] = []
+    for doc_kind in sorted(DOC_READER_ROLES):
+        resolved = resolutions[doc_kind]
+        if resolved == UNRESOLVED_READER:
+            out.append(
+                Violation(
+                    "check_doc_reader_resolves_to_stakeholder",
+                    doc_kind,
+                    f"doc kind '{doc_kind}' has role "
+                    f"'{DOC_READER_ROLES[doc_kind]}' but no Stakeholder in this "
+                    "graph matches it — add a Stakeholder whose id hints at "
+                    "that role, or update doc_readers._ROLE_ID_HINTS",
+                )
+            )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # 2. A conflict is a CONNECTOR — axis, context, steward all present (atomized)
 # ---------------------------------------------------------------------------
@@ -2699,6 +2755,8 @@ ALL_INVARIANTS = (
     check_no_dangling_requirement_relations,
     check_no_dangling_conflict_refs,
     check_no_dangling_operator_refs,
+    # §Requirement — generated-doc reader plumbing (R-doc-names-reader)
+    check_doc_reader_resolves_to_stakeholder,
     # §Conflict connector node (atomized; check_conflict_has_axis_context_steward is thin delegator)
     check_conflict_has_axis,
     check_conflict_has_context,

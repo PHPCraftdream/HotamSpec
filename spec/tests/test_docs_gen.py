@@ -174,6 +174,75 @@ def test_generated_files_are_lf_and_banner(tmp_path: Path) -> None:
         )
 
 
+def test_generated_docs_carry_reader_header() -> None:
+    """R-doc-names-reader: every generated doc's header resolves to a real Stakeholder id.
+
+    Covers the `[BANNER, reader:, ...]`-style docs/gen/*.md builders, the
+    atoms/*.md builders, and the HTML-comment-style spec/docs/{thinking,tools}
+    builders. hotam-spec-self's own graph adopts the ROLE_* stakeholder-id
+    convention (ai-agent / domain-user / framework-author), so every doc kind
+    in DOC_READER_ROLES MUST resolve — none may carry the UNRESOLVED_READER
+    sentinel here.
+    """
+    from hotam_spec.doc_readers import UNRESOLVED_READER  # noqa: PLC0415
+
+    g = gen_spec.load_content_graph()
+    active = gen_spec._active_domain()
+    domain_name = active.name if active is not None else ""
+
+    gen_dir_outputs = {
+        "REQUIREMENTS": gen_spec.build_requirements(g),
+        "TENSIONS": gen_spec.build_tensions(g),
+        "OPEN": gen_spec.build_open(g),
+        "UNENFORCED": gen_spec.build_unenforced(g),
+        "GLOSSARY": gen_spec.build_glossary(g),
+        "HISTORY": gen_spec.build_history(g),
+        "DECISIONS": gen_spec.build_decisions(g),
+        "CONSTITUTION": gen_spec.build_constitution(g),
+        "ENTITIES": gen_spec.build_entities_md(g, domain_name),
+        "FRAMEWORK_INVARIANTS": gen_spec.build_framework_invariants(g),
+        "ATOMS_OPERATOR": gen_spec.build_methodology_atoms_operator(g),
+        "ATOMS_SUBSTRATE": gen_spec.build_methodology_atoms_substrate(g),
+        "ATOMS_DISCIPLINE": gen_spec.build_methodology_atoms_discipline(g),
+        "ATOMS_CHECK": gen_spec.build_methodology_atoms_check(g),
+    }
+    for doc_kind, text in gen_dir_outputs.items():
+        assert "reader: " in text, f"{doc_kind}: missing reader: header line"
+        assert f"reader: {UNRESOLVED_READER}" not in text, (
+            f"{doc_kind}: reader did not resolve to a known Stakeholder"
+        )
+
+    thinking_docs = gen_spec.build_shared_thinking_docs()
+    assert thinking_docs, "expected at least one shared thinking doc"
+    for slug, text in thinking_docs.items():
+        assert "reader: " in text, f"thinking/{slug}: missing reader: header line"
+        assert f"reader: {UNRESOLVED_READER}" not in text, (
+            f"thinking/{slug}: reader did not resolve to a known Stakeholder"
+        )
+
+    tool_docs = gen_spec.build_shared_tool_docs()
+    assert tool_docs, "expected at least one shared tool doc"
+    for basename, text in tool_docs.items():
+        assert "reader: " in text, f"tools/{basename}: missing reader: header line"
+        assert f"reader: {UNRESOLVED_READER}" not in text, (
+            f"tools/{basename}: reader did not resolve to a known Stakeholder"
+        )
+
+    # AUDIT.md (tools/audit_atomicity.py) — same FRAMEWORK-INTERNAL family as
+    # FRAMEWORK_INVARIANTS/GLOSSARY (R-doc-names-reader applies to every
+    # generated doc, not just the docs/gen/*.md builders inside gen_spec.py).
+    _AUDIT_TOOLS = Path(__file__).resolve().parents[1] / "tools"
+    if str(_AUDIT_TOOLS) not in sys.path:
+        sys.path.insert(0, str(_AUDIT_TOOLS))
+    import audit_atomicity  # noqa: PLC0415
+
+    audit_md = audit_atomicity._build_audit_md([], [], gen_spec.stakeholder_ids(g))
+    assert "reader: " in audit_md, "AUDIT.md: missing reader: header line"
+    assert f"reader: {UNRESOLVED_READER}" not in audit_md, (
+        "AUDIT.md: reader did not resolve to a known Stakeholder"
+    )
+
+
 def test_generator_is_deterministic() -> None:
     """Building twice yields identical bytes (no timestamps/ordering nondeterminism)."""
     g = gen_spec.load_content_graph()
@@ -202,6 +271,48 @@ def test_generator_is_deterministic() -> None:
     assert gen_spec.build_methodology_atoms_check(
         g
     ) == gen_spec.build_methodology_atoms_check(g)
+
+
+def test_capture_tool_help_is_columns_invariant(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_capture_tool_help pins COLUMNS/LINES so a tool's --help text -- and
+    therefore the generated spec/docs/tools/*.md byte content -- does not
+    depend on the invoking terminal's width (R-deterministic-generation).
+
+    Regression: argparse.HelpFormatter wraps to shutil.get_terminal_size(),
+    which reads COLUMNS/LINES first; an unpinned width made a narrow CI pty
+    (COLUMNS=80) and a wide interactive terminal (COLUMNS=140) regenerate
+    different bytes for the exact same tool.
+    """
+    target = _TOOLS / "gate.py"
+    assert target.exists(), "tools/gate.py must exist for this determinism probe"
+
+    monkeypatch.setenv("COLUMNS", "80")
+    out_narrow = gen_spec._capture_tool_help(target)
+    monkeypatch.setenv("COLUMNS", "140")
+    out_wide = gen_spec._capture_tool_help(target)
+
+    assert out_narrow, "expected non-empty --help capture for tools/gate.py"
+    assert out_narrow == out_wide, (
+        "help text must be byte-identical regardless of the invoking "
+        "terminal's COLUMNS width"
+    )
+
+
+def test_capture_tool_help_restores_environ(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_capture_tool_help restores the caller's COLUMNS/LINES afterward (no
+    environment leakage across calls)."""
+    target = _TOOLS / "gate.py"
+    monkeypatch.delenv("COLUMNS", raising=False)
+    monkeypatch.delenv("LINES", raising=False)
+    gen_spec._capture_tool_help(target)
+    assert "COLUMNS" not in __import__("os").environ
+    assert "LINES" not in __import__("os").environ
+
+    monkeypatch.setenv("COLUMNS", "99")
+    monkeypatch.setenv("LINES", "50")
+    gen_spec._capture_tool_help(target)
+    assert __import__("os").environ["COLUMNS"] == "99"
+    assert __import__("os").environ["LINES"] == "50"
 
 
 # ---------------------------------------------------------------------------

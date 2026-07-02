@@ -32,11 +32,14 @@ References:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from hotam_spec.assumption import DEAD
 from hotam_spec.conflict import DECIDED_PREFIX
 from hotam_spec.graph import TensionGraph, requirement_by_id
 from hotam_spec.requirement import DRAFT, ENFORCED, SETTLED
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]  # .../HotamSpec (mirrors invariants.py)
 
 
 @dataclass(frozen=True)
@@ -61,13 +64,16 @@ class Finding:
 
 
 def graph_size(g: TensionGraph) -> int:
-    """Canon: §Reflection — NODE_COUNT for the operator budget condition.
+    """Canon: §Reflection — NODE_COUNT measure for the operator budget condition.
 
     RULE: size = |requirements| + |conflicts| + |assumptions|. This is the
-    same metric used by check_operator_within_budget (R-context-budget-rule)
-    — the Reflection band reuses identical logic but surfaces it as a P0
-    advisory, not a P1 structural violation, so over-budget operators appear
-    at the TOP of the action list before any structural noise.
+    same NODE_COUNT metric check_operator_within_budget uses for operators
+    whose context_budget.measure == NODE_COUNT (R-context-budget-rule) — the
+    Reflection band reuses identical logic but surfaces it as a P0 advisory,
+    not a P1 structural violation, so over-budget operators appear at the TOP
+    of the action list before any structural noise. Operators measured by
+    CRYSTAL_CHARS instead use _crystal_chars(), not this function — see
+    reflect_over_budget_operators.
     """
     return len(g.requirements) + len(g.conflicts) + len(g.assumptions)
 
@@ -128,7 +134,8 @@ def reflect_unenforced_settled(g: TensionGraph) -> list[Finding]:
                 condition="reflect_unenforced_settled",
                 target="enforcement-gradient",
                 imperative=(
-                    f"{n_unenforced} SETTLED requirements are PROSE/STRUCTURAL"
+                    f"{n_unenforced} SETTLED requirements are closeable debt"
+                    " (ENFORCEABLE, still PROSE/STRUCTURAL)"
                     " — claimed but not guaranteed, soft context-debt."
                     " See docs/gen/UNENFORCED.md."
                 ),
@@ -137,30 +144,53 @@ def reflect_unenforced_settled(g: TensionGraph) -> list[Finding]:
     return []
 
 
+def _crystal_chars() -> int:
+    """Canon: §Reflection — CRYSTAL_CHARS measure: char length of root CLAUDE.md.
+
+    RULE: mirrors invariants.check_operator_within_budget's CRYSTAL_CHARS
+    branch exactly — the resident crystal (root CLAUDE.md) character count,
+    or 0 if the file is absent (nothing resident yet; not a violation).
+    """
+    claude_md = _REPO_ROOT / "CLAUDE.md"
+    return len(claude_md.read_text(encoding="utf-8")) if claude_md.exists() else 0
+
+
 def reflect_over_budget_operators(g: TensionGraph) -> list[Finding]:
     """Canon: §Reflection — over-budget operators: crystallize first, then delegate.
 
-    RULE: for each Operator whose context_budget.limit is positive and
-    exceeded by graph_size(g), fire a finding on the operator id: crystallize
-    first (R-crystallize-before-split); if still over, delegate a sub-domain
-    (R-context-bounded-delegation). limit == 0 means unbounded (aspect off).
+    RULE: for each Operator whose context_budget.limit is positive, measure it
+    by its OWN context_budget.measure — NODE_COUNT uses graph_size(g);
+    CRYSTAL_CHARS uses the character length of the resident crystal (root
+    CLAUDE.md) — exactly the same dispatch check_operator_within_budget uses
+    (R-context-budget-rule). limit == 0 means unbounded (aspect off).
 
     WHY surfaced here as well as in check_operator_within_budget: the
     §Invariants form is a P1 structural violation; this predicate re-surfaces
-    the same condition as a P0 advisory so an over-budget operator appears at
-    the TOP of the action list before any structural noise.
+    the same condition, measured the same way, as a P0 advisory so an
+    over-budget operator appears at the TOP of the action list before any
+    structural noise.
     """
-    size = graph_size(g)
+    from hotam_spec.operator import CRYSTAL_CHARS, NODE_COUNT  # noqa: PLC0415
+
+    node_size = graph_size(g)
     out: list[Finding] = []
     for op in g.operators:
         limit = op.context_budget.limit
-        if limit > 0 and size > limit:
+        if limit <= 0:
+            continue
+        if op.context_budget.measure == CRYSTAL_CHARS:
+            size = _crystal_chars()
+            unit = "chars (CRYSTAL_CHARS measure)"
+        else:
+            size = node_size
+            unit = "nodes (NODE_COUNT measure)"
+        if size > limit:
             out.append(
                 Finding(
                     condition="reflect_over_budget_operators",
                     target=op.id,
                     imperative=(
-                        f"Operator '{op.id}' holds {size} nodes"
+                        f"Operator '{op.id}' holds {size} {unit}"
                         f" > budget {limit}; crystallize first"
                         " (R-crystallize-before-split); if still over, delegate"
                         " a sub-domain (R-context-bounded-delegation)."

@@ -36,6 +36,7 @@ from hotam_spec.invariants import (  # noqa: E402
     check_conflict_min_two_members,
     check_decided_has_decided_by,
     check_decided_has_rationale_or_derived,
+    check_doc_reader_resolves_to_stakeholder,
     check_enforced_names_invariant,
     check_m_tag_format,
     check_no_dangling_ids,
@@ -617,3 +618,59 @@ def test_check_agent_has_tools_subdir_noop_without_agents_root(
 
     monkeypatch.setattr(inv, "_SPEC_AGENTS_ROOT", tmp_path / "nope")
     assert inv.check_agent_has_tools_subdir(TensionGraph()) == []
+
+
+# ---------------------------------------------------------------------------
+# 11. check_doc_reader_resolves_to_stakeholder (R-doc-names-reader)
+# ---------------------------------------------------------------------------
+
+
+def test_check_doc_reader_resolves_to_stakeholder_registered() -> None:
+    """check_doc_reader_resolves_to_stakeholder is registered in ALL_INVARIANTS."""
+    assert check_doc_reader_resolves_to_stakeholder in ALL_INVARIANTS
+
+
+def test_check_doc_reader_noop_when_no_stakeholders() -> None:
+    """No-ops on an empty graph (no stakeholders to resolve against)."""
+    assert check_doc_reader_resolves_to_stakeholder(TensionGraph()) == []
+
+
+def test_check_doc_reader_noop_when_aspect_not_adopted() -> None:
+    """No-ops when the domain's stakeholder ids match NO ROLE_* hint at all.
+
+    Mirrors the seed fixture: stakeholders named 'finance'/'platform'/etc. have
+    not adopted the ROLE_* naming convention — legitimate no-op, not a debt.
+    """
+    g = seed_graph()
+    assert check_doc_reader_resolves_to_stakeholder(g) == []
+
+
+def test_check_doc_reader_green_when_all_roles_resolve() -> None:
+    """Clean when every ROLE_* hint resolves to a Stakeholder id in the graph."""
+    stakeholders = (
+        Stakeholder(id="ai-agent", name="AI agent", domain="operator"),
+        Stakeholder(id="domain-user", name="Domain user", domain="steward"),
+        Stakeholder(id="framework-author", name="Framework author", domain="fw"),
+    )
+    g = TensionGraph(stakeholders=stakeholders)
+    assert check_doc_reader_resolves_to_stakeholder(g) == []
+
+
+def test_check_doc_reader_fires_on_partial_adoption() -> None:
+    """Fires when SOME roles resolve but others don't (partial adoption is a real gap).
+
+    A graph with an 'ai-agent' stakeholder (resolves ROLE_OPERATOR) but no
+    steward/framework-maintainer-hinting stakeholder leaves REQUIREMENTS.md /
+    FRAMEWORK-INVARIANTS.md etc. with a dangling reader — must fire.
+    """
+    stakeholders = (Stakeholder(id="ai-agent", name="AI agent", domain="operator"),)
+    g = TensionGraph(stakeholders=stakeholders)
+    violations = check_doc_reader_resolves_to_stakeholder(g)
+    assert violations, "partial role adoption must surface the unresolved doc kinds"
+    assert all(
+        v.invariant == "check_doc_reader_resolves_to_stakeholder" for v in violations
+    )
+    fired_kinds = {v.target for v in violations}
+    assert "REQUIREMENTS" in fired_kinds
+    assert "FRAMEWORK_INVARIANTS" in fired_kinds
+    assert "CONSTITUTION" not in fired_kinds  # ai-agent resolves this one
