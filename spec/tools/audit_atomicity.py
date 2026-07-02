@@ -28,7 +28,12 @@ if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
 
 from hotam_spec.doc_readers import reader_line as _doc_reader_line  # noqa: E402
-from hotam_spec.graph import TensionGraph, load_content_graph, stakeholder_ids  # noqa: E402
+from hotam_spec.graph import (  # noqa: E402
+    TensionGraph,
+    active_domain_doc_readers,
+    load_content_graph,
+    stakeholder_ids,
+)
 from hotam_spec.invariants import ALL_INVARIANTS  # noqa: E402
 
 
@@ -181,7 +186,9 @@ def _build_audit_md(
     build_* functions so every generated doc names its reader.
     """
     lines: list[str] = [_BANNER]
-    reader = _doc_reader_line("AUDIT", reader_stakeholder_ids or frozenset())
+    reader = _doc_reader_line(
+        "AUDIT", reader_stakeholder_ids or frozenset(), active_domain_doc_readers()
+    )
     lines.append(f"{reader}\n\n")
     lines.append("# Atomicity Audit\n\n")
 

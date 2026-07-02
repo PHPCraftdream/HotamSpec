@@ -157,6 +157,7 @@ Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of
 - R-tool-create-entity-type — scaffolds an EntityType declaration into the active domain's graph via apply_proposal. [S]
 - R-tool-emit-cipher — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LI… [S]
 - R-tool-gate — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite. [S]
+- R-tool-gate-status — read spec/.runtime/land-log.jsonl and answer the commit-boundary question. [S]
 - R-tool-gen-spec — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally… [S]
 - R-tool-invoke-agent — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and print… [S]
 - R-tool-setup-context-hook — installs/removes the project-local hook that feeds tools/context_producer.py. [S]

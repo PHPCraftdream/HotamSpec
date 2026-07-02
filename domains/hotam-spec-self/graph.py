@@ -525,12 +525,11 @@ def build_graph() -> TensionGraph:
                 "SETTLED"
             ),
             why=(
-                "M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file or split?' question moot — the answer is per-domain directories, each owning its own graph.py, with gen_spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. Evidence: domains/hotam-spec-self/graph.py, spec/tools/gen_spec.py load_content_graph, R-domain-owns-graph-py SETTLED."
+                "M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.py, with gen_spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. Evidence: domains/hotam-spec-self/graph.py, spec/tools/gen_spec.py load_content_graph, R-domain-owns-graph-py SETTLED. (Wave 1 seed-coherence pass: enforced_by's second entry was the bare requirement id 'R-domain-owns-graph-py' rather than a resolvable test/check reference -- corrected to name the actual test that guards the domain-owns-graph-py claim, caught by the new check_enforced_by_resolvable invariant.)"
             ),
             assumptions=("A-bootstrap-self-applies", "A-graph-fits-memory"),
             enforcement="ENFORCED",
-            enforced_by=("check_domain_manifest_exists_and_importable", "R-domain-owns-graph-py"),
-            m_tag="",
+            enforced_by=("check_domain_manifest_exists_and_importable", "test_tool_create_domain.py::test_creates_required_files"),
         ),
         # --- DRAFT — proposed next-steps -----------------------------------
         Requirement(
@@ -1100,22 +1099,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-verify-closure-per-action",
             claim=(
-                "After an applied proposal lands (write + regen + pytest pass), the "
-                "system shall verify the action that triggered the proposal is "
-                "no longer present in the post-apply what_now diagnosis."
+                "After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "P4 — the feedback edge that makes Drive (P5) safe to automate. "
-                "Without per-action closure, an apply can technically land (tests "
-                "green) yet the same diagnosis re-surface — the tick would spin "
-                "without advancing. Structural answer: closure.check_closure asserts "
-                "no Action with the original (kind, target) pair remains."
+                "P4 -- the feedback edge that makes Drive (P5) safe to automate. Without per-action closure, an apply can technically land (tests green) yet the same diagnosis re-surface -- the tick would spin without advancing. Structural answer: closure.check_closure asserts no Action with the original (kind, target) pair remains. (Wave 1 seed-coherence pass: enforced_by's second entry named a tool source path 'tools/closure.py::check_closure' rather than a test node-id -- corrected to the test file that already covers check_closure, caught by the new check_enforced_by_resolvable invariant.)"
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=ENFORCED,
-            enforced_by=("test_closure.py", "tools/closure.py::check_closure"),
+            enforcement="ENFORCED",
+            enforced_by=("test_closure.py",),
         ),
         Requirement(
             id="R-anchor-everything",
@@ -1156,23 +1149,11 @@ def build_graph() -> TensionGraph:
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "SETTLED (P5): the references-not-content discipline is now "
-                "structurally bound. check_section_anchors_known ensures every "
-                "§-anchor cited in framework docstrings resolves in the glossary — "
-                "an operator that invents a §-token immediately fires a P1 "
-                "STRUCTURE violation. test_glossary_sync.py provides the test-time "
-                "mirror. docs/playbooks/ mandates that every proposal cites the "
-                "R-/C-/§ anchor it acts on. The §Tick advisory output itself "
-                "cites anchor ids in every action (target field). Together these "
-                "make reference-not-content structurally visible and machine-checked."
+                "SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every SS-anchor cited in framework docstrings resolves in the glossary -- an operator that invents a SS-token immediately fires a P1 STRUCTURE violation. test_glossary_sync.py provides the test-time mirror. docs/playbooks/ mandates that every proposal cites the R-/C-/SS anchor it acts on; test_playbooks_doc.py is the test-time mirror of that doc's presence and content. The SSTick advisory output itself cites anchor ids in every action (target field). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by's third entry was a bare doc path 'docs/playbooks/' rather than a resolvable test reference -- corrected to name the test file that guards that doc, caught by the new check_enforced_by_resolvable invariant.)"
             ),
             assumptions=("A-bootstrap-self-applies",),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "test_glossary_sync.py",
-                "check_section_anchors_known",
-                "docs/playbooks/",
-            ),
+            enforcement="ENFORCED",
+            enforced_by=("test_glossary_sync.py", "check_section_anchors_known", "test_playbooks_doc.py"),
         ),
         Requirement(
             id="R-crystallize-before-split",
@@ -1631,17 +1612,11 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Director asked: 'спеку-доку, которые будут генерировать описания "
-                "в папке docs'. BUILD: this phase. Subdirectory "
-                "`docs/methodology/atoms/` keeps generated files cleanly separate "
-                "from the existing hand-written `docs/methodology/README.md`."
+                "Director asked: build a system that generates topic-grouped descriptions in the docs folder. BUILD: this phase. Subdirectory `docs/methodology/atoms/` keeps generated files cleanly separate from the existing hand-written `docs/methodology/README.md`. (Wave 1 seed-coherence pass: enforced_by's second entry named a tool source path 'tools/gen_spec.py::build_methodology_atoms' rather than a test node-id -- corrected to the test that already exercises the per-topic builder functions, caught by the new check_enforced_by_resolvable invariant.)"
             ),
             assumptions=("A-python-stack",),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "test_docs_gen.py::test_methodology_atoms_up_to_date",
-                "tools/gen_spec.py::build_methodology_atoms",
-            ),
+            enforcement="ENFORCED",
+            enforced_by=("test_docs_gen.py::test_methodology_atoms_up_to_date",),
         ),
         # --- SETTLED — orphan-check anchoring (framework-agent audit) ----------
         Requirement(
@@ -2798,11 +2773,11 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Each sub-operator needs an operator-prompt scoped to its domain — the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally."
+                "Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_scoped_constitution' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)"
             ),
             assumptions=("A-python-stack",),
-            enforcement=ENFORCED,
-            enforced_by=("test_agent_scoped_constitution",),
+            enforcement="ENFORCED",
+            enforced_by=("test_agent_scoped_constitution.py",),
         ),
         Requirement(
             id="R-repo-map-generated",
@@ -2840,11 +2815,11 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "The operator needs an automatic map of delegated authority — who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep."
+                "The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)"
             ),
             assumptions=("A-python-stack",),
-            enforcement=ENFORCED,
-            enforced_by=("test_agent_map_complete",),
+            enforcement="ENFORCED",
+            enforced_by=("test_agent_map.py",),
         ),
         Requirement(
             id="R-domain-is-a-directory",
@@ -3118,10 +3093,10 @@ def build_graph() -> TensionGraph:
             claim=("The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels."),
             owner="framework-author",
             status="SETTLED",
-            why=("Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen_spec from spec/docs/thinking/* (shared DRY source) and the domain CLAUDE.md (per-domain knowledge). The root is a thin shell pointing into both. RESOLVED — REPLACES the old hand-written prose in root CLAUDE.md (P19a)."),
+            why=("Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen_spec from spec/docs/thinking/* (shared DRY source) and the domain CLAUDE.md (per-domain knowledge). The root is a thin shell pointing into both. RESOLVED -- REPLACES the old hand-written prose in root CLAUDE.md (P19a). (Wave 1 seed-coherence pass: enforced_by named a bare 'test_root_claude_md_is_sentinel_only' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)"),
             assumptions=("A-python-stack",),
-            enforcement=ENFORCED,
-            enforced_by=("test_root_claude_md_is_sentinel_only",),
+            enforcement="ENFORCED",
+            enforced_by=("test_root_claude_md_is_sentinel_only.py",),
         ),
         Requirement(
             id="R-entities-md-generated",
@@ -3306,10 +3281,10 @@ def build_graph() -> TensionGraph:
             claim=("CLAUDE.md shall be generated by substituting <!-- mind --> and <!-- business --> placeholders in CLAUDE.md.template.txt with rendered content, preserving all other template text verbatim."),
             owner="framework-author",
             status="SETTLED",
-            why=("The prior sentinel-surgery approach (editing ~10 separate BEGIN/END marker pairs scattered through an existing file) made it impossible for a human to add durable plain-text notes anywhere in CLAUDE.md without risking accidental clobbering by a future block-insertion bug. The template model inverts this: exactly two named placeholders are substituted; everything else in the template -- including any hand-written notes a human adds -- survives every regeneration verbatim. Simpler mental model, same anti-drift guarantee for the two generated zones."),
+            why=("The prior sentinel-surgery approach (editing ~10 separate BEGIN/END marker pairs scattered through an existing file) made it impossible for a human to add durable plain-text notes anywhere in CLAUDE.md without risking accidental clobbering by a future block-insertion bug. The template model inverts this: exactly two named placeholders are substituted; everything else in the template -- including any hand-written notes a human adds -- survives every regeneration verbatim. Simpler mental model, same anti-drift guarantee for the two generated zones. (Wave 1 seed-coherence pass: enforced_by's second entry 'test_regen_byte_identical' is ambiguous -- two test files each define a function with that bare name -- corrected to the specific file, caught by the new check_enforced_by_resolvable invariant.)"),
             assumptions=("A-python-stack",),
-            enforcement=ENFORCED,
-            enforced_by=("test_hand_written_note_in_template_survives_regen", "test_regen_byte_identical",),
+            enforcement="ENFORCED",
+            enforced_by=("test_hand_written_note_in_template_survives_regen", "test_claude_md_template.py::test_regen_byte_identical"),
         ),
         Requirement(
             id="R-operator-crystal-embeds-thinking-distilled",
@@ -3478,10 +3453,10 @@ def build_graph() -> TensionGraph:
             claim=("Every generated doc shall name its reader as an existing Stakeholder id in its header."),
             owner="framework-author",
             status="SETTLED",
-            why=("Stage E: a generated doc with no named reader is an important-yet-invisible artifact -- nobody is accountable for reading it, so drift between the doc and its audience's actual needs goes unnoticed (the generative law applied to doc plumbing, not just graph nodes). hotam_spec.doc_readers.DOC_READER_ROLES maps each doc kind to a portable ROLE hint (operator / domain-steward / framework-maintainer); gen_spec.py resolves that hint against the active domain's Stakeholder ids and stamps a `reader: <id>` line into every generated doc's header (docs/gen/*.md, spec/docs/{thinking,tools}/*.md, docs/methodology/atoms/*.md). check_doc_reader_resolves_to_stakeholder guards the mapping itself: a role hint that resolves to no Stakeholder in the graph fires a Violation, mirroring the dangling-ref family applied to doc plumbing. Aspect-gated (no-op) for domains that have not adopted the ROLE_* stakeholder-id convention, mirroring the Process/Goal/Entity aspect-gating precedent."),
+            why=("Stage E: a generated doc with no named reader is an important-yet-invisible artifact -- nobody is accountable for reading it, so drift between the doc and its audience's actual needs goes unnoticed (the generative law applied to doc plumbing, not just graph nodes). hotam_spec.doc_readers.DOC_READER_ROLES maps each doc kind to a portable ROLE hint (operator / domain-steward / framework-maintainer); gen_spec.py resolves that hint against an EXPLICIT role -> Stakeholder.id binding the active domain declares in its own manifest.py (the DOC_READERS dict, read via hotam_spec.graph.active_domain_doc_readers()) and stamps a `reader: <id>` line into every generated doc's header (docs/gen/*.md, spec/docs/{thinking,tools}/*.md, docs/methodology/atoms/*.md). Resolution NEVER scans stakeholder ids for a role-shaped substring (R-doc-readers-declared-not-guessed) -- a stakeholder id that happens to contain a role word (e.g. a 'travel-agent' stakeholder in some future business domain) can no longer be silently captured as the reader of operator-facing docs; only a binding the domain author wrote down on purpose counts. check_doc_reader_resolves_to_stakeholder guards the mapping itself: a declared binding whose id is absent from the graph's Stakeholders, or a role with no binding at all, fires a Violation, mirroring the dangling-ref family applied to doc plumbing. Aspect-gated (no-op) for domains that have declared no DOC_READERS binding at all, mirroring the Process/Goal/Entity aspect-gating precedent."),
             relations=(Relation("supports", "R-anchor-everything"), Relation("supports", "R-drift-structurally-impossible"),),
             enforcement="ENFORCED",
-            enforced_by=("check_doc_reader_resolves_to_stakeholder", "test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered", "test_invariants.py::test_check_doc_reader_green_when_all_roles_resolve", "test_invariants.py::test_check_doc_reader_fires_on_partial_adoption", "test_docs_gen.py::test_generated_docs_carry_reader_header"),
+            enforced_by=("check_doc_reader_resolves_to_stakeholder", "test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered", "test_invariants.py::test_check_doc_reader_green_when_all_roles_resolve", "test_invariants.py::test_check_doc_reader_fires_on_partial_adoption", "test_invariants.py::test_check_doc_reader_fires_on_dangling_bound_id", "test_invariants.py::test_check_doc_reader_travel_agent_regression", "test_docs_gen.py::test_generated_docs_carry_reader_header"),
         ),
         Requirement(
             id="R-initiator-supplies-domain-content",
@@ -3491,6 +3466,38 @@ def build_graph() -> TensionGraph:
             why=("Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. Honest enforcement: no automated check yet verifies 'initiator supplied content at boot' as a runtime event -- this is STRUCTURAL (visible/addressable via the mediation loop and closure discipline) not ENFORCED; do not fabricate an enforcer."),
             assumptions=("A-prose-suffices",),
             enforcement=STRUCTURAL,
+        ),
+        Requirement(
+            id="R-enforced-by-resolvable",
+            claim=("Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node-id via the shared enforcer-resolution algorithm."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Wave 1 (seed coherence audit): check_enforced_names_invariant only checks that enforced_by is NON-EMPTY -- a real typo in an entry (a renamed test file, a stale check_* name) passes that check silently and is only discovered when someone runs tools/gate.py by hand and it fails closed to the full suite. That is an honest but SILENT tax on the T1 tiered gate (R-verify-closure-per-action): the graph claims a targeted enforcer exists when it does not, and the steward never sees this as debt. check_enforced_by_resolvable makes the debt visible: it greps tests/*.py to build the check_* -> test-file map (the same map gen_spec.py's CONCEPT-MAP block and tools/gate.py's T1 selector both build) and resolves every enforced_by entry against it, firing a Violation naming the exact unresolvable string. The resolution algorithm itself was extracted out of tools/gate.py into spec/src/hotam_spec/enforcer_resolution.py so this invariant (which lives in src/ and must not import from tools/) and gate.py (a tool) share ONE implementation rather than two hand-synced copies (R-prefer-tool-over-hand). Filesystem-grep-based, in-process, no subprocess spawn -- measured well under a second on this repo's ~180+ test files; not yet cached because the suite has not grown to a size where that matters."),
+            relations=(Relation("supports", "R-verify-closure-per-action"), Relation("supports", "R-enforcement-first-class"),),
+            enforcement=ENFORCED,
+            enforced_by=("check_enforced_by_resolvable", "test_invariants.py::test_enforced_by_resolvable_registered", "test_invariants.py::test_enforced_by_typo_fires", "test_invariants.py::test_enforced_by_unknown_check_name_fires", "test_invariants.py::test_enforced_by_real_names_pass", "test_invariants.py::test_enforced_by_resolvable_green_on_seed",),
+        ),
+        Requirement(
+            id="R-land-tier-trace",
+            claim=("Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran; dry-run proposals shall never write a record, and a broken/unwritable log location shall never fail an otherwise-green apply (best-effort, warn only)."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("R-land-gate-tier-selector introduced the T1/T2 tiered LAND gate but left its own operation invisible -- there was no way to answer, after the fact, which tier a given land actually used. Mirrors R-task-spawn-log-runtime's spawn-log.jsonl precedent (same .runtime/ directory, same append-only JSONL discipline, same gitignored-not-committed-substrate status): a runtime trace, not generated docs, because its truth value depends on wall-clock events, not on the graph. Making the log write happen strictly AFTER the verify step (not before) is the load-bearing property -- a record must describe what was actually verified, never a plan that could still fail."),
+            assumptions=("A-python-stack",),
+            relations=(Relation("refines", "R-land-gate-tier-selector"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_apply_proposal_land_log.py::test_land_log_record_shape_t1", "test_apply_proposal_land_log.py::test_land_log_record_shape_t2", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced", "test_apply_proposal_land_log.py::test_dry_run_writes_no_log", "test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort",),
+        ),
+        Requirement(
+            id="R-commit-boundary-checkable",
+            claim=("tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace introduced by R-land-tier-trace makes ONE part of that claim mechanically answerable after the fact -- whether the log shows a covering T2 run. Splitting this into its own atom (rather than flipping R-tiered-gate-not-a-commit-gate to ENFORCED) keeps both claims honest: the parent claim stays INHERENTLY_PROSE because it genuinely cannot be machine-verified end to end (the human-invocation half is unreachable by any test); this new atom claims only the reachable half, with real enforced_by tests -- avoiding the exact self-contradiction (ENFORCEABLE default vs. an admittedly-unenforceable claim) the 2026-07-02 honesty wave requalified the parent to fix."),
+            assumptions=("A-python-stack",),
+            relations=(Relation("refines", "R-tiered-gate-not-a-commit-gate"), Relation("refines", "R-land-tier-trace"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_tool_gate_status.py::test_t1_then_t2_is_satisfied", "test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied", "test_tool_gate_status.py::test_only_t1_records_never_t2_is_not_satisfied", "test_tool_gate_status.py::test_only_t2_records_is_satisfied", "test_tool_gate_status.py::test_mixed_only_t1_after_last_t2_are_unverified", "test_tool_gate_status.py::test_cli_exit_0_on_satisfied", "test_tool_gate_status.py::test_cli_exit_1_on_not_satisfied",),
         ),
     )
 

@@ -76,6 +76,25 @@ or empty (legitimate state: the framework has no domain yet).
 WHY env-var first: allows CI / test harnesses to pin a specific domain
 without mutating the filesystem (R-deterministic-generation).
 
+## From `spec/src/hotam_spec/graph.py::active_domain_doc_readers`
+
+Canon: §Graph / §Domain — the active domain's declared DOC_READERS binding.
+
+RULE: resolves the active domain directory the same way
+`_active_domain_graph_file` does (env var, else first domains/<name>/
+alphabetically), then imports its `manifest.py` and returns its
+`DOC_READERS` attribute (a `dict[role_hint, Stakeholder.id]`) if present,
+else `{}`. Never fabricates a binding — a domain that has not declared
+`DOC_READERS` yet gets an empty mapping, which resolve_reader() (in
+`hotam_spec.doc_readers`) treats as "unresolved", not a guess.
+
+WHY here, not in doc_readers.py: `doc_readers.py` is framework code and
+must stay content-free (R-content-free-no-business-data) — it cannot
+import any specific domain's manifest. `graph.py` already owns "find the
+active domain" (`_active_domain_graph_file`); this function is the same
+discovery walk applied to `manifest.py` instead of `graph.py`, keeping
+the domain-discovery logic in ONE place.
+
 ## From `spec/src/hotam_spec/graph.py::_load_graph_file`
 
 Canon: §Graph — load build_graph() from a graph file path.

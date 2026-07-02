@@ -14,9 +14,16 @@ R-content-free-no-seed-graph) — it must not bake a specific domain's
 stakeholder ids (e.g. "framework-author") into framework code. Instead each
 doc kind is mapped to a portable ROLE hint (e.g. ROLE_FRAMEWORK_MAINTAINER);
 `resolve_reader()` turns that hint into a concrete Stakeholder.id by looking
-it up in the ACTIVE domain graph's `g.stakeholders` at generation time. A
-domain with no stakeholder for a role is an honest gap (see
-`resolve_reader()` fallback), not a silent lie.
+it up in an EXPLICIT role -> Stakeholder.id binding the active domain
+declares in its own `manifest.py` (the `DOC_READERS` dict, read via
+`hotam_spec.graph.active_domain_doc_readers()`). A domain with no binding
+for a role is an honest gap (see `resolve_reader()` fallback), not a
+silent lie — and, critically, NOT a guess: resolution never scans
+stakeholder ids for a role-shaped substring (R-doc-readers-declared-not-guessed).
+A stakeholder id that happens to contain a role word (e.g. a "travel-agent"
+stakeholder in some future business domain) can no longer be silently
+captured as the reader of operator-facing docs; only a binding the domain
+author wrote down on purpose counts.
 
 Doc kinds fall into three families, each pointing at a distinct role:
   - OPERATOR-FACING (the agent boots from these every turn): CONSTITUTION.md,
@@ -73,52 +80,56 @@ DOC_READER_ROLES: dict[str, str] = {
     "AUDIT": ROLE_FRAMEWORK_MAINTAINER,
 }
 
-# --- role hint -> preferred Stakeholder.id substrings (resolution order) ----
-# Tried in order against the active domain's stakeholder ids; first match wins.
-# This is a RESOLUTION HINT, not a hard binding — resolve_reader() falls back
-# honestly (see below) when no stakeholder matches.
-
-_ROLE_ID_HINTS: dict[str, tuple[str, ...]] = {
-    ROLE_OPERATOR: ("ai-agent", "agent", "operator"),
-    ROLE_DOMAIN_STEWARD: ("domain-user", "steward", "domain"),
-    ROLE_FRAMEWORK_MAINTAINER: ("framework-author", "framework-reviewer", "framework"),
-}
-
-# Sentinel returned when no stakeholder in the active graph matches the role
-# hint — an honest "unresolved" marker rather than a fabricated id. A doc
-# carrying this sentinel FAILS check_doc_reader_resolves_to_stakeholder,
-# surfacing the gap instead of hiding it.
+# Sentinel returned when the active domain has declared no binding for the
+# role hint (or has declared a binding to an id absent from `stakeholder_ids`)
+# — an honest "unresolved" marker rather than a fabricated id. A doc carrying
+# this sentinel FAILS check_doc_reader_resolves_to_stakeholder, surfacing the
+# gap instead of hiding it.
 UNRESOLVED_READER = "(unresolved-reader)"
 
 
-def resolve_reader(doc_kind: str, stakeholder_ids: frozenset[str]) -> str:
+def resolve_reader(
+    doc_kind: str,
+    stakeholder_ids: frozenset[str],
+    role_bindings: dict[str, str] | None = None,
+) -> str:
     """Canon: §Requirement — resolve a doc kind to a concrete Stakeholder.id.
 
     RULE: looks up DOC_READER_ROLES[doc_kind] for the role hint, then returns
-    the first id in `stakeholder_ids` matching one of that role's
-    `_ROLE_ID_HINTS` substrings (case-insensitive). Returns UNRESOLVED_READER
-    if the doc_kind is unknown or no stakeholder matches — never fabricates an
-    id (R-ai-presents-not-decides applied to doc plumbing: an honest gap, not
-    a silent lie).
+    `role_bindings[role]` IF AND ONLY IF that id is present in
+    `stakeholder_ids`. Returns UNRESOLVED_READER if the doc_kind is unknown,
+    `role_bindings` has no entry for the role, or the bound id is not a known
+    Stakeholder — never fabricates or guesses an id
+    (R-ai-presents-not-decides applied to doc plumbing: an honest gap, not a
+    silent lie).
 
-    WHY substring matching over stakeholder ids (not an exact id table): the
-    framework is content-free and cannot know a domain's exact stakeholder
-    slugs in advance; substring hints let the same framework code resolve
-    correctly against any domain that names its stakeholders conventionally
-    (e.g. "framework-author", "domain-user") while staying honest when it
-    cannot.
+    WHY an explicit binding dict, not substring matching over stakeholder ids
+    (R-doc-readers-declared-not-guessed): a substring hint like "agent" can be
+    silently captured by an unrelated stakeholder whose id happens to contain
+    that substring (e.g. a "travel-agent" stakeholder in some future business
+    domain would wrongly become the reader of operator-facing docs). The
+    framework stays content-free by never hardcoding a stakeholder id here —
+    instead each ACTIVE DOMAIN declares its own `DOC_READERS: dict[role,
+    Stakeholder.id]` in its `manifest.py`, read via
+    `hotam_spec.graph.active_domain_doc_readers()` and passed in as
+    `role_bindings`. Callers that omit `role_bindings` (or pass `None`) get
+    an empty mapping — every doc_kind resolves to UNRESOLVED_READER, the
+    same honest gap as "domain has not adopted this aspect yet".
     """
     role = DOC_READER_ROLES.get(doc_kind)
     if role is None:
         return UNRESOLVED_READER
-    hints = _ROLE_ID_HINTS.get(role, ())
-    for hint in hints:
-        for sid in sorted(stakeholder_ids):
-            if hint in sid.lower():
-                return sid
+    bindings = role_bindings or {}
+    bound_id = bindings.get(role)
+    if bound_id is not None and bound_id in stakeholder_ids:
+        return bound_id
     return UNRESOLVED_READER
 
 
-def reader_line(doc_kind: str, stakeholder_ids: frozenset[str]) -> str:
+def reader_line(
+    doc_kind: str,
+    stakeholder_ids: frozenset[str],
+    role_bindings: dict[str, str] | None = None,
+) -> str:
     """Canon: §Requirement — render the `reader: <id>` header line for a doc kind."""
-    return f"reader: {resolve_reader(doc_kind, stakeholder_ids)}"
+    return f"reader: {resolve_reader(doc_kind, stakeholder_ids, role_bindings)}"

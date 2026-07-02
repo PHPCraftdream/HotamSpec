@@ -154,6 +154,46 @@ def _active_domain_graph_file() -> Path | None:
     return None
 
 
+def active_domain_doc_readers() -> dict[str, str]:
+    """Canon: §Graph / §Domain — the active domain's declared DOC_READERS binding.
+
+    RULE: resolves the active domain directory the same way
+    `_active_domain_graph_file` does (env var, else first domains/<name>/
+    alphabetically), then imports its `manifest.py` and returns its
+    `DOC_READERS` attribute (a `dict[role_hint, Stakeholder.id]`) if present,
+    else `{}`. Never fabricates a binding — a domain that has not declared
+    `DOC_READERS` yet gets an empty mapping, which resolve_reader() (in
+    `hotam_spec.doc_readers`) treats as "unresolved", not a guess.
+
+    WHY here, not in doc_readers.py: `doc_readers.py` is framework code and
+    must stay content-free (R-content-free-no-business-data) — it cannot
+    import any specific domain's manifest. `graph.py` already owns "find the
+    active domain" (`_active_domain_graph_file`); this function is the same
+    discovery walk applied to `manifest.py` instead of `graph.py`, keeping
+    the domain-discovery logic in ONE place.
+    """
+    graph_file = _active_domain_graph_file()
+    if graph_file is None:
+        return {}
+    manifest_py = graph_file.parent / "manifest.py"
+    if not manifest_py.exists():
+        return {}
+    spec = importlib.util.spec_from_file_location(
+        f"_manifest_doc_readers_{graph_file.parent.name}", manifest_py
+    )
+    if spec is None or spec.loader is None:
+        return {}
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    except Exception:
+        return {}
+    bindings = getattr(mod, "DOC_READERS", None)
+    if not isinstance(bindings, dict):
+        return {}
+    return {str(k): str(v) for k, v in bindings.items()}
+
+
 def _load_graph_file(graph_file: Path) -> TensionGraph:
     """Canon: §Graph — load build_graph() from a graph file path.
 

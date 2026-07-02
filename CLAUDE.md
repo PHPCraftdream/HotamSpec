@@ -9,7 +9,7 @@ Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/doc
 
 ### Role (the resident seed)
 
-Operator of `hotam-spec-self` (167 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
+Operator of `hotam-spec-self` (170 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
 
 Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).
 
@@ -31,8 +31,10 @@ Every input — idea, request, bug, hypothesis — six steps. Commands run from 
 3. **CONFRONT** — check input vs reality: which SETTLED claims contradicted?
    which Assumptions rested on / killed? already rejected — scan
    RECENTLY-REJECTED below, cite replacement, don't re-derive (anti-relitigation).
+   Tool: `uv run python tools/confront.py "<claim>"`.
 4. **TRANSLATE** — outcome → typed nodes: ProposedRequirement /
-   ProposedConflictTransition / ProposedRejection JSON
+   ProposedConflictTransition / ProposedRejection / ProposedConflict /
+   ProposedOperatorBudget / ProposedEntityType JSON
    (`spec/src/hotam_spec/proposal.py`), drafted under `spec/.runtime/proposals/`.
    Tension found → Conflict node with axis + context + steward, never a silent
    edit (R-no-hand-edit-graph, R-conflict-is-connector-node).
@@ -40,9 +42,12 @@ Every input — idea, request, bug, hypothesis — six steps. Commands run from 
    what, replaces what. Steward decides (R-ai-presents-not-decides).
 6. **LAND** — after approval:
    `uv run python tools/apply_proposal.py [--batch] [--triggering-kind KIND] <file.json>`
-   → regen (`gen_spec.py`) → `uv run pytest -q` → closure verifies triggering
-   diagnosis gone; exit 2 = landed but did NOT advance
-   (R-verify-closure-per-action).
+   → regen (`gen_spec.py`) → tiered gate: `apply_proposal.py` defaults to T1
+   (targeted enforcer subset via `tools/gate.py`); pass `--full` to force T2
+   (`uv run pytest -q`, the full suite) — T2 is MANDATORY at wave/commit
+   boundaries and is the automatic fallback whenever T1 selection fails
+   closed → closure verifies triggering diagnosis gone; exit 2 = landed but
+   did NOT advance (R-verify-closure-per-action).
 
 Writing nothing = valid outcome ("contradicts R-x; rejected as R-y — cite R-z").
 <!-- MEDIATION-LOOP:END -->
@@ -71,7 +76,7 @@ _(full text: spec/docs/thinking/axis.md)_
 
 #### closure
 
-Canon: §Closure — the graph object this proposal is meant to change.
+Canon: §Closure — shared enforcer-name -> pytest node-id resolution logic.
 
 _(full text: spec/docs/thinking/closure.md)_
 
@@ -248,6 +253,12 @@ Canon: §Closure — T1 tiered LAND gate: select a targeted enforcer subset inst
 
 _(full text: spec/docs/tools/gate.md)_
 
+#### gate_status
+
+Canon: §Closure — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.
+
+_(full text: spec/docs/tools/gate_status.md)_
+
 #### gen_spec
 
 Canon: §Generator — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.
@@ -333,6 +344,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/src/hotam_spec/axis.py` — controlled vocabulary of tension dimensions.
 - `spec/src/hotam_spec/conflict.py` — the first-class connector NODE (the centerpiece).
 - `spec/src/hotam_spec/doc_readers.py` — every generated doc names its reader (R-doc-names-reader).
+- `spec/src/hotam_spec/enforcer_resolution.py` — shared enforcer-name -> pytest node-id resolution logic.
 - `spec/src/hotam_spec/entity.py` — domain-declared business concept with its own lifecycle.
 - `spec/src/hotam_spec/glossary.py` — the methodology's controlled vocabulary (framework-side).
 - `spec/src/hotam_spec/graph.py` — the tension graph store and its traversal helpers.
@@ -359,6 +371,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/tools/create_entity_type.py` — scaffolds an EntityType declaration into the active domain's graph via apply_proposal.  →  R-tool-create-entity-type
 - `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.  →  R-tool-emit-cipher
 - `spec/tools/gate.py` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.  →  R-tool-gate
+- `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status
 - `spec/tools/gen_spec.py` — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.  →  R-tool-gen-spec
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
 - `spec/tools/setup_context_hook.py` — installs/removes the project-local hook that feeds tools/context_producer.py.  →  R-tool-setup-context-hook
@@ -390,8 +403,8 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 ### Live state (autogenerated by tools/gen_spec.py — do not hand-edit)
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 12 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
-- **debt:** 142/167 SETTLED ENFORCED · 12 DRAFT · 7 OPEN · 12 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 226 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 55459 chars (headroom 94541)
+- **debt:** 145/170 SETTLED ENFORCED · 12 DRAFT · 7 OPEN · 12 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
+- **graph:** 229 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 53820 chars (headroom 96180)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED (R-measure-context-size; hook deferred)
 <!-- LIVE-STATE:END -->
@@ -405,7 +418,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 167 SETTLED
+- **atoms-count** — 170 SETTLED
 <!-- DOMAIN-MAP:END -->
 <!-- CONSTITUTION:BEGIN -->
 <!-- (generated by tools/gen_spec.py — do not hand-edit) -->
@@ -477,13 +490,16 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 **Other**
 
 - R-ai-presents-not-decides — The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers… [S]
+- R-commit-boundary-checkable — tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verifica… [E]
 - R-constituting-requirements-converge — The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on de… [S]
 - R-critical-core-methodology — The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, pro… [E]
 - R-critical-core-per-domain — Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, n… [P]
 - R-doc-names-reader — Every generated doc shall name its reader as an existing Stakeholder id in its header. [E]
+- R-enforced-by-resolvable — Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node… [E]
 - R-initiator-supplies-domain-content — An agent shall receive its domain content from its initiator at boot and crystallize it into the… [S]
 - R-land-gate-tier-selector — The per-proposal LAND verify step (tools/apply_proposal.py) shall, by default, run the T1 target… [E]
 - R-land-gate-tier-selector-fails-closed — The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selecto… [E]
+- R-land-tier-trace — Every applied proposal that reaches the LAND verify step shall append its verification tier (T1… [E]
 - R-latent-connectors-cluster-by-assumption — The what_now harness shall render latent-connector suspects as one P5 action per shared-assumpti… [E]
 - R-no-hand-edit-graph — Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct ha… [E]
 - R-proposed-conflict-kind-exists — The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes… [E]
@@ -524,9 +540,9 @@ _(no sub-operators yet)_
   - enforced: `check_axis_in_registry`
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_tool_gate.py`
 - **§Closure**
-  - defined: `_(not yet mapped)_`
-  - enforced: _(none)_
-  - tested: `spec/tests/test_closure.py`
+  - defined: `spec/src/hotam_spec/enforcer_resolution.py`
+  - enforced: `check_enforced_by_resolvable`
+  - tested: `spec/tests/test_closure.py`, `spec/tests/test_invariants.py`
 - **§Conflict**
   - defined: `spec/src/hotam_spec/conflict.py`
   - enforced: `check_conflict_has_axis`, `check_conflict_has_axis_context_steward`, `check_conflict_has_context`, `check_conflict_has_steward`, `check_conflict_id_matches_identity`, `check_conflict_min_two_members`, `check_decided_by_is_known_stakeholder`, `check_decided_by_not_member_owner`, `check_decided_has_decided_by`, `check_decided_has_nonempty_decided_by`, `check_decided_has_rationale_or_derived`, `check_steward_not_a_member_owner`
@@ -597,7 +613,7 @@ _(no sub-operators yet)_
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_reflection.py`
 - **§Requirement**
   - defined: `spec/src/hotam_spec/requirement.py`
-  - enforced: `check_doc_reader_resolves_to_stakeholder`, `check_enforceability_kind_known`, `check_enforced_names_invariant`, `check_m_tag_format`, `check_m_tag_open_only`, `check_m_tag_unique`, `check_m_tag_valid_format`, `check_open_has_question`, `check_section_anchors_known`
+  - enforced: `check_doc_reader_resolves_to_stakeholder`, `check_enforceability_kind_known`, `check_enforced_by_resolvable`, `check_enforced_names_invariant`, `check_m_tag_format`, `check_m_tag_open_only`, `check_m_tag_unique`, `check_m_tag_valid_format`, `check_open_has_question`, `check_section_anchors_known`
   - tested: `spec/tests/test_conscience.py`, `spec/tests/test_decisions_bijection.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_enforceability.py`, `spec/tests/test_invariants.py`
 - **§Stakeholder**
   - defined: `spec/src/hotam_spec/stakeholder.py`
@@ -627,18 +643,8 @@ Before proposing an architectural change, scan this list. A claim already REJECT
 - **R-enforcement-gradient** (REJECTED) — REPLACES split into R-enforcement-levels-declared + R-enforced-names-enforcer (wave 2, decided by framework-author 2026-06-30)
 - **R-framework-claude-md-is-domain-free** (REJECTED) — REPLACES R-claude-md-consolidates-when-single-agent. The claim 'root CLAUDE.md shall contain only framework-level content' contradicts the current single-file design: root CLAUDE.md now deliberately embeds the active dom…
 - **R-glossary-sync-test** (REJECTED) — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30)
-- **R-goal-as-target-state** (REJECTED) — REPLACES by R-goal-is-first-class-type + R-goal-target-kind-known + R-goal-owner-is-operator per atomicity discipline (R-requirement-claim-is-atomic). The original claim was mostly atomic but its enforced_by tuple covere…
-- **R-history-from-rejected-markers** (REJECTED) — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30)
-- **R-lifecycle-abstraction** (REJECTED) — REPLACES split into R-lifecycle-type-exists + R-lifecycle-validates-requirement + R-lifecycle-validates-conflict (wave 2, decided by framework-author 2026-06-30)
-- **R-operator-acting-facet** (REJECTED) — REPLACES by R-operator-is-frozen-dataclass + R-operator-references-stakeholder + R-operator-has-context-budget + R-operator-may-have-parent per atomicity discipline (R-requirement-claim-is-atomic). The original claim mix…
-- **R-operator-crystal-embeds-thinking** (REJECTED) — REPLACES by R-operator-crystal-embeds-thinking-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WH…
-- **R-operator-crystal-embeds-tools** (REJECTED) — REPLACES by R-operator-crystal-embeds-tools-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY d…
-- **R-operator-crystal-is-claude-md** (REJECTED) — REPLACES split into R-crystal-is-claude-md + R-crystal-reload-by-reference + R-crystal-tree-hierarchy (wave 2, decided by framework-author 2026-06-30)
-- **R-process-aspect-first** (REJECTED) — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2,…
-- **R-rdf-store** (REJECTED) — REPLACES by storage = the Python code itself. RDF adds a heavy parallel substrate over what frozen dataclasses + plain-function traversal already do; SHACL duplicates the check_* invariants; SPARQL is unnecessary at the…
-- **R-root-claude-md-contains-domain-crystal** (REJECTED) — REPLACES R-claude-md-consolidates-when-single-agent. This claim described embedding a SEPARATE domains/hotam-spec-self/CLAUDE.md inside root CLAUDE.md via a DOMAIN-CRYSTAL sentinel block. That separate file no longer exi…
-- **R-seed-in-src** (REJECTED) — REPLACES by R-content-free-framework. The framework must ship blank; the seed graph leaked business content (R-87, A-single-customer, axes like latency-vs-completeness) into the framework package, breaking the framework…
-- **R-statemachine-wellformedness** (REJECTED) — REPLACES by R-statemachine-reachable + R-statemachine-deterministic + R-statemachine-terminal-or-cyclic + R-statemachine-guard-on-assumption per atomicity discipline (R-requirement-claim-is-atomic). The original claim mi…
+
+_(showing 12 of 24, alphabetical by id — full history: docs/gen/HISTORY.md)_
 <!-- RECENTLY-REJECTED:END -->
 
 <!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->

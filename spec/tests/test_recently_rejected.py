@@ -158,3 +158,57 @@ def test_recently_rejected_bounded() -> None:
         f"RECENTLY-REJECTED block is {len(block)} chars — expected < 8,000 "
         "after Phase 2 compression (dropped duplicate italic why-tail)."
     )
+
+
+# ===========================================================================
+# Test 6: cap enforced — at most N entries shown, with a pointer to full history
+# ===========================================================================
+
+
+def test_recently_rejected_capped_with_pointer() -> None:
+    """RECENTLY-REJECTED shows at most _RECENTLY_REJECTED_CAP entries and, when the
+    roster exceeds the cap, a pointer line to docs/gen/HISTORY.md for the rest —
+    the resident (paid) crystal must not grow monotonically as rejections accumulate.
+    """
+    if _ACTIVE_DOMAIN is None:
+        pytest.skip("No active domain — P22.B not applicable")
+    text = _read(ROOT_CLAUDE_MD)
+    block = _extract_block(text, _RECENTLY_REJECTED_BEGIN, _RECENTLY_REJECTED_END)
+    assert block is not None
+    entry_count = block.count("\n- **R-")
+    assert entry_count <= _gs._RECENTLY_REJECTED_CAP, (
+        f"RECENTLY-REJECTED lists {entry_count} entries — expected at most "
+        f"{_gs._RECENTLY_REJECTED_CAP} (cap not applied)."
+    )
+    if entry_count == _gs._RECENTLY_REJECTED_CAP:
+        assert "docs/gen/HISTORY.md" in block, (
+            "RECENTLY-REJECTED is at the cap but has no pointer to the full "
+            "history (docs/gen/HISTORY.md) for the remaining rejections."
+        )
+
+
+def test_recently_rejected_block_matches_cap_constant() -> None:
+    """The rendered block for a synthetic over-cap graph truncates deterministically
+    to _RECENTLY_REJECTED_CAP entries, alphabetical by id, with a pointer line.
+    """
+    stakeholder = Stakeholder(id="s1", name="S1", domain="d")
+    n = _gs._RECENTLY_REJECTED_CAP + 3
+    reqs = tuple(
+        Requirement(
+            id=f"R-rej-{i:02d}",
+            claim=f"Claim {i}.",
+            owner="s1",
+            status="REJECTED",
+            why=f"REJECTED — REPLACES by R-something-{i}. Some rationale text.",
+        )
+        for i in range(n)
+    )
+    g = TensionGraph(axes=(), stakeholders=(stakeholder,), requirements=reqs)
+    block = _gs._render_recently_rejected_block(g)
+    entry_count = block.count("\n- **R-")
+    assert entry_count == _gs._RECENTLY_REJECTED_CAP, (
+        f"Expected exactly {_gs._RECENTLY_REJECTED_CAP} entries for an "
+        f"over-cap synthetic graph of {n}, got {entry_count}."
+    )
+    assert "docs/gen/HISTORY.md" in block
+    assert f"showing {_gs._RECENTLY_REJECTED_CAP} of {n}" in block

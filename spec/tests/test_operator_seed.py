@@ -110,10 +110,13 @@ def test_mediation_loop_names_real_tools() -> None:
 
     for tool in (
         "what_now.py",
+        "confront.py",
         "apply_proposal.py",
         "gen_spec.py",
+        "gate.py",
         "pytest -q",
         "proposal.py",
+        "--full",
     ):
         assert tool in block, f"MEDIATION-LOOP missing tool reference {tool!r}"
 

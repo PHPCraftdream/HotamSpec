@@ -37,6 +37,7 @@ from hotam_spec.invariants import (  # noqa: E402
     check_decided_has_decided_by,
     check_decided_has_rationale_or_derived,
     check_doc_reader_resolves_to_stakeholder,
+    check_enforced_by_resolvable,
     check_enforced_names_invariant,
     check_m_tag_format,
     check_no_dangling_ids,
@@ -403,6 +404,101 @@ def test_settled_with_enforcer_passes() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 5b. Enforcer resolvability (check_enforced_by_resolvable)
+# ---------------------------------------------------------------------------
+
+
+def test_enforced_by_typo_fires() -> None:
+    """check_enforced_by_resolvable fires when enforced_by names a nonexistent test file."""
+    reqs = (
+        _req(
+            "R-1",
+            "sa",
+            enforcement=ENFORCED,
+            enforced_by=("test_gone.py::test_x",),
+        ),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    v = check_enforced_by_resolvable(g)
+    assert any(
+        x.target == "R-1" and "test_gone.py::test_x" in x.message for x in v
+    ), "must fire on an enforced_by entry that does not resolve to a real test file"
+
+
+def test_enforced_by_unknown_check_name_fires() -> None:
+    """check_enforced_by_resolvable fires when enforced_by names a check_* nothing tests.
+
+    The bogus name is assembled at runtime (not written literally in this
+    source file) so the resolver's own grep-of-test-files never picks up
+    this test's fixture string as a false "reference" to itself.
+    """
+    bogus_name = "check_" + "totally_bogus_nonexistent_" + "zz"
+    reqs = (
+        _req(
+            "R-1",
+            "sa",
+            enforcement=ENFORCED,
+            enforced_by=(bogus_name,),
+        ),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    v = check_enforced_by_resolvable(g)
+    assert any(
+        x.target == "R-1" and bogus_name in x.message for x in v
+    ), "must fire on an unresolvable check_* name"
+
+
+def test_enforced_by_real_names_pass() -> None:
+    """check_enforced_by_resolvable stays green for real, resolvable enforced_by entries."""
+    reqs = (
+        _req(
+            "R-1",
+            "sa",
+            enforcement=ENFORCED,
+            enforced_by=(
+                "check_enforced_names_invariant",
+                "tests/test_invariants.py",
+            ),
+        ),
+        _req("R-2", "sb"),
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=reqs,
+        conflicts=(),
+    )
+    assert holds(check_enforced_by_resolvable(g)), (
+        "real check_* and real test-file enforced_by entries must resolve"
+    )
+
+
+def test_enforced_by_resolvable_registered() -> None:
+    """check_enforced_by_resolvable must be registered in ALL_INVARIANTS."""
+    assert check_enforced_by_resolvable in ALL_INVARIANTS
+
+
+def test_enforced_by_resolvable_green_on_seed() -> None:
+    """The demo seed fixture's enforced_by entries all resolve (no orphan typos)."""
+    g = seed_graph()
+    assert holds(check_enforced_by_resolvable(g)), (
+        f"seed fixture has unresolvable enforced_by entries: {check_enforced_by_resolvable(g)}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # 6. M-tag format invariant (check_m_tag_format)
 # ---------------------------------------------------------------------------
 
@@ -635,18 +731,30 @@ def test_check_doc_reader_noop_when_no_stakeholders() -> None:
     assert check_doc_reader_resolves_to_stakeholder(TensionGraph()) == []
 
 
-def test_check_doc_reader_noop_when_aspect_not_adopted() -> None:
-    """No-ops when the domain's stakeholder ids match NO ROLE_* hint at all.
+def test_check_doc_reader_noop_when_aspect_not_adopted(monkeypatch) -> None:
+    """No-ops when the active domain has declared NO DOC_READERS binding.
 
-    Mirrors the seed fixture: stakeholders named 'finance'/'platform'/etc. have
-    not adopted the ROLE_* naming convention — legitimate no-op, not a debt.
+    Mirrors the seed fixture: a domain whose manifest.py predates this
+    convention (no DOC_READERS dict) has not adopted the aspect yet —
+    legitimate no-op, not a debt.
     """
+    import hotam_spec.graph as gr  # noqa: PLC0415
+
+    monkeypatch.setattr(gr, "active_domain_doc_readers", lambda: {})
     g = seed_graph()
     assert check_doc_reader_resolves_to_stakeholder(g) == []
 
 
-def test_check_doc_reader_green_when_all_roles_resolve() -> None:
-    """Clean when every ROLE_* hint resolves to a Stakeholder id in the graph."""
+def test_check_doc_reader_green_when_all_roles_resolve(monkeypatch) -> None:
+    """Clean when every declared role binding resolves to a Stakeholder id in the graph."""
+    import hotam_spec.graph as gr  # noqa: PLC0415
+
+    bindings = {
+        "operator": "ai-agent",
+        "domain-steward": "domain-user",
+        "framework-maintainer": "framework-author",
+    }
+    monkeypatch.setattr(gr, "active_domain_doc_readers", lambda: bindings)
     stakeholders = (
         Stakeholder(id="ai-agent", name="AI agent", domain="operator"),
         Stakeholder(id="domain-user", name="Domain user", domain="steward"),
@@ -656,13 +764,16 @@ def test_check_doc_reader_green_when_all_roles_resolve() -> None:
     assert check_doc_reader_resolves_to_stakeholder(g) == []
 
 
-def test_check_doc_reader_fires_on_partial_adoption() -> None:
-    """Fires when SOME roles resolve but others don't (partial adoption is a real gap).
+def test_check_doc_reader_fires_on_partial_adoption(monkeypatch) -> None:
+    """Fires when SOME roles bind but others don't (partial adoption is a real gap).
 
-    A graph with an 'ai-agent' stakeholder (resolves ROLE_OPERATOR) but no
-    steward/framework-maintainer-hinting stakeholder leaves REQUIREMENTS.md /
-    FRAMEWORK-INVARIANTS.md etc. with a dangling reader — must fire.
+    A binding that only declares 'operator' -> 'ai-agent' leaves
+    REQUIREMENTS.md / FRAMEWORK-INVARIANTS.md etc. (domain-steward /
+    framework-maintainer roles) with a dangling reader — must fire.
     """
+    import hotam_spec.graph as gr  # noqa: PLC0415
+
+    monkeypatch.setattr(gr, "active_domain_doc_readers", lambda: {"operator": "ai-agent"})
     stakeholders = (Stakeholder(id="ai-agent", name="AI agent", domain="operator"),)
     g = TensionGraph(stakeholders=stakeholders)
     violations = check_doc_reader_resolves_to_stakeholder(g)
@@ -673,4 +784,58 @@ def test_check_doc_reader_fires_on_partial_adoption() -> None:
     fired_kinds = {v.target for v in violations}
     assert "REQUIREMENTS" in fired_kinds
     assert "FRAMEWORK_INVARIANTS" in fired_kinds
-    assert "CONSTITUTION" not in fired_kinds  # ai-agent resolves this one
+    assert "CONSTITUTION" not in fired_kinds  # operator role bound to ai-agent
+
+
+def test_check_doc_reader_fires_on_dangling_bound_id(monkeypatch) -> None:
+    """Fires when a DECLARED binding points at an id that is NOT a real Stakeholder.
+
+    This is the 'declared but dangling' case: manifest.py DOC_READERS names an
+    id, but no Stakeholder with that id exists in this graph — must fire, not
+    silently resolve to nothing.
+    """
+    import hotam_spec.graph as gr  # noqa: PLC0415
+
+    bindings = {
+        "operator": "ai-agent",
+        "domain-steward": "domain-user",
+        "framework-maintainer": "nonexistent-stakeholder",
+    }
+    monkeypatch.setattr(gr, "active_domain_doc_readers", lambda: bindings)
+    stakeholders = (
+        Stakeholder(id="ai-agent", name="AI agent", domain="operator"),
+        Stakeholder(id="domain-user", name="Domain user", domain="steward"),
+    )
+    g = TensionGraph(stakeholders=stakeholders)
+    violations = check_doc_reader_resolves_to_stakeholder(g)
+    fired_kinds = {v.target for v in violations}
+    assert "FRAMEWORK_INVARIANTS" in fired_kinds
+    assert "REQUIREMENTS" not in fired_kinds
+
+
+def test_check_doc_reader_travel_agent_regression(monkeypatch) -> None:
+    """A stakeholder id CONTAINING a role word must NOT be silently captured.
+
+    Regression for the substring-guessing design this replaces: a fake
+    'travel-agent' Stakeholder (unrelated to the operator role) must not
+    become the reader of operator-facing docs just because its id contains
+    'agent'. With no explicit binding for 'operator', that role is an honest
+    unresolved gap, not a guess.
+    """
+    import hotam_spec.graph as gr  # noqa: PLC0415
+
+    # No binding at all for 'operator' — only domain-steward is declared.
+    bindings = {"domain-steward": "domain-user"}
+    monkeypatch.setattr(gr, "active_domain_doc_readers", lambda: bindings)
+    stakeholders = (
+        Stakeholder(id="travel-agent", name="Travel agent", domain="unrelated"),
+        Stakeholder(id="domain-user", name="Domain user", domain="steward"),
+    )
+    g = TensionGraph(stakeholders=stakeholders)
+    violations = check_doc_reader_resolves_to_stakeholder(g)
+    fired_kinds = {v.target for v in violations}
+    # CONSTITUTION is operator-facing; must fire as unresolved, NOT silently
+    # resolve to 'travel-agent'.
+    assert "CONSTITUTION" in fired_kinds
+    for v in violations:
+        assert "travel-agent" not in v.message

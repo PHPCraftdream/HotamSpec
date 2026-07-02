@@ -51,9 +51,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
 
-**Why.** The operator needs an automatic map of delegated authority — who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep.
+**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)
 
-**Enforced by:** `test_agent_map_complete`
+**Enforced by:** `test_agent_map.py`
 
 ## `R-agent-never-lost` (ENFORCED)
 
@@ -75,9 +75,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
 
-**Why.** Each sub-operator needs an operator-prompt scoped to its domain — the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally.
+**Why.** Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_scoped_constitution' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)
 
-**Enforced by:** `test_agent_scoped_constitution`
+**Enforced by:** `test_agent_scoped_constitution.py`
 
 ## `R-boot-cite-in-first-sentence` (PROSE)
 

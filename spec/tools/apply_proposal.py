@@ -143,6 +143,8 @@ def _resolve_content_graph() -> "Path":
 
 _CONTENT_GRAPH = _resolve_content_graph()
 _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
+_RUNTIME_DIR = _SPEC_ROOT / ".runtime"
+_LAND_LOG_NAME = "land-log.jsonl"
 
 # ---------------------------------------------------------------------------
 # Validation helpers
@@ -1570,6 +1572,67 @@ def _apply_entity_type_to_source(
 
 
 # ---------------------------------------------------------------------------
+# LAND trace (R-land-tier-trace)
+# ---------------------------------------------------------------------------
+
+
+def _append_land_log(
+    *,
+    proposal: Proposal,
+    tier: str,
+    node_ids: tuple[str, ...] | str,
+    pytest_ok: bool,
+    closure_exit: int | None,
+    runtime_dir: Path | None = None,
+) -> None:
+    """Canon: §Proposal — append one JSONL record of a landed proposal's verify tier.
+
+    RULE: called ONLY after the verify step (pytest) has actually run, so the
+    record states what actually ran — never a plan. Fields: stamp (iso8601,
+    real wall clock — this is a runtime observability file, not generated
+    substrate, so determinism is not required here, unlike gen_spec.py's
+    R-deterministic-generation), kind (Proposal subtype name), target
+    (proposal.target_anchor()), tier ("T1" or "T2"), node_ids (the resolved
+    pytest node-id tuple for T1, or the literal string "full" for T2),
+    pytest_ok (bool), closure_exit (int|None — None when --triggering-kind
+    was not supplied).
+
+    Mirrors spawn_agent.py's _append_spawn_log (R-task-spawn-log-runtime):
+    same directory (.runtime/, gitignored — R-task-spawn-log-runtime), same
+    append-only JSONL shape discipline.
+
+    WHY best-effort: a broken/unwritable .runtime/ directory must never turn
+    a successful, tests-green apply into a failed one — the trace is an
+    observability aid, not a correctness gate. Any exception writing the log
+    is caught and printed as a WARNING to stderr; apply()'s return code is
+    never affected by this function.
+    """
+    target_dir = runtime_dir if runtime_dir is not None else _RUNTIME_DIR
+    try:
+        import datetime as _dt  # noqa: PLC0415
+
+        target_dir.mkdir(parents=True, exist_ok=True)
+        log_path = target_dir / _LAND_LOG_NAME
+        entry = {
+            "stamp": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+            "kind": type(proposal).__name__,
+            "target": proposal.target_anchor(),
+            "tier": tier,
+            "node_ids": list(node_ids) if isinstance(node_ids, tuple) else node_ids,
+            "pytest_ok": pytest_ok,
+            "closure_exit": closure_exit,
+        }
+        with log_path.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as exc:  # noqa: BLE001 — best-effort, never breaks apply
+        print(
+            f"WARNING: could not append to land-log ({exc}); continuing "
+            f"(R-land-tier-trace is best-effort, never a correctness gate).",
+            file=sys.stderr,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Main apply logic
 # ---------------------------------------------------------------------------
 
@@ -1709,6 +1772,8 @@ def apply(
     # closed (R-land-gate-tier-selector).
     pytest_args = [sys.executable, "-m", "pytest", "-q"]
     gate_tier = "T2 (full suite, --full requested)"
+    land_tier = "T2"
+    land_node_ids: tuple[str, ...] | str = "full"
     if full_suite:
         pytest_args.append(str(_SPEC_ROOT / "tests"))
     elif isinstance(proposal, ProposedRejection):
@@ -1730,6 +1795,8 @@ def apply(
         if gate_result.confident:
             gate_tier = f"T1 (targeted, {len(gate_result.node_ids)} node-id(s))"
             pytest_args.extend(gate_result.node_ids)
+            land_tier = "T1"
+            land_node_ids = tuple(gate_result.node_ids)
         else:
             gate_tier = f"T2 (full suite, gate fell back closed: {gate_result.reason})"
             pytest_args.append(str(_SPEC_ROOT / "tests"))
@@ -1742,7 +1809,8 @@ def apply(
         cwd=str(_SPEC_ROOT),
     )
     print(pytest_result.stdout)
-    if pytest_result.returncode != 0:
+    pytest_ok = pytest_result.returncode == 0
+    if not pytest_ok:
         print(
             "ERROR: pytest failed after apply. File written but tests are red.",
             file=sys.stderr,
@@ -1753,9 +1821,17 @@ def apply(
             "Inspect the diff and revert manually if needed.",
             file=sys.stderr,
         )
+        _append_land_log(
+            proposal=proposal,
+            tier=land_tier,
+            node_ids=land_node_ids,
+            pytest_ok=False,
+            closure_exit=None,
+        )
         return 1
 
     # Closure check (P4 feedback edge) — only when --triggering-kind is supplied.
+    closure_exit: int | None = None
     if triggering_kind is not None:
         import closure  # noqa: PLC0415  (lives in tools/, not a package)
 
@@ -1770,13 +1846,30 @@ def apply(
             f"=== END CLOSURE CHECK ==="
         )
         if not result.advanced:
+            closure_exit = 2
             print(
                 "\nERROR: closure FAILED — the triggering action is STILL in the "
                 "post-apply diagnosis. The write landed (tests green) but the "
                 "action did NOT advance. Investigate before marking closed.",
                 file=sys.stderr,
             )
+            _append_land_log(
+                proposal=proposal,
+                tier=land_tier,
+                node_ids=land_node_ids,
+                pytest_ok=True,
+                closure_exit=closure_exit,
+            )
             return 2
+        closure_exit = 0
+
+    _append_land_log(
+        proposal=proposal,
+        tier=land_tier,
+        node_ids=land_node_ids,
+        pytest_ok=True,
+        closure_exit=closure_exit,
+    )
 
     summary_target = proposal.target_anchor()
     summary_kind = type(proposal).__name__

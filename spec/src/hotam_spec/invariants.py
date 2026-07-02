@@ -41,6 +41,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from hotam_spec.conflict import conflict_identity
+from hotam_spec.enforcer_resolution import (
+    check_to_tests_map as _enforcer_check_to_tests_map,
+    resolve_one_enforcer as _enforcer_resolve_one,
+)
 from hotam_spec.graph import (
     TensionGraph,
     assumption_ids,
@@ -334,22 +338,41 @@ def check_no_dangling_ids(g: TensionGraph) -> list[Violation]:
 def check_doc_reader_resolves_to_stakeholder(g: TensionGraph) -> list[Violation]:
     """Canon: §Requirement — every generated doc's reader resolves to a known Stakeholder.
 
-    RULE (aspect-gated): for every doc kind declared in
+    RULE (aspect-gated): reads the active domain's explicit `DOC_READERS`
+    binding (`manifest.py`, via `hotam_spec.graph.active_domain_doc_readers()`)
+    — a `dict[role_hint, Stakeholder.id]`. For every doc kind declared in
     `hotam_spec.doc_readers.DOC_READER_ROLES`,
-    `doc_readers.resolve_reader(kind, stakeholder_ids(g))` MUST return an id
-    present in `stakeholder_ids(g)` — never `UNRESOLVED_READER`. A dangling
-    reader (a generated doc naming a reader nobody is accountable for) is the
-    same invisibility the dangling-ref family already forbids for edges — this
-    is that family applied to doc plumbing (R-doc-names-reader). No-ops when
-    NO stakeholder in the graph resolves ANY role — a domain that has not
-    opted into the ROLE_* naming convention (e.g. a business domain with
-    stakeholders named "finance"/"platform") has not adopted this aspect yet,
-    mirroring the Process/Goal/Entity aspect-gating precedent (no-op when the
-    aspect's substrate is empty).
+    `doc_readers.resolve_reader(kind, stakeholder_ids(g), bindings)` MUST
+    return an id present in `stakeholder_ids(g)` — never `UNRESOLVED_READER`.
+    A dangling reader (a generated doc naming a reader nobody is accountable
+    for, OR a binding that names an id absent from this graph's Stakeholders)
+    is the same invisibility the dangling-ref family already forbids for
+    edges — this is that family applied to doc plumbing (R-doc-names-reader).
+    No-ops when the active domain has declared NO `DOC_READERS` binding at
+    all, OR when NONE of the declared bound ids appear in `g.stakeholders`
+    (this graph is not the active domain's own graph — e.g. a synthetic
+    test fixture or an unrelated demo domain checked in isolation; nothing
+    here is meaningfully "this graph's" reader plumbing to validate) — a
+    domain that has not opted into this aspect yet (e.g. a business domain
+    whose manifest predates this convention) has not adopted it, mirroring
+    the Process/Goal/Entity aspect-gating precedent (no-op when the aspect's
+    substrate is empty).
 
-    WHY graph-scoped, not filesystem-scoped: the reader MAPPING is framework
-    code (doc_readers.DOC_READER_ROLES); what varies per domain is which
-    Stakeholder ids exist to satisfy it. Passing the already-loaded `g` (mirrors
+    WHY an explicit declared binding, not a substring guess over stakeholder
+    ids (R-doc-readers-declared-not-guessed): the prior design resolved a
+    role hint (e.g. "operator") by scanning `stakeholder_ids(g)` for any id
+    containing a hint substring like "agent" — a stakeholder id such as
+    "travel-agent" in an unrelated business domain would silently capture
+    operator-facing docs it has nothing to do with. An explicit
+    `DOC_READERS` dict the domain author writes down removes the guess
+    entirely; this invariant now validates that DECLARED mapping is
+    well-formed (every bound id is a real Stakeholder), not that some
+    substring happened to match.
+
+    WHY graph-scoped, not filesystem-scoped: the reader ROLE VOCABULARY is
+    framework code (doc_readers.DOC_READER_ROLES); what varies per domain is
+    the BINDING from role to Stakeholder id, declared in that domain's own
+    manifest.py. Passing the already-loaded `g` (mirrors
     check_axis_in_registry) keeps this check pure and avoids re-importing a
     domain graph from disk, unlike the filesystem-coherence checks
     (check_entities_md_lists_all_types) that must walk domains/ because they
@@ -361,28 +384,38 @@ def check_doc_reader_resolves_to_stakeholder(g: TensionGraph) -> list[Violation]
         UNRESOLVED_READER,
         resolve_reader,
     )
+    from hotam_spec.graph import active_domain_doc_readers  # noqa: PLC0415
 
     if not g.stakeholders:
         return []
-    sids = stakeholder_ids(g)
-    resolutions = {
-        doc_kind: resolve_reader(doc_kind, sids) for doc_kind in DOC_READER_ROLES
-    }
-    if all(r == UNRESOLVED_READER for r in resolutions.values()):
+    bindings = active_domain_doc_readers()
+    if not bindings:
         return []  # aspect not adopted by this domain — legitimate no-op
+    sids = stakeholder_ids(g)
+    if not any(bound_id in sids for bound_id in bindings.values()):
+        return []  # `g` is not the active domain's own graph — legitimate no-op
     out: list[Violation] = []
     for doc_kind in sorted(DOC_READER_ROLES):
-        resolved = resolutions[doc_kind]
+        resolved = resolve_reader(doc_kind, sids, bindings)
         if resolved == UNRESOLVED_READER:
-            out.append(
-                Violation(
-                    "check_doc_reader_resolves_to_stakeholder",
-                    doc_kind,
-                    f"doc kind '{doc_kind}' has role "
-                    f"'{DOC_READER_ROLES[doc_kind]}' but no Stakeholder in this "
-                    "graph matches it — add a Stakeholder whose id hints at "
-                    "that role, or update doc_readers._ROLE_ID_HINTS",
+            role = DOC_READER_ROLES[doc_kind]
+            bound_id = bindings.get(role)
+            if bound_id is None:
+                detail = (
+                    f"doc kind '{doc_kind}' has role '{role}' but the active "
+                    "domain's manifest.py DOC_READERS declares no binding for "
+                    "it — add one, e.g. DOC_READERS = {...'"
+                    f"{role}': '<Stakeholder.id>'...}}"
                 )
+            else:
+                detail = (
+                    f"doc kind '{doc_kind}' has role '{role}' bound to "
+                    f"'{bound_id}' in manifest.py DOC_READERS, but no "
+                    "Stakeholder with that id exists in this graph — fix the "
+                    "binding or add the Stakeholder"
+                )
+            out.append(
+                Violation("check_doc_reader_resolves_to_stakeholder", doc_kind, detail)
             )
     return out
 
@@ -993,6 +1026,95 @@ def check_enforced_names_invariant(g: TensionGraph) -> list[Violation]:
                     "name the check_* invariant or test that fires on violation",
                 )
             )
+    return out
+
+
+_TESTS_DIR_FOR_ENFORCER_CHECK = Path(__file__).resolve().parents[2] / "tests"
+
+
+def check_enforced_by_resolvable(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement / §Closure — every ENFORCED requirement's enforced_by entry must resolve to a real check_* function or a concrete pytest node-id.
+
+    RULE: every enforced_by entry of a SETTLED/ENFORCED Requirement must resolve to a real check_* function or a concrete pytest node-id, else it fires a Violation naming the entry that does not resolve.
+
+    Concretely, an entry resolves via one of:
+      1. a function name present in ALL_INVARIANTS (a real check_* the
+         framework runs), OR
+      2. a real test path via hotam_spec.enforcer_resolution's rules
+         (verbatim "file.py"/"file.py::func", or a check_* name a test file
+         references by bare name, or an unambiguous bare test_* function).
+    A typo like 'test_gone.py::test_x', a stale/renamed check_* name, or any
+    other string matching neither path fires a Violation naming the exact
+    entry that failed.
+
+    WHY existence-in-ALL_INVARIANTS is checked FIRST (not folded into the
+    grep-only resolver used by gate.py's T1 selector): "does this enforcer
+    exist" (this invariant's question) and "is there a test file I can run
+    to targeted-verify it" (gate.py's T1 question) are different questions.
+    Many real check_* functions in ALL_INVARIANTS are exercised only
+    indirectly — via `all_violations(g)` / ALL_INVARIANTS iteration in a
+    fixture-driven test, never called by bare name in test source — so
+    gate.py's stricter grep-based resolution correctly fails closed to T2
+    for THOSE (there genuinely is no narrower targeted test to run), while
+    THIS invariant correctly says the enforcer itself is real, not a typo.
+    Conflating the two would either make T1 select nothing meaningful, or
+    make this invariant noisy with ~46 false positives against real,
+    functioning check_* enforcers — that noise was observed when this
+    invariant was first landed and is why the two-path resolution exists.
+
+    WHY a NEW invariant (not folded into check_enforced_names_invariant):
+    that check only verifies enforced_by is NON-EMPTY — a real typo (a
+    renamed test file, a genuinely nonexistent check_*/test_* name) passes
+    it silently. This invariant makes that debt visible directly, instead of
+    only being discovered when a human runs tools/gate.py by hand.
+
+    WHY reuse hotam_spec.enforcer_resolution (not gate.py's own copy):
+    invariants must not import from tools/ (that dependency direction is
+    reversed elsewhere in the codebase — tools import src, never the other
+    way); the resolution algorithm was extracted into
+    src/hotam_spec/enforcer_resolution.py precisely so both gate.py (a tool)
+    and this invariant (in src/) can share the grep-based half of the
+    algorithm (R-prefer-tool-over-hand).
+
+    WHY filesystem-grep-based and kept fast: this check greps every
+    tests/test_*.py file to build the check_* -> test-file map. That grep is
+    O(number of test files) and runs once per check() call, in-process — no
+    subprocess spawn. It has been measured at well under a second on this
+    repo's test suite (~180+ test files) and is safe to run on every
+    diagnose()/what_now() pass. If the test suite grows an order of
+    magnitude, this may need caching; that is not yet the case, so no cache
+    is added preemptively.
+    """
+    out: list[Violation] = []
+    check_to_tests = _enforcer_check_to_tests_map(_TESTS_DIR_FOR_ENFORCER_CHECK)
+    known_check_fn_names = {fn.__name__ for fn in ALL_INVARIANTS}
+    for r in g.requirements:
+        # Mirrors check_bijection_r_to_enforcer's scope: only SETTLED+ENFORCED
+        # requirements make a live claim that an enforcer resolves; a REJECTED
+        # requirement's enforced_by is historical record, not a live guarantee
+        # (R-rejected-preserved-not-deleted keeps the text, but it is no
+        # longer an active claim this invariant should hold to account).
+        if r.status != "SETTLED" or r.enforcement != ENFORCED:
+            continue
+        for entry in r.enforced_by:
+            stripped = entry.strip()
+            if stripped.startswith("check_") and stripped in known_check_fn_names:
+                continue
+            resolved = _enforcer_resolve_one(
+                entry, check_to_tests, _TESTS_DIR_FOR_ENFORCER_CHECK
+            )
+            if resolved is None:
+                out.append(
+                    Violation(
+                        "check_enforced_by_resolvable",
+                        r.id,
+                        f"enforced_by entry {entry!r} does not resolve to a "
+                        "real check_* function or a concrete pytest node-id "
+                        "(no such test file, unknown check_* name, or "
+                        "ambiguous/missing bare test_* function) — fix the "
+                        "name or the enforced_by tuple",
+                    )
+                )
     return out
 
 
@@ -3066,6 +3188,12 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "two-condition branch (level validity, then conditional non-empty enforced_by)",
     ),
     InvariantClassification(
+        "check_enforced_by_resolvable",
+        BESPOKE,
+        "greps tests/*.py to resolve each enforced_by entry via the shared "
+        "hotam_spec.enforcer_resolution algorithm, not a static registry",
+    ),
+    InvariantClassification(
         "check_doc_reader_resolves_to_stakeholder",
         BESPOKE,
         "imports doc_readers plumbing and resolves a role-hint dispatch, not a static registry",
@@ -3223,6 +3351,7 @@ ALL_INVARIANTS = (
     # §Enforcement gradient
     check_enforced_names_invariant,
     check_enforceability_kind_known,
+    check_enforced_by_resolvable,
     # §M-tag (atomized; check_m_tag_format is thin delegator)
     check_m_tag_valid_format,
     check_m_tag_unique,

@@ -62,6 +62,11 @@ if str(SPEC_ROOT / "src") not in sys.path:
 if str(SPEC_ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "tools"))
 
+from hotam_spec.enforcer_resolution import (  # noqa: E402
+    bare_test_func_to_file as _shared_bare_test_func_to_file,
+    check_to_tests_map as _shared_check_to_tests_map,
+    resolve_one_enforcer as _shared_resolve_one_enforcer,
+)
 from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
 
 SPEC_TESTS_DIR = SPEC_ROOT / "tests"
@@ -100,50 +105,19 @@ class GateResult:
 def _check_to_tests_map(tests_dir: Path | None = None) -> dict[str, list[str]]:
     """Canon: §Closure — check_* name -> test files that reference it (bare grep).
 
-    Deliberately mirrors gen_spec._scan_concept_map's check_to_tests construction
-    (R-prefer-tool-over-hand: same source of truth, not re-derived logic) but is
-    reimplemented locally (not imported) to keep gate.py import-light and avoid
-    forcing gen_spec's heavier module-level work onto every gate.py call.
+    Thin wrapper over hotam_spec.enforcer_resolution.check_to_tests_map — the
+    shared resolver module (R-prefer-tool-over-hand: one source of truth,
+    reused by both this tiered gate and check_enforced_by_resolvable).
     """
-    _tests = tests_dir or SPEC_TESTS_DIR
-    check_to_tests: dict[str, list[str]] = {}
-    if not _tests.exists():
-        return check_to_tests
-    for test_file in sorted(_tests.glob("test_*.py")):
-        try:
-            test_src = test_file.read_text(encoding="utf-8")
-        except Exception:
-            continue
-        rel = f"tests/{test_file.name}"
-        for check_name in re.findall(r"\bcheck_\w+", test_src):
-            check_to_tests.setdefault(check_name, [])
-            if rel not in check_to_tests[check_name]:
-                check_to_tests[check_name].append(rel)
-    return check_to_tests
+    return _shared_check_to_tests_map(tests_dir or SPEC_TESTS_DIR)
 
 
 def _bare_test_func_to_file(name: str, tests_dir: Path | None = None) -> str | None:
     """Canon: §Closure — bare `test_foo` function name -> owning test file (rel path).
 
-    Greps for `def test_foo(` across tests/*.py. Returns None if zero or more
-    than one file defines a function with that name (ambiguous == unresolved,
-    fail-closed).
+    Thin wrapper over hotam_spec.enforcer_resolution.bare_test_func_to_file.
     """
-    _tests = tests_dir or SPEC_TESTS_DIR
-    if not _tests.exists():
-        return None
-    pattern = re.compile(rf"^def {re.escape(name)}\(", re.MULTILINE)
-    hits: list[str] = []
-    for test_file in sorted(_tests.glob("test_*.py")):
-        try:
-            src = test_file.read_text(encoding="utf-8")
-        except Exception:
-            continue
-        if pattern.search(src):
-            hits.append(f"tests/{test_file.name}")
-    if len(hits) == 1:
-        return hits[0]
-    return None
+    return _shared_bare_test_func_to_file(name, tests_dir or SPEC_TESTS_DIR)
 
 
 def _resolve_one_enforcer(
@@ -151,35 +125,11 @@ def _resolve_one_enforcer(
     check_to_tests: dict[str, list[str]],
     tests_dir: Path | None = None,
 ) -> list[str] | None:
-    """Resolve a single `enforced_by` string to pytest node-id(s), or None (unresolved)."""
-    entry = entry.strip()
+    """Resolve a single `enforced_by` string to pytest node-id(s), or None (unresolved).
 
-    # Rule 1 + 2: already a test path (file.py or file.py::func), possibly
-    # prefixed with "tests/" or bare.
-    if entry.endswith(".py") or "::" in entry:
-        basename = entry.split("/")[-1]
-        file_part = basename.split("::")[0]
-        _tests = tests_dir or SPEC_TESTS_DIR
-        if (_tests / file_part).exists():
-            return [f"tests/{basename}"]
-        return None
-
-    # Rule 3: check_* name -> tests that reference it.
-    if entry.startswith("check_"):
-        hits = check_to_tests.get(entry)
-        if hits:
-            return list(hits)
-        return None
-
-    # Rule 4: bare test_* function name -> owning file.
-    if entry.startswith("test_"):
-        owner = _bare_test_func_to_file(entry, tests_dir)
-        if owner:
-            return [owner]
-        return None
-
-    # Rule 5: anything else is unresolved.
-    return None
+    Thin wrapper over hotam_spec.enforcer_resolution.resolve_one_enforcer.
+    """
+    return _shared_resolve_one_enforcer(entry, check_to_tests, tests_dir or SPEC_TESTS_DIR)
 
 
 def select_tier1(
