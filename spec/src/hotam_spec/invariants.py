@@ -1930,6 +1930,14 @@ def check_step_invokes_known_transition(g: TensionGraph) -> list[Violation]:
     WHY: Step.invokes was prose-only while Entity was deferred. With Entity landed,
     the verb a Step invokes is a Lifecycle transition — making process steps and
     entity state machines structurally coupled. R-step-invokes-known-transition.
+
+    NOTE (atomicity): one relation checked via three sub-rules (progressive
+    validation gates -- format has a dot, entity-slug resolves, event
+    resolves -- each a precondition of the next, not three independent
+    rules): a Step.invokes value fails this ONE relation for exactly one of
+    those three reasons at a time, so the three Violation messages below are
+    failure branches of a single check, not evidence of a bundled multi-rule
+    function.
     """
     type_by_slug = {et.slug: et for et in g.entity_types}
     out: list[Violation] = []
@@ -3166,7 +3174,8 @@ _JACCARD_THRESHOLD = 0.05
 def check_method_matches_docstring(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
     """Canon: §Invariants — each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages.
 
-    RULE: for every function in ALL_INVARIANTS, the RULE line extracted from its
+    RULE: for every function in ALL_INVARIANTS, it MUST have a docstring, that
+    docstring MUST contain a RULE line, and the RULE line extracted from its
     docstring MUST share at least 5% Jaccard token overlap with the concatenated
     text of all Violation messages in the function body. A mismatch means the
     docstring describes a different rule from what the code enforces (silent drift).
@@ -3175,6 +3184,14 @@ def check_method_matches_docstring(g: TensionGraph) -> list[Violation]:  # noqa:
     thing and does another. This meta-invariant catches gross mismatches
     automatically — the same 'visible-not-invisible' principle applied to the
     framework's own machinery.
+
+    NOTE (atomicity): one relation checked via three sub-rules (progressive
+    validation gates -- docstring exists, RULE line exists, Jaccard overlap
+    meets threshold -- each a precondition of the next, not three
+    independent rules): a function fails this ONE relation for exactly one
+    of those three reasons at a time, so the three Violation messages below
+    are failure branches of a single check, not a bundled multi-rule
+    function.
 
     The Jaccard threshold (0.05) is heuristic and chosen to catch obvious mismatches
     without over-flagging terse-but-correct docstrings that use different but
@@ -3657,6 +3674,15 @@ def check_rules_as_data_classification_coherent(g: TensionGraph) -> list[Violati
     duplicate row), and every row's `name` MUST resolve to a function in
     ALL_INVARIANTS (no stale row surviving a rename/removal). Every row's
     `kind` MUST be in RULES_AS_DATA_KINDS.
+
+    NOTE (atomicity): one bijection checked via four sub-rules (facets of
+    the SAME table<->registry bijection -- stale row, bad kind, duplicate
+    row, unclassified function -- not four independent rules; the same
+    shape as check_bijection_r_to_enforcer's documented two sub-rules, just
+    with more facets of one relation): a row/function pair fails this ONE
+    bijection for exactly one of those four reasons at a time, so the four
+    Violation messages below are failure branches of a single check, not a
+    bundled multi-rule function.
 
     WHY: the classification table is the DATA half of the HYBRID verdict — if
     it silently drifts out of sync with ALL_INVARIANTS (a check added without a

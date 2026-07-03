@@ -1332,14 +1332,14 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-observation-evidence-scope",
             claim=(
-                "Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request; Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types."
+                "Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request."
             ),
             owner="framework-reviewer",
             status=(
                 "SETTLED"
             ),
             why=(
-                "M21. Steward verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). Assumption (hotam_spec/assumption.py) remains the sole belief-carrying node type in the ontology; no Observation/Evidence type is added -- this was the scope-creep risk the OPEN question named, and the steward closed it toward the narrower ontology. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'an operator kept its reasoning in the dialogue and crystallized only on request' as a property of the committed graph (it is a fact about a conversation, not the graph state). This is the same honesty class as R-initiator-supplies-domain-content: a real, permanent dialogue discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this discipline already reached ENFORCED separately: R-no-observation-type (SETTLED, ENFORCED) mechanically verifies no Observation/Evidence node type exists in the ontology -- that narrower, structural half is where the machine-checkable guarantee correctly lives; R-observation-evidence-scope itself states the broader dialogue-discipline stance, which stays INHERENTLY_PROSE. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."
+                "M21. Steward verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'an operator kept its reasoning in the dialogue and crystallized only on request' as a property of the committed graph (it is a fact about a conversation, not the graph state). This is the same honesty class as R-initiator-supplies-domain-content: a real, permanent dialogue discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND -- it also asserted 'Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types', which duplicates R-no-observation-type (SETTLED, ENFORCED) verbatim; that mechanically-checkable half already lives there per R-no-observation-type's own why field ('Split out as its own atom so the mechanical slice can honestly reach ENFORCED while the parent claim stays STRUCTURAL'). Trimmed this claim to the dialogue-discipline half only (the genuinely INHERENTLY_PROSE half with no duplicate owner) -- R-no-observation-type remains the sole, undiluted owner of the negative-existence half via its own relations. No semantic narrowing of what the operator actually promises: both halves are still live and enforced exactly as before, now under two non-overlapping atoms instead of one compound one; this is a wording-only re-atomization of the SAME id (not a rejection+new-id split -- both halves already had a distinct home, one pre-existing (R-no-observation-type) and one here, so no new sibling atom is needed)."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
             enforcement="STRUCTURAL",
@@ -1348,14 +1348,14 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-rules-as-data",
             claim=(
-                "Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data (RULES_AS_DATA_TABLE) with a coherence invariant distinguishing them from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic); derivation of check_* function bodies from the table is deferred until it can coexist with R-method-matches-docstring's per-function inspectable-source requirement."
+                "Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data (RULES_AS_DATA_TABLE) with a coherence invariant distinguishing them from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic) -- derivation of check_* function bodies from the table is deferred until it can coexist with R-method-matches-docstring's per-function inspectable-source requirement."
             ),
             owner="framework-reviewer",
             status=(
                 "SETTLED"
             ),
             why=(
-                "M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classify every check_* by family; the check_* bodies themselves remain hand-written, NOT derived from the table. Empirically verified blocker to body-derivation: check_method_matches_docstring (R-method-matches-docstring) calls inspect.getsource(fn) on every check_* to enforce literal, inspectable Violation(...) messages -- functions produced by a table-driven factory are closures, and inspect.getsource raises OSError on them (no source file to point at). The alternative, exec()-based codegen from the table, would satisfy inspect.getsource mechanically but produce opaque, non-diffable bodies -- LESS convenient for an agent auditing behavior, which is the steward's own stated criterion. So classification-as-data landed; derivation-of-bodies is deliberately deferred, not abandoned, until a mechanism exists that keeps generated check_* functions individually inspectable."
+                "M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classify every check_* by family; the check_* bodies themselves remain hand-written, NOT derived from the table. Empirically verified blocker to body-derivation: check_method_matches_docstring (R-method-matches-docstring) calls inspect.getsource(fn) on every check_* to enforce literal, inspectable Violation(...) messages -- functions produced by a table-driven factory are closures, and inspect.getsource raises OSError on them (no source file to point at). The alternative, exec()-based codegen from the table, would satisfy inspect.getsource mechanically but produce opaque, non-diffable bodies -- LESS convenient for an agent auditing behavior, which is the steward's own stated criterion. So classification-as-data landed; derivation-of-bodies is deliberately deferred, not abandoned, until a mechanism exists that keeps generated check_* functions individually inspectable. Wave 8 move 2 atomicity pass: audit_atomicity.py flagged the claim's semicolon COMPOUND -- inspection shows the clause after the semicolon is a scope/status disclaimer about what this ONE classification promise deliberately does NOT yet cover (body derivation), not a second independent obligation; the claim never promised body-derivation, it explicitly defers it. Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention so audit_atomicity's _CLAIM_SCOPE_CLAUSE exemption recognizes it -- wording/classifier-alignment fix, no semantic change, not a split."
             ),
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
@@ -1516,12 +1516,12 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-subagent-gets-its-claude-md",
             claim=(
-                "A delegated sub-operator shall receive its OWN crystal (a CLAUDE.md generated from its sub-domain) and return CONCLUSIONS only, never raw context, to the root operator."
+                "A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER: spawn_agent built — NOW FIRES (P22.C). Promoted DRAFT->SETTLED on P22.C: spawn_agent tool exists at spec/tools/spawn_agent.py, composing per-agent CLAUDE.md into the subagent prompt before dispatch."
+                "The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER: spawn_agent built -- NOW FIRES (P22.C). Promoted DRAFT->SETTLED on P22.C: spawn_agent tool exists at spec/tools/spawn_agent.py, composing per-agent CLAUDE.md into the subagent prompt before dispatch. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND ('and' joining 'shall receive its OWN crystal' with 'and return CONCLUSIONS only, never raw context') -- the second half duplicates R-delegation-conclusions-only verbatim ('the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail'), which already SETTLED that half independently and generically (for any delegated sub-operator, not just ones with a CLAUDE.md). Trimmed this claim to the crystal-provisioning half only -- the concrete, spawn_agent-specific promise this atom's own enforcer (test_composite_prompt_contains_crystal_and_task) actually verifies. R-delegation-conclusions-only remains the sole owner of the return-conclusions-only half. No semantic narrowing: the return-conclusions-only guarantee is still live, enforced exactly as before, just no longer restated redundantly here."
             ),
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
@@ -1718,17 +1718,11 @@ def build_graph() -> TensionGraph:
             owner="framework-reviewer",
             status="SETTLED",
             why=(
-                "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and "
-                "surfaces Requirements with compound claims as a deterministic audit "
-                "signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the "
-                "discipline to the meta-domain, decomposing compound requirements "
-                "into single-concern atoms. The tool is the machine-readable enforcer "
-                "of the discipline; STRUCTURAL because the check is advisory (P0 "
-                "REFLECTION) rather than a P1 invariant that blocks pytest."
+                "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. ENFORCED Wave 8 move 2 (2026-07-03): audit_atomicity.py's requirement-claim audit was rescoped to LIVE promises only (status SETTLED or OPEN(...) -- REJECTED is frozen history, DRAFT is not yet a promise, see audit_atomicity.py's own RULE/WHY), which shrank the atomicity_compound_baseline.json ratchet baseline from 21 stale/misscoped ids down to 6 genuine live compounds, then to 0 after this wave's splits (R-observation-evidence-scope, R-subagent-gets-its-claude-md, R-land-tier-trace 3-way) and classifier-alignment rewords (R-tiered-gate-not-a-commit-gate, R-rules-as-data, both false-positive semicolon/scope-clause claims). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline is now a STRICT zero-COMPOUND gate for every live SETTLED/OPEN requirement claim -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism (tolerates future HONEST debt without red-lining CI); this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty."
             ),
             assumptions=("A-prose-suffices",),
-            enforcement=STRUCTURAL,
-            enforced_by=("tools/audit_atomicity.py",),
+            enforcement="ENFORCED",
+            enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline",),
         ),
         Requirement(
             id="R-check-method-is-atomic",
@@ -1738,16 +1732,11 @@ def build_graph() -> TensionGraph:
             owner="framework-reviewer",
             status="SETTLED",
             why=(
-                "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags "
-                "check_* functions with compound conditions in docs/gen/AUDIT.md "
-                "(same wave as R-requirement-claim-is-atomic). The tool walks "
-                "invariants.py and reports multi-rule families, making the "
-                "discipline machine-auditable. STRUCTURAL because the check is "
-                "advisory (P0 REFLECTION audit output) not a P1 blocking invariant."
+                "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. ENFORCED Wave 8 move 2 (2026-07-03): the check_* (invariant) side of the atomicity_compound_baseline.json ratchet baseline was already empty coming into this wave (porция 1's AST-loop + N-sub-rules classifier fixes burned it down to 0 with no false positives remaining). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline is now a STRICT zero-COMPOUND gate for every registered check_* function -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism; this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty."
             ),
             assumptions=("A-prose-suffices",),
-            enforcement=STRUCTURAL,
-            enforced_by=("tools/audit_atomicity.py",),
+            enforcement="ENFORCED",
+            enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline",),
         ),
         Requirement(
             id="R-bijection-r-to-enforcer-draft",
@@ -3399,10 +3388,10 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-tiered-gate-not-a-commit-gate",
-            claim=("The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries; the T1 targeted-enforcer tier applies ONLY to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing."),
+            claim=("The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier applies only to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing."),
             owner="framework-author",
             status="SETTLED",
-            why=("Tiering exists to relieve the redundant per-proposal tax, not to weaken the wave/commit-boundary guarantee that the WHOLE graph is still structurally sound after a batch of changes -- a targeted T1 pass on proposal N does not prove proposal N did not regress something proposal N-3 touched. This is inherently a discipline/procedural claim about WHEN each tier is invoked (spec/CLAUDE.md's Mediation loop step 6 LAND, vs. a separate steward-run `uv run pytest -q` at commit time) rather than a graph-checkable structural property, so it is marked STRUCTURAL rather than claiming a machine enforcer that cannot honestly exist for a human-invoked boundary. Requalified INHERENTLY_PROSE 2026-07-02 (honesty wave): the claim's own why already argues no machine check_* can honestly enforce a human-invoked commit-time boundary, yet enforceability defaulted to ENFORCEABLE, so it counted as closeable debt in UNENFORCED.md/reflect_unenforced_settled -- a self-contradiction between the claim's stated nature and its declared kind (R-enforceability-kind-declared)."),
+            why=("Tiering exists to relieve the redundant per-proposal tax, not to weaken the wave/commit-boundary guarantee that the WHOLE graph is still structurally sound after a batch of changes -- a targeted T1 pass on proposal N does not prove proposal N did not regress something proposal N-3 touched. This is inherently a discipline/procedural claim about WHEN each tier is invoked (spec/CLAUDE.md's Mediation loop step 6 LAND, vs. a separate steward-run `uv run pytest -q` at commit time) rather than a graph-checkable structural property, so it is marked STRUCTURAL rather than claiming a machine enforcer that cannot honestly exist for a human-invoked boundary. Requalified INHERENTLY_PROSE 2026-07-02 (honesty wave): the claim's own why already argues no machine check_* can honestly enforce a human-invoked commit-time boundary, yet enforceability defaulted to ENFORCEABLE, so it counted as closeable debt in UNENFORCED.md/reflect_unenforced_settled -- a self-contradiction between the claim's stated nature and its declared kind (R-enforceability-kind-declared). Wave 8 move 2 atomicity pass: the claim's own semicolon was flagged COMPOUND by audit_atomicity.py -- inspection shows the clause after the semicolon is NOT a second independent obligation, it is a scope/boundary clause of the SAME rule (defining exactly how far the T1 tier is allowed to reach, i.e. never further than LAND, never a substitute for T2). Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention (see R-commit-boundary-checkable) and extended audit_atomicity._audit_claim with a _CLAIM_SCOPE_CLAUSE exemption mirroring the invariant side's existing 'N sub-rules' self-declaration exemption -- same false-positive class, same fix shape. No semantic change to the promise; this is a wording/classifier-alignment fix, not a split (R-requirement-claim-is-atomic governs live obligations, and this claim always asserted exactly one)."),
             assumptions=("A-python-stack",),
             relations=(Relation("refines", "R-verify-closure-per-action"),),
             enforcement="STRUCTURAL",
@@ -3441,14 +3430,14 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-land-tier-trace",
-            claim=("Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran; dry-run proposals shall never write a record, and a broken/unwritable log location shall never fail an otherwise-green apply (best-effort, warn only)."),
+            claim=("Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran."),
             owner="framework-author",
             status="SETTLED",
-            why=("R-land-gate-tier-selector introduced the T1/T2 tiered LAND gate but left its own operation invisible -- there was no way to answer, after the fact, which tier a given land actually used. Mirrors R-task-spawn-log-runtime's spawn-log.jsonl precedent (same .runtime/ directory, same append-only JSONL discipline, same gitignored-not-committed-substrate status): a runtime trace, not generated docs, because its truth value depends on wall-clock events, not on the graph. Making the log write happen strictly AFTER the verify step (not before) is the load-bearing property -- a record must describe what was actually verified, never a plan that could still fail."),
+            why=("R-land-gate-tier-selector introduced the T1/T2 tiered LAND gate but left its own operation invisible -- there was no way to answer, after the fact, which tier a given land actually used. Mirrors R-task-spawn-log-runtime's spawn-log.jsonl precedent (same .runtime/ directory, same append-only JSONL discipline, same gitignored-not-committed-substrate status): a runtime trace, not generated docs, because its truth value depends on wall-clock events, not on the graph. Making the log write happen strictly AFTER the verify step (not before) is the load-bearing property -- a record must describe what was actually verified, never a plan that could still fail. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND (2 semicolons, 3 segments) -- inspection confirmed 3 genuinely independent behavioral rules of the land-log mechanism, each with its own dedicated enforcer tests: (1) record shape+timing (kept here), (2) dry-run proposals never write a record (now R-land-tier-trace-skips-dry-run), (3) a broken/unwritable log location is best-effort/warn-only, never failing an otherwise-green apply (now R-land-tier-trace-best-effort). Split three-ways per R-requirement-claim-is-atomic; this atom now carries only the record-shape+timing promise, with enforced_by trimmed to the tests that verify exactly that."),
             assumptions=("A-python-stack",),
             relations=(Relation("refines", "R-land-gate-tier-selector"),),
-            enforcement=ENFORCED,
-            enforced_by=("test_apply_proposal_land_log.py::test_land_log_record_shape_t1", "test_apply_proposal_land_log.py::test_land_log_record_shape_t2", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced", "test_apply_proposal_land_log.py::test_dry_run_writes_no_log", "test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort",),
+            enforcement="ENFORCED",
+            enforced_by=("test_apply_proposal_land_log.py::test_land_log_record_shape_t1", "test_apply_proposal_land_log.py::test_land_log_record_shape_t2", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced"),
         ),
         Requirement(
             id="R-commit-boundary-checkable",
@@ -3651,6 +3640,28 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("test_framework_scoped_invariants_skipped_when_not_self_hosting", "test_framework_scoped_invariants_run_when_self_hosting", "test_hotam_dev_pulse_has_no_framework_scoped_violations", "test_hotam_spec_self_pulse_unchanged_by_self_hosting_gate", "test_synthetic_non_self_domain_with_framework_checks_not_flagged",),
+        ),
+        Requirement(
+            id="R-land-tier-trace-skips-dry-run",
+            claim=("A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Split from R-land-tier-trace (Wave 8 move 2 atomicity pass, 2026-07-03) -- a distinct behavioral rule of the same land-log mechanism: a --dry-run apply never reaches a real verify step, so a log entry would misleadingly claim a tier ran when nothing was actually landed. This is the exemption half of the trace contract, independently enforced by test_dry_run_writes_no_log."),
+            assumptions=("A-python-stack",),
+            relations=(Relation("refines", "R-land-tier-trace"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_apply_proposal_land_log.py::test_dry_run_writes_no_log",),
+        ),
+        Requirement(
+            id="R-land-tier-trace-best-effort",
+            claim=("A broken or unwritable spec/.runtime/land-log.jsonl location shall never fail an otherwise-green apply -- the write is best-effort, warn only."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Split from R-land-tier-trace (Wave 8 move 2 atomicity pass, 2026-07-03) -- a distinct behavioral rule of the same land-log mechanism: the trace is diagnostic, not load-bearing for correctness, so a filesystem problem writing the log must never turn a successful proposal apply into a failure. Independently enforced by test_land_log_write_failure_is_best_effort."),
+            assumptions=("A-python-stack",),
+            relations=(Relation("refines", "R-land-tier-trace"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort",),
         ),
     )
 

@@ -31,7 +31,7 @@ reader: framework-author
 | `R-audit-atomicity-tool` | ATOMIC |  |
 | `R-axes-as-module-constant` | ATOMIC |  |
 | `R-axis-controlled-vocab` | ATOMIC |  |
-| `R-axis-gatekeeper-policy` | COMPOUND | semicolon splits 2 segments |
+| `R-axis-gatekeeper-policy` | ATOMIC |  |
 | `R-backend-scope` | ATOMIC |  |
 | `R-bijection-r-to-enforcer` | ATOMIC |  |
 | `R-bijection-r-to-enforcer-draft` | ATOMIC |  |
@@ -275,9 +275,9 @@ reader: framework-author
 | `check_entities_md_lists_all_types` | ATOMIC |  |
 | `check_entity_field_kind_known` | ATOMIC |  |
 | `check_entity_instance_id_prefix` | ATOMIC |  |
-| `check_entity_instance_refs_resolve` | COMPOUND | loops over 2 entity types: entities, entity_types |
-| `check_entity_instance_required_fields` | COMPOUND | loops over 2 entity types: entities, entity_types |
-| `check_entity_instance_state_in_lifecycle` | COMPOUND | loops over 2 entity types: entities, entity_types |
+| `check_entity_instance_refs_resolve` | ATOMIC |  |
+| `check_entity_instance_required_fields` | ATOMIC |  |
+| `check_entity_instance_state_in_lifecycle` | ATOMIC |  |
 | `check_entity_type_constitution_projection` | ATOMIC |  |
 | `check_entity_type_lifecycle_wellformed` | ATOMIC |  |
 | `check_goal_lifecycle_in_lifecycle` | ATOMIC |  |
@@ -290,7 +290,7 @@ reader: framework-author
 | `check_m_tag_open_only` | ATOMIC |  |
 | `check_m_tag_unique` | ATOMIC |  |
 | `check_m_tag_valid_format` | ATOMIC |  |
-| `check_method_matches_docstring` | COMPOUND | 3 distinct violation messages |
+| `check_method_matches_docstring` | ATOMIC |  |
 | `check_no_dangling_assumption_owner` | ATOMIC |  |
 | `check_no_dangling_conflict_refs` | ATOMIC |  |
 | `check_no_dangling_operator_refs` | ATOMIC |  |
@@ -305,10 +305,10 @@ reader: framework-author
 | `check_process_lifecycle_wellformed` | ATOMIC |  |
 | `check_process_roles_declared` | ATOMIC |  |
 | `check_requirement_status_in_lifecycle` | ATOMIC |  |
-| `check_rules_as_data_classification_coherent` | COMPOUND | 4 distinct violation messages |
+| `check_rules_as_data_classification_coherent` | ATOMIC |  |
 | `check_scoped_node_has_single_presenter` | ATOMIC |  |
 | `check_section_anchors_known` | ATOMIC |  |
-| `check_step_invokes_known_transition` | COMPOUND | loops over 2 entity types: entity_types, processes; 3 distinct violation messages |
+| `check_step_invokes_known_transition` | ATOMIC |  |
 | `check_steward_not_a_member_owner` | ATOMIC |  |
 | `check_transition_guard_assumption_resolves` | ATOMIC |  |
 | `check_typed_anchors_assumption` | ATOMIC |  |

@@ -90,8 +90,47 @@ _DASH_VERB = re.compile(
 )
 
 
+_CLAIM_SCOPE_CLAUSE = re.compile(
+    r"\s--\s(?:this\s+is|this\s+does\s+not|it\s+does\s+not|not\s+itself|"
+    r"[\w\s-]{0,60}?\bapplies\s+only\b|[\w\s-]{0,60}?\bnever\s+substituted\b|"
+    r"derivation\s+of|[\w\s-]{0,60}?\bdeferred\s+until\b)",
+    re.IGNORECASE,
+)
+
+
 def _audit_claim(claim: str) -> tuple[str, str]:
-    """Return (verdict, reason) for a requirement claim."""
+    """Return (verdict, reason) for a requirement claim.
+
+    RULE: a trailing ``-- this is/does not/never ...`` clause is a SCOPE
+    DISCLAIMER on the one relation already stated (naming what the claim
+    does NOT promise, e.g. R-commit-boundary-checkable's "-- this is the
+    mechanically checkable SLICE ... it does not itself verify that a
+    steward runs it"), not a second independent obligation -- it is exempt
+    from the semicolon/em-dash compound signals below. WHY: the same
+    false-positive class the invariant side already fixed for
+    "N sub-rules" self-declarations (_declared_sub_rule_count) -- a single
+    promise legitimately carries a boundary clause narrowing what it does
+    NOT cover, and flagging that as COMPOUND would push authors to either
+    delete honest disclaimers (making claims falsely appear unbounded) or
+    split them into a fake sibling requirement that promises nothing new.
+    """
+    m = _CLAIM_SCOPE_CLAUSE.search(claim)
+    if m:
+        # A genuine scope disclaimer is TRAILING -- it narrows the one relation
+        # already stated and carries no further obligation. If a fresh
+        # obligation verb ("shall") survives AFTER the disclaimer marker, the
+        # "-- this does not ..." is being used to smuggle a second independent
+        # promise past the exemption; do NOT strip in that case so the
+        # semicolon/em-dash/"and" signals below still catch it. This closes the
+        # "obligation buried behind a disclaimer clause" hole while leaving the
+        # legitimate trailing-disclaimer case (R-commit-boundary-checkable,
+        # R-tiered-gate-not-a-commit-gate) exempt.
+        tail = claim[m.start():]
+        if not re.search(r"\bshall\b", tail, re.IGNORECASE):
+            # Strip the disclaimer clause before running the compound signals so
+            # a genuine second obligation earlier in the claim is still caught.
+            claim = _CLAIM_SCOPE_CLAUSE.split(claim)[0]
+
     # Semicolons splitting independent statements
     parts = _SEMICOLON.split(claim)
     if len(parts) > 1:
@@ -121,10 +160,39 @@ def _audit_claim(claim: str) -> tuple[str, str]:
 
 
 def _count_entity_loops(source: str) -> list[str]:
-    """Return list of distinct entity types iterated in for-loops."""
-    # Match patterns like "for x in g.requirements", "for x in g.conflicts", etc.
-    pattern = re.compile(r"for\s+\w+\s+in\s+g\.(\w+)")
-    return sorted(set(pattern.findall(source)))
+    """Return list of distinct entity types walked by statement-level for-loops.
+
+    Deliberately excludes comprehensions (list/set/dict) such as
+    ``type_by_slug = {et.slug: et for et in g.entity_types}`` -- a
+    comprehension building a lookup TABLE consumed by a single subsequent
+    walk is not a second independent rule over that entity type, it is
+    plumbing for the one rule the statement-level loop enforces. Counting it
+    as a second "loop over an entity type" is a classifier false positive:
+    the check still enforces exactly one relation, it just needs a helper
+    index to do so efficiently. Only ``for x in g.<attr>:`` STATEMENTS (the
+    ast.For form, which can carry a violation-producing body across
+    multiple statements) signal a genuine second independent walk.
+    """
+    try:
+        dedented = __import__("textwrap").dedent(source)
+        tree = ast.parse(dedented)
+    except SyntaxError:
+        # Fall back to the old regex heuristic if the source can't be parsed
+        # standalone (e.g. decorators referencing local names).
+        pattern = re.compile(r"for\s+\w+\s+in\s+g\.(\w+)")
+        return sorted(set(pattern.findall(source)))
+
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.For):
+            it = node.iter
+            if (
+                isinstance(it, ast.Attribute)
+                and isinstance(it.value, ast.Name)
+                and it.value.id == "g"
+            ):
+                found.add(it.attr)
+    return sorted(found)
 
 
 def _count_semantic_conditions(tree: ast.Module) -> int:
@@ -149,6 +217,43 @@ def _count_semantic_conditions(tree: ast.Module) -> int:
     return len(messages)
 
 
+_SUB_RULE_MARKER = re.compile(
+    r"\b(?:two|three|four|five|\d+)\s+sub-rules\b", re.IGNORECASE
+)
+
+
+def _declared_sub_rule_count(func: object) -> int:
+    """Return how many independent sub-rules a check_*'s OWN docstring claims.
+
+    Multiple ``Violation(...)`` call sites with distinct message text are not
+    on their own evidence of a compound (multi-rule) check: a single relation
+    ("X must resolve") legitimately fails in several distinct ways (missing
+    docstring / missing RULE line / low overlap; stale row / bad kind /
+    duplicate row / unclassified function) without the check enforcing more
+    than one rule -- see check_bijection_r_to_enforcer's own docstring, which
+    is exempted from compoundness at exactly 2 messages by explicitly
+    documenting itself as "two sub-rules" ANDed under one bijection. The
+    signal that separates "one relation, several failure branches" from
+    "actually multiple independent rules bundled into one function" is
+    whether the docstring itself claims more than one rule -- an author
+    writing "RULE (...): N sub-rules ..." is self-declaring compoundness;
+    a single "RULE: ..." paragraph describing one relation is not, no matter
+    how many ways that one relation can fail.
+    """
+    doc = inspect.getdoc(func) or ""
+    m = _SUB_RULE_MARKER.search(doc)
+    if not m:
+        return 1
+    word = m.group(0).split()[0].lower()
+    numerals = {"two": 2, "three": 3, "four": 4, "five": 5}
+    if word in numerals:
+        return numerals[word]
+    try:
+        return int(word)
+    except ValueError:
+        return 1
+
+
 def _audit_invariant(func: object) -> tuple[str, str]:
     """Return (verdict, reason) for a check_* function."""
     try:
@@ -165,7 +270,11 @@ def _audit_invariant(func: object) -> tuple[str, str]:
             f"loops over {len(entity_types)} entity types: {', '.join(entity_types)}"
         )
 
-    # Check semantic conditions via AST
+    # Check semantic conditions via AST -- only a compound signal when the
+    # check's OWN docstring self-declares more than one sub-rule (see
+    # _declared_sub_rule_count); otherwise several Violation messages are
+    # failure-mode branches of the ONE relation the docstring's single RULE
+    # line describes, not evidence of multiple bundled rules.
     try:
         # Dedent the source for parsing
         import textwrap
@@ -173,8 +282,13 @@ def _audit_invariant(func: object) -> tuple[str, str]:
         dedented = textwrap.dedent(source)
         tree = ast.parse(dedented)
         n_conditions = _count_semantic_conditions(tree)
-        if n_conditions > 2:
-            reasons.append(f"{n_conditions} distinct violation messages")
+        declared_rules = _declared_sub_rule_count(func)
+        if n_conditions > 2 and n_conditions > declared_rules:
+            reasons.append(
+                f"{n_conditions} distinct violation messages "
+                f"(docstring declares {declared_rules} sub-rule"
+                f"{'s' if declared_rules != 1 else ''})"
+            )
     except SyntaxError:
         pass
 
@@ -241,8 +355,26 @@ def main(argv: list[str] | None = None) -> None:
     g = _load_graph(demo=args.demo)
 
     # --- Audit requirement claims ---
+    # Scope (R-requirement-claim-is-atomic): the atomicity ratchet governs
+    # LIVE promises only. REJECTED requirements are kept forever as history
+    # (R-rejected-preserved-not-deleted) -- their claim text is frozen
+    # historical prose, never re-edited, so their compoundness is a fact
+    # about the past, not debt anyone can (or should) burn down today;
+    # flagging them COMPOUND would put dead prose on the same ratchet as a
+    # currently-held promise. DRAFT requirements are "proposed, not yet
+    # accepted into the canon" (requirement.py docstring) -- they are not a
+    # promise yet either; DRAFT->SETTLED promotion is exactly the moment to
+    # atomize a compound draft, so they are excluded from the ratchet here
+    # and instead re-audited at PROMOTE time (not audit_atomicity's job).
+    # SETTLED (including SETTLED/INHERENTLY_PROSE and SETTLED/OPEN(...)) ARE
+    # live, currently-held promises -- INHERENTLY_PROSE only changes HOW a
+    # requirement is verified (no check_* can ever confirm it), not WHETHER
+    # it is a live promise the steward is answerable for, so it stays in
+    # scope for atomicity same as any other SETTLED claim.
     claim_rows: list[tuple[str, str, str]] = []
     for r in sorted(g.requirements, key=lambda r: r.id):
+        if r.status != "SETTLED" and not r.status.startswith("OPEN"):
+            continue
         verdict, reason = _audit_claim(r.claim)
         claim_rows.append((r.id, verdict, reason))
 

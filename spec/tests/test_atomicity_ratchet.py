@@ -59,7 +59,10 @@ def _current_compound_ids() -> tuple[set[str], set[str]]:
     g = load_content_graph()
 
     compound_reqs = {
-        r.id for r in g.requirements if aa._audit_claim(r.claim)[0] == "COMPOUND"
+        r.id
+        for r in g.requirements
+        if (r.status == "SETTLED" or r.status.startswith("OPEN"))
+        and aa._audit_claim(r.claim)[0] == "COMPOUND"
     }
     compound_checks = {
         func.__name__

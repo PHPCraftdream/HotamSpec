@@ -65,6 +65,14 @@ WHY: Step.invokes was prose-only while Entity was deferred. With Entity landed,
 the verb a Step invokes is a Lifecycle transition — making process steps and
 entity state machines structurally coupled. R-step-invokes-known-transition.
 
+NOTE (atomicity): one relation checked via three sub-rules (progressive
+validation gates -- format has a dot, entity-slug resolves, event
+resolves -- each a precondition of the next, not three independent
+rules): a Step.invokes value fails this ONE relation for exactly one of
+those three reasons at a time, so the three Violation messages below are
+failure branches of a single check, not evidence of a bundled multi-rule
+function.
+
 ## From `spec/src/hotam_spec/invariants.py::check_process_roles_declared`
 
 Canon: §Process / §Invariants — every Step.requires_role is in Process.roles_required.

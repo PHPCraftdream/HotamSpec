@@ -287,7 +287,8 @@ hides compoundness; an orphan check hides unclaimed guarantees.
 
 Canon: §Invariants — each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages.
 
-RULE: for every function in ALL_INVARIANTS, the RULE line extracted from its
+RULE: for every function in ALL_INVARIANTS, it MUST have a docstring, that
+docstring MUST contain a RULE line, and the RULE line extracted from its
 docstring MUST share at least 5% Jaccard token overlap with the concatenated
 text of all Violation messages in the function body. A mismatch means the
 docstring describes a different rule from what the code enforces (silent drift).
@@ -296,6 +297,14 @@ WHY: docstring-body drift is the silent failure mode where a check_* says one
 thing and does another. This meta-invariant catches gross mismatches
 automatically — the same 'visible-not-invisible' principle applied to the
 framework's own machinery.
+
+NOTE (atomicity): one relation checked via three sub-rules (progressive
+validation gates -- docstring exists, RULE line exists, Jaccard overlap
+meets threshold -- each a precondition of the next, not three
+independent rules): a function fails this ONE relation for exactly one
+of those three reasons at a time, so the three Violation messages below
+are failure branches of a single check, not a bundled multi-rule
+function.
 
 The Jaccard threshold (0.05) is heuristic and chosen to catch obvious mismatches
 without over-flagging terse-but-correct docstrings that use different but
@@ -335,6 +344,15 @@ have exactly one row in RULES_AS_DATA_TABLE (no missing classification, no
 duplicate row), and every row's `name` MUST resolve to a function in
 ALL_INVARIANTS (no stale row surviving a rename/removal). Every row's
 `kind` MUST be in RULES_AS_DATA_KINDS.
+
+NOTE (atomicity): one bijection checked via four sub-rules (facets of
+the SAME table<->registry bijection -- stale row, bad kind, duplicate
+row, unclassified function -- not four independent rules; the same
+shape as check_bijection_r_to_enforcer's documented two sub-rules, just
+with more facets of one relation): a row/function pair fails this ONE
+bijection for exactly one of those four reasons at a time, so the four
+Violation messages below are failure branches of a single check, not a
+bundled multi-rule function.
 
 WHY: the classification table is the DATA half of the HYBRID verdict — if
 it silently drifts out of sync with ALL_INVARIANTS (a check added without a

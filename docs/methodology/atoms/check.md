@@ -15,13 +15,13 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_bijection_r_to_enforcer`
 
-## `R-check-method-is-atomic` (STRUCTURAL)
+## `R-check-method-is-atomic` (ENFORCED)
 
 **Claim.** Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.
 
-**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. STRUCTURAL because the check is advisory (P0 REFLECTION audit output) not a P1 blocking invariant.
+**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. ENFORCED Wave 8 move 2 (2026-07-03): the check_* (invariant) side of the atomicity_compound_baseline.json ratchet baseline was already empty coming into this wave (porция 1's AST-loop + N-sub-rules classifier fixes burned it down to 0 with no false positives remaining). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline is now a STRICT zero-COMPOUND gate for every registered check_* function -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism; this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty.
 
-**Enforced by:** `tools/audit_atomicity.py`
+**Enforced by:** `test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline`
 
 ## `R-decided-conflict-justifies-itself` (ENFORCED)
 
@@ -55,13 +55,13 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_enforced_names_invariant`
 
-## `R-requirement-claim-is-atomic` (STRUCTURAL)
+## `R-requirement-claim-is-atomic` (ENFORCED)
 
 **Claim.** Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.
 
-**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. The tool is the machine-readable enforcer of the discipline; STRUCTURAL because the check is advisory (P0 REFLECTION) rather than a P1 invariant that blocks pytest.
+**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. ENFORCED Wave 8 move 2 (2026-07-03): audit_atomicity.py's requirement-claim audit was rescoped to LIVE promises only (status SETTLED or OPEN(...) -- REJECTED is frozen history, DRAFT is not yet a promise, see audit_atomicity.py's own RULE/WHY), which shrank the atomicity_compound_baseline.json ratchet baseline from 21 stale/misscoped ids down to 6 genuine live compounds, then to 0 after this wave's splits (R-observation-evidence-scope, R-subagent-gets-its-claude-md, R-land-tier-trace 3-way) and classifier-alignment rewords (R-tiered-gate-not-a-commit-gate, R-rules-as-data, both false-positive semicolon/scope-clause claims). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline is now a STRICT zero-COMPOUND gate for every live SETTLED/OPEN requirement claim -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism (tolerates future HONEST debt without red-lining CI); this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty.
 
-**Enforced by:** `tools/audit_atomicity.py`
+**Enforced by:** `test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline`
 
 ## `R-requirement-enforced` (ENFORCED)
 

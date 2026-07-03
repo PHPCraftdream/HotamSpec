@@ -1,34 +1,5 @@
 {
-  "_comment": "R-requirement-claim-is-atomic / R-check-method-is-atomic ratchet baseline (Wave 2, 2026-07-02). Frozen list of ids that audit_atomicity.py's own classification functions (_audit_claim / _audit_invariant, re-derived live against the loaded domain graph -- NOT the possibly-stale generated docs/gen/AUDIT.md, whose GEN_DIR is hardcoded to the repo-root docs/gen and is a separate pre-existing staleness issue out of this wave's scope) currently flag COMPOUND. Existing debt is honestly frozen here (not silently re-litigated), and test_atomicity_ratchet.py fails RED the moment a COMPOUND id appears that is NOT in this list (a genuinely new compound claim/check introduced after this baseline). Removing an id from this list (because it was split/atomized) is always allowed and expected to shrink the set over time; the test does not enforce shrinkage, only forbids growth beyond this frozen set. R-agent-imports-framework and R-task-spawn-is-ephemeral remain here even though they are now REJECTED (Wave 2 split) -- audit_atomicity.py does not filter by status, and their REJECTED claim text is frozen historical prose (R-rejected-preserved-not-deleted), not live debt; kept in the baseline so the ratchet does not need special-casing for status.",
-  "requirements": [
-    "R-agent-imports-framework",
-    "R-axis-gatekeeper-policy",
-    "R-boot-from-substrate",
-    "R-claude-md-budget-phi-cap",
-    "R-claude-md-tree-of-crystals",
-    "R-commit-boundary-checkable",
-    "R-context-hook-piggybacks-cah-stamp",
-    "R-empty-content-is-legitimate",
-    "R-goal-as-target-state",
-    "R-land-tier-trace",
-    "R-lifecycle-abstraction",
-    "R-observation-evidence-scope",
-    "R-operator-acting-facet",
-    "R-operator-crystal-is-claude-md",
-    "R-rules-as-data",
-    "R-setup-claude-generates-settings",
-    "R-statemachine-wellformedness",
-    "R-subagent-gets-its-claude-md",
-    "R-task-spawn-is-ephemeral",
-    "R-tiered-gate-not-a-commit-gate",
-    "R-unresolvable-conflict-carries-variants"
-  ],
-  "invariants": [
-    "check_entity_instance_refs_resolve",
-    "check_entity_instance_required_fields",
-    "check_entity_instance_state_in_lifecycle",
-    "check_method_matches_docstring",
-    "check_rules_as_data_classification_coherent",
-    "check_step_invokes_known_transition"
-  ]
+  "_comment": "R-requirement-claim-is-atomic / R-check-method-is-atomic ratchet baseline (Wave 8 move 2, 2026-07-03, EMPTIED). Starting from the 2026-07-02 RESCOPE (audit_atomicity.py's requirement-claim audit scoped to LIVE promises only -- status SETTLED or OPEN(...); REJECTED is frozen history per R-rejected-preserved-not-deleted, DRAFT is not yet a promise), the 6 remaining live compounds were resolved this wave: R-commit-boundary-checkable and R-tiered-gate-not-a-commit-gate/R-rules-as-data were false positives on the semicolon/em-dash scope-disclaimer heuristic (fixed via audit_atomicity._CLAIM_SCOPE_CLAUSE, wording reworded to the codebase's existing '--' disclaimer convention, no semantic change); R-observation-evidence-scope and R-subagent-gets-its-claude-md were genuine compounds where one half duplicated an existing sibling atom (R-no-observation-type, R-delegation-conclusions-only respectively) and were trimmed to their non-duplicate half; R-land-tier-trace was a genuine 3-way compound (record-shape+timing / dry-run-exemption / best-effort-on-write-failure, each independently tested) and was split into R-land-tier-trace + R-land-tier-trace-skips-dry-run + R-land-tier-trace-best-effort. Both requirements and invariants sets are now EMPTY -- R-requirement-claim-is-atomic and R-check-method-is-atomic flip to ENFORCED this wave, with test_atomicity_ratchet.py's two tests now acting as a STRICT zero-COMPOUND gate (any regression fails immediately, not just growth-beyond-a-nonzero-baseline). Growing this baseline again in the future is still the honest, permitted path if new compound debt needs to be carried rather than fixed immediately -- the ratchet mechanism (R-atomicity-ratchet-no-growth) does not require the baseline to stay empty, only that it never grows silently.",
+  "requirements": [],
+  "invariants": []
 }
