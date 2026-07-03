@@ -414,6 +414,121 @@ def assumption_by_id(g: TensionGraph, aid: str) -> Assumption | None:
 
 
 # ---------------------------------------------------------------------------
+# Dependency traversal — depends_on chains and independent subgraphs
+# ---------------------------------------------------------------------------
+
+
+def dependency_chains(g: TensionGraph) -> tuple[tuple[str, ...], ...]:
+    """Canon: §Graph — maximal depends_on chains, deepest-dependency first.
+
+    RULE: build the directed graph whose edges are exactly the `depends_on`
+    Relations between Requirements (A depends_on B => edge A -> B). Return every
+    MAXIMAL path (a path whose start node has no incoming depends_on edge and
+    whose end node has no outgoing depends_on edge), each rendered as a tuple of
+    Requirement ids ordered from the most-depended-UPON leaf to the most-
+    dependent root — i.e. reverse topological order, so a consumer can build /
+    verify the chain front-to-back (R-dependency-drives-sequential: the chain is
+    emitted in the order the work must actually happen, dependency before
+    dependent). Chains of length < 2 (an isolated requirement with no depends_on
+    edge in either direction) are omitted — a chain needs at least one real edge.
+    Edges whose target is absent from the graph (dangling) are skipped here (they
+    are a separate diagnosable defect, not this traversal's concern). The outer
+    tuple is sorted for determinism (R-deterministic-generation). A cyclic
+    depends_on component yields no chain from its cycle members (a cycle has no
+    maximal linear path); acyclic tails attached to it are still surfaced.
+
+    WHY reverse-topological (leaf-first): "sequential" means the dependency is
+    done before the thing that depends on it; emitting leaf-first makes the tuple
+    itself the execution order, so R-dependency-drives-sequential is satisfied by
+    reading the chain left to right rather than by a separate sort at the call site.
+    """
+    # Adjacency: node -> set of nodes it depends_on (edge node -> dep).
+    ids = {r.id for r in g.requirements}
+    deps: dict[str, set[str]] = {r.id: set() for r in g.requirements}
+    rdeps: dict[str, set[str]] = {r.id: set() for r in g.requirements}
+    for r in g.requirements:
+        for rel in r.relations:
+            if rel.kind == "depends_on" and rel.target in ids:
+                deps[r.id].add(rel.target)
+                rdeps[rel.target].add(r.id)
+
+    # Roots: nodes that nothing depends on (no incoming reverse edge, i.e. no
+    # requirement lists them as a dependent) but which DO depend on something.
+    roots = sorted(
+        rid for rid in ids if not rdeps[rid] and deps[rid]
+    )
+
+    chains: set[tuple[str, ...]] = set()
+
+    def _walk(root: str) -> None:
+        # DFS every maximal path root -> ... -> leaf, guarding against cycles.
+        stack: list[tuple[str, tuple[str, ...]]] = [(root, (root,))]
+        while stack:
+            node, path = stack.pop()
+            children = sorted(deps[node])
+            unseen = [c for c in children if c not in path]
+            if not unseen:
+                # leaf (or cycle-blocked): emit path leaf-first (reversed).
+                if len(path) >= 2:
+                    chains.add(tuple(reversed(path)))
+                continue
+            for c in unseen:
+                stack.append((c, path + (c,)))
+
+    for root in roots:
+        _walk(root)
+
+    return tuple(sorted(chains))
+
+
+def independent_subgraphs(g: TensionGraph) -> tuple[tuple[str, ...], ...]:
+    """Canon: §Graph — connected components over the depends_on relation.
+
+    RULE: treat every `depends_on` Relation between two Requirements present in
+    the graph as an UNDIRECTED edge and return the connected components — each a
+    sorted tuple of Requirement ids — with the outer tuple sorted for
+    determinism. A component with a single member (a requirement sharing no
+    depends_on edge with any other) IS returned: it is a maximally-independent
+    unit. Two components share no depends_on edge, so they are safe to work on in
+    parallel (R-dependency-drives-parallel: disjoint components are the
+    parallelizable slices).
+
+    WHY undirected components (not the directed chains above): parallelism cares
+    only about REACHABILITY through dependency edges, in either direction — if A
+    depends_on B and C depends_on B, then A and C are in one component (they share
+    B) and must NOT be assumed independent, even though there is no directed path
+    between A and C. Union-find over undirected edges captures exactly that.
+    """
+    parent: dict[str, str] = {r.id: r.id for r in g.requirements}
+
+    def _find(x: str) -> str:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def _union(a: str, b: str) -> None:
+        ra, rb = _find(a), _find(b)
+        if ra != rb:
+            # Attach the lexicographically-larger root under the smaller for
+            # deterministic component roots.
+            hi, lo = (ra, rb) if ra > rb else (rb, ra)
+            parent[hi] = lo
+
+    ids = set(parent)
+    for r in g.requirements:
+        for rel in r.relations:
+            if rel.kind == "depends_on" and rel.target in ids:
+                _union(r.id, rel.target)
+
+    comps: dict[str, list[str]] = {}
+    for rid in ids:
+        comps.setdefault(_find(rid), []).append(rid)
+
+    return tuple(sorted(tuple(sorted(members)) for members in comps.values()))
+
+
+# ---------------------------------------------------------------------------
 # Drift traversal — assumptions and their dependents
 # ---------------------------------------------------------------------------
 

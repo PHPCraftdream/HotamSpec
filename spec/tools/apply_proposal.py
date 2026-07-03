@@ -901,6 +901,75 @@ def _replace_or_insert_field(
     return lines
 
 
+def _render_relations_expr(relations: tuple[tuple[str, str], ...]) -> str:
+    """Canon: §Proposal — render a relations tuple as a Relation(...) source expr.
+
+    RULE: each (kind, target) pair becomes `Relation("kind", "target")`; the
+    whole becomes a parenthesized tuple with a trailing comma. Mirrors the
+    ADD-path rendering in _render_requirement_source so the UPDATE path (adding
+    depends_on/supports/refines edges to an EXISTING requirement) produces
+    byte-identical source, not a bare string tuple _python_repr would emit.
+
+    WHY a dedicated renderer (not _python_repr): relations are typed edges
+    (Relation constructor calls), not literals; _python_repr only knows how to
+    emit str/tuple/Variant literals, so an UPDATE that adds relations would
+    otherwise silently drop them (the field was absent from the UPDATE loop).
+    """
+    items = ", ".join(
+        f'Relation("{kind}", "{target}")' for kind, target in relations
+    )
+    return f"({items},)"
+
+
+def _replace_or_insert_relations(
+    source_lines: list[str],
+    call: ast.Call,
+    relations: tuple[tuple[str, str], ...],
+) -> list[str]:
+    """Canon: §Proposal — replace/insert the relations= kwarg on a Requirement call.
+
+    Same line/col strategy as _replace_or_insert_field, but the value is a
+    Relation(...) constructor tuple (rendered by _render_relations_expr) rather
+    than a _python_repr literal.
+    """
+    lines = list(source_lines)
+    new_repr = _render_relations_expr(relations)
+
+    for kw in call.keywords:
+        if kw.arg != "relations":
+            continue
+        val_node = kw.value
+        lineno = val_node.lineno - 1
+        line = lines[lineno]
+        col = _byte_col_to_char_col(line, val_node.col_offset)
+        end_lineno = getattr(val_node, "end_lineno", None)
+        end_col_bytes = getattr(val_node, "end_col_offset", None)
+        if end_lineno is not None and end_col_bytes is not None:
+            if end_lineno - 1 == lineno:
+                end_col = _byte_col_to_char_col(line, end_col_bytes)
+                lines[lineno] = line[:col] + new_repr + line[end_col:]
+            else:
+                end_line = lines[end_lineno - 1]
+                end_col = _byte_col_to_char_col(end_line, end_col_bytes)
+                suffix = end_line[end_col:]
+                del lines[lineno + 1 : end_lineno - 1 + 1]
+                line = lines[lineno]
+                lines[lineno] = line[:col] + new_repr + suffix
+        return lines
+
+    # Insert before the closing ')' of the call, indented like siblings.
+    end_lineno = getattr(call, "end_lineno", None)
+    if end_lineno is None:
+        raise RuntimeError("Cannot determine end line of Requirement call for relations")
+    indent = "            "
+    if call.keywords:
+        kw_linetext = lines[call.keywords[0].value.lineno - 1]
+        stripped = kw_linetext.lstrip()
+        indent = kw_linetext[: len(kw_linetext) - len(stripped)]
+    lines.insert(end_lineno - 1, f"{indent}relations={new_repr},\n")
+    return lines
+
+
 def _remove_kwarg_line(
     source_lines: list[str],
     call: ast.Call,
@@ -1052,13 +1121,34 @@ def _apply_requirement_to_source(
             ("assumptions", proposal.assumptions),
             ("enforcement", proposal.enforcement),
             ("enforced_by", proposal.enforced_by),
+            ("relations", proposal.relations),
             ("enforceability", proposal.enforceability),
             ("m_tag", proposal.m_tag),
         ]:
             # Skip empty optional fields not already present
-            if field_name in ("assumptions", "enforced_by") and not new_value:
+            if field_name in ("assumptions", "enforced_by", "relations") and not new_value:
                 if _kwarg_line_col(call_node, field_name) is None:
                     continue
+            # relations render as Relation(...) constructor calls, not bare
+            # string tuples — _python_repr cannot produce them, so build the
+            # source expression here and splice it via a raw-source insert path.
+            if field_name == "relations" and new_value:
+                lines = _replace_or_insert_relations(lines, call_node, new_value)
+                new_src = "".join(lines)
+                # relations reference Requirement ids and need the Relation
+                # symbol; ensure it is imported before re-parsing/continuing.
+                new_src = _ensure_import(
+                    new_src, "hotam_spec.requirement", ["Relation"]
+                )
+                lines = new_src.splitlines(keepends=True)
+                tree = ast.parse(new_src)
+                call_node = _find_requirement_call(tree, proposal.id)
+                if call_node is None:
+                    raise RuntimeError(
+                        f"Lost track of requirement '{proposal.id}' after "
+                        f"replacing field 'relations'."
+                    )
+                continue
             # m_tag: if the proposal clears it (e.g. status leaves OPEN) and a
             # m_tag= kwarg is already present in source, remove the kwarg line
             # entirely rather than writing m_tag="" (R-m-tag-open-only expects
@@ -1233,34 +1323,58 @@ def _apply_conflict_transition(
     return list(lines)
 
 
-def _ensure_conflict_import(source_text: str, needed: list[str]) -> str:
-    """Ensure `from hotam_spec.conflict import ...` names every symbol in `needed`.
+def _ensure_import(source_text: str, module: str, needed: list[str]) -> str:
+    """Ensure `from {module} import ...` names every symbol in `needed`.
 
-    Shared by the ConflictTransition writer (variants introduce `Variant`)
-    and the new-Conflict writer (`Conflict`, `conflict_identity`). Appends
-    any missing names to an existing import line, or inserts a fresh import
-    line after `from __future__ import annotations` if none exists yet.
+    RULE: parse the (single) existing `from {module} import <names>` line into
+    a set of whole-token names (split on comma, stripped); append only the
+    tokens in `needed` that are ABSENT from that set — a whole-name comparison,
+    never a substring test (so `State` is not falsely considered present
+    because `StateMachine` is imported, and `Entity` is not falsely present
+    because `EntityType` is). If no import line for `module` exists yet, insert
+    a fresh one immediately after `from __future__ import annotations`.
+
+    WHY one shared helper (generalized from the old _ensure_conflict_import):
+    every writer that materializes a node whose constructor needs symbols from
+    a hotam_spec module (Conflict/Variant, EntityType/EntityField/EntityInstance,
+    Lifecycle/State/Transition) must guarantee those symbols resolve, or the
+    domain's build_graph() raises NameError on the FIRST such node. Porción-1's
+    first-EntityType-in-a-domain case had to inject these imports by hand
+    because the per-writer substring checks were duplicated and fragile; routing
+    them all through one whole-name helper removes that class of drift.
     """
-    m = _re.search(r"^from hotam_spec\.conflict import ([^\n]+)", source_text, _re.MULTILINE)
+    m = _re.search(
+        rf"^from {_re.escape(module)} import ([^\n]+)", source_text, _re.MULTILINE
+    )
     if m:
         existing = m.group(1)
-        existing_names = [n.strip() for n in existing.split(",")]
+        existing_names = {n.strip() for n in existing.split(",") if n.strip()}
         missing = [n for n in needed if n not in existing_names]
         if missing:
             new_import = existing.rstrip() + ", " + ", ".join(missing)
             source_text = source_text.replace(
-                f"from hotam_spec.conflict import {existing}",
-                f"from hotam_spec.conflict import {new_import}",
+                f"from {module} import {existing}",
+                f"from {module} import {new_import}",
                 1,
             )
     else:
         source_text = source_text.replace(
             "from __future__ import annotations\n",
             "from __future__ import annotations\n\n"
-            f"from hotam_spec.conflict import {', '.join(needed)}\n",
+            f"from {module} import {', '.join(needed)}\n",
             1,
         )
     return source_text
+
+
+def _ensure_conflict_import(source_text: str, needed: list[str]) -> str:
+    """Ensure `from hotam_spec.conflict import ...` names every symbol in `needed`.
+
+    Thin wrapper over _ensure_import for the conflict module — kept as a named
+    seam for the ConflictTransition writer (variants introduce `Variant`) and
+    the new-Conflict writer (`Conflict`, `conflict_identity`).
+    """
+    return _ensure_import(source_text, "hotam_spec.conflict", needed)
 
 
 # ---------------------------------------------------------------------------
@@ -1924,66 +2038,20 @@ def _apply_entity_type_to_source(
 
     result = "".join(lines)
 
-    # Ensure required imports are present
-    needs_lifecycle_import = (
-        any(tok in result for tok in ("Lifecycle(", "State(", "Transition("))
-        and "from hotam_spec.lifecycle import" not in result
+    # Ensure required imports are present. The rendered EntityType always uses
+    # Lifecycle + State; a transitions=(...) block uses Transition and a
+    # fields=(...) block uses EntityField. Inject the full expected symbol set
+    # for both modules through the shared whole-name helper (no substring
+    # false-positives); redundant names already imported are left untouched.
+    # This is the fix for porción-1's first-EntityType-in-a-domain case, where
+    # a domain with no prior entity/lifecycle imports (or a partial import
+    # missing State/Transition/EntityField) produced a build_graph() NameError.
+    result = _ensure_import(
+        result, "hotam_spec.lifecycle", ["Lifecycle", "State", "Transition"]
     )
-    if needs_lifecycle_import:
-        result = result.replace(
-            "from __future__ import annotations\n",
-            "from __future__ import annotations\n\nfrom hotam_spec.lifecycle import Lifecycle, State, Transition\n",
-            1,
-        )
-    elif "from hotam_spec.lifecycle import" in result:
-        # Check if Lifecycle, State, Transition are included
-        import re as _re2
-
-        m = _re2.search(r"from hotam_spec\.lifecycle import ([^\n]+)", result)
-        if m:
-            existing = m.group(1)
-            needed = ["Lifecycle", "State", "Transition"]
-            missing = [n for n in needed if n not in existing]
-            if missing:
-                new_import = existing.rstrip() + ", " + ", ".join(missing)
-                result = result.replace(
-                    f"from hotam_spec.lifecycle import {existing}",
-                    f"from hotam_spec.lifecycle import {new_import}",
-                    1,
-                )
-
-    needs_entity_import = (
-        "EntityType(" in result or "EntityField(" in result
-    ) and "from hotam_spec.entity import" not in result
-    if needs_entity_import:
-        # Insert after the lifecycle import or at the top of imports
-        if "from hotam_spec.lifecycle import" in result:
-            result = result.replace(
-                "from hotam_spec.lifecycle import",
-                "from hotam_spec.entity import EntityField, EntityType\nfrom hotam_spec.lifecycle import",
-                1,
-            )
-        else:
-            result = result.replace(
-                "from __future__ import annotations\n",
-                "from __future__ import annotations\n\nfrom hotam_spec.entity import EntityField, EntityType\n",
-                1,
-            )
-    elif "from hotam_spec.entity import" in result:
-        import re as _re3
-
-        m = _re3.search(r"from hotam_spec\.entity import ([^\n]+)", result)
-        if m:
-            existing = m.group(1)
-            needed = ["EntityField", "EntityType"]
-            missing = [n for n in needed if n not in existing]
-            if missing:
-                new_import = existing.rstrip() + ", " + ", ".join(missing)
-                result = result.replace(
-                    f"from hotam_spec.entity import {existing}",
-                    f"from hotam_spec.entity import {new_import}",
-                    1,
-                )
+    result = _ensure_import(
+        result, "hotam_spec.entity", ["EntityField", "EntityType"]
+    )
 
     return result
 

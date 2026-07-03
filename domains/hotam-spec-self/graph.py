@@ -1903,11 +1903,9 @@ def build_graph() -> TensionGraph:
                 "φ-cap size trigger."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "Second trigger besides R-claude-md-budget-phi-cap: cognitive load, "
-                "not token load. BUILD-TRIGGER: a heuristic detector exists (planned: "
-                "count of distinct concerns per sub-domain crossing a threshold)."
+                "REJECTED — REPLACES R-claude-md-tree-of-crystals: the cognitive-trigger framing rested on the already-REJECTED φ-cap notion; the only real delegated trigger that survives is the CRYSTAL_CHARS warn threshold on the resident crystal (contextbudget), which is already first-class. No separate cognitive-trigger node is needed. — (was: Second trigger besides R-claude-md-budget-phi-cap: cognitive load, not token load. BUILD-TRIGGER: a heuristic detector exists (planned: count of distinct concerns per sub-domain crossing a threshold).)"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
@@ -1940,13 +1938,9 @@ def build_graph() -> TensionGraph:
                 "forbidden by a meta-test."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "Single source of truth: Python file generates the JSON; meta-test "
-                "enforces equality. BUILD-TRIGGER: the prerequisite atomization "
-                "(R-requirement-claim-is-atomic and R-check-method-is-atomic) has "
-                "landed — without it, setup_claude.py easily slides back into "
-                "compoundness."
+                "REJECTED — REPLACES the point-installer requirements (R-tool-setup-context-hook et al.): the envisioned single setup_claude.py that would generate settings was never built; the surgical, per-concern installers (setup_context_hook.py --patch-global and friends) won on the ground — configuration is applied one concern at a time, opt-in and user-run, not by one settings-generating entry point. — (was: Single source of truth: Python file generates the JSON; meta-test enforces equality. BUILD-TRIGGER: the prerequisite atomization (R-requirement-claim-is-atomic and R-check-method-is-atomic) has landed — without it, setup_claude.py easily slides back into compoundness.)"
             ),
             assumptions=("A-python-stack",),
             enforcement=PROSE,
@@ -2557,7 +2551,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-dependency-graph-parallelism (parallel concern). Independent components can run concurrently without coordination overhead."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("test_dependency_traversal.py::test_disjoint_components_are_parallelizable",),
         ),
         Requirement(
             id="R-dependency-drives-sequential",
@@ -2568,7 +2563,8 @@ def build_graph() -> TensionGraph:
                 "Atom of R-dependency-graph-parallelism (sequential concern). Coupled requirements need ordering to avoid stale inputs."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent",),
         ),
         Requirement(
             id="R-crystal-is-claude-md",

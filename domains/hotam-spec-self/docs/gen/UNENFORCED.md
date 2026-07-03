@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 174 / SETTLED 197; closeable debt 3; inherent discipline 20; DRAFT 7; OPEN 0; REJECTED 31.**
+**Burn-down: SETTLED-ENFORCED 176 / SETTLED 197; closeable debt 1; inherent discipline 20; DRAFT 5; OPEN 0; REJECTED 33.**
 
 ---
 
@@ -23,8 +23,6 @@ judgment calls no check_* could ever verify.
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-constituting-requirements-converge` | STRUCTURAL | `framework-reviewer` | The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden. |
-| `R-dependency-drives-parallel` | STRUCTURAL | `framework-author` | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
-| `R-dependency-drives-sequential` | STRUCTURAL | `framework-author` | Dependency chains in the network shall be processed sequentially. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 
@@ -149,6 +147,8 @@ judgment calls no check_* could ever verify.
 | `R-process-drives-existing-entities` | check_process_drives_existing_entities | Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types. |
 | `R-step-invokes-known-transition` | check_step_invokes_known_transition | Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle. |
 | `R-dependency-tracked` | check_no_dangling_requirement_relations | The system shall track the dependency network between requirements via Requirement.relations (depends_on, supports, refines). |
+| `R-dependency-drives-parallel` | test_dependency_traversal.py::test_disjoint_components_are_parallelizable | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
+| `R-dependency-drives-sequential` | test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent | Dependency chains in the network shall be processed sequentially. |
 | `R-crystal-is-claude-md` | test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo | Each operator's crystallized substrate shall be its own CLAUDE.md file. |
 | `R-crystal-reload-by-reference` | test_embedded_thinking_tools.py | An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context. |
 | `R-crystal-tree-hierarchy` | test_constitution_gen.py | The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget. |
@@ -237,7 +237,5 @@ judgment calls no check_* could ever verify.
 | `R-measure-context-size` | `ai-agent` |
 | `R-claude-md-tree-of-crystals` | `framework-author` |
 | `R-domain-delegation-persists` | `framework-author` |
-| `R-tree-of-crystals-cognitive-trigger` | `framework-author` |
 | `R-domain-delegation-as-node` | `framework-author` |
-| `R-setup-claude-generates-settings` | `framework-author` |
 | `R-context-hook-piggybacks-cah-stamp` | `framework-author` |

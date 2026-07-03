@@ -27,8 +27,10 @@ structure.
 from hotam_spec.assumption import Assumption, HOLDS
 from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict, conflict_identity
+from hotam_spec.entity import EntityField, EntityInstance, EntityType
 from hotam_spec.graph import TensionGraph
-from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL, Requirement
+from hotam_spec.lifecycle import Lifecycle, State, Transition
+from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL, Requirement, Relation
 from hotam_spec.stakeholder import Stakeholder
 
 
@@ -108,8 +110,9 @@ def build_graph() -> TensionGraph:
             owner="pipeline-operator",
             status="SETTLED",
             why=("T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. Enforcement is honestly STRUCTURAL: what_now/apply_proposal make the T2 boundary visible and addressable (gate_status.py, land-log.jsonl tier trace) but no single check_* fires automatically if a steward skips a wave-boundary T2 run by hand outside the tool."),
-            assumptions=("A-runtime-logs-append-only", "A-single-steward-session",),
-            enforcement=STRUCTURAL,
+            assumptions=("A-runtime-logs-append-only", "A-single-steward-session"),
+            enforcement="STRUCTURAL",
+            relations=(Relation("depends_on", "R-t1-gate-is-default"),),
         ),
         Requirement(
             id="R-spawn-logged",
@@ -128,8 +131,9 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("The land-log is the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- the basis for gate_status.py's commit-boundary answer (R-commit-boundary-checkable, hotam-spec-self); without it there is no auditable trail of what actually got verified before landing."),
             assumptions=("A-runtime-logs-append-only",),
-            enforcement=ENFORCED,
+            enforcement="ENFORCED",
             enforced_by=("test_apply_proposal_land_log.py::test_land_log_record_shape_t1",),
+            relations=(Relation("depends_on", "R-t1-gate-is-default"),),
         ),
         Requirement(
             id="R-commit-follows-review",
@@ -138,8 +142,9 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("Review is the last human-in-the-loop check before a change becomes permanent history; this is a judgment call about diff quality and intent that no mechanical check can substitute for, so enforcement stays honestly PROSE."),
             assumptions=("A-single-steward-session",),
-            enforcement=PROSE,
+            enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("depends_on", "R-wave-lands-atomically"),),
         ),
         Requirement(
             id="R-push-only-on-request",
@@ -148,8 +153,9 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("A push is externally visible and hard to undo cleanly (shared history); reserving it strictly to explicit steward request keeps the irreversible action under human authority, mirroring the project's global CLAUDE.md discipline. Not mechanically checkable from inside this repo (no push actually happens in tests), so PROSE."),
             assumptions=("A-single-steward-session",),
-            enforcement=PROSE,
+            enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("depends_on", "R-commit-follows-review"),),
         ),
         Requirement(
             id="R-wave-strictly-sequential",
@@ -174,10 +180,130 @@ def build_graph() -> TensionGraph:
         ),
     )
 
+    entities = (
+        EntityInstance(
+            id="ENT-wave-w1",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "1"),
+                ("commit_hash", "0b9dc5d"),
+                ("review_verdict", "crystal budget honesty wave 1 -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w2",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "2"),
+                ("commit_hash", "08b7534"),
+                ("review_verdict", "DRAFT cleanup + atomicity ratchets wave 2 -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w3",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "3"),
+                ("commit_hash", "e498c1b"),
+                ("review_verdict", "wave 3 atomization + OPEN closures + DRAFT promotions -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w4",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "4"),
+                ("commit_hash", "5ed7c02"),
+                ("review_verdict", "scope-as-projection + overlap visibility + single presenter -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w5",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "5"),
+                ("commit_hash", "f543212"),
+                ("review_verdict", "discipline slices measured -- spawn-log isolation + boot-cite meter -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w6",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "6"),
+                ("commit_hash", "cc3dee3"),
+                ("review_verdict", "second domain hotam-dev + conditional consolidation + active-domain fix -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w7",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "7"),
+                ("commit_hash", "2bf332c"),
+                ("review_verdict", "domain jurisdictions + axis gatekeeper + delegation ledger + assumption split -- self pulse clean"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-w8",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "8"),
+                ("commit_hash", "f287a0a"),
+                ("review_verdict", "compound burn-down 21+6 -> 0, atomicity cores ENFORCED -- landed & T2-green"),
+            ),
+        ),
+        EntityInstance(
+            id="ENT-wave-case-be22cdd1",
+            entity_type="wave",
+            state="committed",
+            field_values=(
+                ("number", "0"),
+                ("commit_hash", "a6dd56e"),
+                ("review_verdict", "C-be22cdd1 DECIDED via V-unfreeze-entity-projection + entity projection guard -- committed"),
+            ),
+        ),
+    )
+
     return TensionGraph(
         axes=axes,
         stakeholders=stakeholders,
         assumptions=assumptions,
         requirements=requirements,
         conflicts=conflicts,
+        entities=entities,
+        entity_types=(
+        EntityType(
+            slug="wave",
+            description="A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed steward review and a commit.",
+            lifecycle=Lifecycle(
+                slug="wave-lifecycle",
+                states=(
+                    State("planned", kind="initial"),
+                    State("running", kind="normal"),
+                    State("review", kind="normal"),
+                    State("committed", kind="terminal"),
+                ),
+                transitions=(
+                    Transition("planned", "running", event="start"),
+                    Transition("running", "review", event="submit"),
+                    Transition("review", "committed", event="commit"),
+                ),
+            ),
+            fields=(
+                EntityField("number", kind="number", required=True),
+                EntityField("commit_hash", kind="string", required=False),
+                EntityField("review_verdict", kind="string", required=False),
+            ),
+            why="Domain entity type 'wave' declared via create_entity_type.",
+        ),
+        ),
     )

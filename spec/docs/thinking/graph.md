@@ -153,6 +153,50 @@ a next-action, not a crash.
 
 Canon: §Graph — Assumption with id `aid`, or None (see requirement_by_id).
 
+## From `spec/src/hotam_spec/graph.py::dependency_chains`
+
+Canon: §Graph — maximal depends_on chains, deepest-dependency first.
+
+RULE: build the directed graph whose edges are exactly the `depends_on`
+Relations between Requirements (A depends_on B => edge A -> B). Return every
+MAXIMAL path (a path whose start node has no incoming depends_on edge and
+whose end node has no outgoing depends_on edge), each rendered as a tuple of
+Requirement ids ordered from the most-depended-UPON leaf to the most-
+dependent root — i.e. reverse topological order, so a consumer can build /
+verify the chain front-to-back (R-dependency-drives-sequential: the chain is
+emitted in the order the work must actually happen, dependency before
+dependent). Chains of length < 2 (an isolated requirement with no depends_on
+edge in either direction) are omitted — a chain needs at least one real edge.
+Edges whose target is absent from the graph (dangling) are skipped here (they
+are a separate diagnosable defect, not this traversal's concern). The outer
+tuple is sorted for determinism (R-deterministic-generation). A cyclic
+depends_on component yields no chain from its cycle members (a cycle has no
+maximal linear path); acyclic tails attached to it are still surfaced.
+
+WHY reverse-topological (leaf-first): "sequential" means the dependency is
+done before the thing that depends on it; emitting leaf-first makes the tuple
+itself the execution order, so R-dependency-drives-sequential is satisfied by
+reading the chain left to right rather than by a separate sort at the call site.
+
+## From `spec/src/hotam_spec/graph.py::independent_subgraphs`
+
+Canon: §Graph — connected components over the depends_on relation.
+
+RULE: treat every `depends_on` Relation between two Requirements present in
+the graph as an UNDIRECTED edge and return the connected components — each a
+sorted tuple of Requirement ids — with the outer tuple sorted for
+determinism. A component with a single member (a requirement sharing no
+depends_on edge with any other) IS returned: it is a maximally-independent
+unit. Two components share no depends_on edge, so they are safe to work on in
+parallel (R-dependency-drives-parallel: disjoint components are the
+parallelizable slices).
+
+WHY undirected components (not the directed chains above): parallelism cares
+only about REACHABILITY through dependency edges, in either direction — if A
+depends_on B and C depends_on B, then A and C are in one component (they share
+B) and must NOT be assumed independent, even though there is no directed path
+between A and C. Union-find over undirected edges captures exactly that.
+
 ## From `spec/src/hotam_spec/graph.py::requirements_on_assumption`
 
 Canon: §Graph — Requirements that rest on assumption `aid`.
