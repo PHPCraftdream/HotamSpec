@@ -1696,19 +1696,11 @@ def build_graph() -> TensionGraph:
             owner="framework-reviewer",
             status="SETTLED",
             why=(
-                "SETTLED (BUILD-TRIGGER fired): R-operator-prompt-from-substrate "
-                "has landed — gen_spec generates the CONSTITUTION block from SETTLED "
-                "requirements, making the constituting set explicit and machine-known. "
-                "Convergence is structurally expressed by the fact that all SETTLED "
-                "atoms pass the conflict invariants before any is emitted into the "
-                "constitution block; an atom that introduced a new structural violation "
-                "would be caught by pytest before it could be promoted. Pair detection "
-                "via the `axes` discipline at the meta-domain altitude is the next "
-                "layer; STRUCTURAL enforcement covers the achieved level today."
+                "SETTLED (BUILD-TRIGGER fired): R-operator-prompt-from-substrate has landed -- gen_spec generates the CONSTITUTION block from SETTLED requirements, making the constituting set explicit and machine-known. PROMOTED STRUCTURAL->ENFORCED (Wave 10, closeable->0): check_constituting_not_in_unresolved_conflict is the machine-checkable face of pairwise consistency -- no unresolved Conflict (DETECTED/ACKNOWLEDGED) may hold two SETTLED constituting atoms while the CONSTITUTION presents both as settled truth. Scoped to the self-host graph (the one that DEFINES this atom): a business domain's DETECTED conflict with SETTLED members is a NORMAL held tension awaiting its steward (e.g. hotam-dev C-ec1ec532), NOT incoherence, and those atoms do not compose the operator-prompt -- so the demand binds only to the self-host constitution index (honest scope per this atom's own claim 'composing the operator-prompt')."
             ),
             assumptions=("A-bootstrap-self-applies",),
-            enforcement=STRUCTURAL,
-            enforced_by=(),
+            enforcement="ENFORCED",
+            enforced_by=("check_constituting_not_in_unresolved_conflict", "test_invariants.py::test_constituting_convergence_fires_on_self_host_detected"),
         ),
         Requirement(
             id="R-requirement-claim-is-atomic",
@@ -1851,21 +1843,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-task-spawn-log-runtime",
             claim=(
-                "Task-agent invocations shall be appended to "
-                "`spec/.runtime/spawn-log.jsonl` with parent, child kind, task "
-                "subject, and stamp."
+                "The spawn_agent tool shall append a spawn-log entry to spec/.runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "Ephemera, not committed substrate — same altitude as "
-                "`spec/.runtime/context.json`. BUILD-TRIGGER: spawn-log infrastructure "
-                "built — NOW FIRES (P22.C). Promoted DRAFT->SETTLED on P22.C: "
-                "spawn_agent tool writes spawn-log.jsonl entries on every invocation."
+                "Ephemera, not committed substrate -- same altitude as spec/.runtime/context.json. BUILD-TRIGGER: spawn-log infrastructure built -- NOW FIRES (P22.C). Promoted DRAFT->SETTLED on P22.C. CLAIM NARROWED (Wave 10 move 2, honesty of the spawn seam): the prior claim ('Task-agent invocations shall be appended...') asserted COVERAGE of every real invocation, but its enforcer test_spawn_log_written proves only the MECHANISM -- that the tool appends a well-formed row when invoked. Narrowing the claim to the tool-mechanism it actually proves keeps this atom honestly ENFORCED (no claimed-but-unguaranteed coverage). The coverage claim (every real host spawn actually leaves a trace) now lives, honestly STRUCTURAL, as hotam-dev's R-host-spawn-leaves-trace (refining R-spawn-logged), enabled by spawn_agent.py --log-only. audit 2026-07-03: the real spawn-log was empty despite ~30+ host spawns -- exactly the coverage gap the narrowed claim no longer over-promises."
             ),
             assumptions=("A-finite-context-operators",),
-            enforcement=ENFORCED,
-            enforced_by=("test_spawn_log_written",),
+            enforcement="ENFORCED",
+            enforced_by=("test_spawn_log_written", "test_tool_spawn_agent.py::test_log_only_writes_row_without_composing_prompt"),
         ),
         Requirement(
             id="R-tools-registry-generated",
@@ -3658,6 +3645,16 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-land-tier-trace"),),
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort",),
+        ),
+        Requirement(
+            id="R-domain-map-shows-pulse",
+            claim=("The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532 on axis speed-vs-verification) was INVISIBLE from the root crystal and the banner 'every contradiction is visible' was false at the altitude of the whole repo. gen_spec._domain_pulse runs what_now.diagnose per domain into the DOMAIN-MAP (the first eye); emit_cipher._other_domains_open sums the non-pinned domains' open actions into the pulse (the second eye). Both are generated, so they cannot drift from real graph state (R-deterministic-generation). Refines R-domain-map-generated."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain", "test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_domain_open_actions",),
         ),
     )
 

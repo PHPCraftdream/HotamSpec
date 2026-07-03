@@ -95,12 +95,25 @@ def compute_gate_status(log_path: Path | None = None) -> GateStatusResult:
     RULE: only records with tier == 'T1' or tier == 'T2' are considered.
     Records are compared by their 'stamp' field (ISO 8601 string; apply_proposal
     always writes UTC-aware isoformat, which sorts correctly lexicographically).
+
+    RULE (honesty): a T2 record satisfies the boundary ONLY when its verify step
+    actually PASSED — pytest_ok is True (or absent, for legacy rows written
+    before the field existed). A T2 land whose pytest_ok is explicitly False
+    reflects a RED full-suite run (e.g. an apply invoked under the wrong active
+    domain, or a genuinely broken tree); counting it would let the steward
+    commit on the strength of a failed gate — exactly the dishonest green this
+    tool exists to prevent. Such records are dropped from the T2 set, so the
+    boundary reads as still-unverified until a truly green T2 lands.
     """
     target = log_path if log_path is not None else _DEFAULT_LOG_PATH
     records = _read_records(target)
 
     t1_records = [r for r in records if r.get("tier") == "T1"]
-    t2_records = [r for r in records if r.get("tier") == "T2"]
+    t2_records = [
+        r
+        for r in records
+        if r.get("tier") == "T2" and r.get("pytest_ok", True) is not False
+    ]
 
     if not records:
         return GateStatusResult(

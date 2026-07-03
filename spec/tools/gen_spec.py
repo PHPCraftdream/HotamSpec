@@ -166,6 +166,7 @@ from hotam_spec.glossary import TERMS, Term  # noqa: E402
 from hotam_spec.graph import (  # noqa: E402
     TensionGraph,
     active_domain_doc_readers,
+    domain_doc_readers,
     conflicts_by_axis,
     entity_state_conflict_suspects,
     latent_connector_suspects,
@@ -260,6 +261,32 @@ BANNER = (
 )
 
 
+#: Optional per-domain DOC_READERS override consulted by _reader_header_line.
+#: Set (via _doc_readers_override(...)) by _process_domains while rendering ONE
+#: specific domain's docs/gen/, so the `reader:` header resolves from the domain
+#: actually being rendered rather than from the env-active domain
+#: (R-root-crystal-follows-pin). None = fall back to the env-active binding.
+_DOC_READERS_OVERRIDE: dict[str, str] | None = None
+
+
+class _doc_readers_override:  # noqa: N801 — context-manager, lowercase by convention here
+    """Temporarily pin the DOC_READERS binding _reader_header_line resolves against."""
+
+    def __init__(self, bindings: dict[str, str]) -> None:
+        self._bindings = bindings
+        self._prev: dict[str, str] | None = None
+
+    def __enter__(self) -> "None":
+        global _DOC_READERS_OVERRIDE
+        self._prev = _DOC_READERS_OVERRIDE
+        _DOC_READERS_OVERRIDE = self._bindings
+        return None
+
+    def __exit__(self, *exc: object) -> None:
+        global _DOC_READERS_OVERRIDE
+        _DOC_READERS_OVERRIDE = self._prev
+
+
 def _reader_header_line(doc_kind: str, g: TensionGraph) -> str:
     """Canon: §Requirement — the `reader: <id>` header line for one generated doc.
 
@@ -269,8 +296,17 @@ def _reader_header_line(doc_kind: str, g: TensionGraph) -> str:
     stakeholders declared yet) this still emits a line — with the honest
     `(unresolved-reader)` sentinel — so the header shape never depends on
     graph population state (R-empty-content-wellformed).
+
+    When _DOC_READERS_OVERRIDE is set (by _process_domains rendering a specific
+    domain), that per-domain binding is used instead of the env-active one, so
+    a domain's docs never carry another domain's reader (R-root-crystal-follows-pin).
     """
-    return _doc_reader_line(doc_kind, stakeholder_ids(g), active_domain_doc_readers())
+    readers = (
+        _DOC_READERS_OVERRIDE
+        if _DOC_READERS_OVERRIDE is not None
+        else active_domain_doc_readers()
+    )
+    return _doc_reader_line(doc_kind, stakeholder_ids(g), readers)
 
 # --- Module order for the narrative section of REQUIREMENTS.md --------------
 # (module name without .py, section label). The order IS the document order.
@@ -2217,7 +2253,9 @@ def _render_constitution_block(g: TensionGraph) -> str:
     return "\n".join(lines).rstrip()
 
 
-def build_framework_invariants(g: TensionGraph) -> str:
+def build_framework_invariants(
+    g: TensionGraph, domain_name: str | None = None
+) -> str:
     """Build FRAMEWORK-INVARIANTS.md — the relocated framework-plumbing index.
 
     Canon: §Requirement — R-constitution-separates-plumbing (Phase 3, task
@@ -2233,8 +2271,13 @@ def build_framework_invariants(g: TensionGraph) -> str:
         for r in g.requirements
         if r.status == SETTLED and _is_framework_plumbing(r.id)
     ]
-    domain = _active_domain()
-    domain_name = domain.name if domain else "hotam-spec-self"
+    # domain_name is passed explicitly when rendering ONE specific domain via
+    # _process_domains (so the in-doc path pointers name THAT domain, not the
+    # env-active one — R-root-crystal-follows-pin). Falls back to the env-active
+    # domain for the top-level single-domain render.
+    if domain_name is None:
+        domain = _active_domain()
+        domain_name = domain.name if domain else "hotam-spec-self"
     roster_path = f"domains/{domain_name}/docs/gen/REQUIREMENTS.md"
 
     lines: list[str] = [BANNER, _reader_header_line("FRAMEWORK_INVARIANTS", g), ""]
@@ -3721,6 +3764,39 @@ def _scan_concept_map(
 # ---------------------------------------------------------------------------
 
 
+def _domain_pulse(dg: TensionGraph) -> tuple[int, str]:
+    """Canon: §Harness — one domain's open-action count + top-action one-liner.
+
+    Runs what_now.diagnose(dg) against a SPECIFIC domain's graph and returns
+    (n_open_actions, top_action_line). The top line is the highest-priority
+    action's "[P{n}] {target}: {imperative}" rendered as a single line
+    (imperative truncated). Returns (0, "") on a clean graph or any error, so a
+    diagnosis failure can never break DOMAIN-MAP generation.
+
+    WHY per-domain here (the two-eyed pulse, R-domain-map-shows-pulse): the
+    root LIVE-STATE cipher only diagnoses the PINNED self-host domain, so a
+    business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532) was
+    INVISIBLE from the root crystal — the banner "every contradiction is
+    visible" was false at the altitude of the repo. Surfacing each domain's
+    open-action count in DOMAIN-MAP restores that guarantee.
+    """
+    try:
+        import what_now as _what_now  # noqa: PLC0415
+
+        actions = _what_now.diagnose(dg)
+    except Exception:
+        return (0, "")
+    if not actions:
+        return (0, "")
+    top = actions[0]
+    imperative = top.imperative
+    # Collapse whitespace; keep the line compact for a crystal-resident index.
+    imperative = " ".join(imperative.split())
+    if len(imperative) > 140:
+        imperative = imperative[:137] + "..."
+    return (len(actions), f"[P{top.priority}] {top.target}: {imperative}")
+
+
 def _render_domain_map_block(g: TensionGraph | None = None) -> str:  # noqa: ARG001
     """Render the DOMAIN-MAP block content (without sentinels).
 
@@ -3769,7 +3845,13 @@ def _render_domain_map_block(g: TensionGraph | None = None) -> str:  # noqa: ARG
                 except Exception:
                     pass
 
-        # Try to load graph and count atoms.
+        # Try to load graph and count atoms + diagnose open actions (the
+        # two-eyed pulse: R-domain-map-shows-pulse). Every domain's open
+        # actions become visible from the root crystal, so "every contradiction
+        # is visible" holds at the altitude of the whole repo — not only for
+        # the pinned self-host domain.
+        open_actions = 0
+        top_action_line = ""
         graph_py = domain_dir / "graph.py"
         if graph_py.exists():
             try:
@@ -3785,6 +3867,7 @@ def _render_domain_map_block(g: TensionGraph | None = None) -> str:  # noqa: ARG
                     atoms_count = sum(
                         1 for r in dg.requirements if r.status == _SETTLED
                     )
+                    open_actions, top_action_line = _domain_pulse(dg)
             except Exception:
                 pass
 
@@ -3794,6 +3877,12 @@ def _render_domain_map_block(g: TensionGraph | None = None) -> str:  # noqa: ARG
         lines.append(f"- **director** — {director or '—'}")
         lines.append(f"- **path** — `domains/{domain_dir.name}/`")
         lines.append(f"- **atoms-count** — {atoms_count} SETTLED")
+        if open_actions > 0:
+            lines.append(
+                f"- **open actions** — {open_actions} (top: {top_action_line})"
+            )
+        else:
+            lines.append("- **open actions** — 0 (graph clean)")
         lines.append("")
 
     return "\n".join(lines).rstrip()
@@ -4085,18 +4174,25 @@ def _process_domains(g: TensionGraph) -> None:
         gen_dir = domain_dir / "docs" / "gen"
         gen_dir.mkdir(parents=True, exist_ok=True)
 
-        domain_targets = {
-            gen_dir / "REQUIREMENTS.md": build_requirements(dg),
-            gen_dir / "TENSIONS.md": build_tensions(dg),
-            gen_dir / "OPEN.md": build_open(dg),
-            gen_dir / "UNENFORCED.md": build_unenforced(dg),
-            gen_dir / "GLOSSARY.md": build_glossary(dg),
-            gen_dir / "HISTORY.md": build_history(dg),
-            gen_dir / "DECISIONS.md": build_decisions(dg),
-            gen_dir / "CONSTITUTION.md": build_constitution(dg),
-            gen_dir / "ENTITIES.md": build_entities_md(dg, domain_dir.name),
-            gen_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(dg),
-        }
+        # Resolve the `reader:` header from THIS domain's manifest, not from the
+        # env-active domain (R-root-crystal-follows-pin): otherwise landing a
+        # non-pinned-domain proposal rewrote every other domain's reader header
+        # with the transient env domain's binding (or the unresolved sentinel).
+        with _doc_readers_override(domain_doc_readers(domain_dir)):
+            domain_targets = {
+                gen_dir / "REQUIREMENTS.md": build_requirements(dg),
+                gen_dir / "TENSIONS.md": build_tensions(dg),
+                gen_dir / "OPEN.md": build_open(dg),
+                gen_dir / "UNENFORCED.md": build_unenforced(dg),
+                gen_dir / "GLOSSARY.md": build_glossary(dg),
+                gen_dir / "HISTORY.md": build_history(dg),
+                gen_dir / "DECISIONS.md": build_decisions(dg),
+                gen_dir / "CONSTITUTION.md": build_constitution(dg),
+                gen_dir / "ENTITIES.md": build_entities_md(dg, domain_dir.name),
+                gen_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(
+                    dg, domain_name=domain_dir.name
+                ),
+            }
         for path, text in domain_targets.items():
             _write(path, text)
             print(f"written (domain {domain_dir.name}): {path}")
@@ -4612,6 +4708,22 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="render the fixture demo graph into docs/demo/ (not docs/gen/).",
     )
+    parser.add_argument(
+        "--docs-only",
+        action="store_true",
+        help=(
+            "regenerate ONLY the active domain's docs/gen/ (+ methodology "
+            "atoms); skip every root CLAUDE.md block and the agent-crystal "
+            "regen. Used by apply_proposal.py when it lands a proposal for a "
+            "NON-pinned domain (e.g. HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev): the "
+            "applied domain's docs must refresh, but the resident operator "
+            "crystal (root CLAUDE.md) must stay bound to the PINNED self-host "
+            "domain — never contaminated by the transiently-active env domain "
+            "(R-root-crystal-follows-pin). apply_proposal.py then runs a "
+            "second, env-stripped gen_spec pass to refresh the root crystal "
+            "from the pin."
+        ),
+    )
     args = parser.parse_args(argv)
     g = _load_graph(demo=args.demo)
     # When a domain is active, write docs into its docs/gen/ rather than root docs/gen/.
@@ -4622,24 +4734,33 @@ def main(argv: list[str] | None = None) -> None:
         _active = _active_domain()
         if _active is not None:
             _domain_name_for_entities = _active.name
-    targets = {
-        out_dir / "REQUIREMENTS.md": build_requirements(g),
-        out_dir / "TENSIONS.md": build_tensions(g),
-        out_dir / "OPEN.md": build_open(g),
-        out_dir / "UNENFORCED.md": build_unenforced(g),
-        out_dir / "GLOSSARY.md": build_glossary(g),
-        out_dir / "HISTORY.md": build_history(g),
-        out_dir / "DECISIONS.md": build_decisions(g),
-        out_dir / "CONSTITUTION.md": build_constitution(g),
-        out_dir / "ENTITIES.md": build_entities_md(g, _domain_name_for_entities),
-        out_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(g),
-    }
-    for path, text in targets.items():
-        _write(path, text)
-        print(f"written: {path}")
+    # --docs-only: skip this env-active `g`-rendered block entirely. Both the
+    # out_dir (GEN_DIR) targets and the methodology atoms below render from `g`
+    # = the env-active graph; under --docs-only the env domain is a TRANSIENT
+    # applied domain (e.g. hotam-dev), and the methodology atoms in particular
+    # are self-host substrate that must never be rendered from it
+    # (R-root-crystal-follows-pin). The applied domain's docs/gen/ are refreshed
+    # authoritatively by _process_domains(g) at the end, which renders EACH
+    # domain from its OWN graph — env-independent.
+    if not args.docs_only:
+        targets = {
+            out_dir / "REQUIREMENTS.md": build_requirements(g),
+            out_dir / "TENSIONS.md": build_tensions(g),
+            out_dir / "OPEN.md": build_open(g),
+            out_dir / "UNENFORCED.md": build_unenforced(g),
+            out_dir / "GLOSSARY.md": build_glossary(g),
+            out_dir / "HISTORY.md": build_history(g),
+            out_dir / "DECISIONS.md": build_decisions(g),
+            out_dir / "CONSTITUTION.md": build_constitution(g),
+            out_dir / "ENTITIES.md": build_entities_md(g, _domain_name_for_entities),
+            out_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(g),
+        }
+        for path, text in targets.items():
+            _write(path, text)
+            print(f"written: {path}")
 
     # Atomized methodology docs (docs/methodology/atoms/) — always written, not demo-gated.
-    if not args.demo:
+    if not args.demo and not args.docs_only:
         ATOMS_DIR.mkdir(parents=True, exist_ok=True)
         atoms_targets = {
             ATOMS_DIR / "operator.md": build_methodology_atoms_operator(g),
@@ -4651,7 +4772,7 @@ def main(argv: list[str] | None = None) -> None:
             _write(path, text)
             print(f"written: {path}")
 
-    if not args.demo:
+    if not args.demo and not args.docs_only:
         # Root CLAUDE.md: template-driven (R-claude-md-template-driven).
         # CLAUDE.md.template.txt is substituted in one pass — MIND (REPO-MAP +
         # THINKING-INDEX + EMBEDDED-THINKING + EMBEDDED-TOOLS) and BUSINESS
@@ -4686,8 +4807,12 @@ def main(argv: list[str] | None = None) -> None:
         # agents exist).
         _regenerate_agent_shared_docs(g)
 
+    if not args.demo:
         # Concern 1: per-domain generated docs (domains/<name>/docs/gen/*.md —
-        # the DATA layer, untouched by this consolidation).
+        # the DATA layer). Env-independent (each domain rendered from its OWN
+        # graph), so it runs in --docs-only mode too: this is the path that
+        # refreshes the applied domain's docs/gen/ without touching the root
+        # crystal (R-root-crystal-follows-pin).
         _process_domains(g)
 
 

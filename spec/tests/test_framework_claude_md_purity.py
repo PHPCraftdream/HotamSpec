@@ -157,6 +157,63 @@ def test_framework_claude_md_has_domain_map() -> None:
     )
 
 
+def test_domain_map_shows_pulse_per_domain() -> None:
+    """R-domain-map-shows-pulse: every domain in DOMAIN-MAP carries an
+    'open actions' line, so each domain's open contradictions are visible from
+    the root crystal (the two-eyed pulse)."""
+    text = _read(ROOT_CLAUDE_MD)
+    block = _extract_block(
+        text, "<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->"
+    )
+    assert block is not None, "DOMAIN-MAP block not found in root CLAUDE.md"
+    # Count domain headers (### <name>) and 'open actions' lines; every domain
+    # header must be followed by an open-actions line.
+    # Match real domain headers only: '### <slug>' on its own line. The block
+    # opens with a '### Domain Map' title — exclude any header with a space.
+    domain_headers = re.findall(r"^### (\S+)\s*$", block, re.MULTILINE)
+    open_lines = re.findall(r"\*\*open actions\*\*\s*—", block)
+    assert domain_headers, "DOMAIN-MAP lists no domains"
+    assert len(open_lines) == len(domain_headers), (
+        f"DOMAIN-MAP has {len(domain_headers)} domains but "
+        f"{len(open_lines)} 'open actions' lines — every domain must show its "
+        "pulse (R-domain-map-shows-pulse)."
+    )
+
+
+def test_emit_cipher_aggregates_other_domain_open_actions() -> None:
+    """R-domain-map-shows-pulse: emit_cipher's second eye — when a non-pinned
+    domain has open actions, the cipher payload names 'other domains: N open'."""
+    import emit_cipher  # noqa: PLC0415
+
+    text = _read(ROOT_CLAUDE_MD)
+    n = emit_cipher._other_domains_open(text)
+    # n reflects real state; the CONTRACT is that when n>0 the aggregate is a
+    # correct sum and >0 domains are non-pinned. We assert the parser is sound:
+    # it never counts the pinned domain and returns a non-negative int.
+    assert isinstance(n, int) and n >= 0
+    pinned = emit_cipher._pinned_domain()
+    block = _extract_block(
+        text, "<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->"
+    )
+    assert block is not None
+    # Recompute the pinned domain's own open count and confirm it is EXCLUDED.
+    pinned_open = 0
+    cur = ""
+    for line in block.splitlines():
+        h = re.match(r"^### (\S+)", line.strip())
+        if h:
+            cur = h.group(1)
+            continue
+        m = re.search(r"\*\*open actions\*\*\s*—\s*(\d+)", line)
+        if m and cur == pinned:
+            pinned_open = int(m.group(1))
+    # Sum ALL domains, subtract pinned, must equal emit_cipher's answer.
+    all_open = sum(
+        int(m) for m in re.findall(r"\*\*open actions\*\*\s*—\s*(\d+)", block)
+    )
+    assert n == all_open - pinned_open
+
+
 def test_framework_claude_md_has_repo_map_scoped_to_spec() -> None:
     """Root CLAUDE.md REPO-MAP must reference spec/ files; domain content listed under domains/."""
     text = _read(ROOT_CLAUDE_MD)

@@ -2331,17 +2331,63 @@ def apply(
     active_graph.write_text(new_source, encoding="utf-8")
     print(f"Written: {active_graph}")
 
-    # Regen
+    # Regen — contamination-safe (R-root-crystal-follows-pin).
+    #
+    # The applied graph (active_graph) may belong to a NON-pinned domain when
+    # the operator lands a hotam-dev proposal via HOTAM_SPEC_ACTIVE_DOMAIN=
+    # hotam-dev. gen_spec.py resolves the active domain from that same env var,
+    # so a single naive `gen_spec` subprocess (inheriting our env) would
+    # regenerate the ROOT CLAUDE.md — the resident operator crystal — from the
+    # transiently-active domain, overwriting "Operator of hotam-spec-self
+    # (N SETTLED)" with "Operator of hotam-dev (7 SETTLED)". That is real
+    # contamination of the committed self-host crystal.
+    #
+    # Fix: decouple the two writes.
+    #   Pass 1 (--docs-only, env = applied domain): refresh the APPLIED
+    #           domain's docs/gen/ only. Never touches root CLAUDE.md.
+    #   Pass 2 (env STRIPPED of HOTAM_SPEC_ACTIVE_DOMAIN): the root crystal
+    #           regenerates from the PIN (domains/.active-domain) — always the
+    #           self-host domain — plus that domain's docs/gen/.
+    # When the applied domain IS the pinned domain (the common self-host case),
+    # both passes target the same domain and the result is identical to the old
+    # single pass; the extra pass is cheap and keeps ONE code path.
+    applied_domain = active_graph.parent.name if active_graph.parent.name else ""
+    pinned_domain = ""
+    if _ACTIVE_DOMAIN_PIN_FILE.exists():
+        pinned_domain = _ACTIVE_DOMAIN_PIN_FILE.read_text(encoding="utf-8").strip()
+
+    # Pass 1: applied domain's docs only (env carried through as-is).
+    docs_env = dict(_os.environ)
+    if applied_domain:
+        docs_env["HOTAM_SPEC_ACTIVE_DOMAIN"] = applied_domain
+    regen_docs = subprocess.run(
+        [sys.executable, str(_GEN_SPEC), "--docs-only"],
+        capture_output=True,
+        text=True,
+        env=docs_env,
+    )
+    if regen_docs.returncode != 0:
+        print("ERROR: gen_spec.py --docs-only failed:", file=sys.stderr)
+        print(regen_docs.stderr, file=sys.stderr)
+        return 1
+
+    # Pass 2: root crystal from the pin (env var stripped so the pin wins).
+    root_env = dict(_os.environ)
+    root_env.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
     regen_result = subprocess.run(
         [sys.executable, str(_GEN_SPEC)],
         capture_output=True,
         text=True,
+        env=root_env,
     )
     if regen_result.returncode != 0:
         print("ERROR: gen_spec.py failed:", file=sys.stderr)
         print(regen_result.stderr, file=sys.stderr)
         return 1
-    print("gen_spec.py: OK")
+    print(
+        f"gen_spec.py: OK (docs pass: {applied_domain or 'default'}; "
+        f"root crystal from pin: {pinned_domain or 'alphabetical fallback'})"
+    )
 
     # Verify — T1 targeted-enforcer gate by default, T2 full suite on --full,
     # on a ProposedRejection (removal blast radius is not bounded by the

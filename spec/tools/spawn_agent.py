@@ -231,6 +231,20 @@ def main(argv: list[str] | None = None) -> int:
             "(R-spawn-log-carries-isolation). Default: false."
         ),
     )
+    parser.add_argument(
+        "--log-only",
+        action="store_true",
+        default=False,
+        help=(
+            "Append a spawn-log row (agent, task first line, stamp, isolation, "
+            "mutating) WITHOUT composing or printing the crystal prompt "
+            "(R-host-spawn-leaves-trace). Use for a HOST-level spawn (Task/Agent "
+            "tool) that does not route through the crystal-composition path but "
+            "must still leave a trace. In --log-only mode the agent's CLAUDE.md "
+            "is NOT required to exist (host spawns may name a logical agent with "
+            "no on-disk crystal); prompt_chars is recorded as 0."
+        ),
+    )
     args = parser.parse_args(argv)
 
     # --- Require --stamp ---
@@ -241,6 +255,29 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+
+    # --- --log-only: record a host spawn WITHOUT composing the crystal ---
+    # The agent path is recorded verbatim (posix-normalised) even when it does
+    # not resolve to an on-disk agent dir, because a host spawn names a logical
+    # agent (e.g. "oh"/"fx" fleet worker) that has no CLAUDE.md crystal. This is
+    # the honest trace of what actually ran (R-host-spawn-leaves-trace).
+    if args.log_only:
+        agent_dir = _resolve_agent(args.agent_path, _DOMAINS_ROOT, _LEGACY_AGENTS_ROOT)
+        logged_path = (
+            agent_dir
+            if agent_dir is not None
+            else Path(args.agent_path.replace("\\", "/"))
+        )
+        _append_spawn_log(
+            _RUNTIME_DIR,
+            args.stamp,
+            logged_path,
+            args.task,
+            "",  # no composed prompt in log-only mode -> prompt_chars == 0
+            isolation=args.isolation,
+            mutating=args.mutating,
+        )
+        return 0
 
     # --- Resolve agent directory ---
     domains_root = _DOMAINS_ROOT

@@ -61,7 +61,7 @@ Examples:
 
 ```
 usage: spawn_agent [-h] --task TASK [--stamp STAMP]
-                   [--isolation {shared,worktree}] [--mutating]
+                   [--isolation {shared,worktree}] [--mutating] [--log-only]
                    agent_path
 
 Compose a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal,
@@ -83,4 +83,13 @@ options:
                         isolation). Default: shared.
   --mutating            Declare that this task is expected to mutate tracked
                         files (R-spawn-log-carries-isolation). Default: false.
+  --log-only            Append a spawn-log row (agent, task first line, stamp,
+                        isolation, mutating) WITHOUT composing or printing the
+                        crystal prompt (R-host-spawn-leaves-trace). Use for a
+                        HOST-level spawn (Task/Agent tool) that does not route
+                        through the crystal-composition path but must still
+                        leave a trace. In --log-only mode the agent's
+                        CLAUDE.md is NOT required to exist (host spawns may
+                        name a logical agent with no on-disk crystal);
+                        prompt_chars is recorded as 0.
 ```

@@ -18,6 +18,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-commit-follows-review` | SETTLED | `dev-steward` | A-single-steward-session | A commit shall land only after review of the diff by a human or an agent code-review step. |
 | `R-push-only-on-request` | SETTLED | `dev-steward` | A-single-steward-session | Push to remote shall occur only on the dev-steward's explicit request, never autonomously. |
 | `R-wave-strictly-sequential` | SETTLED | `pipeline-operator` | A-single-steward-session | Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently. |
+| `R-host-spawn-leaves-trace` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook. |
 
 ## Stakeholders
 

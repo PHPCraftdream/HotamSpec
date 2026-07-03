@@ -31,6 +31,7 @@ from hotam_spec.invariants import (  # noqa: E402
     ALL_INVARIANTS,
     all_violations,
     check_axis_in_registry,
+    check_constituting_not_in_unresolved_conflict,
     check_conflict_has_axis_context_steward,
     check_conflict_id_matches_identity,
     check_conflict_min_two_members,
@@ -116,6 +117,73 @@ def _graph_with(conflict: Conflict, reqs=None, assumptions=()) -> TensionGraph:
         requirements=reqs,
         conflicts=(conflict,),
     )
+
+
+_ANCHOR = "R-constituting-requirements-converge"
+
+
+def _constituting_graph(members, lifecycle, *, include_anchor: bool):
+    """Build a graph exercising check_constituting_not_in_unresolved_conflict.
+
+    members: the conflict's member ids (both created SETTLED).
+    include_anchor: whether the self-host anchor atom is present as SETTLED.
+    """
+    reqs = [_req(m, "sa" if i % 2 == 0 else "sb") for i, m in enumerate(members)]
+    if include_anchor:
+        reqs.append(_req(_ANCHOR, "sa"))
+    conflict = _wellformed_conflict(
+        members=tuple(members),
+        lifecycle=lifecycle,
+        axis="cost-vs-flexibility",
+        context="constituting-set convergence test",
+    )
+    return TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=tuple(reqs),
+        conflicts=(conflict,),
+        # The self-host discriminator is g.self_hosting (R-domain-self-hosting-
+        # flag), the same signal every FRAMEWORK_SCOPED invariant uses — NOT a
+        # magic atom-id probe. The anchor atom travels together with the flag
+        # here so the fixture mirrors the real self-host graph.
+        self_hosting=include_anchor,
+    )
+
+
+def test_constituting_convergence_fires_on_self_host_detected() -> None:
+    """Two SETTLED constituting atoms in a DETECTED conflict (self-host graph,
+    anchor present) fires check_constituting_not_in_unresolved_conflict."""
+    g = _constituting_graph(("R-1", "R-2"), "DETECTED", include_anchor=True)
+    v = check_constituting_not_in_unresolved_conflict(g)
+    assert len(v) == 1
+    assert "R-1" in v[0].message and "R-2" in v[0].message
+
+
+def test_constituting_convergence_silent_for_business_domain() -> None:
+    """The SAME DETECTED conflict in a business domain (anchor ABSENT) is a
+    normal held tension — the check must NOT fire (honest scope, option b)."""
+    g = _constituting_graph(("R-1", "R-2"), "DETECTED", include_anchor=False)
+    assert check_constituting_not_in_unresolved_conflict(g) == []
+
+
+def test_constituting_convergence_silent_when_resolved() -> None:
+    """A DECIDED conflict between two SETTLED atoms is resolved — no violation
+    even in the self-host graph."""
+    decided = _wellformed_conflict(
+        members=("R-1", "R-2"),
+        lifecycle="DECIDED(steward chose R-1; rationale recorded)",
+        decided_by="outsider",
+        axis="cost-vs-flexibility",
+        context="resolved constituting conflict",
+    )
+    g = TensionGraph(
+        axes=DEMO_AXES,
+        stakeholders=(_S_OUT, _S_A, _S_B),
+        requirements=(_req("R-1", "sa"), _req("R-2", "sb"), _req(_ANCHOR, "sa")),
+        conflicts=(decided,),
+        self_hosting=True,
+    )
+    assert check_constituting_not_in_unresolved_conflict(g) == []
 
 
 def test_dangling_member_fires() -> None:

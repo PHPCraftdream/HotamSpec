@@ -117,6 +117,44 @@ def test_only_t2_records_is_satisfied(tmp_path: Path) -> None:
     assert result.satisfied is True
 
 
+def test_red_t2_does_not_satisfy_boundary(tmp_path: Path) -> None:
+    """A T2 land with pytest_ok=False is a RED full-suite run and must NOT
+    satisfy the boundary (honesty: no committing on the strength of a failed
+    gate). The prior GREEN T2 no longer covers the newer T1, so the boundary
+    reads NOT satisfied with the T1 target unverified."""
+    log_path = tmp_path / "land-log.jsonl"
+    red_t2 = _rec("2026-07-01T12:00:00+00:00", "T2", target="R-red")
+    red_t2["pytest_ok"] = False
+    _write_log(
+        log_path,
+        [
+            _rec("2026-07-01T10:00:00+00:00", "T2", target="R-green"),
+            _rec("2026-07-01T11:00:00+00:00", "T1", target="R-later"),
+            red_t2,
+        ],
+    )
+    result = gate_status.compute_gate_status(log_path)
+    assert result.satisfied is False
+    assert result.unverified_targets == ("R-later",)
+
+
+def test_legacy_t2_without_pytest_ok_field_still_satisfies(tmp_path: Path) -> None:
+    """A T2 record predating the pytest_ok field (absent) is trusted as green
+    (legacy tolerance) — only an EXPLICIT False is treated as a failed gate."""
+    log_path = tmp_path / "land-log.jsonl"
+    legacy_t2 = _rec("2026-07-01T11:00:00+00:00", "T2", target="R-a")
+    del legacy_t2["pytest_ok"]
+    _write_log(
+        log_path,
+        [
+            _rec("2026-07-01T10:00:00+00:00", "T1", target="R-a"),
+            legacy_t2,
+        ],
+    )
+    result = gate_status.compute_gate_status(log_path)
+    assert result.satisfied is True
+
+
 def test_mixed_only_t1_after_last_t2_are_unverified(tmp_path: Path) -> None:
     """Mixed history: T1s before the last T2 are covered; T1s after are not."""
     log_path = tmp_path / "land-log.jsonl"

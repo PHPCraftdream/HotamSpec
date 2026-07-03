@@ -49,12 +49,22 @@ via the framework loader (content) or the fixture import (--demo).
 ## CLI usage
 
 ```
-usage: gen_spec.py [-h] [--demo]
+usage: gen_spec.py [-h] [--demo] [--docs-only]
 
 Canon: §Generator — regenerates docs/gen/ from the executable model
 (docstrings + graph), making drift structurally impossible.
 
 options:
-  -h, --help  show this help message and exit
-  --demo      render the fixture demo graph into docs/demo/ (not docs/gen/).
+  -h, --help   show this help message and exit
+  --demo       render the fixture demo graph into docs/demo/ (not docs/gen/).
+  --docs-only  regenerate ONLY the active domain's docs/gen/ (+ methodology
+               atoms); skip every root CLAUDE.md block and the agent-crystal
+               regen. Used by apply_proposal.py when it lands a proposal for a
+               NON-pinned domain (e.g. HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev):
+               the applied domain's docs must refresh, but the resident
+               operator crystal (root CLAUDE.md) must stay bound to the PINNED
+               self-host domain — never contaminated by the transiently-active
+               env domain (R-root-crystal-follows-pin). apply_proposal.py then
+               runs a second, env-stripped gen_spec pass to refresh the root
+               crystal from the pin.
 ```

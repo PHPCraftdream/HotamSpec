@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 3 / SETTLED 7; closeable debt 2; inherent discipline 2; DRAFT 0; OPEN 0; REJECTED 0.**
+**Burn-down: SETTLED-ENFORCED 2 / SETTLED 8; closeable debt 4; inherent discipline 2; DRAFT 0; OPEN 0; REJECTED 0.**
 
 ---
 
@@ -23,7 +23,9 @@ judgment calls no check_* could ever verify.
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-wave-lands-atomically` | STRUCTURAL | `pipeline-operator` | A wave shall land as a whole with a green T2 (full pytest suite) run at its boundary before the next wave starts. |
+| `R-spawn-logged` | STRUCTURAL | `pipeline-operator` | Every sub-agent spawn shall be appended to spec/.runtime/spawn-log.jsonl. |
 | `R-wave-strictly-sequential` | STRUCTURAL | `pipeline-operator` | Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently. |
+| `R-host-spawn-leaves-trace` | STRUCTURAL | `pipeline-operator` | Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 
@@ -37,7 +39,6 @@ judgment calls no check_* could ever verify.
 | id | enforced_by | claim |
 |---|---|---|
 | `R-t1-gate-is-default` | test_tool_gate.py | tools/apply_proposal.py shall run the T1 targeted-enforcer gate by default on every individual proposal apply, deferring the full T2 suite to wave/commit boundaries. |
-| `R-spawn-logged` | test_tool_spawn_agent.py::test_spawn_log_written | Every sub-agent spawn shall be appended to spec/.runtime/spawn-log.jsonl. |
 | `R-land-leaves-trace` | test_apply_proposal_land_log.py::test_land_log_record_shape_t1 | Every applied proposal shall append a trace entry to spec/.runtime/land-log.jsonl. |
 
 ## DRAFT (not yet promoted)

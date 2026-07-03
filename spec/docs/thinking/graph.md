@@ -83,15 +83,32 @@ gen_spec.py::_select_active_domain_dir for the full WHY). Alphabetical
 stays as the last-resort fallback so a fresh repo with no pin file yet is
 never "lost" (R-agent-never-lost).
 
+## From `spec/src/hotam_spec/graph.py::domain_doc_readers`
+
+Canon: §Graph / §Domain — one SPECIFIC domain's declared DOC_READERS binding.
+
+RULE: import `domain_dir/manifest.py` and return its `DOC_READERS`
+attribute (a `dict[role_hint, Stakeholder.id]`) if present, else `{}`.
+Never fabricates a binding.
+
+WHY a per-domain variant (not only the env-resolved active_domain_doc_readers):
+the per-domain doc generator (gen_spec._process_domains) renders EACH
+domain's docs/gen/ from that domain's OWN graph; its `reader:` header must
+resolve from the SAME domain, not from whatever HOTAM_SPEC_ACTIVE_DOMAIN
+happens to be set to. Resolving through the env-active binding contaminated
+the self-host docs' reader with the transiently-active domain's (or an
+unresolved sentinel) whenever a proposal was landed for a non-pinned domain
+(R-root-crystal-follows-pin). This isolates reader resolution to the domain
+actually being rendered.
+
 ## From `spec/src/hotam_spec/graph.py::active_domain_doc_readers`
 
 Canon: §Graph / §Domain — the active domain's declared DOC_READERS binding.
 
 RULE: resolves the active domain directory the same way
 `_active_domain_graph_file` does (env var, else first domains/<name>/
-alphabetically), then imports its `manifest.py` and returns its
-`DOC_READERS` attribute (a `dict[role_hint, Stakeholder.id]`) if present,
-else `{}`. Never fabricates a binding — a domain that has not declared
+alphabetically), then delegates to `domain_doc_readers(domain_dir)`.
+Never fabricates a binding — a domain that has not declared
 `DOC_READERS` yet gets an empty mapping, which resolve_reader() (in
 `hotam_spec.doc_readers`) treats as "unresolved", not a guess.
 

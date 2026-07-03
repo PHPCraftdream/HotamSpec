@@ -66,6 +66,7 @@ from hotam_spec.requirement import (
     ENFORCEMENT_LEVELS,
     OPEN_PREFIX,
     RELATION_KINDS,
+    SETTLED,
 )
 
 _M_TAG_RE = re.compile(r"^M[1-9][0-9]*$")
@@ -531,6 +532,70 @@ def check_conflict_min_two_members(g: TensionGraph) -> list[Violation]:
                     "check_conflict_min_two_members",
                     c.id,
                     "conflict needs >= 2 distinct member requirements",
+                )
+            )
+    return out
+
+
+#: The self-host operator-prompt is constituted by the domain graph that
+#: DEFINES the convergence rule itself. A graph containing this atom IS the
+#: self-host graph; any other domain graph is a business domain whose DETECTED
+#: conflicts between SETTLED atoms are normal held tensions, not incoherence.
+_CONSTITUTING_CONVERGENCE_ATOM = "R-constituting-requirements-converge"
+
+
+def check_constituting_not_in_unresolved_conflict(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — no two SETTLED constituting atoms sit in an unresolved conflict.
+
+    RULE: in the self-host graph (the one composing the operator-prompt — i.e.
+    the graph that DEFINES R-constituting-requirements-converge), no unresolved
+    Conflict (DETECTED / ACKNOWLEDGED) may hold two SETTLED Requirements as
+    members. This is the machine-checkable face of "the set of SETTLED
+    requirements composing the operator-prompt shall be pairwise consistent"
+    (R-constituting-requirements-converge): a DETECTED conflict between two
+    SETTLED atoms means the CONSTITUTION block presents both as settled truth
+    while the graph itself records them as an open, unstewarded contradiction.
+
+    WHY scoped to the self-host graph (FRAMEWORK_SCOPED, gated on
+    g.self_hosting in all_violations, not per-graph): a business domain's
+    DETECTED conflict with SETTLED members is NORMAL life — the tension has
+    been found and is awaiting its steward, which is exactly what the
+    methodology is for (holding contradictions open as Conflict nodes). Those
+    atoms do NOT compose the operator-prompt, so the pairwise-consistency
+    demand does not apply to them; firing there would forbid the healthy
+    held-tension state (e.g. hotam-dev C-ec1ec532). The rule binds only to the
+    atoms that REALLY constitute the operator-prompt: the self-host
+    constitution index.
+
+    WHY gated on g.self_hosting (not the presence of the rule's own anchor
+    atom): the discriminator must be the same self-host signal every other
+    FRAMEWORK_SCOPED invariant uses (R-domain-self-hosting-flag), not a magic
+    atom-id string — probing for _CONSTITUTING_CONVERGENCE_ATOM would silently
+    go dark the day that atom is renamed/rekeyed, whereas the manifest flag
+    travels with the graph. The atom-presence check is kept only as a
+    defensive no-op for the (test-only) case of loading this function against a
+    graph that carries self_hosting but not its constituting atom.
+    """
+    settled_ids = {r.id for r in g.requirements if r.status == SETTLED}
+    if not g.self_hosting or _CONSTITUTING_CONVERGENCE_ATOM not in settled_ids:
+        # Not the self-host constituting graph — the demand does not apply.
+        return []
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if not c.is_unresolved():
+            continue
+        settled_members = sorted(m for m in set(c.members) if m in settled_ids)
+        if len(settled_members) >= 2:
+            out.append(
+                Violation(
+                    "check_constituting_not_in_unresolved_conflict",
+                    c.id,
+                    f"conflict '{c.id}' ({c.lifecycle}) holds >= 2 SETTLED "
+                    f"constituting atoms ({', '.join(settled_members)}) as an "
+                    f"UNRESOLVED contradiction while the CONSTITUTION presents "
+                    f"them as settled truth — steward must resolve it (DECIDED / "
+                    f"REVISIT_WHEN) or the members must not both be SETTLED "
+                    f"(R-constituting-requirements-converge).",
                 )
             )
     return out
@@ -3493,6 +3558,11 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "cross-references two different fields (steward vs owners-of-members) via a computed set",
     ),
     InvariantClassification(
+        "check_constituting_not_in_unresolved_conflict",
+        BESPOKE,
+        "self-host-scoped pairwise-consistency: intersects each unresolved conflict's members with the SETTLED set, gated on g.self_hosting (R-domain-self-hosting-flag) — not a per-entity single-field lookup",
+    ),
+    InvariantClassification(
         "check_operator_steward_not_self",
         BESPOKE,
         "M36 reflexive cross-check across Conflict x Operator x Stakeholder, not a single-field lookup",
@@ -3762,6 +3832,8 @@ ALL_INVARIANTS = (
     check_conflict_id_matches_identity,
     # §Boundary
     check_steward_not_a_member_owner,
+    # §Constituting-set convergence (self-host operator-prompt only)
+    check_constituting_not_in_unresolved_conflict,
     # §Visibility of the open
     check_open_has_question,
     # §Anti-relitigation
@@ -3869,6 +3941,7 @@ FRAMEWORK_SCOPED_INVARIANTS = (
     check_agent_has_agents_subdir,
     check_agent_has_docs_subdir,
     check_agent_has_tools_subdir,
+    check_constituting_not_in_unresolved_conflict,
 )
 
 # --- M7: the critical core ---

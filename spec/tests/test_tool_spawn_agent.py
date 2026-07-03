@@ -255,6 +255,59 @@ def test_composite_prompt_deterministic(
     assert out1 == out2, "Composite prompt must be byte-stable across runs"
 
 
+def test_log_only_writes_row_without_composing_prompt(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """--log-only appends a spawn-log row and prints NO crystal prompt, even for
+    an agent that has NO on-disk CLAUDE.md (R-host-spawn-leaves-trace)."""
+    import spawn_agent
+
+    runtime_dir = tmp_path / ".runtime"
+    monkeypatch.setattr(spawn_agent, "_DOMAINS_ROOT", tmp_path)
+    monkeypatch.setattr(spawn_agent, "_LEGACY_AGENTS_ROOT", tmp_path / "agents")
+    monkeypatch.setattr(spawn_agent, "_RUNTIME_DIR", runtime_dir)
+
+    rc = spawn_agent.main(
+        [
+            "oh-fleet-worker",  # a logical host agent, no on-disk crystal
+            "--task",
+            "wave 10 move 2 audit\nsecond line ignored",
+            "--stamp",
+            "2026-07-03T00:00:00Z",
+            "--log-only",
+            "--mutating",
+            "--isolation",
+            "worktree",
+        ]
+    )
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "", "log-only must not print a crystal prompt"
+
+    log_path = runtime_dir / "spawn-log.jsonl"
+    assert log_path.exists()
+    rows = [json.loads(ln) for ln in log_path.read_text().splitlines() if ln.strip()]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["agent"] == "oh-fleet-worker"
+    assert row["task_first_line"] == "wave 10 move 2 audit"
+    assert row["prompt_chars"] == 0
+    assert row["isolation"] == "worktree"
+    assert row["mutating"] is True
+
+
+def test_log_only_still_requires_stamp(tmp_path: Path, monkeypatch) -> None:
+    """--log-only does not exempt --stamp (determinism still applies)."""
+    import spawn_agent
+
+    monkeypatch.setattr(spawn_agent, "_DOMAINS_ROOT", tmp_path)
+    monkeypatch.setattr(spawn_agent, "_LEGACY_AGENTS_ROOT", tmp_path / "agents")
+    monkeypatch.setattr(spawn_agent, "_RUNTIME_DIR", tmp_path / ".runtime")
+
+    rc = spawn_agent.main(["some-agent", "--task", "t", "--log-only"])
+    assert rc == 1
+
+
 def test_r_tool_spawn_agent_in_constitution(tmp_path: Path) -> None:
     """R-tool-spawn-agent appears in root CLAUDE.md after gen_spec (P22.C).
 
