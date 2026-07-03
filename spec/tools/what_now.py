@@ -510,6 +510,52 @@ def revisit_marker_actions(g: TensionGraph) -> list[Action]:
     return out
 
 
+def open_ticket_actions() -> list[Action]:
+    """Canon: §Harness — CLI-only band: on-disk tickets awaiting work, by status.
+
+    RULE (R-open-tickets-visible): NOT part of diagnose(g). Like the pending-
+    proposal, generative-audit and revisit-marker bands, this reads the
+    FILESYSTEM (tickets/ at the repo root), which gen_spec must never render
+    (R-deterministic-generation) and which graph-generic tests must not be
+    polluted by, so the signal is surfaced ONLY at the interactive CLI.
+
+    Fires ONE action summarising the non-terminal ticket load (everything not in
+    tickets/done/), broken down by status, so the steward's on-disk queue is
+    visible in the same pulse as graph debt. Emits nothing when there is no open
+    ticket.
+
+    WHY: the steward's backlog moved out of the chat and onto disk (the ticket
+    engine). Without a pulse band the queue would be invisible until someone
+    remembered to `ls tickets/` — exactly the being-lost the harness exists to
+    prevent (R-agent-never-lost).
+    """
+    _tools = Path(__file__).resolve().parent
+    if str(_tools) not in sys.path:
+        sys.path.insert(0, str(_tools))
+    try:
+        import _ticket_store as _ts  # noqa: PLC0415
+    except Exception:
+        return []
+    counts = _ts.counts_by_status()
+    open_total = sum(v for k, v in counts.items() if k != "done")
+    if open_total == 0:
+        return []
+    breakdown = ", ".join(
+        f"{k}: {counts[k]}" for k in _ts.STATUSES if k != "done" and counts[k]
+    )
+    return [
+        Action(
+            priority=P_PENDING_PROPOSAL,
+            kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+            target="open-tickets",
+            imperative=(
+                f"open tickets: {open_total} ({breakdown})"
+                " — `uv run python tools/ticket_list.py` (R-open-tickets-visible)."
+            ),
+        )
+    ]
+
+
 # --- Rendering --------------------------------------------------------------
 
 _EMPTY_GRAPH_BANNER = (
@@ -643,6 +689,7 @@ def main(argv: list[str] | None = None) -> None:
         pending_proposal_actions()
         + generative_audit_staleness_actions(g)
         + revisit_marker_actions(g)
+        + open_ticket_actions()
     )
     if cli_only:
         sys.stdout.write(f"\n--- P{P_PENDING_PROPOSAL} PENDING_PROPOSAL ---\n")

@@ -66,6 +66,12 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]
 - **R-tool-spawn-log-isolation-status** — *reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_log_isolation_status`]
 - **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
+- **R-tool-ticket-comment** — *append a stamped comment to a ticket (and a History "commented" entry).* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_comment`]
+- **R-tool-ticket-create** — *create a new on-disk ticket (auto-id, initial status, first History entry).* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_create`]
+- **R-tool-ticket-edit** — *edit a ticket's title/body, snapshotting the prior text into History.* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_edit`]
+- **R-tool-ticket-list** — *list tickets, optionally filtered by status or assignee (read-only).* [STRUCTURAL·tool · §Ticket] [enforcer: (none)]
+- **R-tool-ticket-move** — *move a ticket to a new status (relocates the file + records the transition in History).* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_move`]
+- **R-tool-ticket-show** — *print one ticket's header, body, comments and full History (read-only).* [STRUCTURAL·tool · §Ticket] [enforcer: (none)]
 - **R-tool-what-now** — *derives the prioritized next correct action from any graph state, making being-lost structurally impossible.* [STRUCTURAL·tool · §Harness] [enforcer: (none)]
 
 ---
@@ -166,6 +172,8 @@ CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Invariants — the structural rules;
   §Graph — the store and its traversal;
   §Loop — the what_now operating procedure (documented, exercised by the harness);
+  §Ticket — a durable on-disk work item (tickets/<status>/T-<n>.md) mutated only
+            through the ticket_* tools, which auto-maintain its History;
   §Glossary — the controlled methodology vocabulary (hotam_spec.glossary.TERMS).
   §Constitution — the operator's boot sequence generated from the SETTLED laws;
                   a fresh agent reads this to reconstitute as operator without

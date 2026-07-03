@@ -90,6 +90,8 @@ CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
   §Invariants — the structural rules;
   §Graph — the store and its traversal;
   §Loop — the what_now operating procedure (documented, exercised by the harness);
+  §Ticket — a durable on-disk work item (tickets/<status>/T-<n>.md) mutated only
+            through the ticket_* tools, which auto-maintain its History;
   §Glossary — the controlled methodology vocabulary (hotam_spec.glossary.TERMS).
   §Constitution — the operator's boot sequence generated from the SETTLED laws;
                   a fresh agent reads this to reconstitute as operator without

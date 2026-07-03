@@ -29,6 +29,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Loop` | The closed loop: State→Diagnosis→Next-action→Action→regenerate→State. |
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
 | `§Scope` | An operator's sub-domain as a PROJECTION (id-set view) over the shared graph, not a copy; overlaps with another operator's projection are computed and rendered, never hidden. |
+| `§Ticket` | A durable on-disk work item (tickets/<status>/T-<n>.md): frontmatter header + Markdown body, mutated only through the ticket_* tools which auto-maintain its status-and-text History. |
 | `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
 | `§Closure` | Per-action verify: after apply_proposal writes + regens + pytest-greens, asserts the triggering diagnosis was actually removed. |
 | `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |

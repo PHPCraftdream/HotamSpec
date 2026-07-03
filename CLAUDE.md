@@ -9,7 +9,7 @@ Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/doc
 
 ### Role (the resident seed)
 
-Operator of `hotam-spec-self` (209 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
+Operator of `hotam-spec-self` (213 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
 
 Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).
 
@@ -337,6 +337,42 @@ Canon: §Tick — the closed-loop diagnostic driver (advisory, M32 conservative)
 
 _(full text: spec/docs/tools/tick.md)_
 
+#### ticket_comment
+
+RULE: ticket_comment.py appends a timestamped line under ## Comments AND records a "commented" History entry, then bumps `updated`. WHY through a tool: comments and their History mirror must both be written atomically so the audit trail stays complete (R-ticket-mutation-via-tools-only, R-ticket-carries-history); a hand-typed comment would leave no History footprint.
+
+_(full text: spec/docs/tools/ticket_comment.md)_
+
+#### ticket_create
+
+RULE: ticket_create.py is the ONLY sanctioned way to bring a ticket into existence. It allocates the next T-<n> id, writes the file into tickets/backlog/, and stamps the first History line ("created"). WHY a tool and not a hand-written file: id allocation, the frontmatter shape, and the mandatory first History entry must be identical for every ticket (R-ticket-mutation-via-tools-only) — a hand-mad…
+
+_(full text: spec/docs/tools/ticket_create.md)_
+
+#### ticket_edit
+
+RULE: ticket_edit.py changes title and/or the description body, and BEFORE writing the new text it records a "text changed" History entry snapshotting the OLD value(s). WHY snapshot-into-History: the steward asked explicitly for "история изменения текста" — the edit trail must survive the edit. Routing edits through the tool is the only way to guarantee no text change is lost (R-ticket-carries-his…
+
+_(full text: spec/docs/tools/ticket_edit.md)_
+
+#### ticket_list
+
+RULE: ticket_list.py is a pure reader that enumerates tickets across the status folders, with optional --status / --assignee filters, printing one line per ticket (id, status, assignee, title). WHY a dedicated lister: the steward's queue now lives on disk; a single command that answers "what is where, and whose is it" is the on-disk analogue of the chat backlog it replaces (R-open-tickets-visible)…
+
+_(full text: spec/docs/tools/ticket_list.md)_
+
+#### ticket_move
+
+RULE: a status change is a FILE MOVE between tickets/<status>/ folders plus a History line ("status: X→Y") and an `updated` bump. ticket_move.py is the only writer of that transition. WHY move-not-flag: encoding status by folder makes the kanban visible at the filesystem/git level, and forcing the move through the tool guarantees the History trail the steward asked for is never skipped (R-ticket-c…
+
+_(full text: spec/docs/tools/ticket_move.md)_
+
+#### ticket_show
+
+RULE: ticket_show.py is a pure reader — it never mutates. It resolves a ticket by id and prints the machine header plus the human body verbatim, so an operator can inspect state without opening the file by hand. WHY a reader tool exists beside the mutators: reading is safe and frequent; keeping it a separate no-write tool means the mutating tools stay the sole writers (R-ticket-mutation-via-tools-…
+
+_(full text: spec/docs/tools/ticket_show.md)_
+
 #### what_now
 
 Canon: §Harness — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.
@@ -434,6 +470,12 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/tools/spawn_agent.py` — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).  →  R-tool-spawn-agent
 - `spec/tools/spawn_log_isolation_status.py` — reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.  →  R-tool-spawn-log-isolation-status
 - `spec/tools/tick.py` — the closed-loop diagnostic driver (advisory, M32 conservative).  →  R-tool-tick
+- `spec/tools/ticket_comment.py` — append a stamped comment to a ticket (and a History "commented" entry).  →  R-tool-ticket-comment
+- `spec/tools/ticket_create.py` — create a new on-disk ticket (auto-id, initial status, first History entry).  →  R-tool-ticket-create
+- `spec/tools/ticket_edit.py` — edit a ticket's title/body, snapshotting the prior text into History.  →  R-tool-ticket-edit
+- `spec/tools/ticket_list.py` — list tickets, optionally filtered by status or assignee (read-only).  →  R-tool-ticket-list
+- `spec/tools/ticket_move.py` — move a ticket to a new status (relocates the file + records the transition in History).  →  R-tool-ticket-move
+- `spec/tools/ticket_show.py` — print one ticket's header, body, comments and full History (read-only).  →  R-tool-ticket-show
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
 **Domain content** (`domains/hotam-spec-self/`)
@@ -460,8 +502,8 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 ### Live state (autogenerated by tools/gen_spec.py — do not hand-edit)
 
 - **top action:** none — graph clean
-- **debt:** 188/209 SETTLED ENFORCED · 5 DRAFT · 0 OPEN · 0 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 269 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 68097 chars (headroom 81903)
+- **debt:** 191/213 SETTLED ENFORCED · 5 DRAFT · 0 OPEN · 0 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
+- **graph:** 273 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 72290 chars (headroom 77710)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — user action needed: uv run python tools/setup_context_hook.py --patch-global --apply (then restart statusline) — R-unmeasured-cipher-names-user-action
 <!-- LIVE-STATE:END -->
@@ -483,7 +525,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 209 SETTLED
+- **atoms-count** — 213 SETTLED
 - **open actions** — 0 (graph clean)
 <!-- DOMAIN-MAP:END -->
 <!-- CONSTITUTION:BEGIN -->
@@ -539,6 +581,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - R-decided-needs-human-signoff — A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cr… [E]
 - R-enforcement-first-class — The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field w… [E]
 - R-open-states-question — Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form O… [E]
+- R-open-tickets-visible — The what_now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets b… [E]
 - R-requirement-claim-is-atomic — Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concern… [E]
 - R-stable-conflict-identity — A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its ten… [E]
 - R-steward-distinct-from-owners — Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's me… [E]
@@ -605,6 +648,9 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - R-tension-audit-presents-only — tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed s… [E]
 - R-tension-audit-shortlist-tool — A tool tools/audit_tensions.py shall emit a deterministic, LLM-free shortlist of SETTLED require… [E]
 - R-tension-audit-staleness-visible — The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the te… [E]
+- R-ticket-carries-history — Every ticket shall carry an append-only ## History section in which each mutation (create, statu… [E]
+- R-ticket-engine-on-disk — Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a J… [E]
+- R-ticket-mutation-via-tools-only — A ticket's frontmatter header and History shall be changed only through the ticket_* tools, neve… [S]
 - R-tiered-gate-not-a-commit-gate — The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit bound… [S]
 - R-trust-anchor-delegation-explicit-only — Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted… [E]
 - R-trust-anchor-mechanism — Every decision shall be personally signed by the human steward -- today: a decided_by: Stakehold… [E]
@@ -732,6 +778,10 @@ _(no sub-operators yet)_
   - defined: `_(not yet mapped)_`
   - enforced: _(none)_
   - tested: `spec/tests/test_docs_gen.py`
+- **§Ticket**
+  - defined: `_(not yet mapped)_`
+  - enforced: _(none)_
+  - tested: _(none)_
 <!-- CONCEPT-MAP:END -->
 <!-- RECENTLY-REJECTED:BEGIN -->
 <!-- (generated by tools/gen_spec.py — do not hand-edit) -->

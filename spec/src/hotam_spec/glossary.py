@@ -88,6 +88,11 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "An operator's sub-domain as a PROJECTION (id-set view) over the shared graph, not a copy; overlaps with another operator's projection are computed and rendered, never hidden.",
     ),
+    Term(
+        "§Ticket",
+        "SECTION",
+        "A durable on-disk work item (tickets/<status>/T-<n>.md): frontmatter header + Markdown body, mutated only through the ticket_* tools which auto-maintain its status-and-text History.",
+    ),
     # Lifecycle states (kind=LIFECYCLE_STATE)
     Term(
         "DETECTED",

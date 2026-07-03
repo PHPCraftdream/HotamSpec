@@ -37,6 +37,12 @@ _No framework-plumbing SETTLED requirements yet._
 - R-tool-spawn-agent — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent… [S]
 - R-tool-spawn-log-isolation-status — reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolatio… [S]
 - R-tool-tick — the closed-loop diagnostic driver (advisory, M32 conservative). [S]
+- R-tool-ticket-comment — append a stamped comment to a ticket (and a History "commented" entry). [S]
+- R-tool-ticket-create — create a new on-disk ticket (auto-id, initial status, first History entry). [S]
+- R-tool-ticket-edit — edit a ticket's title/body, snapshotting the prior text into History. [S]
+- R-tool-ticket-list — list tickets, optionally filtered by status or assignee (read-only). [S]
+- R-tool-ticket-move — move a ticket to a new status (relocates the file + records the transition in History). [S]
+- R-tool-ticket-show — print one ticket's header, body, comments and full History (read-only). [S]
 - R-tool-what-now — derives the prioritized next correct action from any graph state, making being-lost structurally… [S]
 
 **Entity-derived requirements**
