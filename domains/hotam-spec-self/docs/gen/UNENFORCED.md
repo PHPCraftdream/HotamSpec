@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 178 / SETTLED 198; closeable debt 0; inherent discipline 20; DRAFT 5; OPEN 0; REJECTED 33.**
+**Burn-down: SETTLED-ENFORCED 182 / SETTLED 202; closeable debt 0; inherent discipline 20; DRAFT 5; OPEN 0; REJECTED 33.**
 
 ---
 
@@ -229,6 +229,10 @@ _None — all ENFORCEABLE SETTLED requirements are ENFORCED._
 | `R-land-tier-trace-skips-dry-run` | test_apply_proposal_land_log.py::test_dry_run_writes_no_log | A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record. |
 | `R-land-tier-trace-best-effort` | test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort | A broken or unwritable spec/.runtime/land-log.jsonl location shall never fail an otherwise-green apply -- the write is best-effort, warn only. |
 | `R-domain-map-shows-pulse` | test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain, test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_domain_open_actions | The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse. |
+| `R-tension-audit-shortlist-tool` | tests/test_tool_audit_tensions.py::test_pole_tension_is_found, tests/test_tool_audit_tensions.py::test_modal_opposition_is_found, tests/test_tool_audit_tensions.py::test_empty_graph_is_vacuous, tests/test_tool_audit_tensions.py::test_two_runs_identical_candidates, tests/test_tool_audit_tensions.py::test_mediated_pair_is_excluded, tests/test_tool_audit_tensions.py::test_refine_siblings_excluded | A tool tools/audit_tensions.py shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension. |
+| `R-tension-audit-presents-only` | tests/test_tool_audit_tensions.py::test_audit_never_writes_graph_py | tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict. |
+| `R-tension-audit-staleness-visible` | tests/test_what_now.py::test_staleness_never_run_fires, tests/test_what_now.py::test_staleness_fresh_is_silent, tests/test_what_now.py::test_staleness_after_growth_fires, tests/test_what_now.py::test_staleness_never_enters_diagnose | The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the tension audit has never run or the live SETTLED graph has grown by more than GENERATIVE_AUDIT_STALE_DELTA atoms since the last recorded sweep. |
+| `R-revisit-markers-evaluated` | tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_when_never_evaluated, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_silent_after_evaluation, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_refires_after_growth, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_never_enters_diagnose | The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago. |
 
 ## DRAFT (not yet promoted)
 

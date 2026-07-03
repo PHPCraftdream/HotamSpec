@@ -19,6 +19,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-push-only-on-request` | SETTLED | `dev-steward` | A-single-steward-session | Push to remote shall occur only on the dev-steward's explicit request, never autonomously. |
 | `R-wave-strictly-sequential` | SETTLED | `pipeline-operator` | A-single-steward-session | Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently. |
 | `R-host-spawn-leaves-trace` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook. |
+| `R-worktree-parallel-permitted` | SETTLED | `pipeline-operator` | A-single-steward-session | Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide. |
 
 ## Stakeholders
 
@@ -42,6 +43,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 
 - **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
+- **R-tool-audit-tensions** — *the generative-audit tool: a deterministic, LLM-free shortlist of* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_audit_tensions`]
 - **R-tool-boot-cite-status** — *Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_boot_cite_status`]
 - **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
@@ -57,6 +59,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-gate-status** — *read spec/.runtime/land-log.jsonl and answer the commit-boundary question.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate_status`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
+- **R-tool-mark-revisit-evaluated** — *record that a DECIDED conflict's revisit_marker was evaluated.* [STRUCTURAL·tool · §Conflict] [enforcer: `test_tool_mark_revisit_evaluated`]
 - **R-tool-record-delegation** — *records a new steward delegation into the active domain's* [STRUCTURAL·tool · §Stakeholder] [enforcer: `test_tool_record_delegation`]
 - **R-tool-setup-context-hook** — *installs/removes the project-local hook that feeds tools/context_producer.py.* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_setup_context_hook`]
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]

@@ -147,6 +147,7 @@ Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of
 
 - R-tool-apply-proposal — mechanical writer for steward-approved JSON proposals. [S]
 - R-tool-audit-atomicity — surfaces Requirements with compound claims and check_* functions with compound conditions, both… [S]
+- R-tool-audit-tensions — the generative-audit tool: a deterministic, LLM-free shortlist of [S]
 - R-tool-boot-cite-status — Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a ty… [S]
 - R-tool-claude-md-diff-watch — auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a Use… [S]
 - R-tool-closure — per-action verify: did the proposal remove its diagnosis? [S]
@@ -162,6 +163,7 @@ Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of
 - R-tool-gate-status — read spec/.runtime/land-log.jsonl and answer the commit-boundary question. [S]
 - R-tool-gen-spec — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally… [S]
 - R-tool-invoke-agent — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and print… [S]
+- R-tool-mark-revisit-evaluated — record that a DECIDED conflict's revisit_marker was evaluated. [S]
 - R-tool-record-delegation — records a new steward delegation into the active domain's [S]
 - R-tool-setup-context-hook — installs/removes the project-local hook that feeds tools/context_producer.py. [S]
 - R-tool-spawn-agent — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent… [S]

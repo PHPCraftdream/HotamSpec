@@ -56,6 +56,7 @@ Dependency-light (stdlib + the hotam_spec package). Deterministic ordering.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -321,6 +322,159 @@ def pending_proposal_actions(*, now: float | None = None) -> list[Action]:
     return actions
 
 
+TENSION_AUDIT_STAMP = (
+    Path(__file__).resolve().parents[1] / ".runtime" / "tension-audit.jsonl"
+)
+"""Canon: §Harness — append-only run stamp written by tools/audit_tensions.py."""
+
+GENERATIVE_AUDIT_STALE_DELTA = 10
+"""Canon: §Harness — net-new SETTLED atoms since the last generative sweep that
+make the audit stale. Generous: a handful of new atoms rarely hides a fresh
+cross-tension, but past this the un-swept surface compounds silently."""
+
+
+def _last_audit_settled_count() -> int | None:
+    """settled_count from the LAST line of tension-audit.jsonl, or None if absent."""
+    if not TENSION_AUDIT_STAMP.exists():
+        return None
+    last: int | None = None
+    for line in TENSION_AUDIT_STAMP.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        val = rec.get("settled_count")
+        if isinstance(val, int):
+            last = val
+    return last
+
+
+def generative_audit_staleness_actions(g: TensionGraph) -> list[Action]:
+    """Canon: §Harness — CLI-only band: the generative tension audit is stale.
+
+    RULE (R-tension-audit-staleness-visible): NOT part of diagnose(g). Like P6
+    PENDING_PROPOSAL, this band reads the FILESYSTEM (spec/.runtime/tension-audit.jsonl),
+    not the graph, so it is kept OUT of diagnose() — which gen_spec.py renders
+    into the byte-stable LIVE-STATE (R-deterministic-generation) and which every
+    graph-generic test exercises on synthetic graphs. Coupling a filesystem read
+    into diagnose() would both break that determinism contract and pollute
+    unrelated graph tests, so the staleness signal is surfaced ONLY by the
+    interactive CLI (main(), below), exactly as pending_proposal_actions is.
+
+    Fires ONE action on the 'generative-audit' meter when the audit has NEVER
+    run (no stamp) or the live graph has grown by more than
+    GENERATIVE_AUDIT_STALE_DELTA net-new SETTLED atoms since the last recorded
+    sweep: run `uv run python tools/audit_tensions.py` to re-sweep.
+
+    WHY it exists: the framework holds tensions well but historically did not
+    FIND them (0/8 machine-surfaced). Left to memory the first act of sight
+    lapses as the graph grows; this makes "you have not swept lately" an
+    addressable action rather than an invisible lapse.
+    """
+    now = sum(1 for r in g.requirements if r.status == "SETTLED")
+    then = _last_audit_settled_count()
+    if then is None:
+        msg = (
+            f"generative tension audit has NEVER run ({now} SETTLED atoms unswept)"
+            " — run `uv run python tools/audit_tensions.py` to surface"
+            " unmediated-tension suspects (R-tension-audit-staleness-visible)."
+        )
+    elif now - then > GENERATIVE_AUDIT_STALE_DELTA:
+        msg = (
+            f"generative tension audit is stale: {now} SETTLED now vs {then} at"
+            f" the last sweep (+{now - then} > {GENERATIVE_AUDIT_STALE_DELTA})"
+            " — re-run `uv run python tools/audit_tensions.py`"
+            " (R-tension-audit-staleness-visible)."
+        )
+    else:
+        return []
+    return [
+        Action(
+            priority=P_PENDING_PROPOSAL,
+            kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+            target="generative-audit",
+            imperative=msg,
+        )
+    ]
+
+
+REVISIT_EVAL_FILE = (
+    Path(__file__).resolve().parents[1] / ".runtime" / "revisit-eval.jsonl"
+)
+"""Canon: §Harness — append-only revisit-marker evaluation log written by
+tools/mark_revisit_evaluated.py."""
+
+
+def _last_revisit_evaluations() -> dict[str, int]:
+    """Map each evaluated conflict id -> settled_count at its LAST evaluation."""
+    out: dict[str, int] = {}
+    if not REVISIT_EVAL_FILE.exists():
+        return out
+    for line in REVISIT_EVAL_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        cid = rec.get("conflict")
+        sc = rec.get("settled_count")
+        if isinstance(cid, str) and isinstance(sc, int):
+            out[cid] = sc  # later lines overwrite -> last wins
+    return out
+
+
+def revisit_marker_actions(g: TensionGraph) -> list[Action]:
+    """Canon: §Harness — CLI-only band: DECIDED revisit_markers awaiting evaluation.
+
+    RULE: NOT part of diagnose(g). Like the pending-proposal and generative-audit
+    bands, this reads the FILESYSTEM (spec/.runtime/revisit-eval.jsonl), which
+    gen_spec must never render (R-deterministic-generation) and which graph-generic
+    tests must not be polluted by, so the signal is surfaced ONLY at the CLI.
+
+    For each Conflict carrying a non-empty revisit_marker, fire one action when
+    the marker has NEVER been evaluated, or the live graph has grown by more than
+    GENERATIVE_AUDIT_STALE_DELTA net-new SETTLED atoms since its last evaluation
+    (mark_revisit_evaluated.py records the evaluation). Emitted in stable graph
+    order, one line per stale marker.
+
+    WHY: a revisit_marker names the CONDITION under which a DECIDED conflict
+    should be re-opened, but nothing tracked whether anyone LOOKED again. An
+    unread trigger lets the decision silently ossify while its stated revisit
+    condition may already have come true (R-revisit-markers-evaluated).
+    """
+    now = sum(1 for r in g.requirements if r.status == "SETTLED")
+    last_eval = _last_revisit_evaluations()
+    out: list[Action] = []
+    for c in g.conflicts:
+        if not c.revisit_marker:
+            continue
+        then = last_eval.get(c.id)
+        if then is None:
+            reason = "never evaluated"
+        elif now - then > GENERATIVE_AUDIT_STALE_DELTA:
+            reason = f"last evaluated at {then} SETTLED, now {now} (+{now - then})"
+        else:
+            continue
+        out.append(
+            Action(
+                priority=P_PENDING_PROPOSAL,
+                kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+                target=c.id,
+                imperative=(
+                    f"evaluate revisit marker ({reason}): {c.revisit_marker}"
+                    " — then `uv run python tools/mark_revisit_evaluated.py"
+                    f" {c.id}` (R-revisit-markers-evaluated)."
+                ),
+            )
+        )
+    return out
+
+
 # --- Rendering --------------------------------------------------------------
 
 _EMPTY_GRAPH_BANNER = (
@@ -448,10 +602,16 @@ def main(argv: list[str] | None = None) -> None:
     # (age-in-days); never fed into diagnose()/render() so generated docs
     # (which call diagnose() via gen_spec.py) stay byte-stable. See
     # pending_proposal_actions() docstring / R-presented-pending-decision-type.
-    pending = pending_proposal_actions()
-    if pending:
+    # Both bands below are CLI-only (filesystem-sourced, non-deterministic) and
+    # are never fed into diagnose()/render() so generated docs stay byte-stable.
+    cli_only = (
+        pending_proposal_actions()
+        + generative_audit_staleness_actions(g)
+        + revisit_marker_actions(g)
+    )
+    if cli_only:
         sys.stdout.write(f"\n--- P{P_PENDING_PROPOSAL} PENDING_PROPOSAL ---\n")
-        for a in pending:
+        for a in cli_only:
             sys.stdout.write(f"  [P{a.priority}] {a.target}: {a.imperative}\n")
 
 

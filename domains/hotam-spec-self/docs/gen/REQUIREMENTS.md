@@ -247,6 +247,10 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-land-tier-trace-skips-dry-run` | SETTLED | `framework-author` | A-python-stack | A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record. |
 | `R-land-tier-trace-best-effort` | SETTLED | `framework-author` | A-python-stack | A broken or unwritable spec/.runtime/land-log.jsonl location shall never fail an otherwise-green apply -- the write is best-effort, warn only. |
 | `R-domain-map-shows-pulse` | SETTLED | `framework-author` | A-python-stack | The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse. |
+| `R-tension-audit-shortlist-tool` | SETTLED | `framework-author` | — | A tool tools/audit_tensions.py shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension. |
+| `R-tension-audit-presents-only` | SETTLED | `framework-author` | — | tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict. |
+| `R-tension-audit-staleness-visible` | SETTLED | `framework-author` | — | The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the tension audit has never run or the live SETTLED graph has grown by more than GENERATIVE_AUDIT_STALE_DELTA atoms since the last recorded sweep. |
+| `R-revisit-markers-evaluated` | SETTLED | `framework-author` | — | The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago. |
 
 ## Stakeholders
 
@@ -300,6 +304,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 
 - **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
+- **R-tool-audit-tensions** — *the generative-audit tool: a deterministic, LLM-free shortlist of* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_audit_tensions`]
 - **R-tool-boot-cite-status** — *Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_boot_cite_status`]
 - **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
@@ -315,6 +320,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-gate-status** — *read spec/.runtime/land-log.jsonl and answer the commit-boundary question.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate_status`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
+- **R-tool-mark-revisit-evaluated** — *record that a DECIDED conflict's revisit_marker was evaluated.* [STRUCTURAL·tool · §Conflict] [enforcer: `test_tool_mark_revisit_evaluated`]
 - **R-tool-record-delegation** — *records a new steward delegation into the active domain's* [STRUCTURAL·tool · §Stakeholder] [enforcer: `test_tool_record_delegation`]
 - **R-tool-setup-context-hook** — *installs/removes the project-local hook that feeds tools/context_producer.py.* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_setup_context_hook`]
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]

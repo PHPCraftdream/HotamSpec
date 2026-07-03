@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 2 / SETTLED 8; closeable debt 4; inherent discipline 2; DRAFT 0; OPEN 0; REJECTED 0.**
+**Burn-down: SETTLED-ENFORCED 2 / SETTLED 9; closeable debt 4; inherent discipline 3; DRAFT 0; OPEN 0; REJECTED 0.**
 
 ---
 
@@ -33,6 +33,7 @@ judgment calls no check_* could ever verify.
 |---|---|---|---|
 | `R-commit-follows-review` | PROSE | `dev-steward` | A commit shall land only after review of the diff by a human or an agent code-review step. |
 | `R-push-only-on-request` | PROSE | `dev-steward` | Push to remote shall occur only on the dev-steward's explicit request, never autonomously. |
+| `R-worktree-parallel-permitted` | PROSE | `pipeline-operator` | Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide. |
 
 ## SETTLED and ENFORCED (the substrate's automatic reflexes)
 

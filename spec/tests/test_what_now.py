@@ -190,3 +190,75 @@ def test_main_empty_content_prints_calm_banner(capsys, monkeypatch) -> None:
     captured = capsys.readouterr()
     assert "no content yet" in captured.out
     assert "--demo" in captured.out  # banner points at the demo flag
+
+
+# ---------------------------------------------------------------------------
+# Generative-audit staleness band (Wave 11, R-tension-audit-staleness-visible)
+# ---------------------------------------------------------------------------
+
+from hotam_spec.axis import Axis  # noqa: E402
+
+
+def _stale_test_graph(n_settled: int) -> TensionGraph:
+    sh = (Stakeholder(id="a", name="A", domain="x"),)
+    reqs = tuple(
+        Requirement(id=f"R-{i}", claim=f"c{i}", owner="a", status="SETTLED")
+        for i in range(n_settled)
+    )
+    return TensionGraph(
+        axes=(Axis(slug="a-vs-b", description="a vs b"),),
+        stakeholders=sh,
+        requirements=reqs,
+    )
+
+
+def _write_stamp(path: Path, settled_count: int) -> None:
+    import json as _json
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        _json.dumps(
+            {"stamp": "2026-01-01T00:00:00+00:00", "settled_count": settled_count, "candidates": 0}
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_staleness_never_run_fires(monkeypatch, tmp_path) -> None:
+    """No stamp file -> 'never run' staleness action."""
+    monkeypatch.setattr(what_now, "TENSION_AUDIT_STAMP", tmp_path / "absent.jsonl")
+    acts = what_now.generative_audit_staleness_actions(_stale_test_graph(3))
+    assert [a.target for a in acts] == ["generative-audit"]
+    assert "NEVER run" in acts[0].imperative
+
+
+def test_staleness_fresh_is_silent(monkeypatch, tmp_path) -> None:
+    """Recent sweep within DELTA -> no action."""
+    stamp = tmp_path / "tension-audit.jsonl"
+    _write_stamp(stamp, settled_count=3)
+    monkeypatch.setattr(what_now, "TENSION_AUDIT_STAMP", stamp)
+    assert what_now.generative_audit_staleness_actions(_stale_test_graph(3)) == []
+
+
+def test_staleness_after_growth_fires(monkeypatch, tmp_path) -> None:
+    """Grew by more than DELTA SETTLED since the last sweep -> action."""
+    stamp = tmp_path / "tension-audit.jsonl"
+    _write_stamp(stamp, settled_count=3)
+    monkeypatch.setattr(what_now, "TENSION_AUDIT_STAMP", stamp)
+    n = 3 + what_now.GENERATIVE_AUDIT_STALE_DELTA + 1
+    acts = what_now.generative_audit_staleness_actions(_stale_test_graph(n))
+    assert [a.target for a in acts] == ["generative-audit"]
+    assert "stale" in acts[0].imperative
+
+
+def test_staleness_never_enters_diagnose(monkeypatch, tmp_path) -> None:
+    """diagnose(g) must NEVER carry a generative-audit action.
+
+    Determinism guard (R-tension-audit-staleness-visible / R-deterministic-generation):
+    the staleness signal is CLI-only; even with the stamp absent, diagnose() —
+    which gen_spec renders into the byte-stable LIVE-STATE — stays clean.
+    """
+    monkeypatch.setattr(what_now, "TENSION_AUDIT_STAMP", tmp_path / "absent.jsonl")
+    acts = what_now.diagnose(_stale_test_graph(50))
+    assert not [a for a in acts if a.target == "generative-audit"]

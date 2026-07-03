@@ -47,6 +47,10 @@ def build_graph() -> TensionGraph:
                 "wave atomicity."
             ),
         ),
+        Axis(
+            slug="sequential-vs-isolated-parallel",
+            description="Waves touching overlapping scopes run strictly sequentially to avoid racing a shared working tree, vs mutating agents running in parallel when isolated in per-agent git worktrees so their edits cannot collide.",
+        ),
     )
 
     stakeholders = (
@@ -176,6 +180,16 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-spawn-logged"),),
             enforcement=STRUCTURAL,
         ),
+        Requirement(
+            id="R-worktree-parallel-permitted",
+            claim=("Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide."),
+            owner="pipeline-operator",
+            status="SETTLED",
+            why=("This atom reflects, inside the hotam-dev domain, the self-practice crystallized by the framework atom R-parallel-mutating-agents-use-worktree (hotam-spec-self): after the 2026-06-30/07-01 incident where two parallel agents in one shared tree lost work to a history-rewrite, the pipeline adopted per-agent worktree isolation (isolation:'worktree') as the sanctioned way to run mutating agents concurrently. It is honestly modeled here as a hotam-dev requirement (not a cross-domain reference) because a Conflict's members must be co-domain: it lets the sequential-vs-isolated-parallel tension between overlapping-scope waves (R-wave-strictly-sequential) and isolated parallelism be modeled as a first-class Conflict node in the domain that actually runs the pipeline. Enforcement is PROSE: whether an agent ACTUALLY runs in a worktree is operator discipline, not mechanically provable from this graph."),
+            assumptions=("A-single-steward-session",),
+            enforcement=PROSE,
+            enforceability="INHERENTLY_PROSE",
+        ),
     )
 
     conflicts = (
@@ -187,6 +201,15 @@ def build_graph() -> TensionGraph:
             steward="dev-steward",
             lifecycle="DETECTED",
             shared_assumption="A-runtime-logs-append-only",
+        ),
+        Conflict(
+            id=conflict_identity("sequential-vs-isolated-parallel", "R-wave-strictly-sequential demands that waves touching overlapping files/scopes run strictly sequentially (never concurrently) to avoid racing a shared working tree, while R-worktree-parallel-permitted sanctions running mutating pipeline agents in parallel when each is isolated in its own git worktree -- the same pipeline both forbids overlapping-scope concurrency and permits isolated concurrency, and the boundary (when is isolation sufficient to relax strict sequencing?) is undecided"),
+            axis="sequential-vs-isolated-parallel",
+            context="R-wave-strictly-sequential demands that waves touching overlapping files/scopes run strictly sequentially (never concurrently) to avoid racing a shared working tree, while R-worktree-parallel-permitted sanctions running mutating pipeline agents in parallel when each is isolated in its own git worktree -- the same pipeline both forbids overlapping-scope concurrency and permits isolated concurrency, and the boundary (when is isolation sufficient to relax strict sequencing?) is undecided",
+            members=("R-wave-strictly-sequential", "R-worktree-parallel-permitted"),
+            steward="dev-steward",
+            lifecycle="DETECTED",
+            shared_assumption="A-single-steward-session",
         ),
     )
 

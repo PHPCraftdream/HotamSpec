@@ -19,15 +19,30 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **lifecycle:** DETECTED
 - **shared assumption:** `A-runtime-logs-append-only`
 
+### Axis `sequential-vs-isolated-parallel` — 1 conflict(s), single tension
+
+#### `C-80687260` — sequential-vs-isolated-parallel
+
+- **context:** R-wave-strictly-sequential demands that waves touching overlapping files/scopes run strictly sequentially (never concurrently) to avoid racing a shared working tree, while R-worktree-parallel-permitted sanctions running mutating pipeline agents in parallel when each is isolated in its own git worktree -- the same pipeline both forbids overlapping-scope concurrency and permits isolated concurrency, and the boundary (when is isolation sufficient to relax strict sequencing?) is undecided
+- **members:** `R-wave-strictly-sequential`, `R-worktree-parallel-permitted`
+- **steward:** `dev-steward`
+- **lifecycle:** DETECTED
+- **shared assumption:** `A-single-steward-session`
+
 ## Hotam-Specn map (Mermaid)
 
 ```mermaid
 graph TD
     R_t1_gate_is_default["R-t1-gate-is-default"]
     R_wave_lands_atomically["R-wave-lands-atomically"]
+    R_wave_strictly_sequential["R-wave-strictly-sequential"]
+    R_worktree_parallel_permitted["R-worktree-parallel-permitted"]
     C_ec1ec532{"C-ec1ec532\nspeed-vs-verification"}
     R_t1_gate_is_default --> C_ec1ec532
     R_wave_lands_atomically --> C_ec1ec532
+    C_80687260{"C-80687260\nsequential-vs-isolated-parallel"}
+    R_wave_strictly_sequential --> C_80687260
+    R_worktree_parallel_permitted --> C_80687260
 ```
 
 ## Controlled vocabulary of axes (this domain)
@@ -35,6 +50,7 @@ graph TD
 | axis slug | description |
 |---|---|
 | `speed-vs-verification` | T1 targeted-enforcer gate on every apply_proposal call (fast, per-move) vs the mandatory full T2 pytest suite at wave/commit boundaries (slow, complete). T2 has hit multi-minute timeouts in this repo, creating real pressure to skip or shrink it -- which would undermine wave atomicity. |
+| `sequential-vs-isolated-parallel` | Waves touching overlapping scopes run strictly sequentially to avoid racing a shared working tree, vs mutating agents running in parallel when isolated in per-agent git worktrees so their edits cannot collide. |
 
 ## Latent-connector suspicions (heuristic, for AI review)
 
@@ -45,9 +61,7 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-commit-follows-review` | `R-push-only-on-request` | shares assumption(s): A-single-steward-session |
 | `R-commit-follows-review` | `R-wave-lands-atomically` | shares assumption(s): A-single-steward-session |
 | `R-commit-follows-review` | `R-wave-strictly-sequential` | shares assumption(s): A-single-steward-session |
-| `R-push-only-on-request` | `R-wave-lands-atomically` | shares assumption(s): A-single-steward-session |
-| `R-push-only-on-request` | `R-wave-strictly-sequential` | shares assumption(s): A-single-steward-session |
-| `R-wave-lands-atomically` | `R-wave-strictly-sequential` | shares assumption(s): A-single-steward-session |
+| `R-commit-follows-review` | `R-worktree-parallel-permitted` | shares assumption(s): A-single-steward-session |
 | `R-host-spawn-leaves-trace` | `R-land-leaves-trace` | shares assumption(s): A-runtime-logs-append-only |
 | `R-host-spawn-leaves-trace` | `R-spawn-logged` | shares assumption(s): A-runtime-logs-append-only |
 | `R-host-spawn-leaves-trace` | `R-t1-gate-is-default` | shares assumption(s): A-runtime-logs-append-only |
@@ -55,5 +69,10 @@ Requirement pairs that SHOULD perhaps have a connector node but do not. This is 
 | `R-land-leaves-trace` | `R-spawn-logged` | shares assumption(s): A-runtime-logs-append-only |
 | `R-land-leaves-trace` | `R-t1-gate-is-default` | shares assumption(s): A-runtime-logs-append-only |
 | `R-land-leaves-trace` | `R-wave-lands-atomically` | shares assumption(s): A-runtime-logs-append-only |
+| `R-push-only-on-request` | `R-wave-lands-atomically` | shares assumption(s): A-single-steward-session |
+| `R-push-only-on-request` | `R-wave-strictly-sequential` | shares assumption(s): A-single-steward-session |
+| `R-push-only-on-request` | `R-worktree-parallel-permitted` | shares assumption(s): A-single-steward-session |
 | `R-spawn-logged` | `R-t1-gate-is-default` | shares assumption(s): A-runtime-logs-append-only |
 | `R-spawn-logged` | `R-wave-lands-atomically` | shares assumption(s): A-runtime-logs-append-only |
+| `R-wave-lands-atomically` | `R-wave-strictly-sequential` | shares assumption(s): A-single-steward-session |
+| `R-wave-lands-atomically` | `R-worktree-parallel-permitted` | shares assumption(s): A-single-steward-session |

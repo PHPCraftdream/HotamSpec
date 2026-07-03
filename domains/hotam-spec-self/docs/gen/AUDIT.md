@@ -10,14 +10,11 @@ reader: framework-author
 |---|---|---|
 | `R-active-loop-apply-tool` | ATOMIC |  |
 | `R-active-loop-playbook-doc` | ATOMIC |  |
-| `R-active-loop-playbooks` | ATOMIC |  |
 | `R-active-loop-protocol` | ATOMIC |  |
 | `R-agent-code-imports-framework` | ATOMIC |  |
 | `R-agent-declares-purpose` | ATOMIC |  |
 | `R-agent-has-docs-dir` | ATOMIC |  |
-| `R-agent-has-own-crystal` | ATOMIC |  |
 | `R-agent-has-own-tools-dir` | ATOMIC |  |
-| `R-agent-imports-framework` | COMPOUND | semicolon splits 2 segments |
 | `R-agent-is-a-directory` | ATOMIC |  |
 | `R-agent-is-recursive-director` | ATOMIC |  |
 | `R-agent-map-generated` | ATOMIC |  |
@@ -29,24 +26,19 @@ reader: framework-author
 | `R-anchor-taxonomy` | ATOMIC |  |
 | `R-atomicity-ratchet-no-growth` | ATOMIC |  |
 | `R-audit-atomicity-tool` | ATOMIC |  |
-| `R-axes-as-module-constant` | ATOMIC |  |
 | `R-axis-controlled-vocab` | ATOMIC |  |
 | `R-axis-gatekeeper-policy` | ATOMIC |  |
 | `R-backend-scope` | ATOMIC |  |
 | `R-bijection-r-to-enforcer` | ATOMIC |  |
-| `R-bijection-r-to-enforcer-draft` | ATOMIC |  |
 | `R-boot-cite-in-first-sentence` | ATOMIC |  |
 | `R-boot-cite-measured` | ATOMIC |  |
-| `R-boot-from-substrate` | COMPOUND | 'and' connects clause with verb (and cite) |
 | `R-boot-reload-three-facts` | ATOMIC |  |
 | `R-budget-measure` | ATOMIC |  |
 | `R-check-method-is-atomic` | ATOMIC |  |
-| `R-claude-md-budget-phi-cap` | COMPOUND | semicolon splits 2 segments |
 | `R-claude-md-consolidates-when-single-agent` | ATOMIC |  |
 | `R-claude-md-live-state-generated` | ATOMIC |  |
 | `R-claude-md-template-driven` | ATOMIC |  |
-| `R-claude-md-tree-of-crystals` | COMPOUND | 'and' connects clause with verb (and keep) |
-| `R-commit-boundary-checkable` | COMPOUND | semicolon splits 2 segments |
+| `R-commit-boundary-checkable` | ATOMIC |  |
 | `R-conflict-addressing-resolves-variables` | ATOMIC |  |
 | `R-conflict-held-state` | ATOMIC |  |
 | `R-conflict-is-connector-node` | ATOMIC |  |
@@ -55,18 +47,15 @@ reader: framework-author
 | `R-constituting-requirements-converge` | ATOMIC |  |
 | `R-constitution-is-index` | ATOMIC |  |
 | `R-constitution-separates-plumbing` | ATOMIC |  |
-| `R-content-free-framework` | ATOMIC |  |
 | `R-content-free-no-business-data` | ATOMIC |  |
 | `R-content-free-no-examples` | ATOMIC |  |
 | `R-content-free-no-seed-graph` | ATOMIC |  |
 | `R-content-layout-evolution` | ATOMIC |  |
 | `R-context-bounded-delegation` | ATOMIC |  |
 | `R-context-budget-rule` | ATOMIC |  |
-| `R-context-hook-piggybacks-cah-stamp` | COMPOUND | 'and' connects clause with verb (and write) |
 | `R-core-imports-stdlib-or-hotam-spec-only` | ATOMIC |  |
 | `R-critical-core-methodology` | ATOMIC |  |
 | `R-critical-core-per-domain` | ATOMIC |  |
-| `R-critical-core-scope` | ATOMIC |  |
 | `R-crystal-carries-mediation-loop` | ATOMIC |  |
 | `R-crystal-carries-recursion-seed` | ATOMIC |  |
 | `R-crystal-carries-role-seed` | ATOMIC |  |
@@ -80,20 +69,17 @@ reader: framework-author
 | `R-delegation-conclusions-only` | ATOMIC |  |
 | `R-dependency-drives-parallel` | ATOMIC |  |
 | `R-dependency-drives-sequential` | ATOMIC |  |
-| `R-dependency-graph-parallelism` | ATOMIC |  |
 | `R-dependency-tracked` | ATOMIC |  |
 | `R-deterministic-generation` | ATOMIC |  |
 | `R-director-agent-required-per-domain` | ATOMIC |  |
 | `R-doc-names-reader` | ATOMIC |  |
 | `R-docs-generated-from-requirements` | ATOMIC |  |
 | `R-domain-declares-director` | ATOMIC |  |
-| `R-domain-delegation-as-node` | ATOMIC |  |
-| `R-domain-delegation-persists` | ATOMIC |  |
 | `R-domain-has-docs-dir` | ATOMIC |  |
 | `R-domain-has-manifest` | ATOMIC |  |
 | `R-domain-is-a-directory` | ATOMIC |  |
 | `R-domain-map-generated` | ATOMIC |  |
-| `R-domain-owns-claude-md` | ATOMIC |  |
+| `R-domain-map-shows-pulse` | ATOMIC |  |
 | `R-domain-owns-docs-gen` | ATOMIC |  |
 | `R-domain-owns-graph-py` | ATOMIC |  |
 | `R-domain-owns-tools-and-agents` | ATOMIC |  |
@@ -101,13 +87,11 @@ reader: framework-author
 | `R-drift-structurally-impossible` | ATOMIC |  |
 | `R-empty-content-calm-banner` | ATOMIC |  |
 | `R-empty-content-gen-notice` | ATOMIC |  |
-| `R-empty-content-is-legitimate` | COMPOUND | semicolon splits 2 segments |
 | `R-empty-content-wellformed` | ATOMIC |  |
 | `R-enforceability-kind-declared` | ATOMIC |  |
 | `R-enforced-by-resolvable` | ATOMIC |  |
 | `R-enforced-names-enforcer` | ATOMIC |  |
 | `R-enforcement-first-class` | ATOMIC |  |
-| `R-enforcement-gradient` | ATOMIC |  |
 | `R-enforcement-levels-declared` | ATOMIC |  |
 | `R-entities-md-generated` | ATOMIC |  |
 | `R-entity-checks-by-iteration` | ATOMIC |  |
@@ -122,48 +106,39 @@ reader: framework-author
 | `R-entity-state-conflict-surfaced` | ATOMIC |  |
 | `R-entity-type-lifecycle-wellformed` | ATOMIC |  |
 | `R-entity-typed-anchors` | ATOMIC |  |
-| `R-framework-claude-md-is-domain-free` | ATOMIC |  |
 | `R-framework-owned-by-no-agent` | ATOMIC |  |
 | `R-framework-shared-docs-generated` | ATOMIC |  |
 | `R-glossary-drift-stable` | ATOMIC |  |
 | `R-glossary-generated` | ATOMIC |  |
 | `R-glossary-sync-fails-dead` | ATOMIC |  |
 | `R-glossary-sync-fails-unused` | ATOMIC |  |
-| `R-glossary-sync-test` | ATOMIC |  |
-| `R-goal-as-target-state` | COMPOUND | semicolon splits 2 segments |
 | `R-goal-is-first-class-type` | ATOMIC |  |
 | `R-goal-owner-is-operator` | ATOMIC |  |
 | `R-goal-target-kind-known` | ATOMIC |  |
 | `R-goal-type-vs-facet` | ATOMIC |  |
 | `R-held-carries-variants` | ATOMIC |  |
-| `R-history-from-rejected-markers` | ATOMIC |  |
 | `R-history-generated-from-decided` | ATOMIC |  |
 | `R-history-generated-from-rejected` | ATOMIC |  |
 | `R-initiator-supplies-domain-content` | ATOMIC |  |
 | `R-land-gate-tier-selector` | ATOMIC |  |
 | `R-land-gate-tier-selector-fails-closed` | ATOMIC |  |
-| `R-land-tier-trace` | COMPOUND | semicolon splits 2 segments |
+| `R-land-tier-trace` | ATOMIC |  |
+| `R-land-tier-trace-best-effort` | ATOMIC |  |
+| `R-land-tier-trace-skips-dry-run` | ATOMIC |  |
 | `R-latent-connectors-cluster-by-assumption` | ATOMIC |  |
-| `R-lifecycle-abstraction` | COMPOUND | semicolon splits 2 segments |
 | `R-lifecycle-type-exists` | ATOMIC |  |
 | `R-lifecycle-validates-conflict` | ATOMIC |  |
 | `R-lifecycle-validates-goal` | ATOMIC |  |
 | `R-lifecycle-validates-operator` | ATOMIC |  |
 | `R-lifecycle-validates-requirement` | ATOMIC |  |
 | `R-m-tag-format-valid` | ATOMIC |  |
-| `R-measure-context-size` | ATOMIC |  |
 | `R-method-matches-docstring` | ATOMIC |  |
 | `R-no-hand-edit-graph` | ATOMIC |  |
 | `R-no-observation-type` | ATOMIC |  |
-| `R-observation-evidence-scope` | COMPOUND | semicolon splits 2 segments |
+| `R-observation-evidence-scope` | ATOMIC |  |
 | `R-open-states-question` | ATOMIC |  |
-| `R-operator-acting-facet` | COMPOUND | 'and' connects clause with verb (, and may) |
-| `R-operator-backend-protocol` | ATOMIC |  |
-| `R-operator-crystal-embeds-thinking` | ATOMIC |  |
 | `R-operator-crystal-embeds-thinking-distilled` | ATOMIC |  |
-| `R-operator-crystal-embeds-tools` | ATOMIC |  |
 | `R-operator-crystal-embeds-tools-distilled` | ATOMIC |  |
-| `R-operator-crystal-is-claude-md` | COMPOUND | semicolon splits 2 segments |
 | `R-operator-has-context-budget` | ATOMIC |  |
 | `R-operator-is-frozen-dataclass` | ATOMIC |  |
 | `R-operator-may-have-parent` | ATOMIC |  |
@@ -174,12 +149,10 @@ reader: framework-author
 | `R-operator-type-vs-facet` | ATOMIC |  |
 | `R-overlap-single-presenter` | ATOMIC |  |
 | `R-parallel-mutating-agents-use-worktree` | ATOMIC |  |
-| `R-partition-vs-border` | ATOMIC |  |
 | `R-post-compact-regen-from-substrate` | ATOMIC |  |
 | `R-prefer-tool-over-hand` | ATOMIC |  |
 | `R-presented-pending-decision-type` | ATOMIC |  |
 | `R-private-tools-in-agent-folder` | ATOMIC |  |
-| `R-process-aspect-first` | ATOMIC |  |
 | `R-process-drives-existing-entities` | ATOMIC |  |
 | `R-process-goal-owner-is-operator-aspect` | ATOMIC |  |
 | `R-process-lifecycle-wellformed-aspect` | ATOMIC |  |
@@ -189,20 +162,16 @@ reader: framework-author
 | `R-process-types-exist` | ATOMIC |  |
 | `R-project-name-hotam-spec` | ATOMIC |  |
 | `R-proposed-conflict-kind-exists` | ATOMIC |  |
-| `R-rdf-store` | ATOMIC |  |
 | `R-recently-rejected-surfaced` | ATOMIC |  |
 | `R-reflection-predicates-first-class` | ATOMIC |  |
 | `R-rejected-preserved-not-deleted` | ATOMIC |  |
 | `R-repo-map-generated` | ATOMIC |  |
 | `R-requirement-claim-is-atomic` | ATOMIC |  |
 | `R-requirement-enforced` | ATOMIC |  |
-| `R-root-claude-md-contains-domain-crystal` | ATOMIC |  |
 | `R-root-claude-md-is-sentinel-only` | ATOMIC |  |
-| `R-rules-as-data` | COMPOUND | semicolon splits 2 segments |
+| `R-rules-as-data` | ATOMIC |  |
 | `R-scope-is-projection` | ATOMIC |  |
 | `R-scope-overlap-generated` | ATOMIC |  |
-| `R-seed-in-src` | ATOMIC |  |
-| `R-setup-claude-generates-settings` | COMPOUND | semicolon splits 2 segments |
 | `R-shared-thinking-doc-from-canon-sections` | ATOMIC |  |
 | `R-shared-tool-doc-from-docstring-and-help` | ATOMIC |  |
 | `R-shared-tools-in-spec-tools` | ATOMIC |  |
@@ -216,20 +185,19 @@ reader: framework-author
 | `R-statemachine-guard-on-assumption` | ATOMIC |  |
 | `R-statemachine-reachable` | ATOMIC |  |
 | `R-statemachine-terminal-or-cyclic` | ATOMIC |  |
-| `R-statemachine-wellformedness` | COMPOUND | semicolon splits 2 segments |
 | `R-step-invokes-known-transition` | ATOMIC |  |
 | `R-steward-distinct-from-owners` | ATOMIC |  |
 | `R-sub-agent-crystal-triad` | ATOMIC |  |
-| `R-subagent-gets-its-claude-md` | COMPOUND | 'and' connects clause with verb (and return) |
+| `R-subagent-gets-its-claude-md` | ATOMIC |  |
 | `R-task-spawn-is-a-hand` | ATOMIC |  |
-| `R-task-spawn-is-ephemeral` | COMPOUND | 'and' connects clause with verb (and does) |
 | `R-task-spawn-log-runtime` | ATOMIC |  |
 | `R-task-vs-action-distinct-altitudes` | ATOMIC |  |
+| `R-tension-audit-presents-only` | ATOMIC |  |
+| `R-tension-audit-shortlist-tool` | COMPOUND | 'and' connects clause with verb (and emit) |
 | `R-three-cipher-pulse-structurally-injected` | ATOMIC |  |
-| `R-tiered-gate-not-a-commit-gate` | COMPOUND | semicolon splits 2 segments |
+| `R-tiered-gate-not-a-commit-gate` | ATOMIC |  |
 | `R-tool-is-its-own-requirement` | ATOMIC |  |
 | `R-tools-registry-generated` | ATOMIC |  |
-| `R-tree-of-crystals-cognitive-trigger` | ATOMIC |  |
 | `R-trust-anchor-delegation-explicit-only` | ATOMIC |  |
 | `R-trust-anchor-mechanism` | ATOMIC |  |
 | `R-two-altitude-ontology` | ATOMIC |  |
@@ -237,7 +205,6 @@ reader: framework-author
 | `R-uncrystallizable-is-missing-type` | ATOMIC |  |
 | `R-unmeasured-cipher-names-user-action` | ATOMIC |  |
 | `R-unresolvable-classified-by-human` | ATOMIC |  |
-| `R-unresolvable-conflict-carries-variants` | COMPOUND | semicolon splits 2 segments |
 | `R-variant-choice-is-decision` | ATOMIC |  |
 | `R-verify-closure-per-action` | ATOMIC |  |
 | `R-working-vs-substrate-budget` | ATOMIC |  |
@@ -258,6 +225,7 @@ reader: framework-author
 | `check_conflict_id_matches_identity` | ATOMIC |  |
 | `check_conflict_lifecycle_in_lifecycle` | ATOMIC |  |
 | `check_conflict_min_two_members` | ATOMIC |  |
+| `check_constituting_not_in_unresolved_conflict` | ATOMIC |  |
 | `check_decided_by_is_known_stakeholder` | ATOMIC |  |
 | `check_decided_by_not_member_owner` | ATOMIC |  |
 | `check_decided_has_nonempty_decided_by` | ATOMIC |  |
