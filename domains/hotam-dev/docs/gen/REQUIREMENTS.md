@@ -62,6 +62,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-mark-revisit-evaluated** — *record that a DECIDED conflict's revisit_marker was evaluated.* [STRUCTURAL·tool · §Conflict] [enforcer: `test_tool_mark_revisit_evaluated`]
 - **R-tool-record-delegation** — *records a new steward delegation into the active domain's* [STRUCTURAL·tool · §Stakeholder] [enforcer: `test_tool_record_delegation`]
 - **R-tool-setup-context-hook** — *installs/removes the project-local hook that feeds tools/context_producer.py.* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_setup_context_hook`]
+- **R-tool-setup-hooks** — *generate the committable, portable project sensorium.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_setup_hooks`]
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]
 - **R-tool-spawn-log-isolation-status** — *reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_log_isolation_status`]
 - **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]

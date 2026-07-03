@@ -196,6 +196,38 @@ class ProposedAxis:
 
 
 @dataclass(frozen=True)
+class ProposedStakeholder:
+    """Canon: §Proposal / §Stakeholder — propose a new Stakeholder (accountable party)
+    to add to the active domain's graph.
+
+    RULE: kind='Stakeholder'; the apply_proposal tool serializes this into a new
+    Stakeholder(...) entry appended to the active domain's `stakeholders` tuple.
+    id MUST be unique (not already present in the graph's stakeholders) — a
+    duplicate id is a re-declaration, not a new party. id, name and domain MUST
+    all be non-empty.
+
+    WHY this kind exists (the stranger's first door): the very first Conflict a
+    newcomer models requires a steward who is NOT the owner of any member
+    Requirement (check_steward_not_a_member_owner) — i.e. at least two distinct
+    Stakeholders must exist before any tension can be held. Yet every Requirement
+    and every Axis already had a Proposed* door while Stakeholder did not, leaving
+    a newcomer locked between R-no-hand-edit-graph (the graph is writable only
+    through apply_proposal) and the absence of a door. This kind is that missing
+    door — the mechanical path by which a fresh accountability node is
+    materialized without hand-editing the graph (R-no-hand-edit-graph).
+    """
+
+    id: str
+    name: str
+    domain: str
+    why: str = ""
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the stakeholder id is the anchor of this proposal."""
+        return self.id
+
+
+@dataclass(frozen=True)
 class ProposedAssumption:
     """Canon: §Proposal / §Assumption — propose a new Assumption (falsifiable belief)
     to add to the active domain's graph.
@@ -314,5 +346,6 @@ Proposal = (
     | ProposedOperatorBudget
     | ProposedAxis
     | ProposedAssumption
+    | ProposedStakeholder
     | ProposedAssumptionTransition
 )

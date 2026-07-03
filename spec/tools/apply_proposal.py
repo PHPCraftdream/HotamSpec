@@ -22,6 +22,7 @@ Supported proposal kinds:
   - OperatorBudget — replace an existing Operator's ContextBudget (limit/measure)
   - Axis — add a new Axis to the active domain's controlled-vocabulary `axes` tuple
   - Assumption — add a new Assumption to the active domain's `assumptions` tuple
+  - Stakeholder — add a new Stakeholder to the active domain's `stakeholders` tuple
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
@@ -112,6 +113,15 @@ The JSON shapes:
     "why": "..."
   }
 
+  ProposedStakeholder (add a new Stakeholder to the active domain's stakeholders tuple):
+  {
+    "kind": "Stakeholder",
+    "id": "finance",
+    "name": "Finance",
+    "domain": "money",
+    "why": "..."
+  }
+
 Exit codes:
   0 — success (write landed, tests green, and if --triggering-kind was supplied:
       closure confirmed — the action is no longer in the post-apply diagnosis).
@@ -156,6 +166,7 @@ from hotam_spec.proposal import (  # noqa: E402
     ProposedOperatorBudget,
     ProposedRejection,
     ProposedRequirement,
+    ProposedStakeholder,
 )
 
 _SLUG_RE = _re.compile(r"^[a-z][a-z0-9-]*$")
@@ -241,7 +252,7 @@ def _validate_proposal(raw: dict) -> Proposal:
     'Rejection', 'EntityType', 'OperatorBudget', 'Axis', or 'Assumption'. Each
     kind has its own required fields.
 
-    Returns a Proposal (one of the eight dataclass variants) or raises
+    Returns a Proposal (one of the proposal dataclass variants) or raises
     ValueError with a clear message.
     """
     kind = raw.get("kind", "")
@@ -261,13 +272,15 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_axis(raw)
     if kind == "Assumption":
         return _validate_assumption(raw)
+    if kind == "Stakeholder":
+        return _validate_stakeholder(raw)
     if kind == "AssumptionTransition":
         return _validate_assumption_transition(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
         f"Supported: 'ConflictTransition', 'Conflict', 'Requirement', "
         f"'Rejection', 'EntityType', 'OperatorBudget', 'Axis', 'Assumption', "
-        f"'AssumptionTransition'."
+        f"'Stakeholder', 'AssumptionTransition'."
     )
 
 
@@ -516,6 +529,26 @@ def _validate_assumption(raw: dict) -> ProposedAssumption:
         statement=statement,
         status=status,
         owner=owner,
+        why=why if isinstance(why, str) else "",
+    )
+
+
+def _validate_stakeholder(raw: dict) -> ProposedStakeholder:
+    """Parse and validate a Stakeholder proposal."""
+    stakeholder_id = raw.get("id", "").strip()
+    if not stakeholder_id:
+        raise ValueError("'id' is required for a Stakeholder proposal.")
+    name = raw.get("name", "").strip()
+    if not name:
+        raise ValueError("'name' is required and must be non-empty.")
+    domain = raw.get("domain", "").strip()
+    if not domain:
+        raise ValueError("'domain' is required and must be non-empty.")
+    why = raw.get("why", "")
+    return ProposedStakeholder(
+        id=stakeholder_id,
+        name=name,
+        domain=domain,
         why=why if isinstance(why, str) else "",
     )
 
@@ -1712,6 +1745,102 @@ def _apply_axis_to_source(source_text: str, proposal: ProposedAxis) -> str:
     return result
 
 
+def _find_stakeholders_tuple_end(tree: ast.AST) -> int | None:
+    """Find the line number (1-indexed) of the closing ')' of `stakeholders = (...)`.
+
+    Looks for an assignment `stakeholders = (...)` inside `build_graph()` and
+    returns the end_lineno of the Tuple node (the line with the closing paren).
+    Mirrors _find_axes_tuple_end.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == "stakeholders":
+                    return getattr(stmt.value, "end_lineno", None)
+    return None
+
+
+def _collect_stakeholder_ids(tree: ast.AST) -> set[str]:
+    """Collect the set of id= string literals across all Stakeholder(...) calls."""
+    return _collect_call_kwarg_literals(tree, "Stakeholder", "id")
+
+
+def _render_stakeholder_source(proposal: ProposedStakeholder, indent: str) -> str:
+    """Render a Stakeholder(...) constructor call as source text."""
+    inner = indent + "    "
+    lines: list[str] = []
+    lines.append(f"{indent}Stakeholder(")
+    lines.append(f"{inner}id={_python_repr(proposal.id)},")
+    lines.append(f"{inner}name={_python_repr(proposal.name)},")
+    lines.append(f"{inner}domain={_python_repr(proposal.domain)},")
+    lines.append(f"{indent}),")
+    return "\n".join(lines) + "\n"
+
+
+def _apply_stakeholder_to_source(
+    source_text: str, proposal: ProposedStakeholder
+) -> str:
+    """Apply a ProposedStakeholder: insert a new Stakeholder into `stakeholders = (...)`.
+
+    Pre-write validation (raises RuntimeError, nothing written):
+      - no Stakeholder with the same id may already exist (a duplicate id is a
+        re-declaration, not a new party — §Stakeholder).
+    """
+    tree = ast.parse(source_text)
+    existing_ids = _collect_stakeholder_ids(tree)
+    if proposal.id in existing_ids:
+        raise RuntimeError(
+            f"Stakeholder with id='{proposal.id}' already exists in the active "
+            f"domain's stakeholders tuple — a duplicate id is a re-declaration, "
+            f"not a new stakeholder."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    tuple_end = _find_stakeholders_tuple_end(tree)
+    if tuple_end is None:
+        raise RuntimeError(
+            "Cannot find `stakeholders = (...)` tuple in build_graph(). "
+            "Is the domain graph.py well-formed?"
+        )
+
+    # Determine indentation from existing Stakeholder calls (default 8 spaces).
+    indent = "        "
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "Stakeholder":
+            line_text = lines[node.lineno - 1]
+            stripped = line_text.lstrip()
+            indent = line_text[: len(line_text) - len(stripped)]
+            break
+
+    new_stakeholder = _render_stakeholder_source(proposal, indent)
+    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
+    lines.insert(insert_at, new_stakeholder)
+    result = "".join(lines)
+
+    # Ensure Stakeholder is imported.
+    if not _re.search(
+        r"^from hotam_spec\.stakeholder import\b.*\bStakeholder\b",
+        result,
+        _re.MULTILINE,
+    ):
+        result = result.replace(
+            "from __future__ import annotations\n",
+            "from __future__ import annotations\n\n"
+            "from hotam_spec.stakeholder import Stakeholder\n",
+            1,
+        )
+    return result
+
+
 def _find_assumptions_tuple_end(tree: ast.AST) -> int | None:
     """Find the line number (1-indexed) of the closing ')' of `assumptions = (...)`.
 
@@ -2459,6 +2588,9 @@ def apply(
             lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedAssumption):
             new_source = _apply_assumption_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedStakeholder):
+            new_source = _apply_stakeholder_to_source(source_text, proposal)
             lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedAssumptionTransition):
             new_source = _apply_assumption_transition(source_text, proposal)

@@ -41,7 +41,7 @@ Exit codes:
 
 ```
 usage: create_domain.py [-h] [--description DESCRIPTION] [--goals GOALS]
-                        [--director-purpose DIRECTOR_PURPOSE]
+                        [--director-purpose DIRECTOR_PURPOSE] [--activate]
                         name
 
 Scaffold a new business domain at domains/<name>/.
@@ -58,4 +58,7 @@ options:
                         E.g. 'Track requirements;Resolve tensions'.
   --director-purpose DIRECTOR_PURPOSE
                         One-line rationale for the director agent (required).
+  --activate            After scaffolding, pin this domain (domains/.active-
+                        domain) and run gen_spec.py so the repository-root
+                        CLAUDE.md becomes this domain's crystal.
 ```

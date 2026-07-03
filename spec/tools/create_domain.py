@@ -56,23 +56,61 @@ DIRECTOR = "director"
 _GRAPH_PY_TEMPLATE = '''\
 """Canon: §Domain — content graph of domain \'{name}\'."""
 
+from __future__ import annotations
+
+from hotam_spec.assumption import Assumption
+from hotam_spec.axis import Axis
+from hotam_spec.conflict import Conflict, conflict_identity
 from hotam_spec.graph import TensionGraph
+from hotam_spec.requirement import Requirement
+from hotam_spec.stakeholder import Stakeholder
+
+# These imports (Assumption/Axis/Conflict/conflict_identity/Requirement/
+# Stakeholder) are pre-declared so tools/apply_proposal.py can append nodes
+# into the tuples below without having to inject an import. They are referenced
+# only after the first node of each kind is added; the F401 until then is
+# intentional scaffolding.
+_ = (Assumption, Axis, Conflict, conflict_identity, Requirement, Stakeholder)
 
 
 def build_graph() -> TensionGraph:
+    # NOTE: these MUST be named assignments (not inline kwargs) so the
+    # apply_proposal.py writers (ProposedStakeholder/Axis/Requirement/Conflict/
+    # Assumption) can locate and append into each tuple. Do not hand-edit —
+    # add nodes via tools/apply_proposal.py (R-no-hand-edit-graph).
+    stakeholders = (
+    )
+    axes = (
+    )
+    requirements = (
+    )
+    conflicts = (
+    )
+    assumptions = (
+    )
     return TensionGraph(
-        axes=(),
-        stakeholders=(),
-        requirements=(),
+        axes=axes,
+        stakeholders=stakeholders,
+        requirements=requirements,
+        conflicts=conflicts,
+        assumptions=assumptions,
     )
 '''
 
 _CLAUDE_MD_TEMPLATE = """\
 # {name}
 
-> This file is the operator crystal for the `{name}` domain director.
-> It is a PLACEHOLDER — run `uv run python tools/gen_spec.py` from the domain
-> root to populate the blocks below from the live graph.
+> This is a POINTER, not the live crystal for `{name}`.
+>
+> The operator crystal (LIVE-STATE, CONSTITUTION, REPO-MAP, AGENT-MAP) does NOT
+> live in this file. It materializes in the REPOSITORY-ROOT CLAUDE.md whenever
+> `{name}` is the active domain. gen_spec.py rebuilds that root crystal from
+> whichever domain is pinned — it never populates per-domain CLAUDE.md files.
+>
+> To make `{name}` the active domain and get its crystal:
+>   echo {name} > domains/.active-domain      # (or: export HOTAM_SPEC_ACTIVE_DOMAIN={name})
+>   cd spec && uv run python tools/gen_spec.py  # root CLAUDE.md becomes {name}'s crystal
+> (create_domain.py --activate does both in one step.)
 
 ## Domain
 
@@ -81,18 +119,6 @@ _CLAUDE_MD_TEMPLATE = """\
 ## Goals
 
 {goals_bullet}
-
-<!-- LIVE-STATE:BEGIN -->
-<!-- LIVE-STATE:END -->
-
-<!-- CONSTITUTION:BEGIN -->
-<!-- CONSTITUTION:END -->
-
-<!-- REPO-MAP:BEGIN -->
-<!-- REPO-MAP:END -->
-
-<!-- AGENT-MAP:BEGIN -->
-<!-- AGENT-MAP:END -->
 """
 
 
@@ -118,6 +144,32 @@ def _goals_bullet(goals: list[str]) -> str:
     return "\n".join(f"- {g}" for g in goals)
 
 
+def _activate_domain(name: str, domains_root: Path) -> int:
+    """Pin `name` as the active domain and regenerate the root crystal.
+
+    Writes domains/.active-domain = name (the pin gen_spec.py reads first when
+    no HOTAM_SPEC_ACTIVE_DOMAIN env var is set), then runs gen_spec.py so the
+    REPOSITORY-ROOT CLAUDE.md becomes this domain's operator crystal. This is
+    the REAL activation mechanism — the honest replacement for the old, false
+    'run gen_spec.py from the domain root to populate' template instruction.
+    """
+    pin = domains_root / ".active-domain"
+    pin.write_text(name + "\n", encoding="utf-8")
+    print(f"Pinned active domain: {pin} -> {name}")
+    result = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parent / "gen_spec.py")],
+        cwd=str(_SPEC_ROOT),
+    )
+    if result.returncode != 0:
+        print(
+            "ERROR: gen_spec.py failed after pinning; the root crystal may be stale.",
+            file=sys.stderr,
+        )
+        return 1
+    print(f"Regenerated root CLAUDE.md as the '{name}' crystal.")
+    return 0
+
+
 def scaffold(
     name: str,
     description: str,
@@ -126,6 +178,7 @@ def scaffold(
     domains_root: Path,
     *,
     dry_run: bool = False,
+    activate: bool = False,
 ) -> int:
     """Create the domain directory tree. Returns exit code."""
     err = _validate_name(name)
@@ -222,6 +275,9 @@ def scaffold(
         return 1
 
     print(f"Created director agent at {agents_dir / 'director'}")
+
+    if activate:
+        return _activate_domain(name, domains_root)
     return 0
 
 
@@ -250,6 +306,12 @@ def main(argv: list[str] | None = None) -> int:
         default="",
         help="One-line rationale for the director agent (required).",
     )
+    parser.add_argument(
+        "--activate",
+        action="store_true",
+        help="After scaffolding, pin this domain (domains/.active-domain) and run "
+        "gen_spec.py so the repository-root CLAUDE.md becomes this domain's crystal.",
+    )
     args = parser.parse_args(argv)
 
     missing = []
@@ -273,6 +335,7 @@ def main(argv: list[str] | None = None) -> int:
         goals=goals,
         director_purpose=args.director_purpose,
         domains_root=_DOMAINS_ROOT,
+        activate=args.activate,
     )
 
 

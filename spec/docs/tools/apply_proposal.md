@@ -35,6 +35,7 @@ Supported proposal kinds:
   - OperatorBudget — replace an existing Operator's ContextBudget (limit/measure)
   - Axis — add a new Axis to the active domain's controlled-vocabulary `axes` tuple
   - Assumption — add a new Assumption to the active domain's `assumptions` tuple
+  - Stakeholder — add a new Stakeholder to the active domain's `stakeholders` tuple
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
@@ -122,6 +123,15 @@ The JSON shapes:
     "statement": "...",
     "status": "HOLDS",
     "owner": "framework-author",
+    "why": "..."
+  }
+
+  ProposedStakeholder (add a new Stakeholder to the active domain's stakeholders tuple):
+  {
+    "kind": "Stakeholder",
+    "id": "finance",
+    "name": "Finance",
+    "domain": "money",
     "why": "..."
   }
 

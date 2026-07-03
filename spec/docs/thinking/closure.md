@@ -81,6 +81,10 @@ Canon: §Closure — the axis slug is the anchor of this proposal.
 
 ## From `spec/src/hotam_spec/proposal.py::target_anchor`
 
+Canon: §Closure — the stakeholder id is the anchor of this proposal.
+
+## From `spec/src/hotam_spec/proposal.py::target_anchor`
+
 Canon: §Closure — the assumption id is the anchor of this proposal.
 
 ## From `spec/src/hotam_spec/proposal.py::target_anchor`

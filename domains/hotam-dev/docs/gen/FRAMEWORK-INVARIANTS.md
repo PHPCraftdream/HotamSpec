@@ -33,6 +33,7 @@ _No framework-plumbing SETTLED requirements yet._
 - R-tool-mark-revisit-evaluated — record that a DECIDED conflict's revisit_marker was evaluated. [S]
 - R-tool-record-delegation — records a new steward delegation into the active domain's [S]
 - R-tool-setup-context-hook — installs/removes the project-local hook that feeds tools/context_producer.py. [S]
+- R-tool-setup-hooks — generate the committable, portable project sensorium. [S]
 - R-tool-spawn-agent — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent… [S]
 - R-tool-spawn-log-isolation-status — reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolatio… [S]
 - R-tool-tick — the closed-loop diagnostic driver (advisory, M32 conservative). [S]
