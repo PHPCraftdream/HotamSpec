@@ -3694,6 +3694,36 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_when_never_evaluated", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_silent_after_evaluation", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_refires_after_growth", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_never_enters_diagnose",),
         ),
+        Requirement(
+            id="R-assumption-transition-kind-exists",
+            claim=("The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD) in place via tools/apply_proposal.py, appending the reason to its statement and never deleting the node."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Assumption drift is the declared root of the methodology (§Assumption — 'the root of context drift'), yet before this atom the graph had no kill-path: ProposedAssumption was add-only and the _graph_guard hand-edit lock blocked any status change, so a DEAD assumption's cluster-wide fallout (requirements_on_assumption / what_now P2 DRIFT_FALLOUT) could never actually fire — 0 status transitions in the whole project history. The writer (_apply_assumption_transition) UPDATES the existing Assumption(...) call's status= field to the bare constant and APPENDS '— [STATUS] reason' to its statement so the falsification trail survives (mirror of R-rejected-preserved-not-deleted). Signoff asymmetry, decided honestly against thinking/assumption.md: DEAD (kills a premise, cluster-wide fallout) and HOLDS (re-affirms, SILENCES the review signal) both REQUIRE a decided_by Stakeholder — the same altitude as closing a Conflict (R-decided-needs-human-signoff, R-ai-presents-not-decides); UNCERTAIN merely RAISES a question (adds a P4 review signal, removes none), which is exactly the operator's PRESENT step, so the agent may present it alone. The transition fails closed to the T2 full suite because an assumption carries no enforced_by to bound its fallout."),
+            relations=(Relation("supports", "R-conflict-is-connector-node"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_assumption_transition.py::test_validate_uncertain_needs_no_signoff", "test_assumption_transition.py::test_validate_dead_and_holds_require_signoff", "test_assumption_transition.py::test_holds_uncertain_dead_cycle", "test_assumption_transition.py::test_transition_missing_assumption_is_refused", "test_assumption_transition.py::test_dead_transition_surfaces_drift_fallout",),
+        ),
+        Requirement(
+            id="R-machine-check-syntactic",
+            claim=("Every non-empty Assumption.machine_check shall be a well-formed Python expression (compilable in eval mode), never free prose."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The machine_check field was carried by 2 of 12 assumptions ('python.version >= (3, 12)', 'len(graph.requirements) + len(graph.conflicts) < 10_000') and had NEVER been checked in any way — pure invisible substrate. check_assumption_machine_checks_syntactic compiles each non-empty machine_check in eval mode; a SyntaxError is a Violation. The honesty boundary is deliberate and documented (R-uncrystallizable-automated): it does NOT execute or assert-true the formula, because the two real formulas evaluate against DIFFERENT, not-yet-materialized namespaces ('python' is not a defined object as written; 'graph' expects a binding), and §Assumption states machine_check is 'carried but not run' (spec-stack layers 4/5 deferred). What is guaranteed structurally without inventing semantics is that the recorded formula is a compilable expression — the seam the deferred Z3/Hypothesis layers attach to — rather than prose masquerading as machine_check. Promoting to real execution is a separate later atom once a domain supplies the evaluation namespace."),
+            relations=(Relation("supports", "R-stale-substrate"),),
+            enforcement=ENFORCED,
+            enforced_by=("check_assumption_machine_checks_syntactic", "test_assumption_machine_check.py::test_registered_in_all_invariants", "test_assumption_machine_check.py::test_compilable_formula_passes", "test_assumption_machine_check.py::test_python_version_formula_passes", "test_assumption_machine_check.py::test_empty_machine_check_is_skipped", "test_assumption_machine_check.py::test_prose_formula_fires_violation", "test_assumption_machine_check.py::test_real_domain_machine_checks_are_syntactic",),
+        ),
+        Requirement(
+            id="R-uncertain-assumptions-surface",
+            claim=("The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Blind spot found in the fxx assumption-life audit (2026-07-03): DEAD lights up P2 DRIFT_FALLOUT and HOLDS is calm, but an UNCERTAIN assumption aged invisibly — nowhere in the harness — even though the three real UNCERTAIN assumptions carry 58 / 37 / 9 dependent requirements (A-bootstrap-self-applies is the single largest silent question in the graph). uncertain_assumptions(g) is a pure status filter (peer of dead_assumptions); the K=UNCERTAIN_AGING_MIN_DEPENDENTS=5 threshold (chosen against the real graph so all three high-fan-out questions clear it and low-fan-out doubt stays quiet) gates one P4 action per aged assumption, pointing the steward at the AssumptionTransition kill-path (DEAD) or re-affirmation (HOLDS). Graph-only and deterministic, so it lives in what_now.diagnose(g) exactly like the P2 DEAD-fallout band, not as a CLI-only filesystem band."),
+            relations=(Relation("supports", "R-agent-never-lost"),),
+            enforcement=ENFORCED,
+            enforced_by=("test_uncertain_aging.py::test_uncertain_assumptions_filter", "test_uncertain_aging.py::test_below_threshold_is_silent", "test_uncertain_aging.py::test_at_threshold_surfaces_one_p4_action", "test_uncertain_aging.py::test_holds_assumption_never_ages", "test_uncertain_aging.py::test_real_graph_surfaces_three_uncertain_assumptions",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

@@ -76,6 +76,7 @@ from hotam_spec.graph import (  # noqa: E402
     latent_connector_clusters,
     load_content_graph,
     requirements_on_assumption,
+    uncertain_assumptions,
 )
 from hotam_spec.invariants import all_violations  # noqa: E402
 from hotam_spec.reflection import all_findings  # noqa: E402
@@ -89,6 +90,14 @@ P_CONFLICT_STALLED = 3
 P_OPEN_ITEM = 4
 P_LATENT_CONNECTOR = 5
 P_PENDING_PROPOSAL = 6
+
+#: Canon: §Harness — UNCERTAIN-aging threshold (R-uncertain-assumptions-surface).
+#: An UNCERTAIN assumption with at least this many dependent Requirements is a
+#: standing review debt worth a P4 action; below it the doubt is too local to
+#: be worth a line. 5 was chosen against the real hotam-spec-self graph, where
+#: the three UNCERTAIN assumptions carry 58 / 37 / 9 dependents — all three are
+#: genuinely high-fan-out silent questions, none is noise.
+UNCERTAIN_AGING_MIN_DEPENDENTS = 5
 
 _BAND_LABEL = {
     P_REFLECTION: "REFLECTION",
@@ -246,6 +255,32 @@ def diagnose(g: TensionGraph) -> list[Action]:
                         ),
                     )
                 )
+
+    # P4 OPEN_ITEM (continued) — UNCERTAIN-aging: an assumption under question
+    # that a large number of Requirements still rest on is the graph's biggest
+    # SILENT question — nowhere surfaced today (DEAD lights up P2 fallout,
+    # HOLDS is calm, but UNCERTAIN aged invisibly). Fire ONE action per such
+    # assumption whose dependent-Requirement count reaches the threshold, so the
+    # steward is asked to resolve the doubt (kill it via an AssumptionTransition
+    # to DEAD, or re-affirm to HOLDS) rather than let it drift
+    # (R-uncertain-assumptions-surface).
+    for a in uncertain_assumptions(g):
+        dep_reqs = requirements_on_assumption(g, a.id)
+        if len(dep_reqs) < UNCERTAIN_AGING_MIN_DEPENDENTS:
+            continue
+        actions.append(
+            Action(
+                priority=P_OPEN_ITEM,
+                kind=_BAND_LABEL[P_OPEN_ITEM],
+                target=a.id,
+                imperative=(
+                    f"review assumption '{a.id}' ({a.statement!r}): still "
+                    f"UNCERTAIN with {len(dep_reqs)} dependent requirements — "
+                    f"resolve the doubt (transition to DEAD or re-affirm HOLDS) "
+                    f"or it drifts"
+                ),
+            )
+        )
 
     # P5 LATENT_CONNECTOR — heuristic missing-connector suspects (for AI
     # review), CLUSTERED by shared-assumption signature: one action per

@@ -25,7 +25,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from hotam_spec.assumption import DEAD, Assumption
+from hotam_spec.assumption import DEAD, UNCERTAIN, Assumption
 from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict
 from hotam_spec.entity import EntityInstance, EntityType
@@ -582,6 +582,22 @@ def dead_assumptions(g: TensionGraph) -> tuple[Assumption, ...]:
     surface; a DEAD assumption is never silently dropped.
     """
     return tuple(a for a in g.assumptions if a.status == DEAD)
+
+
+def uncertain_assumptions(g: TensionGraph) -> tuple[Assumption, ...]:
+    """Canon: §Graph — assumptions currently flipped to UNCERTAIN.
+
+    RULE: an UNCERTAIN assumption is under question but not yet falsified — it is
+    NOT fallout (nothing has died), but a high-fan-out UNCERTAIN premise is a
+    standing review debt the harness surfaces (see what_now's UNCERTAIN-aging
+    band, R-uncertain-assumptions-surface). A UNCERTAIN assumption that nothing
+    rests on is invisible-and-harmless; one many requirements rest on is the
+    largest silent question in the graph.
+
+    WHY a peer of dead_assumptions(): DEAD lights up fallout (P2); UNCERTAIN
+    lights up review pressure (P4). Both are pure status filters over g.
+    """
+    return tuple(a for a in g.assumptions if a.status == UNCERTAIN)
 
 
 # ---------------------------------------------------------------------------

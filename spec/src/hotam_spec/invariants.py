@@ -2203,6 +2203,51 @@ def check_transition_guard_assumption_resolves(g: TensionGraph) -> list[Violatio
     return out
 
 
+def check_assumption_machine_checks_syntactic(g: TensionGraph) -> list[Violation]:
+    """Canon: §Assumption / §Invariants — every non-empty machine_check is a well-formed
+    Python EXPRESSION (compilable), not free prose.
+
+    RULE: for each Assumption whose machine_check is non-empty, compile it in
+    'eval' mode; a SyntaxError is a Violation on the assumption id. An empty
+    machine_check is skipped (the field is optional). This does NOT execute the
+    formula and does NOT assert it is TRUE — see the honesty boundary below.
+
+    WHY only a syntax check, deliberately (the honesty boundary): the two
+    machine_checks carried in the self-domain graph evaluate against DIFFERENT,
+    not-yet-materialized namespaces — 'python.version >= (3, 12)' names a
+    `python` object that does not exist as written, and
+    'len(graph.requirements) + len(graph.conflicts) < 10_000' expects a `graph`
+    binding. There is today no single agreed namespace over which every
+    machine_check is executable, so EXECUTING them (§Assumption docstring:
+    'machine_check is carried but not run' — spec-stack layers 4/5 deferred)
+    would require inventing that namespace, which R-uncrystallizable-automated
+    forbids doing speculatively. What CAN be guaranteed structurally, without
+    inventing semantics, is that the recorded formula is a well-formed
+    expression — a compilable seam the deferred Z3/Hypothesis layers can later
+    attach to — rather than prose masquerading as a machine_check. Promoting
+    this to real execution is a separate, later act (a new atom) once a domain
+    supplies the evaluation namespace.
+    """
+    out: list[Violation] = []
+    for a in g.assumptions:
+        mc = (a.machine_check or "").strip()
+        if not mc:
+            continue
+        try:
+            compile(mc, "<machine_check>", "eval")
+        except SyntaxError as exc:
+            out.append(
+                Violation(
+                    "check_assumption_machine_checks_syntactic",
+                    a.id,
+                    f"machine_check {mc!r} is not a well-formed Python "
+                    f"expression ({exc.msg}) — it must be a compilable formula "
+                    f"or empty, never prose",
+                )
+            )
+    return out
+
+
 def check_entity_instance_state_in_lifecycle(g: TensionGraph) -> list[Violation]:
     """Canon: §Entity / §Invariants — every EntityInstance.state is valid in its EntityType.lifecycle.
 
@@ -3618,6 +3663,12 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "walks the filesystem + AST-parses docstrings; not a graph-field check",
     ),
     InvariantClassification(
+        "check_assumption_machine_checks_syntactic",
+        BESPOKE,
+        "compiles a free-text formula in eval mode (syntax validity of an "
+        "expression), not a registry-membership or single-field lookup",
+    ),
+    InvariantClassification(
         "check_method_matches_docstring",
         BESPOKE,
         "the meta-invariant that makes TABLE_DRIVEN-vs-BESPOKE distinguishable at all (inspects source)",
@@ -3885,6 +3936,8 @@ ALL_INVARIANTS = (
     # §Entity aspect invariants (aspect-gated: no-op when g.entity_types/entities empty)
     check_entity_type_lifecycle_wellformed,
     check_transition_guard_assumption_resolves,
+    # §Assumption — machine_check well-formedness (syntax seam for layers 4/5)
+    check_assumption_machine_checks_syntactic,
     check_entity_instance_state_in_lifecycle,
     check_entity_instance_required_fields,
     check_entity_instance_id_prefix,

@@ -237,6 +237,20 @@ Canon: §Graph — assumptions currently flipped to DEAD.
 RULE: every DEAD assumption with live dependents is fallout the harness MUST
 surface; a DEAD assumption is never silently dropped.
 
+## From `spec/src/hotam_spec/graph.py::uncertain_assumptions`
+
+Canon: §Graph — assumptions currently flipped to UNCERTAIN.
+
+RULE: an UNCERTAIN assumption is under question but not yet falsified — it is
+NOT fallout (nothing has died), but a high-fan-out UNCERTAIN premise is a
+standing review debt the harness surfaces (see what_now's UNCERTAIN-aging
+band, R-uncertain-assumptions-surface). A UNCERTAIN assumption that nothing
+rests on is invisible-and-harmless; one many requirements rest on is the
+largest silent question in the graph.
+
+WHY a peer of dead_assumptions(): DEAD lights up fallout (P2); UNCERTAIN
+lights up review pressure (P4). Both are pure status filters over g.
+
 ## From `spec/src/hotam_spec/graph.py::is_empty`
 
 Canon: §Graph — True iff no domain content has been loaded.

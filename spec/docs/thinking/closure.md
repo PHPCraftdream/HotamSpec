@@ -85,4 +85,8 @@ Canon: §Closure — the assumption id is the anchor of this proposal.
 
 ## From `spec/src/hotam_spec/proposal.py::target_anchor`
 
+Canon: §Closure — the Assumption id this transition is meant to change.
+
+## From `spec/src/hotam_spec/proposal.py::target_anchor`
+
 Canon: §Closure — the entity slug is the anchor of this proposal.

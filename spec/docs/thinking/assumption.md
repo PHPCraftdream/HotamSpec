@@ -18,8 +18,8 @@ it. That is only catchable because the assumption carries its own status.
 WHY assumptions are first-class (not prose inside a requirement): conflicts and
 requirements INHERIT drift. When an Assumption flips to DEAD, every Conflict and
 Requirement resting on it must light up at once — one trigger re-opens a whole
-semantic cluster (see graph.dependents_of_dead_assumptions and what_now's
-dead-assumption fallout). A shared assumption interpreted two different ways is
+semantic cluster (see graph.dead_assumptions + graph.requirements_on_assumption
+and what_now's dead-assumption fallout). A shared assumption interpreted two different ways is
 also frequently the REAL root of a Conflict (Conflict.shared_assumption).
 
 Lifecycle (the source of truth is the `status` field, params.py-style):
@@ -48,3 +48,29 @@ Fields:
 WHY machine_check is carried but not run: spec-stack layer 5 (Z3 conflict
 detector) and layer 4 (Hypothesis latent-connector hunt) are deferred; the
 field is the seam where they attach without reshaping the ontology.
+
+## From `spec/src/hotam_spec/invariants.py::check_assumption_machine_checks_syntactic`
+
+Canon: §Assumption / §Invariants — every non-empty machine_check is a well-formed
+Python EXPRESSION (compilable), not free prose.
+
+RULE: for each Assumption whose machine_check is non-empty, compile it in
+'eval' mode; a SyntaxError is a Violation on the assumption id. An empty
+machine_check is skipped (the field is optional). This does NOT execute the
+formula and does NOT assert it is TRUE — see the honesty boundary below.
+
+WHY only a syntax check, deliberately (the honesty boundary): the two
+machine_checks carried in the self-domain graph evaluate against DIFFERENT,
+not-yet-materialized namespaces — 'python.version >= (3, 12)' names a
+`python` object that does not exist as written, and
+'len(graph.requirements) + len(graph.conflicts) < 10_000' expects a `graph`
+binding. There is today no single agreed namespace over which every
+machine_check is executable, so EXECUTING them (§Assumption docstring:
+'machine_check is carried but not run' — spec-stack layers 4/5 deferred)
+would require inventing that namespace, which R-uncrystallizable-automated
+forbids doing speculatively. What CAN be guaranteed structurally, without
+inventing semantics, is that the recorded formula is a well-formed
+expression — a compilable seam the deferred Z3/Hypothesis layers can later
+attach to — rather than prose masquerading as a machine_check. Promoting
+this to real execution is a separate, later act (a new atom) once a domain
+supplies the evaluation namespace.

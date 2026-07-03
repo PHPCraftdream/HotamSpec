@@ -120,6 +120,45 @@ only by requirements that are actually about the same claim — is the
 mechanical remedy; this proposal kind is how a narrower Assumption node
 gets materialized without hand-editing the graph (R-no-hand-edit-graph).
 
+## From `spec/src/hotam_spec/proposal.py::ProposedAssumptionTransition`
+
+Canon: §Proposal / §Assumption — propose CHANGING an existing Assumption's status
+(the assumption kill-path: HOLDS → UNCERTAIN → DEAD and back).
+
+RULE: kind='AssumptionTransition'. `assumption_id` MUST already exist in the
+active domain's graph. `new_status` MUST be one of ASSUMPTION_STATES
+(HOLDS | UNCERTAIN | DEAD). `reason` MUST be non-empty — a status change with
+no recorded reason is drift, not a decision. The apply_proposal tool UPDATES
+the existing Assumption(...) call's status= field in place and APPENDS the
+reason to its statement (NEVER deletes the node — the assumption survives its
+own death, mirroring R-rejected-preserved-not-deleted).
+
+SIGNOFF asymmetry (`decided_by`): a transition that REDUCES live signal needs
+a named human, a transition that RAISES it does not.
+  - new_status == DEAD  → decided_by REQUIRED (a Stakeholder id). Killing a
+    premise is a factual claim about the world with cluster-wide fallout —
+    the same altitude as closing a Conflict, so it carries the same signoff
+    lock (R-decided-needs-human-signoff, R-trust-anchor-mechanism). The AI
+    NEVER kills an assumption silently (R-ai-presents-not-decides).
+  - new_status == HOLDS → decided_by REQUIRED. Re-affirming a previously
+    doubted premise SILENCES the review/fallout signal it was raising;
+    re-trusting is as consequential as killing, so it too needs a human.
+  - new_status == UNCERTAIN → decided_by OPTIONAL. Moving to UNCERTAIN only
+    RAISES a question (it ADDS a P4 review signal, removes none); surfacing
+    doubt is exactly the operator's PRESENT step, which R-ai-presents-not-
+    decides permits the agent to do alone. (Decided honestly per
+    thinking/assumption.md: UNCERTAIN is 'under question, not yet
+    falsified' — a question opened, not a decision closed.)
+
+WHY a transition kind at all: drift of assumptions is the DECLARED root of
+the methodology (§Assumption — 'the root of context drift'), yet with only
+ProposedAssumption (add-only) and the hand-edit lock, no assumption could
+EVER change status — the kill-path was mechanically absent, so a DEAD
+assumption's cluster-wide fallout (graph.dead_assumptions +
+graph.requirements_on_assumption, what_now P2 DRIFT_FALLOUT) could never
+actually fire. This kind is that
+missing edge.
+
 ## From `spec/src/hotam_spec/proposal.py::ProposedEntityType`
 
 Canon: §Proposal — propose a new EntityType to add to the active domain's graph.

@@ -246,8 +246,8 @@ it. That is only catchable because the assumption carries its own status.
 WHY assumptions are first-class (not prose inside a requirement): conflicts and
 requirements INHERIT drift. When an Assumption flips to DEAD, every Conflict and
 Requirement resting on it must light up at once — one trigger re-opens a whole
-semantic cluster (see graph.dependents_of_dead_assumptions and what_now's
-dead-assumption fallout). A shared assumption interpreted two different ways is
+semantic cluster (see graph.dead_assumptions + graph.requirements_on_assumption
+and what_now's dead-assumption fallout). A shared assumption interpreted two different ways is
 also frequently the REAL root of a Conflict (Conflict.shared_assumption).
 
 Lifecycle (the source of truth is the `status` field, params.py-style):

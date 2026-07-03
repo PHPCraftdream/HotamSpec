@@ -251,6 +251,9 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-tension-audit-presents-only` | SETTLED | `framework-author` | — | tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict. |
 | `R-tension-audit-staleness-visible` | SETTLED | `framework-author` | — | The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the tension audit has never run or the live SETTLED graph has grown by more than GENERATIVE_AUDIT_STALE_DELTA atoms since the last recorded sweep. |
 | `R-revisit-markers-evaluated` | SETTLED | `framework-author` | — | The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago. |
+| `R-assumption-transition-kind-exists` | SETTLED | `framework-author` | — | The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD) in place via tools/apply_proposal.py, appending the reason to its statement and never deleting the node. |
+| `R-machine-check-syntactic` | SETTLED | `framework-author` | — | Every non-empty Assumption.machine_check shall be a well-formed Python expression (compilable in eval mode), never free prose. |
+| `R-uncertain-assumptions-surface` | SETTLED | `framework-author` | — | The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt. |
 
 ## Stakeholders
 
@@ -507,8 +510,8 @@ it. That is only catchable because the assumption carries its own status.
 WHY assumptions are first-class (not prose inside a requirement): conflicts and
 requirements INHERIT drift. When an Assumption flips to DEAD, every Conflict and
 Requirement resting on it must light up at once — one trigger re-opens a whole
-semantic cluster (see graph.dependents_of_dead_assumptions and what_now's
-dead-assumption fallout). A shared assumption interpreted two different ways is
+semantic cluster (see graph.dead_assumptions + graph.requirements_on_assumption
+and what_now's dead-assumption fallout). A shared assumption interpreted two different ways is
 also frequently the REAL root of a Conflict (Conflict.shared_assumption).
 
 Lifecycle (the source of truth is the `status` field, params.py-style):

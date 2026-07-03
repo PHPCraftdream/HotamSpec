@@ -144,10 +144,11 @@ from hotam_spec.conflict import Variant, conflict_identity  # noqa: E402
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
 from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
-from hotam_spec.assumption import ASSUMPTION_STATES  # noqa: E402
+from hotam_spec.assumption import ASSUMPTION_STATES, DEAD, HOLDS  # noqa: E402
 from hotam_spec.proposal import (  # noqa: E402
     Proposal,
     ProposedAssumption,
+    ProposedAssumptionTransition,
     ProposedAxis,
     ProposedConflict,
     ProposedConflictTransition,
@@ -260,10 +261,13 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_axis(raw)
     if kind == "Assumption":
         return _validate_assumption(raw)
+    if kind == "AssumptionTransition":
+        return _validate_assumption_transition(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
         f"Supported: 'ConflictTransition', 'Conflict', 'Requirement', "
-        f"'Rejection', 'EntityType', 'OperatorBudget', 'Axis', 'Assumption'."
+        f"'Rejection', 'EntityType', 'OperatorBudget', 'Axis', 'Assumption', "
+        f"'AssumptionTransition'."
     )
 
 
@@ -513,6 +517,46 @@ def _validate_assumption(raw: dict) -> ProposedAssumption:
         status=status,
         owner=owner,
         why=why if isinstance(why, str) else "",
+    )
+
+
+def _validate_assumption_transition(raw: dict) -> ProposedAssumptionTransition:
+    """Parse and validate an AssumptionTransition proposal (the kill-path).
+
+    RULE: assumption_id + non-empty reason required; new_status in
+    ASSUMPTION_STATES; decided_by REQUIRED when new_status in (DEAD, HOLDS)
+    (the signoff asymmetry — see ProposedAssumptionTransition docstring).
+    """
+    assumption_id = raw.get("assumption_id", "").strip()
+    if not assumption_id:
+        raise ValueError(
+            "'assumption_id' is required for an AssumptionTransition proposal."
+        )
+    new_status = raw.get("new_status", "").strip()
+    if new_status not in ASSUMPTION_STATES:
+        raise ValueError(
+            f"'new_status' must be one of {sorted(ASSUMPTION_STATES)}; "
+            f"got '{new_status}'."
+        )
+    reason = raw.get("reason", "").strip()
+    if not reason:
+        raise ValueError(
+            "'reason' is required and must be non-empty — an assumption status "
+            "change with no recorded reason is drift, not a decision."
+        )
+    decided_by = raw.get("decided_by", "").strip()
+    if new_status in (DEAD, HOLDS) and not decided_by:
+        raise ValueError(
+            f"'decided_by' (a Stakeholder id) is required when new_status is "
+            f"'{new_status}': a transition that reduces live signal needs a "
+            f"named human signoff (R-trust-anchor-mechanism, "
+            f"R-ai-presents-not-decides)."
+        )
+    return ProposedAssumptionTransition(
+        assumption_id=assumption_id,
+        new_status=new_status,
+        reason=reason,
+        decided_by=decided_by,
     )
 
 
@@ -1778,6 +1822,118 @@ def _apply_assumption_to_source(source_text: str, proposal: ProposedAssumption) 
     return result
 
 
+def _find_assumption_call(tree: ast.AST, assumption_id: str) -> ast.Call | None:
+    """Canon: §Proposal — locate the Assumption(...) AST call whose id matches.
+
+    Mirrors _find_requirement_call: walks the AST for ast.Call nodes named
+    'Assumption', matches on the id= string-literal kwarg.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id != "Assumption":
+            continue
+        if isinstance(func, ast.Attribute) and func.attr != "Assumption":
+            continue
+        for kw in node.keywords:
+            if kw.arg == "id" and isinstance(kw.value, ast.Constant):
+                if kw.value.value == assumption_id:
+                    return node  # type: ignore[return-value]
+    return None
+
+
+def _apply_assumption_transition(
+    source_text: str, proposal: ProposedAssumptionTransition
+) -> str:
+    """Apply a ProposedAssumptionTransition: UPDATE an existing Assumption's status
+    and APPEND the reason to its statement. NEVER deletes the node.
+
+    Pre-write validation (raises RuntimeError, nothing written):
+      - the target Assumption id MUST already exist (a transition addresses an
+        existing belief, never creates one — creation is ProposedAssumption).
+
+    Determinism: the status= value is written as the BARE constant name
+    (HOLDS/UNCERTAIN/DEAD) to match the domain graph's existing style, and the
+    constant import is ensured. The reason is appended to the statement string
+    with a ' — <reason>' separator so the drift history is preserved in the
+    node itself (mirrors R-rejected-preserved-not-deleted for assumptions).
+    """
+    tree = ast.parse(source_text)
+    call_node = _find_assumption_call(tree, proposal.assumption_id)
+    if call_node is None:
+        raise RuntimeError(
+            f"Assumption with id='{proposal.assumption_id}' not found in "
+            f"{_CONTENT_GRAPH}. No changes made — an AssumptionTransition "
+            f"addresses an EXISTING assumption (creation is a ProposedAssumption)."
+        )
+
+    # 1. Append reason to the statement value (preserve the falsification trail).
+    lines = source_text.splitlines(keepends=True)
+    stmt_kw = next((kw for kw in call_node.keywords if kw.arg == "statement"), None)
+    if stmt_kw is not None and isinstance(stmt_kw.value, ast.Constant):
+        old_statement = stmt_kw.value.value
+        new_statement = f"{old_statement} — [{proposal.new_status}] {proposal.reason}"
+        lines = _replace_or_insert_field(
+            lines, call_node, "statement", new_statement
+        )
+        # Re-parse: line numbers of the status kwarg may have shifted if the
+        # statement replacement changed the line count.
+        tree = ast.parse("".join(lines))
+        call_node = _find_assumption_call(tree, proposal.assumption_id)
+        if call_node is None:
+            raise RuntimeError(
+                f"Lost track of Assumption '{proposal.assumption_id}' after "
+                f"appending the transition reason to its statement."
+            )
+
+    # 2. Replace the status= value with the BARE constant name (not a quoted
+    #    string) to match the domain graph style. _replace_or_insert_field via
+    #    _python_repr would quote it, so we do a targeted value-node edit here.
+    status_kw = next((kw for kw in call_node.keywords if kw.arg == "status"), None)
+    if status_kw is None:
+        raise RuntimeError(
+            f"Assumption '{proposal.assumption_id}' has no status= kwarg to "
+            f"transition. No changes made."
+        )
+    val_node = status_kw.value
+    lineno = val_node.lineno - 1
+    line = lines[lineno]
+    col = _byte_col_to_char_col(line, val_node.col_offset)
+    end_col = _byte_col_to_char_col(line, val_node.end_col_offset)
+    lines[lineno] = line[:col] + proposal.new_status + line[end_col:]
+    result = "".join(lines)
+
+    # 3. Ensure the status constant (HOLDS/UNCERTAIN/DEAD) is imported.
+    if not _re.search(
+        rf"^from hotam_spec\.assumption import\b.*\b{proposal.new_status}\b",
+        result,
+        _re.MULTILINE,
+    ):
+        m = _re.search(
+            r"^from hotam_spec\.assumption import ([^\n]+)", result, _re.MULTILINE
+        )
+        if m:
+            existing = m.group(1)
+            names = [n.strip() for n in existing.split(",")]
+            if proposal.new_status not in names:
+                names.append(proposal.new_status)
+            new_import = ", ".join(names)
+            result = result.replace(
+                f"from hotam_spec.assumption import {existing}",
+                f"from hotam_spec.assumption import {new_import}",
+                1,
+            )
+        else:
+            result = result.replace(
+                "from __future__ import annotations\n",
+                "from __future__ import annotations\n\n"
+                f"from hotam_spec.assumption import {proposal.new_status}\n",
+                1,
+            )
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Apply: OperatorBudget
 # ---------------------------------------------------------------------------
@@ -2270,6 +2426,11 @@ def apply(
     target_preexisting = True
     if isinstance(proposal, (ProposedConflict, ProposedAxis, ProposedAssumption)):
         target_preexisting = False
+    elif isinstance(proposal, ProposedAssumptionTransition):
+        # An assumption status change (esp. → DEAD) has cluster-wide fallout the
+        # assumption's own enforced_by cannot bound (assumptions carry none) —
+        # fail closed to the T2 full suite (R-land-gate-tier-selector-fails-closed).
+        target_preexisting = False
     elif isinstance(proposal, ProposedRequirement):
         pre_tree = ast.parse(source_text)
         target_preexisting = _find_requirement_call(pre_tree, proposal.id) is not None
@@ -2298,6 +2459,9 @@ def apply(
             lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedAssumption):
             new_source = _apply_assumption_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedAssumptionTransition):
+            new_source = _apply_assumption_transition(source_text, proposal)
             lines = new_source.splitlines(keepends=True)
         else:
             print(
