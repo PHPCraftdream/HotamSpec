@@ -235,7 +235,10 @@ the whole cluster under it must revive at once — one trigger, one cluster.
 Canon: §Graph — assumptions currently flipped to DEAD.
 
 RULE: every DEAD assumption with live dependents is fallout the harness MUST
-surface; a DEAD assumption is never silently dropped.
+surface; a DEAD assumption is never silently dropped. The filter keys off
+exact status equality, so the volitional IMPLEMENTS status is naturally
+excluded — an aspiration is not a broken premise
+(R-assumption-implements-state).
 
 ## From `spec/src/hotam_spec/graph.py::uncertain_assumptions`
 
@@ -249,7 +252,10 @@ rests on is invisible-and-harmless; one many requirements rest on is the
 largest silent question in the graph.
 
 WHY a peer of dead_assumptions(): DEAD lights up fallout (P2); UNCERTAIN
-lights up review pressure (P4). Both are pure status filters over g.
+lights up review pressure (P4). Both are pure status filters over g. The
+volitional IMPLEMENTS status is excluded by the exact-equality filter — an
+aspiration is not an unresolved doubt and must raise NO review-debt signal
+(R-assumption-implements-state).
 
 ## From `spec/src/hotam_spec/graph.py::is_empty`
 

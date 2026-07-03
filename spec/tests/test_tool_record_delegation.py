@@ -207,3 +207,110 @@ def test_seed_delegation_del_1_exists() -> None:
     assert rec["steward"] == "domain-user"
     assert rec["date"] == "2026-07-02"
     assert "campaign" in rec["scope"]
+
+
+# ---------------------------------------------------------------------------
+# 6. status field + close (revoke) mechanic
+# ---------------------------------------------------------------------------
+
+
+def test_new_record_is_born_active(tmp_path: Path) -> None:
+    path = tmp_path / "delegations.jsonl"
+    record_delegation.record_delegation(
+        steward="domain-user",
+        verbatim="v",
+        scope="campaign: s",
+        date="2026-07-03",
+        graph=_g(),
+        delegations_path=path,
+    )
+    rec = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    assert rec["status"] == "active"
+    assert rec["closed_date"] == ""
+
+
+def test_close_flips_status_and_stamps_date(tmp_path: Path) -> None:
+    path = tmp_path / "delegations.jsonl"
+    record_delegation.record_delegation(
+        steward="domain-user", verbatim="v", scope="campaign: s",
+        date="2026-07-03", graph=_g(), delegations_path=path,
+    )
+    rc = record_delegation.close_delegation(
+        delegation_id="DEL-1", date="2026-07-04", delegations_path=path
+    )
+    assert rc == 0
+    rec = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    assert rec["status"] == "closed"
+    assert rec["closed_date"] == "2026-07-04"
+    # verbatim/scope/date trail preserved untouched
+    assert rec["verbatim"] == "v"
+    assert rec["scope"] == "campaign: s"
+    assert rec["date"] == "2026-07-03"
+
+
+def test_close_unknown_id_refused(tmp_path: Path) -> None:
+    path = tmp_path / "delegations.jsonl"
+    record_delegation.record_delegation(
+        steward="domain-user", verbatim="v", scope="campaign: s",
+        graph=_g(), delegations_path=path,
+    )
+    rc = record_delegation.close_delegation(
+        delegation_id="DEL-99", delegations_path=path
+    )
+    assert rc == 1
+
+
+def test_close_already_closed_refused(tmp_path: Path) -> None:
+    path = tmp_path / "delegations.jsonl"
+    record_delegation.record_delegation(
+        steward="domain-user", verbatim="v", scope="campaign: s",
+        graph=_g(), delegations_path=path,
+    )
+    record_delegation.close_delegation(delegation_id="DEL-1", delegations_path=path)
+    rc = record_delegation.close_delegation(
+        delegation_id="DEL-1", delegations_path=path
+    )
+    assert rc == 1
+
+
+def test_close_backfills_legacy_records_status(tmp_path: Path) -> None:
+    """A pre-status legacy record gains an explicit status on the next close."""
+    path = tmp_path / "delegations.jsonl"
+    path.write_text(
+        json.dumps({"id": "DEL-1", "steward": "domain-user", "verbatim": "x",
+                    "date": "2026-01-01", "scope": "s"}) + "\n"
+        + json.dumps({"id": "DEL-2", "steward": "domain-user", "verbatim": "y",
+                      "date": "2026-01-02", "scope": "s"}) + "\n",
+        encoding="utf-8",
+    )
+    record_delegation.close_delegation(
+        delegation_id="DEL-2", date="2026-07-04", delegations_path=path
+    )
+    recs = [json.loads(ln) for ln in path.read_text(encoding="utf-8").splitlines()]
+    assert recs[0]["status"] == "active"  # backfilled
+    assert recs[1]["status"] == "closed"
+
+
+def test_seed_del_1_is_active_with_status_field() -> None:
+    """The committed DEL-1 carries the status lifecycle field, born active."""
+    domains_root = _SPEC_ROOT.parent / "domains"
+    path = domains_root / "hotam-spec-self" / "delegations.jsonl"
+    rec = json.loads(
+        [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()][0]
+    )
+    assert rec["status"] == "active"
+    assert rec.get("closed_date", "") == ""
+
+
+def test_cli_close_end_to_end(tmp_path: Path, monkeypatch) -> None:
+    """main(--close DEL-1) resolves through the CLI and flips status."""
+    path = tmp_path / "delegations.jsonl"
+    record_delegation.record_delegation(
+        steward="domain-user", verbatim="v", scope="campaign: s",
+        graph=_g(), delegations_path=path,
+    )
+    monkeypatch.setattr(record_delegation, "_delegations_path", lambda *a, **k: path)
+    rc = record_delegation.main(["--close", "DEL-1", "--date", "2026-07-05"])
+    assert rc == 0
+    rec = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    assert rec["status"] == "closed" and rec["closed_date"] == "2026-07-05"

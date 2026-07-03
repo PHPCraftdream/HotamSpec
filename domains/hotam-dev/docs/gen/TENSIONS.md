@@ -26,7 +26,7 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **context:** R-wave-strictly-sequential demands that waves touching overlapping files/scopes run strictly sequentially (never concurrently) to avoid racing a shared working tree, while R-worktree-parallel-permitted sanctions running mutating pipeline agents in parallel when each is isolated in its own git worktree -- the same pipeline both forbids overlapping-scope concurrency and permits isolated concurrency, and the boundary (when is isolation sufficient to relax strict sequencing?) is undecided
 - **members:** `R-wave-strictly-sequential`, `R-worktree-parallel-permitted`
 - **steward:** `dev-steward`
-- **lifecycle:** DETECTED
+- **lifecycle:** DECIDED(no real tension: worktree isolation removes the shared-files premise; the sequentiality rule governs shared working copies only. Steward verdict 2026-07-03 (V5), verbatim: «здесь нет противоерчия. Worktree - это как бы не параллельно». A worktree is not truly parallel work on the same files -- each worktree is an isolated copy, so the strict-sequential wave rule (which exists to prevent two agents clobbering one shared working tree) simply does not apply there; the two requirements never actually collide. Decided by dev-steward, 2026-07-03.)
 - **shared assumption:** `A-single-steward-session`
 
 ## Hotam-Specn map (Mermaid)

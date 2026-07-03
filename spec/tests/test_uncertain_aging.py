@@ -91,9 +91,17 @@ def test_real_graph_surfaces_three_uncertain_assumptions() -> None:
         and "still UNCERTAIN" in a.imperative
         and a.priority == what_now.P_OPEN_ITEM
     ]
-    # The three real UNCERTAIN assumptions (deps 58/37/9) all clear K=5.
-    assert {a.target for a in aging} == {
-        "A-bootstrap-self-applies",
-        "A-most-knowledge-crystallizable",
-        "A-prose-suffices",
-    }
+    # Signature-wave 2 (steward verdicts 2026-07-03) emptied the UNCERTAIN
+    # high-fan-out set:
+    #   - A-bootstrap-self-applies : UNCERTAIN → IMPLEMENTS (earlier wave,
+    #     R-assumption-implements-state) — a VOLITIONAL aspiration no longer
+    #     ages as a doubt.
+    #   - A-prose-suffices : UNCERTAIN → DEAD (V2, verbatim 'Тексты сами по
+    #     себе — это воздух без земли'). Its 37 dependents were re-linked onto
+    #     the new HOLDS assumption A-text-grounded-in-models, so it also drops
+    #     out of the aging set (a DEAD premise raises P2 fallout, not P4 doubt).
+    #   - A-most-knowledge-crystallizable : UNCERTAIN → IMPLEMENTS (V3, verbatim
+    #     'мы к этому стремимся') — likewise a striving, not a doubt.
+    # No UNCERTAIN assumption now clears the K=5 fan-out threshold, so the
+    # aging band is silent — the honest end-state of the wave.
+    assert {a.target for a in aging} == set()

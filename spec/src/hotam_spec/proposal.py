@@ -66,6 +66,15 @@ class ProposedConflictTransition:
     new_lifecycle: str  # the new value (e.g. "DECIDED(... rationale text ...)")
     decided_by: str = ""  # required when new_lifecycle starts with DECIDED or HELD
     revisit_marker: str = ""
+    shared_assumption: str = ""
+    # ^ optional re-point of the Conflict's shared_assumption edge. When a
+    # premise dies and is REPLACED by a narrower one, a DECIDED conflict that
+    # rested on the dead premise would otherwise raise perpetual P2 fallout
+    # (conflicts_on_assumption fires for any conflict whose shared_assumption is
+    # DEAD). Empty string = leave the existing edge untouched (the common case);
+    # a non-empty A-… id re-points the edge so the fallout tracks the LIVE
+    # premise the conflict actually rests on (R-no-hand-edit-graph — the only
+    # mechanical path to move this edge).
     derived: tuple[str, ...] = field(
         default_factory=tuple
     )  # R-ids spawned by this decision
@@ -132,6 +141,18 @@ class ProposedConflict:
     steward: str
     shared_assumption: str = ""
     note: str = ""
+    initial_lifecycle: str = "DETECTED"
+    # ^ normally DETECTED (creation is presentation, not decision —
+    # R-ai-presents-not-decides). A conflict between two SETTLED *constituting*
+    # atoms of the self-host graph, however, CANNOT rest at DETECTED: it would
+    # trip check_constituting_not_in_unresolved_conflict (the CONSTITUTION
+    # presents both as settled truth while the graph records them as an open,
+    # unstewarded contradiction). For that case ONLY, the steward may materialize
+    # the node already DECIDED(...) in one act, supplying decided_by. A DETECTED
+    # step between constituting atoms has no valid resting state, so splitting
+    # creation from decision is impossible here (R-constituting-requirements-
+    # converge). Any value starting with DECIDED REQUIRES decided_by.
+    decided_by: str = ""  # required when initial_lifecycle starts with DECIDED
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the computed C-… id this proposal will materialize.
@@ -266,7 +287,7 @@ class ProposedAssumptionTransition:
 
     RULE: kind='AssumptionTransition'. `assumption_id` MUST already exist in the
     active domain's graph. `new_status` MUST be one of ASSUMPTION_STATES
-    (HOLDS | UNCERTAIN | DEAD). `reason` MUST be non-empty — a status change with
+    (HOLDS | UNCERTAIN | DEAD | IMPLEMENTS). `reason` MUST be non-empty — a status change with
     no recorded reason is drift, not a decision. The apply_proposal tool UPDATES
     the existing Assumption(...) call's status= field in place and APPENDS the
     reason to its statement (NEVER deletes the node — the assumption survives its
@@ -288,6 +309,28 @@ class ProposedAssumptionTransition:
         decides permits the agent to do alone. (Decided honestly per
         thinking/assumption.md: UNCERTAIN is 'under question, not yet
         falsified' — a question opened, not a decision closed.)
+      - new_status == IMPLEMENTS → decided_by REQUIRED (R-assumption-implements-
+        state). IMPLEMENTS is the VOLITIONAL род (an aspiration, not a
+        fact-claim). Whatever the source, re-typing a claim to IMPLEMENTS
+        REMOVES live signal and CHANGES the род of the claim: from UNCERTAIN it
+        silences the P4 doubt signal ('we understood this is not a fact but a
+        goal'); from HOLDS it retracts a fact-declaration made too early; and it
+        commits the graph to a stated striving. By the Wave-12 asymmetry (a
+        transition that reduces live signal / changes the род needs a named
+        human) it carries the signoff lock. The agent MAY still open plain
+        UNCERTAIN alone, but declaring an aspiration is a steward act.
+
+    TRANSITION TABLE (source → target : who signs):
+      *          → UNCERTAIN   : agent (no signoff) — RAISES a doubt signal.
+      *          → HOLDS       : human (decided_by)  — re-affirms a fact.
+      *          → DEAD        : human (decided_by)  — kills a premise.
+      UNCERTAIN  → IMPLEMENTS  : human (decided_by)  — 'not a fact, a goal';
+                                 changes род, drops the P4 doubt signal.
+      HOLDS      → IMPLEMENTS  : human (decided_by)  — 'declared fact too early'.
+      IMPLEMENTS → HOLDS       : human (decided_by)  — 'achieved, became fact'.
+      IMPLEMENTS → DEAD        : human (decided_by)  — 'abandoned the striving'.
+    (The validator keys the lock on `new_status` alone: DEAD/HOLDS/IMPLEMENTS
+    all require decided_by; only UNCERTAIN is agent-enterable.)
 
     WHY a transition kind at all: drift of assumptions is the DECLARED root of
     the methodology (§Assumption — 'the root of context drift'), yet with only
@@ -300,9 +343,9 @@ class ProposedAssumptionTransition:
     """
 
     assumption_id: str  # the A-… anchor being transitioned
-    new_status: str  # HOLDS | UNCERTAIN | DEAD
+    new_status: str  # HOLDS | UNCERTAIN | DEAD | IMPLEMENTS
     reason: str  # non-empty; appended to the Assumption's statement
-    decided_by: str = ""  # REQUIRED when new_status in (DEAD, HOLDS)
+    decided_by: str = ""  # REQUIRED when new_status in (DEAD, HOLDS, IMPLEMENTS)
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the Assumption id this transition is meant to change."""

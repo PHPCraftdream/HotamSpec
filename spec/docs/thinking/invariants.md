@@ -69,6 +69,23 @@ if the assumption is unowned.
 WHY: a dangling owner makes the assumption unanchored; drift detection depends
 on assumptions having a live, resolvable owner.
 
+## From `spec/src/hotam_spec/invariants.py::check_assumption_status_valid`
+
+Canon: §Invariants — every Assumption.status is a known ASSUMPTION_STATE.
+
+RULE (R-assumption-implements-state): for each Assumption, `status` MUST be
+one of ASSUMPTION_STATES (HOLDS | UNCERTAIN | DEAD | IMPLEMENTS). An
+unrecognised status is drift — the harness's status-keyed filters
+(dead_assumptions, uncertain_assumptions) silently skip it, so it would sit
+in the graph invisible to every diagnosis.
+
+WHY this is the enforcer of the IMPLEMENTS род: IMPLEMENTS is the fourth,
+VOLITIONAL status (an aspiration — 'we strive to make this true'), distinct
+from the three epistemic fact-claim statuses. This single-field
+set-membership check is what makes the new status a first-class, admitted
+value rather than an unchecked string: it accepts IMPLEMENTS and rejects any
+value outside ASSUMPTION_STATES.
+
 ## From `spec/src/hotam_spec/invariants.py::check_no_dangling_requirement_owner`
 
 Canon: §Invariants — every Requirement.owner resolves to a known Stakeholder.

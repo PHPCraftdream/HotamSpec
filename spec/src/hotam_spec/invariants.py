@@ -40,6 +40,7 @@ from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 
+from hotam_spec.assumption import ASSUMPTION_STATES
 from hotam_spec.conflict import conflict_identity
 from hotam_spec.enforcer_resolution import (
     check_to_tests_map as _enforcer_check_to_tests_map,
@@ -151,6 +152,36 @@ def check_no_dangling_assumption_owner(g: TensionGraph) -> list[Violation]:
                     "check_no_dangling_assumption_owner",
                     a.id,
                     f"assumption owner '{a.owner}' is not a known Stakeholder",
+                )
+            )
+    return out
+
+
+def check_assumption_status_valid(g: TensionGraph) -> list[Violation]:
+    """Canon: §Invariants — every Assumption.status is a known ASSUMPTION_STATE.
+
+    RULE (R-assumption-implements-state): for each Assumption, `status` MUST be
+    one of ASSUMPTION_STATES (HOLDS | UNCERTAIN | DEAD | IMPLEMENTS). An
+    unrecognised status is drift — the harness's status-keyed filters
+    (dead_assumptions, uncertain_assumptions) silently skip it, so it would sit
+    in the graph invisible to every diagnosis.
+
+    WHY this is the enforcer of the IMPLEMENTS род: IMPLEMENTS is the fourth,
+    VOLITIONAL status (an aspiration — 'we strive to make this true'), distinct
+    from the three epistemic fact-claim statuses. This single-field
+    set-membership check is what makes the new status a first-class, admitted
+    value rather than an unchecked string: it accepts IMPLEMENTS and rejects any
+    value outside ASSUMPTION_STATES.
+    """
+    out: list[Violation] = []
+    for a in g.assumptions:
+        if a.status not in ASSUMPTION_STATES:
+            out.append(
+                Violation(
+                    "check_assumption_status_valid",
+                    a.id,
+                    f"Assumption status '{a.status}' is not one of "
+                    f"{sorted(ASSUMPTION_STATES)} (R-assumption-implements-state)",
                 )
             )
     return out
@@ -3500,6 +3531,11 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "shape: for each Requirement, enforceability must be in ENFORCEABILITY_KINDS",
     ),
     InvariantClassification(
+        "check_assumption_status_valid",
+        TABLE_DRIVEN,
+        "shape: for each Assumption, status must be in ASSUMPTION_STATES",
+    ),
+    InvariantClassification(
         "check_goal_target_kind_known",
         TABLE_DRIVEN,
         "shape: for each Goal, target_state.kind must be in TARGET_KINDS",
@@ -3865,6 +3901,8 @@ def check_rules_as_data_classification_coherent(g: TensionGraph) -> list[Violati
 # ---------------------------------------------------------------------------
 
 ALL_INVARIANTS = (
+    # §Assumption — status enum-membership (admits the IMPLEMENTS род)
+    check_assumption_status_valid,
     # §Referential integrity (atomized; check_no_dangling_ids is the thin delegator)
     check_no_dangling_assumption_owner,
     check_no_dangling_requirement_owner,

@@ -10,25 +10,41 @@ domains/*/graph.py itself, NOT in spec/.runtime/ (gitignored, ephemeral tooling
 output — R-task-spawn-log-runtime's directory choice does not apply here: that
 log records TOOL invocations, this file records HUMAN authorization acts).
 
-Record shape (one JSON object per line, append-only, never rewritten):
+Record shape (one JSON object per line; the verbatim trail is append-only, the
+`status` field is the ONE mutable facet — a delegation has a lifecycle):
   {"id": "DEL-<n>", "steward": "<Stakeholder id>", "verbatim": "<exact wording>",
-   "date": "YYYY-MM-DD", "scope": "<campaign/case>"}
+   "date": "YYYY-MM-DD", "scope": "<campaign/case>", "status": "active",
+   "closed_date": ""}
 
 RULE: id is auto-incremented (DEL-1, DEL-2, ...) from the highest existing id
 in the file — never caller-supplied, so ids stay a stable, gapless append log.
 steward MUST be an existing Stakeholder id in the active domain's graph.
 verbatim and scope MUST be non-empty (an unlabeled or unscoped delegation
 cannot be resolved back to a specific human act — R-speak-by-reference).
-date defaults to today (ISO 8601, local) when omitted.
+date defaults to today (ISO 8601, local) when omitted. A new record is born
+status="active".
+
+RULE (close mechanic, --close DEL-<n>): a delegation is not eternal. When the
+steward revokes it, --close DEL-<n> flips that record's `status` to "closed"
+and stamps `closed_date` (ISO 8601, local) — the ONLY in-place mutation this
+tool performs, and it never touches verbatim/scope/date (the human-act trail is
+preserved, mirroring R-rejected-preserved-not-deleted / the Assumption status
+flip). Closing an unknown or already-closed id is refused (exit 1). WHY a
+mutable status rather than a second append-only closure record: an
+active-vs-closed delegation must be answerable with a single lookup by id — a
+status derived from two separate events is exactly the important-yet-invisible
+seam this framework anchors instead of computing implicitly.
 
 Usage:
   uv run python tools/record_delegation.py --steward domain-user \\
       --verbatim "exact wording of the delegation" \\
       --scope "campaign: description" [--date 2026-07-02]
+  uv run python tools/record_delegation.py --close DEL-1 [--date 2026-07-03]
 
 Exit codes:
-  0 — success (record appended).
-  1 — failure (validation error, e.g. unknown steward, empty verbatim/scope).
+  0 — success (record appended, or --close flipped status to closed).
+  1 — failure (validation error, e.g. unknown steward, empty verbatim/scope,
+      --close of an unknown or already-closed id).
 """
 
 from __future__ import annotations
@@ -138,6 +154,8 @@ def record_delegation(
         "verbatim": verbatim,
         "date": date,
         "scope": scope,
+        "status": "active",
+        "closed_date": "",
     }
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -145,6 +163,61 @@ def record_delegation(
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     print(f"Recorded: {new_id} -> {path}")
+    return 0
+
+
+def close_delegation(
+    *,
+    delegation_id: str,
+    date: str = "",
+    delegations_path: Path | None = None,
+) -> int:
+    """Canon: §Stakeholder — flip a delegation's status to 'closed' in place.
+
+    RULE (--close mechanic): locate the record whose id == delegation_id, set
+    status='closed' and closed_date (ISO 8601, local; today when omitted),
+    rewriting ONLY those two fields. verbatim/scope/date are never touched — the
+    human-act trail is preserved. Refuses (exit 1) an unknown id or one already
+    closed (an idempotent no-op would hide a double-revoke; the steward should
+    see that the id is already closed).
+    """
+    delegation_id = delegation_id.strip()
+    if not delegation_id:
+        print("ERROR: --close requires a DEL-<n> id.", file=sys.stderr)
+        return 1
+    path = delegations_path if delegations_path is not None else _delegations_path()
+    records = _read_records(path)
+    idx = next(
+        (i for i, r in enumerate(records) if r.get("id") == delegation_id), None
+    )
+    if idx is None:
+        print(
+            f"ERROR: no delegation with id '{delegation_id}' in {path}.",
+            file=sys.stderr,
+        )
+        return 1
+    if records[idx].get("status") == "closed":
+        print(
+            f"ERROR: delegation '{delegation_id}' is already closed "
+            f"(closed_date={records[idx].get('closed_date', '')!r}).",
+            file=sys.stderr,
+        )
+        return 1
+    if not date:
+        date = _dt.date.today().isoformat()
+    records[idx]["status"] = "closed"
+    records[idx]["closed_date"] = date
+    # Backfill status on any pre-status legacy sibling records so the file stays
+    # coherent (they were born active; make that explicit without touching their
+    # human-act fields).
+    for r in records:
+        r.setdefault("status", "active")
+        r.setdefault("closed_date", "")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as fh:
+        for r in records:
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"Closed: {delegation_id} (status=closed, closed_date={date}) -> {path}")
     return 0
 
 
@@ -160,17 +233,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--steward",
-        required=True,
         help="Stakeholder id of the steward granting the delegation.",
     )
     parser.add_argument(
         "--verbatim",
-        required=True,
         help="Exact wording of the delegation.",
     )
     parser.add_argument(
         "--scope",
-        required=True,
         help="Campaign or case this delegation applies to.",
     )
     parser.add_argument(
@@ -178,7 +248,27 @@ def main(argv: list[str] | None = None) -> int:
         default="",
         help="ISO 8601 date (default: today).",
     )
+    parser.add_argument(
+        "--close",
+        default="",
+        metavar="DEL-<n>",
+        help="Close (revoke) an existing delegation by id; flips status=closed.",
+    )
     args = parser.parse_args(argv)
+
+    if args.close:
+        return close_delegation(delegation_id=args.close, date=args.date)
+
+    missing = [
+        f"--{name}"
+        for name in ("steward", "verbatim", "scope")
+        if not getattr(args, name)
+    ]
+    if missing:
+        parser.error(
+            "the following arguments are required (unless --close is used): "
+            + ", ".join(missing)
+        )
 
     return record_delegation(
         steward=args.steward,

@@ -66,7 +66,7 @@ def test_validate_uncertain_needs_no_signoff() -> None:
     assert p.target_anchor() == "A-target"
 
 
-@pytest.mark.parametrize("status", ["DEAD", "HOLDS"])
+@pytest.mark.parametrize("status", ["DEAD", "HOLDS", "IMPLEMENTS"])
 def test_validate_dead_and_holds_require_signoff(status: str) -> None:
     raw = {
         "kind": "AssumptionTransition",
@@ -100,6 +100,138 @@ def test_validate_rejects_bad_input(raw, fragment) -> None:
     raw = {"kind": "AssumptionTransition", **raw}
     with pytest.raises(ValueError, match=fragment):
         apply_proposal._validate_assumption_transition(raw)
+
+
+# ---------------------------------------------------------------------------
+# IMPLEMENTS — the VOLITIONAL род (R-assumption-implements-state)
+# ---------------------------------------------------------------------------
+
+
+def test_implements_requires_signoff() -> None:
+    raw = {
+        "kind": "AssumptionTransition",
+        "assumption_id": "A-target",
+        "new_status": "IMPLEMENTS",
+        "reason": "we understood this is not a fact but a goal",
+    }
+    with pytest.raises(ValueError, match="decided_by"):
+        apply_proposal._validate_assumption_transition(raw)
+    raw["decided_by"] = "domain-user"
+    p = apply_proposal._validate_assumption_transition(raw)
+    assert p.new_status == "IMPLEMENTS"
+    assert p.decided_by == "domain-user"
+
+
+def test_implements_is_valid_assumption_state() -> None:
+    from hotam_spec.assumption import ASSUMPTION_STATES, IMPLEMENTS
+
+    assert IMPLEMENTS == "IMPLEMENTS"
+    assert IMPLEMENTS in ASSUMPTION_STATES
+
+
+@pytest.mark.parametrize(
+    "src_status,dst_status",
+    [
+        ("UNCERTAIN", "IMPLEMENTS"),  # 'not a fact, a goal'
+        ("HOLDS", "IMPLEMENTS"),  # 'declared fact too early'
+        ("IMPLEMENTS", "HOLDS"),  # 'achieved, became fact'
+        ("IMPLEMENTS", "DEAD"),  # 'abandoned the striving'
+    ],
+)
+def test_implements_transition_directions_apply(src_status, dst_status) -> None:
+    """All four IMPLEMENTS-touching transitions write cleanly with signoff."""
+    source = f'''\
+from __future__ import annotations
+
+from hotam_spec.assumption import Assumption, {src_status}
+
+
+def build_graph():
+    assumptions = (
+        Assumption(
+            id="A-target",
+            statement="A belief.",
+            status={src_status},
+            owner="framework-author",
+        ),
+    )
+
+    requirements = (
+    )
+'''
+    p = ProposedAssumptionTransition(
+        assumption_id="A-target",
+        new_status=dst_status,
+        reason=f"{src_status} to {dst_status}",
+        decided_by="domain-user",
+    )
+    out = apply_proposal._apply_assumption_transition(source, p)
+    assert f"status={dst_status}" in out
+    ast.parse(out)
+
+
+def test_implements_status_valid_invariant() -> None:
+    """check_assumption_status_valid accepts IMPLEMENTS, rejects a bogus status."""
+    from hotam_spec.assumption import Assumption
+    from hotam_spec.graph import TensionGraph
+    from hotam_spec.invariants import check_assumption_status_valid
+
+    good = TensionGraph(
+        assumptions=(
+            Assumption(
+                id="A-aspire",
+                statement="we strive for this",
+                status="IMPLEMENTS",
+                owner="framework-author",
+            ),
+        )
+    )
+    assert check_assumption_status_valid(good) == []
+
+    bad = TensionGraph(
+        assumptions=(
+            Assumption(
+                id="A-bogus",
+                statement="x",
+                status="WISHFUL",
+                owner="framework-author",
+            ),
+        )
+    )
+    viols = check_assumption_status_valid(bad)
+    assert len(viols) == 1 and viols[0].target == "A-bogus"
+
+
+def test_implements_neither_ages_nor_falls_out() -> None:
+    """An IMPLEMENTS assumption raises no UNCERTAIN-aging and no DEAD-fallout."""
+    from hotam_spec.assumption import Assumption
+    from hotam_spec.graph import (
+        TensionGraph,
+        dead_assumptions,
+        uncertain_assumptions,
+    )
+    from hotam_spec.requirement import Requirement
+
+    a = Assumption(
+        id="A-aspire",
+        statement="we strive",
+        status="IMPLEMENTS",
+        owner="framework-author",
+    )
+    reqs = tuple(
+        Requirement(
+            id=f"R-{i}",
+            claim="c",
+            owner="framework-author",
+            status="SETTLED",
+            why="w",
+            assumptions=("A-aspire",),
+        )
+        for i in range(50)
+    )
+    g = TensionGraph(assumptions=(a,), requirements=reqs)
+    assert uncertain_assumptions(g) == ()  # not a doubt
+    assert dead_assumptions(g) == ()  # not a broken premise
 
 
 # ---------------------------------------------------------------------------

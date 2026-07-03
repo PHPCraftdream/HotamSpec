@@ -52,7 +52,7 @@ TENSIONS,OPEN}.md by tools/gen_spec.py; diagnosed by tools/what_now.py.
 
 from __future__ import annotations
 
-from hotam_spec.assumption import HOLDS, UNCERTAIN, Assumption
+from hotam_spec.assumption import HOLDS, UNCERTAIN, Assumption, IMPLEMENTS, DEAD
 from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict, conflict_identity, Variant
 from hotam_spec.graph import TensionGraph
@@ -189,8 +189,8 @@ def build_graph() -> TensionGraph:
         ),
         Assumption(
             id="A-prose-suffices",
-            statement="For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core.",
-            status=UNCERTAIN,
+            statement="For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core. — [DEAD] Steward verdict 2026-07-03 (V2), verbatim: «кажется, теста никогда не достаточно. У всего должны быть модели, модели должны иметь простые методы (которые легко читаются (пару строчек), и текстовое поисание, по которому легко проверить, что имплементация метода соотвествует описанию. И должны быть тесты, которые вызывают эти методы. Еще должны быть стейты ... это мы в самом начале собуждали. Тексты сами по себе - это воздух без зелми». Prose alone never sufficed: a claim is trustworthy only when grounded in a model (short readable methods + description checkable against implementation + tests invoking them + states). REPLACED by the HOLDS assumption A-text-grounded-in-models; all 37 dependent requirements were re-linked onto it before this kill.",
+            status=DEAD,
             owner="ai-agent",
         ),
         Assumption(
@@ -208,8 +208,8 @@ def build_graph() -> TensionGraph:
         ),
         Assumption(
             id="A-bootstrap-self-applies",
-            statement="The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing.",
-            status=UNCERTAIN,
+            statement="The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing. — [IMPLEMENTS] Steward verdict 2026-07-03 (verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. A-bootstrap-self-applies is not a fact under question but an aspiration we strive toward — re-typed from UNCERTAIN (58 dependents, top pulse line) to the volitional IMPLEMENTS род rather than re-affirmed HOLDS. Changes род and drops the P4 doubt signal honestly.",
+            status=IMPLEMENTS,
             owner="framework-reviewer",
         ),
         Assumption(
@@ -226,8 +226,8 @@ def build_graph() -> TensionGraph:
         ),
         Assumption(
             id="A-most-knowledge-crystallizable",
-            statement="Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type.",
-            status=UNCERTAIN,
+            statement="Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type. — [IMPLEMENTS] Steward verdict 2026-07-03 (V3), variant B verbatim: «Б - мы к этому стремимся, при нахождении несоответствия пытаемся исправить на месте сами или через агента-руку». This is not a fact-claim about the world but a VOLITIONAL striving (R-assumption-implements-state): most knowledge is not KNOWN to be crystallizable, but the operator STRIVES to crystallize it and, on finding a mismatch, repairs it in place itself or via a hand-agent. Re-typing UNCERTAIN → IMPLEMENTS retires the standing P4 doubt signal and records the aspiration.",
+            status=IMPLEMENTS,
             owner="framework-reviewer",
         ),
         Assumption(
@@ -247,6 +247,18 @@ def build_graph() -> TensionGraph:
             statement="The framework body (hotam_spec.*) is shared infrastructure any agent's code may import; it is owned by no single agent -- ownership is a governance convention, not a per-agent claim.",
             status=HOLDS,
             owner="framework-author",
+        ),
+        Assumption(
+            id="A-text-grounded-in-models",
+            statement="Text alone is air without ground: every claim is grounded in a model that has short readable methods, a textual description checkable against the method's implementation, tests that invoke those methods, and states (lifecycles). A requirement resting on this assumption is trustworthy only insofar as such a grounding model exists behind it.",
+            status=HOLDS,
+            owner="domain-user",
+        ),
+        Assumption(
+            id="A-single-human-wears-all-hats",
+            statement="In the current phase all stakeholder roles (domain-user/framework-reviewer/framework-author in self, dev-steward/pipeline-operator in hotam-dev) are worn by one human; role-separation checks guard structure, not real independence",
+            status=HOLDS,
+            owner="domain-user",
         ),
     )
 
@@ -384,18 +396,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-open-states-question",
             claim=(
-                "Every requirement whose status begins with 'OPEN' shall carry a "
-                "non-empty question of the form OPEN(<question>)."
+                "Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>)."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "An OPEN with no question is a hole no one can act on. The "
-                "harness surfaces OPEN items by their question; emptiness "
-                "defeats the point of marking the requirement open at all."
+                "An OPEN with no question is a hole no one can act on. The harness surfaces OPEN items by their question; emptiness defeats the point of marking the requirement open at all."
             ),
-            assumptions=("A-prose-suffices",),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models",),
+            enforcement="ENFORCED",
             enforced_by=("check_open_has_question",),
         ),
         Requirement(
@@ -415,18 +424,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-axis-controlled-vocab",
             claim=(
-                "Every Conflict.axis shall be the slug of an Axis declared in "
-                "the graph's `axes` tuple."
+                "Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Conflicts CLUSTER by axis — many C-nodes on one axis = one "
-                "architectural choice. Free-text axes would fragment the "
-                "cluster and hide the clustering signal."
+                "Conflicts CLUSTER by axis — many C-nodes on one axis = one architectural choice. Free-text axes would fragment the cluster and hide the clustering signal."
             ),
-            assumptions=("A-prose-suffices",),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models",),
+            enforcement="ENFORCED",
             enforced_by=("check_axis_in_registry",),
         ),
         Requirement(
@@ -497,17 +503,15 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-critical-core-scope",
             claim=(
-                "The set of requirement domains warranting the deferred formal "
-                "layers (Z3 conflict-detector, Quint temporal, mutation "
-                "testing) shall be declared."
+                "The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared."
             ),
             owner="domain-user",
             status="REJECTED",
             why=(
                 "REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: M7 resolved (P6 — §Conscience): the critical core for the methodology's OWN domain is the six invariants in CRITICAL_CORE_INVARIANTS — check_steward_not_a_member_owner, check_operator_steward_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question. These six guard every path by which a contradiction could be introduced without being seen. Business-domain 'critical core' (money / access / SLA) is a separate per-domain calibration; the framework's own methodology critical core is now declared and property-tested via test_conscience.py.))"
             ),
-            assumptions=("A-prose-suffices",),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models",),
+            enforcement="ENFORCED",
             enforced_by=("test_conscience.py",),
         ),
         Requirement(
@@ -546,38 +550,29 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-active-loop-playbooks",
             claim=(
-                "Each what_now priority band shall have a documented agent "
-                "PLAYBOOK plus a tools/apply_proposal.py that mechanically "
-                "applies a steward-approved JSON proposal to spec/content/."
+                "Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/."
             ),
             owner="ai-agent",
             status="REJECTED",
             why=(
-                "REJECTED — REPLACES by R-active-loop-protocol + "
-                "R-active-loop-apply-tool + R-active-loop-playbook-doc per "
-                "atomicity discipline (R-requirement-claim-is-atomic). The "
-                "original claim mixed three concerns: data-model, tool, "
-                "documentation."
+                "REJECTED — REPLACES by R-active-loop-protocol + R-active-loop-apply-tool + R-active-loop-playbook-doc per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed three concerns: data-model, tool, documentation."
             ),
-            assumptions=("A-stakeholders-care", "A-prose-suffices"),
-            enforcement=PROSE,
+            assumptions=("A-stakeholders-care", "A-text-grounded-in-models"),
+            enforcement="PROSE",
             enforced_by=(),
         ),
         Requirement(
             id="R-active-loop-protocol",
             claim=(
-                "Three Proposed* dataclass types (ProposedRequirement, "
-                "ProposedConflictTransition, ProposedRejection) shall exist as "
-                "the protocol for steward-approved operator changes."
+                "Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes."
             ),
             owner="ai-agent",
             status="SETTLED",
             why=(
-                "Atom of R-active-loop-playbooks (data-model concern). "
-                "hotam_spec/proposal.py defines the three types."
+                "Atom of R-active-loop-playbooks (data-model concern). hotam_spec/proposal.py defines the three types."
             ),
-            assumptions=("A-stakeholders-care", "A-prose-suffices"),
-            enforcement=ENFORCED,
+            assumptions=("A-stakeholders-care", "A-text-grounded-in-models"),
+            enforcement="ENFORCED",
             enforced_by=("test_proposal.py",),
         ),
         Requirement(
@@ -641,40 +636,30 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-glossary-sync-test",
             claim=(
-                "A controlled vocabulary of methodology terms shall be "
-                "generated under docs/gen/GLOSSARY.md, with a sync test that "
-                "fails on undefined or unused terms."
+                "A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms."
             ),
             owner="framework-author",
             status="REJECTED",
             why=(
                 "REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: Terminology drift is its own kind of invisibility — 'axis' / 'dimension', 'steward' / 'owner', 'conflict' / 'tension' will fragment without it. Now ENFORCED: test_glossary_sync.py fires on any dead vocab or invented §-token, and test_docs_gen.py::test_glossary_md_up_to_date keeps GLOSSARY.md byte-stable.))"
             ),
-            assumptions=("A-prose-suffices", "A-python-stack"),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "test_glossary_sync.py",
-                "test_docs_gen.py::test_glossary_md_up_to_date",
-            ),
+            assumptions=("A-text-grounded-in-models", "A-python-stack"),
+            enforcement="ENFORCED",
+            enforced_by=("test_glossary_sync.py", "test_docs_gen.py::test_glossary_md_up_to_date"),
         ),
         Requirement(
             id="R-history-from-rejected-markers",
             claim=(
-                "docs/gen/HISTORY.md shall be generated from REJECTED markers "
-                "in requirement WHY blocks and from DECIDED/REVISIT_WHEN "
-                "lifecycle states on Conflicts."
+                "docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts."
             ),
             owner="ai-agent",
             status="REJECTED",
             why=(
                 "REJECTED — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-history-generated-from-rejected + R-history-generated-from-decided (wave 2, decided by framework-author 2026-06-30) — (was: The historian artifact is now real: build_history() in tools/gen_spec.py materializes REJECTED requirements and DECIDED/REVISIT_WHEN conflicts into docs/gen/HISTORY.md. Anti-drift enforced by test_history_md_up_to_date; content coverage enforced by test_history_gen.py.))"
             ),
-            assumptions=("A-prose-suffices",),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "test_history_gen.py",
-                "test_docs_gen.py::test_history_md_up_to_date",
-            ),
+            assumptions=("A-text-grounded-in-models",),
+            enforcement="ENFORCED",
+            enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
         ),
         Requirement(
             id="R-smoke-test",
@@ -715,23 +700,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-process-aspect-first",
             claim=(
-                "hotam_spec.process shall be the FIRST opt-in behavioral aspect — "
-                "Lifecycle + Steps + roles_required + drives_entities — added "
-                "after the keystone Lifecycle abstraction lands."
+                "hotam_spec.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands."
             ),
             owner="framework-author",
             status="REJECTED",
             why=(
                 "REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-process-types-exist + R-process-opt-in + R-process-lifecycle-wellformed-aspect + R-process-roles-declared-aspect + R-process-goal-owner-is-operator-aspect + R-process-typed-anchors-extended (wave 2, decided by framework-author 2026-06-30) — (was: SETTLED (P9): hotam_spec/process.py ships Process + Step + Goal + TargetState + PROCESS_LIFECYCLE + GOAL_LIFECYCLE. The §Process aspect is opt-in (TensionGraph.processes defaults to empty). PR-closed-loop instantiates ONE worked example at the meta-domain level. Three new invariants enforce the behavioral surface: check_process_lifecycle_wellformed, check_process_roles_declared, and check_goal_owner_is_operator. check_typed_anchors extended for PR- and GOAL- prefixes. M12 resolved: Lifecycle is core; Process is the first opt-in aspect that proves the keystone supports new aspects without parallel machinery.))"
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "test_process.py",
-                "check_process_lifecycle_wellformed",
-                "check_process_roles_declared",
-                "check_typed_anchors",
-            ),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
+            enforced_by=("test_process.py", "check_process_lifecycle_wellformed", "check_process_roles_declared", "check_typed_anchors"),
         ),
         Requirement(
             id="R-task-vs-action-distinct-altitudes",
@@ -1647,26 +1625,16 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-m-tag-format-valid",
             claim=(
-                "Every Requirement.m_tag (when non-empty) shall match "
-                "`^M[1-9][0-9]*$`, be unique across the graph, and appear "
-                "only on OPEN requirements."
+                "Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "The M-decision registry (DECISIONS.md) bijection depends on "
-                "m_tag discipline. Was orphan policy; now claimed. Atomic — "
-                "one concern (M-tag well-formedness) with three sub-rules all "
-                "in one check_*; if we later split the check, this R splits "
-                "with it."
+                "The M-decision registry (DECISIONS.md) bijection depends on m_tag discipline. Was orphan policy; now claimed. Atomic — one concern (M-tag well-formedness) with three sub-rules all in one check_*; if we later split the check, this R splits with it."
             ),
-            assumptions=("A-prose-suffices",),
-            enforcement=ENFORCED,
-            enforced_by=(
-                "check_m_tag_valid_format",
-                "check_m_tag_unique",
-                "check_m_tag_open_only",
-            ),
+            assumptions=("A-text-grounded-in-models",),
+            enforcement="ENFORCED",
+            enforced_by=("check_m_tag_valid_format", "check_m_tag_unique", "check_m_tag_open_only"),
         ),
         # --- DRAFT — P11 new: convergence, atomicity, agent-dir, delegation, tools ---
         Requirement(
@@ -1712,7 +1680,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. ENFORCED Wave 8 move 2 (2026-07-03): audit_atomicity.py's requirement-claim audit was rescoped to LIVE promises only (status SETTLED or OPEN(...) -- REJECTED is frozen history, DRAFT is not yet a promise, see audit_atomicity.py's own RULE/WHY), which shrank the atomicity_compound_baseline.json ratchet baseline from 21 stale/misscoped ids down to 6 genuine live compounds, then to 0 after this wave's splits (R-observation-evidence-scope, R-subagent-gets-its-claude-md, R-land-tier-trace 3-way) and classifier-alignment rewords (R-tiered-gate-not-a-commit-gate, R-rules-as-data, both false-positive semicolon/scope-clause claims). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline is now a STRICT zero-COMPOUND gate for every live SETTLED/OPEN requirement claim -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism (tolerates future HONEST debt without red-lining CI); this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty."
             ),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline",),
         ),
@@ -1726,28 +1694,22 @@ def build_graph() -> TensionGraph:
             why=(
                 "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. ENFORCED Wave 8 move 2 (2026-07-03): the check_* (invariant) side of the atomicity_compound_baseline.json ratchet baseline was already empty coming into this wave (porция 1's AST-loop + N-sub-rules classifier fixes burned it down to 0 with no false positives remaining). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline is now a STRICT zero-COMPOUND gate for every registered check_* function -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism; this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty."
             ),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline",),
         ),
         Requirement(
             id="R-bijection-r-to-enforcer-draft",
             claim=(
-                "Each ENFORCED Requirement shall name exactly one enforcer in its "
-                "`enforced_by` after atomization is complete."
+                "Each ENFORCED Requirement shall name exactly one enforcer in its `enforced_by` after atomization is complete."
             ),
             owner="framework-reviewer",
             status="REJECTED",
             why=(
-                "REJECTED — SUPERSEDED by R-bijection-r-to-enforcer SETTLED (wave 3 "
-                "outcome). The SETTLED version generalizes this claim: every "
-                "SETTLED/ENFORCED requirement must name an existing check_* in "
-                "ALL_INVARIANTS or a real test_*, enforced by check_bijection_r_to_enforcer. "
-                "The original id was duplicated with the SETTLED version; renamed "
-                "to R-bijection-r-to-enforcer-draft for history preservation."
+                "REJECTED — SUPERSEDED by R-bijection-r-to-enforcer SETTLED (wave 3 outcome). The SETTLED version generalizes this claim: every SETTLED/ENFORCED requirement must name an existing check_* in ALL_INVARIANTS or a real test_*, enforced by check_bijection_r_to_enforcer. The original id was duplicated with the SETTLED version; renamed to R-bijection-r-to-enforcer-draft for history preservation."
             ),
-            assumptions=("A-prose-suffices",),
-            enforcement=PROSE,
+            assumptions=("A-text-grounded-in-models",),
+            enforcement="PROSE",
             enforced_by=(),
         ),
         Requirement(
@@ -2138,7 +2100,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-glossary-sync-test (generation concern). Without a generated glossary, terminology drift is invisible."
             ),
-            assumptions=("A-prose-suffices", "A-python-stack"),
+            assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_glossary_md_up_to_date",),
         ),
@@ -2152,7 +2114,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-glossary-sync-test (dead-term concern). Dead terms accumulate noise and mislead operators."
             ),
-            assumptions=("A-prose-suffices", "A-python-stack"),
+            assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py",),
         ),
@@ -2166,7 +2128,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-glossary-sync-test (undefined-term concern). An undefined section-anchor is an unresolved reference that breaks speak-by-reference."
             ),
-            assumptions=("A-prose-suffices", "A-python-stack"),
+            assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py",),
         ),
@@ -2180,7 +2142,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-glossary-sync-test (drift-stability concern). Same anti-drift discipline as R-drift-structurally-impossible applied to the glossary."
             ),
-            assumptions=("A-prose-suffices", "A-python-stack"),
+            assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_glossary_md_up_to_date",),
         ),
@@ -2194,12 +2156,9 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-history-from-rejected-markers (REJECTED source stream). REJECTED requirements are the historian's primary source for design dead-ends."
             ),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
-            enforced_by=(
-                "test_history_gen.py",
-                "test_docs_gen.py::test_history_md_up_to_date",
-            ),
+            enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
         ),
         Requirement(
             id="R-history-generated-from-decided",
@@ -2211,12 +2170,9 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-history-from-rejected-markers (DECIDED/REVISIT source stream). Conflict decisions are the historian's primary source for resolved tensions."
             ),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
-            enforced_by=(
-                "test_history_gen.py",
-                "test_docs_gen.py::test_history_md_up_to_date",
-            ),
+            enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
         ),
         Requirement(
             id="R-lifecycle-type-exists",
@@ -2298,7 +2254,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-process-aspect-first (type-existence concern). These types are the behavioral surface of the first opt-in aspect."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_process.py",),
         ),
@@ -2312,7 +2268,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-process-aspect-first (opt-in concern). Core cost must not be imposed on domains that do not model processes."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_process.py",),
         ),
@@ -2326,7 +2282,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-process-aspect-first (lifecycle wellformedness concern). A Process with an invalid lifecycle is structurally broken."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_process_lifecycle_wellformed",),
         ),
@@ -2340,7 +2296,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-process-aspect-first (roles-declared concern). Undeclared roles are dangling references in the behavioral model."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_process_roles_declared",),
         ),
@@ -2354,7 +2310,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-process-aspect-first (goal-owner concern). A Goal without a valid operator owner is unstewardable."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_goal_owner_is_operator",),
         ),
@@ -2368,7 +2324,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-process-aspect-first (typed-anchors concern). Without prefix validation, Process and Goal nodes escape the anchoring discipline."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_typed_anchors_process", "check_typed_anchors_goal"),
         ),
@@ -2380,12 +2336,10 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (lifecycle wellformedness concern). An EntityType with "
-                "an invalid lifecycle is structurally broken — check_entity_type_lifecycle_wellformed "
-                "reuses check_lifecycle_wellformed (the §Lifecycle keystone) for zero-parallel machinery (M12)."
+                "Atom of §Entity aspect (lifecycle wellformedness concern). An EntityType with an invalid lifecycle is structurally broken — check_entity_type_lifecycle_wellformed reuses check_lifecycle_wellformed (the §Lifecycle keystone) for zero-parallel machinery (M12)."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_entity_type_lifecycle_wellformed",),
         ),
         Requirement(
@@ -2396,11 +2350,10 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (state validity concern). An instance with an unknown state "
-                "is structurally invalid — mirrors check_requirement_status_in_lifecycle for requirements."
+                "Atom of §Entity aspect (state validity concern). An instance with an unknown state is structurally invalid — mirrors check_requirement_status_in_lifecycle for requirements."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_entity_instance_state_in_lifecycle",),
         ),
         Requirement(
@@ -2411,11 +2364,10 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (required-fields concern). A missing required field violates "
-                "the declared EntityType schema and makes downstream traversal unreliable."
+                "Atom of §Entity aspect (required-fields concern). A missing required field violates the declared EntityType schema and makes downstream traversal unreliable."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_entity_instance_required_fields",),
         ),
         Requirement(
@@ -2426,11 +2378,10 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (typed-anchor concern). Encodes both type and entity kind in "
-                "the id, enabling unambiguous cross-reference (R-anchor-everything)."
+                "Atom of §Entity aspect (typed-anchor concern). Encodes both type and entity kind in the id, enabling unambiguous cross-reference (R-anchor-everything)."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_entity_instance_id_prefix", "check_typed_anchors_entity"),
         ),
         Requirement(
@@ -2441,27 +2392,24 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (referential integrity concern). A dangling reference field "
-                "is the entity-level equivalent of a dangling Conflict member."
+                "Atom of §Entity aspect (referential integrity concern). A dangling reference field is the entity-level equivalent of a dangling Conflict member."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_entity_instance_refs_resolve",),
         ),
         Requirement(
             id="R-entity-field-kind-known",
             claim=(
-                "Every EntityField.kind shall be in ENTITY_FIELD_KINDS "
-                "(string | number | enum | reference | state)."
+                "Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string | number | enum | reference | state)."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (field-kind concern). An unknown kind breaks the discriminant "
-                "for kind-specific invariants and future machine-checkable field validation."
+                "Atom of §Entity aspect (field-kind concern). An unknown kind breaks the discriminant for kind-specific invariants and future machine-checkable field validation."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_entity_field_kind_known",),
         ),
         Requirement(
@@ -2472,45 +2420,38 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Entity aspect (typed-anchors concern). Without prefix validation, "
-                "EntityInstance nodes escape the anchoring discipline (R-anchor-everything)."
+                "Atom of §Entity aspect (typed-anchors concern). Without prefix validation, EntityInstance nodes escape the anchoring discipline (R-anchor-everything)."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_typed_anchors_entity",),
         ),
         Requirement(
             id="R-process-drives-existing-entities",
             claim=(
-                "Every entity slug referenced in a Process.drives_entities shall resolve to a "
-                "declared EntityType slug in g.entity_types."
+                "Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Process/§Entity coupling (referential integrity concern). A Process "
-                "that references undeclared entity types is structurally broken — the coupling "
-                "between the behavioral aspect and the entity aspect must be referentially sound."
+                "Atom of §Process/§Entity coupling (referential integrity concern). A Process that references undeclared entity types is structurally broken — the coupling between the behavioral aspect and the entity aspect must be referentially sound."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_process_drives_existing_entities",),
         ),
         Requirement(
             id="R-step-invokes-known-transition",
             claim=(
-                "Every Step.transition (when non-empty) shall name a transition event declared "
-                "in the driven EntityType.lifecycle."
+                "Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle."
             ),
             owner="framework-author",
             status="SETTLED",
             why=(
-                "Atom of §Process/§Entity coupling (step-transition concern). A Step that "
-                "invokes an undeclared transition is a structural dead-end — the lifecycle "
-                "machine cannot process it."
+                "Atom of §Process/§Entity coupling (step-transition concern). A Step that invokes an undeclared transition is a structural dead-end — the lifecycle machine cannot process it."
             ),
-            assumptions=("A-prose-suffices", "A-bootstrap-self-applies"),
-            enforcement=ENFORCED,
+            assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
             enforced_by=("check_step_invokes_known_transition",),
         ),
         Requirement(
@@ -2636,16 +2577,9 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being seen."
             ),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
-            enforced_by=(
-                "test_conscience.py",
-                "check_no_dangling_assumption_owner",
-                "check_no_dangling_requirement_owner",
-                "check_no_dangling_requirement_assumptions",
-                "check_no_dangling_requirement_relations",
-                "check_no_dangling_conflict_refs",
-            ),
+            enforced_by=("test_conscience.py", "check_no_dangling_assumption_owner", "check_no_dangling_requirement_owner", "check_no_dangling_requirement_assumptions", "check_no_dangling_requirement_relations", "check_no_dangling_conflict_refs"),
         ),
         Requirement(
             id="R-critical-core-per-domain",
@@ -2657,7 +2591,7 @@ def build_graph() -> TensionGraph:
             why=(
                 "Atom of R-critical-core-scope (per-domain scope). Each domain has its own cost-of-unnoticed-conflict profile; the framework must not impose the methodology's own critical core onto business domains."
             ),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
         ),
@@ -3397,7 +3331,7 @@ def build_graph() -> TensionGraph:
             owner="domain-user",
             status="SETTLED",
             why=("Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
         ),
@@ -3509,10 +3443,10 @@ def build_graph() -> TensionGraph:
             owner="framework-reviewer",
             status="SETTLED",
             why=("R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human judgment no check_* can force wholesale, and burning down the 27 pre-existing compound atoms (21 requirements + 6 check_*) in one wave is out of scope. But the DIRECTION of the debt (is it growing or merely being carried) IS mechanically checkable via a ratchet: test_atomicity_ratchet.py re-derives the live COMPOUND set from audit_atomicity's own _audit_claim/_audit_invariant functions and fails RED the instant a COMPOUND id appears that is not already in the frozen baseline. This is the R-commit-boundary-checkable slice-of-a-broader-claim pattern applied to atomicity: the parents stay STRUCTURAL (the full claim -- eventually zero compound atoms -- is not machine-verifiable end to end), while this narrower atom (no NEW compound debt) has a real, always-green-until-violated enforcer landing in the same wave."),
-            assumptions=("A-prose-suffices",),
+            assumptions=("A-text-grounded-in-models",),
             relations=(Relation("refines", "R-requirement-claim-is-atomic"), Relation("refines", "R-check-method-is-atomic"),),
-            enforcement=ENFORCED,
-            enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline", "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline",),
+            enforcement="ENFORCED",
+            enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline", "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline"),
         ),
         Requirement(
             id="R-framework-owned-by-no-agent",
@@ -3742,6 +3676,25 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_tool_setup_hooks.py::test_build_settings_has_universal_events", "test_tool_setup_hooks.py::test_build_settings_commands_are_portable", "test_tool_setup_hooks.py::test_build_settings_covers_every_universal_tool", "test_tool_setup_hooks.py::test_dry_run_writes_nothing",),
         ),
+        Requirement(
+            id="R-assumption-implements-state",
+            claim=("An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. Context: A-bootstrap-self-applies sat UNCERTAIN with 58 dependents — the single largest silent question in the graph and the top pulse line. Rather than re-affirm it HOLDS (a factual lie: it is NOT yet true), the steward introduced a fourth род of status: the aspiration. HOLDS/UNCERTAIN/DEAD are epistemic (they answer 'is this true?'); IMPLEMENTS is volitional (it answers 'do we want this to become true, and are we working toward it?'). Three consequences follow directly from its non-epistemic nature and are guaranteed by the existing status-keyed filters that use exact equality: (a) the UNCERTAIN-aging predicate (graph.uncertain_assumptions) does NOT touch it — an aspiration is not an unresolved doubt, so it raises no P4 review-debt; (b) it is NEVER DEAD-fallout (graph.dead_assumptions, reflection.reflect_dead_assumption_on_enforcer) — an aspiration is not a broken premise; (c) legitimate transitions and their signoff (the full table lives in proposal.ProposedAssumptionTransition): IMPLEMENTS to HOLDS ('achieved, became fact'), IMPLEMENTS to DEAD ('abandoned the striving'), UNCERTAIN to IMPLEMENTS ('we understood this is not a fact but a goal') and HOLDS to IMPLEMENTS ('declared fact too early') — ALL four require a human decided_by. Agent entry WITHOUT signoff remains UNCERTAIN-only. The UNCERTAIN to IMPLEMENTS move both CHANGES the род of the claim and REMOVES the live P4 doubt signal, so by the Wave-12 asymmetry (a transition that reduces live signal needs a named human) it carries the signoff lock, unlike the signal-raising move to plain UNCERTAIN. IMPLEMENTS is added to hotam_spec.assumption.ASSUMPTION_STATES and enforced first-class by check_assumption_status_valid (a per-Assumption set-membership invariant registered in ALL_INVARIANTS and RULES_AS_DATA_TABLE as TABLE_DRIVEN); apply_proposal._validate_assumption_transition adds IMPLEMENTS to the decided_by-required set (DEAD, HOLDS, IMPLEMENTS)."),
+            relations=(Relation("supports", "R-conflict-is-connector-node"),),
+            enforcement=ENFORCED,
+            enforced_by=("check_assumption_status_valid", "test_assumption_transition.py::test_implements_is_valid_assumption_state", "test_assumption_transition.py::test_implements_requires_signoff", "test_assumption_transition.py::test_implements_transition_directions_apply", "test_assumption_transition.py::test_implements_status_valid_invariant", "test_assumption_transition.py::test_implements_neither_ages_nor_falls_out",),
+        ),
+        Requirement(
+            id="R-user-request-decomposed-to-tickets",
+            claim=("The operator shall, immediately on receiving a user request, decompose it into tickets in the dialogue and ask the addressee -- session tasks or the ticket engine -- before beginning any work."),
+            owner="ai-agent",
+            status="SETTLED",
+            why=("Steward verdict 2026-07-03 (verbatim): 'всё, что просит пользователь - сразу декомпоизровать на тикеты в чате и справшить куда их оптравить - в таски сессии или в движок тикетов'. Decomposition-before-work is a behavioral discipline of the operator: it makes the unit of work explicit and routable BEFORE effort is spent, so a multi-part request is never silently collapsed into one undifferentiated action (R-anchor-everything at the work-item altitude; R-ai-presents-not-decides -- the routing choice is the steward's, presented not assumed). It is machine-unverifiable (INHERENTLY_PROSE): whether the operator actually paused to decompose and ask lives in the dialogue, not the graph."),
+            enforcement=STRUCTURAL,
+            enforceability="INHERENTLY_PROSE",
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
@@ -3840,12 +3793,12 @@ def build_graph() -> TensionGraph:
             members=("R-content-free-framework", "R-agent-never-lost"),
             steward="domain-user",
             lifecycle="DECIDED(The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.)",
-            shared_assumption="A-prose-suffices",
+            shared_assumption="A-text-grounded-in-models",
             revisit_marker=(
-                "REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided."
+                "REVISIT when a fifth opt-in aspect is proposed OR the first inter-aspect conflict is observed — at that point the core-vs-aspect boundary must be formally re-decided. Boundary re-affirmed at three aspects (2026-07-03): no inter-aspect conflict observed; alarm re-armed. shared_assumption re-pointed from the now-DEAD A-prose-suffices onto its live replacement A-text-grounded-in-models (V2)."
             ),
             decided_by="domain-user",
-            derived=("R-initiator-supplies-domain-content",),
+            derived=(),
         ),
         Conflict(
             id=conflict_identity(c4_axis, c4_ctx),
@@ -3917,6 +3870,16 @@ def build_graph() -> TensionGraph:
             lifecycle="DECIDED(chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 (\"все вопросы решай в сторону совершенства\"))",
             decided_by="domain-user",
             variants=(),
+        ),
+        Conflict(
+            id=conflict_identity("offload-vs-carry", "every newly SETTLED atom adds resident weight to the operator crystal: R-operator-prompt-from-substrate + R-constitution-is-index project ALL SETTLED requirements into root CLAUDE.md (~64k chars at 198 atoms), while R-budget-measure caps that same crystal at 130000 warn / 150000 hard (CRYSTAL_CHARS) -- crystallization pressure and the residency cap collide monotonically as the graph grows, with no eviction mechanic beyond tiered distillation"),
+            axis="offload-vs-carry",
+            context="every newly SETTLED atom adds resident weight to the operator crystal: R-operator-prompt-from-substrate + R-constitution-is-index project ALL SETTLED requirements into root CLAUDE.md (~64k chars at 198 atoms), while R-budget-measure caps that same crystal at 130000 warn / 150000 hard (CRYSTAL_CHARS) -- crystallization pressure and the residency cap collide monotonically as the graph grows, with no eviction mechanic beyond tiered distillation",
+            members=("R-operator-prompt-from-substrate", "R-budget-measure"),
+            steward="framework-reviewer",
+            lifecycle="DECIDED(DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Steward verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.)",
+            decided_by="domain-user",
+            shared_assumption="A-finite-context-operators",
         ),
     )
 

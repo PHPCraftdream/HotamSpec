@@ -109,6 +109,47 @@ def test_find_conflict_call_returns_none_for_unknown_id() -> None:
     assert node is None
 
 
+def test_conflict_transition_repoints_shared_assumption() -> None:
+    """A ConflictTransition may re-point the Conflict's shared_assumption edge.
+
+    Signature-wave 2 (V2): when a premise dies and is REPLACED by a narrower
+    one, a DECIDED conflict that rested on the dead premise would otherwise
+    raise perpetual P2 fallout (conflicts_on_assumption fires for any conflict
+    whose shared_assumption is DEAD). The optional shared_assumption field on
+    ProposedConflictTransition is the only mechanical path to move that edge
+    onto the LIVE replacement premise (R-no-hand-edit-graph).
+    """
+    proposal = apply_proposal._validate_proposal(
+        {
+            "kind": "ConflictTransition",
+            "conflict_id": _SAMPLE_CID,
+            "new_lifecycle": "DECIDED(re-pointed onto the live premise)",
+            "decided_by": "domain-user",
+            "shared_assumption": "A-text-grounded-in-models",
+        }
+    )
+    assert proposal.shared_assumption == "A-text-grounded-in-models"
+    lines = apply_proposal._apply_conflict_transition(_SAMPLE_SOURCE, proposal)
+    result = "".join(lines)
+    assert 'shared_assumption="A-text-grounded-in-models"' in result
+    assert 'shared_assumption="A-prose-suffices"' not in result
+
+
+def test_conflict_transition_leaves_shared_assumption_untouched_when_empty() -> None:
+    """An empty shared_assumption leaves the existing edge in place (common case)."""
+    proposal = apply_proposal._validate_proposal(
+        {
+            "kind": "ConflictTransition",
+            "conflict_id": _SAMPLE_CID,
+            "new_lifecycle": "ACKNOWLEDGED",
+        }
+    )
+    assert proposal.shared_assumption == ""
+    lines = apply_proposal._apply_conflict_transition(_SAMPLE_SOURCE, proposal)
+    result = "".join(lines)
+    assert 'shared_assumption="A-prose-suffices"' in result
+
+
 # ---------------------------------------------------------------------------
 # 2b. _find_conflict_call — variable-bound axis/context resolution
 #     (R-conflict-addressing-resolves-variables)
@@ -244,6 +285,78 @@ def test_all_real_domain_conflicts_are_addressable() -> None:
     for c in g.conflicts:
         node = apply_proposal._find_conflict_call(tree, c.id)
         assert node is not None, f"conflict {c.id} is not addressable"
+
+
+# ---------------------------------------------------------------------------
+# 2c. ProposedConflict — DECIDED-at-creation (constituting-atoms exception)
+# ---------------------------------------------------------------------------
+
+
+def test_conflict_default_initial_lifecycle_is_detected() -> None:
+    """A Conflict proposal with no initial_lifecycle defaults to DETECTED."""
+    p = apply_proposal._validate_proposal(
+        {
+            "kind": "Conflict",
+            "axis": "core-vs-aspect",
+            "context": "some tension context",
+            "members": ["R-foo", "R-bar"],
+            "steward": "framework-reviewer",
+        }
+    )
+    assert p.initial_lifecycle == "DETECTED"
+    assert p.decided_by == ""
+
+
+def test_conflict_decided_at_creation_requires_decided_by() -> None:
+    """initial_lifecycle=DECIDED(...) without decided_by is rejected."""
+    with pytest.raises(ValueError, match="decided_by"):
+        apply_proposal._validate_proposal(
+            {
+                "kind": "Conflict",
+                "axis": "core-vs-aspect",
+                "context": "some tension context",
+                "members": ["R-foo", "R-bar"],
+                "steward": "framework-reviewer",
+                "initial_lifecycle": "DECIDED(resolved)",
+            }
+        )
+
+
+def test_conflict_rejects_non_detected_non_decided_initial_lifecycle() -> None:
+    """initial_lifecycle other than DETECTED / DECIDED(...) is rejected."""
+    with pytest.raises(ValueError, match="initial_lifecycle"):
+        apply_proposal._validate_proposal(
+            {
+                "kind": "Conflict",
+                "axis": "core-vs-aspect",
+                "context": "some tension context",
+                "members": ["R-foo", "R-bar"],
+                "steward": "framework-reviewer",
+                "initial_lifecycle": "ACKNOWLEDGED",
+            }
+        )
+
+
+def test_conflict_source_renders_decided_at_creation() -> None:
+    """_render_conflict_source emits the DECIDED lifecycle + decided_by verbatim.
+
+    Signature-wave 2 (V4): a conflict between two SETTLED constituting atoms
+    cannot rest at DETECTED (check_constituting_not_in_unresolved_conflict), so
+    it is materialized already-DECIDED in one steward act.
+    """
+    from hotam_spec.proposal import ProposedConflict
+
+    p = ProposedConflict(
+        axis="offload-vs-carry",
+        context="ctx",
+        members=("R-foo", "R-bar"),
+        steward="framework-reviewer",
+        initial_lifecycle="DECIDED(tree-of-links law)",
+        decided_by="domain-user",
+    )
+    src = apply_proposal._render_conflict_source(p, "        ")
+    assert 'lifecycle="DECIDED(tree-of-links law)"' in src
+    assert 'decided_by="domain-user"' in src
 
 
 # ---------------------------------------------------------------------------
@@ -791,3 +904,94 @@ def test_apply_conflict_dry_run_does_not_write(tmp_path: Path) -> None:
 
     assert sample_file.read_text(encoding="utf-8") == _CONFLICT_GRAPH_SOURCE
     assert result == 0
+
+
+# ---------------------------------------------------------------------------
+# Post-write verify: the UPDATE path must not silently no-op a reattachment
+# (signature-wave-2 lesson — a batch reported clean while 3 targets' assumptions
+#  were never moved; only the DEAD-fallout net later caught the loss).
+# ---------------------------------------------------------------------------
+
+_REQ_UPDATE_SOURCE = '''"""sample"""
+from __future__ import annotations
+
+from hotam_spec.requirement import Requirement, PROSE
+
+
+def build_graph():
+    requirements = (
+        Requirement(
+            id="R-x",
+            claim=("c"),
+            owner="o",
+            status="SETTLED",
+            assumptions=("A-old",),
+            enforcement=PROSE,
+        ),
+    )
+    return requirements
+'''
+
+
+def _proposed_req(**over):
+    from hotam_spec.proposal import ProposedRequirement
+
+    base = dict(
+        id="R-x",
+        claim="c",
+        owner="o",
+        status="SETTLED",
+        why="",
+        assumptions=("A-new",),
+        relations=(),
+        enforcement="PROSE",
+        enforced_by=(),
+        m_tag="",
+        enforceability="ENFORCEABLE",
+    )
+    base.update(over)
+    return ProposedRequirement(**base)
+
+
+def test_update_reattaches_assumptions_and_verify_passes() -> None:
+    """An honest reattachment UPDATE lands and the post-check accepts it."""
+    p = _proposed_req(assumptions=("A-new",))
+    out = apply_proposal._apply_requirement_to_source(_REQ_UPDATE_SOURCE, p)
+    assert "A-new" in out and "A-old" not in out
+    # Post-check runs inside _apply_requirement_to_source and did not raise.
+
+
+def test_verify_requirement_update_reflected_catches_silent_noop() -> None:
+    """If the emitted source does NOT reflect the intended assumptions, the
+    post-check raises (exit != 0) rather than let a silent no-op land."""
+    # Emitted source still carries the OLD assumption though the proposal wanted
+    # a different one — simulate a writer that silently failed to move it.
+    stale_source = _REQ_UPDATE_SOURCE  # still has assumptions=("A-old",)
+    p = _proposed_req(assumptions=("A-new",))
+    with pytest.raises(RuntimeError, match="Post-write verify FAILED"):
+        apply_proposal._verify_requirement_update_reflected(stale_source, p)
+
+
+def test_verify_requirement_update_reflected_catches_status_mismatch() -> None:
+    p = _proposed_req(assumptions=("A-old",), status="REJECTED")
+    # Source has status="SETTLED"; proposal wants REJECTED — mismatch must raise.
+    with pytest.raises(RuntimeError, match="status="):
+        apply_proposal._verify_requirement_update_reflected(_REQ_UPDATE_SOURCE, p)
+
+
+def test_verify_requirement_update_reflected_missing_target_raises() -> None:
+    p = _proposed_req(id="R-does-not-exist")
+    with pytest.raises(RuntimeError, match="vanished|did not land"):
+        apply_proposal._verify_requirement_update_reflected(_REQ_UPDATE_SOURCE, p)
+
+
+def test_read_requirement_kwarg_resolves_bare_name_and_tuple() -> None:
+    import ast as _ast
+
+    tree = _ast.parse(_REQ_UPDATE_SOURCE)
+    call = apply_proposal._find_requirement_call(tree, "R-x")
+    assert call is not None
+    assert apply_proposal._read_requirement_kwarg(call, "enforcement") == "PROSE"
+    assert apply_proposal._read_requirement_kwarg(call, "assumptions") == ("A-old",)
+    assert apply_proposal._read_requirement_kwarg(call, "status") == "SETTLED"
+    assert apply_proposal._read_requirement_kwarg(call, "nonexistent") is None

@@ -19,26 +19,26 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-ai-presents-not-decides` | SETTLED | `ai-agent` | A-stakeholders-care | The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward. |
 | `R-steward-distinct-from-owners` | SETTLED | `framework-author` | A-stakeholders-care | Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members. |
 | `R-empty-content-is-legitimate` | REJECTED | `domain-user` | A-content-free-honest | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
-| `R-open-states-question` | SETTLED | `framework-author` | A-prose-suffices | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
+| `R-open-states-question` | SETTLED | `framework-author` | A-text-grounded-in-models | Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>). |
 | `R-rejected-preserved-not-deleted` | SETTLED | `framework-author` | A-stakeholders-care | Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted. |
-| `R-axis-controlled-vocab` | SETTLED | `framework-author` | A-prose-suffices | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
+| `R-axis-controlled-vocab` | SETTLED | `framework-author` | A-text-grounded-in-models | Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. |
 | `R-stable-conflict-identity` | SETTLED | `framework-author` | A-python-stack | A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members. |
 | `R-two-altitude-ontology` | SETTLED | `framework-author` | A-bootstrap-self-applies | The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively). |
 | `R-boot-from-substrate` | REJECTED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | The operator shall begin every new turn by re-loading three facts from the substrate — current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio — and cite at least one of them in the first sentence of any substantive reply. |
 | `R-trust-anchor-mechanism` | SETTLED | `framework-author` | A-stakeholders-care, A-bootstrap-self-applies | Every decision shall be personally signed by the human steward -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship. |
-| `R-critical-core-scope` | REJECTED | `domain-user` | A-prose-suffices | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
+| `R-critical-core-scope` | REJECTED | `domain-user` | A-text-grounded-in-models | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-axis-gatekeeper-policy` | SETTLED | `ai-agent` | — | Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.py), refusing near-duplicate axes unless overridden by an explicit --force-new justification. |
 | `R-content-layout-evolution` | SETTLED | `framework-author` | A-bootstrap-self-applies, A-graph-fits-memory | Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17. |
-| `R-active-loop-playbooks` | REJECTED | `ai-agent` | A-stakeholders-care, A-prose-suffices | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
-| `R-active-loop-protocol` | SETTLED | `ai-agent` | A-stakeholders-care, A-prose-suffices | Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes. |
+| `R-active-loop-playbooks` | REJECTED | `ai-agent` | A-stakeholders-care, A-text-grounded-in-models | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
+| `R-active-loop-protocol` | SETTLED | `ai-agent` | A-stakeholders-care, A-text-grounded-in-models | Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes. |
 | `R-active-loop-apply-tool` | SETTLED | `ai-agent` | — | A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/. |
 | `R-active-loop-playbook-doc` | SETTLED | `ai-agent` | — | At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band. |
 | `R-decided-needs-human-signoff` | SETTLED | `framework-reviewer` | A-stakeholders-care | A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant. |
-| `R-glossary-sync-test` | REJECTED | `framework-author` | A-prose-suffices, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
-| `R-history-from-rejected-markers` | REJECTED | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
+| `R-glossary-sync-test` | REJECTED | `framework-author` | A-text-grounded-in-models, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms. |
+| `R-history-from-rejected-markers` | REJECTED | `ai-agent` | A-text-grounded-in-models | docs/gen/HISTORY.md shall be generated from REJECTED markers in requirement WHY blocks and from DECIDED/REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-smoke-test` | SETTLED | `framework-author` | A-python-stack | spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs. |
 | `R-lifecycle-abstraction` | REJECTED | `framework-author` | A-bootstrap-self-applies | A generic hotam_spec.lifecycle (State / Transition / Lifecycle) shall be introduced; Requirement.status and Conflict.lifecycle shall validate against framework-supplied Lifecycle constants. |
-| `R-process-aspect-first` | REJECTED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | hotam_spec.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
+| `R-process-aspect-first` | REJECTED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | hotam_spec.process shall be the FIRST opt-in behavioral aspect — Lifecycle + Steps + roles_required + drives_entities — added after the keystone Lifecycle abstraction lands. |
 | `R-task-vs-action-distinct-altitudes` | SETTLED | `framework-author` | A-bootstrap-self-applies | The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged. |
 | `R-operator-acting-facet` | REJECTED | `framework-author` | A-finite-context-operators | An Operator shall be a Stakeholder's ACTING facet: it owns a bounded DomainScope, carries a ContextBudget and capabilities, and may have a parent Operator. |
 | `R-operator-is-frozen-dataclass` | SETTLED | `framework-author` | A-finite-context-operators | An Operator shall be a frozen dataclass in hotam_spec.operator with typed anchor 'OP-'. |
@@ -92,12 +92,12 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-conflict-structurally-visible` | SETTLED | `framework-author` | A-stakeholders-care | Every Conflict node shall carry a non-empty axis, context, and steward. |
 | `R-conflict-min-two-members` | SETTLED | `framework-author` | A-stakeholders-care | Every Conflict node shall contain at least two distinct Requirement ids in its members tuple. |
 | `R-decided-conflict-justifies-itself` | SETTLED | `framework-author` | A-stakeholders-care | Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement. |
-| `R-m-tag-format-valid` | SETTLED | `framework-author` | A-prose-suffices | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
+| `R-m-tag-format-valid` | SETTLED | `framework-author` | A-text-grounded-in-models | Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements. |
 | `R-operator-prompt-from-substrate` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py. |
 | `R-constituting-requirements-converge` | SETTLED | `framework-reviewer` | A-bootstrap-self-applies | The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden. |
-| `R-requirement-claim-is-atomic` | SETTLED | `framework-reviewer` | A-prose-suffices | Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements. |
-| `R-check-method-is-atomic` | SETTLED | `framework-reviewer` | A-prose-suffices | Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions. |
-| `R-bijection-r-to-enforcer-draft` | REJECTED | `framework-reviewer` | A-prose-suffices | Each ENFORCED Requirement shall name exactly one enforcer in its `enforced_by` after atomization is complete. |
+| `R-requirement-claim-is-atomic` | SETTLED | `framework-reviewer` | A-text-grounded-in-models | Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements. |
+| `R-check-method-is-atomic` | SETTLED | `framework-reviewer` | A-text-grounded-in-models | Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions. |
+| `R-bijection-r-to-enforcer-draft` | REJECTED | `framework-reviewer` | A-text-grounded-in-models | Each ENFORCED Requirement shall name exactly one enforcer in its `enforced_by` after atomization is complete. |
 | `R-agent-is-a-directory` | SETTLED | `framework-author` | A-finite-context-operators | A domain-agent shall be represented as a directory at `spec/agents/<name>/`. |
 | `R-agent-has-own-crystal` | REJECTED | `ai-agent` | A-finite-context-operators, A-compaction-loses-working | Each domain-agent shall carry its own `CLAUDE.md` file as its operator-prompt crystal. |
 | `R-agent-has-own-tools-dir` | SETTLED | `ai-agent` | A-finite-context-operators | Each domain-agent shall carry a `tools/` subdirectory holding its private tools. |
@@ -123,32 +123,32 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-empty-content-gen-notice` | SETTLED | `framework-author` | A-python-stack | When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
 | `R-boot-reload-three-facts` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio. |
 | `R-boot-cite-in-first-sentence` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply. |
-| `R-glossary-generated` | SETTLED | `framework-author` | A-prose-suffices, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md. |
-| `R-glossary-sync-fails-dead` | SETTLED | `framework-author` | A-prose-suffices, A-python-stack | The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework. |
-| `R-glossary-sync-fails-unused` | SETTLED | `framework-author` | A-prose-suffices, A-python-stack | The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary. |
-| `R-glossary-drift-stable` | SETTLED | `framework-author` | A-prose-suffices, A-python-stack | The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte. |
-| `R-history-generated-from-rejected` | SETTLED | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks. |
-| `R-history-generated-from-decided` | SETTLED | `ai-agent` | A-prose-suffices | docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts. |
+| `R-glossary-generated` | SETTLED | `framework-author` | A-text-grounded-in-models, A-python-stack | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md. |
+| `R-glossary-sync-fails-dead` | SETTLED | `framework-author` | A-text-grounded-in-models, A-python-stack | The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework. |
+| `R-glossary-sync-fails-unused` | SETTLED | `framework-author` | A-text-grounded-in-models, A-python-stack | The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary. |
+| `R-glossary-drift-stable` | SETTLED | `framework-author` | A-text-grounded-in-models, A-python-stack | The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte. |
+| `R-history-generated-from-rejected` | SETTLED | `ai-agent` | A-text-grounded-in-models | docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks. |
+| `R-history-generated-from-decided` | SETTLED | `ai-agent` | A-text-grounded-in-models | docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts. |
 | `R-lifecycle-type-exists` | SETTLED | `framework-author` | A-bootstrap-self-applies | A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types. |
 | `R-lifecycle-validates-requirement` | SETTLED | `framework-author` | A-bootstrap-self-applies | Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE. |
 | `R-lifecycle-validates-conflict` | SETTLED | `framework-author` | A-bootstrap-self-applies | Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE. |
 | `R-lifecycle-validates-operator` | SETTLED | `framework-author` | A-bootstrap-self-applies | Operator.lifecycle shall validate against the framework-supplied OPERATOR_LIFECYCLE. |
 | `R-lifecycle-validates-goal` | SETTLED | `framework-author` | A-bootstrap-self-applies | Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE. |
-| `R-process-types-exist` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | hotam_spec.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
-| `R-process-opt-in` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple. |
-| `R-process-lifecycle-wellformed-aspect` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed. |
-| `R-process-roles-declared-aspect` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every role referenced in a Process step shall be declared in the Process roles_required tuple. |
-| `R-process-goal-owner-is-operator-aspect` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator. |
-| `R-process-typed-anchors-extended` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes. |
-| `R-entity-type-lifecycle-wellformed` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_entity_type_lifecycle_wellformed. |
-| `R-entity-instance-state-in-lifecycle` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance.state shall be a valid state in the corresponding EntityType.lifecycle. |
-| `R-entity-instance-required-fields` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance shall provide values for all EntityFields with required=True. |
-| `R-entity-instance-id-prefix` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance.id shall start with 'ENT-<entity_type>-' (typed-anchor discipline). |
-| `R-entity-instance-refs-resolve` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityInstance reference field shall resolve in the graph according to its ref_target. |
-| `R-entity-field-kind-known` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string \| number \| enum \| reference \| state). |
-| `R-entity-typed-anchors` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes. |
-| `R-process-drives-existing-entities` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types. |
-| `R-step-invokes-known-transition` | SETTLED | `framework-author` | A-prose-suffices, A-bootstrap-self-applies | Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle. |
+| `R-process-types-exist` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | hotam_spec.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types. |
+| `R-process-opt-in` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple. |
+| `R-process-lifecycle-wellformed-aspect` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed. |
+| `R-process-roles-declared-aspect` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every role referenced in a Process step shall be declared in the Process roles_required tuple. |
+| `R-process-goal-owner-is-operator-aspect` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator. |
+| `R-process-typed-anchors-extended` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes. |
+| `R-entity-type-lifecycle-wellformed` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_entity_type_lifecycle_wellformed. |
+| `R-entity-instance-state-in-lifecycle` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every EntityInstance.state shall be a valid state in the corresponding EntityType.lifecycle. |
+| `R-entity-instance-required-fields` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every EntityInstance shall provide values for all EntityFields with required=True. |
+| `R-entity-instance-id-prefix` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every EntityInstance.id shall start with 'ENT-<entity_type>-' (typed-anchor discipline). |
+| `R-entity-instance-refs-resolve` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every EntityInstance reference field shall resolve in the graph according to its ref_target. |
+| `R-entity-field-kind-known` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string \| number \| enum \| reference \| state). |
+| `R-entity-typed-anchors` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes. |
+| `R-process-drives-existing-entities` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types. |
+| `R-step-invokes-known-transition` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle. |
 | `R-dependency-tracked` | SETTLED | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements via Requirement.relations (depends_on, supports, refines). |
 | `R-dependency-drives-parallel` | SETTLED | `framework-author` | A-finite-context-operators | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
 | `R-dependency-drives-sequential` | SETTLED | `framework-author` | A-finite-context-operators | Dependency chains in the network shall be processed sequentially. |
@@ -157,8 +157,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-crystal-tree-hierarchy` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget. |
 | `R-enforcement-levels-declared` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED. |
 | `R-enforced-names-enforcer` | SETTLED | `framework-author` | A-most-knowledge-crystallizable | An ENFORCED requirement shall name its enforcing invariant or test in enforced_by. |
-| `R-critical-core-methodology` | SETTLED | `domain-user` | A-prose-suffices | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
-| `R-critical-core-per-domain` | SETTLED | `domain-user` | A-prose-suffices | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
+| `R-critical-core-methodology` | SETTLED | `domain-user` | A-text-grounded-in-models | The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py. |
+| `R-critical-core-per-domain` | SETTLED | `domain-user` | A-text-grounded-in-models | Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed. |
 | `R-bijection-r-to-enforcer` | SETTLED | `framework-author` | A-bootstrap-self-applies | Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/. |
 | `R-tool-is-its-own-requirement` | SETTLED | `framework-author` | A-python-stack | Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists. |
 | `R-agent-scoped-constitution` | SETTLED | `framework-author` | A-python-stack | For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
@@ -221,7 +221,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-land-gate-tier-selector-fails-closed` | SETTLED | `framework-author` | A-python-stack | The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY selection uncertainty or blast-radius-unbounded case -- an unknown/new target, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), any single enforced_by entry gate.py cannot resolve to a concrete pytest node-id, a ProposedRejection (a rejected atom's own enforced_by does not bound its removal blast radius), or the creation of a brand-new Requirement or Conflict node (a new node's enforced_by, if any, is steward-supplied and unverified) -- never returning a partial or best-effort subset in an uncertain or unbounded case. |
 | `R-tiered-gate-not-a-commit-gate` | SETTLED | `framework-author` | A-python-stack | The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier applies only to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing. |
 | `R-doc-names-reader` | SETTLED | `framework-author` | — | Every generated doc shall name its reader as an existing Stakeholder id in its header. |
-| `R-initiator-supplies-domain-content` | SETTLED | `domain-user` | A-prose-suffices | An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec. |
+| `R-initiator-supplies-domain-content` | SETTLED | `domain-user` | A-text-grounded-in-models | An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec. |
 | `R-enforced-by-resolvable` | SETTLED | `framework-author` | — | Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node-id via the shared enforcer-resolution algorithm. |
 | `R-land-tier-trace` | SETTLED | `framework-author` | A-python-stack | Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran. |
 | `R-commit-boundary-checkable` | SETTLED | `framework-author` | A-python-stack | tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline. |
@@ -232,7 +232,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-core-imports-stdlib-or-hotam-spec-only` | SETTLED | `framework-author` | A-finite-context-operators | Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency. |
 | `R-agent-code-imports-framework` | SETTLED | `framework-author` | A-agent-code-imports-framework-directionally | An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory. |
 | `R-task-spawn-is-a-hand` | SETTLED | `ai-agent` | A-finite-context-operators | A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator. |
-| `R-atomicity-ratchet-no-growth` | SETTLED | `framework-reviewer` | A-prose-suffices | The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json. |
+| `R-atomicity-ratchet-no-growth` | SETTLED | `framework-reviewer` | A-text-grounded-in-models | The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json. |
 | `R-framework-owned-by-no-agent` | SETTLED | `framework-author` | A-framework-shared-infra-no-owner | The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import. |
 | `R-conflict-held-state` | SETTLED | `framework-reviewer` | A-bootstrap-self-applies | Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements. |
 | `R-held-carries-variants` | SETTLED | `framework-reviewer` | A-bootstrap-self-applies | A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes. |
@@ -256,6 +256,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-uncertain-assumptions-surface` | SETTLED | `framework-author` | — | The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt. |
 | `R-proposed-stakeholder-kind-exists` | SETTLED | `framework-author` | — | The proposal protocol shall include a ProposedStakeholder kind (kind='Stakeholder') that materializes a new Stakeholder node in the active domain's stakeholders tuple via tools/apply_proposal.py, refusing a duplicate id. |
 | `R-sensorium-committed` | SETTLED | `framework-author` | — | The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch, PreToolUse graph-guard, Stop context_producer+boot_cite) shall live in a committed project settings.json generated by tools/setup_hooks.py with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json. |
+| `R-assumption-implements-state` | SETTLED | `framework-author` | — | An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD. |
+| `R-user-request-decomposed-to-tickets` | SETTLED | `ai-agent` | — | The operator shall, immediately on receiving a user request, decompose it into tickets in the dialogue and ask the addressee -- session tasks or the ticket engine -- before beginning any work. |
 
 ## Stakeholders
 
@@ -272,16 +274,18 @@ Generated from the executable model: the methodology narrative comes from `spec/
 |---|---|---|---|
 | `A-python-stack` | HOLDS | `framework-author` | The framework runs on Python 3.12+ with uv + ruff + pytest + hypothesis. |
 | `A-stakeholders-care` | HOLDS | `framework-author` | At least two distinct human stakeholders exist who are willing to steward conflicts. |
-| `A-prose-suffices` | UNCERTAIN | `ai-agent` | For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core. |
+| `A-prose-suffices` | DEAD | `ai-agent` | For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core. — [DEAD] Steward verdict 2026-07-03 (V2), verbatim: «кажется, теста никогда не достаточно. У всего должны быть модели, модели должны иметь простые методы (которые легко читаются (пару строчек), и текстовое поисание, по которому легко проверить, что имплементация метода соотвествует описанию. И должны быть тесты, которые вызывают эти методы. Еще должны быть стейты ... это мы в самом начале собуждали. Тексты сами по себе - это воздух без зелми». Prose alone never sufficed: a claim is trustworthy only when grounded in a model (short readable methods + description checkable against implementation + tests invoking them + states). REPLACED by the HOLDS assumption A-text-grounded-in-models; all 37 dependent requirements were re-linked onto it before this kill. |
 | `A-graph-fits-memory` | HOLDS | `framework-author` | The whole tension graph fits in one Python process; streaming/persistence is not required. |
 | `A-content-free-honest` | HOLDS | `framework-author` | An empty spec/content/ is a legitimate ship state — the framework's value is real even before any domain is populated. |
-| `A-bootstrap-self-applies` | UNCERTAIN | `framework-reviewer` | The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing. |
+| `A-bootstrap-self-applies` | IMPLEMENTS | `framework-reviewer` | The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing. — [IMPLEMENTS] Steward verdict 2026-07-03 (verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. A-bootstrap-self-applies is not a fact under question but an aspiration we strive toward — re-typed from UNCERTAIN (58 dependents, top pulse line) to the volitional IMPLEMENTS род rather than re-affirmed HOLDS. Changes род and drops the P4 doubt signal honestly. |
 | `A-finite-context-operators` | HOLDS | `framework-author` | Operators are finite-context agents; an operator's problem domain must fit its context. |
 | `A-compaction-loses-working` | HOLDS | `ai-agent` | Knowledge living only in working context is lost on context auto-compaction; only the crystallized substrate survives. |
-| `A-most-knowledge-crystallizable` | UNCERTAIN | `framework-reviewer` | Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type. |
+| `A-most-knowledge-crystallizable` | IMPLEMENTS | `framework-reviewer` | Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type. — [IMPLEMENTS] Steward verdict 2026-07-03 (V3), variant B verbatim: «Б - мы к этому стремимся, при нахождении несоответствия пытаемся исправить на месте сами или через агента-руку». This is not a fact-claim about the world but a VOLITIONAL striving (R-assumption-implements-state): most knowledge is not KNOWN to be crystallizable, but the operator STRIVES to crystallize it and, on finding a mismatch, repairs it in place itself or via a hand-agent. Re-typing UNCERTAIN → IMPLEMENTS retires the standing P4 doubt signal and records the aspiration. |
 | `A-conflict-is-a-node-not-an-edge` | HOLDS | `framework-author` | A contradiction can only carry its shared knowledge (axis, context, shared root) if it is modeled as a first-class NODE; a `conflicts_with` edge between requirements holds nothing and cannot be clustered or stewarded. |
 | `A-agent-code-imports-framework-directionally` | HOLDS | `framework-author` | The dependency arrow between agent code and the framework body runs one way only: an agent's code may import hotam_spec.* as shared infrastructure, but hotam_spec.* (and spec/tools/*.py) must never import back from any agent's private tools/ directory. |
 | `A-framework-shared-infra-no-owner` | HOLDS | `framework-author` | The framework body (hotam_spec.*) is shared infrastructure any agent's code may import; it is owned by no single agent -- ownership is a governance convention, not a per-agent claim. |
+| `A-text-grounded-in-models` | HOLDS | `domain-user` | Text alone is air without ground: every claim is grounded in a model that has short readable methods, a textual description checkable against the method's implementation, tests that invoke those methods, and states (lifecycles). A requirement resting on this assumption is trustworthy only insofar as such a grounding model exists behind it. |
+| `A-single-human-wears-all-hats` | HOLDS | `domain-user` | In the current phase all stakeholder roles (domain-user/framework-reviewer/framework-author in self, dev-steward/pipeline-operator in hotam-dev) are worn by one human; role-separation checks guard structure, not real independence |
 
 ## Operators
 
@@ -518,9 +522,43 @@ and what_now's dead-assumption fallout). A shared assumption interpreted two dif
 also frequently the REAL root of a Conflict (Conflict.shared_assumption).
 
 Lifecycle (the source of truth is the `status` field, params.py-style):
-  HOLDS     — currently believed true.
+  HOLDS     — currently believed true.               [epistemic — a fact-claim]
   UNCERTAIN — under question; not yet falsified, not safely relied on.
+                                                      [epistemic — a fact-claim]
   DEAD      — known false; everything resting on it must be revisited.
+                                                      [epistemic — a fact-claim]
+  IMPLEMENTS — an ASPIRATION: not a claim about what the world IS, but a
+               statement of what we STRIVE to make true ('we are trying to do
+               this, we want this'). [VOLITIONAL — not epistemic]
+
+RULE (IMPLEMENTS, R-assumption-implements-state): IMPLEMENTS is a fourth,
+VOLITIONAL род of status, categorically distinct from the three epistemic
+statuses (HOLDS/UNCERTAIN/DEAD, which answer 'is this true?'). IMPLEMENTS
+answers 'do we want this to become true, and are we working toward it?'. Three
+consequences follow directly from its non-epistemic nature and are enforced by
+the filters/predicates that key off exact status equality:
+  (a) the UNCERTAIN-aging predicate does NOT touch it — an aspiration is not an
+      unresolved doubt, so it raises no P4 review-debt signal (see
+      graph.uncertain_assumptions, what_now's UNCERTAIN-aging band);
+  (b) it is NEVER counted as DEAD-fallout — nothing rests on a broken premise,
+      because an aspiration is not (yet) a premise (see graph.dead_assumptions,
+      reflection.reflect_dead_assumption_on_enforcer);
+  (c) legitimate transitions and their signoff (the transition table lives in
+      §Proposal — ProposedAssumptionTransition): IMPLEMENTS→HOLDS ('achieved,
+      became fact'), IMPLEMENTS→DEAD ('abandoned the striving'),
+      UNCERTAIN→IMPLEMENTS ('we understood this is not a fact but a goal') and
+      HOLDS→IMPLEMENTS ('we declared it fact too early') — ALL four require a
+      human decided_by. Agent entry WITHOUT signoff remains UNCERTAIN-only.
+
+WHY a distinct род rather than reusing HOLDS: re-affirming a doubted premise as
+HOLDS is a factual lie when the truth is 'this is not yet true but we are
+building toward it'. Collapsing aspiration into HOLDS would silence the
+UNCERTAIN-aging review signal under a false FACT-claim; IMPLEMENTS silences the
+doubt-signal HONESTLY, by re-typing the claim from fact to goal. The
+UNCERTAIN→IMPLEMENTS transition therefore CHANGES the род of the claim and
+removes a live P4 doubt signal — by the Wave-12 asymmetry (a transition that
+reduces live signal needs a named human) it REQUIRES a decided_by, unlike the
+signal-RAISING move to plain UNCERTAIN.
 
 ### 5. §Requirement — the requirement node — `hotam_spec.requirement`
 

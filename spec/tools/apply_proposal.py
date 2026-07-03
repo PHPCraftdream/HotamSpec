@@ -154,7 +154,12 @@ from hotam_spec.conflict import Variant, conflict_identity  # noqa: E402
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
 from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
-from hotam_spec.assumption import ASSUMPTION_STATES, DEAD, HOLDS  # noqa: E402
+from hotam_spec.assumption import (  # noqa: E402
+    ASSUMPTION_STATES,
+    DEAD,
+    HOLDS,
+    IMPLEMENTS,
+)
 from hotam_spec.proposal import (  # noqa: E402
     Proposal,
     ProposedAssumption,
@@ -331,6 +336,7 @@ def _validate_conflict_transition(raw: dict) -> ProposedConflictTransition:
     if not isinstance(derived_raw, list):
         raise ValueError("'derived' must be a list of R-id strings.")
     derived = tuple(str(x) for x in derived_raw)
+    shared_assumption = raw.get("shared_assumption", "")
     return ProposedConflictTransition(
         conflict_id=conflict_id,
         new_lifecycle=new_lifecycle,
@@ -338,6 +344,9 @@ def _validate_conflict_transition(raw: dict) -> ProposedConflictTransition:
         revisit_marker=revisit_marker if isinstance(revisit_marker, str) else "",
         derived=derived,
         variants=variants,
+        shared_assumption=(
+            shared_assumption.strip() if isinstance(shared_assumption, str) else ""
+        ),
     )
 
 
@@ -443,6 +452,27 @@ def _validate_conflict(raw: dict) -> ProposedConflict:
         raise ValueError("'steward' is required and must be non-empty.")
     shared_assumption = raw.get("shared_assumption", "")
     note = raw.get("note", "")
+    initial_lifecycle = raw.get("initial_lifecycle", "DETECTED")
+    if not isinstance(initial_lifecycle, str) or not initial_lifecycle.strip():
+        initial_lifecycle = "DETECTED"
+    initial_lifecycle = initial_lifecycle.strip()
+    decided_by = raw.get("decided_by", "").strip()
+    if initial_lifecycle.startswith("DECIDED") and not decided_by:
+        raise ValueError(
+            "initial_lifecycle starts with DECIDED but decided_by is empty. "
+            "Materializing a conflict already-DECIDED requires a human decider "
+            "(R-decided-needs-human-signoff)."
+        )
+    if (
+        not initial_lifecycle.startswith("DECIDED")
+        and initial_lifecycle != "DETECTED"
+    ):
+        raise ValueError(
+            "initial_lifecycle must be 'DETECTED' (the default) or start with "
+            "'DECIDED(...)'. Other lifecycles (ACKNOWLEDGED / REVISIT_WHEN / "
+            "HELD) are reached via a separate ConflictTransition, never at "
+            "creation."
+        )
     return ProposedConflict(
         axis=axis,
         context=context,
@@ -452,6 +482,8 @@ def _validate_conflict(raw: dict) -> ProposedConflict:
             shared_assumption.strip() if isinstance(shared_assumption, str) else ""
         ),
         note=note if isinstance(note, str) else "",
+        initial_lifecycle=initial_lifecycle,
+        decided_by=decided_by,
     )
 
 
@@ -557,8 +589,12 @@ def _validate_assumption_transition(raw: dict) -> ProposedAssumptionTransition:
     """Parse and validate an AssumptionTransition proposal (the kill-path).
 
     RULE: assumption_id + non-empty reason required; new_status in
-    ASSUMPTION_STATES; decided_by REQUIRED when new_status in (DEAD, HOLDS)
-    (the signoff asymmetry — see ProposedAssumptionTransition docstring).
+    ASSUMPTION_STATES; decided_by REQUIRED when new_status in
+    (DEAD, HOLDS, IMPLEMENTS) — the signoff asymmetry: only UNCERTAIN (a
+    signal-RAISING doubt) is agent-enterable; DEAD/HOLDS reduce live signal and
+    IMPLEMENTS re-types a fact-claim into a VOLITIONAL aspiration
+    (R-assumption-implements-state), all steward acts (see
+    ProposedAssumptionTransition docstring for the full transition table).
     """
     assumption_id = raw.get("assumption_id", "").strip()
     if not assumption_id:
@@ -578,11 +614,12 @@ def _validate_assumption_transition(raw: dict) -> ProposedAssumptionTransition:
             "change with no recorded reason is drift, not a decision."
         )
     decided_by = raw.get("decided_by", "").strip()
-    if new_status in (DEAD, HOLDS) and not decided_by:
+    if new_status in (DEAD, HOLDS, IMPLEMENTS) and not decided_by:
         raise ValueError(
             f"'decided_by' (a Stakeholder id) is required when new_status is "
-            f"'{new_status}': a transition that reduces live signal needs a "
-            f"named human signoff (R-trust-anchor-mechanism, "
+            f"'{new_status}': a transition that reduces live signal or re-types a "
+            f"fact-claim into a VOLITIONAL aspiration needs a named human signoff "
+            f"(R-assumption-implements-state, R-trust-anchor-mechanism, "
             f"R-ai-presents-not-decides)."
         )
     return ProposedAssumptionTransition(
@@ -1179,6 +1216,106 @@ def _render_requirement_source(proposal: ProposedRequirement, indent: str) -> st
 # ---------------------------------------------------------------------------
 
 
+def _read_requirement_kwarg(call: ast.Call, field: str) -> object | None:
+    """Canon: §Proposal — read back a Requirement kwarg's evaluated value from source.
+
+    Returns the resolved value for the named kwarg, or None if the kwarg is
+    absent. String Constants resolve to their str; tuples of string Constants
+    resolve to a tuple of str; a bare Name (e.g. enforcement=PROSE) resolves to
+    its identifier string ('PROSE'). Anything else resolves to None (treated as
+    'unverifiable', never a false mismatch).
+    """
+    for kw in call.keywords:
+        if kw.arg != field:
+            continue
+        v = kw.value
+        if isinstance(v, ast.Constant) and isinstance(v.value, str):
+            return v.value
+        if isinstance(v, ast.Name):
+            return v.id
+        if isinstance(v, ast.Tuple):
+            items: list[str] = []
+            for elt in v.elts:
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                    items.append(elt.value)
+                else:
+                    return None  # non-string element: unverifiable
+            return tuple(items)
+        return None
+    return None
+
+
+def _verify_requirement_update_reflected(
+    emitted_source: str, proposal: ProposedRequirement
+) -> None:
+    """Canon: §Proposal — confirm an UPDATE actually wrote its load-bearing fields.
+
+    RULE (R-verify-closure-per-action): after the UPDATE loop emits new source,
+    re-parse it, locate the target Requirement, and assert that its
+    `assumptions`, `status`, `enforcement`, and `enforceability` read back
+    exactly what the proposal intended. A mismatch means the writer silently
+    failed to effect the change (a no-op edit, a lost line-shift, a matcher that
+    resolved to the wrong node) — raise RuntimeError so the land fails LOUDLY
+    instead of reporting a clean write over an unchanged graph.
+
+    WHY only these four fields: they are the ones a signature/reattachment wave
+    turns on (assumptions re-point; status/enforcement/enforceability flip).
+    claim/why/relations/m_tag are verified structurally elsewhere (docs-gen,
+    bijection, m-tag invariants); the silent-loss class this guard closes is the
+    assumptions-reattach no-op that the Wave-2 batch exposed. enforcement/
+    enforceability are only checked when the proposal carries a non-default
+    value that must be present in source.
+    """
+    tree = ast.parse(emitted_source)
+    call = _find_requirement_call(tree, proposal.id)
+    if call is None:
+        raise RuntimeError(
+            f"Post-write verify: requirement '{proposal.id}' vanished from the "
+            f"emitted source after an UPDATE — the write did not land."
+        )
+    # assumptions: the reattach field. Absent-in-source == empty tuple.
+    got_assumptions = _read_requirement_kwarg(call, "assumptions")
+    want_assumptions = proposal.assumptions
+    if got_assumptions is None:
+        got_assumptions = ()
+    if isinstance(got_assumptions, tuple) and tuple(got_assumptions) != tuple(
+        want_assumptions
+    ):
+        raise RuntimeError(
+            f"Post-write verify FAILED for '{proposal.id}': proposal set "
+            f"assumptions={list(want_assumptions)} but the emitted source reads "
+            f"back assumptions={list(got_assumptions)}. The writer silently did "
+            f"NOT effect the reattachment (R-verify-closure-per-action)."
+        )
+    # status: a bare string kwarg — must match exactly.
+    got_status = _read_requirement_kwarg(call, "status")
+    if got_status is not None and got_status != proposal.status:
+        raise RuntimeError(
+            f"Post-write verify FAILED for '{proposal.id}': proposal set "
+            f"status='{proposal.status}' but the emitted source reads back "
+            f"status='{got_status}' (R-verify-closure-per-action)."
+        )
+    # enforcement: only verify when non-default (default PROSE may be elided).
+    got_enf = _read_requirement_kwarg(call, "enforcement")
+    if got_enf is not None and got_enf != proposal.enforcement:
+        raise RuntimeError(
+            f"Post-write verify FAILED for '{proposal.id}': proposal set "
+            f"enforcement='{proposal.enforcement}' but the emitted source reads "
+            f"back enforcement='{got_enf}' (R-verify-closure-per-action)."
+        )
+    # enforceability: only verify when the proposal carries a non-default label
+    # that must be present in source.
+    if proposal.enforceability and proposal.enforceability != "ENFORCEABLE":
+        got_enfy = _read_requirement_kwarg(call, "enforceability")
+        if got_enfy != proposal.enforceability:
+            raise RuntimeError(
+                f"Post-write verify FAILED for '{proposal.id}': proposal set "
+                f"enforceability='{proposal.enforceability}' but the emitted "
+                f"source reads back enforceability='{got_enfy}' "
+                f"(R-verify-closure-per-action)."
+            )
+
+
 def _apply_requirement_to_source(
     source_text: str, proposal: ProposedRequirement
 ) -> str:
@@ -1260,7 +1397,16 @@ def _apply_requirement_to_source(
                     f"Lost track of requirement '{proposal.id}' after "
                     f"replacing field '{field_name}'."
                 )
-        return "".join(lines)
+        result = "".join(lines)
+        # POST-CHECK (R-verify-closure-per-action): a mechanical writer that
+        # reports success while silently NOT effecting the intended change is a
+        # class of bug that bit the signature-wave-2 reattachment (a batch UPDATE
+        # was reported clean while three targets' assumptions were never moved —
+        # only the DEAD-fallout net later surfaced the loss). Confirm the emitted
+        # source actually reflects the proposal's load-bearing fields for THIS
+        # target; if not, raise (exit != 0) rather than let a no-op land quietly.
+        _verify_requirement_update_reflected(result, proposal)
+        return result
 
     # ADD new requirement at end of requirements tuple
     lines = source_text.splitlines(keepends=True)
@@ -1373,10 +1519,15 @@ def _apply_conflict_transition(
         ("lifecycle", proposal.new_lifecycle),
         ("decided_by", proposal.decided_by),
         ("revisit_marker", proposal.revisit_marker),
+        ("shared_assumption", proposal.shared_assumption),
         ("derived", proposal.derived),
         ("variants", proposal.variants),
     ]:
-        if field_name in ("revisit_marker",) and not new_value:
+        if field_name == "shared_assumption" and not new_value:
+            # Empty = leave the existing edge untouched (never overwrite a live
+            # shared_assumption with ""). Re-pointing is opt-in per proposal.
+            continue
+        if field_name == "revisit_marker" and not new_value:
             existing = _kwarg_line_col(call_node, field_name)
             if existing is None:
                 continue
@@ -1539,7 +1690,9 @@ def _render_conflict_source(proposal: ProposedConflict, indent: str) -> str:
     lines.append(f"{inner}context={ctx_repr},")
     lines.append(f"{inner}members={_python_repr(proposal.members)},")
     lines.append(f"{inner}steward={_python_repr(proposal.steward)},")
-    lines.append(f'{inner}lifecycle="DETECTED",')
+    lines.append(f"{inner}lifecycle={_python_repr(proposal.initial_lifecycle)},")
+    if proposal.decided_by:
+        lines.append(f"{inner}decided_by={_python_repr(proposal.decided_by)},")
     if proposal.shared_assumption:
         lines.append(
             f"{inner}shared_assumption={_python_repr(proposal.shared_assumption)},"

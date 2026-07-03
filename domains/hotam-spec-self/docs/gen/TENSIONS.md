@@ -40,9 +40,8 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **members:** `R-content-free-framework`, `R-agent-never-lost`
 - **steward:** `domain-user`
 - **lifecycle:** DECIDED(The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.)
-- **shared assumption:** `A-prose-suffices`
-- **spawned (lineage):** `R-initiator-supplies-domain-content`
-- **revisit marker:** REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided.
+- **shared assumption:** `A-text-grounded-in-models`
+- **revisit marker:** REVISIT when a fifth opt-in aspect is proposed OR the first inter-aspect conflict is observed — at that point the core-vs-aspect boundary must be formally re-decided. Boundary re-affirmed at three aspects (2026-07-03): no inter-aspect conflict observed; alarm re-armed. shared_assumption re-pointed from the now-DEAD A-prose-suffices onto its live replacement A-text-grounded-in-models (V2).
 
 #### `C-be22cdd1` — core-vs-aspect
 
@@ -83,6 +82,16 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **lifecycle:** DECIDED(the dependency graph decides — parallelize independent components, sequence coupled chains; cut the domain along lines of independence, never arbitrarily.)
 - **shared assumption:** `A-finite-context-operators`
 
+### Axis `offload-vs-carry` — 1 conflict(s), single tension
+
+#### `C-7f86e41d` — offload-vs-carry
+
+- **context:** every newly SETTLED atom adds resident weight to the operator crystal: R-operator-prompt-from-substrate + R-constitution-is-index project ALL SETTLED requirements into root CLAUDE.md (~64k chars at 198 atoms), while R-budget-measure caps that same crystal at 130000 warn / 150000 hard (CRYSTAL_CHARS) -- crystallization pressure and the residency cap collide monotonically as the graph grows, with no eviction mechanic beyond tiered distillation
+- **members:** `R-operator-prompt-from-substrate`, `R-budget-measure`
+- **steward:** `framework-reviewer`
+- **lifecycle:** DECIDED(DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Steward verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.)
+- **shared assumption:** `A-finite-context-operators`
+
 ## Hotam-Specn map (Mermaid)
 
 ```mermaid
@@ -92,13 +101,14 @@ graph TD
     R_active_loop_playbooks["R-active-loop-playbooks"]
     R_content_free_framework["R-content-free-framework"]
     R_empty_content_is_legitimate["R-empty-content-is-legitimate"]
-    R_initiator_supplies_domain_content["R-initiator-supplies-domain-content"]
     R_crystallize_knowledge_to_code["R-crystallize-knowledge-to-code"]
     R_context_bounded_delegation["R-context-bounded-delegation"]
     R_crystallize_before_split["R-crystallize-before-split"]
     R_dependency_graph_parallelism["R-dependency-graph-parallelism"]
     R_speculative_aspects_frozen["R-speculative-aspects-frozen"]
     R_entity_derived_requirement["R-entity-derived-requirement"]
+    R_operator_prompt_from_substrate["R-operator-prompt-from-substrate"]
+    R_budget_measure["R-budget-measure"]
     C_186c4347{"C-186c4347\nagent-autonomy-vs-human-control"}
     R_agent_never_lost --> C_186c4347
     R_ai_presents_not_decides --> C_186c4347
@@ -109,7 +119,6 @@ graph TD
     C_8600b1b8{"C-8600b1b8\ncore-vs-aspect"}
     R_content_free_framework --> C_8600b1b8
     R_agent_never_lost --> C_8600b1b8
-    C_8600b1b8 -.spawns.-> R_initiator_supplies_domain_content
     C_06e2d84e{"C-06e2d84e\napparatus-weight-vs-coverage"}
     R_crystallize_knowledge_to_code --> C_06e2d84e
     R_content_free_framework --> C_06e2d84e
@@ -123,6 +132,9 @@ graph TD
     C_be22cdd1{"C-be22cdd1\ncore-vs-aspect"}
     R_speculative_aspects_frozen --> C_be22cdd1
     R_entity_derived_requirement --> C_be22cdd1
+    C_7f86e41d{"C-7f86e41d\noffload-vs-carry"}
+    R_operator_prompt_from_substrate --> C_7f86e41d
+    R_budget_measure --> C_7f86e41d
 ```
 
 ## Controlled vocabulary of axes (this domain)

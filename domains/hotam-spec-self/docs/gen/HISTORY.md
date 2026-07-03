@@ -209,9 +209,8 @@ substrate (R-history-from-rejected-markers).
 - **members:** `R-content-free-framework`, `R-agent-never-lost`
 - **steward:** `domain-user`
 - **rationale:** The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.
-- **shared assumption:** `A-prose-suffices`
-- **spawned (derived):** `R-initiator-supplies-domain-content`
-- **revisit when:** REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed — at that point the core-vs-aspect boundary must be formally decided.
+- **shared assumption:** `A-text-grounded-in-models`
+- **revisit when:** REVISIT when a fifth opt-in aspect is proposed OR the first inter-aspect conflict is observed — at that point the core-vs-aspect boundary must be formally re-decided. Boundary re-affirmed at three aspects (2026-07-03): no inter-aspect conflict observed; alarm re-armed. shared_assumption re-pointed from the now-DEAD A-prose-suffices onto its live replacement A-text-grounded-in-models (V2).
 
 ### `C-06e2d84e` — axis `apparatus-weight-vs-coverage`
 
@@ -245,6 +244,14 @@ substrate (R-history-from-rejected-markers).
 - **members:** `R-speculative-aspects-frozen`, `R-entity-derived-requirement`
 - **steward:** `framework-reviewer`
 - **rationale:** chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 ("все вопросы решай в сторону совершенства")
+
+### `C-7f86e41d` — axis `offload-vs-carry`
+
+- **context:** every newly SETTLED atom adds resident weight to the operator crystal: R-operator-prompt-from-substrate + R-constitution-is-index project ALL SETTLED requirements into root CLAUDE.md (~64k chars at 198 atoms), while R-budget-measure caps that same crystal at 130000 warn / 150000 hard (CRYSTAL_CHARS) -- crystallization pressure and the residency cap collide monotonically as the graph grows, with no eviction mechanic beyond tiered distillation
+- **members:** `R-operator-prompt-from-substrate`, `R-budget-measure`
+- **steward:** `framework-reviewer`
+- **rationale:** DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Steward verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.
+- **shared assumption:** `A-finite-context-operators`
 
 ## Parked decisions (REVISIT_WHEN)
 
