@@ -143,8 +143,4 @@ graph TD
 
 Requirement pairs that SHOULD perhaps have a connector node but do not. This is a heuristic stub for the deferred detector — a suspicion to judge, never an auto-materialized conflict.
 
-| left | right | hint |
-|---|---|---|
-| `R-agent-code-imports-framework` | `R-conflict-is-connector-node` | shares assumption(s): A-content-free-honest |
-| `R-agent-code-imports-framework` | `R-framework-owned-by-no-agent` | shares assumption(s): A-content-free-honest |
-| `R-conflict-is-connector-node` | `R-framework-owned-by-no-agent` | shares assumption(s): A-content-free-honest |
+_None flagged._

@@ -79,6 +79,47 @@ measure=new_measure). Used to move an operator off a stale/mismeasured
 budget (e.g. NODE_COUNT counting the free substrate) onto a measure that
 actually reflects R-working-vs-substrate-budget (e.g. CRYSTAL_CHARS).
 
+## From `spec/src/hotam_spec/proposal.py::ProposedAxis`
+
+Canon: §Proposal — propose a new Axis (controlled-vocabulary tension dimension)
+to add to the active domain's graph.
+
+RULE: kind='Axis'; the apply_proposal tool serializes this into a new
+Axis(...) entry appended to the active domain's `axes` tuple. slug MUST be
+kebab-case and MUST NOT already exist in the graph's axes (a duplicate
+slug is a re-declaration, not a new axis — R-axis-controlled-vocab).
+description MUST be non-empty (an axis with no description names nothing
+to cluster around).
+
+WHY a gatekeeper precedes this proposal, never a bare CLI shortcut: an
+axis is the ONE structural place two future Conflicts cluster into one
+architectural tension (R-axis-gatekeeper-policy — 'a privatnik is born
+with a door'). Admitting a near-duplicate axis silently FORKS a cluster
+into two, which is exactly the invisibility R-anchor-everything forbids.
+tools/create_axis.py is the confront-gated CLI that constructs this
+proposal; hand-writing the JSON bypasses the similarity check and is
+discouraged (R-prefer-tool-over-hand).
+
+## From `spec/src/hotam_spec/proposal.py::ProposedAssumption`
+
+Canon: §Proposal / §Assumption — propose a new Assumption (falsifiable belief)
+to add to the active domain's graph.
+
+RULE: kind='Assumption'; the apply_proposal tool serializes this into a new
+Assumption(...) entry appended to the active domain's `assumptions` tuple.
+id MUST be unique (not already present in the graph's assumptions) and
+SHOULD start with 'A-' (R-anchor-everything). status MUST be one of
+hotam_spec.assumption.ASSUMPTION_STATES (HOLDS | UNCERTAIN | DEAD).
+owner MUST be a Stakeholder id.
+
+WHY this kind exists: latent-connector clustering (§Conflict —
+latent_connector_clusters) flags requirements that share an
+over-broad assumption as suspiciously linked. Splitting an over-broad
+assumption into narrower, more specific ones — each genuinely shared
+only by requirements that are actually about the same claim — is the
+mechanical remedy; this proposal kind is how a narrower Assumption node
+gets materialized without hand-editing the graph (R-no-hand-edit-graph).
+
 ## From `spec/src/hotam_spec/proposal.py::ProposedEntityType`
 
 Canon: §Proposal — propose a new EntityType to add to the active domain's graph.

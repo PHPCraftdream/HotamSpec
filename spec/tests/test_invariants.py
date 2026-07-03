@@ -839,3 +839,149 @@ def test_check_doc_reader_travel_agent_regression(monkeypatch) -> None:
     assert "CONSTITUTION" in fired_kinds
     for v in violations:
         assert "travel-agent" not in v.message
+
+
+# ---------------------------------------------------------------------------
+# R-domain-self-hosting-flag (wave 7 move 1) — FRAMEWORK_SCOPED_INVARIANTS
+# run only when g.self_hosting is True.
+# ---------------------------------------------------------------------------
+
+
+def test_framework_scoped_invariants_skipped_when_not_self_hosting() -> None:
+    """A non-self-hosting graph with a SETTLED/ENFORCED requirement must not
+    fire any FRAMEWORK_SCOPED_INVARIANTS check, even though those checks would
+    normally fire on real framework state (e.g. orphan-enforcer bijection
+    violations are a certainty on any graph with fewer SETTLED/ENFORCED
+    requirements than there are functions in ALL_INVARIANTS).
+    """
+    from hotam_spec.invariants import FRAMEWORK_SCOPED_INVARIANTS  # noqa: PLC0415
+    from hotam_spec.requirement import ENFORCED, SETTLED  # noqa: PLC0415
+
+    g = TensionGraph(
+        stakeholders=(Stakeholder(id="s1", name="S1", domain="d"),),
+        requirements=(
+            Requirement(
+                id="R-lonely",
+                claim="a lonely settled requirement",
+                owner="s1",
+                status=SETTLED,
+                enforcement=ENFORCED,
+                enforced_by=("check_lonely_lonely_lonely",),
+            ),
+        ),
+        self_hosting=False,
+    )
+    violations = all_violations(g)
+    framework_names = {fn.__name__ for fn in FRAMEWORK_SCOPED_INVARIANTS}
+    fired_framework = {v.invariant for v in violations if v.invariant in framework_names}
+    assert fired_framework == set(), (
+        f"framework-scoped invariants fired on a non-self-hosting graph: {fired_framework}"
+    )
+
+
+def test_framework_scoped_invariants_run_when_self_hosting() -> None:
+    """The same deliberately-broken graph DOES fire framework-scoped checks
+    (specifically check_bijection_r_to_enforcer's unresolvable-enforcer branch)
+    once self_hosting is True — the gate is a real switch, not a permanent no-op.
+    """
+    from hotam_spec.requirement import ENFORCED, SETTLED  # noqa: PLC0415
+
+    g = TensionGraph(
+        stakeholders=(Stakeholder(id="s1", name="S1", domain="d"),),
+        requirements=(
+            Requirement(
+                id="R-lonely",
+                claim="a lonely settled requirement",
+                owner="s1",
+                status=SETTLED,
+                enforcement=ENFORCED,
+                enforced_by=("check_lonely_lonely_lonely",),
+            ),
+        ),
+        self_hosting=True,
+    )
+    violations = all_violations(g)
+    assert any(v.invariant == "check_bijection_r_to_enforcer" for v in violations)
+
+
+def test_hotam_dev_pulse_has_no_framework_scoped_violations() -> None:
+    """The real hotam-dev business domain (loaded from domains/hotam-dev/graph.py)
+    must carry self_hosting=False and produce zero FRAMEWORK_SCOPED_INVARIANTS
+    violations — the concrete regression this move fixes (was 76 phantom P1s).
+    """
+    import os  # noqa: PLC0415
+
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
+    from hotam_spec.invariants import FRAMEWORK_SCOPED_INVARIANTS  # noqa: PLC0415
+
+    old = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN")
+    os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = "hotam-dev"
+    try:
+        g = load_content_graph()
+    finally:
+        if old is None:
+            os.environ.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
+        else:
+            os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = old
+
+    assert g.self_hosting is False
+    framework_names = {fn.__name__ for fn in FRAMEWORK_SCOPED_INVARIANTS}
+    violations = all_violations(g)
+    fired_framework = {v.invariant for v in violations if v.invariant in framework_names}
+    assert fired_framework == set(), (
+        f"hotam-dev (non-self-hosting) fired framework-scoped checks: {fired_framework}"
+    )
+
+
+def test_hotam_spec_self_pulse_unchanged_by_self_hosting_gate() -> None:
+    """The real hotam-spec-self domain carries self_hosting=True and its
+    violation set is unaffected by this move (framework-scoped checks still
+    run for the domain that models the framework).
+    """
+    import os  # noqa: PLC0415
+
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
+
+    old = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN")
+    os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = "hotam-spec-self"
+    try:
+        g = load_content_graph()
+    finally:
+        if old is None:
+            os.environ.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
+        else:
+            os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = old
+
+    assert g.self_hosting is True
+    assert all_violations(g) == []
+
+
+def test_synthetic_non_self_domain_with_framework_checks_not_flagged() -> None:
+    """A synthetic domain graph carrying framework-shaped SETTLED/ENFORCED
+    requirements (naming check_bijection_r_to_enforcer etc. in enforced_by,
+    as a real domain might if it copy-pasted framework requirements) is NOT
+    flagged by the framework-scoped orphan/coherence checks as long as
+    self_hosting stays False — jurisdiction is domain-declared, not inferred
+    from content shape.
+    """
+    from hotam_spec.invariants import FRAMEWORK_SCOPED_INVARIANTS  # noqa: PLC0415
+    from hotam_spec.requirement import ENFORCED, SETTLED  # noqa: PLC0415
+
+    g = TensionGraph(
+        stakeholders=(Stakeholder(id="s1", name="S1", domain="d"),),
+        requirements=(
+            Requirement(
+                id="R-mimics-framework",
+                claim="a requirement that names a framework check_* by hand",
+                owner="s1",
+                status=SETTLED,
+                enforcement=ENFORCED,
+                enforced_by=("check_bijection_r_to_enforcer",),
+            ),
+        ),
+        self_hosting=False,
+    )
+    violations = all_violations(g)
+    framework_names = {fn.__name__ for fn in FRAMEWORK_SCOPED_INVARIANTS}
+    fired_framework = {v.invariant for v in violations if v.invariant in framework_names}
+    assert fired_framework == set()

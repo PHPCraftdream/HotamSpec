@@ -69,6 +69,26 @@ def test_cites_anchor_goal_and_op_prefix() -> None:
     assert bcs.cites_anchor("OP-director owns this") is True
 
 
+def test_cites_anchor_rejects_r_squared() -> None:
+    assert bcs.cites_anchor("The R-squared value looks good") is False
+
+
+def test_cites_anchor_rejects_c_suite() -> None:
+    assert bcs.cites_anchor("This is a C-suite decision") is False
+
+
+def test_cites_anchor_rejects_op_ed() -> None:
+    assert bcs.cites_anchor("Read the OP-ED in the paper") is False
+
+
+def test_cites_anchor_rejects_goal_oriented() -> None:
+    assert bcs.cites_anchor("A GOAL-oriented approach works well") is False
+
+
+def test_cites_anchor_rejects_a_list() -> None:
+    assert bcs.cites_anchor("This is an A-list requirement") is False
+
+
 # ---------------------------------------------------------------------------
 # last_assistant_text
 # ---------------------------------------------------------------------------
@@ -89,7 +109,7 @@ def test_last_assistant_text_picks_last_assistant_turn(tmp_path: Path) -> None:
         "\n".join(
             [
                 _transcript_line("user", ["hello"]),
-                _transcript_line("assistant", ["Per R-x this is the first reply."]),
+                _transcript_line("assistant", ["Per R-x-anchor this is the first reply."]),
                 _transcript_line("user", ["ok next"]),
                 _transcript_line("assistant", ["Second reply with no anchor."]),
             ]
@@ -176,7 +196,7 @@ def test_write_from_payload_appends(tmp_path: Path) -> None:
     transcript = tmp_path / "t.jsonl"
     log_path = tmp_path / "boot-cite-log.jsonl"
 
-    transcript.write_text(_transcript_line("assistant", ["R-foo cited."]), encoding="utf-8")
+    transcript.write_text(_transcript_line("assistant", ["R-foo-bar cited."]), encoding="utf-8")
     bcs.write_from_payload({"transcript_path": str(transcript)}, log_path, stamp="s1")
 
     transcript.write_text(_transcript_line("assistant", ["no anchor."]), encoding="utf-8")
@@ -236,7 +256,7 @@ def test_compute_status_mixed_and_windowed(tmp_path: Path) -> None:
 
 def test_main_write_then_read(tmp_path: Path, capsys) -> None:
     transcript = tmp_path / "t.jsonl"
-    transcript.write_text(_transcript_line("assistant", ["R-x cited here."]), encoding="utf-8")
+    transcript.write_text(_transcript_line("assistant", ["R-x-cited here."]), encoding="utf-8")
     payload_path = tmp_path / "payload.json"
     payload_path.write_text(json.dumps({"transcript_path": str(transcript)}), encoding="utf-8")
     log_path = tmp_path / "log.jsonl"

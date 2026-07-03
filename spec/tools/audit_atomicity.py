@@ -6,6 +6,13 @@ Run:
   uv run python tools/audit_atomicity.py            # audit domain content
   uv run python tools/audit_atomicity.py --demo      # audit demo fixture
 
+Output: AUDIT.md is written to the ACTIVE domain's docs/gen/ dir
+(domains/<active>/docs/gen/AUDIT.md), resolved through the same
+gen_spec._resolve_active_gen_dir() the generator itself uses -- not a fixed
+top-level docs/gen/. A legacy top-level docs/gen/AUDIT.md would silently go
+stale the moment a second domain becomes active; there is exactly one
+resolver and one written location, shared with gen_spec.py.
+
 Deterministic: sorted output, LF newlines, utf-8, no timestamps.
 """
 
@@ -22,10 +29,20 @@ from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent  # .../HotamSpec
-GEN_DIR = REPO_ROOT / "docs" / "gen"
 
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
+if str(SPEC_ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(SPEC_ROOT / "tools"))
+
+# GEN_DIR resolves through the SAME active-domain resolver gen_spec.py uses
+# (gen_spec._resolve_active_gen_dir), so the audit is written to the ACTIVE
+# domain's docs/gen/ (domains/<active>/docs/gen/AUDIT.md), never a stale
+# top-level docs/gen/ that no longer corresponds to the graph being audited
+# (R-active-domain-pin-not-alphabetical: one resolver, one answer, shared).
+from gen_spec import _resolve_active_gen_dir  # noqa: E402
+
+GEN_DIR = _resolve_active_gen_dir()
 
 from hotam_spec.doc_readers import reader_line as _doc_reader_line  # noqa: E402
 from hotam_spec.graph import (  # noqa: E402

@@ -230,6 +230,24 @@ def build_graph() -> TensionGraph:
             status=UNCERTAIN,
             owner="framework-reviewer",
         ),
+        Assumption(
+            id="A-conflict-is-a-node-not-an-edge",
+            statement="A contradiction can only carry its shared knowledge (axis, context, shared root) if it is modeled as a first-class NODE; a `conflicts_with` edge between requirements holds nothing and cannot be clustered or stewarded.",
+            status=HOLDS,
+            owner="framework-author",
+        ),
+        Assumption(
+            id="A-agent-code-imports-framework-directionally",
+            statement="The dependency arrow between agent code and the framework body runs one way only: an agent's code may import hotam_spec.* as shared infrastructure, but hotam_spec.* (and spec/tools/*.py) must never import back from any agent's private tools/ directory.",
+            status=HOLDS,
+            owner="framework-author",
+        ),
+        Assumption(
+            id="A-framework-shared-infra-no-owner",
+            statement="The framework body (hotam_spec.*) is shared infrastructure any agent's code may import; it is owned by no single agent -- ownership is a governance convention, not a per-agent claim.",
+            status=HOLDS,
+            owner="framework-author",
+        ),
     )
 
     requirements = (
@@ -277,9 +295,9 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "The central ontological insight. An edge holds nothing; a node holds knowledge belonging to neither party (the axis, the context, the shared root) — that is what makes contradictions first-class and clusterable."
+                "The central ontological insight. An edge holds nothing; a node holds knowledge belonging to neither party (the axis, the context, the shared root) -- that is what makes contradictions first-class and clusterable. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-conflict-is-a-node-not-an-edge, which names this requirement's actual premise."
             ),
-            assumptions=("A-content-free-honest",),
+            assumptions=("A-conflict-is-a-node-not-an-edge",),
             enforcement="ENFORCED",
             enforced_by=("check_conflict_has_axis", "check_conflict_has_context", "check_conflict_has_steward", "test_invariants.py::test_conflicts_with_is_not_a_relation_kind"),
         ),
@@ -495,17 +513,18 @@ def build_graph() -> TensionGraph:
         Requirement(
             id="R-axis-gatekeeper-policy",
             claim=(
-                "Axis-duplicate gatekeeping shall be a mandatory part of the future axis-creation path (confront-style similarity check at creation time), not a separately-switched feature; until an axis-creation tool exists, the hand-curated axes tuple is the gate."
+                "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.py), refusing near-duplicate axes unless overridden by an explicit --force-new justification."
             ),
             owner="ai-agent",
             status=(
                 "SETTLED"
             ),
             why=(
-                "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- i.e. it is not an optional toggle to switch on later (immediately / on first ambiguous slug / above N axes were the three options posed by the OPEN question), it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. Until an axis-creation tool is built, the axes tuple on each domain's TensionGraph is hand-curated by the steward directly editing spec/content (or domains/*/graph.py) via apply_proposal, which already IS the gate -- no axis is admitted without a human writing it."
+                "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. tools/create_axis.py now exists: it reuses confront.py's lexical token/stem overlap scorer against every existing Axis's slug+description, refuses (exit 1) on a score >= threshold (default 0.35, naming the nearest existing axis), and admits only via --force-new '<justification>' which is folded into the landed proposal's why field (never a silent override). Exact-slug duplicates are refused unconditionally (no --force-new escape -- that is re-declaration, not creation). ENFORCED by spec/tests/test_tool_create_axis.py covering: positive (novel axis passes), negative (near-duplicate refused, exit != 0, nearest match named), force-new override path (justification recorded), exact-slug duplicate always refused, and the apply-side writer (_apply_axis_to_source: insert + duplicate-slug refusal)."
             ),
             assumptions=(),
-            enforcement="STRUCTURAL",
+            enforcement="ENFORCED",
+            enforced_by=("tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper", "tests/test_tool_create_axis.py::test_near_duplicate_refused", "tests/test_tool_create_axis.py::test_near_duplicate_refusal_names_nearest", "tests/test_tool_create_axis.py::test_exact_slug_duplicate_always_refused_even_with_force", "tests/test_tool_create_axis.py::test_force_new_overrides_refusal", "tests/test_tool_create_axis.py::test_force_new_justification_recorded", "tests/test_tool_create_axis.py::test_writer_inserts_new_axis", "tests/test_tool_create_axis.py::test_writer_refuses_duplicate_slug"),
         ),
         Requirement(
             id="R-content-layout-evolution",
@@ -1320,10 +1339,11 @@ def build_graph() -> TensionGraph:
                 "SETTLED"
             ),
             why=(
-                "M21. Steward verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). Assumption (hotam_spec/assumption.py) remains the sole belief-carrying node type in the ontology; no Observation/Evidence type is added -- this was the scope-creep risk the OPEN question named, and the steward closed it toward the narrower ontology."
+                "M21. Steward verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). Assumption (hotam_spec/assumption.py) remains the sole belief-carrying node type in the ontology; no Observation/Evidence type is added -- this was the scope-creep risk the OPEN question named, and the steward closed it toward the narrower ontology. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'an operator kept its reasoning in the dialogue and crystallized only on request' as a property of the committed graph (it is a fact about a conversation, not the graph state). This is the same honesty class as R-initiator-supplies-domain-content: a real, permanent dialogue discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this discipline already reached ENFORCED separately: R-no-observation-type (SETTLED, ENFORCED) mechanically verifies no Observation/Evidence node type exists in the ontology -- that narrower, structural half is where the machine-checkable guarantee correctly lives; R-observation-evidence-scope itself states the broader dialogue-discipline stance, which stays INHERENTLY_PROSE. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."
             ),
             assumptions=("A-most-knowledge-crystallizable",),
             enforcement="STRUCTURAL",
+            enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
             id="R-rules-as-data",
@@ -1515,11 +1535,12 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=(
-                "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle."
+                "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'no target backend is named' or 'adapting the skin is the adopting agent's own concern' as a runtime property of the committed graph (it is a design-stance/non-decision about scope, not a structural fact). This is the same honesty class as R-initiator-supplies-domain-content and R-observation-evidence-scope: a real, permanent positional discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this claim already reached ENFORCED separately: R-core-imports-stdlib-or-hotam-spec-only (SETTLED, ENFORCED) mechanically verifies the CONSTRUCTION half -- an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core -- that narrower, structural half is where the machine-checkable guarantee correctly lives; R-backend-scope itself states the broader naming/positional stance, which stays INHERENTLY_PROSE. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."
             ),
             assumptions=("A-finite-context-operators",),
             enforcement="PROSE",
             enforced_by=(),
+            enforceability="INHERENTLY_PROSE",
         ),
         # --- SETTLED — P11 new: convergence, atomicity, agent-directory, tools, docs ---
         Requirement(
@@ -3046,10 +3067,10 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-entity-derived-requirement",
-            claim=("Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's CLAUDE.md CONSTITUTION block, with enforced_by listing the check_entity_* family covering it."),
+            claim=("Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the check_entity_* family covering it."),
             owner="framework-author",
             status="SETTLED",
-            why=("Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description changes the claim. Eliminates the prose gap between 'R about entity behavior' and 'EntityType implementing it'. Unfrozen per DECIDED C-be22cdd1 / V-unfreeze-entity-projection (2026-07-02): check_entity_type_constitution_projection (new sibling of check_entities_md_lists_all_types) now structurally verifies the projection is not silently omitted from CONSTITUTION.md, closing the honesty gap between the STRUCTURAL claim and mechanical guarantee. Dormant-but-real: 0 entity_types in the active domain today makes the check vacuously pass, not falsely enforced -- the guard is live and will fire the moment a domain declares an EntityType without projecting it."),
+            why=("Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description changes the claim. Eliminates the prose gap between 'R about entity behavior' and 'EntityType implementing it'. Unfrozen per DECIDED C-be22cdd1 / V-unfreeze-entity-projection (2026-07-02): check_entity_type_constitution_projection (new sibling of check_entities_md_lists_all_types) now structurally verifies the projection is not silently omitted from FRAMEWORK-INVARIANTS.md, closing the honesty gap between the STRUCTURAL claim and mechanical guarantee. Dormant-but-real: 0 entity_types in the active domain today makes the check vacuously pass, not falsely enforced -- the guard is live and will fire the moment a domain declares an EntityType without projecting it. Wording precision (Wave 7 move 3a, no semantic change): claim and why now name the actual projection target, FRAMEWORK-INVARIANTS.md, not CONSTITUTION.md -- check_entity_type_constitution_projection's own docstring has always verified FRAMEWORK-INVARIANTS.md (entity-derived requirements are framework-plumbing, relocated out of CONSTITUTION.md by gen_spec.py's build_framework_invariants/_render_constitution_block split); the claim text simply had not caught up to that landed reality."),
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_entity_type_constitution_projection",),
@@ -3452,12 +3473,13 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-trust-anchor-delegation-explicit-only",
-            claim=("Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default."),
+            claim=("Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default, recorded durably in domains/<name>/delegations.jsonl and resolvable from any Conflict lifecycle marker that cites it."),
             owner="framework-author",
             status="SETTLED",
-            why=("M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the EXCEPTION half: delegation is not the default and is not implicit from e.g. an agent being given repo write access -- it requires an explicit steward grant, scoped either to one case or to a named campaign declared in advance. No new machinery yet checks this structurally (there is no standing 'delegation grant' object in the graph today); it is recorded as a live discipline constraint on any future delegation feature (see R-context-bounded-delegation, R-delegation-conclusions-only) rather than a currently-enforced check, honestly PROSE."),
-            assumptions=("A-stakeholders-care", "A-bootstrap-self-applies",),
-            enforcement=PROSE,
+            why=("M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the EXCEPTION half: delegation is not the default and is not implicit from e.g. an agent being given repo write access -- it requires an explicit steward grant, scoped either to one case or to a named campaign declared in advance. The standing 'delegation grant' object now exists: domains/hotam-spec-self/delegations.jsonl -- a durable, COMMITTED (not .runtime/) append-only JSONL ledger of {id, steward, verbatim, date, scope} records, each one a trust-anchor signature next to the graph it authorizes. tools/record_delegation.py appends new records (auto-incrementing DEL-<n>, refusing an unknown steward or empty verbatim/scope). The seed record DEL-1 (steward domain-user, date 2026-07-02, scope 'campaign: session pipeline decisions (C-be22cdd1 HELD + DECIDED)') anchors the verbatim delegation that authorized the core-vs-aspect Conflict's DECIDED transition. ENFORCED by spec/tests/test_delegation_marker_honesty.py: every Conflict.lifecycle text carrying the literal marker 'per explicit campaign delegation <date>' must resolve to a delegations.jsonl record dated the same day -- an unresolved marker (a date naming no ledger entry) is a caught violation, never a silent pass. spec/tests/test_tool_record_delegation.py covers the writer: auto-increment (including gap-tolerant), unknown-steward refusal, empty verbatim/scope refusal, default-date fill-in."),
+            assumptions=("A-stakeholders-care", "A-bootstrap-self-applies"),
+            enforcement="ENFORCED",
+            enforced_by=("tests/test_delegation_marker_honesty.py::test_active_domain_delegation_markers_resolve", "tests/test_delegation_marker_honesty.py::test_del_1_specifically_resolves_the_core_vs_aspect_conflict", "tests/test_delegation_marker_honesty.py::test_unresolved_marker_is_detected", "tests/test_tool_record_delegation.py::test_first_record_gets_del_1", "tests/test_tool_record_delegation.py::test_second_record_increments_to_del_2", "tests/test_tool_record_delegation.py::test_increment_survives_gaps", "tests/test_tool_record_delegation.py::test_unknown_steward_refused", "tests/test_tool_record_delegation.py::test_empty_verbatim_refused", "tests/test_tool_record_delegation.py::test_empty_scope_refused", "tests/test_tool_record_delegation.py::test_seed_delegation_del_1_exists"),
         ),
         Requirement(
             id="R-unresolvable-conflict-carries-variants",
@@ -3494,10 +3516,10 @@ def build_graph() -> TensionGraph:
             claim=("An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory."),
             owner="framework-author",
             status="SETTLED",
-            why=("First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt."),
-            assumptions=("A-content-free-honest",),
-            enforcement=ENFORCED,
-            enforced_by=("test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir", "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir",),
+            why=("First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-agent-code-imports-framework-directionally, which names this requirement's actual premise."),
+            assumptions=("A-agent-code-imports-framework-directionally",),
+            enforcement="ENFORCED",
+            enforced_by=("test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir", "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir"),
         ),
         Requirement(
             id="R-task-spawn-is-a-hand",
@@ -3525,9 +3547,9 @@ def build_graph() -> TensionGraph:
             claim=("The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import."),
             owner="framework-author",
             status="SETTLED",
-            why=("Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework (ENFORCED via test_agent_import_direction.py). No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that hotam_spec/ has exactly one owner field (framework-author, the framework's own steward) and no agent directory declares or claims exclusive ownership of any hotam_spec module. Landed as the missing REPLACES target flagged in the Wave 2 review (a REJECTED atom pointed at this id before it existed)."),
-            assumptions=("A-content-free-honest",),
-            enforcement=STRUCTURAL,
+            why=("Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework (ENFORCED via test_agent_import_direction.py). No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that hotam_spec/ has exactly one owner field (framework-author, the framework's own steward) and no agent directory declares or claims exclusive ownership of any hotam_spec module. Landed as the missing REPLACES target flagged in the Wave 2 review (a REJECTED atom pointed at this id before it existed). REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-framework-shared-infra-no-owner, which names this requirement's actual premise."),
+            assumptions=("A-framework-shared-infra-no-owner",),
+            enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
         ),
         Requirement(
@@ -3619,6 +3641,16 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_boot_cite_status.py::test_write_from_payload_cited_true", "test_tool_boot_cite_status.py::test_compute_status_mixed_and_windowed",),
+        ),
+        Requirement(
+            id="R-domain-self-hosting-flag",
+            claim=("Framework-jurisdiction invariants (FRAMEWORK_SCOPED_INVARIANTS) shall run only against a graph whose manifest declares SELF_HOSTING=True."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Wave 7 docrystallization of the gap named by the Wave 6/prior agent's landed bijection work: TensionGraph.self_hosting (graph.py) is populated at load time from the sibling manifest.py's SELF_HOSTING constant (default False); invariants.all_violations gates FRAMEWORK_SCOPED_INVARIANTS (the 12 functions covering domain/agent/tool-plumbing structural checks that only make sense against the framework's OWN self-model, e.g. filesystem walks over spec/tools/, spec/agents/) on this flag so they fire ONLY when g.self_hosting is True -- domains/hotam-spec-self/manifest.py sets SELF_HOSTING = True (it IS the framework modeling itself); any other business domain (e.g. domains/hotam-dev/) defaults to SELF_HOSTING = False and is correctly exempt from framework-internal plumbing checks that have no bearing on business content. Without this gate, framework-jurisdiction checks would fire as phantom P1 violations against business domains that never claim to model the framework itself. Evidence: spec/src/hotam_spec/graph.py TensionGraph.self_hosting field + _manifest_self_hosting() loader; spec/src/hotam_spec/invariants.py FRAMEWORK_SCOPED_INVARIANTS set + all_violations gate (`if check.__name__ in framework_scoped and not g.self_hosting`); domains/hotam-spec-self/manifest.py SELF_HOSTING = True."),
+            assumptions=("A-bootstrap-self-applies",),
+            enforcement=ENFORCED,
+            enforced_by=("test_framework_scoped_invariants_skipped_when_not_self_hosting", "test_framework_scoped_invariants_run_when_self_hosting", "test_hotam_dev_pulse_has_no_framework_scoped_violations", "test_hotam_spec_self_pulse_unchanged_by_self_hosting_gate", "test_synthetic_non_self_domain_with_framework_checks_not_flagged",),
         ),
     )
 

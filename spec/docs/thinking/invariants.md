@@ -359,3 +359,10 @@ Canon: §Conscience — CRITICAL_CORE_INVARIANTS is the narrow set of invariants
 whose violation would silently break the hard boundary or anti-drift.
 The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over
 this boundary; all_violations runs the full set (both rings).
+
+Canon: §Domain — FRAMEWORK_SCOPED_INVARIANTS (bijection over ALL_INVARIANTS,
+docstring/body coherence, rules-as-data classification, domain+agent
+filesystem walks) run ONLY when g.self_hosting is True (R-domain-self-
+hosting-flag). An ordinary business domain has no jurisdiction over
+framework internals; running these against it produces phantom P1s that
+are not this domain's to fix.

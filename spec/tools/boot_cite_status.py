@@ -25,10 +25,26 @@ applied to self-measurement): this is a LEXICAL check. It proves the first
 sentence CONTAINS an anchor-shaped token; it does NOT prove the citation is
 correct, relevant, or that the reply actually confronted graph reality
 before writing (R-boot-cite-in-first-sentence's real intent). A reply could
-game this check by prefixing a random anchor with no bearing on the content.
-This tool measures the citation RITUAL, not the citation's TRUTH -- exactly
-the gap the mediation loop's CONFRONT step (tools/confront.py) exists to
-narrow, which this tool does not attempt to replace.
+still game this check by prefixing a real-shaped-but-irrelevant anchor with
+no bearing on the content. This tool measures the citation RITUAL, not the
+citation's TRUTH -- exactly the gap the mediation loop's CONFRONT step
+(tools/confront.py) exists to narrow, which this tool does not attempt to
+replace.
+
+ANCHOR SHAPE (tightened): a typed anchor must carry >=2 hyphen-separated
+slug segments after its prefix (R-anchor-everything mints multi-word
+kebab-case slugs, e.g. "R-anchor-everything", never a single bare word) --
+with two narrow legitimate single-segment exceptions: hex-hash Conflict
+ids (e.g. "C-8600b1b8") and lowercase single-word Operator ids (e.g.
+"OP-director", matching hotam_spec.operator's naming convention). This
+rejects English words that merely happen to glue onto a prefix by
+coincidence and are NOT typed anchors: "R-squared", "C-suite", "OP-ED",
+"GOAL-oriented", "A-list" all match a looser single-segment pattern but
+must NOT count as a citation ("OP-ED" fails the Operator-id exception too
+-- all-caps, not the lowercase convention) -- loosening the regex to
+accept them would silently inflate the compliance rate with false
+positives, the same honesty failure this tool exists to avoid. The bare
+section-sign (§) path is untouched.
 
 READER: given the log, answer "what fraction of the last N logged replies
 cited an anchor in their first sentence?" -- a burn-down/compliance meter,
@@ -58,8 +74,21 @@ from pathlib import Path
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_LOG_PATH = _SPEC_ROOT / ".runtime" / "boot-cite-log.jsonl"
 
-# R-/C-/A-/OP-/GOAL- prefix followed by a slug char, or a bare section-sign.
-_ANCHOR_RE = re.compile(r"(?:\b(?:R|C|A|OP|GOAL)-[A-Za-z0-9][A-Za-z0-9-]*)|§")
+# R-/C-/A-/OP-/GOAL- prefix followed by >=2 hyphen-separated slug segments
+# (each segment >=1 alnum char), or a bare section-sign. Requiring two
+# segments (not one) rejects a bare adjective/gerund glued to the prefix by
+# coincidence -- "R-squared", "C-suite", "OP-ED", "GOAL-oriented", "A-list"
+# all lexically match a looser single-segment pattern but are not typed
+# anchors (R-anchor-everything mints multi-word kebab-case slugs like
+# R-anchor-everything itself, never a single bare word). "R-anchor-everything"
+# (3 segments) and "C-8600b1b8" (1 hex segment... but hex hash ids are the
+# one legitimate single-segment case, see below) still need to resolve.
+_ANCHOR_RE = re.compile(
+    r"(?:\b(?:R|C|A|OP|GOAL)-[A-Za-z0-9]+-[A-Za-z0-9-]+)"  # >=2 hyphen segments
+    r"|(?:\bC-[0-9a-f]{6,}\b)"  # hex-hash Conflict ids (single segment, legitimate)
+    r"|(?:\bOP-[a-z][a-z0-9]{2,}\b)"  # single-word lowercase Operator ids (e.g. OP-director)
+    r"|§"
+)
 
 _SENTENCE_SPLIT_RE = re.compile(r"[.!?\n]")
 

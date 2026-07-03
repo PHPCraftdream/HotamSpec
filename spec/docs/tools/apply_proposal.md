@@ -33,6 +33,8 @@ Supported proposal kinds:
   - Rejection — reject an existing Requirement (status → REJECTED)
   - EntityType — add a new EntityType to the active domain's graph
   - OperatorBudget — replace an existing Operator's ContextBudget (limit/measure)
+  - Axis — add a new Axis to the active domain's controlled-vocabulary `axes` tuple
+  - Assumption — add a new Assumption to the active domain's `assumptions` tuple
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
@@ -102,6 +104,24 @@ The JSON shapes:
     "operator_id": "OP-director",
     "new_limit": 150000,
     "new_measure": "CRYSTAL_CHARS",
+    "why": "..."
+  }
+
+  ProposedAxis (add a new Axis to the active domain's axes tuple):
+  {
+    "kind": "Axis",
+    "slug": "cost-vs-flexibility",
+    "description": "...",
+    "why": "..."
+  }
+
+  ProposedAssumption (add a new Assumption to the active domain's assumptions tuple):
+  {
+    "kind": "Assumption",
+    "id": "A-foo",
+    "statement": "...",
+    "status": "HOLDS",
+    "owner": "framework-author",
     "why": "..."
   }
 

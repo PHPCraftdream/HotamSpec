@@ -9,6 +9,13 @@ GOALS = (
 )
 DIRECTOR = "director"
 
+# SELF_HOSTING (R-domain-self-hosting-flag): this domain models the Hotam-Spec
+# framework ITSELF, so framework-jurisdiction invariants (bijection over
+# ALL_INVARIANTS, docstring/body coherence, rules-as-data classification,
+# domain+agent filesystem walks) are in scope here. Any other domain defaults
+# to False (business jurisdiction only) unless it deliberately sets this True.
+SELF_HOSTING = True
+
 # --- doc-reader bindings (R-doc-readers-declared-not-guessed) ---------------
 # Explicit role -> Stakeholder.id binding for hotam_spec.doc_readers.
 # Keys are the portable ROLE_* hints declared in

@@ -9,7 +9,7 @@ Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/doc
 
 ### Role (the resident seed)
 
-Operator of `hotam-spec-self` (194 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
+Operator of `hotam-spec-self` (195 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
 
 Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).
 
@@ -100,7 +100,7 @@ _(full text: spec/docs/thinking/contextbudget.md)_
 
 #### domain
 
-RULE: A domain directory MUST contain a manifest.py that can be loaded without error. Missing or unloadable manifests make the domain invisible to the framework (R-domain-has-manifest). WHY: The manifest is the stable identity anchor for a domain; if it cannot be loaded, no field checks are possible and the domain is structurally dark.
+RULE: manifest.py is read directly (not via graph.py); a domain with no manifest.py (e.g. the legacy spec/content/ fallback) or no SELF_HOSTING attribute is NOT self-hosting (R-domain-self-hosting-flag). Only domains/hotam-spec-self/manifest.py sets SELF_HOSTING = True. WHY read here (not cached on TensionGraph construction by the domain's own graph.py): manifest.py is domain plumbing edited directly (not via apply_proposal, per the ЖЁСТКИЕ ПРАВИЛА); keeping the flag's source of truth in manifest.py — not duplicated into graph.py's build_graph() call sites — means a steward flips one file to change jurisdiction.
 
 _(full text: spec/docs/thinking/domain.md)_
 
@@ -241,6 +241,12 @@ Canon: §Agent — scaffolds spec/agents/<name>/ as a self-contained sub-operato
 
 _(full text: spec/docs/tools/create_agent.md)_
 
+#### create_axis
+
+Canon: §Axis — scaffolds a new Axis into the active domain's controlled-vocabulary WHY a gatekeeper CLI, not a bare apply_proposal shortcut: an axis is the ONE structural place many local Conflict disputes cluster into a single unresolved ARCHITECTURAL choice (R-axis-controlled-vocab). Admitting a near-duplicate axis silently FORKS one cluster into two ("latency-vs-completeness" vs "speed-vs-full-check" would otherwise never merge) — exactly the kind of important-yet-invisible d…
+
+_(full text: spec/docs/tools/create_axis.md)_
+
 #### create_domain
 
 Canon: §Domain — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md. WHY: Domains are isolated from the framework (spec/); each business unit owns its own tension graph, tools, agents, generated docs, and operator crystal. Hand-creating this tree is error-prone (wrong manifest fields, missing sentinels, forgotten agents/ tree). create_domain bootstraps ALL of this — including the initial director-agent — in one command, guaranteeing structural consistency with R-do…
@@ -282,6 +288,12 @@ _(full text: spec/docs/tools/gen_spec.md)_
 Canon: §Agent — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout. WHY: an agent dropped into the repo without its CLAUDE.md is unanchored; it will invent state from training memory instead of reading the substrate (R-boot-from-substrate). Forcing resolution through this tool makes the constitution step explicit and auditable. The tool REFUSES on a missing directory or missing CLAUDE.md so that silent misconfiguration is impossible.
 
 _(full text: spec/docs/tools/invoke_agent.md)_
+
+#### record_delegation
+
+RULE: id is auto-incremented (DEL-1, DEL-2, ...) from the highest existing id in the file — never caller-supplied, so ids stay a stable, gapless append log. steward MUST be an existing Stakeholder id in the active domain's graph. verbatim and scope MUST be non-empty (an unlabeled or unscoped delegation cannot be resolved back to a specific human act — R-speak-by-reference). date defaults to today… WHY a committed file, not spec/.runtime/ ephemera: a delegation IS a trust-anchor signature — the steward's own explicit act of handing decision authority to the agent, per-case or for a declared campaign, "never implied or standing by default" (R-trust-anchor-delegation-explicit-only). Trust-anchor signatures belong in versioned substrate next to the graph they authorize decisions on, exactly lik…
+
+_(full text: spec/docs/tools/record_delegation.md)_
 
 #### setup_context_hook
 
@@ -388,6 +400,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/tools/context.py` — the operator's working-context measurement (reader).  →  R-tool-context
 - `spec/tools/context_producer.py` — the producer half of the context cipher, writing spec/.runtime/context.json.  →  R-tool-context-producer
 - `spec/tools/create_agent.py` — scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.  →  R-tool-create-agent
+- `spec/tools/create_axis.py` — scaffolds a new Axis into the active domain's controlled-vocabulary  →  R-tool-create-axis
 - `spec/tools/create_domain.py` — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.  →  R-tool-create-domain
 - `spec/tools/create_entity_type.py` — scaffolds an EntityType declaration into the active domain's graph via apply_proposal.  →  R-tool-create-entity-type
 - `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.  →  R-tool-emit-cipher
@@ -395,6 +408,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status
 - `spec/tools/gen_spec.py` — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.  →  R-tool-gen-spec
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
+- `spec/tools/record_delegation.py` — records a new steward delegation into the active domain's  →  R-tool-record-delegation
 - `spec/tools/setup_context_hook.py` — installs/removes the project-local hook that feeds tools/context_producer.py.  →  R-tool-setup-context-hook
 - `spec/tools/spawn_agent.py` — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).  →  R-tool-spawn-agent
 - `spec/tools/spawn_log_isolation_status.py` — reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.  →  R-tool-spawn-log-isolation-status
@@ -424,9 +438,9 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 <!-- LIVE-STATE:BEGIN -->
 ### Live state (autogenerated by tools/gen_spec.py — do not hand-edit)
 
-- **top action:** [P0] REFLECTION on `enforcement-gradient` — 9 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
-- **debt:** 167/194 SETTLED ENFORCED · 7 DRAFT · 0 OPEN · 9 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 248 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 60687 chars (headroom 89313)
+- **top action:** none — graph clean
+- **debt:** 170/195 SETTLED ENFORCED · 7 DRAFT · 0 OPEN · 5 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
+- **graph:** 252 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 62754 chars (headroom 87246)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — user action needed: uv run python tools/setup_context_hook.py --patch-global --apply (then restart statusline) — R-unmeasured-cipher-names-user-action
 <!-- LIVE-STATE:END -->
@@ -447,7 +461,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 194 SETTLED
+- **atoms-count** — 195 SETTLED
 <!-- DOMAIN-MAP:END -->
 <!-- CONSTITUTION:BEGIN -->
 <!-- (generated by tools/gen_spec.py — do not hand-edit) -->
@@ -492,7 +506,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 **Check / Invariant**
 
 - R-axis-controlled-vocab — Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple. [E]
-- R-axis-gatekeeper-policy — Axis-duplicate gatekeeping shall be a mandatory part of the future axis-creation path (confront-… [S]
+- R-axis-gatekeeper-policy — Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style s… [E]
 - R-conflict-addressing-resolves-variables — tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string… [E]
 - R-conflict-held-state — Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTra… [E]
 - R-conflict-is-connector-node — A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared… [E]
@@ -533,6 +547,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - R-critical-core-methodology — The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, pro… [E]
 - R-critical-core-per-domain — Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, n… [P]
 - R-doc-names-reader — Every generated doc shall name its reader as an existing Stakeholder id in its header. [E]
+- R-domain-self-hosting-flag — Framework-jurisdiction invariants (FRAMEWORK_SCOPED_INVARIANTS) shall run only against a graph w… [E]
 - R-enforced-by-resolvable — Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node… [E]
 - R-framework-owned-by-no-agent — The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastruc… [S]
 - R-held-carries-variants — A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, co… [E]
@@ -556,7 +571,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - R-spawn-log-carries-isolation — Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shar… [E]
 - R-speculative-aspects-frozen — The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no i… [E]
 - R-tiered-gate-not-a-commit-gate — The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit bound… [S]
-- R-trust-anchor-delegation-explicit-only — Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted… [P]
+- R-trust-anchor-delegation-explicit-only — Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted… [E]
 - R-trust-anchor-mechanism — Every decision shall be personally signed by the human steward -- today: a decided_by: Stakehold… [E]
 - R-uncrystallizable-automated — Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records… [S]
 - R-uncrystallizable-is-missing-type — Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate m… [S]
@@ -583,7 +598,7 @@ _(no sub-operators yet)_
 - **§Assumption**
   - defined: `spec/src/hotam_spec/assumption.py`
   - enforced: _(none)_
-  - tested: `spec/tests/test_docs_gen.py`
+  - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_tool_apply_proposal_assumption.py`
 - **§Atoms**
   - defined: `_(not yet mapped)_`
   - enforced: _(none)_
@@ -599,7 +614,7 @@ _(no sub-operators yet)_
 - **§Conflict**
   - defined: `spec/src/hotam_spec/conflict.py`
   - enforced: `check_conflict_has_axis`, `check_conflict_has_axis_context_steward`, `check_conflict_has_context`, `check_conflict_has_steward`, `check_conflict_id_matches_identity`, `check_conflict_min_two_members`, `check_decided_by_is_known_stakeholder`, `check_decided_by_not_member_owner`, `check_decided_has_decided_by`, `check_decided_has_nonempty_decided_by`, `check_decided_has_rationale_or_derived`, `check_held_by_is_known_stakeholder`, `check_held_by_not_member_owner`, `check_held_has_decided_by`, `check_held_has_min_two_variants`, `check_held_has_nonempty_decided_by`, `check_steward_not_a_member_owner`
-  - tested: `spec/tests/test_apply_proposal.py`, `spec/tests/test_claude_md_template.py`, `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_latent_connector_noise_fix.py`, `spec/tests/test_tool_boot_cite_status.py`
+  - tested: `spec/tests/test_apply_proposal.py`, `spec/tests/test_claude_md_template.py`, `spec/tests/test_conscience.py`, `spec/tests/test_delegation_marker_honesty.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_latent_connector_noise_fix.py`, `spec/tests/test_tool_boot_cite_status.py`
 - **§Conscience**
   - defined: `_(not yet mapped)_`
   - enforced: _(none)_
@@ -659,7 +674,7 @@ _(no sub-operators yet)_
 - **§Proposal**
   - defined: `spec/src/hotam_spec/proposal.py`
   - enforced: `check_decided_has_decided_by`
-  - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`
+  - tested: `spec/tests/test_conscience.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_tool_apply_proposal_assumption.py`
 - **§Reflection**
   - defined: `spec/src/hotam_spec/reflection.py`
   - enforced: _(none)_

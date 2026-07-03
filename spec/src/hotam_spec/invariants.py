@@ -3813,6 +3813,38 @@ ALL_INVARIANTS = (
     check_rules_as_data_classification_coherent,
 )
 
+# ---------------------------------------------------------------------------
+# Framework-scoped invariants (R-domain-self-hosting-flag, wave 7 move 1)
+# ---------------------------------------------------------------------------
+#
+# These check_* functions carry FRAMEWORK jurisdiction, not business-domain
+# jurisdiction: they inspect ALL_INVARIANTS itself (the bijection, docstring/
+# body coherence, rules-as-data classification) or walk the ENTIRE domains/
+# filesystem regardless of which domain is active (manifest + agent-scaffold
+# checks). Run against an ordinary business domain (e.g. hotam-dev), they fire
+# on framework internals that domain has no authority over and did not touch
+# — phantom P1s. They are meaningful ONLY when g.self_hosting is True (the
+# active domain IS hotam-spec-self, the domain that models the framework).
+#
+# check_enforced_by_resolvable is deliberately NOT here: every domain is
+# responsible for its OWN enforced_by names resolving (that is business
+# jurisdiction — each domain's SETTLED/ENFORCED requirements must point at
+# real enforcers), so it stays universal.
+FRAMEWORK_SCOPED_INVARIANTS = (
+    check_bijection_r_to_enforcer,
+    check_method_matches_docstring,
+    check_rules_as_data_classification_coherent,
+    check_domain_manifest_exists_and_importable,
+    check_domain_manifest_id_matches_dirname,
+    check_domain_manifest_description_nonempty,
+    check_domain_manifest_goals_nonempty,
+    check_domain_manifest_director_nonempty,
+    check_domain_director_exists,
+    check_agent_has_agents_subdir,
+    check_agent_has_docs_subdir,
+    check_agent_has_tools_subdir,
+)
+
 # --- M7: the critical core ---
 # These invariants guard paths by which contradictions could be INTRODUCED
 # without being seen. They get the Hypothesis property-sweep treatment
@@ -3869,8 +3901,18 @@ def all_violations(g: TensionGraph) -> list[Violation]:
     whose violation would silently break the hard boundary or anti-drift.
     The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over
     this boundary; all_violations runs the full set (both rings).
+
+    Canon: §Domain — FRAMEWORK_SCOPED_INVARIANTS (bijection over ALL_INVARIANTS,
+    docstring/body coherence, rules-as-data classification, domain+agent
+    filesystem walks) run ONLY when g.self_hosting is True (R-domain-self-
+    hosting-flag). An ordinary business domain has no jurisdiction over
+    framework internals; running these against it produces phantom P1s that
+    are not this domain's to fix.
     """
     out: list[Violation] = []
+    framework_scoped = frozenset(fn.__name__ for fn in FRAMEWORK_SCOPED_INVARIANTS)
     for check in ALL_INVARIANTS:
+        if check.__name__ in framework_scoped and not g.self_hosting:
+            continue
         out.extend(check(g))
     return out

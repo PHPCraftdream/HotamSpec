@@ -38,10 +38,26 @@ applied to self-measurement): this is a LEXICAL check. It proves the first
 sentence CONTAINS an anchor-shaped token; it does NOT prove the citation is
 correct, relevant, or that the reply actually confronted graph reality
 before writing (R-boot-cite-in-first-sentence's real intent). A reply could
-game this check by prefixing a random anchor with no bearing on the content.
-This tool measures the citation RITUAL, not the citation's TRUTH -- exactly
-the gap the mediation loop's CONFRONT step (tools/confront.py) exists to
-narrow, which this tool does not attempt to replace.
+still game this check by prefixing a real-shaped-but-irrelevant anchor with
+no bearing on the content. This tool measures the citation RITUAL, not the
+citation's TRUTH -- exactly the gap the mediation loop's CONFRONT step
+(tools/confront.py) exists to narrow, which this tool does not attempt to
+replace.
+
+ANCHOR SHAPE (tightened): a typed anchor must carry >=2 hyphen-separated
+slug segments after its prefix (R-anchor-everything mints multi-word
+kebab-case slugs, e.g. "R-anchor-everything", never a single bare word) --
+with two narrow legitimate single-segment exceptions: hex-hash Conflict
+ids (e.g. "C-8600b1b8") and lowercase single-word Operator ids (e.g.
+"OP-director", matching hotam_spec.operator's naming convention). This
+rejects English words that merely happen to glue onto a prefix by
+coincidence and are NOT typed anchors: "R-squared", "C-suite", "OP-ED",
+"GOAL-oriented", "A-list" all match a looser single-segment pattern but
+must NOT count as a citation ("OP-ED" fails the Operator-id exception too
+-- all-caps, not the lowercase convention) -- loosening the regex to
+accept them would silently inflate the compliance rate with false
+positives, the same honesty failure this tool exists to avoid. The bare
+section-sign (§) path is untouched.
 
 READER: given the log, answer "what fraction of the last N logged replies
 cited an anchor in their first sentence?" -- a burn-down/compliance meter,

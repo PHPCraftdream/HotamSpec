@@ -20,6 +20,8 @@ Supported proposal kinds:
   - Rejection — reject an existing Requirement (status → REJECTED)
   - EntityType — add a new EntityType to the active domain's graph
   - OperatorBudget — replace an existing Operator's ContextBudget (limit/measure)
+  - Axis — add a new Axis to the active domain's controlled-vocabulary `axes` tuple
+  - Assumption — add a new Assumption to the active domain's `assumptions` tuple
 
 Usage:
   uv run python tools/apply_proposal.py proposal.json
@@ -92,6 +94,24 @@ The JSON shapes:
     "why": "..."
   }
 
+  ProposedAxis (add a new Axis to the active domain's axes tuple):
+  {
+    "kind": "Axis",
+    "slug": "cost-vs-flexibility",
+    "description": "...",
+    "why": "..."
+  }
+
+  ProposedAssumption (add a new Assumption to the active domain's assumptions tuple):
+  {
+    "kind": "Assumption",
+    "id": "A-foo",
+    "statement": "...",
+    "status": "HOLDS",
+    "owner": "framework-author",
+    "why": "..."
+  }
+
 Exit codes:
   0 — success (write landed, tests green, and if --triggering-kind was supplied:
       closure confirmed — the action is no longer in the post-apply diagnosis).
@@ -124,8 +144,11 @@ from hotam_spec.conflict import Variant, conflict_identity  # noqa: E402
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
 from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
+from hotam_spec.assumption import ASSUMPTION_STATES  # noqa: E402
 from hotam_spec.proposal import (  # noqa: E402
     Proposal,
+    ProposedAssumption,
+    ProposedAxis,
     ProposedConflict,
     ProposedConflictTransition,
     ProposedEntityType,
@@ -214,10 +237,10 @@ def _validate_proposal(raw: dict) -> Proposal:
     """Canon: §Proposal — parse and validate a JSON dict into a Proposal variant.
 
     RULE: 'kind' must be one of 'ConflictTransition', 'Conflict', 'Requirement',
-    'Rejection', 'EntityType', or 'OperatorBudget'. Each kind has its own
-    required fields.
+    'Rejection', 'EntityType', 'OperatorBudget', 'Axis', or 'Assumption'. Each
+    kind has its own required fields.
 
-    Returns a Proposal (one of the six dataclass variants) or raises
+    Returns a Proposal (one of the eight dataclass variants) or raises
     ValueError with a clear message.
     """
     kind = raw.get("kind", "")
@@ -233,10 +256,14 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_entity_type(raw)
     if kind == "OperatorBudget":
         return _validate_operator_budget(raw)
+    if kind == "Axis":
+        return _validate_axis(raw)
+    if kind == "Assumption":
+        return _validate_assumption(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
         f"Supported: 'ConflictTransition', 'Conflict', 'Requirement', "
-        f"'Rejection', 'EntityType', 'OperatorBudget'."
+        f"'Rejection', 'EntityType', 'OperatorBudget', 'Axis', 'Assumption'."
     )
 
 
@@ -434,6 +461,57 @@ def _validate_operator_budget(raw: dict) -> ProposedOperatorBudget:
         operator_id=operator_id,
         new_limit=new_limit,
         new_measure=new_measure,
+        why=why if isinstance(why, str) else "",
+    )
+
+
+def _validate_axis(raw: dict) -> ProposedAxis:
+    """Parse and validate an Axis proposal."""
+    slug = raw.get("slug", "").strip()
+    if not slug:
+        raise ValueError("'slug' is required for an Axis proposal.")
+    if not _SLUG_RE.match(slug):
+        raise ValueError(
+            f"'slug' must be kebab-case (lowercase letters, digits, hyphens, "
+            f"starting with a letter); got '{slug}'."
+        )
+    description = raw.get("description", "").strip()
+    if not description:
+        raise ValueError("'description' is required and must be non-empty.")
+    why = raw.get("why", "")
+    return ProposedAxis(
+        slug=slug,
+        description=description,
+        why=why if isinstance(why, str) else "",
+    )
+
+
+def _validate_assumption(raw: dict) -> ProposedAssumption:
+    """Parse and validate an Assumption proposal."""
+    assumption_id = raw.get("id", "").strip()
+    if not assumption_id:
+        raise ValueError("'id' is required for an Assumption proposal.")
+    if not assumption_id.startswith("A-"):
+        raise ValueError(
+            f"'id' must start with 'A-' (R-anchor-everything); got '{assumption_id}'."
+        )
+    statement = raw.get("statement", "").strip()
+    if not statement:
+        raise ValueError("'statement' is required and must be non-empty.")
+    status = raw.get("status", "").strip()
+    if status not in ASSUMPTION_STATES:
+        raise ValueError(
+            f"'status' must be one of {sorted(ASSUMPTION_STATES)}; got '{status}'."
+        )
+    owner = raw.get("owner", "").strip()
+    if not owner:
+        raise ValueError("'owner' is required and must be non-empty.")
+    why = raw.get("why", "")
+    return ProposedAssumption(
+        id=assumption_id,
+        statement=statement,
+        status=status,
+        owner=owner,
         why=why if isinstance(why, str) else "",
     )
 
@@ -1364,6 +1442,229 @@ def _apply_conflict_to_source(source_text: str, proposal: ProposedConflict) -> s
 
 
 # ---------------------------------------------------------------------------
+# Apply: Axis (add a new controlled-vocabulary entry)
+# ---------------------------------------------------------------------------
+
+
+def _find_axes_tuple_end(tree: ast.AST) -> int | None:
+    """Find the line number (1-indexed) of the closing ')' of `axes = (...)`.
+
+    Looks for an assignment `axes = (...)` inside `build_graph()` and returns
+    the end_lineno of the Tuple node (the line with the closing paren).
+    Mirrors _find_requirements_tuple_end / _find_conflicts_tuple_end.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == "axes":
+                    return getattr(stmt.value, "end_lineno", None)
+    return None
+
+
+def _collect_axis_slugs(tree: ast.AST) -> set[str]:
+    """Collect the set of slug= string literals across all Axis(...) calls."""
+    return _collect_call_kwarg_literals(tree, "Axis", "slug")
+
+
+def _render_axis_source(proposal: ProposedAxis, indent: str) -> str:
+    """Render an Axis(...) constructor call as source text."""
+    inner = indent + "    "
+    lines: list[str] = []
+    lines.append(f"{indent}Axis(")
+    lines.append(f"{inner}slug={_python_repr(proposal.slug)},")
+    lines.append(f"{inner}description={_python_repr(proposal.description)},")
+    lines.append(f"{indent}),")
+    return "\n".join(lines) + "\n"
+
+
+def _apply_axis_to_source(source_text: str, proposal: ProposedAxis) -> str:
+    """Apply a ProposedAxis: insert a new Axis into `axes = (...)`.
+
+    Pre-write validation (raises RuntimeError, nothing written):
+      - no Axis with the same slug may already exist (a duplicate slug is a
+        re-declaration, not a new axis — R-axis-controlled-vocab).
+
+    WHY no fuzzy-similarity check here: the confront-style lexical similarity
+    gate (R-axis-gatekeeper-policy) is the CLI's job (tools/create_axis.py),
+    which runs BEFORE constructing this proposal and can be overridden with
+    --force-new + a recorded rationale. This writer enforces only the
+    structural invariant (exact-slug uniqueness) that the graph-side
+    check_axis_in_registry family also depends on; the semantic near-duplicate
+    judgment is a steward-facing decision, not a mechanical block.
+    """
+    tree = ast.parse(source_text)
+    existing_slugs = _collect_axis_slugs(tree)
+    if proposal.slug in existing_slugs:
+        raise RuntimeError(
+            f"Axis with slug='{proposal.slug}' already exists in the active "
+            f"domain's axes tuple — a duplicate slug is a re-declaration, not "
+            f"a new axis (R-axis-controlled-vocab)."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    tuple_end = _find_axes_tuple_end(tree)
+    if tuple_end is None:
+        raise RuntimeError(
+            "Cannot find `axes = (...)` tuple in build_graph(). "
+            "Is the domain graph.py well-formed?"
+        )
+
+    # Determine indentation from existing Axis calls (default 8 spaces).
+    indent = "        "
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "Axis":
+            line_text = lines[node.lineno - 1]
+            stripped = line_text.lstrip()
+            indent = line_text[: len(line_text) - len(stripped)]
+            break
+
+    new_axis = _render_axis_source(proposal, indent)
+    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
+    lines.insert(insert_at, new_axis)
+    result = "".join(lines)
+
+    # Ensure Axis is imported.
+    if not _re.search(
+        r"^from hotam_spec\.axis import\b.*\bAxis\b", result, _re.MULTILINE
+    ):
+        m = _re.search(r"^from hotam_spec\.axis import ([^\n]+)", result, _re.MULTILINE)
+        if m:
+            existing = m.group(1)
+            new_import = existing.rstrip() + ", Axis"
+            result = result.replace(
+                f"from hotam_spec.axis import {existing}",
+                f"from hotam_spec.axis import {new_import}",
+                1,
+            )
+        else:
+            result = result.replace(
+                "from __future__ import annotations\n",
+                "from __future__ import annotations\n\nfrom hotam_spec.axis import Axis\n",
+                1,
+            )
+    return result
+
+
+def _find_assumptions_tuple_end(tree: ast.AST) -> int | None:
+    """Find the line number (1-indexed) of the closing ')' of `assumptions = (...)`.
+
+    Looks for an assignment `assumptions = (...)` inside `build_graph()` and
+    returns the end_lineno of the Tuple node (the line with the closing paren).
+    Mirrors _find_axes_tuple_end.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == "assumptions":
+                    return getattr(stmt.value, "end_lineno", None)
+    return None
+
+
+def _collect_assumption_ids(tree: ast.AST) -> set[str]:
+    """Collect the set of id= string literals across all Assumption(...) calls."""
+    return _collect_call_kwarg_literals(tree, "Assumption", "id")
+
+
+def _render_assumption_source(proposal: ProposedAssumption, indent: str) -> str:
+    """Render an Assumption(...) constructor call as source text."""
+    inner = indent + "    "
+    lines: list[str] = []
+    lines.append(f"{indent}Assumption(")
+    lines.append(f'{inner}id={_python_repr(proposal.id)},')
+    lines.append(f'{inner}statement={_python_repr(proposal.statement)},')
+    lines.append(f"{inner}status={proposal.status},")
+    lines.append(f'{inner}owner={_python_repr(proposal.owner)},')
+    lines.append(f"{indent}),")
+    return "\n".join(lines) + "\n"
+
+
+def _apply_assumption_to_source(source_text: str, proposal: ProposedAssumption) -> str:
+    """Apply a ProposedAssumption: insert a new Assumption into `assumptions = (...)`.
+
+    Pre-write validation (raises RuntimeError, nothing written):
+      - no Assumption with the same id may already exist (a duplicate id is a
+        re-declaration, not a new assumption).
+    """
+    tree = ast.parse(source_text)
+    existing_ids = _collect_assumption_ids(tree)
+    if proposal.id in existing_ids:
+        raise RuntimeError(
+            f"Assumption with id='{proposal.id}' already exists in the active "
+            f"domain's assumptions tuple — a duplicate id is a re-declaration, "
+            f"not a new assumption."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    tuple_end = _find_assumptions_tuple_end(tree)
+    if tuple_end is None:
+        raise RuntimeError(
+            "Cannot find `assumptions = (...)` tuple in build_graph(). "
+            "Is the domain graph.py well-formed?"
+        )
+
+    # Determine indentation from existing Assumption calls (default 8 spaces).
+    indent = "        "
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "Assumption":
+            line_text = lines[node.lineno - 1]
+            stripped = line_text.lstrip()
+            indent = line_text[: len(line_text) - len(stripped)]
+            break
+
+    new_assumption = _render_assumption_source(proposal, indent)
+    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
+    lines.insert(insert_at, new_assumption)
+    result = "".join(lines)
+
+    # Ensure status constant (HOLDS/UNCERTAIN/DEAD) is imported.
+    if not _re.search(
+        rf"^from hotam_spec\.assumption import\b.*\b{proposal.status}\b",
+        result,
+        _re.MULTILINE,
+    ):
+        m = _re.search(
+            r"^from hotam_spec\.assumption import ([^\n]+)", result, _re.MULTILINE
+        )
+        if m:
+            existing = m.group(1)
+            names = [n.strip() for n in existing.split(",")]
+            if proposal.status not in names:
+                names.append(proposal.status)
+            new_import = ", ".join(names)
+            result = result.replace(
+                f"from hotam_spec.assumption import {existing}",
+                f"from hotam_spec.assumption import {new_import}",
+                1,
+            )
+        else:
+            result = result.replace(
+                "from __future__ import annotations\n",
+                "from __future__ import annotations\n\n"
+                f"from hotam_spec.assumption import {proposal.status}\n",
+                1,
+            )
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Apply: OperatorBudget
 # ---------------------------------------------------------------------------
 
@@ -1852,6 +2153,7 @@ def apply(
       - ProposedRejection: set status to REJECTED, prepend reason
       - ProposedEntityType: insert new EntityType into entity_types=()
       - ProposedOperatorBudget: locate Operator node, replace context_budget=
+      - ProposedAxis: insert a new Axis into the active domain's axes=() tuple
 
     Steps:
       1. Read spec/content/graph.py.
@@ -1898,7 +2200,7 @@ def apply(
     # accidental emptiness of a fresh node's enforced_by tuple — is what
     # drives the T1/T2 tier decision below (fail closed on any creation).
     target_preexisting = True
-    if isinstance(proposal, ProposedConflict):
+    if isinstance(proposal, (ProposedConflict, ProposedAxis, ProposedAssumption)):
         target_preexisting = False
     elif isinstance(proposal, ProposedRequirement):
         pre_tree = ast.parse(source_text)
@@ -1923,6 +2225,12 @@ def apply(
             lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedOperatorBudget):
             lines = _apply_operator_budget(source_text, proposal)
+        elif isinstance(proposal, ProposedAxis):
+            new_source = _apply_axis_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedAssumption):
+            new_source = _apply_assumption_to_source(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
         else:
             print(
                 f"ERROR: unhandled proposal type {type(proposal).__name__}",

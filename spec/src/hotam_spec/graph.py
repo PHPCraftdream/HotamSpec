@@ -85,6 +85,25 @@ class TensionGraph:
     goals: tuple[Goal, ...] = field(default_factory=tuple)
     entity_types: tuple[EntityType, ...] = field(default_factory=tuple)
     entities: tuple[EntityInstance, ...] = field(default_factory=tuple)
+    self_hosting: bool = False
+    """Canon: §Domain — True iff this graph models the Hotam-Spec framework
+    ITSELF (the hotam-spec-self domain), False for any ordinary business
+    domain (R-domain-self-hosting-flag).
+
+    RULE: populated at load time from the sibling manifest.py's SELF_HOSTING
+    attribute (default False when absent). FRAMEWORK_SCOPED invariants
+    (bijection over ALL_INVARIANTS, docstring/body coherence, rules-as-data
+    classification, and the domain+agent filesystem walks) carry framework
+    jurisdiction, not business-domain jurisdiction — they run only when
+    self_hosting is True (invariants.all_violations gates them on this flag).
+
+    WHY a graph field (not a call-site parameter): all_violations(g) takes
+    only the graph; threading jurisdiction through a second parameter would
+    change every call site (tests, gate.py, what_now.py) for one domain's
+    concern. A field travels with the graph the same way axes/self_hosting
+    already do, and is set once at the loader boundary (_load_graph_file),
+    keeping the invariant functions themselves parameter-free.
+    """
 
     def is_empty(self) -> bool:
         """Canon: §Graph — True iff no domain content has been loaded.
@@ -247,7 +266,42 @@ def _load_graph_file(graph_file: Path) -> TensionGraph:
             f"{graph_file}:{CONTENT_BUILDER_NAME}() must return a "
             f"TensionGraph, got {type(g).__name__}"
         )
+    self_hosting = _manifest_self_hosting(graph_file.parent)
+    if self_hosting != g.self_hosting:
+        import dataclasses  # noqa: PLC0415
+
+        g = dataclasses.replace(g, self_hosting=self_hosting)
     return g
+
+
+def _manifest_self_hosting(domain_dir: Path) -> bool:
+    """Canon: §Domain — read SELF_HOSTING off domains/<name>/manifest.py (default False).
+
+    RULE: manifest.py is read directly (not via graph.py); a domain with no
+    manifest.py (e.g. the legacy spec/content/ fallback) or no SELF_HOSTING
+    attribute is NOT self-hosting (R-domain-self-hosting-flag). Only
+    domains/hotam-spec-self/manifest.py sets SELF_HOSTING = True.
+
+    WHY read here (not cached on TensionGraph construction by the domain's
+    own graph.py): manifest.py is domain plumbing edited directly (not via
+    apply_proposal, per the ЖЁСТКИЕ ПРАВИЛА); keeping the flag's source of
+    truth in manifest.py — not duplicated into graph.py's build_graph() call
+    sites — means a steward flips one file to change jurisdiction.
+    """
+    manifest_py = domain_dir / "manifest.py"
+    if not manifest_py.exists():
+        return False
+    spec = importlib.util.spec_from_file_location(
+        f"_manifest_self_hosting_{domain_dir.name}", manifest_py
+    )
+    if spec is None or spec.loader is None:
+        return False
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    except Exception:
+        return False
+    return bool(getattr(mod, "SELF_HOSTING", False))
 
 
 def load_content_graph() -> TensionGraph:

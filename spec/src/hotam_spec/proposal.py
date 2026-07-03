@@ -165,6 +165,69 @@ class ProposedOperatorBudget:
 
 
 @dataclass(frozen=True)
+class ProposedAxis:
+    """Canon: §Proposal — propose a new Axis (controlled-vocabulary tension dimension)
+    to add to the active domain's graph.
+
+    RULE: kind='Axis'; the apply_proposal tool serializes this into a new
+    Axis(...) entry appended to the active domain's `axes` tuple. slug MUST be
+    kebab-case and MUST NOT already exist in the graph's axes (a duplicate
+    slug is a re-declaration, not a new axis — R-axis-controlled-vocab).
+    description MUST be non-empty (an axis with no description names nothing
+    to cluster around).
+
+    WHY a gatekeeper precedes this proposal, never a bare CLI shortcut: an
+    axis is the ONE structural place two future Conflicts cluster into one
+    architectural tension (R-axis-gatekeeper-policy — 'a privatnik is born
+    with a door'). Admitting a near-duplicate axis silently FORKS a cluster
+    into two, which is exactly the invisibility R-anchor-everything forbids.
+    tools/create_axis.py is the confront-gated CLI that constructs this
+    proposal; hand-writing the JSON bypasses the similarity check and is
+    discouraged (R-prefer-tool-over-hand).
+    """
+
+    slug: str
+    description: str
+    why: str = ""
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the axis slug is the anchor of this proposal."""
+        return f"Axis:{self.slug}"
+
+
+@dataclass(frozen=True)
+class ProposedAssumption:
+    """Canon: §Proposal / §Assumption — propose a new Assumption (falsifiable belief)
+    to add to the active domain's graph.
+
+    RULE: kind='Assumption'; the apply_proposal tool serializes this into a new
+    Assumption(...) entry appended to the active domain's `assumptions` tuple.
+    id MUST be unique (not already present in the graph's assumptions) and
+    SHOULD start with 'A-' (R-anchor-everything). status MUST be one of
+    hotam_spec.assumption.ASSUMPTION_STATES (HOLDS | UNCERTAIN | DEAD).
+    owner MUST be a Stakeholder id.
+
+    WHY this kind exists: latent-connector clustering (§Conflict —
+    latent_connector_clusters) flags requirements that share an
+    over-broad assumption as suspiciously linked. Splitting an over-broad
+    assumption into narrower, more specific ones — each genuinely shared
+    only by requirements that are actually about the same claim — is the
+    mechanical remedy; this proposal kind is how a narrower Assumption node
+    gets materialized without hand-editing the graph (R-no-hand-edit-graph).
+    """
+
+    id: str
+    statement: str
+    status: str
+    owner: str  # Stakeholder id
+    why: str = ""
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the assumption id is the anchor of this proposal."""
+        return self.id
+
+
+@dataclass(frozen=True)
 class ProposedEntityType:
     """Canon: §Proposal — propose a new EntityType to add to the active domain's graph.
 
@@ -199,4 +262,6 @@ Proposal = (
     | ProposedRejection
     | ProposedEntityType
     | ProposedOperatorBudget
+    | ProposedAxis
+    | ProposedAssumption
 )

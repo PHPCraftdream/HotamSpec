@@ -19,6 +19,13 @@ Run:
   uv run python tools/audit_atomicity.py            # audit domain content
   uv run python tools/audit_atomicity.py --demo      # audit demo fixture
 
+Output: AUDIT.md is written to the ACTIVE domain's docs/gen/ dir
+(domains/<active>/docs/gen/AUDIT.md), resolved through the same
+gen_spec._resolve_active_gen_dir() the generator itself uses -- not a fixed
+top-level docs/gen/. A legacy top-level docs/gen/AUDIT.md would silently go
+stale the moment a second domain becomes active; there is exactly one
+resolver and one written location, shared with gen_spec.py.
+
 Deterministic: sorted output, LF newlines, utf-8, no timestamps.
 
 ## CLI usage
