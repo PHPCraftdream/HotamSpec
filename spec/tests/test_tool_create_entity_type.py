@@ -251,25 +251,15 @@ def test_validates_state_machine() -> None:
     assert rc == 1
 
 
-def test_r_tool_create_entity_type_in_constitution() -> None:
-    """After running gen_spec, root CLAUDE.md mentions R-tool-create-entity-type (P22.C)."""
-    # Run gen_spec to ensure the CLAUDE.md is up to date.
-    result = subprocess.run(
-        [sys.executable, str(_TOOLS / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(_SPEC_ROOT),
-    )
-    assert result.returncode == 0, f"gen_spec.py failed: {result.stderr}"
+def test_r_tool_create_entity_type_in_constitution(gen_spec_snapshot) -> None:
+    """A FRESH gen_spec run projects R-tool-create-entity-type into root CLAUDE.md.
 
-    # Check root CLAUDE.md (the sole CLAUDE.md post-P22.C consolidation, where
-    # tool-derived requirements are projected into the CONSTITUTION block).
-    root_claude_md = _SPEC_ROOT.parent / "CLAUDE.md"
-    assert root_claude_md.exists(), "Root CLAUDE.md not found."
-
-    text = root_claude_md.read_text(encoding="utf-8")
+    Task #46, Measure 1/4: instead of spawning gen_spec as a subprocess, assert
+    against the session-scoped freshly-generated CLAUDE.md snapshot.
+    """
+    text = gen_spec_snapshot["claude_md_text"]
     assert "R-tool-create-entity-type" in text, (
-        "R-tool-create-entity-type not found in root CLAUDE.md. "
+        "R-tool-create-entity-type not found in freshly generated root CLAUDE.md. "
         "Check that create_entity_type.py's first docstring line matches "
         "'Canon: §Entity — <claim>'."
     )

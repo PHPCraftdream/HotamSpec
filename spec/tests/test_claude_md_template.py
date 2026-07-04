@@ -12,7 +12,6 @@ Canon: R-claude-md-template-driven.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -32,6 +31,26 @@ ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _run_gen_spec_in_process() -> None:
+    """Regenerate root CLAUDE.md in-process under the self-host pin (task #46,
+    Measure 2 — replaces a subprocess spawn while reproducing its isolation:
+    HOTAM_SPEC_ACTIVE_DOMAIN=hotam-spec-self + cwd=spec, both cleanly restored)."""
+    import os  # noqa: PLC0415
+
+    prev_env = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN")
+    prev_cwd = os.getcwd()
+    os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = "hotam-spec-self"
+    try:
+        os.chdir(SPEC_ROOT)
+        _gs.main([])
+    finally:
+        os.chdir(prev_cwd)
+        if prev_env is None:
+            os.environ.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
+        else:
+            os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = prev_env
 
 
 # ===========================================================================
@@ -86,19 +105,23 @@ def test_generated_claude_md_no_longer_contains_placeholder_literals() -> None:
 def test_hand_written_note_in_template_survives_regen() -> None:
     """A unique marker appended below both placeholders survives gen_spec.py regen."""
     original = CLAUDE_MD_TEMPLATE.read_bytes()
+    # Snapshot the generated CLAUDE.md bytes so the finally block restores them
+    # VERBATIM. Restoring by re-running gen_spec is unsafe here: build_live_state
+    # reports the resident-crystal char count read from the CURRENT on-disk
+    # CLAUDE.md (gen_spec.py:1797), a self-referential field that only reaches a
+    # fixpoint over two passes — a single restore regen would leave a stale count
+    # and redden test_docs_gen::test_claude_md_live_state_up_to_date. subprocess
+    # isolation used to mask this because many LATER subprocess regens
+    # re-converged the file; with those removed (task #46), we restore the exact
+    # original bytes instead (Measure 2 — reproduce the lost isolation explicitly).
+    original_claude_md = ROOT_CLAUDE_MD.read_bytes()
     marker = "TEST-MARKER-d41a9f3b-durable-note-survives-regen"
     try:
         text = _read(CLAUDE_MD_TEMPLATE)
         text_with_marker = text.rstrip("\n") + f"\n\n{marker}\n"
         CLAUDE_MD_TEMPLATE.write_text(text_with_marker, encoding="utf-8", newline="\n")
 
-        result = subprocess.run(
-            [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-            capture_output=True,
-            text=True,
-            cwd=str(SPEC_ROOT),
-        )
-        assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
+        _run_gen_spec_in_process()
 
         generated = _read(ROOT_CLAUDE_MD)
         assert marker in generated, (
@@ -107,13 +130,7 @@ def test_hand_written_note_in_template_survives_regen() -> None:
         )
     finally:
         CLAUDE_MD_TEMPLATE.write_bytes(original)
-        # Restore CLAUDE.md to match the un-marked template.
-        subprocess.run(
-            [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-            capture_output=True,
-            text=True,
-            cwd=str(SPEC_ROOT),
-        )
+        ROOT_CLAUDE_MD.write_bytes(original_claude_md)
 
 
 # ===========================================================================

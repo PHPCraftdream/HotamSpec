@@ -19,7 +19,6 @@ Verifies that:
 from __future__ import annotations
 
 import importlib.util
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -156,25 +155,24 @@ def test_agents_root_does_not_exist() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_agent_map_regen_stable() -> None:
-    """Running gen_spec.py twice shall produce byte-identical CLAUDE.md."""
-    gen_spec = SPEC_ROOT / "tools" / "gen_spec.py"
+def test_agent_map_matches_fresh_gen_spec(gen_spec_snapshot) -> None:
+    """The AGENT-MAP placeholder block is present in a FRESH gen_spec run.
 
-    def run_gen() -> None:
-        result = subprocess.run(
-            [sys.executable, str(gen_spec)],
-            capture_output=True,
-            text=True,
-            cwd=str(SPEC_ROOT),
-        )
-        assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
-
-    run_gen()
-    text1 = ROOT_CLAUDE_MD.read_bytes()
-    run_gen()
-    text2 = ROOT_CLAUDE_MD.read_bytes()
-    assert text1 == text2, (
-        "gen_spec.py is not idempotent: CLAUDE.md differs between two runs"
+    Task #46, Measure 4: gen_spec byte-idempotency is proven ONCE in
+    test_gen_spec_idempotency.py; this test no longer spawns a subprocess to
+    re-prove it. Instead it asserts the block content against the session-scoped
+    freshly-generated snapshot (Measure 1), guaranteeing the on-disk block is
+    what the current substrate generates.
+    """
+    text = gen_spec_snapshot["claude_md_text"]
+    begin = text.find(_AGENT_MAP_BEGIN)
+    end = text.find(_AGENT_MAP_END)
+    assert begin != -1 and end != -1 and end > begin, (
+        "AGENT-MAP sentinels missing from freshly generated CLAUDE.md"
+    )
+    block = text[begin + len(_AGENT_MAP_BEGIN) : end]
+    assert "no sub-operators yet" in block, (
+        f"Fresh AGENT-MAP block lost its placeholder:\n{block}"
     )
 
 

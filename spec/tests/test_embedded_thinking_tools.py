@@ -13,7 +13,6 @@ Canon: R-crystal-is-claude-md, R-agent-references-shared-docs, R-crystal-is-tier
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -126,18 +125,23 @@ def test_embedded_thinking_block_is_bounded() -> None:
     )
 
 
-def test_embedded_blocks_regen_byte_identical() -> None:
-    """Running gen_spec.py again must not change root CLAUDE.md (idempotency)."""
-    before = _read(ROOT_CLAUDE_MD)
-    result = subprocess.run(
-        [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(SPEC_ROOT),
+def test_embedded_blocks_present_in_fresh_gen_spec(gen_spec_snapshot) -> None:
+    """EMBEDDED-THINKING and EMBEDDED-TOOLS blocks are present + non-empty in a
+    FRESH gen_spec run.
+
+    Task #46, Measure 4: gen_spec byte-idempotency is proven once in
+    test_gen_spec_idempotency.py. This test asserts block presence against the
+    session-scoped freshly-generated snapshot (Measure 1) rather than spawning a
+    subprocess to regenerate.
+    """
+    text = gen_spec_snapshot["claude_md_text"]
+    thinking = _extract_block(
+        text, _EMBEDDED_THINKING_BEGIN, _EMBEDDED_THINKING_END
     )
-    assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
-    after = _read(ROOT_CLAUDE_MD)
-    assert before == after, (
-        "Root CLAUDE.md changed on re-regen — EMBEDDED-THINKING/EMBEDDED-TOOLS "
-        "blocks are not idempotent."
+    tools = _extract_block(text, _EMBEDDED_TOOLS_BEGIN, _EMBEDDED_TOOLS_END)
+    assert thinking and thinking.strip(), (
+        "Fresh CLAUDE.md is missing a non-empty EMBEDDED-THINKING block"
+    )
+    assert tools and tools.strip(), (
+        "Fresh CLAUDE.md is missing a non-empty EMBEDDED-TOOLS block"
     )

@@ -5,7 +5,6 @@ Canon: R-recently-rejected-surfaced.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -92,22 +91,24 @@ def test_recently_rejected_lists_known_rejections() -> None:
 # ===========================================================================
 
 
-def test_recently_rejected_regen_byte_identical() -> None:
-    """Running gen_spec.py again must not change the RECENTLY-REJECTED block (idempotency)."""
+def test_recently_rejected_matches_fresh_gen_spec(gen_spec_snapshot) -> None:
+    """The RECENTLY-REJECTED block is present + non-empty in a FRESH gen_spec run.
+
+    Task #46, Measure 4: gen_spec byte-idempotency is proven once in
+    test_gen_spec_idempotency.py. This test asserts block content against the
+    session-scoped freshly-generated snapshot (Measure 1) rather than spawning a
+    subprocess to regenerate.
+    """
     if _ACTIVE_DOMAIN is None:
         pytest.skip("No active domain — P22.B not applicable")
-    before = _read(ROOT_CLAUDE_MD)
-    result = subprocess.run(
-        [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(SPEC_ROOT),
+    block = _extract_block(
+        gen_spec_snapshot["claude_md_text"],
+        _RECENTLY_REJECTED_BEGIN,
+        _RECENTLY_REJECTED_END,
     )
-    assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
-    after = _read(ROOT_CLAUDE_MD)
-    assert before == after, (
-        "Root CLAUDE.md changed on re-regen — RECENTLY-REJECTED block is not idempotent. "
-        "Check _render_recently_rejected_block() for non-determinism."
+    assert block, "Fresh CLAUDE.md is missing the RECENTLY-REJECTED block"
+    assert _KNOWN_REJECTED_ID in block, (
+        f"Fresh RECENTLY-REJECTED block lost known rejection {_KNOWN_REJECTED_ID}"
     )
 
 

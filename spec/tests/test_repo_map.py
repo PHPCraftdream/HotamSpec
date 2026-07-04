@@ -12,8 +12,6 @@ from __future__ import annotations
 
 import ast
 import re
-import subprocess
-import sys
 from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]
@@ -110,23 +108,19 @@ def test_repo_map_complete() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_repo_map_regen_stable() -> None:
-    """Running gen_spec.py twice must produce byte-identical CLAUDE.md."""
-    before = _read_claude()
+def test_repo_map_matches_fresh_gen_spec(gen_spec_snapshot) -> None:
+    """Every generated doc appears in the REPO-MAP block of a FRESH gen_spec run.
 
-    result = subprocess.run(
-        [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(SPEC_ROOT),
-    )
-    assert result.returncode == 0, f"gen_spec.py failed:\n{result.stderr}"
-
-    after = _read_claude()
-    assert before == after, (
-        "CLAUDE.md changed after re-running gen_spec.py — REPO-MAP is not idempotent. "
-        "Check _scan_repo_map() for non-determinism."
-    )
+    Task #46, Measure 4: gen_spec byte-idempotency is proven once in
+    test_gen_spec_idempotency.py. This test asserts REPO-MAP content against the
+    session-scoped freshly-generated snapshot (Measure 1) rather than spawning a
+    subprocess to regenerate.
+    """
+    block = _extract_repo_map_block(gen_spec_snapshot["claude_md_text"])
+    assert block, "Fresh CLAUDE.md is missing the REPO-MAP block"
+    for p in sorted(GEN_DIR.glob("*.md")):
+        entry = f"docs/gen/{p.name}"
+        assert entry in block, f"Fresh REPO-MAP block missing generated doc: {entry}"
 
 
 # ---------------------------------------------------------------------------

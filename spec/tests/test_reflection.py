@@ -352,7 +352,7 @@ def test_reflection_no_derived_unbuilt_when_settled() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_real_meta_domain_reflection_today() -> None:
+def test_real_meta_domain_reflection_today(active_graph) -> None:
     """Live meta-domain: REFLECTION actions are in a reasonable range and sensible.
 
     State after P11 (21 new requirements added):
@@ -362,9 +362,9 @@ def test_real_meta_domain_reflection_today() -> None:
       - No DEAD assumptions -> no dead-assumption-on-enforcer
       - R-active-loop-playbooks is DECIDED derived but SETTLED -> no derived-unbuilt
     """
-    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
-
-    g = load_content_graph()
+    # Task #46, Measure 3: read the session-scoped active graph (frozen, shared
+    # read-only) instead of rebuilding it per-test.
+    g = active_graph
     actions = diagnose(g)
     reflection_actions = [a for a in actions if a.priority == P_REFLECTION]
 

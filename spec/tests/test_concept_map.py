@@ -8,7 +8,6 @@ Verifies that:
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -81,33 +80,18 @@ def test_concept_map_lists_all_glossary_sections() -> None:
     )
 
 
-def test_concept_map_regen_stable() -> None:
-    """Running gen_spec.py twice produces identical CLAUDE.md output (idempotency)."""
-    result1 = subprocess.run(
-        [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(SPEC_ROOT),
-    )
-    assert result1.returncode == 0, (
-        f"gen_spec.py failed on first run:\n{result1.stderr}"
-    )
+def test_concept_map_matches_fresh_gen_spec(gen_spec_snapshot) -> None:
+    """Every §-section slug appears in the CONCEPT-MAP block of a FRESH gen_spec run.
 
-    text_after_first = _read_claude_md()
-
-    result2 = subprocess.run(
-        [sys.executable, str(SPEC_ROOT / "tools" / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(SPEC_ROOT),
-    )
-    assert result2.returncode == 0, (
-        f"gen_spec.py failed on second run:\n{result2.stderr}"
-    )
-
-    text_after_second = _read_claude_md()
-
-    assert text_after_first == text_after_second, (
-        "gen_spec.py is not idempotent: two consecutive runs produced different CLAUDE.md output. "
-        "This means _scan_concept_map() or an upstream block is non-deterministic."
+    Task #46, Measure 4: byte-idempotency is proven once in
+    test_gen_spec_idempotency.py. This test asserts the block content against the
+    session-scoped freshly-generated snapshot (Measure 1) rather than spawning a
+    subprocess to regenerate.
+    """
+    text = gen_spec_snapshot["claude_md_text"]
+    block = _concept_map_block(text)
+    section_slugs = [t.slug for t in TERMS if t.kind == "SECTION"]
+    missing = [slug for slug in section_slugs if f"**{slug}**" not in block]
+    assert not missing, (
+        f"Fresh CONCEPT-MAP block is missing §-section slugs: {missing}"
     )

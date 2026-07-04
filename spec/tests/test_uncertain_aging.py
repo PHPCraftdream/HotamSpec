@@ -80,10 +80,10 @@ def test_holds_assumption_never_ages() -> None:
     assert _aging_actions(g) == []
 
 
-def test_real_graph_surfaces_three_uncertain_assumptions() -> None:
-    from hotam_spec.graph import load_content_graph
-
-    g = load_content_graph()
+def test_real_graph_surfaces_three_uncertain_assumptions(active_graph) -> None:
+    # Task #46, Measure 3: read the session-scoped active graph (frozen, shared
+    # read-only) instead of rebuilding it per-test.
+    g = active_graph
     aging = [
         a
         for a in what_now.diagnose(g)

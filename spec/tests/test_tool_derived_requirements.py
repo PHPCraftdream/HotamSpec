@@ -7,7 +7,6 @@ that the generated docs stay stable under regeneration.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -93,24 +92,21 @@ def test_tool_derived_ids_appear_in_requirements_md() -> None:
     )
 
 
-def test_tool_derived_regen_stable() -> None:
-    """Regenerating gen_spec produces byte-identical output (anti-drift, deterministic)."""
-    # Capture current REQUIREMENTS.md content.
-    req_md = GEN_DIR / "REQUIREMENTS.md"
-    assert req_md.exists(), "REQUIREMENTS.md must exist before stability test"
-    before = req_md.read_text(encoding="utf-8")
+def test_tool_derived_requirements_md_is_fresh(gen_spec_snapshot) -> None:
+    """The committed REQUIREMENTS.md equals a FRESH gen_spec regeneration.
 
-    # Regenerate.
-    result = subprocess.run(
-        [sys.executable, str(TOOLS_DIR / "gen_spec.py")],
-        capture_output=True,
-        text=True,
-        cwd=str(SPEC_ROOT),
+    Task #46, Measure 4: gen_spec byte-idempotency is proven once in
+    test_gen_spec_idempotency.py. This test no longer spawns a subprocess to
+    re-prove stability; instead it confirms the committed REQUIREMENTS.md matches
+    the session-scoped freshly-generated snapshot (Measure 1) — i.e. the on-disk
+    doc is not stale relative to the current substrate.
+    """
+    fresh = gen_spec_snapshot["docs_gen"].get("REQUIREMENTS.md")
+    assert fresh is not None, "Fresh gen_spec produced no REQUIREMENTS.md"
+    committed = (
+        (GEN_DIR / "REQUIREMENTS.md").read_text(encoding="utf-8").replace("\r\n", "\n")
     )
-    assert result.returncode == 0, f"gen_spec.py failed: {result.stderr}"
-
-    after = req_md.read_text(encoding="utf-8")
-    assert before == after, (
-        "REQUIREMENTS.md changed after re-running gen_spec.py — output is not stable. "
-        "Ensure gen_spec.py is deterministic and all Canon: markers are committed."
+    assert committed == fresh, (
+        "Committed REQUIREMENTS.md differs from a fresh gen_spec run — output is "
+        "stale or non-deterministic. Run: uv run python tools/gen_spec.py"
     )

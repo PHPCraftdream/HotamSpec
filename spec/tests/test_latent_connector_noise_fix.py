@@ -134,7 +134,7 @@ def test_pair_sharing_both_generic_and_specific_still_flagged() -> None:
     assert "A-rare2" in hit.hint
 
 
-def test_real_graph_suspect_count_dramatically_reduced() -> None:
+def test_real_graph_suspect_count_dramatically_reduced(active_graph) -> None:
     """The real meta-domain graph's suspect count drops from 3555 to a small number.
 
     Pre-fix (unfiltered share-any-assumption heuristic) this was 3555 on the
@@ -143,7 +143,9 @@ def test_real_graph_suspect_count_dramatically_reduced() -> None:
     upper bound rather than an exact literal so future graph edits don't
     spuriously break this test.
     """
-    g = load_content_graph()
+    # Task #46, Measure 3: read the session-scoped active graph (frozen, shared
+    # read-only) instead of rebuilding it per-test.
+    g = active_graph
     suspects = latent_connector_suspects(g)
     assert len(suspects) < 100, (
         f"expected a small, specificity-filtered suspect count, got {len(suspects)}"
