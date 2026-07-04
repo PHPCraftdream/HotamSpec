@@ -336,9 +336,47 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
 
+# --- Intra-process source caches (deterministic within one gen_spec run) -----
+# The same ~55 source files (tools/*.py, src/hotam_spec/*.py, thinking/*.md) were
+# read and ast.parse'd dozens of times per run. Files do not change during a
+# single process → memoize read+parse by absolute path. Cache is module-level so
+# a fresh process (a new env pin) starts clean; nothing is persisted to disk.
+_SOURCE_TEXT_CACHE: dict[str, str] = {}
+_SOURCE_AST_CACHE: dict[str, ast.Module] = {}
+
+
+def read_source(path: Path) -> str:
+    """Return utf-8 text of `path`, memoized by absolute path (raw, no newline norm).
+
+    Mirrors the historical `path.read_text(encoding="utf-8")` call sites so the
+    cached bytes are byte-identical to the un-cached ones.
+    """
+    key = str(path.resolve())
+    cached = _SOURCE_TEXT_CACHE.get(key)
+    if cached is None:
+        cached = path.read_text(encoding="utf-8")
+        _SOURCE_TEXT_CACHE[key] = cached
+    return cached
+
+
+def parse_source(path: Path) -> ast.Module:
+    """Return the ast.Module for `path`, memoized by absolute path.
+
+    Parsed over read_source(path) so text and AST share one cache key. The
+    returned tree is shared — consumers only read it (ast.walk / get_docstring),
+    never mutate it.
+    """
+    key = str(path.resolve())
+    tree = _SOURCE_AST_CACHE.get(key)
+    if tree is None:
+        tree = ast.parse(read_source(path))
+        _SOURCE_AST_CACHE[key] = tree
+    return tree
+
+
 def _module_docstring(mod: str) -> str:
     """Top-level docstring of src/hotam_spec/<mod>.py via ast (no code execution)."""
-    tree = ast.parse(_read(SRC / f"{mod}.py"))
+    tree = parse_source(SRC / f"{mod}.py")
     return ast.get_docstring(tree) or ""
 
 
@@ -396,8 +434,7 @@ def _scan_tool_requirements(
         if path.name.startswith("_"):
             continue
         try:
-            src = path.read_text(encoding="utf-8")
-            tree = ast.parse(src)
+            tree = parse_source(path)
             doc = ast.get_docstring(tree) or ""
         except Exception:
             continue
@@ -2821,8 +2858,7 @@ def _docstring_role(path: Path) -> str:
     part is returned.  Falls back to '(no docstring)' if none is present.
     """
     try:
-        src = path.read_text(encoding="utf-8")
-        tree = ast.parse(src)
+        tree = parse_source(path)
         doc = ast.get_docstring(tree) or ""
     except Exception:
         return "(parse error)"
@@ -3180,8 +3216,7 @@ def _collect_canon_docstrings(src_dir: Path) -> dict[str, list[tuple[str, str, s
         if py_file.name.startswith("_"):
             continue
         try:
-            src = py_file.read_text(encoding="utf-8")
-            tree = ast.parse(src)
+            tree = parse_source(py_file)
         except Exception:
             continue
 
@@ -3418,8 +3453,7 @@ def build_shared_tool_docs(
         if path.name.startswith("_"):
             continue
         try:
-            src = path.read_text(encoding="utf-8")
-            tree = ast.parse(src)
+            tree = parse_source(path)
             doc = ast.get_docstring(tree) or ""
         except Exception:
             continue
@@ -3658,8 +3692,7 @@ def _scan_concept_map(
         if py_file.name.startswith("_"):
             continue
         try:
-            src_text = py_file.read_text(encoding="utf-8")
-            tree = ast.parse(src_text)
+            tree = parse_source(py_file)
             doc = ast.get_docstring(tree) or ""
         except Exception:
             continue
@@ -3675,8 +3708,7 @@ def _scan_concept_map(
     inv_py = _src / "invariants.py"
     if inv_py.exists():
         try:
-            inv_src = inv_py.read_text(encoding="utf-8")
-            inv_tree = ast.parse(inv_src)
+            inv_tree = parse_source(inv_py)
         except Exception:
             inv_tree = None
         if inv_tree:
@@ -3696,7 +3728,7 @@ def _scan_concept_map(
     if _tests.exists():
         for test_file in sorted(_tests.glob("test_*.py")):
             try:
-                test_src = test_file.read_text(encoding="utf-8")
+                test_src = read_source(test_file)
             except Exception:
                 continue
             rel = f"spec/tests/{test_file.name}"

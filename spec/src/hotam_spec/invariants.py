@@ -34,11 +34,50 @@ suite but are not the primary conscience boundary.
 from __future__ import annotations
 
 import ast
+import functools
 import inspect
 import re
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
+
+
+#: Intra-process memo for all_violations(g), keyed by id(g). The stored graph
+#: reference guards against CPython id reuse: a cache hit is honored only when
+#: the live object is the SAME frozen graph. Pure function of a frozen graph, so
+#: reusing the result within one process is deterministic; a fresh process (a new
+#: env pin) starts empty and nothing is persisted to disk.
+_ALL_VIOLATIONS_CACHE = {}  # type: dict[int, tuple[TensionGraph, list[Violation]]]
+
+
+@functools.lru_cache(maxsize=None)
+def _cached_parse_path(path_str: str) -> ast.Module | None:
+    """Parse a source file's AST, memoized by absolute path (intra-process).
+
+    Source files do not change within one process (a gen_spec/pytest run), so
+    the same ~55 files are re-parsed dozens of times across the check_* layer.
+    Returns None on OSError/SyntaxError so callers keep their skip semantics.
+    A fresh process starts with an empty cache; nothing is persisted to disk.
+    """
+    try:
+        source = Path(path_str).read_text(encoding="utf-8")
+        return ast.parse(source)
+    except (OSError, SyntaxError):
+        return None
+
+
+@functools.lru_cache(maxsize=None)
+def _cached_parse_source_of(fn: object) -> ast.Module | None:
+    """Parse a function's own source via inspect, memoized by function object.
+
+    Same function object => same source within one process. Returns None on
+    OSError/TypeError/SyntaxError to preserve the caller's empty-result skip.
+    """
+    try:
+        source = inspect.getsource(fn)  # type: ignore[arg-type]
+        return ast.parse(source)
+    except (OSError, TypeError, SyntaxError):
+        return None
 
 from hotam_spec.assumption import ASSUMPTION_STATES
 from hotam_spec.conflict import conflict_identity
@@ -2686,10 +2725,8 @@ def check_section_anchors_known(g: TensionGraph) -> list[Violation]:
     known = term_slugs()
     out: list[Violation] = []
     for path in sorted(_TENSIO_SRC.glob("*.py")):
-        try:
-            source = path.read_text(encoding="utf-8")
-            tree = ast.parse(source)
-        except (OSError, SyntaxError):
+        tree = _cached_parse_path(str(path.resolve()))
+        if tree is None:
             continue
         # Collect all docstrings in the module
         docstrings: list[str] = []
@@ -3262,10 +3299,8 @@ def _extract_violation_messages_from_source(fn: object) -> list[str]:
 
     Uses ast on the function source; returns empty list if source is unavailable or unparseable.
     """
-    try:
-        source = inspect.getsource(fn)  # type: ignore[arg-type]
-        tree = ast.parse(source)
-    except (OSError, TypeError, SyntaxError):
+    tree = _cached_parse_source_of(fn)
+    if tree is None:
         return []
 
     messages: list[str] = []
@@ -4099,10 +4134,18 @@ def all_violations(g: TensionGraph) -> list[Violation]:
     framework internals; running these against it produces phantom P1s that
     are not this domain's to fix.
     """
+    key = id(g)
+    cached = _ALL_VIOLATIONS_CACHE.get(key)
+    if cached is not None and cached[0] is g:
+        # Same live, frozen graph object within this process → reuse. Return a
+        # fresh list so callers that mutate their copy cannot corrupt the cache.
+        return list(cached[1])
+
     out: list[Violation] = []
     framework_scoped = frozenset(fn.__name__ for fn in FRAMEWORK_SCOPED_INVARIANTS)
     for check in ALL_INVARIANTS:
         if check.__name__ in framework_scoped and not g.self_hosting:
             continue
         out.extend(check(g))
-    return out
+    _ALL_VIOLATIONS_CACHE[key] = (g, out)
+    return list(out)

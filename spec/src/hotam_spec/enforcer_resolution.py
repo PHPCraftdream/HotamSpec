@@ -22,6 +22,7 @@ Deterministic: no timestamps/randomness; pure filesystem read + regex.
 
 from __future__ import annotations
 
+import functools
 import re
 from pathlib import Path
 
@@ -30,6 +31,36 @@ __all__ = [
     "bare_test_func_to_file",
     "resolve_one_enforcer",
 ]
+
+# Matches `def <name>(` at line start (module-level test function definitions).
+_DEF_RE = re.compile(r"^def (test_\w+)\(", re.MULTILINE)
+
+
+@functools.lru_cache(maxsize=None)
+def _func_to_file_index(tests_dir_str: str) -> dict[str, str | None]:
+    """Build `{test_func_name: rel_file | None}` in one pass, memoized per dir.
+
+    A name mapped to None means AMBIGUOUS: two or more files define a function
+    with that name (fail-closed, per the original per-call semantics). Built once
+    per tests_dir per process; a fresh process starts with an empty cache and
+    nothing is persisted to disk (deterministic within a run).
+    """
+    index: dict[str, str | None] = {}
+    tests_dir = Path(tests_dir_str)
+    if not tests_dir.exists():
+        return index
+    for test_file in sorted(tests_dir.glob("test_*.py")):
+        try:
+            src = test_file.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        rel = f"tests/{test_file.name}"
+        for name in set(_DEF_RE.findall(src)):
+            if name in index:
+                index[name] = None  # collision -> ambiguous, fail-closed
+            else:
+                index[name] = rel
+    return index
 
 
 def check_to_tests_map(tests_dir: Path) -> dict[str, list[str]]:
@@ -58,18 +89,7 @@ def bare_test_func_to_file(name: str, tests_dir: Path) -> str | None:
     """
     if not tests_dir.exists():
         return None
-    pattern = re.compile(rf"^def {re.escape(name)}\(", re.MULTILINE)
-    hits: list[str] = []
-    for test_file in sorted(tests_dir.glob("test_*.py")):
-        try:
-            src = test_file.read_text(encoding="utf-8")
-        except Exception:
-            continue
-        if pattern.search(src):
-            hits.append(f"tests/{test_file.name}")
-    if len(hits) == 1:
-        return hits[0]
-    return None
+    return _func_to_file_index(str(tests_dir.resolve())).get(name)
 
 
 def resolve_one_enforcer(
