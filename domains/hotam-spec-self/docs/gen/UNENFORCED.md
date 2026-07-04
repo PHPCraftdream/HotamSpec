@@ -14,13 +14,16 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 195 / SETTLED 217; closeable debt 0; inherent discipline 22; DRAFT 5; OPEN 0; REJECTED 33.**
+**Burn-down: SETTLED-ENFORCED 195 / SETTLED 219; closeable debt 2; inherent discipline 22; DRAFT 5; OPEN 0; REJECTED 33.**
 
 ---
 
 ## Closeable debt (ENFORCEABLE, no enforcer yet)
 
-_None — all ENFORCEABLE SETTLED requirements are ENFORCED._
+| id | enforcement | owner | claim |
+|---|---|---|---|
+| `R-framework-suite-tiered` | STRUCTURAL | `framework-author` | The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset. |
+| `R-framework-suite-domain-independent` | PROSE | `framework-author` | The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 

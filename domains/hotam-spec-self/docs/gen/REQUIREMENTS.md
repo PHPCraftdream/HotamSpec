@@ -266,6 +266,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-attention-agent-agnostic-core` | SETTLED | `framework-author` | A-text-grounded-in-models | The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner. |
 | `R-attention-superset-of-diagnose` | SETTLED | `framework-author` | A-text-grounded-in-models | The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected. |
 | `R-attention-claude-adapter` | SETTLED | `framework-author` | A-text-grounded-in-models | The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing. |
+| `R-framework-suite-tiered` | SETTLED | `framework-author` | — | The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset. |
+| `R-framework-suite-domain-independent` | SETTLED | `framework-author` | — | The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned. |
 
 ## Stakeholders
 

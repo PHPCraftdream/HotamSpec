@@ -3778,6 +3778,23 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_attention_claude_adapter.py",),
         ),
+        Requirement(
+            id="R-framework-suite-tiered",
+            claim=("The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin."),
+            enforcement=STRUCTURAL,
+            enforced_by=("test_framework_domain_tiering.py::test_every_test_is_tiered", "test_framework_domain_tiering.py::test_tiers_partition_the_suite",),
+        ),
+        Requirement(
+            id="R-framework-suite-domain-independent",
+            claim=("The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. PROSE-enforced (not a single-run pytest invariant): proving it requires re-running `-m framework` under a FOREIGN pin (a nested pytest inside one run would recurse); the proof is executed at wave/commit boundary -- Wave 17 demonstrated 982 passed / 18 deselected under HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev."),
+            enforcement=PROSE,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

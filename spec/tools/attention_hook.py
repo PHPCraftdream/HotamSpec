@@ -34,7 +34,26 @@ if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
 
+_USAGE = (
+    "Usage (from spec/):\n"
+    "  uv run python tools/attention_hook.py\n"
+    "\n"
+    "Thin Claude-Code UserPromptSubmit hook. Loads the active-domain graph,\n"
+    "calls hotam_spec.attention.collect() and prints the flat attention list\n"
+    "to stdout (Claude Code injects it into the agent's turn). No arguments;\n"
+    "fails soft (prints nothing, exits 0) on any error.\n"
+)
+
+
 def main() -> int:
+    # A STATIC usage string when asked for help. attention_hook has no argparse;
+    # without this branch, gen_spec's _capture_tool_help (which invokes main with
+    # --help to snapshot help text) would instead run the LIVE collector and bake
+    # its calendar/atom-count-dependent output into spec/docs/tools/attention_hook.md
+    # — a non-deterministic drift source (re-snapshotted every atom/day).
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        sys.stdout.write(_USAGE)
+        return 0
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     try:

@@ -36,16 +36,11 @@ Usage (from spec/):
 ## CLI usage
 
 ```
-== attention (auto) ==
-attention: 10 signal(s) (lower P = more urgent).
-[P6 PENDING_PROPOSAL] generative-audit: generative tension audit is stale: 217 SETTLED now vs 202 at the last sweep (+15 > 10) — re-run `uv run python tools/audit_tensions.py` (R-tension-audit-staleness-visible).
-[P6 PENDING_PROPOSAL] open-tickets: open tickets: 6 (backlog: 6) — `uv run python tools/ticket_list.py` (R-open-tickets-visible).
-[P6 PENDING_PROPOSAL] R-host-spawn-leaves-trace-land.json: presented, awaiting steward: R-host-spawn-leaves-trace-land.json, 1 day(s)
-[P6 PENDING_PROPOSAL] delegation-node-candidate.json: presented, awaiting steward: delegation-node-candidate.json, 1 day(s)
-[P6 PENDING_PROPOSAL] wave16-attention-core.json: presented, awaiting steward: wave16-attention-core.json, 1 day(s)
-[P6 PENDING_PROPOSAL] wave16-attention-rest.json: presented, awaiting steward: wave16-attention-rest.json, 1 day(s)
-[P6 PENDING_PROPOSAL] wave16-attention-rest2.json: presented, awaiting steward: wave16-attention-rest2.json, 1 day(s)
-[P6 PENDING_PROPOSAL] C-06e2d84e: evaluate revisit marker (never evaluated): REVISIT if the DRAFT backlog grows faster than it is built — then prune or promote. — then `uv run python tools/mark_revisit_evaluated.py C-06e2d84e` (R-revisit-markers-evaluated).
-[P6 PENDING_PROPOSAL] C-186c4347: evaluate revisit marker (never evaluated): REVISIT if domain-users report the playbook overhead negates the harness's directness (the loop becomes slower than free manual editing) — then re-calibrate band-by-band. — then `uv run python tools/mark_revisit_evaluated.py C-186c4347` (R-revisit-markers-evaluated).
-[P6 PENDING_PROPOSAL] C-c3911f28: evaluate revisit marker (never evaluated): REVISIT if a fresh framework clone needs the meta-domain to self-bootstrap (cf. M8 content-layout evolution). — then `uv run python tools/mark_revisit_evaluated.py C-c3911f28` (R-revisit-markers-evaluated).
+Usage (from spec/):
+  uv run python tools/attention_hook.py
+
+Thin Claude-Code UserPromptSubmit hook. Loads the active-domain graph,
+calls hotam_spec.attention.collect() and prints the flat attention list
+to stdout (Claude Code injects it into the agent's turn). No arguments;
+fails soft (prints nothing, exits 0) on any error.
 ```
