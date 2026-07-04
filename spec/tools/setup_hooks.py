@@ -38,12 +38,34 @@ _DIR = "$CLAUDE_PROJECT_DIR"
 _MARKER = "# R-sensorium-committed"
 
 
-def _tool(name: str) -> str:
-    """A portable `uv run` invocation of spec/tools/<name>.py, anchored on the
-    project dir so it works from any clone on any machine."""
-    return (
-        f'uv run --project "{_DIR}/spec" python "{_DIR}/spec/tools/{name}.py"'
+def _tool(name: str, tool_args: str = "") -> str:
+    """A portable, FAST invocation of spec/tools/<name>.py, anchored on the
+    project dir so it works from any clone on any machine.
+
+    Speed vs portability (the honest fallback): `uv run` re-checks the lock /
+    sync of the environment on EVERY invocation (~2s of dead weight), and hooks
+    are the hottest path in the loop — they fire on every prompt / compact / stop.
+    So the emitted command PREFERS the already-built venv interpreter
+    (spec/.venv/{bin/python,Scripts/python.exe}) when it exists, and FALLS BACK to
+    `uv run --project` only when the venv is absent (a fresh clone before the
+    first sync). The fallback is honest: the venv-python is probed with `[ -x ]`
+    before use, so a fresh clone is never broken — it just pays the uv cost once,
+    until `uv sync` materializes the venv.
+
+    Portability: the probe covers BOTH layouts — POSIX `bin/python` and Windows
+    `Scripts/python.exe` — with no hardcoded machine path (only $CLAUDE_PROJECT_DIR).
+    Claude Code runs hook commands through a POSIX shell (sh) on every platform,
+    so this `[ -x ] && … || …` conditional is valid on Windows too (Git-Bash).
+    """
+    tool = f'"{_DIR}/spec/tools/{name}.py"'
+    args = f" {tool_args}" if tool_args else ""
+    venv = f'"{_DIR}/spec/.venv"'
+    fast = (
+        f'PY={venv}/bin/python; [ -x "$PY" ] || PY={venv}/Scripts/python.exe; '
+        f'if [ -x "$PY" ]; then "$PY" {tool}{args}; '
+        f'else uv run --project "{_DIR}/spec" python {tool}{args}; fi'
     )
+    return fast
 
 
 def _cmd(body: str) -> dict:
@@ -74,7 +96,7 @@ def build_settings() -> dict:
     attn = _tool("attention_hook") + " 2>/dev/null || true"
     guard = _tool("_graph_guard")
     ctx = _tool("context_producer") + " 2>/dev/null || true"
-    boot = _tool("boot_cite_status") + " write 2>/dev/null || true"
+    boot = _tool("boot_cite_status", "write") + " 2>/dev/null || true"
 
     return {
         "hooks": {
