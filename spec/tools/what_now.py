@@ -66,20 +66,25 @@ _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from hotam_spec.conflict import ACKNOWLEDGED, DETECTED  # noqa: E402
 from hotam_spec.graph import (  # noqa: E402
     CONTENT_GRAPH_FILE,
     TensionGraph,
-    conflicts_on_assumption,
-    dead_assumptions,
-    entity_state_conflict_suspects,
-    latent_connector_clusters,
     load_content_graph,
-    requirements_on_assumption,
-    uncertain_assumptions,
 )
-from hotam_spec.invariants import all_violations  # noqa: E402
-from hotam_spec.reflection import all_findings  # noqa: E402
+from hotam_spec import attention as _attention  # noqa: E402
+from hotam_spec.attention import (  # noqa: E402
+    UNCERTAIN_AGING_MIN_DEPENDENTS,
+    AttentionSignal,
+    AttentionSource,
+    READS_RUNTIME_FS,
+)
+from hotam_spec.invariants import all_violations  # noqa: E402,F401
+from hotam_spec.reflection import all_findings  # noqa: E402,F401
+
+# Re-exported for backwards compatibility with tests that referenced these
+# names on this module before the graph-diagnosis body moved into the
+# hotam_spec.attention core (Wave 16). They remain the canonical source.
+_ = (UNCERTAIN_AGING_MIN_DEPENDENTS, all_violations, all_findings)
 
 # --- Priority bands (lower number = more urgent) ----------------------------
 
@@ -90,14 +95,6 @@ P_CONFLICT_STALLED = 3
 P_OPEN_ITEM = 4
 P_LATENT_CONNECTOR = 5
 P_PENDING_PROPOSAL = 6
-
-#: Canon: §Harness — UNCERTAIN-aging threshold (R-uncertain-assumptions-surface).
-#: An UNCERTAIN assumption with at least this many dependent Requirements is a
-#: standing review debt worth a P4 action; below it the doubt is too local to
-#: be worth a line. 5 was chosen against the real hotam-spec-self graph, where
-#: the three UNCERTAIN assumptions carry 58 / 37 / 9 dependents — all three are
-#: genuinely high-fan-out silent questions, none is noise.
-UNCERTAIN_AGING_MIN_DEPENDENTS = 5
 
 _BAND_LABEL = {
     P_REFLECTION: "REFLECTION",
@@ -131,192 +128,34 @@ class Action:
     imperative: str
 
 
+def _signal_to_action(s: AttentionSignal) -> Action:
+    """Adapt a core AttentionSignal into the harness's Action shape.
+
+    The band label is looked up from the signal's priority so what_now's
+    rendering (which keys on Action.kind) is unchanged.
+    """
+    return Action(
+        priority=s.priority,
+        kind=_BAND_LABEL.get(s.priority, str(s.priority)),
+        target=s.target,
+        imperative=s.message,
+    )
+
+
 def diagnose(g: TensionGraph) -> list[Action]:
     """Derive the full prioritized next-action list from a graph state.
 
-    Deterministic: actions are emitted band by band, and within a band in stable
-    graph/id order, then a final stable sort by (priority, kind, target) fixes
-    the global order. Running twice on the same graph yields the same list.
+    Thin adapter over hotam_spec.attention.diagnose_signals(g): the graph-only,
+    DETERMINISTIC diagnosis body now lives in the attention core (the single
+    graph AttentionSource) so the harness and the substrate share one copy
+    (R-attention-superset-of-diagnose). This function only maps AttentionSignal
+    -> Action. Deterministic: the core sorts by (priority, target, message);
+    the final stable sort here fixes (priority, kind, target).
     """
-    actions: list[Action] = []
-
-    # P0 REFLECTION — operator self-readiness (§Reflection, M35).
-    # The five conditions live as named predicates in hotam_spec.reflection
-    # (R-reflection-predicates-first-class); the harness maps each Finding
-    # into a P0 Action exactly as it maps invariants Violations into P1 below.
-    for f in all_findings(g):
-        actions.append(
-            Action(
-                priority=P_REFLECTION,
-                kind=_BAND_LABEL[P_REFLECTION],
-                target=f.target,
-                imperative=f.imperative,
-            )
-        )
-
-    # P1 STRUCTURE — failing structural invariants.
-    for v in all_violations(g):
-        actions.append(
-            Action(
-                priority=P_STRUCTURE,
-                kind=_BAND_LABEL[P_STRUCTURE],
-                target=v.target,
-                imperative=f"[{v.invariant}] {v.message}",
-            )
-        )
-
-    # P2 DRIFT_FALLOUT — DEAD assumptions with live dependents.
-    for a in dead_assumptions(g):
-        dep_reqs = requirements_on_assumption(g, a.id)
-        dep_cons = conflicts_on_assumption(g, a.id)
-        if not dep_reqs and not dep_cons:
-            continue  # a dead assumption with no dependents needs no revisit
-        for r in dep_reqs:
-            actions.append(
-                Action(
-                    priority=P_DRIFT_FALLOUT,
-                    kind=_BAND_LABEL[P_DRIFT_FALLOUT],
-                    target=r.id,
-                    imperative=(
-                        f"assumption '{a.id}' is DEAD ({a.statement!r}); "
-                        f"revisit requirement '{r.id}' which rests on it"
-                    ),
-                )
-            )
-        for c in dep_cons:
-            actions.append(
-                Action(
-                    priority=P_DRIFT_FALLOUT,
-                    kind=_BAND_LABEL[P_DRIFT_FALLOUT],
-                    target=c.id,
-                    imperative=(
-                        f"assumption '{a.id}' is DEAD; revive conflict cluster "
-                        f"'{c.id}' whose shared_assumption was '{a.id}'"
-                    ),
-                )
-            )
-
-    # P3 CONFLICT_STALLED — conflicts with no steward resolution.
-    for c in g.conflicts:
-        if c.lifecycle == DETECTED:
-            actions.append(
-                Action(
-                    priority=P_CONFLICT_STALLED,
-                    kind=_BAND_LABEL[P_CONFLICT_STALLED],
-                    target=c.id,
-                    imperative=(
-                        f"conflict '{c.id}' on axis '{c.axis}' is DETECTED with no "
-                        f"steward movement; steward '{c.steward}' must ACKNOWLEDGE it"
-                    ),
-                )
-            )
-        elif c.lifecycle == ACKNOWLEDGED:
-            actions.append(
-                Action(
-                    priority=P_CONFLICT_STALLED,
-                    kind=_BAND_LABEL[P_CONFLICT_STALLED],
-                    target=c.id,
-                    imperative=(
-                        f"conflict '{c.id}' is ACKNOWLEDGED but undecided; steward "
-                        f"'{c.steward}' must DECIDE (rationale) or set REVISIT_WHEN"
-                    ),
-                )
-            )
-
-    # P4 OPEN_ITEM — OPEN(question) requirements.
-    for r in g.requirements:
-        if r.is_open():
-            question = r.status[len("OPEN") :].strip().strip("()").strip()
-            actions.append(
-                Action(
-                    priority=P_OPEN_ITEM,
-                    kind=_BAND_LABEL[P_OPEN_ITEM],
-                    target=r.id,
-                    imperative=(
-                        f"OPEN requirement '{r.id}' (owner '{r.owner}') awaits a "
-                        f"decision: {question or '(no question stated)'}"
-                    ),
-                )
-            )
-
-    # P4 OPEN_ITEM (continued) — HELD conflicts: not resolvable by amending
-    # their members, held open carrying elaborated variants; the steward must
-    # choose one (§Conflict — Variant / HELD, R-held-carries-variants).
-    for c in g.conflicts:
-        if c.is_held():
-            for v in c.variants:
-                actions.append(
-                    Action(
-                        priority=P_OPEN_ITEM,
-                        kind=_BAND_LABEL[P_OPEN_ITEM],
-                        target=c.id,
-                        imperative=(
-                            f"choose a variant: '{v.id}' — {c.axis}"
-                        ),
-                    )
-                )
-
-    # P4 OPEN_ITEM (continued) — UNCERTAIN-aging: an assumption under question
-    # that a large number of Requirements still rest on is the graph's biggest
-    # SILENT question — nowhere surfaced today (DEAD lights up P2 fallout,
-    # HOLDS is calm, but UNCERTAIN aged invisibly). Fire ONE action per such
-    # assumption whose dependent-Requirement count reaches the threshold, so the
-    # steward is asked to resolve the doubt (kill it via an AssumptionTransition
-    # to DEAD, or re-affirm to HOLDS) rather than let it drift
-    # (R-uncertain-assumptions-surface).
-    for a in uncertain_assumptions(g):
-        dep_reqs = requirements_on_assumption(g, a.id)
-        if len(dep_reqs) < UNCERTAIN_AGING_MIN_DEPENDENTS:
-            continue
-        actions.append(
-            Action(
-                priority=P_OPEN_ITEM,
-                kind=_BAND_LABEL[P_OPEN_ITEM],
-                target=a.id,
-                imperative=(
-                    f"review assumption '{a.id}' ({a.statement!r}): still "
-                    f"UNCERTAIN with {len(dep_reqs)} dependent requirements — "
-                    f"resolve the doubt (transition to DEAD or re-affirm HOLDS) "
-                    f"or it drifts"
-                ),
-            )
-        )
-
-    # P5 LATENT_CONNECTOR — heuristic missing-connector suspects (for AI
-    # review), CLUSTERED by shared-assumption signature: one action per
-    # cluster, not C(n,2) pair lines (R-latent-connectors-cluster-by-assumption;
-    # pair-level detail lives in latent_connector_clusters(...).pairs and in
-    # the TENSIONS.md suspect table).
-    for cl in latent_connector_clusters(g):
-        sig = ", ".join(cl.assumptions)
-        actions.append(
-            Action(
-                priority=P_LATENT_CONNECTOR,
-                kind=_BAND_LABEL[P_LATENT_CONNECTOR],
-                target=",".join(cl.assumptions),
-                imperative=(
-                    f"[HEURISTIC, for AI review] assumption(s) {sig} shared by "
-                    f"{len(cl.requirements)} requirements "
-                    f"({', '.join(cl.requirements)}) with no mediating Conflict "
-                    f"node — review the cluster as ONE item: consider splitting "
-                    f"the assumption or materializing a connector "
-                    f"({len(cl.pairs)} pair(s); detail: docs/gen/TENSIONS.md)"
-                ),
-            )
-        )
-
-    for s in entity_state_conflict_suspects(g):
-        actions.append(
-            Action(
-                priority=P_LATENT_CONNECTOR,
-                kind=_BAND_LABEL[P_LATENT_CONNECTOR],
-                target=f"{s.left}~{s.right}",
-                imperative=(f"[HEURISTIC, entity-state conflict] {s.hint}"),
-            )
-        )
-
+    actions = [_signal_to_action(s) for s in _attention.diagnose_signals(g)]
     actions.sort(key=lambda a: (a.priority, a.kind, a.target, a.imperative))
     return actions
+
 
 
 def pending_proposal_actions(*, now: float | None = None) -> list[Action]:
@@ -554,6 +393,83 @@ def open_ticket_actions() -> list[Action]:
             ),
         )
     ]
+
+
+# --- Runtime-fs attention sources (the injected superset half) --------------
+
+
+def _actions_to_signals(source_id: str, actions: list[Action]) -> list[AttentionSignal]:
+    """Adapt the legacy Action-returning fs-band functions into AttentionSignals
+    tagged with their source id, so they can be injected into
+    hotam_spec.attention.collect() as runtime-fs sources."""
+    return [
+        AttentionSignal(
+            source=source_id,
+            priority=a.priority,
+            target=a.target,
+            message=a.imperative,
+        )
+        for a in actions
+    ]
+
+
+def runtime_fs_sources() -> tuple[AttentionSource, ...]:
+    """Canon: §Attention — the RUNTIME-FS half of the attention registry.
+
+    These four sources read the FILESYSTEM (spec/.runtime/*, tickets/, pending
+    proposals), so they are NON-deterministic and MUST NOT flow into diagnose()
+    / LIVE-STATE. They live here in the tool (not in the stdlib-only core) and
+    are INJECTED into hotam_spec.attention.collect(runtime_sources=...) by the
+    live consumer (this CLI, the Claude hook, any agent). That injection seam is
+    the architectural guarantee behind R-attention-superset-of-diagnose: the
+    deterministic core has no reference to them, so they can never leak into the
+    substrate.
+
+    Each is tagged READS_RUNTIME_FS; collect() rejects any READS_GRAPH source
+    passed as a runtime source.
+    """
+    return (
+        AttentionSource(
+            id="pending-proposals",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "pending-proposals", pending_proposal_actions()
+            ),
+        ),
+        AttentionSource(
+            id="generative-audit",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "generative-audit", generative_audit_staleness_actions(g)
+            ),
+        ),
+        AttentionSource(
+            id="revisit-markers",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "revisit-markers", revisit_marker_actions(g)
+            ),
+        ),
+        AttentionSource(
+            id="open-tickets",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "open-tickets", open_ticket_actions()
+            ),
+        ),
+    )
+
+
+def collect_attention(g: TensionGraph) -> list[AttentionSignal]:
+    """Canon: §Attention — the LIVE superset for an agent/hook consumer.
+
+    Runs the framework's deterministic graph diagnosis PLUS the injected
+    runtime-fs bands — the full "pay attention here" list for a living agent.
+    This is what tools/attention.py (the CLI) and tools/attention_hook.py (the
+    Claude adapter) call. gen_spec / LIVE-STATE never call this — they call
+    diagnose() (the deterministic subset) only.
+    """
+    return _attention.collect(g, runtime_sources=runtime_fs_sources())
 
 
 # --- Rendering --------------------------------------------------------------

@@ -43,6 +43,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Agent` | A scoped sub-operator directory (spec/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories. |
 | `§Domain` | A self-contained business domain directory (domains/<name>/) with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md. |
 | `§Entity` | Domain-declared business concept with its own lifecycle (M12 opt-in aspect): EntityType + EntityField + EntityInstance; check_entity_* covers every declared type by iteration. |
+| `§Attention` | The agent-agnostic registry of attention-codes (ATTENTION_SOURCES): collect() runs the sources and returns typed AttentionSignals. Graph sources are deterministic (the diagnose subset the substrate consumes); runtime-fs sources are injected by the live consumer to form the agent superset. |
 
 ## Lifecycle states
 | slug | definition |

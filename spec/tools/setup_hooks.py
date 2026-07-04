@@ -59,7 +59,10 @@ def build_settings() -> dict:
       SessionStart / PostCompact — regenerate docs so a fresh session boots on
                                    current substrate (gen_spec.py).
       UserPromptSubmit          — emit the three-cipher pulse + inject the
-                                   CLAUDE.md diff since the last turn.
+                                   CLAUDE.md diff since the last turn + inject
+                                   the attention list (attention_hook.py, the
+                                   Claude adapter over the attention core,
+                                   R-attention-claude-adapter).
       PreToolUse (Edit|Write)   — deny direct hand-edits of domains/*/graph.py
                                    (R-no-hand-edit-graph), the guard a stranger
                                    otherwise lacks entirely.
@@ -68,6 +71,7 @@ def build_settings() -> dict:
     gen = _tool("gen_spec") + " >/dev/null 2>&1 || true"
     emit = _tool("emit_cipher") + " 2>/dev/null || true"
     diff = _tool("claude_md_diff_watch") + " 2>/dev/null || true"
+    attn = _tool("attention_hook") + " 2>/dev/null || true"
     guard = _tool("_graph_guard")
     ctx = _tool("context_producer") + " 2>/dev/null || true"
     boot = _tool("boot_cite_status") + " write 2>/dev/null || true"
@@ -76,7 +80,7 @@ def build_settings() -> dict:
         "hooks": {
             "SessionStart": [{"hooks": [_cmd(gen)]}],
             "PostCompact": [{"hooks": [_cmd(gen)]}],
-            "UserPromptSubmit": [{"hooks": [_cmd(emit), _cmd(diff)]}],
+            "UserPromptSubmit": [{"hooks": [_cmd(emit), _cmd(diff), _cmd(attn)]}],
             "PreToolUse": [
                 {"matcher": "Edit|Write", "hooks": [_cmd(guard)]}
             ],

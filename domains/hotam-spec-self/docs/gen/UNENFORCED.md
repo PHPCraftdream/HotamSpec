@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 191 / SETTLED 213; closeable debt 0; inherent discipline 22; DRAFT 5; OPEN 0; REJECTED 33.**
+**Burn-down: SETTLED-ENFORCED 195 / SETTLED 217; closeable debt 0; inherent discipline 22; DRAFT 5; OPEN 0; REJECTED 33.**
 
 ---
 
@@ -244,6 +244,10 @@ _None — all ENFORCEABLE SETTLED requirements are ENFORCED._
 | `R-ticket-engine-on-disk` | test_tool_ticket_create.py, test_tool_ticket_move.py | Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools. |
 | `R-ticket-carries-history` | test_tool_ticket_create.py, test_tool_ticket_move.py, test_tool_ticket_comment.py, test_tool_ticket_edit.py | Every ticket shall carry an append-only ## History section in which each mutation (create, status move, comment, text change) records one machine-recognisable entry, with a text change snapshotting the prior text. |
 | `R-open-tickets-visible` | test_open_tickets_band.py | The what_now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into diagnose(). |
+| `R-attention-registry` | test_attention_core.py | An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs. |
+| `R-attention-agent-agnostic-core` | test_attention_core.py::test_core_names_no_platform_token | The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner. |
+| `R-attention-superset-of-diagnose` | test_attention_core.py | The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected. |
+| `R-attention-claude-adapter` | test_attention_claude_adapter.py | The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing. |
 
 ## DRAFT (not yet promoted)
 

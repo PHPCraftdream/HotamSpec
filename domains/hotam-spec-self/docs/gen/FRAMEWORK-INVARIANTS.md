@@ -146,6 +146,8 @@ Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of
 **Tool-derived requirements**
 
 - R-tool-apply-proposal — mechanical writer for steward-approved JSON proposals. [S]
+- R-tool-attention — the agent-agnostic CLI over the attention core. [S]
+- R-tool-attention-hook — the Claude adapter: inject the attention list into context. [S]
 - R-tool-audit-atomicity — surfaces Requirements with compound claims and check_* functions with compound conditions, both… [S]
 - R-tool-audit-tensions — the generative-audit tool: a deterministic, LLM-free shortlist of [S]
 - R-tool-boot-cite-status — Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a ty… [S]

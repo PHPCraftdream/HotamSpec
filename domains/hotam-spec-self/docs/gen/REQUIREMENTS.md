@@ -262,6 +262,10 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-ticket-carries-history` | SETTLED | `framework-author` | A-text-grounded-in-models | Every ticket shall carry an append-only ## History section in which each mutation (create, status move, comment, text change) records one machine-recognisable entry, with a text change snapshotting the prior text. |
 | `R-ticket-mutation-via-tools-only` | SETTLED | `framework-author` | A-text-grounded-in-models | A ticket's frontmatter header and History shall be changed only through the ticket_* tools, never by hand-editing the file. |
 | `R-open-tickets-visible` | SETTLED | `framework-author` | A-text-grounded-in-models | The what_now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into diagnose(). |
+| `R-attention-registry` | SETTLED | `framework-author` | A-text-grounded-in-models | An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs. |
+| `R-attention-agent-agnostic-core` | SETTLED | `framework-author` | A-text-grounded-in-models | The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner. |
+| `R-attention-superset-of-diagnose` | SETTLED | `framework-author` | A-text-grounded-in-models | The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected. |
+| `R-attention-claude-adapter` | SETTLED | `framework-author` | A-text-grounded-in-models | The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing. |
 
 ## Stakeholders
 
@@ -316,6 +320,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 Projected from `spec/tools/*.py` module docstrings whose first line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). The docstring IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R.
 
 - **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
+- **R-tool-attention** — *the agent-agnostic CLI over the attention core.* [STRUCTURAL·tool · §Attention] [enforcer: (none)]
+- **R-tool-attention-hook** — *the Claude adapter: inject the attention list into context.* [STRUCTURAL·tool · §Attention] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
 - **R-tool-audit-tensions** — *the generative-audit tool: a deterministic, LLM-free shortlist of* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_audit_tensions`]
 - **R-tool-boot-cite-status** — *Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_boot_cite_status`]

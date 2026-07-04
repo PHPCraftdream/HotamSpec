@@ -9,7 +9,7 @@ Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/doc
 
 ### Role (the resident seed)
 
-Operator of `hotam-spec-self` (213 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
+Operator of `hotam-spec-self` (217 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.py`) ↔ **tests** (`check_*`/`test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
 
 Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).
 
@@ -67,6 +67,12 @@ _(full text: spec/docs/thinking/agent.md)_
 RULE (IMPLEMENTS, R-assumption-implements-state): IMPLEMENTS is a fourth, VOLITIONAL род of status, categorically distinct from the three epistemic statuses (HOLDS/UNCERTAIN/DEAD, which answer 'is this true?'). IMPLEMENTS answers 'do we want this to become true, and are we working toward it?'. Three consequences follow directly from its non-epistemic nature and are enforced by the filters/predicat… WHY assumptions are first-class (not prose inside a requirement): conflicts and requirements INHERIT drift. When an Assumption flips to DEAD, every Conflict and Requirement resting on it must light up at once — one trigger re-opens a whole semantic cluster (see graph.dead_assumptions + graph.requirements_on_assumption and what_now's dead-assumption fallout). A shared assumption interpreted two dif… RULE: `status` MUST be one of ASSUMPTION_STATES (HOLDS | UNCERTAIN | DEAD | IMPLEMENTS) (invariants.check_assumption_status_valid). When status == DEAD, every dependent Requirement/Conflict is surfaced for revisit by the harness — it is NEVER silently dropped. IMPLEMENTS (the VOLITIONAL род — an aspiration, not a fact-claim) is neither surfaced as DEAD-fallout nor aged as an UNCERTAIN doubt (R-ass… WHY machine_check is carried but not run: spec-stack layer 5 (Z3 conflict detector) and layer 4 (Hypothesis latent-connector hunt) are deferred; the field is the seam where they attach without reshaping the ontology. RULE: for each Assumption whose machine_check is non-empty, compile it in 'eval' mode; a SyntaxError is a Violation on the assumption id. An empty machine_check is skipped (the field is optional). This does NOT execute the formula and does NOT assert it is TRUE — see the honesty boundary below. WHY only a syntax check, deliberately (the honesty boundary): the two machine_checks carried in the self-domain graph evaluate against DIFFERENT, not-yet-materialized namespaces — 'python.version >= (3, 12)' names a `python` object that does not exist as written, and 'len(graph.requirements) + len(graph.conflicts) < 10_000' expects a `graph` binding. There is today no single agreed namespace over…
 
 _(full text: spec/docs/thinking/assumption.md)_
+
+#### attention
+
+RULE (R-attention-registry): every signal an agent is obliged to notice — "here is what needs your attention right now" — is produced by a NAMED source in a single registry (ATTENTION_SOURCES), and `collect(g, ...)` runs the registry and returns a flat list of typed AttentionSignal records. No agent, on any platform, has to remember where the signals live: it runs the core and reads the list. The… WHY a core (not just tool functions): the "what needs attention" signals were scattered — half in diagnose(g), half as CLI-only bands owned by tools/what_now.py. There was no single, agent-agnostic, importable-as-a-library place an arbitrary agent could call. Lifting them into one stdlib-only core with an explicit registry makes the sensorium a first-class, testable object and lets what_now become…
+
+_(full text: spec/docs/thinking/attention.md)_
 
 #### axis
 
@@ -192,6 +198,18 @@ _(full text: spec/docs/thinking/stakeholder.md)_
 Canon: §Proposal — mechanical writer for steward-approved JSON proposals.
 
 _(full text: spec/docs/tools/apply_proposal.md)_
+
+#### attention
+
+RULE (R-attention-agent-agnostic-core): this is the UNIVERSAL entry point any agent, on any platform, runs to get the "pay attention here" list. It prints plain text (one line per signal) and knows nothing of Claude — the Claude hook (tools/attention_hook.py) is a thin wrapper that shells out to this same core. WHY separate from what_now.py: what_now renders the operator's banded action report (a rich human console). attention.py is the minimal, machine-consumable sensorium surface an ARBITRARY agent calls; what_now is one consumer of the same core (R-prefer-tool-over-hand).
+
+_(full text: spec/docs/tools/attention.md)_
+
+#### attention_hook
+
+RULE (R-attention-claude-adapter): this is a THIN Claude-Code UserPromptSubmit hook wrapper around the agent-agnostic attention core. It does NOT re-implement any sensing logic: it loads the active-domain graph, calls hotam_spec.attention.collect() with the runtime-fs sources injected by tools/what_now.runtime_fs_sources() (the live superset), and prints the flat plain-text list to stdout — Claude…
+
+_(full text: spec/docs/tools/attention_hook.md)_
 
 #### audit_atomicity
 
@@ -397,6 +415,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - [§Agent](spec/docs/thinking/agent.md)
 - [§Assumption](spec/docs/thinking/assumption.md)
+- [§Attention](spec/docs/thinking/attention.md)
 - [§Axis](spec/docs/thinking/axis.md)
 - [§Closure](spec/docs/thinking/closure.md)
 - [§Conflict](spec/docs/thinking/conflict.md)
@@ -426,6 +445,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 **Framework body** (`spec/src/hotam_spec/`)
 
 - `spec/src/hotam_spec/assumption.py` — a claim with its OWN lifecycle (the root of context drift).
+- `spec/src/hotam_spec/attention.py` — the agent-agnostic registry of "attention codes".
 - `spec/src/hotam_spec/axis.py` — controlled vocabulary of tension dimensions.
 - `spec/src/hotam_spec/conflict.py` — the first-class connector NODE (the centerpiece).
 - `spec/src/hotam_spec/doc_readers.py` — every generated doc names its reader (R-doc-names-reader).
@@ -446,6 +466,8 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 **Tools** (`spec/tools/`)
 
 - `spec/tools/apply_proposal.py` — mechanical writer for steward-approved JSON proposals.  →  R-tool-apply-proposal
+- `spec/tools/attention.py` — the agent-agnostic CLI over the attention core.  →  R-tool-attention
+- `spec/tools/attention_hook.py` — the Claude adapter: inject the attention list into context.  →  R-tool-attention-hook
 - `spec/tools/audit_atomicity.py` — surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.  →  R-tool-audit-atomicity
 - `spec/tools/audit_tensions.py` — the generative-audit tool: a deterministic, LLM-free shortlist of  →  R-tool-audit-tensions
 - `spec/tools/boot_cite_status.py` — Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.  →  R-tool-boot-cite-status
@@ -502,8 +524,8 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 ### Live state (autogenerated by tools/gen_spec.py — do not hand-edit)
 
 - **top action:** none — graph clean
-- **debt:** 191/213 SETTLED ENFORCED · 5 DRAFT · 0 OPEN · 0 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 273 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 72290 chars (headroom 77710)
+- **debt:** 195/217 SETTLED ENFORCED · 5 DRAFT · 0 OPEN · 0 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
+- **graph:** 277 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 75353 chars (headroom 74647)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — user action needed: uv run python tools/setup_context_hook.py --patch-global --apply (then restart statusline) — R-unmeasured-cipher-names-user-action
 <!-- LIVE-STATE:END -->
@@ -525,7 +547,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 213 SETTLED
+- **atoms-count** — 217 SETTLED
 - **open actions** — 0 (graph clean)
 <!-- DOMAIN-MAP:END -->
 <!-- CONSTITUTION:BEGIN -->
@@ -608,6 +630,10 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - R-assumption-implements-state — An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspirat… [E]
 - R-assumption-transition-kind-exists — The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransit… [E]
 - R-atomicity-ratchet-no-growth — The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.p… [E]
+- R-attention-agent-agnostic-core — The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/h… [E]
+- R-attention-claude-adapter — The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter… [E]
+- R-attention-registry — An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist w… [E]
+- R-attention-superset-of-diagnose — The live attention list attention.collect(g) shall be a superset of the deterministic graph subs… [E]
 - R-backend-scope — The framework names no target backends: the core (graph/JSON proposals/CLI/pytest) stays backend… [P]
 - R-commit-boundary-checkable — tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verifica… [E]
 - R-constituting-requirements-converge — The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on de… [E]
@@ -686,6 +712,10 @@ _(no sub-operators yet)_
   - defined: `_(not yet mapped)_`
   - enforced: _(none)_
   - tested: `spec/tests/test_docs_gen.py`
+- **§Attention**
+  - defined: `spec/src/hotam_spec/attention.py`
+  - enforced: _(none)_
+  - tested: `spec/tests/test_attention_claude_adapter.py`, `spec/tests/test_attention_core.py`
 - **§Axis**
   - defined: `spec/src/hotam_spec/axis.py`
   - enforced: `check_axis_in_registry`

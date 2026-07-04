@@ -304,6 +304,12 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "Domain-declared business concept with its own lifecycle (M12 opt-in aspect): EntityType + EntityField + EntityInstance; check_entity_* covers every declared type by iteration.",
     ),
+    # §Attention section (Wave 16 — the agent-agnostic attention-code registry)
+    Term(
+        "§Attention",
+        "SECTION",
+        "The agent-agnostic registry of attention-codes (ATTENTION_SOURCES): collect() runs the sources and returns typed AttentionSignals. Graph sources are deterministic (the diagnose subset the substrate consumes); runtime-fs sources are injected by the live consumer to form the agent superset.",
+    ),
 )
 
 

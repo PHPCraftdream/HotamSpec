@@ -114,13 +114,15 @@ def test_embedded_thinking_block_is_bounded() -> None:
         f"EMBEDDED-THINKING block is {len(thinking)} chars — Tier 1 distillation "
         "should keep this well under the pre-P22.D-fix full-text size (~105k)."
     )
-    assert len(tools) < 11_500, (
+    assert len(tools) < 13_000, (
         f"EMBEDDED-TOOLS block is {len(tools)} chars — Tier 1 distillation "
         "should keep this well under the pre-P22.D-fix full-text size (~29k). "
         "Bound raised 8000->8500 in Wave 13 to admit the setup_hooks tool "
         "(R-sensorium-committed); raised 8500->11500 in Wave 15 to admit the six "
-        "ticket_* tools (R-ticket-engine-on-disk); each tool's section is already "
-        "minimally distilled (Canon-line pseudo-rule + one capped WHY)."
+        "ticket_* tools (R-ticket-engine-on-disk); raised 11500->13000 in Wave 16 "
+        "to admit the attention.py + attention_hook.py tools (R-attention-registry, "
+        "R-attention-claude-adapter); each tool's section is already minimally "
+        "distilled (Canon-line pseudo-rule + one capped WHY)."
     )
 
 
