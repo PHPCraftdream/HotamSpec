@@ -1915,48 +1915,6 @@ def extract_live_state_block(claude_md_text: str) -> str | None:
     return inner.strip("\n")
 
 
-def _update_claude_md_live_state(g: TensionGraph) -> None:
-    """Rewrite the LIVE-STATE sentinel block in CLAUDE.md with fresh numbers.
-
-    Idempotent: calling twice on an unchanged graph produces identical CLAUDE.md.
-    Only runs in non-demo mode (--demo never touches CLAUDE.md).
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = build_live_state(g)
-
-    if _LS_BEGIN in text and _LS_END in text:
-        begin_pos = text.find(_LS_BEGIN)
-        end_pos = text.find(_LS_END)
-        before = text[: begin_pos + len(_LS_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-    else:
-        # Sentinels absent — insert after "### Three-cipher pulse" intro para
-        # (the section that ends before the next ### or ##). This is a one-time
-        # bootstrap for a CLAUDE.md that has never had the block.
-        marker = "### Three-cipher pulse"
-        marker_pos = text.find(marker)
-        if marker_pos == -1:
-            # Cannot find the section; write the sentinels at the end as a fallback.
-            new_text = text.rstrip("\n") + f"\n\n{_LS_BEGIN}\n{new_block}\n{_LS_END}\n"
-        else:
-            # Find the end of the introductory paragraph block for that section
-            # (next blank line after the paragraph, before the next heading).
-            search_from = marker_pos + len(marker)
-            next_heading = text.find("\n###", search_from)
-            if next_heading == -1:
-                next_heading = text.find("\n##", search_from)
-            insert_at = next_heading if next_heading != -1 else len(text)
-            new_text = (
-                text[:insert_at].rstrip("\n")
-                + f"\n\n{_LS_BEGIN}\n{new_block}\n{_LS_END}\n"
-                + text[insert_at:].lstrip("\n")
-            )
-
-    _write(CLAUDE_MD, new_text)
-
 
 # ---------------------------------------------------------------------------
 # CONSTITUTION block — generated digest of SETTLED requirements in CLAUDE.md
@@ -2379,42 +2337,6 @@ def build_framework_invariants(
         lines.append(entity_section)
 
     return "\n".join(lines).rstrip() + "\n"
-
-
-def _update_claude_md_constitution(g: TensionGraph) -> None:
-    """Rewrite the CONSTITUTION sentinel block in CLAUDE.md with the digest.
-
-    Idempotent: calling twice on an unchanged graph produces identical CLAUDE.md.
-    If sentinels are absent, inserts them after the LIVE-STATE block.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = _render_constitution_block(g)
-
-    if _CONST_BEGIN in text and _CONST_END in text:
-        begin_pos = text.find(_CONST_BEGIN)
-        end_pos = text.find(_CONST_END)
-        before = text[: begin_pos + len(_CONST_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-    else:
-        # Insert after LIVE-STATE:END block.
-        ls_end_pos = text.find(_LS_END)
-        if ls_end_pos != -1:
-            insert_at = ls_end_pos + len(_LS_END)
-            new_text = (
-                text[:insert_at]
-                + f"\n\n{_CONST_BEGIN}\n{new_block}\n{_CONST_END}\n"
-                + text[insert_at:]
-            )
-        else:
-            # Fallback: append at end.
-            new_text = (
-                text.rstrip("\n") + f"\n\n{_CONST_BEGIN}\n{new_block}\n{_CONST_END}\n"
-            )
-
-    _write(CLAUDE_MD, new_text)
 
 
 # ---------------------------------------------------------------------------
@@ -2973,44 +2895,6 @@ def _scan_repo_map(
     return "\n".join(lines).rstrip()
 
 
-def _update_claude_md_repo_map(g: TensionGraph) -> None:  # noqa: ARG001
-    """Rewrite the REPO-MAP sentinel block in CLAUDE.md with a fresh file index.
-
-    Idempotent: calling twice on an unchanged filesystem produces identical CLAUDE.md.
-    If sentinels are absent, inserts them after the CONSTITUTION:END block.
-    Only runs in non-demo mode.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = _scan_repo_map()
-
-    if _REPO_MAP_BEGIN in text and _REPO_MAP_END in text:
-        begin_pos = text.find(_REPO_MAP_BEGIN)
-        end_pos = text.find(_REPO_MAP_END)
-        before = text[: begin_pos + len(_REPO_MAP_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-    else:
-        # Insert after CONSTITUTION:END block.
-        const_end_pos = text.find(_CONST_END)
-        if const_end_pos != -1:
-            insert_at = const_end_pos + len(_CONST_END)
-            new_text = (
-                text[:insert_at]
-                + f"\n\n{_REPO_MAP_BEGIN}\n{new_block}\n{_REPO_MAP_END}\n"
-                + text[insert_at:]
-            )
-        else:
-            # Fallback: append at end.
-            new_text = (
-                text.rstrip("\n")
-                + f"\n\n{_REPO_MAP_BEGIN}\n{new_block}\n{_REPO_MAP_END}\n"
-            )
-
-    _write(CLAUDE_MD, new_text)
-
-
 # ---------------------------------------------------------------------------
 # AGENT-MAP block — generated agent-delegation index inside CLAUDE.md
 # ---------------------------------------------------------------------------
@@ -3125,44 +3009,6 @@ def _scan_agent_map(
         lines.append("_(no sub-operators yet)_")
 
     return "\n".join(lines).rstrip()
-
-
-def _update_claude_md_agent_map(g: TensionGraph) -> None:
-    """Rewrite the AGENT-MAP sentinel block in CLAUDE.md with a fresh agent index.
-
-    Idempotent: calling twice on an unchanged filesystem produces identical CLAUDE.md.
-    If sentinels are absent, inserts them after the REPO-MAP:END block.
-    Only runs in non-demo mode.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = _scan_agent_map(g)
-
-    if _AGENT_MAP_BEGIN in text and _AGENT_MAP_END in text:
-        begin_pos = text.find(_AGENT_MAP_BEGIN)
-        end_pos = text.find(_AGENT_MAP_END)
-        before = text[: begin_pos + len(_AGENT_MAP_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-    else:
-        # Insert after REPO-MAP:END block.
-        repo_end_pos = text.find(_REPO_MAP_END)
-        if repo_end_pos != -1:
-            insert_at = repo_end_pos + len(_REPO_MAP_END)
-            new_text = (
-                text[:insert_at]
-                + f"\n\n{_AGENT_MAP_BEGIN}\n{new_block}\n{_AGENT_MAP_END}\n"
-                + text[insert_at:]
-            )
-        else:
-            # Fallback: append at end.
-            new_text = (
-                text.rstrip("\n")
-                + f"\n\n{_AGENT_MAP_BEGIN}\n{new_block}\n{_AGENT_MAP_END}\n"
-            )
-
-    _write(CLAUDE_MD, new_text)
 
 
 # ---------------------------------------------------------------------------
@@ -3920,48 +3766,6 @@ def _render_domain_map_block(g: TensionGraph | None = None) -> str:  # noqa: ARG
     return "\n".join(lines).rstrip()
 
 
-def _update_claude_md_domain_map(g: TensionGraph) -> None:
-    """Rewrite (or insert) the DOMAIN-MAP sentinel block in CLAUDE.md.
-
-    Only inserts when domains/ is non-empty; when empty the block stays
-    as-is (or absent).  Idempotent.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    # Only write the block when domains/ has content; skip otherwise to avoid
-    # changing root CLAUDE.md unnecessarily in the empty-domains state.
-    active = _active_domain()
-    text = _read(CLAUDE_MD)
-
-    # If sentinels already present, always refresh.
-    if _DOMAIN_MAP_BEGIN in text and _DOMAIN_MAP_END in text:
-        new_block = _render_domain_map_block(g)
-        begin_pos = text.find(_DOMAIN_MAP_BEGIN)
-        end_pos = text.find(_DOMAIN_MAP_END)
-        before = text[: begin_pos + len(_DOMAIN_MAP_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-        _write(CLAUDE_MD, new_text)
-    elif active is not None:
-        # Domains exist but sentinels not yet in CLAUDE.md — insert after AGENT-MAP:END.
-        new_block = _render_domain_map_block(g)
-        pos = text.find(_AGENT_MAP_END)
-        if pos != -1:
-            insert_at = pos + len(_AGENT_MAP_END)
-            new_text = (
-                text[:insert_at]
-                + f"\n\n{_DOMAIN_MAP_BEGIN}\n{new_block}\n{_DOMAIN_MAP_END}\n"
-                + text[insert_at:]
-            )
-        else:
-            new_text = (
-                text.rstrip("\n")
-                + f"\n\n{_DOMAIN_MAP_BEGIN}\n{new_block}\n{_DOMAIN_MAP_END}\n"
-            )
-        _write(CLAUDE_MD, new_text)
-    # else: domains/ empty and sentinels not present — no-op
-
-
 def _render_thinking_index_block(thinking_dir: Path | None = None) -> str:
     """Render the THINKING-INDEX block content (without sentinels).
 
@@ -3982,41 +3786,6 @@ def _render_thinking_index_block(thinking_dir: Path | None = None) -> str:
             rel = f"spec/docs/thinking/{md.name}"
             lines.append(f"- [§{label}]({rel})")
     return "\n".join(lines).rstrip()
-
-
-def _update_claude_md_thinking_index(thinking_dir: Path | None = None) -> None:
-    """Rewrite (or insert) the THINKING-INDEX sentinel block in root CLAUDE.md.
-
-    Inserts after DOMAIN-MAP:END if sentinels not yet present. Idempotent.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = _render_thinking_index_block(thinking_dir)
-
-    if _THINKING_INDEX_BEGIN in text and _THINKING_INDEX_END in text:
-        begin_pos = text.find(_THINKING_INDEX_BEGIN)
-        end_pos = text.find(_THINKING_INDEX_END)
-        before = text[: begin_pos + len(_THINKING_INDEX_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-        _write(CLAUDE_MD, new_text)
-    else:
-        # Insert after DOMAIN-MAP:END if present, else append.
-        pos = text.find(_DOMAIN_MAP_END)
-        if pos != -1:
-            insert_at = pos + len(_DOMAIN_MAP_END)
-            new_text = (
-                text[:insert_at]
-                + f"\n\n{_THINKING_INDEX_BEGIN}\n{new_block}\n{_THINKING_INDEX_END}\n"
-                + text[insert_at:]
-            )
-        else:
-            new_text = (
-                text.rstrip("\n")
-                + f"\n\n{_THINKING_INDEX_BEGIN}\n{new_block}\n{_THINKING_INDEX_END}\n"
-            )
-        _write(CLAUDE_MD, new_text)
 
 
 # ---------------------------------------------------------------------------
@@ -4119,44 +3888,6 @@ def _render_recently_rejected_block(g: TensionGraph) -> str:
     return "\n".join(lines).rstrip()
 
 
-def _update_claude_md_recently_rejected(g: TensionGraph) -> None:
-    """Rewrite (or insert) the RECENTLY-REJECTED sentinel block in root CLAUDE.md.
-
-    Position: AFTER EMBEDDED-TOOLS:END (last block). Idempotent.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = _render_recently_rejected_block(g)
-
-    if _RECENTLY_REJECTED_BEGIN in text and _RECENTLY_REJECTED_END in text:
-        begin_pos = text.find(_RECENTLY_REJECTED_BEGIN)
-        end_pos = text.find(_RECENTLY_REJECTED_END)
-        before = text[: begin_pos + len(_RECENTLY_REJECTED_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-        _write(CLAUDE_MD, new_text)
-    else:
-        # Insert after EMBEDDED-TOOLS:END if present, else after THINKING-INDEX:END, else append.
-        for sentinel in (_EMBEDDED_TOOLS_END, _THINKING_INDEX_END):
-            pos = text.find(sentinel)
-            if pos != -1:
-                insert_at = pos + len(sentinel)
-                new_text = (
-                    text[:insert_at]
-                    + f"\n\n{_RECENTLY_REJECTED_BEGIN}\n{new_block}\n{_RECENTLY_REJECTED_END}\n"
-                    + text[insert_at:]
-                )
-                _write(CLAUDE_MD, new_text)
-                return
-        # Fallback: append at end.
-        new_text = (
-            text.rstrip("\n")
-            + f"\n\n{_RECENTLY_REJECTED_BEGIN}\n{new_block}\n{_RECENTLY_REJECTED_END}\n"
-        )
-        _write(CLAUDE_MD, new_text)
-
-
 # ---------------------------------------------------------------------------
 # Concern 1: Per-domain iteration (future-facing; no-op when domains/ empty)
 # ---------------------------------------------------------------------------
@@ -4252,39 +3983,6 @@ def _process_domains(g: TensionGraph) -> None:
 # CONCEPT-MAP block in root CLAUDE.md (P22.C: rendered straight into root,
 # no more indirection through a separate domain CLAUDE.md file).
 # ---------------------------------------------------------------------------
-
-
-def _update_claude_md_concept_map() -> None:
-    """Rewrite (or insert) the CONCEPT-MAP sentinel block in root CLAUDE.md.
-
-    Position: AFTER AGENT-MAP:END. Idempotent.
-    """
-    if not CLAUDE_MD.exists():
-        return
-    text = _read(CLAUDE_MD)
-    new_block = _scan_concept_map()
-
-    if _CONCEPT_MAP_BEGIN in text and _CONCEPT_MAP_END in text:
-        begin_pos = text.find(_CONCEPT_MAP_BEGIN)
-        end_pos = text.find(_CONCEPT_MAP_END)
-        before = text[: begin_pos + len(_CONCEPT_MAP_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
-    else:
-        pos = text.find(_AGENT_MAP_END)
-        if pos != -1:
-            insert_at = pos + len(_AGENT_MAP_END)
-            new_text = (
-                text[:insert_at]
-                + f"\n\n{_CONCEPT_MAP_BEGIN}\n{new_block}\n{_CONCEPT_MAP_END}\n"
-                + text[insert_at:]
-            )
-        else:
-            new_text = (
-                text.rstrip("\n")
-                + f"\n\n{_CONCEPT_MAP_BEGIN}\n{new_block}\n{_CONCEPT_MAP_END}\n"
-            )
-    _write(CLAUDE_MD, new_text)
 
 
 # ---------------------------------------------------------------------------
