@@ -37,8 +37,10 @@ def test_absent_stamp_reads_unmeasured(tmp_path: Path, monkeypatch) -> None:
     assert s.pct is None
     line = context.render_line()
     assert line.startswith("context: UNMEASURED")
-    assert "R-unmeasured-cipher-names-user-action" in line
-    assert "tools/setup_context_hook.py --patch-global --apply" in line
+    assert "R-unmeasured-cipher-names-host-boundary" in line
+    # Honest boundary: no command-to-call is named; the host is not touched.
+    assert "R-work-within-launch-dir" in line
+    assert "--patch-global" not in line
 
 
 def test_valid_stamp_reads_measured(tmp_path: Path, monkeypatch) -> None:

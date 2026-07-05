@@ -18,10 +18,10 @@ tests/test_tool_context.py):
 R-measure-context-size (DRAFT): the reader + schema + LIVE-STATE bridge exist
 (gen_spec renders render_line()); the PRODUCING hook is still deferred —
 project-local hook events (SessionStart / UserPromptSubmit / PostToolUse /
-Stop) do not receive context-window usage on stdin today; only the global
-statusline pipeline sees it, and the user's global ~/.claude config is outside
-the framework body. The requirement stays DRAFT until a hook can honestly
-write this stamp.
+Stop) do not receive context-window usage on stdin today; only the host
+statusline pipeline sees it, and the host is sovereign — the framework will
+NOT touch it (R-work-within-launch-dir). The requirement stays DRAFT until the
+host honestly delivers ctx_pct on the local stdin payload.
 """
 
 from __future__ import annotations
@@ -65,23 +65,23 @@ def read_context() -> ContextState:
 
 
 _UNMEASURED_ACTION = (
-    "context: UNMEASURED — user action needed: "
-    "cd spec && .venv/Scripts/python.exe tools/setup_context_hook.py --patch-global --apply "
-    "(or .venv/bin/python on POSIX; then restart statusline) "
-    "— R-unmeasured-cipher-names-user-action"
+    "context: UNMEASURED — measuring working-context requires host cooperation "
+    "the framework will not touch (R-work-within-launch-dir); it measures only "
+    "if the local stdin payload honestly carries ctx_pct "
+    "— R-unmeasured-cipher-names-host-boundary"
 )
 
 
 def render_line() -> str:
     """One-line context cipher for the LIVE-STATE block / tick.
 
-    R-unmeasured-cipher-names-user-action: while UNMEASURED, this line names
-    the EXACT command the user must run to activate measurement (the bridge
-    is a two-step opt-in: `setup_context_hook.py` installs the project-local
-    hook by default, but the global statusline patch is a SEPARATE explicit
-    `--patch-global --apply` step that touches ~/.claude and is never run
-    automatically). Once measured, the instruction disappears — it is only
-    useful while the gap it describes still exists.
+    R-unmeasured-cipher-names-host-boundary: while UNMEASURED, this line
+    honestly explains WHY there is no number — measuring working-context would
+    require cooperation from the sovereign host (statusline / ~/.claude), which
+    the framework will not touch (R-work-within-launch-dir). There is no
+    command to call: the cipher measures only if the local stdin payload
+    honestly carries ctx_pct. Once measured, the explanation disappears — it is
+    only useful while the gap it describes still exists.
     """
     s = read_context()
     if not s.measured or s.pct is None:

@@ -13,13 +13,14 @@ Canon: §Context — installs/removes the project-local hook that feeds tools/co
 
 Canon: §Context — installs/removes the project-local hook that feeds tools/context_producer.py.
 
-A user-invocable installer: it does NOT touch the user's GLOBAL Claude config
-(anything under the home ~/.claude) UNLESS the user explicitly runs it with
-`--patch-global --apply` (see PATCH-GLOBAL below). By default it only
-merge-adds PostToolUse and Stop hook entries into THIS project's
-.claude/settings.local.json, pointing them at `spec/tools/context_producer.py`
-(which writes spec/.runtime/context.json — the contract tools/context.py
-reads, pinned by tests/test_tool_context.py).
+A user-invocable installer STRICTLY within the launch directory
+(R-work-within-launch-dir): it NEVER touches the user's GLOBAL Claude config
+(anything under the home ~/.claude) and NEVER patches or reads the host
+statusline. It only merge-adds PostToolUse and Stop hook entries into THIS
+project's .claude/settings.local.json, pointing them at
+`spec/tools/context_producer.py` (which writes spec/.runtime/context.json —
+the contract tools/context.py reads, pinned by tests/test_tool_context.py)
+when — and only when — the local stdin payload honestly carries ctx_pct.
 
 Merge discipline: every hook entry this installer adds carries the marker
 string `"# cah-context-hook:v1"` appended to its command so `--off` can find
@@ -31,59 +32,31 @@ read, preserved verbatim, and re-written unchanged).
 Idempotent: running `install` twice does not duplicate entries (matched by
 the same marker string already being present in an existing command).
 
-USER ACTION REQUIRED (context cipher stays UNMEASURED until this runs):
-  uv run python tools/setup_context_hook.py                       # install project-local hook (default)
-  uv run python tools/setup_context_hook.py --status               # report installed? + context.json freshness
-  uv run python tools/setup_context_hook.py --off                  # remove exactly the entries this tool added
-  uv run python tools/setup_context_hook.py --patch-global          # DRY-RUN: show the diff to the global statusline script
-  uv run python tools/setup_context_hook.py --patch-global --apply  # APPLY the patch (backs up first) — then restart the statusline
-  uv run python tools/setup_context_hook.py --revert-global         # restore the global statusline script from its backup
+NOTE on measurement: Claude Code's project-local hook events do not deliver
+context-window usage on stdin today. Installing this hook is harmless and
+in-bounds, but it will only ever write a real number if the host honestly
+supplies ctx_pct on the local stdin payload; until then the cipher stays
+honestly UNMEASURED. The framework will NOT reach into the host to close that
+gap (R-work-within-launch-dir).
 
-PATCH-GLOBAL (§Context bridge, R-context-hook-piggybacks-cah-stamp design):
-the project-local hook above can only READ a context % that something
-already computed. The global statusline script (found via the `statusLine`
-command in ~/.claude/settings.json — the `cah-status.js` bin from the
-`clock` skill) computes context-window usage LIVE on every render but never
-persists it anywhere on disk. `--patch-global` inserts one small, idempotent
-block into that script: right after its existing `persistSessionState(...)`
-call (which already writes `~/.claude/cah-bin/cache/rate-limits.json`), it
-adds a `persistContextCache(pct, model)` call that writes a SIBLING cache
-file `~/.claude/cah-bin/cache/context-cache.json` = {"ctx_pct", "model",
-"stamp"}. `context_producer.py` then reads that cache file (see its
-CACHE CONTRACT docstring) to write `spec/.runtime/context.json`.
-
-This tool NEVER writes to ~/.claude directly except inside `--patch-global
---apply` (explicit steward action) and NEVER without a timestamped backup
-(`cah-status.js.bak-<iso8601>` next to the original) so `--revert-global` can
-always restore the pre-patch file. If the target script does not match the
-expected shape (missing anchors, already patched by something else, unknown
-version), the tool refuses with a clear message and writes nothing —
-corrupting the user's live statusline is treated as unacceptable.
+Usage (commands run from spec/):
+  .venv/Scripts/python.exe tools/setup_context_hook.py            # install project-local hook (default)
+  .venv/Scripts/python.exe tools/setup_context_hook.py --status   # report installed? + context.json freshness
+  .venv/Scripts/python.exe tools/setup_context_hook.py --off      # remove exactly the entries this tool added
 
 ## CLI usage
 
 ```
-usage: setup_context_hook.py [-h]
-                             [--status | --off | --patch-global | --revert-global]
-                             [--apply]
+usage: setup_context_hook.py [-h] [--status | --off]
 
 Install/remove the project-local PostToolUse+Stop hook that feeds
-tools/context_producer.py -> spec/.runtime/context.json (default action). The
-context cipher stays UNMEASURED until BOTH this project-local hook AND the
-global statusline patch (--patch-global --apply, a SEPARATE explicit step
-touching ~/.claude) are in place — this tool never touches ~/.claude on its
-own.
+tools/context_producer.py -> spec/.runtime/context.json (default action).
+Strictly within the launch directory: this tool never touches ~/.claude or the
+host statusline (R-work-within-launch-dir). The context cipher stays honestly
+UNMEASURED until the local stdin payload carries ctx_pct.
 
 options:
-  -h, --help       show this help message and exit
-  --status         Report install state + context.json freshness.
-  --off            Remove exactly the hook entries this tool added.
-  --patch-global   Show (dry-run) or apply (--apply) the surgical patch to the
-                   user's global cah-status.js statusline script, so it also
-                   caches ctx_pct/model/stamp for context_producer.py to read.
-                   Off by default; requires --apply to actually write.
-  --revert-global  Restore the global statusline script from its most recent
-                   --patch-global backup.
-  --apply          With --patch-global: actually write the patch (default is
-                   dry-run). Ignored otherwise.
+  -h, --help  show this help message and exit
+  --status    Report install state + context.json freshness.
+  --off       Remove exactly the hook entries this tool added.
 ```

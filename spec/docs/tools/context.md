@@ -31,7 +31,7 @@ tests/test_tool_context.py):
 R-measure-context-size (DRAFT): the reader + schema + LIVE-STATE bridge exist
 (gen_spec renders render_line()); the PRODUCING hook is still deferred —
 project-local hook events (SessionStart / UserPromptSubmit / PostToolUse /
-Stop) do not receive context-window usage on stdin today; only the global
-statusline pipeline sees it, and the user's global ~/.claude config is outside
-the framework body. The requirement stays DRAFT until a hook can honestly
-write this stamp.
+Stop) do not receive context-window usage on stdin today; only the host
+statusline pipeline sees it, and the host is sovereign — the framework will
+NOT touch it (R-work-within-launch-dir). The requirement stays DRAFT until the
+host honestly delivers ctx_pct on the local stdin payload.

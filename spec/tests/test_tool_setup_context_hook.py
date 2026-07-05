@@ -1,8 +1,10 @@
 """Tests for spec/tools/setup_context_hook.py + spec/tools/context_producer.py.
 
 Hermetic: never touches the real project .claude/settings.local.json or the
-real spec/.runtime/context.json. All settings-file operations run against a
-tmp_path copy via monkeypatched module-level path constants.
+real spec/.runtime/context.json, and NEVER reads the real ~/.claude. All
+settings-file operations run against a tmp_path copy via monkeypatched
+module-level path constants. The producer's ONLY source is the local stdin
+payload (R-work-within-launch-dir) — there is no host cache to read.
 """
 
 from __future__ import annotations
@@ -128,6 +130,15 @@ def test_off_removes_only_our_entries(tmp_path, monkeypatch):
     assert "Stop" not in written.get("hooks", {})
 
 
+def test_hook_command_never_names_the_host(tmp_path, monkeypatch):
+    """The installed command touches only the launch dir — no ~/.claude, no uv."""
+    monkeypatch.setattr(sch, "_SETTINGS_LOCAL", _settings_path(tmp_path))
+    cmd = sch._hook_command()
+    assert ".claude" not in cmd.replace(".claude/settings.local.json", "")  # no home ~/.claude
+    assert "patch-global" not in cmd
+    assert "context-cache" not in cmd
+
+
 def test_status_reports_not_installed_when_absent(tmp_path, monkeypatch):
     settings_path = _settings_path(tmp_path)
     monkeypatch.setattr(sch, "_SETTINGS_LOCAL", settings_path)
@@ -154,7 +165,7 @@ def test_status_reports_installed_and_context_age(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# context_producer: hermetic (fixture payload, never the real global cache)
+# context_producer: hermetic — local stdin payload is the ONLY source
 # ---------------------------------------------------------------------------
 
 
@@ -209,218 +220,15 @@ def test_producer_main_reads_stdin_file(tmp_path, monkeypatch):
     assert data["ctx_pct"] == 12.0
 
 
-def test_producer_falls_back_to_global_cache_when_payload_lacks_ctx_pct(
-    tmp_path, monkeypatch
-):
-    runtime_file = tmp_path / "context.json"
-    cache_file = tmp_path / "context-cache.json"
-    cache_file.write_text(
-        json.dumps({"ctx_pct": 55.5, "model": "claude-sonnet-5", "stamp": "x"}),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(producer, "_RUNTIME", runtime_file)
-    monkeypatch.setenv("CAH_CONTEXT_CACHE", str(cache_file))
-
-    wrote = producer.produce({})
-
-    assert wrote is True
-    data = json.loads(runtime_file.read_text(encoding="utf-8"))
-    assert data["ctx_pct"] == 55.5
-    assert data["model"] == "claude-sonnet-5"
-
-
-def test_producer_skips_when_global_cache_absent_and_no_payload(tmp_path, monkeypatch):
+def test_producer_never_reads_host_cache(tmp_path, monkeypatch):
+    """Empty payload writes nothing — there is no host cache fallback."""
     runtime_file = tmp_path / "context.json"
     monkeypatch.setattr(producer, "_RUNTIME", runtime_file)
-    monkeypatch.setenv("CAH_CONTEXT_CACHE", str(tmp_path / "missing.json"))
 
     wrote = producer.produce({})
 
     assert wrote is False
     assert not runtime_file.exists()
-
-
-def test_producer_payload_ctx_pct_takes_priority_over_global_cache(tmp_path, monkeypatch):
-    runtime_file = tmp_path / "context.json"
-    cache_file = tmp_path / "context-cache.json"
-    cache_file.write_text(json.dumps({"ctx_pct": 99.0}), encoding="utf-8")
-    monkeypatch.setattr(producer, "_RUNTIME", runtime_file)
-    monkeypatch.setenv("CAH_CONTEXT_CACHE", str(cache_file))
-
-    wrote = producer.produce({"ctx_pct": 5.0, "model": "m"})
-
-    assert wrote is True
-    data = json.loads(runtime_file.read_text(encoding="utf-8"))
-    assert data["ctx_pct"] == 5.0
-
-
-# ---------------------------------------------------------------------------
-# --patch-global: hermetic, always against a tmp fixture script — NEVER the
-# real ~/.claude/cah-bin/bin/cah-status.js.
-# ---------------------------------------------------------------------------
-
-_FAKE_CAH_STATUS_JS = """\
-import { readFileSync, mkdirSync, writeFileSync, renameSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { homedir } from 'node:os';
-
-const RATE_LIMITS_CACHE =
-  process.env.CAH_RATE_LIMITS_CACHE ||
-  join(homedir(), '.claude', 'cah-bin', 'cache', 'rate-limits.json');
-
-function persistSessionState(fiveHour, sevenDay, effort) {
-  if (!fiveHour && !sevenDay && !effort) return;
-  try {
-    mkdirSync(dirname(RATE_LIMITS_CACHE), { recursive: true });
-    writeFileSync(RATE_LIMITS_CACHE, JSON.stringify({ fiveHour, sevenDay, effort }));
-  } catch {
-    // Fail-silent
-  }
-}
-
-function buildLine(data) {
-  let displayName = null;
-  let usedTokens = null;
-  let limit = null;
-  let fiveHour = null;
-  let sevenDay = null;
-  let effort = null;
-  persistSessionState(fiveHour, sevenDay, effort);
-  return 'fake-line';
-}
-
-function main() {
-  console.log(buildLine({}));
-}
-
-main();
-"""
-
-
-def _write_fake_script(tmp_path):
-    script = tmp_path / "cah-status.js"
-    script.write_text(_FAKE_CAH_STATUS_JS, encoding="utf-8")
-    return script
-
-
-def test_patch_global_dry_run_does_not_modify_file(tmp_path):
-    script = _write_fake_script(tmp_path)
-    original = script.read_text(encoding="utf-8")
-
-    report = sch.patch_global(apply=False, target=script)
-
-    assert "DRY-RUN" in report
-    assert script.read_text(encoding="utf-8") == original
-    assert not list(tmp_path.glob("*.bak-*"))
-
-
-def test_patch_global_apply_injects_function_and_call_and_backs_up(tmp_path):
-    script = _write_fake_script(tmp_path)
-    original = script.read_text(encoding="utf-8")
-
-    report = sch.patch_global(apply=True, target=script)
-
-    assert "APPLIED" in report
-    patched = script.read_text(encoding="utf-8")
-    assert sch._GLOBAL_MARKER in patched
-    assert "function persistContextCache(" in patched
-    assert "persistContextCache(" in patched.split("persistSessionState(fiveHour, sevenDay, effort);")[1]
-
-    backups = list(tmp_path.glob("cah-status.js.bak-*"))
-    assert len(backups) == 1
-    assert backups[0].read_text(encoding="utf-8") == original
-
-
-def test_patch_global_apply_twice_is_idempotent_refusal(tmp_path):
-    script = _write_fake_script(tmp_path)
-    sch.patch_global(apply=True, target=script)
-    once_patched = script.read_text(encoding="utf-8")
-
-    try:
-        sch.patch_global(apply=True, target=script)
-        raised = False
-    except sch.GlobalPatchError as exc:
-        raised = True
-        assert "already patched" in str(exc)
-
-    assert raised is True
-    # file untouched by the second (refused) attempt
-    assert script.read_text(encoding="utf-8") == once_patched
-
-
-def test_patch_global_refuses_on_missing_anchor(tmp_path):
-    script = tmp_path / "cah-status.js"
-    script.write_text("// nothing resembling cah-status.js here\n", encoding="utf-8")
-    original = script.read_text(encoding="utf-8")
-
-    try:
-        sch.patch_global(apply=True, target=script)
-        raised = False
-    except sch.GlobalPatchError:
-        raised = True
-
-    assert raised is True
-    assert script.read_text(encoding="utf-8") == original  # never a corrupting write
-
-
-def test_patch_global_refuses_on_duplicate_anchor(tmp_path):
-    script = tmp_path / "cah-status.js"
-    doubled = _FAKE_CAH_STATUS_JS + "\npersistSessionState(fiveHour, sevenDay, effort);\n"
-    script.write_text(doubled, encoding="utf-8")
-    original = script.read_text(encoding="utf-8")
-
-    try:
-        sch.patch_global(apply=True, target=script)
-        raised = False
-    except sch.GlobalPatchError as exc:
-        raised = True
-        assert "found 2" in str(exc)
-
-    assert raised is True
-    assert script.read_text(encoding="utf-8") == original
-
-
-def test_revert_global_restores_from_backup(tmp_path):
-    script = _write_fake_script(tmp_path)
-    original = script.read_text(encoding="utf-8")
-    sch.patch_global(apply=True, target=script)
-    assert script.read_text(encoding="utf-8") != original
-
-    report = sch.revert_global(target=script)
-
-    assert "REVERTED" in report
-    assert script.read_text(encoding="utf-8") == original
-
-
-def test_revert_global_refuses_without_backup(tmp_path):
-    script = _write_fake_script(tmp_path)
-
-    try:
-        sch.revert_global(target=script)
-        raised = False
-    except sch.GlobalPatchError as exc:
-        raised = True
-        assert "no backup found" in str(exc)
-
-    assert raised is True
-
-
-def test_find_global_status_script_resolves_from_settings_json(tmp_path, monkeypatch):
-    settings = tmp_path / "settings.json"
-    script = tmp_path / "cah-status.js"
-    script.write_text(_FAKE_CAH_STATUS_JS, encoding="utf-8")
-    settings.write_text(
-        json.dumps({"statusLine": {"command": f'node "{script.as_posix()}"'}}),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(sch, "_GLOBAL_SETTINGS", settings)
-
-    found = sch.find_global_status_script()
-
-    assert found == script
-
-
-def test_find_global_status_script_returns_none_when_settings_absent(tmp_path, monkeypatch):
-    monkeypatch.setattr(sch, "_GLOBAL_SETTINGS", tmp_path / "missing-settings.json")
-
-    assert sch.find_global_status_script() is None
+    # The producer module carries no host-cache machinery.
+    assert not hasattr(producer, "_read_global_cache")
+    assert not hasattr(producer, "_GLOBAL_CACHE")

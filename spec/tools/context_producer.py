@@ -12,56 +12,33 @@ tests/test_tool_context.py:
       "stamp":   "<iso8601>"       # optional
     }
 
-HONESTY NOTE, UPDATED (2026-07-02): the globally-installed `clock` skill
-(cah-stamp, ~/.claude/cah-bin/bin/cah-stamp.js and cah-status.js) computes its
-context-usage percentage LIVE from the statusLine envelope on every render
-but historically never persisted it — ~/.claude/cah-bin/cache/rate-limits.json
-holds only {fiveHour, sevenDay, effort, capturedAt} (5h/weekly quota, not
-context %). `spec/tools/setup_context_hook.py --patch-global --apply` is the
-STEWARD-RUN tool that closes this gap: it patches the user's global
-cah-status.js to also write ~/.claude/cah-bin/cache/context-cache.json =
-{"ctx_pct", "model", "stamp"} (CACHE CONTRACT below). That patch is opt-in
-and outside this framework's write authority — this producer only READS the
-cache path if it exists; it never assumes the patch has been applied.
+HONEST, LOCAL-ONLY SOURCE (R-work-within-launch-dir): the ONLY source of
+ctx_pct is the incoming hook JSON payload on stdin (a top-level numeric
+`ctx_pct`). The framework will NOT touch the host — it does not read, patch,
+or depend on any global ~/.claude cache or the host statusline. If the local
+stdin payload does not carry a usable 0..100 `ctx_pct`, the producer WRITES
+NOTHING (fail-silent, matching the reader's honest-UNMEASURED default) rather
+than guessing.
 
-CACHE CONTRACT (what --patch-global writes, if applied):
-    ~/.claude/cah-bin/cache/context-cache.json = {
-      "ctx_pct": <float 0..100>,
-      "model":   "<display name>",
-      "stamp":   "<iso8601>"
-    }
-Overridable via env var CAH_CONTEXT_CACHE (mirrors cah-status.js's own
-CAH_CONTEXT_CACHE env override, so tests can redirect both sides to the same
-tmp fixture).
-
-This producer looks for a usable `ctx_pct` in TWO places, in order:
-  1. the incoming hook JSON payload itself (top-level numeric `ctx_pct`) —
-     the honest, minimal contract a caller can satisfy directly on stdin;
-  2. if absent, the global context-cache.json (see CACHE CONTRACT above),
-     read ONLY if it exists and parses — never assumed present.
-If neither yields a usable 0..100 float, the producer WRITES NOTHING
-(fail-silent, matching the reader's honest-UNMEASURED default) rather than
-guessing.
+NOTE: Claude Code's project-local hook events do not, today, deliver
+context-window usage on stdin — so in practice this producer stays silent and
+the cipher stays honestly UNMEASURED. It writes only if a caller (test, or a
+future host that honestly supplies ctx_pct on stdin) provides it.
 
 Run:
-  echo '{"ctx_pct": 42.5, "model": "claude-sonnet-5"}' | uv run python tools/context_producer.py
-  uv run python tools/context_producer.py --stdin-file payload.json
-  # or, with no payload at all, after the user has run
-  # `setup_context_hook.py --patch-global --apply`:
-  echo '{}' | uv run python tools/context_producer.py   # falls back to the global cache
+  echo '{"ctx_pct": 42.5, "model": "claude-sonnet-5"}' | .venv/Scripts/python.exe tools/context_producer.py
+  .venv/Scripts/python.exe tools/context_producer.py --stdin-file payload.json
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 _RUNTIME = Path(__file__).resolve().parents[1] / ".runtime" / "context.json"
-_GLOBAL_CACHE = Path.home() / ".claude" / "cah-bin" / "cache" / "context-cache.json"
 
 
 def _read_payload(stdin_file: str | None) -> dict:
@@ -79,38 +56,19 @@ def _read_payload(stdin_file: str | None) -> dict:
         return {}
 
 
-def _read_global_cache() -> dict:
-    """Read the global context-cache.json (see CACHE CONTRACT), or {} if absent/unreadable.
-
-    Path is overridable via CAH_CONTEXT_CACHE (matches cah-status.js's own
-    env override), so tests can point both sides at the same tmp fixture
-    without touching the real ~/.claude.
-    """
-    path = Path(os.environ.get("CAH_CONTEXT_CACHE", "") or _GLOBAL_CACHE)
-    try:
-        raw = path.read_text(encoding="utf-8")
-        data = json.loads(raw)
-        return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-
 def produce(payload: dict) -> bool:
-    """Write spec/.runtime/context.json from payload (or the global cache) if a usable ctx_pct exists.
+    """Write spec/.runtime/context.json from the stdin payload if a usable ctx_pct exists.
 
-    Returns True if a stamp was written, False if skipped (no usable signal
-    in either source). Fail-silent by design: an absent/invalid ctx_pct
-    writes nothing rather than guessing (mirrors context.py's honest-
-    UNMEASURED default).
+    Returns True if a stamp was written, False if skipped (no usable signal in
+    the payload). Fail-silent by design: an absent/invalid ctx_pct writes
+    nothing rather than guessing (mirrors context.py's honest-UNMEASURED
+    default). The ONLY source is the local stdin payload — the framework never
+    reads the host (R-work-within-launch-dir).
     """
     ctx_pct = payload.get("ctx_pct")
     model = payload.get("model", "")
     if not isinstance(ctx_pct, (int, float)) or not (0 <= ctx_pct <= 100):
-        cache = _read_global_cache()
-        ctx_pct = cache.get("ctx_pct")
-        model = cache.get("model", model)
-        if not isinstance(ctx_pct, (int, float)) or not (0 <= ctx_pct <= 100):
-            return False
+        return False
 
     stamp = {
         "ctx_pct": float(ctx_pct),
