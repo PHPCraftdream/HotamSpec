@@ -206,6 +206,13 @@ GENERATIVE_AUDIT_STALE_DELTA = 10
 make the audit stale. Generous: a handful of new atoms rarely hides a fresh
 cross-tension, but past this the un-swept surface compounds silently."""
 
+REVISIT_STALE_PERCENT = 5
+"""Canon: §Harness — percentage growth of SETTLED atoms since the last revisit
+evaluation that triggers re-evaluation. At 5%, a 200-atom graph needs +10 new
+atoms to re-fire, a 400-atom graph needs +20. This replaces the old absolute
+threshold (GENERATIVE_AUDIT_STALE_DELTA=10) which re-fired every ~1.5 days at
+normal development pace (~8 atoms/day), causing noise/habituation."""
+
 
 def _last_audit_settled_count() -> int | None:
     """settled_count from the LAST line of tension-audit.jsonl, or None if absent."""
@@ -312,9 +319,15 @@ def revisit_marker_actions(g: TensionGraph) -> list[Action]:
 
     For each Conflict carrying a non-empty revisit_marker, fire one action when
     the marker has NEVER been evaluated, or the live graph has grown by more than
-    GENERATIVE_AUDIT_STALE_DELTA net-new SETTLED atoms since its last evaluation
+    REVISIT_STALE_PERCENT % of SETTLED atoms since its last evaluation
     (mark_revisit_evaluated.py records the evaluation). Emitted in stable graph
     order, one line per stale marker.
+
+    WHY percentage (not absolute): the old threshold (GENERATIVE_AUDIT_STALE_DELTA=10)
+    re-fired every ~1.5 days at normal development pace (~8 atoms/day), causing
+    attention noise. A 5% threshold scales with graph size: a 200-atom graph
+    needs +10 new SETTLED atoms, a 400-atom graph needs +20. This keeps revisit
+    signals meaningful instead of habitual.
 
     WHY: a revisit_marker names the CONDITION under which a DECIDED conflict
     should be re-opened, but nothing tracked whether anyone LOOKED again. An
@@ -323,6 +336,10 @@ def revisit_marker_actions(g: TensionGraph) -> list[Action]:
     """
     now = sum(1 for r in g.requirements if r.status == "SETTLED")
     last_eval = _last_revisit_evaluations()
+    # Percentage-based threshold: re-fire when growth exceeds REVISIT_STALE_PERCENT%
+    # of current SETTLED count, with a floor of 10 atoms so very small graphs
+    # don't re-fire on every single atom.
+    threshold = max(10, now * REVISIT_STALE_PERCENT // 100)
     out: list[Action] = []
     for c in g.conflicts:
         if not c.revisit_marker:
@@ -330,8 +347,8 @@ def revisit_marker_actions(g: TensionGraph) -> list[Action]:
         then = last_eval.get(c.id)
         if then is None:
             reason = "never evaluated"
-        elif now - then > GENERATIVE_AUDIT_STALE_DELTA:
-            reason = f"last evaluated at {then} SETTLED, now {now} (+{now - then})"
+        elif now - then > threshold:
+            reason = f"last evaluated at {then} SETTLED, now {now} (+{now - then}, threshold {threshold})"
         else:
             continue
         out.append(

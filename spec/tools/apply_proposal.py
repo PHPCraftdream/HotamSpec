@@ -2565,7 +2565,11 @@ def _append_land_log(
         )
 
 
-def pending_proposal_files(proposals_dir: Path | None = None) -> list[Path]:
+def pending_proposal_files(
+    proposals_dir: Path | None = None,
+    *,
+    auto_archive_landed: bool = True,
+) -> list[Path]:
     """Canon: §Proposal — list proposal JSON files still awaiting a steward decision.
 
     RULE (R-presented-pending-decision-type): a file is PENDING iff it is a
@@ -2575,6 +2579,13 @@ def pending_proposal_files(proposals_dir: Path | None = None) -> list[Path]:
     not pending, and are excluded. Sorted oldest-mtime-first (the longest-
     waiting proposal surfaces first — R-speak-by-reference: age is disclosed,
     not hidden).
+
+    When `auto_archive_landed` is True (the default), each candidate file is
+    checked: if the proposal's target anchor is already SETTLED in the active
+    graph, the file is silently moved to applied/ (auto-archiving historical
+    debris that was hand-landed without passing through the archive path).
+    This prevents false "presented, awaiting steward" signals for proposals
+    whose atoms are already in the graph.
 
     WHY both the flat layout and pending/ count as pending: this tool's own
     history (spec/.runtime/proposals/*.json, pre-existing this feature) never
@@ -2586,17 +2597,96 @@ def pending_proposal_files(proposals_dir: Path | None = None) -> list[Path]:
     base = proposals_dir if proposals_dir is not None else _PROPOSALS_DIR
     if not base.exists():
         return []
-    out: list[Path] = []
+    candidates: list[Path] = []
     for p in base.glob("*.json"):
         if p.is_file():
-            out.append(p)
+            candidates.append(p)
     pending_sub = base / "pending"
     if pending_sub.exists():
         for p in pending_sub.glob("*.json"):
             if p.is_file():
-                out.append(p)
+                candidates.append(p)
+
+    if not auto_archive_landed or not candidates:
+        candidates.sort(key=lambda p: (p.stat().st_mtime, p.name))
+        return candidates
+
+    # Load the graph once to check which proposals are already landed.
+    try:
+        from hotam_spec.graph import load_content_graph  # noqa: PLC0415
+
+        g = load_content_graph()
+        settled_ids: set[str] = set()
+        for r in g.requirements:
+            if r.status == "SETTLED":
+                settled_ids.add(r.id)
+        for r in g.requirements:
+            settled_ids.add(r.id)  # any status = exists in graph
+        for c in g.conflicts:
+            settled_ids.add(c.id)
+        for a in g.assumptions:
+            settled_ids.add(a.id)
+    except Exception:  # noqa: BLE001
+        # If graph can't load, skip auto-archive and return all candidates.
+        candidates.sort(key=lambda p: (p.stat().st_mtime, p.name))
+        return candidates
+
+    out: list[Path] = []
+    applied_dir = base / "applied"
+    for p in candidates:
+        try:
+            raw = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            out.append(p)
+            continue
+        # For batch files (list), check all items.
+        items = raw if isinstance(raw, list) else [raw]
+        all_landed = True
+        for item in items:
+            if not isinstance(item, dict):
+                all_landed = False
+                break
+            target = _proposal_target_anchor(item)
+            if target is None or target not in settled_ids:
+                all_landed = False
+                break
+        if all_landed:
+            # Auto-archive: move to applied/
+            _archive_proposal_file(p, applied_dir=applied_dir)
+        else:
+            out.append(p)
     out.sort(key=lambda p: (p.stat().st_mtime, p.name))
     return out
+
+
+def _proposal_target_anchor(raw: dict) -> str | None:
+    """Extract the target anchor id from a raw proposal dict, or None."""
+    kind = raw.get("kind", "")
+    if kind == "Requirement":
+        return raw.get("id", "").strip() or None
+    if kind == "Rejection":
+        return raw.get("requirement_id", "").strip() or None
+    if kind == "ConflictTransition":
+        return raw.get("conflict_id", "").strip() or None
+    if kind == "Conflict":
+        axis = raw.get("axis", "").strip()
+        context = raw.get("context", "").strip()
+        if axis and context:
+            return conflict_identity(axis, context)
+        return None
+    if kind == "Assumption":
+        return raw.get("id", "").strip() or None
+    if kind == "AssumptionTransition":
+        return raw.get("assumption_id", "").strip() or None
+    if kind == "Stakeholder":
+        return raw.get("id", "").strip() or None
+    if kind == "Axis":
+        return raw.get("slug", "").strip() or None
+    if kind == "OperatorBudget":
+        return raw.get("operator_id", "").strip() or None
+    if kind == "EntityType":
+        return raw.get("slug", "").strip() or None
+    return None
 
 
 def _archive_proposal_file(
@@ -3082,6 +3172,9 @@ def main(argv: list[str] | None = None) -> int:
                     file=sys.stderr,
                 )
                 return rc
+        # All batch items landed — archive the batch file itself.
+        if not args.dry_run:
+            _archive_proposal_file(proposal_path)
         return 0
 
     try:

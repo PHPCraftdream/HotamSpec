@@ -21,6 +21,13 @@ tools/what_now.runtime_fs_sources() (the live superset), and prints the flat
 plain-text list to stdout — Claude Code injects a UserPromptSubmit hook's stdout
 into the agent's context.
 
+Delta mode (default): the hook snapshots the set of shown signals (by a stable
+key: source + priority + target + message) in spec/.runtime/attention-last-shown.json.
+On the NEXT invocation, if the signal set is IDENTICAL to the snapshot, only a
+one-line counter is printed instead of the full list. A NEW or DISAPPEARED signal
+produces the full list and updates the snapshot. This prevents attention-blindness
+from seeing the same wall of text every prompt.
+
 The core (hotam_spec.attention) knows nothing about Claude or hooks
 (R-attention-agent-agnostic-core); this file is the ONLY Claude-specific seam,
 and it is a tool, not core. tools/setup_hooks.py wires it onto UserPromptSubmit
@@ -41,6 +48,7 @@ Usage (from spec/):
 
 Thin Claude-Code UserPromptSubmit hook. Loads the active-domain graph,
 calls hotam_spec.attention.collect() and prints the flat attention list
-to stdout (Claude Code injects it into the agent's turn). No arguments;
-fails soft (prints nothing, exits 0) on any error.
+to stdout (Claude Code injects it into the agent's turn). Shows a delta
+summary when the signal set is unchanged since the last invocation.
+No arguments; fails soft (prints nothing, exits 0) on any error.
 ```
