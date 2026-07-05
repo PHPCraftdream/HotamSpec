@@ -54,3 +54,4 @@ Desktop.ini
 
 # --- Node (in case tooling ever touches JS) ---
 node_modules/
+.claude/*.bak-*
