@@ -109,7 +109,7 @@ _CLAUDE_MD_TEMPLATE = """\
 >
 > To make `{name}` the active domain and get its crystal:
 >   echo {name} > domains/.active-domain      # (or: export HOTAM_SPEC_ACTIVE_DOMAIN={name})
->   cd spec && uv run python tools/gen_spec.py  # root CLAUDE.md becomes {name}'s crystal
+>   cd spec && python tools/gen_spec.py  # root CLAUDE.md becomes {name}'s crystal
 > (create_domain.py --activate does both in one step.)
 
 ## Domain

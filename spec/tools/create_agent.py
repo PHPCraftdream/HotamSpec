@@ -44,7 +44,7 @@ _CLAUDE_MD_TEMPLATE = """\
 # {name}
 
 > This file is the operator crystal for the `{name}` sub-agent.
-> It is a PLACEHOLDER — run `uv run python tools/gen_spec.py` to populate
+> It is a PLACEHOLDER — run `python tools/gen_spec.py` to populate
 > the CONSTITUTION block below from the live graph.
 
 ## Purpose
@@ -91,7 +91,7 @@ R-id prefixes it stewards, and a `tools/` directory for private tooling.
 
 To regenerate the CONSTITUTION block after graph changes, run:
 
-    uv run python tools/gen_spec.py
+    python tools/gen_spec.py
 
 from the `spec/` directory. The sentinels `<!-- CONSTITUTION:BEGIN -->` and
 `<!-- CONSTITUTION:END -->` in `CLAUDE.md` mark where gen_spec writes.

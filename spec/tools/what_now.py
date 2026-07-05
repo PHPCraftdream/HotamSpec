@@ -253,14 +253,14 @@ def generative_audit_staleness_actions(g: TensionGraph) -> list[Action]:
     if then is None:
         msg = (
             f"generative tension audit has NEVER run ({now} SETTLED atoms unswept)"
-            " — run `uv run python tools/audit_tensions.py` to surface"
+            " — run `python tools/audit_tensions.py` to surface"
             " unmediated-tension suspects (R-tension-audit-staleness-visible)."
         )
     elif now - then > GENERATIVE_AUDIT_STALE_DELTA:
         msg = (
             f"generative tension audit is stale: {now} SETTLED now vs {then} at"
             f" the last sweep (+{now - then} > {GENERATIVE_AUDIT_STALE_DELTA})"
-            " — re-run `uv run python tools/audit_tensions.py`"
+            " — re-run `python tools/audit_tensions.py`"
             " (R-tension-audit-staleness-visible)."
         )
     else:
@@ -341,7 +341,7 @@ def revisit_marker_actions(g: TensionGraph) -> list[Action]:
                 target=c.id,
                 imperative=(
                     f"evaluate revisit marker ({reason}): {c.revisit_marker}"
-                    " — then `uv run python tools/mark_revisit_evaluated.py"
+                    " — then `python tools/mark_revisit_evaluated.py"
                     f" {c.id}` (R-revisit-markers-evaluated)."
                 ),
             )
@@ -389,7 +389,7 @@ def open_ticket_actions() -> list[Action]:
             target="open-tickets",
             imperative=(
                 f"open tickets: {open_total} ({breakdown})"
-                " — `uv run python tools/ticket_list.py` (R-open-tickets-visible)."
+                " — `python tools/ticket_list.py` (R-open-tickets-visible)."
             ),
         )
     ]
@@ -544,7 +544,7 @@ def render(
     lines.append("")
     lines.append(
         "Loop: pick the top action -> edit spec/content -> "
-        "`uv run python tools/gen_spec.py` -> `uv run pytest -q` -> re-run me."
+        "`python tools/gen_spec.py` -> `python -m pytest -q` -> re-run me."
     )
     return "\n".join(lines) + "\n"
 

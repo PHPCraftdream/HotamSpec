@@ -24,14 +24,14 @@ Every input — idea, request, bug, hypothesis — six steps. Commands run from 
 
 1. **ORIENT** — reload pulse: top action · debt · context (LIVE-STATE below;
    re-injected each turn by emit_cipher hook). Full list:
-   `uv run python tools/what_now.py` (R-boot-reload-three-facts, R-agent-never-lost).
+   `python tools/what_now.py` (R-boot-reload-three-facts, R-agent-never-lost).
 2. **LOCATE** — find what input touches: Constitution index below for R-anchors,
    `docs/gen/TENSIONS.md` for conflict clusters, `docs/gen/REQUIREMENTS.md` for
    full claims + assumptions.
 3. **CONFRONT** — check input vs reality: which SETTLED claims contradicted?
    which Assumptions rested on / killed? already rejected — scan
    RECENTLY-REJECTED below, cite replacement, don't re-derive (anti-relitigation).
-   Tool: `uv run python tools/confront.py "<claim>"`.
+   Tool: `python tools/confront.py "<claim>"`.
 4. **TRANSLATE** — outcome → typed nodes: ProposedRequirement /
    ProposedConflictTransition / ProposedRejection / ProposedConflict /
    ProposedOperatorBudget / ProposedEntityType JSON
@@ -41,10 +41,10 @@ Every input — idea, request, bug, hypothesis — six steps. Commands run from 
 5. **PRESENT** — show steward the proposal + anchors: resolves what, contradicts
    what, replaces what. Steward decides (R-ai-presents-not-decides).
 6. **LAND** — after approval:
-   `uv run python tools/apply_proposal.py [--batch] [--triggering-kind KIND] <file.json>`
+   `python tools/apply_proposal.py [--batch] [--triggering-kind KIND] <file.json>`
    → regen (`gen_spec.py`) → tiered gate: `apply_proposal.py` defaults to T1
    (targeted enforcer subset via `tools/gate.py`); pass `--full` to force T2
-   (`uv run pytest -q`, the full suite) — T2 is MANDATORY at wave/commit
+   (`python -m pytest -q`, the full suite) — T2 is MANDATORY at wave/commit
    boundaries and is the automatic fallback whenever T1 selection fails
    closed → closure verifies triggering diagnosis gone; exit 2 = landed but
    did NOT advance (R-verify-closure-per-action).
@@ -405,7 +405,7 @@ _(full text: spec/docs/tools/what_now.md)_
 Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, same Mediation loop, thinking + constitution filtered by SCOPE prefixes (R-sub-agent-crystal-triad: scoped thinking + parent reference + scoped constitution).
 
 - One domain, zero active sub-agents → exactly ONE CLAUDE.md (this file). Sub-agent crystals materialize only at real spawn time (R-claude-md-consolidates-when-single-agent).
-- Spawn path (from `spec/`): `uv run python tools/create_agent.py <name> --scope R-<prefix>- --purpose "…" --parent domains/hotam-spec-self/agents` → `uv run python tools/gen_spec.py` (fills scoped blocks) → `uv run python tools/spawn_agent.py <agent-path> --task "…" --stamp <iso8601>` (composes crystal+task; appends `spec/.runtime/spawn-log.jsonl`, R-task-spawn-log-runtime).
+- Spawn path (from `spec/`): `python tools/create_agent.py <name> --scope R-<prefix>- --purpose "…" --parent domains/hotam-spec-self/agents` → `python tools/gen_spec.py` (fills scoped blocks) → `python tools/spawn_agent.py <agent-path> --task "…" --stamp <iso8601>` (composes crystal+task; appends `spec/.runtime/spawn-log.jsonl`, R-task-spawn-log-runtime).
 - Delegate only when still over budget AFTER crystallizing (R-crystallize-before-split, R-context-bounded-delegation). Sub-operator returns CONCLUSIONS only — shared objects as explicit border, never raw context (R-delegation-conclusions-only).
 <!-- OPERATOR-RECURSION:END -->
 <!-- THINKING-INDEX:BEGIN -->
@@ -525,7 +525,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** none — graph clean
 - **debt:** 195/221 SETTLED ENFORCED · 4 DRAFT · 0 OPEN · 4 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 282 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 76172 chars (headroom 73828)
+- **graph:** 282 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 76133 chars (headroom 73867)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
