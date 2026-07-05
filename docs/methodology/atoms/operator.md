@@ -15,6 +15,12 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Enforced by:** `test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir`, `test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir`
 
+## `R-agent-conduct-is-rules-not-tests` (PROSE)
+
+**Claim.** Agent conduct -- the highest abstraction -- shall not be faked as code-checked: what code can verify is ENFORCED with a real test, what only conscience can verify is an honest PROSE rule, and the two are kept explicitly separate.
+
+**Why.** Вердикт стьюарда (2026-07-05, подписан): «мы не можем проверить кодом работу агента — это высшая абстракция кодом не проверяется. Поэтому это нужно оформлять как правило, если оно нам действительно нужно и полезно. И так наверное многие вещи. Мы даже протестировать это не сможем. И кажется нужно отделять то, что мы можем протестировать от просто правил. При чем правила желательно формулировать так, чтобы быстро показывались противоречия при их внесении с изменениями.» Два мёртвых метра подтвердили вердикт: boot-cite Stop-хук писал 10-13% в журнал, который ничто не читало (form-metric theatre); spawn-log был пуст при десятках спавнов. Принцип даёт им судьбу: boot-cite-measured REJECTED как фальшивый ENFORCED, а spawn-log атом честно маркирован STRUCTURAL. Уточняет R-enforcement-first-class (механика полей) и R-enforceability-kind-declared (ENFORCEABLE vs INHERENTLY_PROSE): те задают КАК маркировать, этот принцип задаёт ЗАЧЕМ и КОГДА какой уровень выбирать.
+
 ## `R-agent-declares-purpose` (ENFORCED)
 
 **Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.
@@ -92,14 +98,6 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Claim.** The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply.
 
 **Why.** Atom of R-boot-from-substrate (WHEN to cite). Citing anchors the reply in the live substrate, proving the operator actually loaded it and is not parroting from memory.
-
-## `R-boot-cite-measured` (ENFORCED)
-
-**Claim.** A Stop hook shall lexically check whether the first sentence of the operator's last reply in the transcript contains a typed anchor (R-/C-/A-/OP-/GOAL-/section-sign), logging the result to spec/.runtime/boot-cite-log.jsonl, checked as a form-level (not substance-level) signal.
-
-**Why.** R-boot-cite-in-first-sentence (PROSE) has never had any mechanical trace of compliance. tools/boot_cite_status.py's writer half reads the Stop hook's transcript_path payload, extracts the last assistant text block's first sentence, and lexically tests it for an anchor token; the reader half (compute_boot_cite_status) answers what fraction of the last N logged replies complied. HONESTY BOUNDARY, explicit in the tool docstring: this measures the citation RITUAL (a token-shaped string appears), never the citation's TRUTH (that the anchor is relevant or that graph reality was actually confronted) -- R-boot-cite-in-first-sentence itself stays PROSE/STRUCTURAL; this atom only claims the measurable slice exists and is tested.
-
-**Enforced by:** `test_tool_boot_cite_status.py::test_write_from_payload_cited_true`, `test_tool_boot_cite_status.py::test_compute_status_mixed_and_windowed`
 
 ## `R-boot-reload-three-facts` (ENFORCED)
 

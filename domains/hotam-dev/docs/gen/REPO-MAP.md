@@ -34,7 +34,6 @@ reader: (unresolved-reader)
 - `spec/tools/attention_hook.py` — the Claude adapter: inject the attention list into context.  →  R-tool-attention-hook
 - `spec/tools/audit_atomicity.py` — surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.  →  R-tool-audit-atomicity
 - `spec/tools/audit_tensions.py` — the generative-audit tool: a deterministic, LLM-free shortlist of  →  R-tool-audit-tensions
-- `spec/tools/boot_cite_status.py` — Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.  →  R-tool-boot-cite-status
 - `spec/tools/claude_md_diff_watch.py` — auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.  →  R-tool-claude-md-diff-watch
 - `spec/tools/closure.py` — per-action verify: did the proposal remove its diagnosis?  →  R-tool-closure
 - `spec/tools/confront.py` — the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.  →  R-tool-confront
@@ -65,21 +64,22 @@ reader: (unresolved-reader)
 - `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for enforcement-perimeter files.
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
-**Domain content** (`domains/hotam-dev/`)
+**Domain content** (`domains/hotam-spec-self/`)
 
-- `domains/hotam-dev/graph.py` — content graph of domain 'hotam-dev'.
-- `domains/hotam-dev/manifest.py` — manifest of domain 'hotam-dev'.
+- `domains/hotam-spec-self/graph.py` — Hotam-Spec modeling itself — the meta-domain (the framework's own design).
+- `domains/hotam-spec-self/manifest.py` — manifest of domain 'hotam-spec-self'.
 
-**Generated docs** (`domains/hotam-dev/docs/gen/`)
+**Generated docs** (`domains/hotam-spec-self/docs/gen/`)
 
-- `domains/hotam-dev/docs/gen/CONSTITUTION.md` — The operator's boot sequence
-- `domains/hotam-dev/docs/gen/DECISIONS.md` — Open methodology decisions
-- `domains/hotam-dev/docs/gen/ENTITIES.md` — Entities
-- `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
-- `domains/hotam-dev/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
-- `domains/hotam-dev/docs/gen/HISTORY.md` — Methodology decision history
-- `domains/hotam-dev/docs/gen/OPEN.md` — Open registry
-- `domains/hotam-dev/docs/gen/REPO-MAP.md` — Repository file index
-- `domains/hotam-dev/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/hotam-dev/docs/gen/TENSIONS.md` — The tension map
-- `domains/hotam-dev/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit
+- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/hotam-spec-self/docs/gen/DECISIONS.md` — Open methodology decisions
+- `domains/hotam-spec-self/docs/gen/ENTITIES.md` — Entities
+- `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
+- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
+- `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
+- `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index
+- `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
+- `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
+- `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter

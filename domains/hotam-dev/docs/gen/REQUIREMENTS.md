@@ -46,7 +46,6 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-attention-hook** — *the Claude adapter: inject the attention list into context.* [STRUCTURAL·tool · §Attention] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
 - **R-tool-audit-tensions** — *the generative-audit tool: a deterministic, LLM-free shortlist of* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_audit_tensions`]
-- **R-tool-boot-cite-status** — *Stop-hook writer + reader that lexically checks whether the operator's first sentence cites a typed anchor.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_boot_cite_status`]
 - **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
 - **R-tool-confront** — *the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_confront`]

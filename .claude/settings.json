@@ -55,10 +55,6 @@
           {
             "type": "command",
             "command": "PY=\"$CLAUDE_PROJECT_DIR/spec/.venv\"/bin/python; [ -x \"$PY\" ] || PY=\"$CLAUDE_PROJECT_DIR/spec/.venv\"/Scripts/python.exe; if [ -x \"$PY\" ]; then \"$PY\" \"$CLAUDE_PROJECT_DIR/spec/tools/context_producer.py\"; else uv run --project \"$CLAUDE_PROJECT_DIR/spec\" python \"$CLAUDE_PROJECT_DIR/spec/tools/context_producer.py\"; fi 2>/dev/null || true # R-sensorium-committed"
-          },
-          {
-            "type": "command",
-            "command": "PY=\"$CLAUDE_PROJECT_DIR/spec/.venv\"/bin/python; [ -x \"$PY\" ] || PY=\"$CLAUDE_PROJECT_DIR/spec/.venv\"/Scripts/python.exe; if [ -x \"$PY\" ]; then \"$PY\" \"$CLAUDE_PROJECT_DIR/spec/tools/boot_cite_status.py\" write; else uv run --project \"$CLAUDE_PROJECT_DIR/spec\" python \"$CLAUDE_PROJECT_DIR/spec/tools/boot_cite_status.py\" write; fi 2>/dev/null || true # R-sensorium-committed"
           }
         ]
       }

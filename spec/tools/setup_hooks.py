@@ -88,7 +88,7 @@ def build_settings() -> dict:
       PreToolUse (Edit|Write)   — deny direct hand-edits of domains/*/graph.py
                                    (R-no-hand-edit-graph), the guard a stranger
                                    otherwise lacks entirely.
-      Stop                      — persist context measurement + boot-cite status.
+      Stop                      — persist context measurement.
     """
     gen = _tool("gen_spec") + " >/dev/null 2>&1 || true"
     emit = _tool("emit_cipher") + " 2>/dev/null || true"
@@ -96,7 +96,6 @@ def build_settings() -> dict:
     attn = _tool("attention_hook") + " 2>/dev/null || true"
     guard = _tool("_graph_guard")
     ctx = _tool("context_producer") + " 2>/dev/null || true"
-    boot = _tool("boot_cite_status", "write") + " 2>/dev/null || true"
 
     return {
         "hooks": {
@@ -106,7 +105,7 @@ def build_settings() -> dict:
             "PreToolUse": [
                 {"matcher": "Edit|Write", "hooks": [_cmd(guard)]}
             ],
-            "Stop": [{"hooks": [_cmd(ctx), _cmd(boot)]}],
+            "Stop": [{"hooks": [_cmd(ctx)]}],
         }
     }
 

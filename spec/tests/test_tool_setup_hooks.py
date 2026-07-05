@@ -54,7 +54,6 @@ def test_build_settings_covers_every_universal_tool() -> None:
         "claude_md_diff_watch",
         "_graph_guard",
         "context_producer",
-        "boot_cite_status",
     } <= tools
 
 
