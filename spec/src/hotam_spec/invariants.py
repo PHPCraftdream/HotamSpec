@@ -84,6 +84,7 @@ from hotam_spec.conflict import conflict_identity
 from hotam_spec.enforcer_resolution import (
     check_to_tests_map as _enforcer_check_to_tests_map,
     resolve_one_enforcer as _enforcer_resolve_one,
+    test_func_has_teeth as _enforcer_test_func_has_teeth,
 )
 from hotam_spec.graph import (
     TensionGraph,
@@ -1412,6 +1413,56 @@ def check_enforced_by_resolvable(g: TensionGraph) -> list[Violation]:
                         "(no such test file, unknown check_* name, or "
                         "ambiguous/missing bare test_* function) — fix the "
                         "name or the enforced_by tuple",
+                    )
+                )
+    return out
+
+
+def check_enforced_by_test_has_teeth(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement / §Closure — every enforced_by test function has real assertions.
+
+    RULE: when an enforced_by entry resolves to a bare test_* function name
+    (rule 4 in enforcer_resolution), that function's body MUST contain at
+    least one assert statement, pytest.raises call, or other function call
+    (which could assert internally). A test whose body is only
+    pass/docstring/Ellipsis with no assertions and no calls is a toothless
+    stub — it makes "ENFORCED" a lie.
+
+    WHY a separate invariant (not folded into check_enforced_by_resolvable):
+    resolvability and teeth are different questions (R-requirement-claim-is-
+    atomic). A test_foo that EXISTS but does nothing is resolvable (the file
+    and def are real) but toothless (it enforces nothing). Separating them
+    keeps each invariant's violation message actionable: "not found" vs
+    "found but empty".
+
+    WHY conservative on calls: a test that calls ANY function is given the
+    benefit of the doubt — the helper might assert internally. Only a body
+    with literally zero calls AND zero asserts is flagged. This avoids
+    false positives on tests that delegate to assertion helpers or use
+    pytest.raises as a context manager.
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        if r.status != "SETTLED" or r.enforcement != ENFORCED:
+            continue
+        for entry in r.enforced_by:
+            stripped = entry.strip()
+            if not stripped.startswith("test_"):
+                continue
+            if "::" in stripped or stripped.endswith(".py"):
+                continue
+            result = _enforcer_test_func_has_teeth(
+                stripped, _TESTS_DIR_FOR_ENFORCER_CHECK
+            )
+            if result is False:
+                out.append(
+                    Violation(
+                        "check_enforced_by_test_has_teeth",
+                        r.id,
+                        f"enforced_by entry {stripped!r} resolves to a test function "
+                        "whose body contains no assert, no function call, and no "
+                        "raise — it is a toothless stub, not real enforcement; "
+                        "add assertions or replace with a real enforcer",
                     )
                 )
     return out
@@ -3865,8 +3916,14 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
     InvariantClassification(
         "check_enforced_by_resolvable",
         BESPOKE,
-        "greps tests/*.py to resolve each enforced_by entry via the shared "
+        "AST-parses tests/*.py to resolve each enforced_by entry via the shared "
         "hotam_spec.enforcer_resolution algorithm, not a static registry",
+    ),
+    InvariantClassification(
+        "check_enforced_by_test_has_teeth",
+        BESPOKE,
+        "AST-inspects each bare test_* enforcer's body for assertions/calls; "
+        "a pass-only stub is not real enforcement",
     ),
     InvariantClassification(
         "check_doc_reader_resolves_to_stakeholder",
@@ -4046,6 +4103,7 @@ ALL_INVARIANTS = (
     check_enforced_names_invariant,
     check_enforceability_kind_known,
     check_enforced_by_resolvable,
+    check_enforced_by_test_has_teeth,
     # §M-tag (atomized; check_m_tag_format is thin delegator)
     check_m_tag_valid_format,
     check_m_tag_unique,

@@ -526,7 +526,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** none — graph clean
 - **debt:** 198/223 SETTLED ENFORCED · 4 DRAFT · 0 OPEN · 3 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 284 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 76811 chars (headroom 73189)
+- **graph:** 284 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 76883 chars (headroom 73117)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -729,7 +729,7 @@ _(no sub-operators yet)_
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_invariants.py`, `spec/tests/test_tool_gate.py`
 - **§Closure**
   - defined: `spec/src/hotam_spec/enforcer_resolution.py`
-  - enforced: `check_enforced_by_resolvable`
+  - enforced: `check_enforced_by_resolvable`, `check_enforced_by_test_has_teeth`
   - tested: `spec/tests/test_closure.py`, `spec/tests/test_invariants.py`
 - **§Conflict**
   - defined: `spec/src/hotam_spec/conflict.py`
@@ -801,7 +801,7 @@ _(no sub-operators yet)_
   - tested: `spec/tests/test_docs_gen.py`, `spec/tests/test_reflection.py`
 - **§Requirement**
   - defined: `spec/src/hotam_spec/requirement.py`
-  - enforced: `check_constituting_not_in_unresolved_conflict`, `check_doc_reader_resolves_to_stakeholder`, `check_enforceability_kind_known`, `check_enforced_by_resolvable`, `check_enforced_names_invariant`, `check_m_tag_format`, `check_m_tag_open_only`, `check_m_tag_unique`, `check_m_tag_valid_format`, `check_open_has_question`, `check_section_anchors_known`
+  - enforced: `check_constituting_not_in_unresolved_conflict`, `check_doc_reader_resolves_to_stakeholder`, `check_enforceability_kind_known`, `check_enforced_by_resolvable`, `check_enforced_by_test_has_teeth`, `check_enforced_names_invariant`, `check_m_tag_format`, `check_m_tag_open_only`, `check_m_tag_unique`, `check_m_tag_valid_format`, `check_open_has_question`, `check_section_anchors_known`
   - tested: `spec/tests/test_apply_proposal.py`, `spec/tests/test_conscience.py`, `spec/tests/test_decisions_bijection.py`, `spec/tests/test_docs_gen.py`, `spec/tests/test_enforceability.py`, `spec/tests/test_fires_coverage.py`, `spec/tests/test_invariants.py`, `spec/tests/test_no_observation_type_scope.py`
 - **§Scope**
   - defined: `spec/src/hotam_spec/scope_projection.py`

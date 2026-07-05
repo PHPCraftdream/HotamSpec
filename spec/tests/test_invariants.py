@@ -567,6 +567,57 @@ def test_enforced_by_resolvable_green_on_seed() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 5c. Toothless test lint (check_enforced_by_test_has_teeth)
+# ---------------------------------------------------------------------------
+
+
+def test_enforced_by_toothless_test_fires() -> None:
+    """check_enforced_by_test_has_teeth fires on a bare test_* stub with only pass."""
+    import tempfile  # noqa: PLC0415
+    from hotam_spec.invariants import check_enforced_by_test_has_teeth
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_file = Path(tmpdir) / "test_toothless_demo.py"
+        test_file.write_text(
+            'def test_toothless_stub():\n    """docstring."""\n    pass\n',
+            encoding="utf-8",
+        )
+
+        import hotam_spec.invariants as inv_mod
+        old_dir = inv_mod._TESTS_DIR_FOR_ENFORCER_CHECK
+        inv_mod._TESTS_DIR_FOR_ENFORCER_CHECK = Path(tmpdir)
+
+        from hotam_spec.enforcer_resolution import _func_to_file_index, _cached_parse_path
+        _func_to_file_index.cache_clear()
+        _cached_parse_path.cache_clear()
+
+        try:
+            reqs = (
+                _req(
+                    "R-1",
+                    "sa",
+                    enforcement=ENFORCED,
+                    enforced_by=("test_toothless_stub",),
+                ),
+                _req("R-2", "sb"),
+            )
+            g = TensionGraph(
+                axes=DEMO_AXES,
+                stakeholders=(_S_OUT, _S_A, _S_B),
+                requirements=reqs,
+                conflicts=(),
+            )
+            v = check_enforced_by_test_has_teeth(g)
+            assert len(v) > 0, "must fire on a toothless test stub"
+            assert v[0].target == "R-1"
+            assert "toothless" in v[0].message
+        finally:
+            inv_mod._TESTS_DIR_FOR_ENFORCER_CHECK = old_dir
+            _func_to_file_index.cache_clear()
+            _cached_parse_path.cache_clear()
+
+
+# ---------------------------------------------------------------------------
 # 6. M-tag format invariant (check_m_tag_format)
 # ---------------------------------------------------------------------------
 

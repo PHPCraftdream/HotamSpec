@@ -20,24 +20,51 @@ tried in order; first match wins) — identical to gate.py's original
 docstring:
   1. "test_file.py::test_func"        -> used as a pytest node-id verbatim.
   2. "test_file.py"                   -> the whole file is a node-id.
-  3. "check_<name>"                   -> resolved via a grep of test files
-                                          for the bare check_* name.
-  4. "test_<name>" (bare function)    -> grep test files for `def test_<name>(`
+  3. "check_<name>"                   -> resolved via AST scan of test files
+                                          for actual call-site usage of the
+                                          check_* name (not mere text mention
+                                          in comments/docstrings).
+  4. "test_<name>" (bare function)    -> AST scan for `def test_<name>(`
                                           and use the owning file as a node-id.
   5. anything else                    -> UNRESOLVED.
 
-Deterministic: no timestamps/randomness; pure filesystem read + regex.
+Deterministic: no timestamps/randomness; pure filesystem read + AST parse.
+
+AST-strict (Enf#4 fix): names mentioned only in comments, docstrings, or
+string literals do NOT count as resolution targets. Only real `def` statements
+(for test functions) and real call-site usage (for check_* names) count.
 
 ## From `spec/src/hotam_spec/enforcer_resolution.py::check_to_tests_map`
 
-Canon: §Closure — check_* name -> test files that reference it (bare grep).
+Canon: §Closure — check_* name -> test files that actually reference it in code (AST-strict).
+
+A check_* name is considered referenced by a test file only if it appears
+as a real Python identifier (Name or Attribute node) in the AST — NOT if
+it merely appears in a comment, docstring, or string literal.
 
 ## From `spec/src/hotam_spec/enforcer_resolution.py::bare_test_func_to_file`
 
 Canon: §Closure — bare `test_foo` function name -> owning test file (rel path).
 
 Returns None if zero or more than one file defines a function with that
-name (ambiguous == unresolved, fail-closed).
+name (ambiguous == unresolved, fail-closed). Uses AST — only real `def`
+statements count, not text mentions.
+
+## From `spec/src/hotam_spec/enforcer_resolution.py::test_func_has_teeth`
+
+Canon: §Closure — check if a test function has real assertions (not just pass/docstring).
+
+Returns True if the test has teeth (contains assert, pytest.raises, or
+calls that could raise). Returns False if the body is only
+pass/docstring/ellipsis with no assert and no function calls.
+Returns None if the function cannot be found.
+
+A test "has teeth" if its body contains at least one of:
+  - ast.Assert node
+  - a call to pytest.raises (ast.Call with pytest.raises attribute)
+  - any function call at all (conservative: a helper could assert internally)
+
+A test with ONLY pass, docstring (Expr(Constant(str))), or Ellipsis is toothless.
 
 ## From `spec/src/hotam_spec/enforcer_resolution.py::resolve_one_enforcer`
 
