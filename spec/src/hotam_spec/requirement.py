@@ -148,6 +148,7 @@ class Requirement:
     enforced_by: tuple[str, ...] = field(default_factory=tuple)
     m_tag: str = ""
     enforceability: str = ENFORCEABLE
+    summary: str = ""
 
     def is_closeable_debt(self) -> bool:
         """Canon: §Requirement — True iff this is REAL enforcement-gradient debt.

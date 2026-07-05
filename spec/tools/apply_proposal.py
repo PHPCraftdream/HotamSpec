@@ -380,6 +380,7 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
     enforced_by = tuple(str(x) for x in enforced_by_raw)
     m_tag = raw.get("m_tag", "")
     enforceability = raw.get("enforceability", "ENFORCEABLE").strip()
+    summary = raw.get("summary", "")
     return ProposedRequirement(
         id=req_id,
         claim=claim,
@@ -392,6 +393,7 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
         enforced_by=enforced_by,
         m_tag=m_tag if isinstance(m_tag, str) else "",
         enforceability=enforceability,
+        summary=summary if isinstance(summary, str) else "",
     )
 
 
@@ -1207,6 +1209,9 @@ def _render_requirement_source(proposal: ProposedRequirement, indent: str) -> st
         lines.append(f'{inner}m_tag="{proposal.m_tag}",')
     if proposal.enforceability and proposal.enforceability != "ENFORCEABLE":
         lines.append(f'{inner}enforceability="{proposal.enforceability}",')
+    if proposal.summary:
+        summary_escaped = proposal.summary.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append(f'{inner}summary=("{summary_escaped}"),')
     lines.append(f"{indent}),")
     return "\n".join(lines) + "\n"
 
@@ -1338,6 +1343,7 @@ def _apply_requirement_to_source(
             ("relations", proposal.relations),
             ("enforceability", proposal.enforceability),
             ("m_tag", proposal.m_tag),
+            ("summary", proposal.summary),
         ]:
             # Skip empty optional fields not already present
             if field_name in ("assumptions", "enforced_by", "relations") and not new_value:
@@ -1380,6 +1386,10 @@ def _apply_requirement_to_source(
                         f"removing field '{field_name}'."
                     )
                 continue
+            # summary: skip when empty and not already present (optional field).
+            if field_name == "summary" and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
             # Skip the default enforceability value when the field isn't
             # already present in source (keep terse output for the common case).
             if (

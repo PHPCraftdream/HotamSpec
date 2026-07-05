@@ -3841,6 +3841,14 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged",),
         ),
+        Requirement(
+            id="R-crystal-carries-short-form",
+            claim=("The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b)."),
+            enforcement="STRUCTURAL",
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

@@ -273,6 +273,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-conflict-resolved-in-members-or-mediator` | SETTLED | `framework-author` | — | A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph. |
 | `R-enforcement-perimeter-baselines-guarded` | SETTLED | `framework-author` | — | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
 | `R-enforcement-perimeter-visible` | SETTLED | `framework-author` | — | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |
+| `R-crystal-carries-short-form` | SETTLED | `framework-author` | — | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
 
 ## Stakeholders
 

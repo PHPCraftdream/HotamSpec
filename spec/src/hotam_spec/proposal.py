@@ -41,6 +41,7 @@ class ProposedRequirement:
     enforced_by: tuple[str, ...] = field(default_factory=tuple)
     m_tag: str = ""
     enforceability: str = "ENFORCEABLE"
+    summary: str = ""
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.
