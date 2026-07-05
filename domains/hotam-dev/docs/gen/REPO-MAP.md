@@ -43,6 +43,7 @@ reader: (unresolved-reader)
 - `spec/tools/create_axis.py` — scaffolds a new Axis into the active domain's controlled-vocabulary  →  R-tool-create-axis
 - `spec/tools/create_domain.py` — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.  →  R-tool-create-domain
 - `spec/tools/create_entity_type.py` — scaffolds an EntityType declaration into the active domain's graph via apply_proposal.  →  R-tool-create-entity-type
+- `spec/tools/delegate.py` — Canon: §Ticket (sibling) -- file-based delegation tool (create / close / show / list).
 - `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.  →  R-tool-emit-cipher
 - `spec/tools/gate.py` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.  →  R-tool-gate
 - `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status

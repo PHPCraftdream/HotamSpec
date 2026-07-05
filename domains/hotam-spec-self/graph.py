@@ -1792,11 +1792,9 @@ def build_graph() -> TensionGraph:
                 "(`Delegation`)."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "Distinct from task-spawn: domain-delegation is recorded in the "
-                "graph and stewardable. BUILD-TRIGGER: the `Delegation` node type "
-                "(R-domain-delegation-as-node) is built."
+                "REJECTED — REPLACES by R-delegation-is-a-file: steward chose file-based delegations (delegations/DG-<n>.md, versioned in git) over substrate-node persistence. The directory + tool mechanism replaces the envisioned Delegation node type. — (was: Distinct from task-spawn: domain-delegation is recorded in the graph and stewardable. BUILD-TRIGGER: the `Delegation` node type (R-domain-delegation-as-node) is built.)"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
@@ -1868,12 +1866,9 @@ def build_graph() -> TensionGraph:
                 "returns_contract, crystal_path."
             ),
             owner="framework-author",
-            status="DRAFT",
+            status="REJECTED",
             why=(
-                "Makes the delegation persistent and stewardable, unlike task-spawn "
-                "ephemera. BUILD-TRIGGER: R-agent-is-a-directory through "
-                "R-agent-imports-framework have landed (agents exist as directories) "
-                "AND a first real delegation is performed."
+                "REJECTED — REPLACES by R-delegation-is-a-file: steward chose file-based delegations (delegations/DG-<n>.md, versioned in git) over a new Delegation graph-node type. Git history on committed files carries the audit trail; a dedicated dataclass is unnecessary overhead. — (was: Makes the delegation persistent and stewardable, unlike task-spawn ephemera. BUILD-TRIGGER: R-agent-is-a-directory through R-agent-imports-framework have landed (agents exist as directories) AND a first real delegation is performed.)"
             ),
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
@@ -3885,6 +3880,16 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-enforcement-first-class"), Relation("refines", "R-enforceability-kind-declared"),),
             enforcement=PROSE,
             enforceability="INHERENTLY_PROSE",
+        ),
+        Requirement(
+            id="R-delegation-is-a-file",
+            claim=("Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их историю в гите'. REPLACES the graph-node Delegation design (R-domain-delegation-as-node, R-domain-delegation-persists): the steward chose file-based delegations over a new graph node type -- git history on committed files IS the audit trail, making a dedicated Delegation dataclass unnecessary."),
+            assumptions=("A-finite-context-operators",),
+            enforcement=STRUCTURAL,
+            enforced_by=("test_tool_delegate.py::test_create_allocates_id_and_writes_file", "test_tool_delegate.py::test_close_sets_done_and_result",),
         ),
     )
 

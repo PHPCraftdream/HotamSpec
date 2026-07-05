@@ -133,3 +133,7 @@ stay intra-domain (both operators resolvable in the same `graph.py`); a
 cross-domain hand-off is a separate, unbuilt mechanism, not an incremental
 tweak to this node. Documenting the wall here keeps the limit visible rather
 than inviting a caller to assume cross-domain overlap already works.
+
+---
+
+**Resolved 2026-07-05:** file-based delegations chosen (R-delegation-is-a-file). The steward decided that delegations are versioned files under `delegations/DG-<n>.md`, created and closed via `tools/delegate.py`, with git history as the audit trail. The graph-node design described above was not built; `R-domain-delegation-as-node` and `R-domain-delegation-persists` are now REJECTED.

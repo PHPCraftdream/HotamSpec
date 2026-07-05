@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 197 / SETTLED 225; closeable debt 4; inherent discipline 24; DRAFT 4; OPEN 1; REJECTED 37.**
+**Burn-down: SETTLED-ENFORCED 197 / SETTLED 226; closeable debt 5; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
 
 ---
 
@@ -26,6 +26,7 @@ judgment calls no check_* could ever verify.
 | `R-work-within-launch-dir` | PROSE | `framework-author` | The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise. |
 | `R-conflict-resolved-in-members-or-mediator` | PROSE | `framework-author` | A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph. |
 | `R-crystal-carries-short-form` | STRUCTURAL | `framework-author` | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
+| `R-delegation-is-a-file` | STRUCTURAL | `framework-author` | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 
@@ -264,5 +265,3 @@ judgment calls no check_* could ever verify.
 |---|---|
 | `R-measure-context-size` | `ai-agent` |
 | `R-claude-md-tree-of-crystals` | `framework-author` |
-| `R-domain-delegation-persists` | `framework-author` |
-| `R-domain-delegation-as-node` | `framework-author` |
