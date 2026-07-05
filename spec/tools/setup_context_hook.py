@@ -12,9 +12,9 @@ when — and only when — the local stdin payload honestly carries ctx_pct.
 Merge discipline: every hook entry this installer adds carries the marker
 string `"# cah-context-hook:v1"` appended to its command so `--off` can find
 and remove EXACTLY the entries this tool added, without touching any
-pre-existing or foreign hook (SessionStart/UserPromptSubmit/PostCompact/
-PreToolUse entries already present in this repo's settings.local.json are
-read, preserved verbatim, and re-written unchanged).
+pre-existing or foreign hook. Only PostToolUse is installed here; the Stop
+context_producer hook lives in the committed settings.json
+(R-sensorium-committed) and is NOT duplicated into settings.local.json.
 
 Idempotent: running `install` twice does not duplicate entries (matched by
 the same marker string already being present in an existing command).
@@ -45,7 +45,7 @@ _RUNTIME_CONTEXT = Path(__file__).resolve().parents[1] / ".runtime" / "context.j
 _PRODUCER = Path(__file__).resolve().parent / "context_producer.py"
 
 _MARKER = "# cah-context-hook:v1"
-_HOOK_EVENTS = ("PostToolUse", "Stop")
+_HOOK_EVENTS = ("PostToolUse",)  # Stop context_producer is in committed settings.json (R-sensorium-committed)
 
 
 def _hook_command() -> str:

@@ -30,7 +30,7 @@ def _settings_path(tmp_path: Path) -> Path:
     return tmp_path / ".claude" / "settings.local.json"
 
 
-def test_install_on_empty_settings_adds_posttooluse_and_stop(tmp_path, monkeypatch):
+def test_install_on_empty_settings_adds_posttooluse(tmp_path, monkeypatch):
     settings_path = _settings_path(tmp_path)
     monkeypatch.setattr(sch, "_SETTINGS_LOCAL", settings_path)
 
@@ -40,9 +40,9 @@ def test_install_on_empty_settings_adds_posttooluse_and_stop(tmp_path, monkeypat
     assert settings_path.exists()
     written = json.loads(settings_path.read_text(encoding="utf-8"))
     assert "PostToolUse" in written["hooks"]
-    assert "Stop" in written["hooks"]
+    # Stop context_producer now lives in committed settings.json, not local
+    assert "Stop" not in written["hooks"]
     assert sch._MARKER in written["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
-    assert sch._MARKER in written["hooks"]["Stop"][0]["hooks"][0]["command"]
 
 
 def test_install_preserves_foreign_hooks_and_permissions(tmp_path, monkeypatch):
@@ -78,7 +78,8 @@ def test_install_preserves_foreign_hooks_and_permissions(tmp_path, monkeypatch):
     assert written["permissions"] == {"allow": ["Bash(git status)"]}
     # our entries added alongside
     assert any(sch._MARKER in g["hooks"][0]["command"] for g in written["hooks"]["PostToolUse"])
-    assert "Stop" in written["hooks"]
+    # Stop context_producer now lives in committed settings.json, not local
+    assert "Stop" not in written["hooks"]
 
 
 def test_install_twice_is_idempotent(tmp_path, monkeypatch):
@@ -93,9 +94,9 @@ def test_install_twice_is_idempotent(tmp_path, monkeypatch):
     post_marker_groups = [
         g for g in written["hooks"]["PostToolUse"] if sch._has_marker(g)
     ]
-    stop_marker_groups = [g for g in written["hooks"]["Stop"] if sch._has_marker(g)]
     assert len(post_marker_groups) == 1
-    assert len(stop_marker_groups) == 1
+    # Stop not present in local (lives in committed settings.json)
+    assert "Stop" not in written["hooks"]
 
 
 def test_off_removes_only_our_entries(tmp_path, monkeypatch):
