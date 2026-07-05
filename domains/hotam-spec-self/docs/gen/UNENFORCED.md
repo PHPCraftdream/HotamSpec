@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 197 / SETTLED 223; closeable debt 4; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 36.**
+**Burn-down: SETTLED-ENFORCED 198 / SETTLED 224; closeable debt 4; inherent discipline 22; DRAFT 4; OPEN 1; REJECTED 36.**
 
 ---
 
@@ -255,6 +255,7 @@ judgment calls no check_* could ever verify.
 | `R-unmeasured-cipher-names-host-boundary` | test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line | While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call. |
 | `R-enforcement-perimeter-baselines-guarded` | tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
 | `R-enforcement-perimeter-visible` | tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |
+| `R-run-speed-guarded` | test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression | Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline. |
 
 ## DRAFT (not yet promoted)
 

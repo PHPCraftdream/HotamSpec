@@ -291,15 +291,23 @@ def test_close_backfills_legacy_records_status(tmp_path: Path) -> None:
     assert recs[1]["status"] == "closed"
 
 
-def test_seed_del_1_is_active_with_status_field() -> None:
-    """The committed DEL-1 carries the status lifecycle field, born active."""
+def test_seed_del_1_is_closed_campaign_preserved() -> None:
+    """The committed DEL-1 carries the status lifecycle field.
+
+    DEL-1 was the standing campaign delegation ('реши все задачи...'). The
+    steward closed it on 2026-07-05 (campaign over), so every conflict
+    resolution again requires an explicit signature. The record is NOT
+    deleted -- it is flipped to 'closed' with a closed_date, preserving the
+    trace (mirroring R-rejected-preserved-not-deleted).
+    """
     domains_root = _SPEC_ROOT.parent / "domains"
     path = domains_root / "hotam-spec-self" / "delegations.jsonl"
     rec = json.loads(
         [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()][0]
     )
-    assert rec["status"] == "active"
-    assert rec.get("closed_date", "") == ""
+    assert rec["id"] == "DEL-1"
+    assert rec["status"] == "closed"
+    assert rec.get("closed_date", "") != ""
 
 
 def test_cli_close_end_to_end(tmp_path: Path, monkeypatch) -> None:

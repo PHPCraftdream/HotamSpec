@@ -16,8 +16,9 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **context:** T1 targeted-enforcer gate on every apply_proposal call vs mandatory full T2 pytest suite at wave/commit boundaries -- T2 runs have hit multi-minute timeouts in this repo (observed Wave 2), creating real pressure to skip or shrink T2, which would undermine R-wave-lands-atomically
 - **members:** `R-t1-gate-is-default`, `R-wave-lands-atomically`
 - **steward:** `dev-steward`
-- **lifecycle:** DETECTED
+- **lifecycle:** DECIDED(Resolved 2026-07-05 both ways per R-conflict-resolved-in-members-or-mediator: members amended (test suite sped 223s->~55s, gen_spec 20s->3s) AND a mediating rule created (R-run-speed-guarded self-calibrating guard) so the speed need cannot silently regress. Steward verdict.)
 - **shared assumption:** `A-runtime-logs-append-only`
+- **revisit marker:** REVISIT if at larger scale (600+ atoms / 5+ domains) the run-speed guard trips persistently despite Python-side optimizations -- then reconsider deeper (compiled snapshot / language).
 
 ### Axis `sequential-vs-isolated-parallel` — 1 conflict(s), single tension
 

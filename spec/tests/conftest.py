@@ -227,3 +227,88 @@ def active_graph():
     from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     return load_content_graph()
+
+
+# ---------------------------------------------------------------------------
+# Run-speed guard: record wall-clock duration of every pytest session
+# (R-run-speed-guarded).  Data lands in .runtime/run-durations.jsonl (per-
+# machine, gitignored).  On the 5th record, a baseline (mean×1.2) is
+# written to .runtime/run-speed-baseline.json.  The separate test
+# test_run_speed_guard.py reads the PREVIOUS run's data and fails if the
+# duration exceeded the baseline — lag-1 design keeps the guard within
+# normal pytest semantics.
+# ---------------------------------------------------------------------------
+
+_SESSION_START: float | None = None
+
+# Minimum number of tests collected to consider a run "full suite".
+# Partial runs (single file, -k filter) must NOT pollute the speed journal
+# because their short durations would corrupt the baseline and cause false
+# failures on subsequent full runs (R-run-speed-guarded).
+_FULL_SUITE_THRESHOLD = 100
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    """Record wall-clock start of the pytest session."""
+    import time  # noqa: PLC0415
+
+    global _SESSION_START  # noqa: PLW0603
+    _SESSION_START = time.monotonic()
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Record session duration and maintain the speed baseline.
+
+    Only records when the session collected >= _FULL_SUITE_THRESHOLD tests,
+    so partial runs (agents running ``pytest tests/test_x.py``, ``-k foo``,
+    etc.) never corrupt the calibration journal.
+    """
+    import json as _json  # noqa: PLC0415
+    import time  # noqa: PLC0415
+
+    if _SESSION_START is None:
+        return
+
+    # Guard: skip recording for partial runs.
+    collected = getattr(session, "testscollected", 0)
+    if collected < _FULL_SUITE_THRESHOLD:
+        return
+
+    duration = time.monotonic() - _SESSION_START
+
+    runtime_dir = _SPEC_ROOT / ".runtime"
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+
+    journal = runtime_dir / "run-durations.jsonl"
+    baseline_file = runtime_dir / "run-speed-baseline.json"
+
+    # Append this run's duration
+    try:
+        with open(journal, "a", encoding="utf-8") as f:
+            f.write(_json.dumps({"duration_s": round(duration, 3)}) + "\n")
+    except OSError:
+        return  # best-effort, never fail the suite for logging
+
+    # Read all durations to check calibration
+    try:
+        durations: list[float] = []
+        for line in journal.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                durations.append(_json.loads(line)["duration_s"])
+    except (OSError, KeyError, _json.JSONDecodeError):
+        return
+
+    # Calibrate baseline on 5th record (or later if baseline missing)
+    if len(durations) >= 5 and not baseline_file.exists():
+        first5 = durations[:5]
+        baseline = sum(first5) / len(first5) * 1.2
+        try:
+            baseline_file.write_text(
+                _json.dumps(
+                    {"baseline_s": round(baseline, 3), "calibrated_from": first5}
+                ),
+                encoding="utf-8",
+            )
+        except OSError:
+            pass  # best-effort

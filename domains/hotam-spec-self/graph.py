@@ -3849,6 +3849,24 @@ def build_graph() -> TensionGraph:
             why=("Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b)."),
             enforcement="STRUCTURAL",
         ),
+        Requirement(
+            id="R-decided-by-verifiable-signature",
+            claim=("Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review."),
+            owner="framework-author",
+            status="OPEN(should decided_by be bound to git commit authorship / a cryptographic signature as a verifiable, unforgeable signature, or stay a free string trusted via review?)",
+            why=("Steward verdict 2026-07-05: recorded as an OPEN question, not decided now. Context: DEL-1 (the standing campaign delegation) was closed the same day, so every conflict resolution now requires an explicit steward signature again -- which sharpens the question of whether that signature is trustworthy. Today decided_by is a free string the agent itself writes into the graph (six-lens review Enf#2 / Vision#1: 'signature is a blank form' -- structurally indistinguishable from a real human act). Binding it to git commit authorship (git knows the real author of every change) would make the signature evidence rather than ritual. Left OPEN because it changes the steward's own signing mechanics and is a single-human-wears-all-hats context where the value is not yet forced (A-single-human-wears-all-hats); revisit when a second human steward appears (ties to #44 role model) or when the Signoff-record ontology (etap 5.1) is built."),
+            enforcement=PROSE,
+            enforceability="INHERENTLY_PROSE",
+        ),
+        Requirement(
+            id="R-run-speed-guarded",
+            claim=("Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward's verbatim need (2026-07-05): real speed must be guarded by code-law; machines differ so no hardcoded constant — first 5 runs calibrate, +20% headroom, per-machine gitignored file. Closes the speed-vs-verification tension (C-ec1ec532 in hotam-dev) with a mediating rule: speed cannot silently regress."),
+            enforcement=ENFORCED,
+            enforced_by=("test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

@@ -274,6 +274,8 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-enforcement-perimeter-baselines-guarded` | SETTLED | `framework-author` | — | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
 | `R-enforcement-perimeter-visible` | SETTLED | `framework-author` | — | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |
 | `R-crystal-carries-short-form` | SETTLED | `framework-author` | — | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
+| `R-decided-by-verifiable-signature` | OPEN(should decided_by be bound to git commit authorship / a cryptographic signature as a verifiable, unforgeable signature, or stay a free string trusted via review?) | `framework-author` | — | Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review. |
+| `R-run-speed-guarded` | SETTLED | `framework-author` | — | Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline. |
 
 ## Stakeholders
 

@@ -5,7 +5,7 @@ reader: (unresolved-reader)
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-Open requirements: **0**. Unresolved conflicts: **1**.
+Open requirements: **0**. Unresolved conflicts: **0**.
 
 ---
 
@@ -15,6 +15,4 @@ _None._
 
 ## Unresolved conflicts (no steward resolution yet)
 
-| id | axis | lifecycle | steward | members |
-|---|---|---|---|---|
-| `C-ec1ec532` | `speed-vs-verification` | DETECTED | `dev-steward` | R-t1-gate-is-default, R-wave-lands-atomically |
+_None._
