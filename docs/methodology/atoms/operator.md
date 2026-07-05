@@ -111,17 +111,17 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-operator-crystal-embeds-thinking-distilled` (ENFORCED)
 
-**Claim.** The operator's CLAUDE.md shall embed a compressed RULE+WHY distillation of each scope-relevant thinking topic inline (Tier 1), each with a pointer to its full text at spec/docs/thinking/<slug>.md (Tier 3), not the full body carried verbatim in working context.
+**Claim.** The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (via short_form) plus a path link to spec/docs/thinking/<slug>.md, not a multi-line RULE+WHY distillate.
 
-**Why.** REPLACES R-operator-crystal-embeds-thinking: full-text embedding contradicted R-crystal-reload-by-reference (an operator shall reload its crystal by reference rather than re-carrying it in working context) -- it re-carried the entire verbatim thinking corpus in working context instead of referencing it -- and it breached the 150k-char host limit (root CLAUDE.md measured ~197,916 chars with all 22 spec/docs/thinking/*.md and 14 spec/docs/tools/*.md embedded verbatim). The distillate keeps the reasoning that matters (RULE + WHY, not a bare table of contents) small enough to carry for every scope-relevant topic, while the full text stays on disk and is Tier-3-referenced by path, loaded only when actually needed.
+**Why.** REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach: even compressed RULE+WHY pairs consumed ~19k chars across 22 topics. A single RULE sentence (via short_form, R-crystal-carries-short-form) plus a path link achieves the same navigation goal in ~2.4k chars — the full text is on disk at the linked path, loaded only when needed (R-crystal-reload-by-reference).
 
 **Enforced by:** `test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded`
 
 ## `R-operator-crystal-embeds-tools-distilled` (ENFORCED)
 
-**Claim.** The operator's CLAUDE.md shall embed a compressed RULE+WHY distillation of each scope-relevant tool's documentation inline (Tier 1), each with a pointer to its full text at spec/docs/tools/<basename>.md (Tier 3), not the full body carried verbatim in working context.
+**Claim.** The operator's CLAUDE.md shall embed a table of tool name + Canon sentence (via short_form) plus a path link to spec/docs/tools/<basename>.md, not a multi-line distillate.
 
-**Why.** REPLACES R-operator-crystal-embeds-tools: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k-char host limit (root CLAUDE.md measured ~197,916 chars with the full tool-doc corpus embedded verbatim). The distillate keeps the RULE + WHY reasoning for every scope-relevant tool while the full doc stays on disk, Tier-3-referenced by path.
+**Why.** REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed ~12k chars across 30+ tools. A single Canon sentence (via short_form, R-crystal-carries-short-form) plus a path link achieves navigation in ~2.9k chars while the full text stays on disk (R-crystal-reload-by-reference).
 
 **Enforced by:** `test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded`
 

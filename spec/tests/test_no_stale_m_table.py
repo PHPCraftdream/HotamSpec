@@ -24,11 +24,17 @@ def test_root_claude_md_has_no_m_table_rows() -> None:
     )
 
 
-def test_root_claude_md_links_to_decisions_md() -> None:
-    """Root CLAUDE.md must reference the generated DECISIONS.md path."""
-    text = ROOT_CLAUDE.read_text(encoding="utf-8")
-    needle = "domains/hotam-spec-self/docs/gen/DECISIONS.md"
-    assert needle in text, (
-        f"Root CLAUDE.md does not link to {needle}. "
+def test_repo_map_links_to_decisions_md() -> None:
+    """REPO-MAP.md (or root CLAUDE.md) must reference the generated DECISIONS.md path."""
+    import sys
+    _tools = str(ROOT_CLAUDE.parent / "spec" / "tools")
+    if _tools not in sys.path:
+        sys.path.insert(0, _tools)
+    import gen_spec as _gs
+    repo_map_md = _gs.REPO_MAP_MD
+    assert repo_map_md.exists(), f"REPO-MAP.md not found at {repo_map_md}"
+    text = repo_map_md.read_text(encoding="utf-8")
+    assert "DECISIONS.md" in text, (
+        "REPO-MAP.md does not reference DECISIONS.md. "
         "Add a pointer so readers know where the M-registry lives."
     )

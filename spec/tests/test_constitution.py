@@ -191,7 +191,7 @@ def test_framework_invariants_md_up_to_date() -> None:
 
 def test_constitution_is_index() -> None:
     """CONSTITUTION block is a compact index: roster pointer present, bounded,
-    and no longer carries full '[ENFORCED·...]' enforcer chains inline."""
+    id+flag format with no claims inline."""
     text = _read_normalized(ROOT_CLAUDE_MD)
     block = _extract_constitution_block(text)
     assert block is not None, "CONSTITUTION block not found"
@@ -200,9 +200,9 @@ def test_constitution_is_index() -> None:
         "CONSTITUTION index must point to the full roster in "
         "docs/gen/REQUIREMENTS.md"
     )
-    assert len(block) < 26_000, (
-        f"CONSTITUTION index block is {len(block)} chars — expected < 26,000 "
-        "chars for an index format. Run: uv run python tools/gen_spec.py"
+    assert len(block) < 6_000, (
+        f"CONSTITUTION index block is {len(block)} chars — expected < 6,000 "
+        "chars for the id+flag-only format. Run: uv run python tools/gen_spec.py"
     )
     assert "[ENFORCED·" not in block, (
         "CONSTITUTION block still contains full '[ENFORCED·...]' enforcer "

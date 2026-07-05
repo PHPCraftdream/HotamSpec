@@ -54,16 +54,18 @@ def test_scan_returns_all_canon_tools() -> None:
     )
 
 
-def test_tools_with_canon_appear_in_claude_md() -> None:
-    """Every R-tool-<basename> projected from a Canon: marker appears in CLAUDE.md."""
+def test_tools_with_canon_appear_in_framework_invariants() -> None:
+    """Every R-tool-<basename> projected from a Canon: marker appears in FRAMEWORK-INVARIANTS.md."""
     tool_reqs = _scan_tool_requirements()
     assert tool_reqs, (
         "no tool requirements found — at least some tools should have Canon: markers"
     )
-    claude_text = CLAUDE_MD.read_text(encoding="utf-8")
-    missing = [tr.id for tr in tool_reqs if tr.id not in claude_text]
+    fi_path = GEN_DIR / "FRAMEWORK-INVARIANTS.md"
+    assert fi_path.exists(), f"FRAMEWORK-INVARIANTS.md not found at {fi_path}"
+    fi_text = fi_path.read_text(encoding="utf-8")
+    missing = [tr.id for tr in tool_reqs if tr.id not in fi_text]
     assert not missing, (
-        f"These R-tool-* ids are missing from CLAUDE.md: {missing}. "
+        f"These R-tool-* ids are missing from FRAMEWORK-INVARIANTS.md: {missing}. "
         "Run `uv run python tools/gen_spec.py` to regenerate."
     )
 

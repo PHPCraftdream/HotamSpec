@@ -74,6 +74,7 @@ def test_concept_map_lists_all_glossary_sections() -> None:
     section_slugs = [t.slug for t in TERMS if t.kind == "SECTION"]
     assert section_slugs, "No SECTION terms found in glossary.TERMS — check glossary.py"
 
+    # New table format: | **§slug** | ... | ... | ... |
     missing = [slug for slug in section_slugs if f"**{slug}**" not in block]
     assert not missing, (
         f"The following §-section slugs are absent from the CONCEPT-MAP block: {missing}"

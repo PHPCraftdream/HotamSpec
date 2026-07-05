@@ -78,6 +78,7 @@ DOC_READER_ROLES: dict[str, str] = {
     "FRAMEWORK_INVARIANTS": ROLE_FRAMEWORK_MAINTAINER,
     "GLOSSARY": ROLE_FRAMEWORK_MAINTAINER,
     "AUDIT": ROLE_FRAMEWORK_MAINTAINER,
+    "REPO_MAP": ROLE_OPERATOR,
 }
 
 # Sentinel returned when the active domain has declared no binding for the

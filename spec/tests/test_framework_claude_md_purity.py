@@ -214,14 +214,14 @@ def test_emit_cipher_aggregates_other_domain_open_actions() -> None:
     assert n == all_open - pinned_open
 
 
-def test_framework_claude_md_has_repo_map_scoped_to_spec() -> None:
-    """Root CLAUDE.md REPO-MAP must reference spec/ files; domain content listed under domains/."""
-    text = _read(ROOT_CLAUDE_MD)
-    assert "<!-- REPO-MAP:BEGIN -->" in text, "Root CLAUDE.md missing REPO-MAP:BEGIN"
-    block = _extract_block(text, "<!-- REPO-MAP:BEGIN -->", "<!-- REPO-MAP:END -->")
-    assert block is not None, "REPO-MAP block not found in root CLAUDE.md"
-    assert "spec/src/hotam_spec/" in block, "REPO-MAP missing framework body section"
-    assert "spec/tools/" in block, "REPO-MAP missing tools section"
+def test_repo_map_md_references_spec_files() -> None:
+    """REPO-MAP.md (relocated from crystal) must reference spec/ files."""
+    import gen_spec as _gs  # noqa: PLC0415
+    repo_map_md = _gs.REPO_MAP_MD
+    assert repo_map_md.exists(), f"REPO-MAP.md not found at {repo_map_md}"
+    text = repo_map_md.read_text(encoding="utf-8")
+    assert "spec/src/hotam_spec/" in text, "REPO-MAP.md missing framework body section"
+    assert "spec/tools/" in text, "REPO-MAP.md missing tools section"
 
 
 def test_framework_claude_md_has_recently_rejected_sentinels() -> None:

@@ -56,15 +56,17 @@ def test_embedded_thinking_sentinels_present() -> None:
 
 
 def test_embedded_thinking_contains_distilled_topic_content() -> None:
-    """EMBEDDED-THINKING block must contain a RULE-bearing distillate of each CORE topic."""
+    """EMBEDDED-THINKING block must contain a one-line entry for each CORE topic."""
     text = _read(ROOT_CLAUDE_MD)
     block = _extract_block(text, _EMBEDDED_THINKING_BEGIN, _EMBEDDED_THINKING_END)
     assert block is not None, "EMBEDDED-THINKING block not found."
     for slug in ["conflict", "graph", "requirement"]:
-        heading = f"#### {slug}"
-        assert heading in block, f"EMBEDDED-THINKING missing heading {heading!r}"
-        after = block[block.index(heading) :]
-        assert "RULE" in after, f"EMBEDDED-THINKING topic {slug!r} has no RULE distillate"
+        # New format: - [§Slug](path) — RULE sentence
+        capitalized = slug.capitalize()
+        assert f"§{capitalized}" in block, f"EMBEDDED-THINKING missing §{capitalized}"
+        assert f"spec/docs/thinking/{slug}.md" in block, (
+            f"EMBEDDED-THINKING missing path link for {slug}"
+        )
 
 
 def test_embedded_tools_sentinels_present() -> None:
@@ -80,12 +82,13 @@ def test_embedded_tools_sentinels_present() -> None:
 
 
 def test_embedded_tools_contains_distilled_tool_content() -> None:
-    """EMBEDDED-TOOLS block must contain distilled (not full --help) content of known tools."""
+    """EMBEDDED-TOOLS block must contain one-line entries for known tools."""
     text = _read(ROOT_CLAUDE_MD)
     block = _extract_block(text, _EMBEDDED_TOOLS_BEGIN, _EMBEDDED_TOOLS_END)
     assert block is not None, "EMBEDDED-TOOLS block not found."
-    for expected in ["#### gen_spec", "#### what_now", "#### apply_proposal"]:
-        assert expected in block, f"EMBEDDED-TOOLS missing heading {expected!r}"
+    for tool_name in ["gen_spec", "what_now", "apply_proposal"]:
+        # New format: - [tool_name](path) — Canon sentence
+        assert f"[{tool_name}]" in block, f"EMBEDDED-TOOLS missing tool {tool_name!r}"
     assert "usage: gen_spec.py" not in block, (
         "EMBEDDED-TOOLS still carries raw --help USAGE transcript — "
         "Tier 3 content leaked into the Tier 1 distillate."
@@ -93,13 +96,13 @@ def test_embedded_tools_contains_distilled_tool_content() -> None:
 
 
 def test_embedded_thinking_block_has_tier3_reference() -> None:
-    """Each distilled topic section must point at its full-text file on disk (Tier 3)."""
+    """Each topic entry must point at its full-text file on disk (Tier 3)."""
     text = _read(ROOT_CLAUDE_MD)
     block = _extract_block(text, _EMBEDDED_THINKING_BEGIN, _EMBEDDED_THINKING_END)
     assert block is not None, "EMBEDDED-THINKING block not found."
     for slug in ["conflict", "graph", "requirement"]:
         assert f"spec/docs/thinking/{slug}.md" in block, (
-            f"EMBEDDED-THINKING topic {slug!r} missing its Tier-3 full-text pointer"
+            f"EMBEDDED-THINKING topic {slug!r} missing its path link"
         )
 
 
@@ -109,19 +112,13 @@ def test_embedded_thinking_block_is_bounded() -> None:
     thinking = _extract_block(text, _EMBEDDED_THINKING_BEGIN, _EMBEDDED_THINKING_END)
     tools = _extract_block(text, _EMBEDDED_TOOLS_BEGIN, _EMBEDDED_TOOLS_END)
     assert thinking is not None and tools is not None
-    assert len(thinking) < 20_000, (
-        f"EMBEDDED-THINKING block is {len(thinking)} chars — Tier 1 distillation "
-        "should keep this well under the pre-P22.D-fix full-text size (~105k)."
+    assert len(thinking) < 6_000, (
+        f"EMBEDDED-THINKING block is {len(thinking)} chars — one-line-per-topic "
+        "format should keep this well under the pre-diet size (~19k)."
     )
-    assert len(tools) < 13_000, (
-        f"EMBEDDED-TOOLS block is {len(tools)} chars — Tier 1 distillation "
-        "should keep this well under the pre-P22.D-fix full-text size (~29k). "
-        "Bound raised 8000->8500 in Wave 13 to admit the setup_hooks tool "
-        "(R-sensorium-committed); raised 8500->11500 in Wave 15 to admit the six "
-        "ticket_* tools (R-ticket-engine-on-disk); raised 11500->13000 in Wave 16 "
-        "to admit the attention.py + attention_hook.py tools (R-attention-registry, "
-        "R-attention-claude-adapter); each tool's section is already minimally "
-        "distilled (Canon-line pseudo-rule + one capped WHY)."
+    assert len(tools) < 6_000, (
+        f"EMBEDDED-TOOLS block is {len(tools)} chars — one-line-per-tool "
+        "format should keep this well under the pre-diet size (~12k)."
     )
 
 

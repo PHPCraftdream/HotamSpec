@@ -251,15 +251,18 @@ def test_validates_state_machine() -> None:
     assert rc == 1
 
 
-def test_r_tool_create_entity_type_in_constitution(gen_spec_snapshot) -> None:
-    """A FRESH gen_spec run projects R-tool-create-entity-type into root CLAUDE.md.
+def test_r_tool_create_entity_type_in_framework_invariants() -> None:
+    """R-tool-create-entity-type appears in FRAMEWORK-INVARIANTS.md.
 
-    Task #46, Measure 1/4: instead of spawning gen_spec as a subprocess, assert
-    against the session-scoped freshly-generated CLAUDE.md snapshot.
+    Tool-derived requirements are relocated from root CLAUDE.md crystal to
+    FRAMEWORK-INVARIANTS.md.
     """
-    text = gen_spec_snapshot["claude_md_text"]
+    import gen_spec as _gs  # noqa: PLC0415
+    fi_path = _gs.GEN_DIR / "FRAMEWORK-INVARIANTS.md"
+    assert fi_path.exists(), f"FRAMEWORK-INVARIANTS.md not found at {fi_path}"
+    text = fi_path.read_text(encoding="utf-8")
     assert "R-tool-create-entity-type" in text, (
-        "R-tool-create-entity-type not found in freshly generated root CLAUDE.md. "
+        "R-tool-create-entity-type not found in FRAMEWORK-INVARIANTS.md. "
         "Check that create_entity_type.py's first docstring line matches "
         "'Canon: §Entity — <claim>'."
     )

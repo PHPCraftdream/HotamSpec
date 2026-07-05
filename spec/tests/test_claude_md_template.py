@@ -167,9 +167,8 @@ def test_mind_content_present_in_output() -> None:
     # distillate and its Tier-3 full-text pointer, not the full doc body verbatim
     # (R-crystal-is-tiered; see test_embedded_thinking_tools.py for the detailed
     # per-block assertions).
-    assert "#### conflict" in text, (
-        "Generated CLAUDE.md does not contain the distilled §Conflict topic "
-        "(expected '#### conflict' heading)"
+    assert "§Conflict" in text, (
+        "Generated CLAUDE.md does not contain the §Conflict topic entry"
     )
     assert "spec/docs/thinking/conflict.md" in text, (
         "Generated CLAUDE.md does not point at the full text of spec/docs/thinking/conflict.md"

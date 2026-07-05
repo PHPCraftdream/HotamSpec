@@ -30,12 +30,10 @@ ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
 _SENTINEL_PAIRS = [
     ("<!-- LIVE-STATE:BEGIN -->", "<!-- LIVE-STATE:END -->"),
-    ("<!-- REPO-MAP:BEGIN -->", "<!-- REPO-MAP:END -->"),
     ("<!-- DOMAIN-MAP:BEGIN -->", "<!-- DOMAIN-MAP:END -->"),
     ("<!-- CONSTITUTION:BEGIN -->", "<!-- CONSTITUTION:END -->"),
     ("<!-- AGENT-MAP:BEGIN -->", "<!-- AGENT-MAP:END -->"),
     ("<!-- CONCEPT-MAP:BEGIN -->", "<!-- CONCEPT-MAP:END -->"),
-    ("<!-- THINKING-INDEX:BEGIN -->", "<!-- THINKING-INDEX:END -->"),
     ("<!-- EMBEDDED-THINKING:BEGIN -->", "<!-- EMBEDDED-THINKING:END -->"),
     ("<!-- EMBEDDED-TOOLS:BEGIN -->", "<!-- EMBEDDED-TOOLS:END -->"),
     ("<!-- RECENTLY-REJECTED:BEGIN -->", "<!-- RECENTLY-REJECTED:END -->"),
@@ -69,31 +67,31 @@ def _strip_sentinels(text: str) -> str:
     return stripped
 
 
-def test_root_claude_md_has_thinking_index_sentinels() -> None:
-    """Root CLAUDE.md must contain THINKING-INDEX:BEGIN and THINKING-INDEX:END sentinels."""
+def test_root_claude_md_has_embedded_thinking_sentinels() -> None:
+    """Root CLAUDE.md must contain EMBEDDED-THINKING:BEGIN and EMBEDDED-THINKING:END sentinels."""
     text = _read(ROOT_CLAUDE_MD)
-    assert "<!-- THINKING-INDEX:BEGIN -->" in text, (
-        "Root CLAUDE.md missing THINKING-INDEX:BEGIN sentinel. "
+    assert "<!-- EMBEDDED-THINKING:BEGIN -->" in text, (
+        "Root CLAUDE.md missing EMBEDDED-THINKING:BEGIN sentinel. "
         "Run: uv run python tools/gen_spec.py"
     )
-    assert "<!-- THINKING-INDEX:END -->" in text, (
-        "Root CLAUDE.md missing THINKING-INDEX:END sentinel. "
+    assert "<!-- EMBEDDED-THINKING:END -->" in text, (
+        "Root CLAUDE.md missing EMBEDDED-THINKING:END sentinel. "
         "Run: uv run python tools/gen_spec.py"
     )
 
 
-def test_root_claude_md_thinking_index_lists_thinking_files() -> None:
-    """THINKING-INDEX block must list at least the core thinking files."""
+def test_root_claude_md_embedded_thinking_lists_thinking_files() -> None:
+    """EMBEDDED-THINKING block must list at least the core thinking files."""
     text = _read(ROOT_CLAUDE_MD)
-    bp = text.find("<!-- THINKING-INDEX:BEGIN -->")
-    ep = text.find("<!-- THINKING-INDEX:END -->")
+    bp = text.find("<!-- EMBEDDED-THINKING:BEGIN -->")
+    ep = text.find("<!-- EMBEDDED-THINKING:END -->")
     if bp == -1 or ep == -1:
-        pytest.skip("THINKING-INDEX sentinels absent — covered by other test")
+        pytest.skip("EMBEDDED-THINKING sentinels absent — covered by other test")
     block = text[bp:ep]
     # Must reference at least conflict.md, graph.md, requirement.md.
     for expected in ["conflict.md", "graph.md", "requirement.md"]:
         assert expected in block, (
-            f"THINKING-INDEX block missing expected link to {expected}"
+            f"EMBEDDED-THINKING block missing expected link to {expected}"
         )
 
 
