@@ -213,3 +213,41 @@ def test_recently_rejected_block_matches_cap_constant() -> None:
     )
     assert "docs/gen/HISTORY.md" in block
     assert f"showing {_gs._RECENTLY_REJECTED_CAP} of {n}" in block
+
+
+# ===========================================================================
+# Test 8: double-dash REJECTED entries are not silently dropped
+# ===========================================================================
+
+
+def test_recently_rejected_double_dash_not_dropped() -> None:
+    """REJECTED requirements using double-dash ('--') in their why must appear
+    in the RECENTLY-REJECTED block, not only those using em-dash.
+
+    This is the regression test for the bug where 6 of 34 REJECTED entries
+    were silently dropped because gen_spec matched only the em-dash variant.
+    """
+    stakeholder = Stakeholder(id="s1", name="S1", domain="d")
+    reqs = (
+        Requirement(
+            id="R-emdash-ok",
+            claim="Em-dash entry.",
+            owner="s1",
+            status="REJECTED",
+            why="REJECTED — REPLACES by R-successor-a. Rationale A.",
+        ),
+        Requirement(
+            id="R-doubledash-ok",
+            claim="Double-dash entry.",
+            owner="s1",
+            status="REJECTED",
+            why="REJECTED -- REPLACES by R-successor-b. Rationale B.",
+        ),
+    )
+    g = TensionGraph(axes=(), stakeholders=(stakeholder,), requirements=reqs)
+    block = _gs._render_recently_rejected_block(g)
+    assert "R-emdash-ok" in block, "Em-dash REJECTED entry missing from block"
+    assert "R-doubledash-ok" in block, (
+        "Double-dash REJECTED entry missing from block — "
+        "regression: gen_spec must match both em-dash and double-dash variants"
+    )

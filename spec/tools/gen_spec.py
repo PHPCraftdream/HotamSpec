@@ -4033,11 +4033,29 @@ def _update_claude_md_thinking_index(thinking_dir: Path | None = None) -> None:
 
 _RECENTLY_REJECTED_CAP = 12
 
+# Regex that matches the "REJECTED <dash> REPLACES" marker regardless of
+# which dash variant the graph.py author used: em-dash (U+2014 '—'),
+# en-dash (U+2013 '–'), double-dash ('--'), or single hyphen ('-').
+# Single source of truth — used by the RECENTLY-REJECTED renderer and any
+# other consumer that needs to detect the anti-relitigation marker.
+_REJECTED_REPLACES_RE = re.compile(r"REJECTED\s*(?:—|–|--|-)\s*REPLACES")
+
+
+def _has_rejected_replaces_marker(why: str) -> bool:
+    """Return True if ``why`` contains a 'REJECTED <dash> REPLACES' marker.
+
+    Normalizes across em-dash, en-dash, double-dash and single-dash variants
+    so that no REJECTED requirement silently falls out of the anti-relitigation
+    surface due to inconsistent punctuation in graph.py.
+    """
+    return _REJECTED_REPLACES_RE.search(why) is not None
+
 
 def _render_recently_rejected_block(g: TensionGraph) -> str:
     """Render the RECENTLY-REJECTED block content (without sentinels).
 
-    Lists REJECTED requirements whose why contains 'REJECTED — REPLACES',
+    Lists REJECTED requirements whose why contains a 'REJECTED <dash> REPLACES'
+    marker (em-dash, en-dash, double-dash or single-dash — all normalised),
     capped at _RECENTLY_REJECTED_CAP entries to keep the resident (paid)
     crystal from growing monotonically as rejections accumulate — the full
     roster has no dates to rank by "recency" honestly, so the cap is applied
@@ -4061,7 +4079,7 @@ def _render_recently_rejected_block(g: TensionGraph) -> str:
         [
             r
             for r in g.requirements
-            if r.status == "REJECTED" and "REJECTED — REPLACES" in r.why
+            if r.status == "REJECTED" and _has_rejected_replaces_marker(r.why)
         ],
         key=lambda r: r.id,
     )

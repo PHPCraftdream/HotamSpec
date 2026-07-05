@@ -525,7 +525,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** none — graph clean
 - **debt:** 195/221 SETTLED ENFORCED · 4 DRAFT · 0 OPEN · 4 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 282 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 76085 chars (headroom 73915)
+- **graph:** 282 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 76172 chars (headroom 73828)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -826,18 +826,18 @@ Before proposing an architectural change, scan this list. A claim already REJECT
 
 - **R-active-loop-playbooks** (REJECTED) — REPLACES by R-active-loop-protocol + R-active-loop-apply-tool + R-active-loop-playbook-doc per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed three concerns: data-model, tool, documentatio…
 - **R-agent-has-own-crystal** (REJECTED) — REPLACES R-sub-agent-crystal-triad + R-claude-md-consolidates-when-single-agent. The unconditional claim 'each domain-agent shall carry its own CLAUDE.md file' is now false: the domains/hotam-spec-self/agents/ scaffold (…
+- **R-agent-imports-framework** (REJECTED) — REPLACES split into R-agent-code-imports-framework + R-framework-owned-by-no-agent (Wave 2 burn-down, decided by framework-author 2026-07-02) per atomicity discipline (R-requirement-claim-is-atomic). audit_atomicity.py f…
 - **R-axes-as-module-constant** (REJECTED) — REPLACES by per-graph TensionGraph.axes. A module-level registry bakes a specific business vocabulary (latency-vs-completeness, privacy-vs-analytics, ...) into the content-free framework. Each domain owns its own vocabul…
 - **R-boot-from-substrate** (REJECTED) — REPLACES split into R-boot-reload-three-facts + R-boot-cite-in-first-sentence (wave 2, decided by framework-author 2026-06-30)
+- **R-claude-md-budget-phi-cap** (REJECTED) — REPLACES by R-budget-measure + R-working-vs-substrate-budget (both SETTLED/ENFORCED) via CRYSTAL_CHARS. The phi-cap claim hardcoded a numeric ceiling (1_000_000 / phi ~= 618033 tokens) picked before the operator had any…
 - **R-content-free-framework** (REJECTED) — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30)
 - **R-context-hook-piggybacks-cah-stamp** (REJECTED) — REPLACES by R-work-within-launch-dir + the local-only context bridge. The claim required the project-local hook to READ a context-cache.json written by the global statusline script — i.e. it depended on patching/reading…
 - **R-critical-core-scope** (REJECTED) — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30)
 - **R-dependency-graph-parallelism** (REJECTED) — REPLACES split into R-dependency-tracked + R-dependency-drives-parallel + R-dependency-drives-sequential (wave 2, decided by framework-author 2026-06-30)
 - **R-domain-owns-claude-md** (REJECTED) — REPLACES R-claude-md-consolidates-when-single-agent. The unconditional claim 'each domains/<name>/CLAUDE.md is the domain-scoped operator-prompt' no longer holds: domains/hotam-spec-self/CLAUDE.md was deleted in the P22.…
 - **R-empty-content-is-legitimate** (REJECTED) — REPLACES split into R-empty-content-wellformed + R-empty-content-calm-banner + R-empty-content-gen-notice (D2, decided by domain-user 2026-06-30)
-- **R-enforcement-gradient** (REJECTED) — REPLACES split into R-enforcement-levels-declared + R-enforced-names-enforcer (wave 2, decided by framework-author 2026-06-30)
-- **R-framework-claude-md-is-domain-free** (REJECTED) — REPLACES R-claude-md-consolidates-when-single-agent. The claim 'root CLAUDE.md shall contain only framework-level content' contradicts the current single-file design: root CLAUDE.md now deliberately embeds the active dom…
 
-_(showing 12 of 28, alphabetical by id — full history: docs/gen/HISTORY.md)_
+_(showing 12 of 34, alphabetical by id — full history: docs/gen/HISTORY.md)_
 <!-- RECENTLY-REJECTED:END -->
 
 <!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->
