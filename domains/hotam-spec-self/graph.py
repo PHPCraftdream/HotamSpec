@@ -3795,6 +3795,14 @@ def build_graph() -> TensionGraph:
             why=("Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. PROSE-enforced (not a single-run pytest invariant): proving it requires re-running `-m framework` under a FOREIGN pin (a nested pytest inside one run would recurse); the proof is executed at wave/commit boundary -- Wave 17 demonstrated 982 passed / 18 deselected under HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev."),
             enforcement=PROSE,
         ),
+        Requirement(
+            id="R-work-within-launch-dir",
+            claim=("The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node)."),
+            enforcement=PROSE,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
