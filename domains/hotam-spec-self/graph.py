@@ -3821,6 +3821,26 @@ def build_graph() -> TensionGraph:
             why=("Steward verdict 2026-07-05, verbatim: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности, которая помогает им решить конфликт' + clarification 'это даже не либо, а может быть дополнением' -- the two paths are not exclusive; a conflict may be resolved by amending its members, by introducing a mediating entity (a Variant, a derived Requirement, or a new mediating node), or by BOTH together. The one forbidden path is resolution OUTSIDE the graph. Trigger: six-lens review (docs/reviews/, 2026-07-05) found the framework's own largest recent work -- the T2 223s->56s performance campaign -- materially relieved the tension of the single open conflict C-ec1ec532 (speed-vs-verification) in CODE, while the conflict still hangs DETECTED in the graph: a resolution taken outside the graph, which this rule names illegitimate. Names the legitimate resolution surface so 'solved in the chat / in the code, conflict left dangling' becomes a visible violation of the connector-node discipline (R-conflict-is-connector-node)."),
             enforcement=PROSE,
         ),
+        Requirement(
+            id="R-enforcement-perimeter-baselines-guarded",
+            claim=("The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.py edits (Enf#3, supervector A)."),
+            relations=(Relation("refines", "R-no-hand-edit-graph"),),
+            enforcement="ENFORCED",
+            enforced_by=("tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py",),
+        ),
+        Requirement(
+            id="R-enforcement-perimeter-visible",
+            claim=("A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong. But silent weakening (e.g. return [] in a check_*) must be VISIBLE: the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A)."),
+            relations=(Relation("refines", "R-no-hand-edit-graph"),),
+            enforcement=ENFORCED,
+            enforced_by=("tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

@@ -55,6 +55,22 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_enforced_names_invariant`
 
+## `R-enforcement-perimeter-baselines-guarded` (ENFORCED)
+
+**Claim.** The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py.
+
+**Why.** Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.py edits (Enf#3, supervector A).
+
+**Enforced by:** `tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py`
+
+## `R-enforcement-perimeter-visible` (ENFORCED)
+
+**Claim.** A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py.
+
+**Why.** Enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong. But silent weakening (e.g. return [] in a check_*) must be VISIBLE: the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A).
+
+**Enforced by:** `tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged`
+
 ## `R-requirement-claim-is-atomic` (ENFORCED)
 
 **Claim.** Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.

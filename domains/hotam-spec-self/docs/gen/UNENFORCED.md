@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 195 / SETTLED 221; closeable debt 4; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 35.**
+**Burn-down: SETTLED-ENFORCED 197 / SETTLED 223; closeable debt 4; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 35.**
 
 ---
 
@@ -253,6 +253,8 @@ judgment calls no check_* could ever verify.
 | `R-attention-superset-of-diagnose` | test_attention_core.py | The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected. |
 | `R-attention-claude-adapter` | test_attention_claude_adapter.py | The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing. |
 | `R-unmeasured-cipher-names-host-boundary` | test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line | While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call. |
+| `R-enforcement-perimeter-baselines-guarded` | tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
+| `R-enforcement-perimeter-visible` | tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |
 
 ## DRAFT (not yet promoted)
 
