@@ -66,8 +66,9 @@ def read_context() -> ContextState:
 
 _UNMEASURED_ACTION = (
     "context: UNMEASURED — user action needed: "
-    "uv run python tools/setup_context_hook.py --patch-global --apply "
-    "(then restart statusline) — R-unmeasured-cipher-names-user-action"
+    "cd spec && .venv/Scripts/python.exe tools/setup_context_hook.py --patch-global --apply "
+    "(or .venv/bin/python on POSIX; then restart statusline) "
+    "— R-unmeasured-cipher-names-user-action"
 )
 
 

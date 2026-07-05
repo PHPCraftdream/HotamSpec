@@ -257,7 +257,13 @@ def revert_global(target: Path | None = None) -> str:
 def _hook_command() -> str:
     """The command string this installer wires into PostToolUse/Stop hooks."""
     producer_posix = _PRODUCER.as_posix()
-    return f'uv run --project "{_REPO_ROOT.as_posix()}/spec" python "{producer_posix}" 2>/dev/null || true {_MARKER}'
+    spec_dir = f"{_REPO_ROOT.as_posix()}/spec"
+    return (
+        f'PY="{spec_dir}/.venv/bin/python"; '
+        f'[ -x "$PY" ] || PY="{spec_dir}/.venv/Scripts/python.exe"; '
+        f'if [ -x "$PY" ]; then "$PY" "{producer_posix}" 2>/dev/null || true; '
+        f'else uv run --project "{spec_dir}" python "{producer_posix}" 2>/dev/null || true; fi {_MARKER}'
+    )
 
 
 def _load_settings() -> dict:
