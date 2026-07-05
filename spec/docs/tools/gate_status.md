@@ -30,8 +30,9 @@ human or a wave-closing script before `git commit`. It only ANSWERS the
 question the trace can answer; it cannot know whether a commit is imminent,
 and it does not replace running `uv run pytest -q` yourself.
 
-Policy:
-  - empty log (no file, or zero records)              -> boundary satisfied (exit 0)
+Policy (fail-closed):
+  - empty log (no file, or zero records)              -> boundary NOT satisfied (exit 1);
+    no T2 trace means no evidence the full suite ever ran — unknown = unverified.
   - log has entries; latest T2's stamp >= latest T1's stamp
     (or there is no T1 record at all)                 -> boundary satisfied (exit 0)
   - latest T1 stamp > latest T2 stamp (or T2 is absent
@@ -43,6 +44,16 @@ Determinism: given a fixed land-log.jsonl, output is deterministic (records
 are read in file order — an append-only log — and compared by ISO 8601
 stamp string, which sorts correctly for same-timezone UTC timestamps as
 written by apply_proposal.py's _append_land_log).
+
+Honesty boundary (ISO timestamp comparison): stamp comparison is
+lexicographic on ISO 8601 strings. This is correct iff all stamps use the
+same UTC offset format (e.g. +00:00) and the system clock is monotonic.
+If two agents write stamps from desynchronized clocks, a T2 that ran
+AFTER a T1 may carry an EARLIER stamp, causing a false "NOT satisfied".
+This is a conservative (fail-closed) failure mode — it never produces a
+false "satisfied". A future hardening could parse stamps via
+datetime.fromisoformat() for comparison, but the current lexicographic
+order is sufficient for single-machine, single-clock workflows.
 
 Run (from spec/):
   uv run python tools/gate_status.py                       # human-readable

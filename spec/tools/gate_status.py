@@ -17,8 +17,9 @@ human or a wave-closing script before `git commit`. It only ANSWERS the
 question the trace can answer; it cannot know whether a commit is imminent,
 and it does not replace running `uv run pytest -q` yourself.
 
-Policy:
-  - empty log (no file, or zero records)              -> boundary satisfied (exit 0)
+Policy (fail-closed):
+  - empty log (no file, or zero records)              -> boundary NOT satisfied (exit 1);
+    no T2 trace means no evidence the full suite ever ran — unknown = unverified.
   - log has entries; latest T2's stamp >= latest T1's stamp
     (or there is no T1 record at all)                 -> boundary satisfied (exit 0)
   - latest T1 stamp > latest T2 stamp (or T2 is absent
@@ -30,6 +31,16 @@ Determinism: given a fixed land-log.jsonl, output is deterministic (records
 are read in file order — an append-only log — and compared by ISO 8601
 stamp string, which sorts correctly for same-timezone UTC timestamps as
 written by apply_proposal.py's _append_land_log).
+
+Honesty boundary (ISO timestamp comparison): stamp comparison is
+lexicographic on ISO 8601 strings. This is correct iff all stamps use the
+same UTC offset format (e.g. +00:00) and the system clock is monotonic.
+If two agents write stamps from desynchronized clocks, a T2 that ran
+AFTER a T1 may carry an EARLIER stamp, causing a false "NOT satisfied".
+This is a conservative (fail-closed) failure mode — it never produces a
+false "satisfied". A future hardening could parse stamps via
+datetime.fromisoformat() for comparison, but the current lexicographic
+order is sufficient for single-machine, single-clock workflows.
 
 Run (from spec/):
   uv run python tools/gate_status.py                       # human-readable
@@ -54,8 +65,10 @@ class GateStatusResult:
     """Canon: §Closure — the outcome of a commit-boundary check over the land-log.
 
     Fields:
-      satisfied        — True iff the boundary question holds (empty log, or a
-                          full T2 run landed at-or-after the last T1-gated land).
+      satisfied        — True iff the boundary question holds (a full T2 run
+                          landed at-or-after the last T1-gated land, or no T1
+                          records exist).  False when the log is empty, missing,
+                          or corrupt (fail-closed: no trace = unverified).
       unverified_targets — target anchors of T1 records newer than the last T2
                           record (or ALL T1 records, if no T2 record exists at
                           all); empty when satisfied.
@@ -70,10 +83,10 @@ class GateStatusResult:
 def _read_records(log_path: Path) -> list[dict]:
     """Canon: §Closure — read land-log.jsonl records in file (append) order.
 
-    Missing file -> empty list (an empty log is a legitimate, satisfied state
-    — nothing has ever landed T1-only without a following T2). Malformed
-    lines are skipped (best-effort read of a best-effort-written log; a
-    single corrupt line must not crash the status check).
+    Missing file -> empty list (the caller treats an empty list as fail-closed:
+    no trace = boundary NOT verified). Malformed lines are skipped
+    (best-effort read of a best-effort-written log; a single corrupt line
+    must not crash the status check).
     """
     if not log_path.exists():
         return []
@@ -117,8 +130,11 @@ def compute_gate_status(log_path: Path | None = None) -> GateStatusResult:
 
     if not records:
         return GateStatusResult(
-            satisfied=True,
-            reason="land-log is empty (no proposals landed yet) — boundary trivially satisfied.",
+            satisfied=False,
+            reason=(
+                "no T2 trace found — boundary NOT verified; "
+                "run full suite (python -m pytest -q)."
+            ),
         )
 
     if not t1_records:
@@ -175,8 +191,8 @@ def main(argv: list[str] | None = None) -> int:
     """Canon: §Closure — CLI entry point: print the commit-boundary status.
 
     Exit codes:
-      0 — boundary satisfied (log empty, or a full T2 run landed at-or-after
-          the last T1-gated land).
+      0 — boundary satisfied (a full T2 run landed at-or-after the last
+          T1-gated land, or no T1 records exist).
       1 — boundary NOT satisfied (a T1-gated land is newer than the last T2,
           or no T2 has ever landed while T1 records exist).
     """

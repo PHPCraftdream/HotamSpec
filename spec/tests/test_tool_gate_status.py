@@ -43,20 +43,29 @@ def _rec(stamp: str, tier: str, target: str = "R-foo") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_empty_log_is_satisfied(tmp_path: Path) -> None:
-    """No log file at all -> satisfied (trivially, nothing has landed)."""
+def test_missing_log_is_not_satisfied(tmp_path: Path) -> None:
+    """No log file at all -> NOT satisfied (fail-closed: no trace = unverified)."""
     log_path = tmp_path / "land-log.jsonl"
     result = gate_status.compute_gate_status(log_path)
-    assert result.satisfied is True
-    assert result.unverified_targets == ()
+    assert result.satisfied is False
+    assert "NOT verified" in result.reason
 
 
-def test_empty_file_is_satisfied(tmp_path: Path) -> None:
-    """A log file that exists but is empty -> satisfied."""
+def test_empty_file_is_not_satisfied(tmp_path: Path) -> None:
+    """A log file that exists but is empty -> NOT satisfied (fail-closed)."""
     log_path = tmp_path / "land-log.jsonl"
     log_path.write_text("", encoding="utf-8")
     result = gate_status.compute_gate_status(log_path)
-    assert result.satisfied is True
+    assert result.satisfied is False
+    assert "NOT verified" in result.reason
+
+
+def test_all_corrupt_lines_is_not_satisfied(tmp_path: Path) -> None:
+    """A log file with only corrupt JSON -> NOT satisfied (fail-closed)."""
+    log_path = tmp_path / "land-log.jsonl"
+    log_path.write_text("not json\nalso bad\n", encoding="utf-8")
+    result = gate_status.compute_gate_status(log_path)
+    assert result.satisfied is False
 
 
 def test_t1_then_t2_is_satisfied(tmp_path: Path) -> None:
@@ -192,11 +201,21 @@ def test_malformed_lines_are_skipped(tmp_path: Path) -> None:
 
 def test_cli_exit_0_on_satisfied(tmp_path: Path, capsys) -> None:  # noqa: ANN001
     log_path = tmp_path / "land-log.jsonl"
-    _write_log(log_path, [])
+    _write_log(log_path, [_rec("2026-07-01T10:00:00+00:00", "T2", target="R-a")])
     rc = gate_status.main(["--log-path", str(log_path)])
     assert rc == 0
     out = capsys.readouterr().out
     assert "SATISFIED" in out
+
+
+def test_cli_exit_1_on_empty_log(tmp_path: Path, capsys) -> None:  # noqa: ANN001
+    """CLI: empty log -> exit 1 (fail-closed regression guard)."""
+    log_path = tmp_path / "land-log.jsonl"
+    _write_log(log_path, [])
+    rc = gate_status.main(["--log-path", str(log_path)])
+    assert rc == 1
+    out = capsys.readouterr().out
+    assert "NOT SATISFIED" in out
 
 
 def test_cli_exit_1_on_not_satisfied(tmp_path: Path, capsys) -> None:  # noqa: ANN001
