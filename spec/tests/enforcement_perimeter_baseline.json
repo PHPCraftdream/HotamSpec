@@ -3,7 +3,7 @@
   "files": {
     "src/hotam_spec/attention.py": "069cbce30c56a6f1e72c8b68e9ab2f91e798241982d73bde2693a8518b25206c",
     "src/hotam_spec/enforcer_resolution.py": "c25d3c8c3671c55e10d83fd88ccfe0cc7a3d55c2c1d13aba11e4ded26a0221a5",
-    "src/hotam_spec/invariants.py": "b03c5d5fe54d370fc4b6ffc37f36d73d1b20a488f4e9a0e0797edab20acbf8da",
+    "src/hotam_spec/invariants.py": "8c718c61cc38dee6912eb90540984be4c92d620ef6c28ab728eb7b8ea8cfe18c",
     "tools/_graph_guard.py": "31a4eac69039d90f21467976a54e205547181328a33768168d54ebed6f23a3d8",
     "tools/gate.py": "07424808d06fe14852597c6240badf69100c764490e71fbece0cdcfb0b9d5bde"
   }

@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 197 / SETTLED 223; closeable debt 4; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 35.**
+**Burn-down: SETTLED-ENFORCED 198 / SETTLED 223; closeable debt 3; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 35.**
 
 ---
 
@@ -22,7 +22,6 @@ judgment calls no check_* could ever verify.
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
-| `R-framework-suite-tiered` | STRUCTURAL | `framework-author` | The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset. |
 | `R-framework-suite-domain-independent` | PROSE | `framework-author` | The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned. |
 | `R-work-within-launch-dir` | PROSE | `framework-author` | The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise. |
 | `R-conflict-resolved-in-members-or-mediator` | PROSE | `framework-author` | A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph. |
@@ -252,6 +251,7 @@ judgment calls no check_* could ever verify.
 | `R-attention-agent-agnostic-core` | test_attention_core.py::test_core_names_no_platform_token | The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner. |
 | `R-attention-superset-of-diagnose` | test_attention_core.py | The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected. |
 | `R-attention-claude-adapter` | test_attention_claude_adapter.py | The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing. |
+| `R-framework-suite-tiered` | test_framework_domain_tiering.py::test_every_test_is_tiered, test_framework_domain_tiering.py::test_tiers_partition_the_suite | The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset. |
 | `R-unmeasured-cipher-names-host-boundary` | test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line | While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call. |
 | `R-enforcement-perimeter-baselines-guarded` | tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
 | `R-enforcement-perimeter-visible` | tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |

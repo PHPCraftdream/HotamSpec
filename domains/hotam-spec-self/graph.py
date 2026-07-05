@@ -3784,8 +3784,8 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             status="SETTLED",
             why=("Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin."),
-            enforcement=STRUCTURAL,
-            enforced_by=("test_framework_domain_tiering.py::test_every_test_is_tiered", "test_framework_domain_tiering.py::test_tiers_partition_the_suite",),
+            enforcement="ENFORCED",
+            enforced_by=("test_framework_domain_tiering.py::test_every_test_is_tiered", "test_framework_domain_tiering.py::test_tiers_partition_the_suite"),
         ),
         Requirement(
             id="R-framework-suite-domain-independent",

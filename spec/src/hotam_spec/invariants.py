@@ -3347,6 +3347,50 @@ def _extract_violation_messages_from_source(fn: object) -> list[str]:
 _JACCARD_THRESHOLD = 0.05
 
 
+def _fn_has_violation_calls(fn: object) -> bool:
+    """True if the function's AST contains any Violation(...) constructor call."""
+    tree = _cached_parse_source_of(fn)
+    if tree is None:
+        return False
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if (isinstance(func, ast.Name) and func.id == "Violation") or (
+            isinstance(func, ast.Attribute) and func.attr == "Violation"
+        ):
+            return True
+    return False
+
+
+def _fn_is_delegator(fn: object) -> bool:
+    """True if fn calls any function whose own source contains Violation(...).
+
+    Detects thin delegators that dispatch to sub-checks containing real enforcement.
+    """
+    tree = _cached_parse_source_of(fn)
+    if tree is None:
+        return False
+    # Collect all function names called in this function's body
+    called_names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                called_names.add(node.func.id)
+            elif isinstance(node.func, ast.Attribute):
+                called_names.add(node.func.attr)
+    # Check if any called function is in this module and has Violation calls
+    import sys
+    mod = sys.modules[fn.__module__]  # type: ignore[union-attr]
+    for name in called_names:
+        callee = getattr(mod, name, None)
+        if callee is None or not callable(callee):
+            continue
+        if _fn_has_violation_calls(callee):
+            return True
+    return False
+
+
 def check_method_matches_docstring(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
     """Canon: §Invariants — each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages.
 
@@ -3399,7 +3443,26 @@ def check_method_matches_docstring(g: TensionGraph) -> list[Violation]:  # noqa:
             continue
         messages = _extract_violation_messages_from_source(fn)
         if not messages:
-            # No Violation calls found (e.g. thin delegator that calls sub-checks) — skip overlap check
+            # messages empty = either (a) Violation calls exist but message is a variable
+            # (not extractable), or (b) no Violation calls at all.
+            # Case (a): has teeth, just can't do Jaccard — skip overlap check.
+            # Case (b): toothless UNLESS it's a delegator calling other check_* functions
+            # that themselves have Violation calls.
+            if _fn_has_violation_calls(fn):
+                # Case (a): Violation calls present but messages not extractable — skip Jaccard
+                continue
+            if _fn_is_delegator(fn):
+                # Delegator: calls other functions containing Violation — skip
+                continue
+            # Truly toothless: RULE declared but no enforcement path
+            out.append(
+                Violation(
+                    "check_method_matches_docstring",
+                    name,
+                    f"check_* '{name}': RULE declared but function raises no Violation "
+                    f"and is not a delegator — cannot enforce",
+                )
+            )
             continue
         rule_tokens = _tokenize(rule_text)
         body_tokens = _tokenize(" ".join(messages))
