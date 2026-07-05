@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 195 / SETTLED 220; closeable debt 3; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 35.**
+**Burn-down: SETTLED-ENFORCED 195 / SETTLED 221; closeable debt 4; inherent discipline 22; DRAFT 4; OPEN 0; REJECTED 35.**
 
 ---
 
@@ -25,6 +25,7 @@ judgment calls no check_* could ever verify.
 | `R-framework-suite-tiered` | STRUCTURAL | `framework-author` | The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset. |
 | `R-framework-suite-domain-independent` | PROSE | `framework-author` | The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned. |
 | `R-work-within-launch-dir` | PROSE | `framework-author` | The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise. |
+| `R-conflict-resolved-in-members-or-mediator` | PROSE | `framework-author` | A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 

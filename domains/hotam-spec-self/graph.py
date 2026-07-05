@@ -3813,6 +3813,14 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_tool_context.py::test_absent_stamp_reads_unmeasured", "test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line",),
         ),
+        Requirement(
+            id="R-conflict-resolved-in-members-or-mediator",
+            claim=("A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Steward verdict 2026-07-05, verbatim: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности, которая помогает им решить конфликт' + clarification 'это даже не либо, а может быть дополнением' -- the two paths are not exclusive; a conflict may be resolved by amending its members, by introducing a mediating entity (a Variant, a derived Requirement, or a new mediating node), or by BOTH together. The one forbidden path is resolution OUTSIDE the graph. Trigger: six-lens review (docs/reviews/, 2026-07-05) found the framework's own largest recent work -- the T2 223s->56s performance campaign -- materially relieved the tension of the single open conflict C-ec1ec532 (speed-vs-verification) in CODE, while the conflict still hangs DETECTED in the graph: a resolution taken outside the graph, which this rule names illegitimate. Names the legitimate resolution surface so 'solved in the chat / in the code, conflict left dangling' becomes a visible violation of the connector-node discipline (R-conflict-is-connector-node)."),
+            enforcement=PROSE,
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
