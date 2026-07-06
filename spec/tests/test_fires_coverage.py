@@ -32,6 +32,7 @@ from hotam_spec.invariants import (  # noqa: E402
     check_conflict_lifecycle_in_lifecycle,
     check_decided_by_is_known_stakeholder,
     check_decided_by_not_member_owner,
+    check_decided_conflict_carries_signoff,
     check_decided_has_nonempty_decided_by,
     check_domain_director_exists,
     check_domain_manifest_description_nonempty,
@@ -57,6 +58,7 @@ from hotam_spec.invariants import (  # noqa: E402
     check_requirement_status_in_lifecycle,
     check_rules_as_data_classification_coherent,
     check_section_anchors_known,
+    check_signoff_chosen_variant_resolves,
     check_typed_anchors_assumption,
     check_typed_anchors_conflict,
     check_typed_anchors_goal,
@@ -68,6 +70,7 @@ from hotam_spec.invariants import (  # noqa: E402
 from hotam_spec.lifecycle import INITIAL, Lifecycle, State, Transition  # noqa: E402
 from hotam_spec.operator import Operator  # noqa: E402
 from hotam_spec.requirement import Relation, Requirement  # noqa: E402
+from hotam_spec.signoff import Signoff  # noqa: E402
 from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 # --- Shared helpers -----------------------------------------------------------
@@ -229,6 +232,35 @@ def test_fires_held_by_not_member_owner() -> None:
     )
     g = _graph(conflicts=(c,))
     assert check_held_by_not_member_owner(g)
+
+
+# --- Signoff provenance (§Signoff) --------------------------------------------
+
+
+def test_fires_signoff_chosen_variant_resolves() -> None:
+    # chosen_variant points at a variant id NOT on the conflict
+    c = _conflict(
+        lifecycle="DECIDED(rationale)",
+        decided_by="s3",
+        variants=(
+            Variant(id="V-a", behavior="x", implies="y", costs="z"),
+            Variant(id="V-b", behavior="x2", implies="y2", costs="z2"),
+        ),
+        signoff=Signoff(decided_by="s3", date="2026-07-06", chosen_variant="V-GHOST"),
+    )
+    g = _graph(conflicts=(c,))
+    assert check_signoff_chosen_variant_resolves(g)
+
+
+def test_fires_decided_conflict_carries_signoff() -> None:
+    # signoff present but decided_by disagrees with the conflict's decided_by
+    c = _conflict(
+        lifecycle="DECIDED(rationale)",
+        decided_by="s3",
+        signoff=Signoff(decided_by="s2", date="2026-07-06"),  # s2 != s3
+    )
+    g = _graph(conflicts=(c,))
+    assert check_decided_conflict_carries_signoff(g)
 
 
 # --- Typed anchors ------------------------------------------------------------

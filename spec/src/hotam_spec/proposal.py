@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from hotam_spec.conflict import Variant, conflict_identity
+from hotam_spec.signoff import Signoff
 
 
 @dataclass(frozen=True)
@@ -81,7 +82,25 @@ class ProposedConflictTransition:
     )  # R-ids spawned by this decision
     variants: tuple[Variant, ...] = field(default_factory=tuple)
     # ^ Variant payloads; required (>=2) when new_lifecycle starts with HELD
-    # (§Conflict — Variant, check_held_has_min_two_variants).
+    # (§Conflict — Variant, check_held_has_min_two_variants). When transitioning
+    # HELD -> DECIDED, supply the SAME variants so the writer preserves them
+    # (anti-relitigation: the non-chosen variants' implies/costs must survive).
+    # §Signoff fields (optional; the writer builds a Signoff payload from these
+    # when new_lifecycle starts with DECIDED or HELD, attached as Conflict.signoff):
+    date: str = ""
+    # ^ ISO YYYY-MM-DD; the date the steward signed. Human-readable, deterministic
+    # as a written string. Coarse by design (a full timestamp layer is a later
+    # wave). The writer fills today's date as a default when this is empty.
+    verbatim: str = ""
+    # ^ the steward's own words carried verbatim (optional).
+    instrument: str = "personal"
+    # ^ HOW the signoff was captured (the verifiable-signature seam). `personal`
+    # (default) | `DEL-<n>`. `git`/`crypto` reserved for the future
+    # R-decided-by-verifiable-signature wave.
+    chosen_variant: str = ""
+    # ^ V-id of the variant the steward picked when resolving HELD -> DECIDED.
+    # Written into signoff.chosen_variant; check_signoff_chosen_variant_resolves
+    # enforces it is the id of one of the conflict's variants when non-empty.
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.
@@ -347,6 +366,17 @@ class ProposedAssumptionTransition:
     new_status: str  # HOLDS | UNCERTAIN | DEAD | IMPLEMENTS
     reason: str  # non-empty; appended to the Assumption's statement
     decided_by: str = ""  # REQUIRED when new_status in (DEAD, HOLDS, IMPLEMENTS)
+    # §Signoff fields (optional; the writer builds a Signoff payload from these
+    # when decided_by is non-empty, attached as Assumption.signoff — the LAST
+    # transition's provenance. decided_by no longer evaporates into gitignored
+    # JSON; R-trust-anchor-mechanism becomes auditable from the substrate):
+    date: str = ""
+    # ^ ISO YYYY-MM-DD; the date the steward signed. The writer fills today's
+    # date as a default when this is empty.
+    verbatim: str = ""
+    # ^ the steward's own words carried verbatim (optional).
+    instrument: str = "personal"
+    # ^ HOW the signoff was captured (the verifiable-signature seam).
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the Assumption id this transition is meant to change."""

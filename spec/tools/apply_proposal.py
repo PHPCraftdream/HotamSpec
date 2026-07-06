@@ -154,6 +154,7 @@ from hotam_spec.conflict import Variant, conflict_identity  # noqa: E402
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402
 from hotam_spec.lifecycle import STATE_KINDS  # noqa: E402
 from hotam_spec.operator import BUDGET_MEASURES  # noqa: E402
+from hotam_spec.signoff import Signoff  # noqa: E402
 from hotam_spec.assumption import (  # noqa: E402
     ASSUMPTION_STATES,
     DEAD,
@@ -347,6 +348,14 @@ def _validate_conflict_transition(raw: dict) -> ProposedConflictTransition:
         shared_assumption=(
             shared_assumption.strip() if isinstance(shared_assumption, str) else ""
         ),
+        date=(raw.get("date", "") or "").strip() if isinstance(raw.get("date", ""), str) else "",
+        verbatim=raw.get("verbatim", "") if isinstance(raw.get("verbatim", ""), str) else "",
+        instrument=(raw.get("instrument", "personal") or "personal").strip()
+        if isinstance(raw.get("instrument", "personal"), str)
+        else "personal",
+        chosen_variant=(raw.get("chosen_variant", "") or "").strip()
+        if isinstance(raw.get("chosen_variant", ""), str)
+        else "",
     )
 
 
@@ -629,6 +638,11 @@ def _validate_assumption_transition(raw: dict) -> ProposedAssumptionTransition:
         new_status=new_status,
         reason=reason,
         decided_by=decided_by,
+        date=(raw.get("date", "") or "").strip() if isinstance(raw.get("date", ""), str) else "",
+        verbatim=raw.get("verbatim", "") if isinstance(raw.get("verbatim", ""), str) else "",
+        instrument=(raw.get("instrument", "personal") or "personal").strip()
+        if isinstance(raw.get("instrument", "personal"), str)
+        else "personal",
     )
 
 
@@ -1124,6 +1138,7 @@ def _python_repr(value: object) -> str:
     (mirrors how Conflict itself round-trips through source text).
     """
     from hotam_spec.conflict import Variant  # noqa: PLC0415
+    from hotam_spec.signoff import Signoff  # noqa: PLC0415
 
     if isinstance(value, str):
         # Use double quotes, escape internal double quotes
@@ -1137,6 +1152,18 @@ def _python_repr(value: object) -> str:
             f"implies={_python_repr(value.implies)}, "
             f"costs={_python_repr(value.costs)})"
         )
+    if isinstance(value, Signoff):
+        parts = [
+            f"decided_by={_python_repr(value.decided_by)}",
+            f"date={_python_repr(value.date)}",
+        ]
+        if value.verbatim:
+            parts.append(f"verbatim={_python_repr(value.verbatim)}")
+        if value.instrument and value.instrument != "personal":
+            parts.append(f"instrument={_python_repr(value.instrument)}")
+        if value.chosen_variant:
+            parts.append(f"chosen_variant={_python_repr(value.chosen_variant)}")
+        return "Signoff(" + ", ".join(parts) + ")"
     if isinstance(value, tuple):
         if not value:
             return "()"
@@ -1515,13 +1542,48 @@ def _apply_rejection_to_source(source_text: str, proposal: ProposedRejection) ->
 def _apply_conflict_transition(
     source_text: str, proposal: ProposedConflictTransition
 ) -> list[str]:
-    """Apply a ConflictTransition to graph source. Returns modified lines."""
+    """Apply a ConflictTransition to graph source. Returns modified lines.
+
+    Signoff + variants-preservation (§Signoff — K2 fix):
+      - When new_lifecycle starts with DECIDED or HELD and decided_by is
+        non-empty, the writer builds a Signoff payload from proposal fields
+        (decided_by, date, verbatim, instrument, chosen_variant) and attaches it
+        as Conflict.signoff — the provenance no longer evaporates into gitignored
+        JSON (R-trust-anchor-mechanism becomes auditable from the substrate).
+      - When new_lifecycle does NOT start with DECIDED/HELD, the signoff is left
+        untouched (an ACKNOWLEDGED transition carries no steward decision).
+      - `variants` is NEVER overwritten with an empty tuple: if the proposal
+        supplies no variants, the EXISTING variants in the graph are preserved
+        (anti-relitigation — a HELD→DECIDED transition must not erase the
+        non-chosen variants' implies/costs; K2(b) fix). This mirrors the
+        shared_assumption rule: empty proposal value = leave existing untouched.
+    """
     tree = ast.parse(source_text)
     call_node = _find_conflict_call(tree, proposal.conflict_id)
     if call_node is None:
         raise RuntimeError(
             f"conflict_id '{proposal.conflict_id}' not found in "
             f"{_CONTENT_GRAPH}. No changes made."
+        )
+
+    # Build the Signoff payload for DECIDED/HELD transitions with a named
+    # decider. The date defaults to today (writer-time, NOT exec-time — the
+    # written value is a fixed string in graph.py, so the graph stays
+    # deterministic on import).
+    signoff: Signoff | None = None
+    if (
+        proposal.new_lifecycle.startswith(("DECIDED", "HELD"))
+        and proposal.decided_by
+    ):
+        from datetime import date as _date  # noqa: PLC0415
+
+        signoff_date = proposal.date or _date.today().isoformat()
+        signoff = Signoff(
+            decided_by=proposal.decided_by,
+            date=signoff_date,
+            verbatim=proposal.verbatim,
+            instrument=proposal.instrument or "personal",
+            chosen_variant=proposal.chosen_variant,
         )
 
     lines = source_text.splitlines(keepends=True)
@@ -1532,6 +1594,7 @@ def _apply_conflict_transition(
         ("shared_assumption", proposal.shared_assumption),
         ("derived", proposal.derived),
         ("variants", proposal.variants),
+        ("signoff", signoff),
     ]:
         if field_name == "shared_assumption" and not new_value:
             # Empty = leave the existing edge untouched (never overwrite a live
@@ -1541,10 +1604,18 @@ def _apply_conflict_transition(
             existing = _kwarg_line_col(call_node, field_name)
             if existing is None:
                 continue
+        # K2(b) fix: variants and derived are NEVER overwritten with an empty
+        # value — if the proposal supplies none, preserve the existing ones
+        # (anti-relitigation: a HELD→DECIDED transition must not erase the
+        # non-chosen variants' implies/costs, and a transition that spawns no
+        # new derived requirements must not wipe the lineage record).
         if field_name in ("derived", "variants") and not new_value:
-            existing = _kwarg_line_col(call_node, field_name)
-            if existing is None:
-                continue
+            continue
+        # signoff=None means this transition carries no steward decision (e.g.
+        # ACKNOWLEDGED) — leave any existing signoff untouched, never overwrite
+        # a recorded decision with None.
+        if field_name == "signoff" and new_value is None:
+            continue
         lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
         new_src = "".join(lines)
         tree = ast.parse(new_src)
@@ -1557,6 +1628,10 @@ def _apply_conflict_transition(
     if proposal.variants:
         result = "".join(lines)
         result = _ensure_conflict_import(result, ["Variant"])
+        lines = result.splitlines(keepends=True)
+    if signoff is not None:
+        result = "".join(lines)
+        result = _ensure_import(result, "hotam_spec.signoff", ["Signoff"])
         lines = result.splitlines(keepends=True)
     return list(lines)
 
@@ -2223,6 +2298,34 @@ def _apply_assumption_transition(
                 f"from hotam_spec.assumption import {proposal.new_status}\n",
                 1,
             )
+
+    # 4. Attach the Signoff payload when a human signed this transition
+    #    (decided_by non-empty). The decided_by no longer evaporates into the
+    #    gitignored proposal JSON — it lands in the graph as Assumption.signoff,
+    #    the provenance of the LAST transition (R-trust-anchor-mechanism, K2(a)
+    #    fix). The date defaults to today (writer-time, NOT exec-time — the
+    #    written value is a fixed string, so the graph stays deterministic).
+    if proposal.decided_by:
+        from datetime import date as _date  # noqa: PLC0415
+
+        signoff_date = proposal.date or _date.today().isoformat()
+        signoff = Signoff(
+            decided_by=proposal.decided_by,
+            date=signoff_date,
+            verbatim=proposal.verbatim,
+            instrument=proposal.instrument or "personal",
+        )
+        tree = ast.parse(result)
+        call_node = _find_assumption_call(tree, proposal.assumption_id)
+        if call_node is None:
+            raise RuntimeError(
+                f"Lost track of Assumption '{proposal.assumption_id}' before "
+                f"attaching signoff."
+            )
+        lines = result.splitlines(keepends=True)
+        lines = _replace_or_insert_field(lines, call_node, "signoff", signoff)
+        result = "".join(lines)
+        result = _ensure_import(result, "hotam_spec.signoff", ["Signoff"])
     return result
 
 

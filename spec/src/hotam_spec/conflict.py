@@ -65,6 +65,8 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 
+from hotam_spec.signoff import Signoff
+
 DETECTED = "DETECTED"
 ACKNOWLEDGED = "ACKNOWLEDGED"
 DECIDED_PREFIX = "DECIDED"  # "DECIDED(<rationale>)"
@@ -177,6 +179,11 @@ class Conflict:
     variants: tuple[Variant, ...] = field(default_factory=tuple)
     # ^ elaborated behavior variants; required (>=2) when lifecycle is HELD
     # (check_held_has_min_two_variants). Empty for every other lifecycle.
+    signoff: Signoff | None = None
+    # ^ §Signoff — frozen provenance record (decided_by + date + verbatim +
+    # instrument + chosen_variant) attached when a steward transitioned this
+    # conflict to DECIDED or HELD. None for DETECTED/ACKNOWLEDGED and for
+    # decisions taken before this field existed (R-trust-anchor-mechanism).
 
     def is_unresolved(self) -> bool:
         """Canon: §Conflict — True iff no steward resolution has landed yet.

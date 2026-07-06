@@ -1117,6 +1117,85 @@ def check_decided_has_decided_by(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_signoff_chosen_variant_resolves(g: TensionGraph) -> list[Violation]:
+    """Canon: §Signoff — a signoff.chosen_variant (when non-empty) resolves to a
+    Variant id on the conflict carrying the signoff.
+
+    RULE: for each Conflict with a non-None signoff whose chosen_variant is
+    non-empty, chosen_variant MUST be the id of one of the conflict's variants.
+    A chosen_variant pointing at a variant that is NOT on the conflict (or at
+    nothing) breaks the anti-relitigation guarantee: the non-chosen variants'
+    implies/costs survive the decision precisely so the chosen one can be
+    cited — an unresolvable chosen_variant severs that citation.
+
+    WHY this check is on the Conflict (not the Signoff alone): the chosen
+    variant is meaningful ONLY relative to the variants the steward was
+    choosing BETWEEN, which live on the Conflict. A Signoff detached from its
+    conflict has no variants to resolve against, so the check must walk
+    conflict.signoff against conflict.variants together.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if c.signoff is None:
+            continue
+        cv = c.signoff.chosen_variant
+        if not cv:
+            continue
+        variant_ids = {v.id for v in c.variants}
+        if cv not in variant_ids:
+            out.append(
+                Violation(
+                    "check_signoff_chosen_variant_resolves",
+                    c.id,
+                    f"signoff.chosen_variant '{cv}' is not the id of any "
+                    f"Variant on conflict '{c.id}' (variants: "
+                    f"{sorted(variant_ids) or 'none'})",
+                )
+            )
+    return out
+
+
+def check_decided_conflict_carries_signoff(g: TensionGraph) -> list[Violation]:
+    """Canon: §Signoff — a DECIDED/HELD conflict's signoff is consistent with
+    its decided_by field (SOFT: pre-existing decisions without signoff are
+    legitimate).
+
+    RULE: this invariant does NOT require every DECIDED/HELD conflict to carry
+    a signoff — decisions taken before the §Signoff mechanism landed are
+    legitimate and are NOT forced to migrate. Instead it enforces CONSISTENCY:
+    when a signoff IS present on a DECIDED/HELD conflict, signoff.decided_by
+    MUST equal the conflict's decided_by field. A mismatch would mean the
+    provenance record and the conflict's own decided_by disagree about WHO
+    decided — exactly the kind of silent drift R-trust-anchor-mechanism exists
+    to prevent.
+
+    WHY soft (no migration forcing): there are 8 pre-existing DECIDED conflicts
+    in the live graph decided before this field existed; demanding a signoff on
+    each would manufacture false P1s that are not this wave's to fix. The
+    consistency check (when signoff IS present) is the honest boundary: new
+    decisions get a signoff via the writer, and any future edit that
+    inconsistentifies an existing signoff is caught.
+    """
+    out: list[Violation] = []
+    for c in g.conflicts:
+        if c.signoff is None:
+            continue
+        if not (c.is_decided() or c.is_held()):
+            continue
+        if c.signoff.decided_by != c.decided_by:
+            out.append(
+                Violation(
+                    "check_decided_conflict_carries_signoff",
+                    c.id,
+                    f"signoff.decided_by '{c.signoff.decided_by}' disagrees "
+                    f"with conflict '{c.id}' decided_by '{c.decided_by}' — "
+                    f"the provenance record and the conflict field must name "
+                    f"the same human decider",
+                )
+            )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # 6. Typed-anchor prefixes — every id carries the right kind prefix (atomized)
 # ---------------------------------------------------------------------------
@@ -3751,6 +3830,16 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "shape: for each DECIDED Conflict, decided_by must not be in the computed member-owner set",
     ),
     InvariantClassification(
+        "check_signoff_chosen_variant_resolves",
+        TABLE_DRIVEN,
+        "shape: for each Conflict with signoff.chosen_variant non-empty, it must resolve in the conflict's own variant-id set",
+    ),
+    InvariantClassification(
+        "check_decided_conflict_carries_signoff",
+        BESPOKE,
+        "soft consistency: signoff.decided_by must equal conflict.decided_by when signoff is present (no migration forcing of pre-existing decisions)",
+    ),
+    InvariantClassification(
         "check_held_has_min_two_variants",
         TABLE_DRIVEN,
         "shape: for each HELD Conflict, len(set(variant ids)) must satisfy a >= 2 relation",
@@ -4086,6 +4175,9 @@ ALL_INVARIANTS = (
     check_decided_has_nonempty_decided_by,
     check_decided_by_is_known_stakeholder,
     check_decided_by_not_member_owner,
+    # §Signoff provenance record (§Signoff — K2 fix)
+    check_signoff_chosen_variant_resolves,
+    check_decided_conflict_carries_signoff,
     # §HELD state + variants (atomized; check_held_has_decided_by is thin delegator)
     check_held_has_min_two_variants,
     check_held_has_nonempty_decided_by,

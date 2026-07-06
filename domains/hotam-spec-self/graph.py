@@ -52,6 +52,8 @@ TENSIONS,OPEN}.md by tools/gen_spec.py; diagnosed by tools/what_now.py.
 
 from __future__ import annotations
 
+from hotam_spec.signoff import Signoff
+
 from hotam_spec.assumption import HOLDS, UNCERTAIN, Assumption, IMPLEMENTS, DEAD
 from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict, conflict_identity, Variant
@@ -3891,6 +3893,16 @@ def build_graph() -> TensionGraph:
             enforcement=STRUCTURAL,
             enforced_by=("test_tool_delegate.py::test_create_allocates_id_and_writes_file", "test_tool_delegate.py::test_close_sets_done_and_result",),
         ),
+        Requirement(
+            id="R-signoff-preserved-in-substrate",
+            claim=("A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph, so the signature evaporated into gitignored JSON -- R-trust-anchor-mechanism [E] was not auditable from the substrate. K2(b): HELD->DECIDED erased Variants (the non-chosen implies/costs -- anti-relitigation cargo -- were overwritten with an empty tuple); the chosen variant lived only as prose inside DECIDED(...). This atom lands the Signoff frozen payload (spec/src/hotam_spec/signoff.py): a payload dataclass (NOT a new node type, anti-RDF -- mirrors Variant's rationale) attached to Conflict.signoff and Assumption.signoff, carrying decided_by + date + verbatim + instrument + chosen_variant. The writer (apply_proposal) now builds the Signoff from proposal fields and attaches it; variants are preserved across HELD->DECIDED. instrument is an explicit seam for the future verifiable-signature wave (R-decided-by-verifiable-signature is OPEN -- this atom does NOT bind to git/crypto, only names the seam). check_signoff_chosen_variant_resolves enforces a non-empty chosen_variant is the id of one of the conflict's variants; check_decided_conflict_carries_signoff enforces consistency (signoff.decided_by == conflict.decided_by) when a signoff is present, SOFT (pre-existing decisions without signoff are legitimate, no migration forcing)."),
+            assumptions=("A-stakeholders-care", "A-bootstrap-self-applies",),
+            enforcement=ENFORCED,
+            enforced_by=("check_signoff_chosen_variant_resolves", "check_decided_conflict_carries_signoff",),
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
@@ -4065,7 +4077,8 @@ def build_graph() -> TensionGraph:
             steward="framework-reviewer",
             lifecycle="DECIDED(chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 (\"все вопросы решай в сторону совершенства\"))",
             decided_by="domain-user",
-            variants=(),
+            variants=(Variant(id="V-unfreeze-entity-projection", behavior="Unfreeze the Entity->CLAUDE.md CONSTITUTION projection specifically (not the whole Entity aspect): allow new EntityType declarations to keep generating R-entity-<slug> constitution rows and enforced_by coverage, while the REST of the Entity aspect (create_entity_type.py inward edits, entity.py machinery growth) stays frozen under R-speculative-aspects-frozen's baseline hash guard.", implies="R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the steward signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.", costs="The freeze's hash-baseline test (test_frozen_aspects_snapshot.py) currently covers src/hotam_spec/entity.py wholesale; carving out the projection path requires either a narrower baseline or a second frozen-surface declaration, adding one more piece of frozen-aspect bookkeeping. Slightly weakens the freeze's simplicity (one clean boundary becomes two)."), Variant(id="V-keep-freeze-defer-enforce", behavior="Keep R-speculative-aspects-frozen exactly as-is (the whole Entity aspect frozen, zero inward development) and demote R-entity-derived-requirement's enforcement from its current STRUCTURAL/claimed-guarantee posture to an explicitly conditional claim: 'this SHALL hold once the Entity aspect unfreezes; until then it is dormant-by-construction (0 entity_types in the graph makes the claim vacuously true, not falsely enforced).'", implies="R-entity-derived-requirement's why= is amended to state its own dormancy explicitly (mirrors how R-entity-is-declarative and the other frozen-aspect atoms already read after being relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing). No code changes; a prose-honesty amendment only.", costs="The domain stays unable to actually USE the Entity aspect until a real business domain triggers the unfreeze (Phase 5) -- burn-down of this particular architectural choice is deferred indefinitely rather than resolved now. The tension itself does not go away, it is just named honestly and left HELD/parked rather than acted on.")),
+            signoff=Signoff(decided_by="domain-user", date="2026-07-02", instrument="DEL-1", chosen_variant="V-unfreeze-entity-projection"),
         ),
         Conflict(
             id=conflict_identity("offload-vs-carry", "every newly SETTLED atom adds resident weight to the operator crystal: R-operator-prompt-from-substrate + R-constitution-is-index project ALL SETTLED requirements into root CLAUDE.md (~64k chars at 198 atoms), while R-budget-measure caps that same crystal at 130000 warn / 150000 hard (CRYSTAL_CHARS) -- crystallization pressure and the residency cap collide monotonically as the graph grows, with no eviction mechanic beyond tiered distillation"),

@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 197 / SETTLED 226; closeable debt 5; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
+**Burn-down: SETTLED-ENFORCED 198 / SETTLED 227; closeable debt 5; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
 
 ---
 
@@ -258,6 +258,7 @@ judgment calls no check_* could ever verify.
 | `R-enforcement-perimeter-baselines-guarded` | tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
 | `R-enforcement-perimeter-visible` | tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |
 | `R-run-speed-guarded` | test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression | Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline. |
+| `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff | A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 
 ## DRAFT (not yet promoted)
 

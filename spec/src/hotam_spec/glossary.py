@@ -304,6 +304,12 @@ TERMS: tuple[Term, ...] = (
         "SECTION",
         "Domain-declared business concept with its own lifecycle (M12 opt-in aspect): EntityType + EntityField + EntityInstance; check_entity_* covers every declared type by iteration.",
     ),
+    # §Signoff section (Wave — provenance record of a human steward decision)
+    Term(
+        "§Signoff",
+        "SECTION",
+        "The frozen provenance payload (decided_by + date + verbatim + instrument + chosen_variant) attached to a node a human steward decided on; not a node type, a payload like Variant.",
+    ),
     # §Attention section (Wave 16 — the agent-agnostic attention-code registry)
     Term(
         "§Attention",

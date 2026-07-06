@@ -57,6 +57,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from hotam_spec.signoff import Signoff
+
 HOLDS = "HOLDS"
 UNCERTAIN = "UNCERTAIN"
 DEAD = "DEAD"
@@ -100,3 +102,10 @@ class Assumption:
     status: str
     owner: str
     machine_check: str | None = None
+    signoff: Signoff | None = None
+    # ^ §Signoff — frozen provenance record of the LAST transition that changed
+    # this assumption's status. A HOLDS/DEAD/IMPLEMENTS transition requires a
+    # human decided_by (R-trust-anchor-mechanism); before this field existed
+    # the decided_by lived only in the gitignored proposal JSON and evaporated.
+    # None for assumptions never transitioned through the writer, or transitioned
+    # before this field existed.

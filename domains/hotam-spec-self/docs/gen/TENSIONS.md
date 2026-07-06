@@ -49,6 +49,15 @@ Generated from `spec/content/graph.py` (the domain's tension graph). A **Conflic
 - **members:** `R-speculative-aspects-frozen`, `R-entity-derived-requirement`
 - **steward:** `framework-reviewer`
 - **lifecycle:** DECIDED(chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 ("все вопросы решай в сторону совершенства"))
+- **variants** (steward chooses one):
+  - `V-unfreeze-entity-projection`
+    - behavior: Unfreeze the Entity->CLAUDE.md CONSTITUTION projection specifically (not the whole Entity aspect): allow new EntityType declarations to keep generating R-entity-<slug> constitution rows and enforced_by coverage, while the REST of the Entity aspect (create_entity_type.py inward edits, entity.py machinery growth) stays frozen under R-speculative-aspects-frozen's baseline hash guard.
+    - implies: R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the steward signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.
+    - costs: The freeze's hash-baseline test (test_frozen_aspects_snapshot.py) currently covers src/hotam_spec/entity.py wholesale; carving out the projection path requires either a narrower baseline or a second frozen-surface declaration, adding one more piece of frozen-aspect bookkeeping. Slightly weakens the freeze's simplicity (one clean boundary becomes two).
+  - `V-keep-freeze-defer-enforce`
+    - behavior: Keep R-speculative-aspects-frozen exactly as-is (the whole Entity aspect frozen, zero inward development) and demote R-entity-derived-requirement's enforcement from its current STRUCTURAL/claimed-guarantee posture to an explicitly conditional claim: 'this SHALL hold once the Entity aspect unfreezes; until then it is dormant-by-construction (0 entity_types in the graph makes the claim vacuously true, not falsely enforced).'
+    - implies: R-entity-derived-requirement's why= is amended to state its own dormancy explicitly (mirrors how R-entity-is-declarative and the other frozen-aspect atoms already read after being relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing). No code changes; a prose-honesty amendment only.
+    - costs: The domain stays unable to actually USE the Entity aspect until a real business domain triggers the unfreeze (Phase 5) -- burn-down of this particular architectural choice is deferred indefinitely rather than resolved now. The tension itself does not go away, it is just named honestly and left HELD/parked rather than acted on.
 
 ### Axis `apparatus-weight-vs-coverage` — 1 conflict(s), single tension
 
