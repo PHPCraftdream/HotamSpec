@@ -348,7 +348,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-create-axis** — *scaffolds a new Axis into the active domain's controlled-vocabulary* [STRUCTURAL·tool · §Axis] [enforcer: `test_tool_create_axis`]
 - **R-tool-create-domain** — *scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.* [STRUCTURAL·tool · §Domain] [enforcer: `test_tool_create_domain`]
 - **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
-- **R-tool-emit-cipher** — *emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
+- **R-tool-emit-cipher** — *emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-gate** — *T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate`]
 - **R-tool-gate-status** — *read spec/.runtime/land-log.jsonl and answer the commit-boundary question.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate_status`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]

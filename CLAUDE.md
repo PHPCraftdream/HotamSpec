@@ -124,7 +124,7 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 - [create_axis](spec/docs/tools/create_axis.md) — scaffolds a new Axis into the active domain's controlled-vocabulary
 - [create_domain](spec/docs/tools/create_domain.md) — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.
 - [create_entity_type](spec/docs/tools/create_entity_type.md) — scaffolds an EntityType declaration into the active domain's graph via apply_proposal.
-- [emit_cipher](spec/docs/tools/emit_cipher.md) — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.
+- [emit_cipher](spec/docs/tools/emit_cipher.md) — emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
 - [gate](spec/docs/tools/gate.md) — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.
 - [gate_status](spec/docs/tools/gate_status.md) — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.
 - [gen_spec](spec/docs/tools/gen_spec.md) — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.
@@ -160,7 +160,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `R-axes-as-module-constant` — REJECTED requirement 'R-axes-as-module-constant' claims a REPLACES successor in prose but has NO structural `replaces` edge — migrate it via a ProposedRejection (with replaced_by) so the anti-relitigation relation becomes machine-traversable (R-rejected-preserved-not-deleted). Advisory; never a gate.
 - **debt:** 198/228 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 6 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26842 chars (headroom 123158)
+- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26830 chars (headroom 123170)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

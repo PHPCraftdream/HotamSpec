@@ -7,11 +7,11 @@
 
 ## Synopsis
 
-Canon: §Operator — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.
+Canon: §Operator — emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
 
 ## Module docstring
 
-Canon: §Operator — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.
+Canon: §Operator — emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
 
 ## CLI usage
 

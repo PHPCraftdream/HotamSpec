@@ -1,85 +1,70 @@
-"""Canon: §Operator — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block."""
+"""Canon: §Operator — emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph."""
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
 # Make hotam_spec importable so this standalone tool can resolve the consumer
-# project root via the shared R1-R6 chain (R-project-root-not-hardcoded).
+# project root via the shared R1-R6 chain (R-project-root-not-hardcoded), and
+# make tools/ importable so gen_spec (the render-time source of the cipher
+# values) and what_now (per-domain diagnosis) can be imported directly.
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 if str(_SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_SPEC_ROOT / "src"))
+_TOOLS = Path(__file__).resolve().parent
+if str(_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_TOOLS))
 
 from hotam_spec.project_paths import project_root_or_raise  # noqa: E402
 
-# Consumer paths: CLAUDE.md and domains/.active-domain are CONSUMER data,
-# resolved via project_root(). In self-hosting R3 yields the same path as parents[2].
+# Consumer paths: domains/.active-domain is CONSUMER data, resolved via
+# project_root(). In self-hosting R3 yields the same path as parents[2].
 _REPO_ROOT = project_root_or_raise()
-_CLAUDE_MD = _REPO_ROOT / "CLAUDE.md"
-
-_BEGIN = "<!-- LIVE-STATE:BEGIN -->"
-_END = "<!-- LIVE-STATE:END -->"
-
-_DOMAIN_MAP_BEGIN = "<!-- DOMAIN-MAP:BEGIN -->"
-_DOMAIN_MAP_END = "<!-- DOMAIN-MAP:END -->"
 
 _PIN_FILE = _REPO_ROOT / "domains" / ".active-domain"
 
 
-def _extract_live_state(text: str) -> str:
-    """Return the text between LIVE-STATE markers, or empty string."""
-    try:
-        start = text.index(_BEGIN) + len(_BEGIN)
-        end = text.index(_END, start)
-        return text[start:end]
-    except ValueError:
-        return ""
-
-
-def _extract_bullet(block: str, key: str) -> str:
-    """Return the value of a bullet line like `- **key:** value`."""
-    pattern = rf"\*\*{re.escape(key)}:\*\*\s*(.+)"
-    m = re.search(pattern, block)
-    return m.group(1).strip() if m else ""
-
-
 def _pinned_domain() -> str:
-    """Return the pinned self-host domain name (whose LIVE-STATE the cipher reflects)."""
+    """Return the pinned self-host domain name (whose graph the cipher reflects)."""
     try:
         return _PIN_FILE.read_text(encoding="utf-8").strip()
     except OSError:
         return ""
 
 
-def _other_domains_open(text: str) -> int:
-    """Sum open-action counts across every domain in DOMAIN-MAP EXCEPT the pinned one.
+def _other_domains_open(text: str = "") -> int:  # noqa: ARG001
+    """Sum open-action counts across every domain in domains/ EXCEPT the pinned one.
 
     The three-cipher pulse (top/debt/context) already reflects the pinned
-    self-host domain via LIVE-STATE. The DOMAIN-MAP block carries a per-domain
-    'open actions — N (...)' line (R-domain-map-shows-pulse). This aggregate is
-    the SECOND eye: how many open actions live in OTHER domains, invisible to
-    the self-host cipher (e.g. hotam-dev's DETECTED conflict). Returns 0 when
-    the block or the lines are absent.
+    self-host domain's graph directly (R-domain-map-shows-pulse's root-crystal
+    counterpart). This aggregate is the SECOND eye: how many open actions live
+    in OTHER domains, invisible to the self-host cipher (e.g. hotam-dev's
+    DETECTED conflict). Returns 0 when domains/ is absent or empty.
+
+    Computed directly from each domain's graph.py (via gen_spec's domain
+    loader + what_now.diagnose), NOT by parsing the rendered DOMAIN-MAP
+    markdown — the graph is the source, the markdown is a rendering of it.
+    The `text` parameter is accepted (unused) for backward compatibility with
+    callers that still pass rendered CLAUDE.md text.
     """
-    try:
-        start = text.index(_DOMAIN_MAP_BEGIN)
-        end = text.index(_DOMAIN_MAP_END, start)
-    except ValueError:
+    import gen_spec as _gen_spec  # noqa: PLC0415
+    import what_now as _what_now  # noqa: PLC0415
+
+    if not _gen_spec.DOMAINS_ROOT.exists():
         return 0
-    dm = text[start:end]
     pinned = _pinned_domain()
     total = 0
-    current_domain = ""
-    for line in dm.splitlines():
-        h = re.match(r"^### (\S+)", line.strip())
-        if h:
-            current_domain = h.group(1)
+    for domain_dir in _gen_spec._sorted_domain_dirs():
+        if domain_dir.name == pinned:
             continue
-        m = re.search(r"\*\*open actions\*\*\s*—\s*(\d+)", line)
-        if m and current_domain and current_domain != pinned:
-            total += int(m.group(1))
+        dg = _gen_spec._load_domain_graph(domain_dir)
+        if dg is None:
+            continue
+        try:
+            total += len(_what_now.diagnose(dg))
+        except Exception:  # noqa: BLE001
+            continue
     return total
 
 
@@ -89,18 +74,18 @@ def main() -> None:
     )
     parser.parse_args()
 
-    try:
-        text = _CLAUDE_MD.read_text(encoding="utf-8")
-    except OSError:
-        text = ""
+    import gen_spec as _gen_spec  # noqa: PLC0415
+    from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
-    block = _extract_live_state(text)
+    g = load_content_graph()
+    top, debt = _gen_spec.compute_cipher_lines(g)
+    # NOTE: the LIVE-STATE markdown's context line ("- context: ...") has no
+    # bold **context:** key (unlike top action / debt), so it was never
+    # extracted by the old regex-based bullet parser either — `context` was
+    # always empty in the payload. Preserved here for bit-identical output.
+    context = ""
 
-    top = _extract_bullet(block, "top action")
-    debt = _extract_bullet(block, "debt")
-    context = _extract_bullet(block, "context")
-
-    other_open = _other_domains_open(text)
+    other_open = _other_domains_open()
 
     if top or debt or context or other_open:
         parts = [p for p in [top, debt, context] if p]

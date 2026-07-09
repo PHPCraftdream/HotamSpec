@@ -53,7 +53,7 @@ reader: (unresolved-reader)
 - `spec/tools/create_domain.py` — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.  →  R-tool-create-domain
 - `spec/tools/create_entity_type.py` — scaffolds an EntityType declaration into the active domain's graph via apply_proposal.  →  R-tool-create-entity-type
 - `spec/tools/delegate.py` — Canon: §Ticket (sibling) -- file-based delegation tool (create / close / show / list).
-- `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.  →  R-tool-emit-cipher
+- `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.  →  R-tool-emit-cipher
 - `spec/tools/gate.py` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.  →  R-tool-gate
 - `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status
 - `spec/tools/gen_enforcer_map.py` — Build-time snapshot generator for the enforcer-name -> pytest node-id map.
@@ -71,7 +71,7 @@ reader: (unresolved-reader)
 - `spec/tools/ticket_list.py` — list tickets, optionally filtered by status or assignee (read-only).  →  R-tool-ticket-list
 - `spec/tools/ticket_move.py` — move a ticket to a new status (relocates the file + records the transition in History).  →  R-tool-ticket-move
 - `spec/tools/ticket_show.py` — print one ticket's header, body, comments and full History (read-only).  →  R-tool-ticket-show
-- `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for enforcement-perimeter files.
+- `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for protected hash baselines.
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
 **Domain content** (`domains/hotam-dev/`)
