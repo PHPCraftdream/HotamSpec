@@ -180,6 +180,66 @@ def test_apply_rejection_materializes_replaces_edge(tmp_path) -> None:
             assert kw.value.value == "REJECTED"
 
 
+def test_apply_rejection_edge_only_reapply_does_not_grow_why(tmp_path) -> None:
+    """Re-applying a ProposedRejection whose reason matches the ALREADY-REJECTED
+    node's existing why verbatim (edge-only re-run) must add the replaces edge
+    WITHOUT rewriting why -- no '-- (was: ...)' chain growth. This is the
+    migration path for a later wave adding replaced_by to an already-landed
+    REJECTED requirement (R-rejected-preserved-not-deleted anti-relitigation
+    history must not balloon on every re-application).
+    """
+    graph_src = tmp_path / "graph.py"
+    graph_src.write_text(
+        "from hotam_spec.requirement import Requirement\n"
+        "from hotam_spec.stakeholder import Stakeholder\n"
+        "from hotam_spec.axis import Axis\n"
+        "from hotam_spec.graph import TensionGraph\n"
+        "def build_graph():\n"
+        "    return TensionGraph(\n"
+        "        axes=(Axis(slug='ax-one', description='d'),),\n"
+        "        stakeholders=(Stakeholder(id='s-a', name='A', domain='x'),),\n"
+        "        requirements=(\n"
+        "            Requirement(\n"
+        "                id='R-old', claim='old', owner='s-a', status='REJECTED',\n"
+        "                why='REJECTED -- REPLACES R-new: the old design.',\n"
+        "            ),\n"
+        "            Requirement(\n"
+        "                id='R-new', claim='new', owner='s-a', status='SETTLED',\n"
+        "            ),\n"
+        "        ),\n"
+        "    )\n",
+        encoding="utf-8",
+    )
+    proposal = ProposedRejection(
+        requirement_id="R-old",
+        reason="REJECTED -- REPLACES R-new: the old design.",
+        replaced_by=("R-new",),
+    )
+    new_src = apply_proposal._apply_rejection_to_source(
+        graph_src.read_text(encoding="utf-8"), proposal
+    )
+    import ast as _ast  # noqa: PLC0415
+
+    tree = _ast.parse(new_src)
+    # The edge lands on the successor.
+    succ_call = apply_proposal._find_requirement_call(tree, "R-new")
+    assert succ_call is not None
+    rels = apply_proposal._extract_requirement_relations(succ_call)
+    assert ("replaces", "R-old") in rels
+
+    # why on R-old is untouched -- no '(was: ...)' chain.
+    old_call = apply_proposal._find_requirement_call(tree, "R-old")
+    assert old_call is not None
+    why_value = None
+    for kw in old_call.keywords:
+        if kw.arg == "why" and isinstance(kw.value, _ast.Constant):
+            why_value = kw.value.value
+    assert why_value == "REJECTED -- REPLACES R-new: the old design.", (
+        f"why must be left untouched on an edge-only re-application; got {why_value!r}"
+    )
+    assert "(was:" not in (why_value or "")
+
+
 def test_apply_rejection_refuses_unknown_successor(tmp_path) -> None:
     """A replaced_by naming a non-existent requirement is refused (clear error)."""
     graph_src = tmp_path / "graph.py"

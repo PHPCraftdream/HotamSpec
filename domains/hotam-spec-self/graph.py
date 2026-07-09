@@ -576,6 +576,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care", "A-text-grounded-in-models"),
             enforcement="ENFORCED",
             enforced_by=("test_proposal.py",),
+            relations=(Relation("replaces", "R-active-loop-playbooks"),),
         ),
         Requirement(
             id="R-active-loop-apply-tool",
@@ -595,6 +596,7 @@ def build_graph() -> TensionGraph:
             assumptions=(),
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal.py",),
+            relations=(Relation("replaces", "R-active-loop-playbooks"),),
         ),
         Requirement(
             id="R-active-loop-playbook-doc",
@@ -609,6 +611,7 @@ def build_graph() -> TensionGraph:
             assumptions=(),
             enforcement="ENFORCED",
             enforced_by=("test_playbooks_doc.py",),
+            relations=(Relation("replaces", "R-active-loop-playbooks"),),
         ),
         Requirement(
             id="R-decided-needs-human-signoff",
@@ -765,6 +768,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("check_typed_anchors_operator", "test_operator.py"),
+            relations=(Relation("replaces", "R-operator-acting-facet"),),
         ),
         Requirement(
             id="R-operator-references-stakeholder",
@@ -780,6 +784,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("check_no_dangling_operator_refs", "test_operator.py"),
+            relations=(Relation("replaces", "R-operator-acting-facet"),),
         ),
         Requirement(
             id="R-operator-has-context-budget",
@@ -796,6 +801,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("check_operator_within_budget", "test_operator.py"),
+            relations=(Relation("replaces", "R-operator-acting-facet"),),
         ),
         Requirement(
             id="R-operator-may-have-parent",
@@ -810,6 +816,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_no_dangling_operator_refs",),
+            relations=(Relation("replaces", "R-operator-acting-facet"),),
         ),
         Requirement(
             id="R-context-budget-rule",
@@ -897,6 +904,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("test_goal.py", "check_typed_anchors_goal"),
+            relations=(Relation("replaces", "R-goal-as-target-state"),),
         ),
         Requirement(
             id="R-goal-target-kind-known",
@@ -910,6 +918,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_goal_target_kind_known",),
+            relations=(Relation("replaces", "R-goal-as-target-state"),),
         ),
         Requirement(
             id="R-goal-owner-is-operator",
@@ -923,6 +932,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_goal_owner_is_operator", "check_no_dangling_operator_refs"),
+            relations=(Relation("replaces", "R-goal-as-target-state"),),
         ),
         Requirement(
             id="R-context-bounded-delegation",
@@ -1011,6 +1021,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_canonical_lifecycles_wellformed",),
+            relations=(Relation("replaces", "R-statemachine-wellformedness"),),
         ),
         Requirement(
             id="R-statemachine-deterministic",
@@ -1027,6 +1038,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_canonical_lifecycles_wellformed",),
+            relations=(Relation("replaces", "R-statemachine-wellformedness"),),
         ),
         Requirement(
             id="R-statemachine-terminal-or-cyclic",
@@ -1043,6 +1055,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_canonical_lifecycles_wellformed",),
+            relations=(Relation("replaces", "R-statemachine-wellformedness"),),
         ),
         Requirement(
             id="R-statemachine-guard-on-assumption",
@@ -1057,6 +1070,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_transition_guard_assumption_resolves", "test_entity_invariants.py::test_transition_guard_assumption_resolves_clean", "test_entity_invariants.py::test_transition_guard_assumption_resolves_dangling_fires", "test_entity_invariants.py::test_transition_guard_assumption_dead_assumption_still_visible_in_dependents"),
+            relations=(Relation("replaces", "R-statemachine-wellformedness"),),
         ),
         # --- DRAFT — crystallization + anchoring super-rules (dossier 3) -----
         Requirement(
@@ -1161,6 +1175,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("test_reflection.py",),
+            relations=(Relation("replaces", "R-claude-md-budget-phi-cap"),),
         ),
         Requirement(
             id="R-enforcement-gradient",
@@ -1245,6 +1260,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_operator_within_budget", "test_operator.py"),
+            relations=(Relation("replaces", "R-claude-md-budget-phi-cap"),),
         ),
         Requirement(
             id="R-partition-vs-border",
@@ -1492,6 +1508,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators", "A-bootstrap-self-applies"),
             enforcement="PROSE",
             enforced_by=(),
+            relations=(Relation("replaces", "R-tree-of-crystals-cognitive-trigger"),),
         ),
         Requirement(
             id="R-subagent-gets-its-claude-md",
@@ -1521,6 +1538,7 @@ def build_graph() -> TensionGraph:
             enforcement="PROSE",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("replaces", "R-operator-backend-protocol"),),
         ),
         # --- SETTLED — P11 new: convergence, atomicity, agent-directory, tools, docs ---
         Requirement(
@@ -1685,6 +1703,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline",),
+            relations=(Relation("replaces", "R-task-spawn-is-ephemeral"),),
         ),
         Requirement(
             id="R-check-method-is-atomic",
@@ -1984,6 +2003,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
+            relations=(Relation("replaces", "R-content-free-framework"),),
         ),
         Requirement(
             id="R-content-free-no-examples",
@@ -1998,6 +2018,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
+            relations=(Relation("replaces", "R-content-free-framework"),),
         ),
         Requirement(
             id="R-content-free-no-seed-graph",
@@ -2012,6 +2033,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
+            relations=(Relation("replaces", "R-content-free-framework"),),
         ),
         Requirement(
             id="R-empty-content-wellformed",
@@ -2026,6 +2048,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_invariants.py::test_empty_graph_is_wellformed",),
+            relations=(Relation("replaces", "R-empty-content-is-legitimate"),),
         ),
         Requirement(
             id="R-empty-content-calm-banner",
@@ -2042,6 +2065,7 @@ def build_graph() -> TensionGraph:
             enforced_by=(
                 "test_what_now.py::test_main_empty_content_prints_calm_banner",
             ),
+            relations=(Relation("replaces", "R-empty-content-is-legitimate"),),
         ),
         Requirement(
             id="R-empty-content-gen-notice",
@@ -2058,6 +2082,7 @@ def build_graph() -> TensionGraph:
             enforced_by=(
                 "test_docs_gen.py::test_empty_graph_renders_no_content_notice",
             ),
+            relations=(Relation("replaces", "R-empty-content-is-legitimate"),),
         ),
         Requirement(
             id="R-boot-reload-three-facts",
@@ -2072,6 +2097,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement=ENFORCED,
             enforced_by=("test_reflection.py",),
+            relations=(Relation("replaces", "R-boot-from-substrate"),),
         ),
         Requirement(
             id="R-boot-cite-in-first-sentence",
@@ -2086,6 +2112,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("replaces", "R-boot-from-substrate"),),
         ),
         Requirement(
             id="R-glossary-generated",
@@ -2100,6 +2127,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_glossary_md_up_to_date",),
+            relations=(Relation("replaces", "R-glossary-sync-test"),),
         ),
         Requirement(
             id="R-glossary-sync-fails-dead",
@@ -2114,6 +2142,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py",),
+            relations=(Relation("replaces", "R-glossary-sync-test"),),
         ),
         Requirement(
             id="R-glossary-sync-fails-unused",
@@ -2128,6 +2157,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py",),
+            relations=(Relation("replaces", "R-glossary-sync-test"),),
         ),
         Requirement(
             id="R-glossary-drift-stable",
@@ -2142,6 +2172,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_glossary_md_up_to_date",),
+            relations=(Relation("replaces", "R-glossary-sync-test"),),
         ),
         Requirement(
             id="R-history-generated-from-rejected",
@@ -2156,6 +2187,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
+            relations=(Relation("replaces", "R-history-from-rejected-markers"),),
         ),
         Requirement(
             id="R-history-generated-from-decided",
@@ -2170,6 +2202,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
+            relations=(Relation("replaces", "R-history-from-rejected-markers"),),
         ),
         Requirement(
             id="R-lifecycle-type-exists",
@@ -2184,6 +2217,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("test_lifecycle.py",),
+            relations=(Relation("replaces", "R-lifecycle-abstraction"),),
         ),
         Requirement(
             id="R-lifecycle-validates-requirement",
@@ -2198,6 +2232,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_requirement_status_in_lifecycle",),
+            relations=(Relation("replaces", "R-lifecycle-abstraction"),),
         ),
         Requirement(
             id="R-lifecycle-validates-conflict",
@@ -2212,6 +2247,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_conflict_lifecycle_in_lifecycle",),
+            relations=(Relation("replaces", "R-lifecycle-abstraction"),),
         ),
         Requirement(
             id="R-lifecycle-validates-operator",
@@ -2254,6 +2290,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_process.py",),
+            relations=(Relation("replaces", "R-process-aspect-first"),),
         ),
         Requirement(
             id="R-process-opt-in",
@@ -2268,6 +2305,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_process.py",),
+            relations=(Relation("replaces", "R-process-aspect-first"),),
         ),
         Requirement(
             id="R-process-lifecycle-wellformed-aspect",
@@ -2282,6 +2320,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_process_lifecycle_wellformed",),
+            relations=(Relation("replaces", "R-process-aspect-first"),),
         ),
         Requirement(
             id="R-process-roles-declared-aspect",
@@ -2296,6 +2335,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_process_roles_declared",),
+            relations=(Relation("replaces", "R-process-aspect-first"),),
         ),
         Requirement(
             id="R-process-goal-owner-is-operator-aspect",
@@ -2310,6 +2350,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_goal_owner_is_operator",),
+            relations=(Relation("replaces", "R-process-aspect-first"),),
         ),
         Requirement(
             id="R-process-typed-anchors-extended",
@@ -2324,6 +2365,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_typed_anchors_process", "check_typed_anchors_goal"),
+            relations=(Relation("replaces", "R-process-aspect-first"),),
         ),
         Requirement(
             id="R-entity-type-lifecycle-wellformed",
@@ -2464,6 +2506,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_no_dangling_requirement_relations",),
+            relations=(Relation("replaces", "R-dependency-graph-parallelism"),),
         ),
         Requirement(
             id="R-dependency-drives-parallel",
@@ -2478,6 +2521,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("test_dependency_traversal.py::test_disjoint_components_are_parallelizable",),
+            relations=(Relation("replaces", "R-dependency-graph-parallelism"),),
         ),
         Requirement(
             id="R-dependency-drives-sequential",
@@ -2490,6 +2534,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent",),
+            relations=(Relation("replaces", "R-dependency-graph-parallelism"),),
         ),
         Requirement(
             id="R-crystal-is-claude-md",
@@ -2504,6 +2549,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo",),
+            relations=(Relation("replaces", "R-operator-crystal-is-claude-md"),),
         ),
         Requirement(
             id="R-crystal-reload-by-reference",
@@ -2518,6 +2564,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_embedded_thinking_tools.py",),
+            relations=(Relation("replaces", "R-operator-crystal-is-claude-md"),),
         ),
         Requirement(
             id="R-crystal-tree-hierarchy",
@@ -2532,6 +2579,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_constitution_gen.py",),
+            relations=(Relation("replaces", "R-operator-crystal-is-claude-md"),),
         ),
         Requirement(
             id="R-enforcement-levels-declared",
@@ -2546,6 +2594,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-most-knowledge-crystallizable",),
             enforcement="ENFORCED",
             enforced_by=("check_enforced_names_invariant",),
+            relations=(Relation("replaces", "R-enforcement-gradient"),),
         ),
         Requirement(
             id="R-enforced-names-enforcer",
@@ -2563,6 +2612,7 @@ def build_graph() -> TensionGraph:
                 "check_enforced_names_invariant",
                 "test_docs_gen.py::test_unenforced_md_up_to_date",
             ),
+            relations=(Relation("replaces", "R-enforcement-gradient"),),
         ),
         Requirement(
             id="R-critical-core-methodology",
@@ -2577,6 +2627,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_conscience.py", "check_no_dangling_assumption_owner", "check_no_dangling_requirement_owner", "check_no_dangling_requirement_assumptions", "check_no_dangling_requirement_relations", "check_no_dangling_conflict_refs"),
+            relations=(Relation("replaces", "R-critical-core-scope"),),
         ),
         Requirement(
             id="R-critical-core-per-domain",
@@ -2591,6 +2642,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("replaces", "R-critical-core-scope"),),
         ),
         Requirement(
             id="R-bijection-r-to-enforcer",
@@ -3107,6 +3159,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo",),
+            relations=(Relation("replaces", "R-agent-has-own-crystal"),),
         ),
         Requirement(
             id="R-operator-crystal-embeds-thinking",
@@ -3137,6 +3190,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack", "A-finite-context-operators"),
             enforcement="ENFORCED",
             enforced_by=("test_agent_scoped_constitution.py", "test_tool_spawn_agent.py"),
+            relations=(Relation("replaces", "R-agent-has-own-crystal"),),
         ),
         Requirement(
             id="R-claude-md-template-driven",
@@ -3423,6 +3477,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-agent-code-imports-framework-directionally",),
             enforcement="ENFORCED",
             enforced_by=("test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir", "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir"),
+            relations=(Relation("replaces", "R-agent-imports-framework"),),
         ),
         Requirement(
             id="R-task-spawn-is-a-hand",
@@ -3433,6 +3488,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("replaces", "R-task-spawn-is-ephemeral"),),
         ),
         Requirement(
             id="R-atomicity-ratchet-no-growth",
@@ -3454,6 +3510,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-framework-shared-infra-no-owner",),
             enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
+            relations=(Relation("replaces", "R-agent-imports-framework"),),
         ),
         Requirement(
             id="R-conflict-held-state",
@@ -3504,6 +3561,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("test_scope_projection.py::test_project_scope_selects_by_prefix", "test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly"),
+            relations=(Relation("replaces", "R-partition-vs-border"),),
         ),
         Requirement(
             id="R-scope-overlap-generated",
@@ -3514,6 +3572,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption", "test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty",),
+            relations=(Relation("replaces", "R-partition-vs-border"),),
         ),
         Requirement(
             id="R-overlap-single-presenter",
@@ -3524,6 +3583,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("check_scoped_node_has_single_presenter", "test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter",),
+            relations=(Relation("replaces", "R-partition-vs-border"),),
         ),
         Requirement(
             id="R-spawn-log-carries-isolation",
@@ -3892,6 +3952,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=STRUCTURAL,
             enforced_by=("test_tool_delegate.py::test_create_allocates_id_and_writes_file", "test_tool_delegate.py::test_close_sets_done_and_result",),
+            relations=(Relation("replaces", "R-domain-delegation-persists"),),
         ),
         Requirement(
             id="R-signoff-preserved-in-substrate",

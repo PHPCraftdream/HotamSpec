@@ -1626,6 +1626,15 @@ def _apply_rejection_to_source(source_text: str, proposal: ProposedRejection) ->
     never clobber). The prose "REJECTED — REPLACES" marker in `why` is written
     too — it remains the human-readable twin; the edge is the machine-traversable
     twin.
+
+    Edge-only re-application (idempotent, no `why` growth): when the node is
+    ALREADY REJECTED and `proposal.reason` is textually identical to the
+    existing `why` (ignoring "--" vs "—" dash-style), this is a pure
+    edge-addition re-run — status and why are left untouched, and only the
+    `replaces` edges are materialized. This lets a later wave add `replaced_by`
+    to an already-landed REJECTED requirement without re-prepending the same
+    reason onto its own history (which would otherwise grow a
+    "— (was: — (was: ...))" chain on every re-application).
     """
     tree = ast.parse(source_text)
     call_node = _find_requirement_call(tree, proposal.requirement_id)
@@ -1634,32 +1643,43 @@ def _apply_rejection_to_source(source_text: str, proposal: ProposedRejection) ->
             f"Requirement '{proposal.requirement_id}' not found in {_CONTENT_GRAPH}."
         )
 
-    lines = source_text.splitlines(keepends=True)
-
-    # Set status to "REJECTED"
-    lines = _replace_or_insert_field(lines, call_node, "status", "REJECTED")
-    new_src = "".join(lines)
-    tree = ast.parse(new_src)
-    call_node = _find_requirement_call(tree, proposal.requirement_id)
-    if call_node is None:
-        raise RuntimeError(
-            f"Lost track of requirement '{proposal.requirement_id}' after "
-            f"setting status."
-        )
-
-    # Prepend rejection reason to why
+    existing_status = ""
     existing_why = ""
     for kw in call_node.keywords:
-        if kw.arg == "why" and isinstance(kw.value, ast.Constant):
+        if kw.arg == "status" and isinstance(kw.value, ast.Constant):
+            existing_status = kw.value.value
+        elif kw.arg == "why" and isinstance(kw.value, ast.Constant):
             existing_why = kw.value.value
-            break
 
-    new_why = proposal.reason
-    if existing_why:
-        new_why = f"{proposal.reason} — (was: {existing_why})"
+    def _norm(text: str) -> str:
+        return text.replace("--", "—").strip()
 
-    lines = _replace_or_insert_field(lines, call_node, "why", new_why)
-    new_src = "".join(lines)
+    edge_only = existing_status == "REJECTED" and _norm(existing_why) == _norm(
+        proposal.reason
+    )
+
+    if edge_only:
+        new_src = source_text
+    else:
+        lines = source_text.splitlines(keepends=True)
+
+        # Set status to "REJECTED"
+        lines = _replace_or_insert_field(lines, call_node, "status", "REJECTED")
+        new_src = "".join(lines)
+        tree = ast.parse(new_src)
+        call_node = _find_requirement_call(tree, proposal.requirement_id)
+        if call_node is None:
+            raise RuntimeError(
+                f"Lost track of requirement '{proposal.requirement_id}' after "
+                f"setting status."
+            )
+
+        new_why = proposal.reason
+        if existing_why:
+            new_why = f"{proposal.reason} — (was: {existing_why})"
+
+        lines = _replace_or_insert_field(lines, call_node, "why", new_why)
+        new_src = "".join(lines)
 
     # Materialize structural replaces edges on each named successor.
     for successor_id in proposal.replaced_by:
