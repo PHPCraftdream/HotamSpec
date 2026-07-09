@@ -25,8 +25,9 @@ if str(_SPEC_ROOT / "tools") not in sys.path:
 
 import apply_proposal  # noqa: E402
 from hotam_spec.proposal import ProposedRequirement  # noqa: E402
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
 
-_REAL_LAND_LOG = _SPEC_ROOT / ".runtime" / "land-log.jsonl"
+_REAL_LAND_LOG = _runtime_dir() / "land-log.jsonl"
 
 _SAMPLE_SOURCE = '''\
 """sample graph for land-log hygiene test."""

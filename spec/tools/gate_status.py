@@ -57,7 +57,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_DEFAULT_LOG_PATH = _SPEC_ROOT / ".runtime" / "land-log.jsonl"
+if str(_SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_SPEC_ROOT / "src"))
+
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
+
+_DEFAULT_LOG_PATH = _runtime_dir() / "land-log.jsonl"
 
 
 @dataclass(frozen=True)

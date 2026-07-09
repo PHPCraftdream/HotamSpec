@@ -38,7 +38,13 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-_RUNTIME = Path(__file__).resolve().parents[1] / ".runtime" / "context.json"
+_SPEC_ROOT = Path(__file__).resolve().parents[1]
+if str(_SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_SPEC_ROOT / "src"))
+
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
+
+_RUNTIME = _runtime_dir() / "context.json"
 
 
 def _read_payload(stdin_file: str | None) -> dict:

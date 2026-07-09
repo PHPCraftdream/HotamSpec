@@ -60,6 +60,7 @@ if str(_SPEC_ROOT / "src") not in sys.path:
 
 from hotam_spec.project_paths import project_root_or_raise  # noqa: E402
 from hotam_spec.repo_paths import domains_root as _domains_root  # noqa: E402
+from hotam_spec.runtime_paths import runtime_dir as _runtime_root  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Path constants — monkeypatchable in tests (override slots; None = resolve fresh)
@@ -71,7 +72,7 @@ from hotam_spec.repo_paths import domains_root as _domains_root  # noqa: E402
 _REPO_ROOT: Path | None = None
 _DOMAINS_ROOT: Path | None = None
 _LEGACY_AGENTS_ROOT = _SPEC_ROOT / "agents"
-_RUNTIME_DIR = _SPEC_ROOT / ".runtime"
+_RUNTIME_DIR = _runtime_root()
 
 
 def _project_root() -> Path:

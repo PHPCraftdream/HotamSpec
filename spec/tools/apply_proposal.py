@@ -188,6 +188,7 @@ from hotam_spec.proposal import (  # noqa: E402
 
 _SLUG_RE = _re.compile(r"^[a-z][a-z0-9-]*$")
 from hotam_spec.repo_paths import domains_root as _domains_root  # noqa: E402
+from hotam_spec.runtime_paths import runtime_dir as _runtime_root  # noqa: E402
 
 # Consumer domains root: CONSUMER data. Module-level override slot for tests;
 # when None, resolved FRESH each use via _domains_root() (§3.3 — NO import-time
@@ -222,7 +223,7 @@ def _resolve_content_graph() -> "Path":
 
 _CONTENT_GRAPH = _resolve_content_graph()
 _GEN_SPEC = Path(__file__).resolve().parent / "gen_spec.py"
-_RUNTIME_DIR = _SPEC_ROOT / ".runtime"
+_RUNTIME_DIR = _runtime_root()
 _LAND_LOG_NAME = "land-log.jsonl"
 _PROPOSALS_DIR = _RUNTIME_DIR / "proposals"
 _PROPOSALS_APPLIED_DIR = _PROPOSALS_DIR / "applied"

@@ -66,6 +66,7 @@ from hotam_spec.graph import (  # noqa: E402
     members_pair_set,
 )
 from hotam_spec.requirement import SETTLED  # noqa: E402
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Tunables (documented constants, not magic numbers)
@@ -89,7 +90,7 @@ POLE_MIN_TOKENS = 1
 pole's lexicon. 1 is deliberate: poles are 1-2 word slugs, so a single hit is
 already meaningful directional evidence."""
 
-STAMP_FILE = SPEC_ROOT / ".runtime" / "tension-audit.jsonl"
+STAMP_FILE = _runtime_dir() / "tension-audit.jsonl"
 
 # Signal priority (lower = stronger evidence, sorted first).
 _SIG_POLE, _SIG_MODAL, _SIG_NOUN = 0, 1, 2

@@ -42,7 +42,9 @@ _TOOLS = Path(__file__).resolve().parent
 if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
-_RUNTIME = Path(__file__).resolve().parents[1] / ".runtime"
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir
+
+_RUNTIME = _runtime_dir()
 _SNAPSHOT_FILE = _RUNTIME / "attention-last-shown.json"
 
 _USAGE = (

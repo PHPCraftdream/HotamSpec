@@ -28,6 +28,7 @@ reader: ai-agent
 - `spec/src/hotam_spec/reflection.py` — the operator's P0 self-diagnosis conditions as named predicates.
 - `spec/src/hotam_spec/repo_paths.py` — centralized repository path roots.
 - `spec/src/hotam_spec/requirement.py` — a business requirement as a node in the tension graph.
+- `spec/src/hotam_spec/runtime_paths.py` — runtime-directory resolution for consumer-side ephemera.
 - `spec/src/hotam_spec/scope_projection.py` — an operator's sub-domain as a PROJECTION, not a copy (design B).
 - `spec/src/hotam_spec/signoff.py` — the frozen provenance record of a human steward decision.
 - `spec/src/hotam_spec/stakeholder.py` — who owns requirements and stewards conflicts.

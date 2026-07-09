@@ -30,6 +30,8 @@ if _TOOLS not in sys.path:
 if str(_SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_SPEC_ROOT / "src"))
 
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
+
 
 # --- Wave 17: framework-vs-domain test tiering (steward doctrine, verdict #8) ---
 #
@@ -276,7 +278,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     duration = time.monotonic() - _SESSION_START
 
-    runtime_dir = _SPEC_ROOT / ".runtime"
+    runtime_dir = _runtime_dir()
     runtime_dir.mkdir(parents=True, exist_ok=True)
 
     journal = runtime_dir / "run-durations.jsonl"

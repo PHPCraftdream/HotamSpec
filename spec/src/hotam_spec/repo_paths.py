@@ -19,7 +19,7 @@ This module replaces those fragile literals with named, stable accessors:
   ``domains_root()`` — ``<repo>/domains``.
   ``tests_root()``   — ``<repo>/spec/tests``.
   ``tools_root()``   — ``<repo>/spec/tools``.
-  ``runtime_root()`` — ``<repo>/spec/.runtime`` (gitignored ephemera).
+  ``runtime_root()`` — runtime ephemera (delegates to runtime_paths.runtime_dir()).
 
 stdlib-only, no side effects, no imports of domain-specific code. The roots
 are computed lazily (function calls, not module-level constants) so that
@@ -105,16 +105,19 @@ def tools_root() -> Path:
 
 
 def runtime_root() -> Path:
-    """Return the ``<repo>/spec/.runtime`` directory (gitignored ephemera).
+    """Return the runtime directory for ephemera (§3.2 variant 4-C).
 
-    WHY a named accessor: ``spec/.runtime/`` is referenced by multiple tools
-    (what_now, context_producer, apply_proposal, ...) and its path is always
-    ``<spec>/.runtime``. Centralizing it here prevents a typo from silently
-    writing to the wrong location.
+    Delegates to ``hotam_spec.runtime_paths.runtime_dir()`` — runtime is
+    CONSUMER data, resolved via ``HOTAM_SPEC_RUNTIME_DIR`` env var (literal)
+    or ``project_root() / ".hotam-spec" / "runtime"`` (default), with a
+    self-hosting legacy fallback to ``spec/.runtime/`` when the new location
+    is empty but the legacy location has accumulated data.
 
-    Canon: §Graph — runtime-root accessor.
+    Canon: §Graph — runtime-root accessor (R-project-root-not-hardcoded).
     """
-    return _SPEC_ROOT / ".runtime"
+    from hotam_spec.runtime_paths import runtime_dir  # noqa: PLC0415
+
+    return runtime_dir()
 
 
 def docs_gen_root(domain_name: str | None = None) -> Path:

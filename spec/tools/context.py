@@ -26,10 +26,19 @@ host honestly delivers ctx_pct on the local stdin payload.
 
 from __future__ import annotations
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-_RUNTIME = Path(__file__).resolve().parents[1] / ".runtime" / "context.json"
+# Runtime is CONSUMER data — resolved via the R1-R6 chain (§3.2 variant 4-C).
+# Make hotam_spec importable for the runtime_paths accessor.
+_SPEC_ROOT = Path(__file__).resolve().parents[1]
+if str(_SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_SPEC_ROOT / "src"))
+
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir
+
+_RUNTIME = _runtime_dir() / "context.json"
 
 
 @dataclass(frozen=True)

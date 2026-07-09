@@ -44,8 +44,9 @@ if str(_SPEC_ROOT / "src") not in sys.path:
 
 from hotam_spec.graph import load_content_graph  # noqa: E402
 from hotam_spec.requirement import SETTLED  # noqa: E402
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
 
-REVISIT_EVAL_FILE = _SPEC_ROOT / ".runtime" / "revisit-eval.jsonl"
+REVISIT_EVAL_FILE = _runtime_dir() / "revisit-eval.jsonl"
 
 
 def append_evaluation(

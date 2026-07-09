@@ -80,6 +80,7 @@ from hotam_spec.attention import (  # noqa: E402
 )
 from hotam_spec.invariants import all_violations  # noqa: E402,F401
 from hotam_spec.reflection import all_findings  # noqa: E402,F401
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
 
 # Re-exported for backwards compatibility with tests that referenced these
 # names on this module before the graph-diagnosis body moved into the
@@ -197,7 +198,7 @@ def pending_proposal_actions(*, now: float | None = None) -> list[Action]:
 
 
 TENSION_AUDIT_STAMP = (
-    Path(__file__).resolve().parents[1] / ".runtime" / "tension-audit.jsonl"
+    _runtime_dir() / "tension-audit.jsonl"
 )
 """Canon: §Harness — append-only run stamp written by tools/audit_tensions.py."""
 
@@ -283,7 +284,7 @@ def generative_audit_staleness_actions(g: TensionGraph) -> list[Action]:
 
 
 REVISIT_EVAL_FILE = (
-    Path(__file__).resolve().parents[1] / ".runtime" / "revisit-eval.jsonl"
+    _runtime_dir() / "revisit-eval.jsonl"
 )
 """Canon: §Harness — append-only revisit-marker evaluation log written by
 tools/mark_revisit_evaluated.py."""

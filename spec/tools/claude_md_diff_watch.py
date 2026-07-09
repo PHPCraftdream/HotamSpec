@@ -13,12 +13,13 @@ if str(_SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_SPEC_ROOT / "src"))
 
 from hotam_spec.project_paths import project_root_or_raise  # noqa: E402
+from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
 
 # Consumer path: root CLAUDE.md is CONSUMER data, resolved via project_root().
 # In self-hosting R3 yields the same path as parents[2].
 _REPO_ROOT = project_root_or_raise()
 _CLAUDE_MD = _REPO_ROOT / "CLAUDE.md"
-_SNAPSHOT = Path(__file__).resolve().parents[1] / ".runtime" / "claude_md_snapshot.md"
+_SNAPSHOT = _runtime_dir() / "claude_md_snapshot.md"
 
 _DIFF_LINE_CAP = 150
 
