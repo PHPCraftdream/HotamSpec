@@ -34,9 +34,8 @@ from pathlib import Path
 
 # --- Make the hotam_spec package importable ------------------------------------
 
+import _bootstrap  # noqa: E402,F401  -- side effect: configures sys.path for hotam_spec
 SPEC_ROOT = Path(__file__).resolve().parents[1]
-if str(SPEC_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "src"))
 
 from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
 from hotam_spec.requirement import REJECTED, SETTLED  # noqa: E402

@@ -49,12 +49,19 @@ from pathlib import Path
 # --- Make the hotam_spec package importable (model is the source of truth) ------
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
-REPO_ROOT = SPEC_ROOT.parent  # .../HotamSpec
+if str(SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(SPEC_ROOT / "src"))
+
+from hotam_spec.repo_paths import (  # noqa: E402
+    domains_root as _domains_root,
+    repo_root as _repo_root,
+)
+REPO_ROOT = _repo_root()  # .../HotamSpec
 SRC = SPEC_ROOT / "src" / "hotam_spec"
 DEMO_DIR = REPO_ROOT / "docs" / "demo"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 CLAUDE_MD_TEMPLATE = REPO_ROOT / "CLAUDE.md.template.txt"
-DOMAINS_ROOT = REPO_ROOT / "domains"
+DOMAINS_ROOT = _domains_root()
 
 
 def _sorted_domain_dirs() -> list[Path]:
@@ -66,27 +73,16 @@ def _sorted_domain_dirs() -> list[Path]:
     )
 
 
-#: Pin file naming the default active domain when HOTAM_SPEC_ACTIVE_DOMAIN is
-#: unset. Lives at domains/.active-domain (sibling to the domain dirs it
-#: chooses between) rather than under spec/.runtime/, because spec/.runtime/
-#: is gitignored ephemera (R-task-spawn-log-runtime) and the whole point of
-#: the pin is to be a COMMITTED, version-controlled decision, not a local
-#: transient. Mirrors hotam_spec.graph._ACTIVE_DOMAIN_PIN_FILE exactly (same
-#: repo path) so every resolver in the repo agrees on the same deterministic
-#: default (R-active-domain-pin-not-alphabetical).
-_ACTIVE_DOMAIN_PIN_FILE = REPO_ROOT / "domains" / ".active-domain"
-
-
 def _select_active_domain_dir(domain_dirs: list[Path]) -> Path | None:
     """Pick the active domain dir from an already-sorted list.
 
-    RULE: resolution order is (1) HOTAM_SPEC_ACTIVE_DOMAIN env var (must name
-    one of the given dirs), (2) spec/.runtime/active-domain pin file (must
-    name one of the given dirs), (3) the first domain alphabetically. Shared
-    by every _resolve_active_*() helper below so GEN_DIR / CONTENT_DIR / the
-    agents root and the ROLE-block scope_label never disagree about which
-    domain is active (mirrors hotam_spec.graph._active_domain_graph_file()'s
-    order).
+    Delegates the env→pin→alphabetical NAME resolution to the single
+    hotam_spec.domain_resolution.resolve_active_domain() (the ONE shared
+    resolver used by graph.py, gen_spec.py and apply_proposal.py alike),
+    then maps the returned name back to its directory in ``domain_dirs``.
+    Shared by every _resolve_active_*() helper below so GEN_DIR /
+    CONTENT_DIR / the agents root and the ROLE-block scope_label never
+    disagree about which domain is active.
 
     WHY a pin file ahead of the alphabetical fallback: with exactly one
     domain, "first alphabetically" and "the intended domain" always coincide
@@ -102,17 +98,14 @@ def _select_active_domain_dir(domain_dirs: list[Path]) -> Path | None:
     """
     if not domain_dirs:
         return None
-    env_domain = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN", "").strip()
-    if env_domain:
-        for d in domain_dirs:
-            if d.name == env_domain:
-                return d
-    if _ACTIVE_DOMAIN_PIN_FILE.exists():
-        pinned = _ACTIVE_DOMAIN_PIN_FILE.read_text(encoding="utf-8").strip()
-        if pinned:
-            for d in domain_dirs:
-                if d.name == pinned:
-                    return d
+    from hotam_spec.domain_resolution import resolve_active_domain  # noqa: PLC0415
+
+    name = resolve_active_domain(DOMAINS_ROOT)
+    if name is None:
+        return None
+    for d in domain_dirs:
+        if d.name == name:
+            return d
     return domain_dirs[0]
 
 
@@ -177,6 +170,13 @@ from hotam_spec.graph import (  # noqa: E402
 from hotam_spec.operator import CRYSTAL_CHARS, NODE_COUNT  # noqa: E402
 from hotam_spec.requirement import DRAFT, ENFORCED, SETTLED  # noqa: E402
 from hotam_spec.text import short_form  # noqa: E402
+from hotam_spec.claude_md import (  # noqa: E402
+    extract_block as _claude_md_extract_block,
+    replace_block as _claude_md_replace_block,
+    insert_block_after as _claude_md_insert_block_after,
+    wrap_block as _claude_md_wrap_block,
+    end_sentinel as _claude_md_end_sentinel,
+)
 
 # --- CLAUDE.md live-state sentinels -----------------------------------------
 
@@ -1906,14 +1906,11 @@ def build_live_state(g: TensionGraph) -> str:
 def extract_live_state_block(claude_md_text: str) -> str | None:
     """Extract the text between LIVE-STATE sentinels (excluding sentinels).
 
-    Returns None if sentinels are not found.
+    Delegates to hotam_spec.claude_md.extract_block (the reusable
+    sentinel-bounded extraction helper). Returns None if sentinels are
+    not found.
     """
-    begin_pos = claude_md_text.find(_LS_BEGIN)
-    end_pos = claude_md_text.find(_LS_END)
-    if begin_pos == -1 or end_pos == -1 or end_pos <= begin_pos:
-        return None
-    inner = claude_md_text[begin_pos + len(_LS_BEGIN) : end_pos]
-    return inner.strip("\n")
+    return _claude_md_extract_block(claude_md_text, "LIVE-STATE")
 
 
 
@@ -2719,26 +2716,15 @@ def _regenerate_agent_constitutions(
                 "This indicates manual corruption; the scaffold always emits them."
             )
 
-        begin_pos = text.find(_CONST_BEGIN)
-        end_pos = text.find(_CONST_END)
-        before = text[: begin_pos + len(_CONST_BEGIN)]
-        after = text[end_pos:]
-        text = before + "\n" + new_const_block + "\n" + after
+        text = _claude_md_replace_block(text, "CONSTITUTION", new_const_block)
 
         # Update (or insert) the OVERLAP block immediately after CONSTITUTION:END.
         if _OVERLAP_BEGIN in text and _OVERLAP_END in text:
-            ov_begin_pos = text.find(_OVERLAP_BEGIN)
-            ov_end_pos = text.find(_OVERLAP_END)
-            ov_before = text[: ov_begin_pos + len(_OVERLAP_BEGIN)]
-            ov_after = text[ov_end_pos:]
-            text = ov_before + "\n" + new_overlap_block + "\n" + ov_after
+            text = _claude_md_replace_block(text, "OVERLAP", new_overlap_block)
         else:
-            const_end_pos = text.find(_CONST_END)
-            insert_at = const_end_pos + len(_CONST_END)
-            overlap_section = (
-                f"\n\n{_OVERLAP_BEGIN}\n{new_overlap_block}\n{_OVERLAP_END}"
+            text = _claude_md_insert_block_after(
+                text, "CONSTITUTION", "OVERLAP", new_overlap_block
             )
-            text = text[:insert_at] + overlap_section + text[insert_at:]
 
         _write(claude_md_path, text)
         print(f"updated agent: {claude_md_path}")
@@ -3465,24 +3451,16 @@ def _update_agent_shared_docs_block(
     )
 
     if _SHARED_DOCS_BEGIN in text and _SHARED_DOCS_END in text:
-        begin_pos = text.find(_SHARED_DOCS_BEGIN)
-        end_pos = text.find(_SHARED_DOCS_END)
-        before = text[: begin_pos + len(_SHARED_DOCS_BEGIN)]
-        after = text[end_pos:]
-        new_text = before + "\n" + new_block + "\n" + after
+        new_text = _claude_md_replace_block(text, "SHARED-DOCS", new_block)
     else:
         # Insert after AGENT-MAP:END if present, else after CONSTITUTION:END, else append.
-        for sentinel in (_AGENT_MAP_END, _CONST_END):
-            pos = text.find(sentinel)
-            if pos != -1:
-                insert_at = pos + len(sentinel)
-                new_text = (
-                    text[:insert_at]
-                    + f"\n\n{_SHARED_DOCS_BEGIN}\n{new_block}\n{_SHARED_DOCS_END}\n"
-                    + text[insert_at:]
-                )
+        inserted = False
+        for anchor in ("AGENT-MAP", "CONSTITUTION"):
+            if _claude_md_end_sentinel(anchor) in text:
+                new_text = _claude_md_insert_block_after(text, anchor, "SHARED-DOCS", new_block)
+                inserted = True
                 break
-        else:
+        if not inserted:
             new_text = (
                 text.rstrip("\n")
                 + f"\n\n{_SHARED_DOCS_BEGIN}\n{new_block}\n{_SHARED_DOCS_END}\n"

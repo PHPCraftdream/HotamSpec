@@ -73,14 +73,15 @@ registry and returns a flat list of typed AttentionSignal records.
   - If `measure == NODE_COUNT`, compute:
       size = len(g.requirements) + len(g.conflicts) + len(g.assumptions)
     (full-graph count; DomainScope narrowing is deferred to a later P-phase).
-- [§Domain](spec/docs/thinking/domain.md) — RULE: manifest.py is read directly (not via graph.py); a domain with no
-manifest.py (e.g.
+- [§Domain](spec/docs/thinking/domain.md) — RULE (R-active-domain-pin-not-alphabetical): exactly ONE function,
+``resolve_active_domain(domains_root)``, implements the resolution order
+shared by every tool that must agree on which domain is active:
 - [§Entity](spec/docs/thinking/entity.md) — Canon: §Entity — domain-declared business concept with its own lifecycle.
 - [§Glossary](spec/docs/thinking/glossary.md) — RULE: every §-token used in hotam_spec framework docstrings MUST appear here as a
 Term entry.
 - [§Goal](spec/docs/thinking/goal.md) — RULE: used by check_typed_anchors to verify GOAL- prefix discipline and by
 check_goal_owner_is_operator to resolve Goal.owner references.
-- [§Graph](spec/docs/thinking/graph.md) — Canon: §Graph — the tension graph store and its traversal helpers.
+- [§Graph](spec/docs/thinking/graph.md) — RULE: the BEGIN/END sentinel-pair pattern (e.g.
 - [§Invariants](spec/docs/thinking/invariants.md) — Canon: §Invariants — structural form of the tension graph (the check_* layer).
 - [§Lifecycle](spec/docs/thinking/lifecycle.md) — RULE: a well-formed Lifecycle satisfies all four conditions below.
 - [§Operator](spec/docs/thinking/operator.md) — RULE: used by check_no_dangling_ids to verify Operator.parent references
@@ -160,7 +161,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `R-active-loop-playbooks` — REJECTED requirement 'R-active-loop-playbooks' claims a REPLACES successor in prose but has NO structural `replaces` edge — migrate it via a ProposedRejection (with replaced_by) so the anti-relitigation relation becomes machine-traversable (R-rejected-preserved-not-deleted). Advisory; never a gate.
 - **debt:** 198/227 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 5 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 291 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26585 chars (headroom 123415)
+- **graph:** 291 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26704 chars (headroom 123296)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -236,11 +237,11 @@ _(no sub-operators yet)_
 | **§Constitution** | _(not yet mapped)_ | _(none)_ | 3 tests |
 | **§Context** | _(not yet mapped)_ | _(none)_ | 1 tests |
 | **§ContextBudget** | _(not yet mapped)_ | 1 checks | 3 tests |
-| **§Domain** | _(not yet mapped)_ | 7 checks | 5 tests |
+| **§Domain** | `spec/src/hotam_spec/domain_resolution.py` | 7 checks | 6 tests |
 | **§Entity** | `spec/src/hotam_spec/entity.py` | 12 checks | 6 tests |
 | **§Glossary** | `spec/src/hotam_spec/glossary.py` | 1 checks | 3 tests |
 | **§Goal** | _(not yet mapped)_ | 2 checks | 2 tests |
-| **§Graph** | `spec/src/hotam_spec/graph.py` | _(none)_ | 1 tests |
+| **§Graph** | `spec/src/hotam_spec/graph.py` | _(none)_ | 2 tests |
 | **§Invariants** | `spec/src/hotam_spec/invariants.py` | 47 checks | 25 tests |
 | **§Lifecycle** | `spec/src/hotam_spec/lifecycle.py` | 10 checks | 8 tests |
 | **§Loop** | _(not yet mapped)_ | _(none)_ | _(none)_ |

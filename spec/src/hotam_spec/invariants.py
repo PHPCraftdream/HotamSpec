@@ -101,6 +101,11 @@ from hotam_spec.lifecycle import (
 )
 from hotam_spec.operator import OPERATOR_LIFECYCLE
 from hotam_spec.process import GOAL_LIFECYCLE, TARGET_KINDS
+from hotam_spec.repo_paths import (
+    domains_root as _domains_root,
+    repo_root as _repo_root,
+    spec_root as _spec_root,
+)
 from hotam_spec.requirement import (
     ENFORCEABILITY_KINDS,
     ENFORCED,
@@ -1408,7 +1413,7 @@ def check_enforced_names_invariant(g: TensionGraph) -> list[Violation]:
     return out
 
 
-_TESTS_DIR_FOR_ENFORCER_CHECK = Path(__file__).resolve().parents[2] / "tests"
+_TESTS_DIR_FOR_ENFORCER_CHECK = _spec_root() / "tests"
 
 
 def check_enforced_by_resolvable(g: TensionGraph) -> list[Violation]:
@@ -2652,8 +2657,8 @@ def check_typed_anchors_entity(g: TensionGraph) -> list[Violation]:
 # 14b. Entity-docs anti-drift — ENTITIES.md lists every declared EntityType
 # ---------------------------------------------------------------------------
 
-_DOMAINS_ROOT_FOR_ENTITY_CHECK = Path(__file__).resolve().parents[3] / "domains"
-_REPO_ROOT_FOR_ENTITY_CHECK = Path(__file__).resolve().parents[3]
+_DOMAINS_ROOT_FOR_ENTITY_CHECK = _domains_root()
+_REPO_ROOT_FOR_ENTITY_CHECK = _repo_root()
 
 
 def check_entities_md_lists_all_types(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
@@ -2972,8 +2977,8 @@ def check_bijection_r_to_enforcer(g: TensionGraph) -> list[Violation]:
 # compatibility with the check_* protocol but is not used.
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT_FROM_INVARIANTS = Path(__file__).resolve().parents[3]  # .../HotamSpec
-_DOMAINS_ROOT = _REPO_ROOT_FROM_INVARIANTS / "domains"
+_REPO_ROOT_FROM_INVARIANTS = _repo_root()  # .../HotamSpec
+_DOMAINS_ROOT = _domains_root()
 
 
 def _resolve_spec_agents_root() -> Path:
@@ -2992,7 +2997,7 @@ def _resolve_spec_agents_root() -> Path:
             director_agents = domain_dir / "agents" / "director" / "agents"
             if director_agents.exists():
                 return director_agents
-    return Path(__file__).resolve().parents[3] / "spec" / "agents"
+    return _repo_root() / "spec" / "agents"
 
 
 _SPEC_AGENTS_ROOT = _resolve_spec_agents_root()

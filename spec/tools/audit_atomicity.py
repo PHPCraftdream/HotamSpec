@@ -27,13 +27,9 @@ from pathlib import Path
 
 # --- Make the hotam_spec package importable ------------------------------------
 
+import _bootstrap  # noqa: E402,F401  -- side effect: configures sys.path for hotam_spec + tools
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent  # .../HotamSpec
-
-if str(SPEC_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "src"))
-if str(SPEC_ROOT / "tools") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "tools"))
 
 # GEN_DIR resolves through the SAME active-domain resolver gen_spec.py uses
 # (gen_spec._resolve_active_gen_dir), so the audit is written to the ACTIVE

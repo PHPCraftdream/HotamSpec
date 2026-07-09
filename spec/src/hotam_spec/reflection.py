@@ -39,9 +39,10 @@ from pathlib import Path
 from hotam_spec.assumption import DEAD, IMPLEMENTS
 from hotam_spec.conflict import DECIDED_PREFIX
 from hotam_spec.graph import TensionGraph, requirement_by_id
+from hotam_spec.repo_paths import repo_root
 from hotam_spec.requirement import DRAFT, ENFORCED, SETTLED
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]  # .../HotamSpec (mirrors invariants.py)
+_REPO_ROOT = repo_root()  # .../HotamSpec (mirrors invariants.py)
 
 #: An IMPLEMENTS aspiration older than this (in days) without re-affirmation
 #: fires the decay signal. 14 days = roughly two working weeks; short enough

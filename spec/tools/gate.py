@@ -56,11 +56,8 @@ from pathlib import Path
 
 # --- Make the hotam_spec package + sibling tools importable --------------------
 
+import _bootstrap  # noqa: E402,F401  -- side effect: configures sys.path for hotam_spec + tools
 SPEC_ROOT = Path(__file__).resolve().parents[1]
-if str(SPEC_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "src"))
-if str(SPEC_ROOT / "tools") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "tools"))
 
 from hotam_spec.enforcer_resolution import (  # noqa: E402
     bare_test_func_to_file as _shared_bare_test_func_to_file,

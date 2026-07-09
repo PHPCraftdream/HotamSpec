@@ -28,9 +28,11 @@ from pathlib import Path
 from hotam_spec.assumption import DEAD, UNCERTAIN, Assumption
 from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict
+from hotam_spec.domain_resolution import resolve_active_domain
 from hotam_spec.entity import EntityInstance, EntityType
 from hotam_spec.operator import Operator
 from hotam_spec.process import Goal, Process
+from hotam_spec.repo_paths import domains_root, repo_root, spec_root, src_root
 from hotam_spec.requirement import Requirement
 from hotam_spec.stakeholder import Stakeholder
 
@@ -134,62 +136,59 @@ class TensionGraph:
 # ---------------------------------------------------------------------------
 
 #: Path to the user-content slot (legacy; used when no domains/ are present).
-# graph.py lives at spec/src/hotam_spec/graph.py; parents[2] is `spec/`.
-CONTENT_DIR = Path(__file__).resolve().parents[2] / "content"
+#: Centralized via hotam_spec.repo_paths (no fragile parents[N] literals).
+CONTENT_DIR = spec_root() / "content"
 CONTENT_GRAPH_FILE = CONTENT_DIR / "graph.py"
 CONTENT_BUILDER_NAME = "build_graph"
 
-#: Repo root (spec/src/hotam_spec/graph.py -> parents[3] = repo root)
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-_DOMAINS_ROOT = _REPO_ROOT / "domains"
-
-#: Pin file naming the default active domain when HOTAM_SPEC_ACTIVE_DOMAIN is
-#: unset. Lives at domains/.active-domain — a COMMITTED, version-controlled
-#: file (unlike spec/.runtime/, which is gitignored ephemera per
-#: R-task-spawn-log-runtime) so the default is a deliberate, auditable
-#: decision, not a local-only override. Mirrors gen_spec.py's
-#: _ACTIVE_DOMAIN_PIN_FILE and apply_proposal.py's resolver exactly (same
-#: repo path) so every tool that discovers the active domain agrees on the
-#: same deterministic default (R-active-domain-pin-not-alphabetical).
-_ACTIVE_DOMAIN_PIN_FILE = _REPO_ROOT / "domains" / ".active-domain"
+#: Repo root + domains root — centralized via hotam_spec.repo_paths.
+#: NOTE: the env→pin→alphabetical active-domain resolution order now lives in
+#: ONE place — hotam_spec.domain_resolution.resolve_active_domain — shared by
+#: graph.py, gen_spec.py and apply_proposal.py (R-active-domain-pin-not-
+#: alphabetical). The pin-file path is centralized there too.
+_REPO_ROOT = repo_root()
+_DOMAINS_ROOT = domains_root()
 
 
 def _active_domain_graph_file() -> Path | None:
     """Canon: §Graph — return path to the active domain's graph.py, or None.
 
     RULE: resolution order is (1) HOTAM_SPEC_ACTIVE_DOMAIN env var, (2)
-    spec/.runtime/active-domain pin file, (3) the first
-    domains/<name>/graph.py alphabetically. Returns None if domains/ is
-    absent or empty (legitimate state: the framework has no domain yet).
+    domains/.active-domain pin file, (3) the first domains/<name>/graph.py
+    alphabetically. Returns None if domains/ is absent or empty (legitimate
+    state: the framework has no domain yet).
+
+    Delegates the env→pin→alphabetical NAME resolution to the single
+    hotam_spec.domain_resolution.resolve_active_domain() (the ONE shared
+    resolver), then verifies the chosen domain actually has a graph.py —
+    if not (e.g. a freshly-scaffolded domain with no content yet), falls
+    back to the first domain alphabetically that DOES have a graph.py.
+    This graph.py-existence guard is specific to the framework loader (a
+    domain without graph.py has no content to load); gen_spec.py and
+    apply_proposal.py resolve the directory itself and handle the absence
+    of graph.py at their own call sites.
 
     WHY env-var first, pin file second: the env var lets CI / test harnesses
     override the domain without mutating the filesystem
     (R-deterministic-generation); the pin file is the committed, deliberate
     default for everyday use — with >= 2 domains present, "first
     alphabetically" is an accident of naming, not a decision (see
-    gen_spec.py::_select_active_domain_dir for the full WHY). Alphabetical
-    stays as the last-resort fallback so a fresh repo with no pin file yet is
-    never "lost" (R-agent-never-lost).
+    domain_resolution module docstring for the full WHY). Alphabetical
+    stays as the last-resort fallback so a fresh repo with no pin file yet
+    is never "lost" (R-agent-never-lost).
     """
-    import os  # noqa: PLC0415
-
-    env_domain = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN", "").strip()
-    if env_domain:
-        candidate = _DOMAINS_ROOT / env_domain / "graph.py"
+    name = resolve_active_domain(_DOMAINS_ROOT)
+    if name is not None:
+        candidate = _DOMAINS_ROOT / name / "graph.py"
         if candidate.exists():
             return candidate
+    # The resolved name's domain has no graph.py (fresh scaffold) — fall back
+    # to the first domain alphabetically that DOES have one.
     if not _DOMAINS_ROOT.exists():
         return None
-    domain_dirs = sorted(
+    for d in sorted(
         d for d in _DOMAINS_ROOT.iterdir() if d.is_dir() and not d.name.startswith("_")
-    )
-    if _ACTIVE_DOMAIN_PIN_FILE.exists():
-        pinned = _ACTIVE_DOMAIN_PIN_FILE.read_text(encoding="utf-8").strip()
-        if pinned:
-            candidate = _DOMAINS_ROOT / pinned / "graph.py"
-            if candidate.exists():
-                return candidate
-    for d in domain_dirs:
+    ):
         gf = d / "graph.py"
         if gf.exists():
             return gf
@@ -272,7 +271,7 @@ def _load_graph_file(graph_file: Path) -> TensionGraph:
         return TensionGraph()
     module = importlib.util.module_from_spec(spec)
     # Make sure user content can `from hotam_spec.* import …` cleanly.
-    src_dir = str(Path(__file__).resolve().parents[1])
+    src_dir = str(src_root())
     if src_dir not in sys.path:
         sys.path.insert(0, src_dir)
     spec.loader.exec_module(module)

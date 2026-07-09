@@ -3,8 +3,8 @@
   "files": {
     "src/hotam_spec/attention.py": "069cbce30c56a6f1e72c8b68e9ab2f91e798241982d73bde2693a8518b25206c",
     "src/hotam_spec/enforcer_resolution.py": "0bbe3cbeb65f79c107c455e6ee08e61e519b30ebde0393c19cc9f468cf8a8578",
-    "src/hotam_spec/invariants.py": "4bc90352517761866afcd9117d666b564bad60f9b3aca1de8ced00640b32c606",
+    "src/hotam_spec/invariants.py": "b2caaac283fbb48d30636309fe5b4a71750162819ff118ae40dc56e4dbc22942",
     "tools/_graph_guard.py": "31a4eac69039d90f21467976a54e205547181328a33768168d54ebed6f23a3d8",
-    "tools/gate.py": "07424808d06fe14852597c6240badf69100c764490e71fbece0cdcfb0b9d5bde"
+    "tools/gate.py": "fa39be0ce7ac6dde817efc05f80346ab7d18a890e67e62216c756bb79e7ef9f9"
   }
 }
