@@ -11,9 +11,10 @@ Canon: §Reflection — the operator's P0 self-diagnosis conditions as named pre
 
 RULE: every P0 REFLECTION condition the harness can raise MUST be a named,
 pure, graph-only predicate in this module — draft-overhang, unenforced-settled,
-over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt —
-composed by tools/what_now.py via all_findings() in REFLECTION_PREDICATES
-order, never re-inlined in tool code (R-reflection-predicates-first-class).
+over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt,
+implements-decay — composed by tools/what_now.py via all_findings() in
+REFLECTION_PREDICATES order, never re-inlined in tool code
+(R-reflection-predicates-first-class).
 
 CONTRACT of each predicate: `reflect_*(graph) -> list[Finding]`. An EMPTY list
 means the operator is ready on that condition. Each Finding names the offending
@@ -142,6 +143,31 @@ WHY: a DECIDED conflict justifies itself partly through what it spawned
 (R-decided-conflict-justifies-itself); a derived requirement left
 DRAFT/absent means the decision's promised follow-through silently never
 landed — debt the operator, not the domain, owns.
+
+## From `spec/src/hotam_spec/reflection.py::reflect_implements_decay`
+
+Canon: §Reflection — IMPLEMENTS-decay: an aspiration aging without progress.
+
+RULE: for each Assumption whose status is IMPLEMENTS, if its age (measured
+from decided_at if known, else from created_at) exceeds IMPLEMENTS_DECAY_DAYS
+days, fire ONE finding per assumption: 're-affirm or downgrade'. The signal
+is advisory (P0 REFLECTION band surfaced via what_now), NEVER a gate/blocker.
+
+WHY IMPLEMENTS is the dangerous quiet corner (Ontology K2(c)): an aspiration
+by construction raises no UNCERTAIN-aging doubt and no DEAD-fallout — it is
+the legal way to record a striving and forget it forever. The two largest
+live assumptions (A-bootstrap-self-applies, A-most-knowledge-crystallizable)
+are IMPLEMENTS; without this predicate they are permanently invisible. The
+decay predicate restores honest aging: 'you wanted this N days ago; is it
+still a live striving, or has it silently become a dead hope?'.
+
+HONEST UNKNOWN SEMANTICS: an IMPLEMENTS assumption with NO known date (both
+decided_at and created_at are "") is a LEGACY node predating the timestamp
+layer — it has no honest age. Such a node MUST NOT fire (no false noise on
+the ~290 pre-timestamp nodes). The predicate only fires when an age is
+computable. decided_at (the last transition into IMPLEMENTS) takes
+precedence over created_at: re-typing an assumption to IMPLEMENTS resets
+the decay clock, so an aspiration actively worked on never ages out.
 
 ## From `spec/src/hotam_spec/reflection.py::all_findings`
 

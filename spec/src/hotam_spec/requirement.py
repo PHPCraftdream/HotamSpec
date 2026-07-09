@@ -149,6 +149,14 @@ class Requirement:
     m_tag: str = ""
     enforceability: str = ENFORCEABLE
     summary: str = ""
+    created_at: str = ""
+    # ^ ISO YYYY-MM-DD of node CREATION; "" = unknown (legacy nodes predating
+    # the timestamp layer have no honest creation date — do NOT fabricate one).
+    # Stamped by apply_proposal.py at first materialization, never at exec-time.
+    settled_at: str = ""
+    # ^ ISO YYYY-MM-DD of the LAST transition into SETTLED; "" = unknown. A
+    # requirement re-entering SETTLED from OPEN/REJECTED re-stamps this field.
+    # Surfaces 'settled N days ago, not re-confronted' without a separate mechanism.
 
     def is_closeable_debt(self) -> bool:
         """Canon: §Requirement — True iff this is REAL enforcement-gradient debt.

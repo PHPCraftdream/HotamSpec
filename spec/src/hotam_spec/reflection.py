@@ -2,9 +2,10 @@
 
 RULE: every P0 REFLECTION condition the harness can raise MUST be a named,
 pure, graph-only predicate in this module — draft-overhang, unenforced-settled,
-over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt —
-composed by tools/what_now.py via all_findings() in REFLECTION_PREDICATES
-order, never re-inlined in tool code (R-reflection-predicates-first-class).
+over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt,
+implements-decay — composed by tools/what_now.py via all_findings() in
+REFLECTION_PREDICATES order, never re-inlined in tool code
+(R-reflection-predicates-first-class).
 
 CONTRACT of each predicate: `reflect_*(graph) -> list[Finding]`. An EMPTY list
 means the operator is ready on that condition. Each Finding names the offending
@@ -32,14 +33,22 @@ References:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date as _date
 from pathlib import Path
 
-from hotam_spec.assumption import DEAD
+from hotam_spec.assumption import DEAD, IMPLEMENTS
 from hotam_spec.conflict import DECIDED_PREFIX
 from hotam_spec.graph import TensionGraph, requirement_by_id
 from hotam_spec.requirement import DRAFT, ENFORCED, SETTLED
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]  # .../HotamSpec (mirrors invariants.py)
+
+#: An IMPLEMENTS aspiration older than this (in days) without re-affirmation
+#: fires the decay signal. 14 days = roughly two working weeks; short enough
+#: that an aspiration forgotten between waves surfaces, long enough that a
+#: wave-in-flight does not noise. The age is measured from created_at (or the
+#: last decided_at transition that re-typed the assumption to IMPLEMENTS).
+IMPLEMENTS_DECAY_DAYS = 14
 
 
 @dataclass(frozen=True)
@@ -269,6 +278,63 @@ def reflect_derived_but_unbuilt(g: TensionGraph) -> list[Finding]:
     return out
 
 
+def reflect_implements_decay(g: TensionGraph) -> list[Finding]:
+    """Canon: §Reflection — IMPLEMENTS-decay: an aspiration aging without progress.
+
+    RULE: for each Assumption whose status is IMPLEMENTS, if its age (measured
+    from decided_at if known, else from created_at) exceeds IMPLEMENTS_DECAY_DAYS
+    days, fire ONE finding per assumption: 're-affirm or downgrade'. The signal
+    is advisory (P0 REFLECTION band surfaced via what_now), NEVER a gate/blocker.
+
+    WHY IMPLEMENTS is the dangerous quiet corner (Ontology K2(c)): an aspiration
+    by construction raises no UNCERTAIN-aging doubt and no DEAD-fallout — it is
+    the legal way to record a striving and forget it forever. The two largest
+    live assumptions (A-bootstrap-self-applies, A-most-knowledge-crystallizable)
+    are IMPLEMENTS; without this predicate they are permanently invisible. The
+    decay predicate restores honest aging: 'you wanted this N days ago; is it
+    still a live striving, or has it silently become a dead hope?'.
+
+    HONEST UNKNOWN SEMANTICS: an IMPLEMENTS assumption with NO known date (both
+    decided_at and created_at are "") is a LEGACY node predating the timestamp
+    layer — it has no honest age. Such a node MUST NOT fire (no false noise on
+    the ~290 pre-timestamp nodes). The predicate only fires when an age is
+    computable. decided_at (the last transition into IMPLEMENTS) takes
+    precedence over created_at: re-typing an assumption to IMPLEMENTS resets
+    the decay clock, so an aspiration actively worked on never ages out.
+    """
+    today = _date.today()
+    out: list[Finding] = []
+    for a in g.assumptions:
+        if a.status != IMPLEMENTS:
+            continue
+        # Prefer decided_at (the last transition into IMPLEMENTS); fall back to
+        # created_at. Both must be ISO YYYY-MM-DD or empty.
+        stamp_str = a.decided_at or a.created_at
+        if not stamp_str:
+            continue  # unknown date — no honest age, do NOT fire
+        try:
+            stamp = _date.fromisoformat(stamp_str)
+        except ValueError:
+            continue  # malformed date — do NOT fire (defensive; never lie)
+        age_days = (today - stamp).days
+        if age_days > IMPLEMENTS_DECAY_DAYS:
+            out.append(
+                Finding(
+                    condition="reflect_implements_decay",
+                    target=a.id,
+                    imperative=(
+                        f"IMPLEMENTS aspiration '{a.id}' is {age_days} days old"
+                        f" (last stamped {stamp_str}) without re-affirmation"
+                        " — re-affirm (transition to HOLDS if achieved) or"
+                        " downgrade (to DEAD if abandoned). An aspiration that"
+                        " ages silently is the invisible corner IMPLEMENTS"
+                        " created (Ontology K2(c))."
+                    ),
+                )
+            )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Registry + single entry point (mirror of invariants.ALL_INVARIANTS)
 # ---------------------------------------------------------------------------
@@ -279,6 +345,7 @@ REFLECTION_PREDICATES = (
     reflect_over_budget_operators,
     reflect_dead_assumption_on_enforcer,
     reflect_derived_but_unbuilt,
+    reflect_implements_decay,
 )
 
 

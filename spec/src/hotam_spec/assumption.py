@@ -109,3 +109,14 @@ class Assumption:
     # the decided_by lived only in the gitignored proposal JSON and evaporated.
     # None for assumptions never transitioned through the writer, or transitioned
     # before this field existed.
+    created_at: str = ""
+    # ^ ISO YYYY-MM-DD of node CREATION; "" = unknown (legacy nodes predating
+    # the timestamp layer have no honest creation date — do NOT fabricate one).
+    # Stamped by apply_proposal.py at first materialization, never at exec-time.
+    # Used by reflect_implements_decay to age an IMPLEMENTS aspiration: an
+    # assumption with unknown created_at is NOT aged (no false signal).
+    decided_at: str = ""
+    # ^ ISO YYYY-MM-DD of the LAST transition into HOLDS/DEAD/IMPLEMENTS;
+    # "" = unknown. Stamped by apply_proposal.py alongside the Signoff payload
+    # when a steward transition lands. Re-typing to IMPLEMENTS re-stamps this,
+    # resetting the decay clock.

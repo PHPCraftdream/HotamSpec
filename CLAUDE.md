@@ -90,9 +90,10 @@ tests to confirm a named process is present.
 - [§Proposal](spec/docs/thinking/proposal.md) — Canon: §Proposal — structured operator-→-steward change proposals.
 - [§Reflection](spec/docs/thinking/reflection.md) — RULE: every P0 REFLECTION condition the harness can raise MUST be a named,
 pure, graph-only predicate in this module — draft-overhang, unenforced-settled,
-over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt —
-composed by tools/what_now.py via all_findings() in REFLECTION_PREDICATES
-order, never re-inlined in tool code (R-reflection-predicates-first-class).
+over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt,
+implements-decay — composed by tools/what_now.py via all_findings() in
+REFLECTION_PREDICATES order, never re-inlined in tool code
+(R-reflection-predicates-first-class).
 - [§Requirement](spec/docs/thinking/requirement.md) — RULE: every section-anchor token (pattern: section-sign followed by an
 identifier, e.g.
 - [§Scope](spec/docs/thinking/scope.md) — RULE (R-overlap-single-presenter): a node contested by two or more
@@ -159,7 +160,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P4] OPEN_ITEM on `R-decided-by-verifiable-signature` — OPEN requirement 'R-decided-by-verifiable-signature' (owner 'framework-author') awaits a decision: should decided_by be bound to git commit authorship / a cryptographic signature as a verifiable, unforgeable signature, or stay a free string trusted via review?
 - **debt:** 198/227 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 5 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 291 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26499 chars (headroom 123501)
+- **graph:** 291 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26517 chars (headroom 123483)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

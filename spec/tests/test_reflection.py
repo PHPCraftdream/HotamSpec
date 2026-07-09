@@ -28,7 +28,7 @@ for _p in (_SRC, _TOOLS):
         sys.path.insert(0, str(_p))
 
 from hotam_spec import reflection  # noqa: E402
-from hotam_spec.assumption import DEAD, Assumption  # noqa: E402
+from hotam_spec.assumption import DEAD, IMPLEMENTS, Assumption  # noqa: E402
 from hotam_spec.axis import Axis  # noqa: E402
 from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
 from hotam_spec.graph import TensionGraph  # noqa: E402
@@ -399,6 +399,7 @@ _PREDICATE_NAMES = [
     "reflect_over_budget_operators",
     "reflect_dead_assumption_on_enforcer",
     "reflect_derived_but_unbuilt",
+    "reflect_implements_decay",
 ]
 
 
@@ -433,9 +434,21 @@ def test_what_now_sources_reflection_predicates_from_module() -> None:
 
 
 def _all_conditions_violating_graph() -> TensionGraph:
-    """One synthetic graph that violates ALL five reflection conditions at once."""
+    """One synthetic graph that violates ALL six reflection conditions at once."""
+    from datetime import date as _date
+    from datetime import timedelta as _timedelta
+
     dead_a = Assumption(
         id="A-dead-all", statement="was true, now dead", status=DEAD, owner="s-a"
+    )
+    # An IMPLEMENTS aspiration well past the decay threshold (30 days old).
+    old_stamp = (_date.today() - _timedelta(days=30)).isoformat()
+    decaying = Assumption(
+        id="A-implements-old",
+        statement="a striving forgotten",
+        status=IMPLEMENTS,
+        owner="s-a",
+        created_at=old_stamp,
     )
     closeable = tuple(_settled_req(f"R-u{i}", enforcement=PROSE) for i in range(6))
     stale = Requirement(
@@ -473,7 +486,7 @@ def _all_conditions_violating_graph() -> TensionGraph:
         stakeholders=_SH,
         requirements=closeable + (stale,) + parents + drafts,
         conflicts=(c,),
-        assumptions=(dead_a,),
+        assumptions=(dead_a, decaying),
         operators=(op,),
     )
 

@@ -184,6 +184,13 @@ class Conflict:
     # instrument + chosen_variant) attached when a steward transitioned this
     # conflict to DECIDED or HELD. None for DETECTED/ACKNOWLEDGED and for
     # decisions taken before this field existed (R-trust-anchor-mechanism).
+    created_at: str = ""
+    # ^ ISO YYYY-MM-DD of node CREATION; "" = unknown (legacy nodes predating
+    # the timestamp layer have no honest creation date — do NOT fabricate one).
+    decided_at: str = ""
+    # ^ ISO YYYY-MM-DD of the LAST transition into DECIDED/HELD; "" = unknown.
+    # Stamped by apply_proposal.py alongside the Signoff payload when a steward
+    # decision lands. Mirrors Assumption.decided_at (the two DECIDED-typed nodes).
 
     def is_unresolved(self) -> bool:
         """Canon: §Conflict — True iff no steward resolution has landed yet.

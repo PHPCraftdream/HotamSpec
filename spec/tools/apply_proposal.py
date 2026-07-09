@@ -390,6 +390,8 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
     m_tag = raw.get("m_tag", "")
     enforceability = raw.get("enforceability", "ENFORCEABLE").strip()
     summary = raw.get("summary", "")
+    created_at = (raw.get("created_at", "") or "").strip()
+    settled_at = (raw.get("settled_at", "") or "").strip()
     return ProposedRequirement(
         id=req_id,
         claim=claim,
@@ -403,6 +405,8 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
         m_tag=m_tag if isinstance(m_tag, str) else "",
         enforceability=enforceability,
         summary=summary if isinstance(summary, str) else "",
+        created_at=created_at if isinstance(created_at, str) else "",
+        settled_at=settled_at if isinstance(settled_at, str) else "",
     )
 
 
@@ -567,12 +571,14 @@ def _validate_assumption(raw: dict) -> ProposedAssumption:
     if not owner:
         raise ValueError("'owner' is required and must be non-empty.")
     why = raw.get("why", "")
+    created_at = (raw.get("created_at", "") or "").strip()
     return ProposedAssumption(
         id=assumption_id,
         statement=statement,
         status=status,
         owner=owner,
         why=why if isinstance(why, str) else "",
+        created_at=created_at if isinstance(created_at, str) else "",
     )
 
 
@@ -1239,6 +1245,16 @@ def _render_requirement_source(proposal: ProposedRequirement, indent: str) -> st
     if proposal.summary:
         summary_escaped = proposal.summary.replace("\\", "\\\\").replace('"', '\\"')
         lines.append(f'{inner}summary=("{summary_escaped}"),')
+    # Timestamps: created_at always stamped at creation; settled_at when status
+    # is SETTLED. The date is a fixed string written here (writer-time), NOT
+    # exec-time — the graph stays deterministic on import.
+    from datetime import date as _date  # noqa: PLC0415
+
+    created = proposal.created_at or _date.today().isoformat()
+    lines.append(f'{inner}created_at="{created}",')
+    if proposal.status == "SETTLED":
+        settled = proposal.settled_at or _date.today().isoformat()
+        lines.append(f'{inner}settled_at="{settled}",')
     lines.append(f"{indent}),")
     return "\n".join(lines) + "\n"
 
@@ -1359,6 +1375,16 @@ def _apply_requirement_to_source(
         # UPDATE existing requirement fields
         lines = source_text.splitlines(keepends=True)
         call_node = existing
+        # When transitioning to SETTLED, stamp settled_at (writer-time date).
+        # settled_at from the proposal takes precedence; empty = today.
+        from datetime import date as _date  # noqa: PLC0415
+
+        settled_stamp = proposal.settled_at
+        if proposal.status == "SETTLED" and not settled_stamp:
+            settled_stamp = _date.today().isoformat()
+        # Detect whether status is actually changing to SETTLED (re-stamp) vs.
+        # staying SETTLED (keep existing if proposal doesn't override). We
+        # always write settled_at when the proposal's status is SETTLED.
         for field_name, new_value in [
             ("claim", proposal.claim),
             ("owner", proposal.owner),
@@ -1371,6 +1397,7 @@ def _apply_requirement_to_source(
             ("enforceability", proposal.enforceability),
             ("m_tag", proposal.m_tag),
             ("summary", proposal.summary),
+            ("settled_at", settled_stamp if proposal.status == "SETTLED" else ""),
         ]:
             # Skip empty optional fields not already present
             if field_name in ("assumptions", "enforced_by", "relations") and not new_value:
@@ -1415,6 +1442,11 @@ def _apply_requirement_to_source(
                 continue
             # summary: skip when empty and not already present (optional field).
             if field_name == "summary" and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
+            # settled_at: skip when empty (status not SETTLED) and not already
+            # present. When status IS SETTLED, new_value is non-empty (stamped).
+            if field_name == "settled_at" and not new_value:
                 if _kwarg_line_col(call_node, field_name) is None:
                     continue
             # Skip the default enforceability value when the field isn't
@@ -1571,6 +1603,7 @@ def _apply_conflict_transition(
     # written value is a fixed string in graph.py, so the graph stays
     # deterministic on import).
     signoff: Signoff | None = None
+    decided_stamp = ""
     if (
         proposal.new_lifecycle.startswith(("DECIDED", "HELD"))
         and proposal.decided_by
@@ -1578,6 +1611,7 @@ def _apply_conflict_transition(
         from datetime import date as _date  # noqa: PLC0415
 
         signoff_date = proposal.date or _date.today().isoformat()
+        decided_stamp = signoff_date
         signoff = Signoff(
             decided_by=proposal.decided_by,
             date=signoff_date,
@@ -1595,6 +1629,7 @@ def _apply_conflict_transition(
         ("derived", proposal.derived),
         ("variants", proposal.variants),
         ("signoff", signoff),
+        ("decided_at", decided_stamp),
     ]:
         if field_name == "shared_assumption" and not new_value:
             # Empty = leave the existing edge untouched (never overwrite a live
@@ -1616,6 +1651,11 @@ def _apply_conflict_transition(
         # a recorded decision with None.
         if field_name == "signoff" and new_value is None:
             continue
+        # decided_at: skip when empty (not a DECIDED/HELD transition) and not
+        # already present. When it IS a steward decision, decided_stamp is set.
+        if field_name == "decided_at" and not new_value:
+            if _kwarg_line_col(call_node, field_name) is None:
+                continue
         lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
         new_src = "".join(lines)
         tree = ast.parse(new_src)
@@ -1782,6 +1822,14 @@ def _render_conflict_source(proposal: ProposedConflict, indent: str) -> str:
         lines.append(
             f"{inner}shared_assumption={_python_repr(proposal.shared_assumption)},"
         )
+    # Timestamp: created_at always stamped at creation. If initial_lifecycle is
+    # DECIDED, also stamp decided_at (a conflict materialized already-DECIDED).
+    from datetime import date as _date  # noqa: PLC0415
+
+    created = _date.today().isoformat()
+    lines.append(f'{inner}created_at="{created}",')
+    if proposal.initial_lifecycle.startswith("DECIDED"):
+        lines.append(f'{inner}decided_at="{created}",')
     lines.append(f"{indent}),")
     return "\n".join(lines) + "\n"
 
@@ -2108,12 +2156,16 @@ def _collect_assumption_ids(tree: ast.AST) -> set[str]:
 def _render_assumption_source(proposal: ProposedAssumption, indent: str) -> str:
     """Render an Assumption(...) constructor call as source text."""
     inner = indent + "    "
+    from datetime import date as _date  # noqa: PLC0415
+
+    created = proposal.created_at or _date.today().isoformat()
     lines: list[str] = []
     lines.append(f"{indent}Assumption(")
     lines.append(f'{inner}id={_python_repr(proposal.id)},')
     lines.append(f'{inner}statement={_python_repr(proposal.statement)},')
     lines.append(f"{inner}status={proposal.status},")
     lines.append(f'{inner}owner={_python_repr(proposal.owner)},')
+    lines.append(f'{inner}created_at="{created}",')
     lines.append(f"{indent}),")
     return "\n".join(lines) + "\n"
 
@@ -2305,6 +2357,8 @@ def _apply_assumption_transition(
     #    the provenance of the LAST transition (R-trust-anchor-mechanism, K2(a)
     #    fix). The date defaults to today (writer-time, NOT exec-time — the
     #    written value is a fixed string, so the graph stays deterministic).
+    #    The SAME date stamps decided_at (the timestamp field) so the reflection
+    #    decay predicate can age the aspiration from the transition date.
     if proposal.decided_by:
         from datetime import date as _date  # noqa: PLC0415
 
@@ -2324,6 +2378,7 @@ def _apply_assumption_transition(
             )
         lines = result.splitlines(keepends=True)
         lines = _replace_or_insert_field(lines, call_node, "signoff", signoff)
+        lines = _replace_or_insert_field(lines, call_node, "decided_at", signoff_date)
         result = "".join(lines)
         result = _ensure_import(result, "hotam_spec.signoff", ["Signoff"])
     return result

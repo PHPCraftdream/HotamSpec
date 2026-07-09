@@ -43,6 +43,13 @@ class ProposedRequirement:
     m_tag: str = ""
     enforceability: str = "ENFORCEABLE"
     summary: str = ""
+    created_at: str = ""
+    # ^ ISO YYYY-MM-DD of node creation; the apply_proposal writer fills today's
+    # date as a default when this is empty (writer-time, NOT exec-time — the
+    # written value is a fixed string, so the graph stays deterministic).
+    settled_at: str = ""
+    # ^ ISO YYYY-MM-DD of the LAST transition into SETTLED; the writer fills
+    # today's date when the proposal's status is SETTLED and this is empty.
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.
@@ -294,6 +301,9 @@ class ProposedAssumption:
     status: str
     owner: str  # Stakeholder id
     why: str = ""
+    created_at: str = ""
+    # ^ ISO YYYY-MM-DD of node creation; the apply_proposal writer fills today's
+    # date as a default when this is empty (writer-time, NOT exec-time).
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the assumption id is the anchor of this proposal."""
