@@ -23,6 +23,7 @@ reader: (unresolved-reader)
 - `spec/src/hotam_spec/node_schemas.py` — registry of every typed-anchor node kind in the framework.
 - `spec/src/hotam_spec/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
 - `spec/src/hotam_spec/process.py` — opt-in behavioral aspect (M12).
+- `spec/src/hotam_spec/project_paths.py` — project-root resolution for the consumer's data directory.
 - `spec/src/hotam_spec/proposal.py` — structured operator-→-steward change proposals.
 - `spec/src/hotam_spec/reflection.py` — the operator's P0 self-diagnosis conditions as named predicates.
 - `spec/src/hotam_spec/repo_paths.py` — centralized repository path roots.

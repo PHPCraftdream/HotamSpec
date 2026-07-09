@@ -241,7 +241,7 @@ _(no sub-operators yet)_
 | **§Entity** | `spec/src/hotam_spec/entity.py` | 12 checks | 6 tests |
 | **§Glossary** | `spec/src/hotam_spec/glossary.py` | 1 checks | 3 tests |
 | **§Goal** | _(not yet mapped)_ | 2 checks | 2 tests |
-| **§Graph** | `spec/src/hotam_spec/graph.py` | _(none)_ | 2 tests |
+| **§Graph** | `spec/src/hotam_spec/graph.py` | _(none)_ | 3 tests |
 | **§Invariants** | `spec/src/hotam_spec/invariants.py` | 47 checks | 26 tests |
 | **§Lifecycle** | `spec/src/hotam_spec/lifecycle.py` | 10 checks | 8 tests |
 | **§Loop** | _(not yet mapped)_ | _(none)_ | _(none)_ |

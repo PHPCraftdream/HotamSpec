@@ -393,6 +393,77 @@ Includes the §Process, §Goal, and §Entity aspect collections.
 WHY: the harness and generator use this to render a calm "no content
 yet" message instead of an awkwardly empty roster.
 
+## From `spec/src/hotam_spec/project_paths.py` (module)
+
+Canon: §Graph — project-root resolution for the consumer's data directory.
+
+R-project-root-not-hardcoded: this module resolves WHERE the consumer's data
+lives (domains/, tickets/, delegations/, CLAUDE.md, .claude/) — NOT where the
+framework itself lives. The framework-internal paths (spec/, tests/, tools/)
+are served by ``repo_paths.repo_root()``; this module is a logically separate
+accessor for the project-root concept.
+
+The two accessors COINCIDE in self-hosting mode (the HotamSpec repo models
+itself: framework repo == consumer repo, so ``project_root()`` falls back to
+``repo_paths.repo_root()`` at R6). They DIVERGE when a consumer installs the
+framework from PyPI/git/vendor-copy and works in their own repo: then
+``project_root()`` resolves the consumer's repo, while ``repo_root()`` stays
+at the framework install location.
+
+The resolution chain (first non-empty result wins):
+
+  R1 — ``HOTAM_SPEC_PROJECT_ROOT`` env (must exist, must be a directory).
+  R2 — ``HOTAM_SPEC_DOMAINS_ROOT`` env (project = its parent, must exist).
+  R3 — markers in CWD, bottom-up search: any of ``domains/``, ``CLAUDE.md``,
+       ``.claude/``, ``tickets/``, ``delegations/``, ``pyproject.toml`` with
+       a ``[tool.hotam-spec]`` table.
+  R4 — ``.hotam-spec-project`` marker file, searched bottom-up up to 5 levels
+       from CWD.
+  R5 — ``pyproject.toml`` → ``[tool.hotam-spec].project_root`` (relative path
+       resolved from the pyproject.toml's own directory).
+  R6 — self-hosting fallback: ``repo_paths.repo_root()`` (framework repo ==
+       consumer repo — the only assumption that holds for the self-modeling
+       core and its test suite).
+
+Uncertainty rule: if the entire chain is exhausted and nothing matched,
+``project_root()`` returns ``None`` — it never guesses. Callers that NEED a
+path raise ``ProjectRootUnresolved``, which carries a diagnostic listing
+which env vars were checked, which markers were searched, and where.
+
+stdlib-only (tomllib is stdlib since Python 3.11; this repo requires 3.12).
+No side effects, no imports of domain-specific code.
+
+## From `spec/src/hotam_spec/project_paths.py::ProjectRootUnresolved`
+
+Raised when ``project_root()`` returned ``None`` and a path is needed.
+
+Carries a diagnostic string built by ``project_root_or_raise()`` that
+lists every source checked (R1 env, R2 env, R3 markers, R4 marker file,
+R5 pyproject) and the directories searched, so the operator can see
+exactly what failed rather than getting a bare "not found".
+
+Canon: §Graph — the uncertainty-rule exception type.
+
+## From `spec/src/hotam_spec/project_paths.py::project_root`
+
+Resolve the consumer's project root via the R1–R6 chain.
+
+Returns the first matching directory or ``None`` if nothing matched
+(the uncertainty rule — never guesses). Callers needing a path should
+use ``project_root_or_raise()`` to get a diagnostic exception on failure.
+
+Canon: §Graph — project-root resolver entry point.
+
+## From `spec/src/hotam_spec/project_paths.py::project_root_or_raise`
+
+Return ``project_root()`` or raise ``ProjectRootUnresolved``.
+
+For callers that NEED a path and cannot proceed without one. The
+exception carries a full diagnostic (which sources were checked, what
+they contained, what CWD was).
+
+Canon: §Graph — the uncertainty-rule raising accessor.
+
 ## From `spec/src/hotam_spec/repo_paths.py` (module)
 
 Canon: §Graph — centralized repository path roots.
