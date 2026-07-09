@@ -1339,6 +1339,55 @@ def check_typed_anchors_goal(g: TensionGraph) -> list[Violation]:
     return out
 
 
+# ---------------------------------------------------------------------------
+# Typed-anchor delegator dispatch — sourced from NODE_SCHEMAS
+# ---------------------------------------------------------------------------
+#
+# check_typed_anchors fans out to the atomic per-kind sub-checks. The SET of
+# kinds it covers is sourced from the NODE_SCHEMAS registry (node_schemas.py):
+# each row's prefix comes from the registry, the sub-check function is
+# hand-bound (a registry row cannot name a code symbol). The kinds listed
+# here are EXACTLY the historical delegator surface (Requirement/Assumption/
+# Conflict/Operator/Process/Goal); EntityInstance and Variant have their own
+# dedicated checks and are deliberately NOT folded into check_typed_anchors,
+# preserving bit-for-bit behavior. A BUILD-TIME ASSERTION makes a registry/
+# delegator disagreement fail loudly at import: if a listed kind is missing
+# from the registry or has an empty prefix, import fails rather than silently
+# changing delegator coverage.
+
+_TYPED_ANCHOR_DELEGATIONS: list[tuple[str, object]] = []
+
+
+def _register_typed_anchor_delegations() -> None:
+    """Populate _TYPED_ANCHOR_DELEGATIONS from NODE_SCHEMAS + hand-bound fns.
+
+    Idempotent: clears and rebuilds. Called once at import. Each row is
+    (kind, sub_check_function); the prefix the sub-check enforces is the one
+    the registry declares for that kind (verified at the call site below).
+    """
+    from hotam_spec.node_schemas import NODE_SCHEMAS  # noqa: PLC0415
+
+    _TYPED_ANCHOR_DELEGATIONS.clear()
+    bindings: dict[str, object] = {
+        "Requirement": check_typed_anchors_requirement,
+        "Assumption": check_typed_anchors_assumption,
+        "Conflict": check_typed_anchors_conflict,
+        "Operator": check_typed_anchors_operator,
+        "Process": check_typed_anchors_process,
+        "Goal": check_typed_anchors_goal,
+    }
+    for kind, fn in bindings.items():
+        schema = next((s for s in NODE_SCHEMAS if s.kind == kind), None)
+        assert schema is not None and schema.prefix, (
+            f"check_typed_anchors delegator: kind '{kind}' missing or "
+            "prefix-less in NODE_SCHEMAS; registry out of sync with delegator"
+        )
+        _TYPED_ANCHOR_DELEGATIONS.append((kind, fn))
+
+
+_register_typed_anchor_delegations()
+
+
 def check_typed_anchors(g: TensionGraph) -> list[Violation]:
     """Canon: §Invariants — every id carries the prefix that matches its kind (thin delegator).
 
@@ -1356,15 +1405,21 @@ def check_typed_anchors(g: TensionGraph) -> list[Violation]:
     This is a THIN DELEGATOR — calls the atomic per-entity-type sub-checks and
     concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
+    The set of sub-checks it fans out to is sourced from the NODE_SCHEMAS
+    registry (node_schemas.py): every prefix-bearing kind that participates in
+    this delegator is listed in _TYPED_ANCHOR_DELEGATIONS, keyed by the same
+    prefix the registry declares. A new prefix-bearing kind added to the
+    registry is NOT automatically picked up here — it must be added to
+    _TYPED_ANCHOR_DELEGATIONS explicitly, preserving the historical minimal
+    surface (Entity/Variant have their own dedicated checks and are not folded
+    into this delegator). Bit-for-bit behavior is unchanged: the registry only
+    names what the hand-written bodies already enforce.
+
     References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
     """
     out: list[Violation] = []
-    out.extend(check_typed_anchors_requirement(g))
-    out.extend(check_typed_anchors_assumption(g))
-    out.extend(check_typed_anchors_conflict(g))
-    out.extend(check_typed_anchors_operator(g))
-    out.extend(check_typed_anchors_process(g))
-    out.extend(check_typed_anchors_goal(g))
+    for _kind, sub_check in _TYPED_ANCHOR_DELEGATIONS:
+        out.extend(sub_check(g))
     return out
 
 

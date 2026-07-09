@@ -246,6 +246,16 @@ R-anchor-taxonomy.
 This is a THIN DELEGATOR — calls the atomic per-entity-type sub-checks and
 concatenates. The atomic sub-checks are registered individually in ALL_INVARIANTS.
 
+The set of sub-checks it fans out to is sourced from the NODE_SCHEMAS
+registry (node_schemas.py): every prefix-bearing kind that participates in
+this delegator is listed in _TYPED_ANCHOR_DELEGATIONS, keyed by the same
+prefix the registry declares. A new prefix-bearing kind added to the
+registry is NOT automatically picked up here — it must be added to
+_TYPED_ANCHOR_DELEGATIONS explicitly, preserving the historical minimal
+surface (Entity/Variant have their own dedicated checks and are not folded
+into this delegator). Bit-for-bit behavior is unchanged: the registry only
+names what the hand-written bodies already enforce.
+
 References: R-anchor-everything (DRAFT), R-anchor-taxonomy (OPEN/M28).
 
 ## From `spec/src/hotam_spec/invariants.py::check_section_anchors_known`
@@ -401,3 +411,85 @@ filesystem walks) run ONLY when g.self_hosting is True (R-domain-self-
 hosting-flag). An ordinary business domain has no jurisdiction over
 framework internals; running these against it produces phantom P1s that
 are not this domain's to fix.
+
+## From `spec/src/hotam_spec/node_schemas.py` (module)
+
+Canon: §Invariants — registry of every typed-anchor node kind in the framework.
+
+RULE (R-anchor-everything): each kind of node the graph can carry has a
+NodeSchema — its id-prefix family, the TensionGraph collection attribute that
+holds its instances, the fields that reference OTHER nodes (ref_fields), and
+(where applicable) the Lifecycle that governs the node's status field.
+
+This module is the single declarative source describing node kinds. It is a
+REGISTRY, not an enforcer: the existing check_typed_anchors_* / check_no_dangling_*
+functions remain the enforcers (their names are referenced by enforced_by in
+domains/*/graph.py, so they CANNOT be renamed). The registry exists so that:
+
+  - new tooling (skeletons, generators, validators) can consult one place
+    instead of re-deriving the prefix/collection mapping;
+  - a future wave can drive more check_* from the registry without touching
+    the 88 hand-written functions in one shot;
+  - tests can assert the registry matches the live graph (every kind present
+    in the graph has a schema; prefixes agree with what the enforcers expect).
+
+CONTENT-FREE: no business data. stdlib + hotam_spec only
+(R-core-imports-stdlib-or-hotam-spec-only).
+
+WHY a frozenset/frozen-dataclass registry (not dynamic discovery): the kinds,
+prefixes and ref-fields are structural facts about the framework ontology that
+change rarely; a declarative table is auditable and diff-stable, whereas
+walking dataclass fields at runtime would couple the registry to incidental
+field additions (e.g. a new comment field is NOT a new ref-field).
+
+## From `spec/src/hotam_spec/node_schemas.py::NodeSchema`
+
+Canon: §Invariants — one node kind's structural fingerprint.
+
+Fields:
+  kind            — the Proposal/kind name and the human label
+                    (e.g. 'Requirement', 'Conflict', 'Axis').
+  prefix          — the typed-anchor id prefix family enforced by
+                    check_typed_anchors_* (e.g. 'R-', 'C-', 'OP-').
+                    Empty string means the kind has NO enforced prefix
+                    family (Axis/Stakeholder use bare slugs/ids; the
+                    framework has not pinned a prefix for them).
+  collection_attr — the TensionGraph attribute holding instances
+                    (e.g. 'requirements', 'conflicts'); empty string for
+                    kinds that are payloads on another node (Variant lives
+                    on Conflict.variants, not as a top-level collection).
+  ref_fields      — tuple of (attr_name, target_kind) pairs for fields
+                    that reference OTHER nodes — the dangling-id surface.
+                    Used by check_no_dangling_*; documented here so a
+                    future table-driven dangling check can consult it.
+  lifecycle       — the Lifecycle governing the node's status/lifecycle
+                    field, or None when the kind has no lifecycle field.
+
+WHY frozen: the schema describes an immutable structural fact; building it
+at import time and sharing the instance keeps the registry a pure table.
+
+## From `spec/src/hotam_spec/node_schemas.py::schema_for_kind`
+
+Canon: §Invariants — return the NodeSchema for ``kind``, or None if unknown.
+
+Pure lookup over the frozen registry; no allocation, no side effects.
+
+## From `spec/src/hotam_spec/node_schemas.py::schema_for_prefix`
+
+Canon: §Invariants — return the NodeSchema whose enforced prefix family is ``prefix``.
+
+Returns None for empty prefixes (Axis/Stakeholder/EntityType) and for
+unknown prefixes. Pure lookup.
+
+## From `spec/src/hotam_spec/node_schemas.py::kinds_with_prefix`
+
+Canon: §Invariants — return the kinds that have an enforced id-prefix family, in order.
+
+These are exactly the kinds covered by some check_typed_anchors_*.
+Pure derivation over the registry.
+
+## From `spec/src/hotam_spec/node_schemas.py::collection_attrs`
+
+Canon: §Invariants — return the TensionGraph collection attribute names, in order.
+
+Pure derivation; useful for validators that walk the graph uniformly.

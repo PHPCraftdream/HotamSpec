@@ -20,6 +20,7 @@ reader: ai-agent
 - `spec/src/hotam_spec/graph.py` — the tension graph store and its traversal helpers.
 - `spec/src/hotam_spec/invariants.py` — structural form of the tension graph (the check_* layer).
 - `spec/src/hotam_spec/lifecycle.py` — the generic state-machine value-type (framework keystone).
+- `spec/src/hotam_spec/node_schemas.py` — registry of every typed-anchor node kind in the framework.
 - `spec/src/hotam_spec/operator.py` — the acting facet of a Stakeholder (M20: NEW TYPE).
 - `spec/src/hotam_spec/process.py` — opt-in behavioral aspect (M12).
 - `spec/src/hotam_spec/proposal.py` — structured operator-→-steward change proposals.
