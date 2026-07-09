@@ -20,8 +20,7 @@ import sys
 # the enforcement perimeter (R-enforcement-perimeter-baselines-guarded).
 _PROTECTED_BASELINES = {
     "atomicity_compound_baseline.json",
-    "enforcement_perimeter_baseline.json",
-    "frozen_aspects_baseline.json",
+    "protected_baselines.json",
 }
 
 # Pin files that control which domain the verification machinery targets.

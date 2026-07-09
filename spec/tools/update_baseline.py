@@ -1,12 +1,16 @@
-"""Canon: §Invariants -- sanctioned baseline updater for enforcement-perimeter files.
+"""Canon: §Invariants -- sanctioned baseline updater for protected hash baselines.
 
 The PreToolUse guard (_graph_guard.py) denies direct Edit/Write to
-spec/tests/*_baseline.json (R-enforcement-perimeter-baselines-guarded).
-This tool is the ONLY sanctioned path to update those baselines:
+spec/tests/protected_baselines.json and spec/tests/atomicity_compound_baseline.json
+(R-enforcement-perimeter-baselines-guarded). This tool is the ONLY sanctioned
+path to update those baselines:
 
-  - frozen_aspects_baseline.json: recomputes sha256 hashes of frozen-aspect files.
-  - atomicity_compound_baseline.json: recomputes COMPOUND sets from audit_atomicity.
-  - enforcement_perimeter_baseline.json: recomputes sha256 hashes of enforcement code.
+  - protected_baselines.json holds TWO sha256 hash-pin sections, both updated
+    by the same parameterized rehash logic:
+      * enforcement_perimeter -- hashes of enforcement code (R-enforcement-perimeter-visible).
+      * frozen_aspects        -- hashes of frozen-aspect files (R-speculative-aspects-frozen).
+  - atomicity_compound_baseline.json is a DIFFERENT kind of baseline (sets of
+    compound requirement/invariant NAMES, not hashes) and keeps its own logic.
 
 Every update prints a human-readable diff (old hash -> new hash) so the change
 is VISIBLE in the tool output and the commit message. The guard does not block
@@ -38,16 +42,36 @@ if str(_SRC) not in sys.path:
 if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
+_PROTECTED_BASELINES_PATH = _TESTS_DIR / "protected_baselines.json"
+
+# Section names within protected_baselines.json that hold sha256 hash pins.
+_HASH_SECTIONS = ("enforcement_perimeter", "frozen_aspects")
+
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _update_frozen_aspects() -> bool:
-    """Recompute frozen_aspects_baseline.json from current file hashes."""
-    baseline_path = _TESTS_DIR / "frozen_aspects_baseline.json"
-    data = json.loads(baseline_path.read_text(encoding="utf-8"))
-    files = data["files"]
+def _load_protected_baselines() -> dict:
+    return json.loads(_PROTECTED_BASELINES_PATH.read_text(encoding="utf-8"))
+
+
+def _write_protected_baselines(data: dict) -> None:
+    _PROTECTED_BASELINES_PATH.write_text(
+        json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+
+def _update_hash_section(section: str) -> bool:
+    """Recompute sha256 hashes for one section of protected_baselines.json.
+
+    Shared logic for both `enforcement_perimeter` and `frozen_aspects` --
+    the two sections are semantically identical (a named set of files pinned
+    by sha256, guarding one rule), differing only in which files and which
+    rule they guard.
+    """
+    data = _load_protected_baselines()
+    files = data[section]["files"]
     changed = False
     for rel_path in list(files.keys()):
         full = _SPEC_ROOT / rel_path
@@ -60,37 +84,32 @@ def _update_frozen_aspects() -> bool:
             files[rel_path] = new_hash
             changed = True
     if changed:
-        baseline_path.write_text(
-            json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
-        print("  WRITTEN frozen_aspects_baseline.json")
+        _write_protected_baselines(data)
+        print(f"  WRITTEN protected_baselines.json [{section}]")
     else:
-        print("  frozen_aspects_baseline.json: no changes")
+        print(f"  protected_baselines.json [{section}]: no changes")
     return changed
 
 
 def _set_frozen_aspects_comment(new_comment: str) -> bool:
-    """Replace the `_comment` field of frozen_aspects_baseline.json verbatim.
+    """Replace the frozen_aspects section's `comment` field verbatim.
 
-    Sanctioned write path (same guard-bypass rationale as _update_frozen_aspects:
+    Sanctioned write path (same guard-bypass rationale as _update_hash_section:
     this writes via Python I/O, not Claude's Edit/Write tools). Used to keep the
-    guarded JSON's inline comment SHORT — a fixed pointer to the full narrative
+    guarded JSON's inline comment SHORT -- a fixed pointer to the full narrative
     history, which lives in a hand-authored doc outside the enforcement
     perimeter (docs/development/FROZEN-ASPECTS-HISTORY.md) rather than growing
     unboundedly inline in a machine-checked baseline file.
     """
-    baseline_path = _TESTS_DIR / "frozen_aspects_baseline.json"
-    data = json.loads(baseline_path.read_text(encoding="utf-8"))
-    old_comment = data.get("_comment", "")
+    data = _load_protected_baselines()
+    old_comment = data["frozen_aspects"].get("comment", "")
     if old_comment == new_comment:
-        print("  frozen_aspects_baseline.json: _comment unchanged")
+        print("  protected_baselines.json [frozen_aspects]: comment unchanged")
         return False
-    data["_comment"] = new_comment
-    baseline_path.write_text(
-        json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    print(f"  _comment: {len(old_comment)} chars -> {len(new_comment)} chars")
-    print("  WRITTEN frozen_aspects_baseline.json (_comment only)")
+    data["frozen_aspects"]["comment"] = new_comment
+    _write_protected_baselines(data)
+    print(f"  comment: {len(old_comment)} chars -> {len(new_comment)} chars")
+    print("  WRITTEN protected_baselines.json [frozen_aspects] (comment only)")
     return True
 
 
@@ -135,36 +154,10 @@ def _update_atomicity() -> bool:
     return changed
 
 
-def _update_enforcement_perimeter() -> bool:
-    """Recompute enforcement_perimeter_baseline.json from current file hashes."""
-    baseline_path = _TESTS_DIR / "enforcement_perimeter_baseline.json"
-    data = json.loads(baseline_path.read_text(encoding="utf-8"))
-    files = data["files"]
-    changed = False
-    for rel_path in list(files.keys()):
-        full = _SPEC_ROOT / rel_path
-        if not full.exists():
-            print(f"  WARNING: {rel_path} no longer exists")
-            continue
-        new_hash = _sha256(full)
-        if new_hash != files[rel_path]:
-            print(f"  {rel_path}: {files[rel_path][:16]}... -> {new_hash[:16]}...")
-            files[rel_path] = new_hash
-            changed = True
-    if changed:
-        baseline_path.write_text(
-            json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
-        print("  WRITTEN enforcement_perimeter_baseline.json")
-    else:
-        print("  enforcement_perimeter_baseline.json: no changes")
-    return changed
-
-
 _UPDATERS = {
-    "frozen_aspects": _update_frozen_aspects,
+    "frozen_aspects": lambda: _update_hash_section("frozen_aspects"),
     "atomicity": _update_atomicity,
-    "enforcement_perimeter": _update_enforcement_perimeter,
+    "enforcement_perimeter": lambda: _update_hash_section("enforcement_perimeter"),
 }
 
 
@@ -183,14 +176,14 @@ def main(argv: list[str] | None = None) -> int:
         "--set-frozen-aspects-comment",
         metavar="TEXT",
         help=(
-            "replace frozen_aspects_baseline.json's _comment field verbatim "
-            "with TEXT (sanctioned write path; does not touch file hashes)."
+            "replace protected_baselines.json's frozen_aspects.comment field "
+            "verbatim with TEXT (sanctioned write path; does not touch file hashes)."
         ),
     )
     args = parser.parse_args(argv)
 
     if args.set_frozen_aspects_comment is not None:
-        print("[frozen_aspects._comment]")
+        print("[frozen_aspects.comment]")
         changed = _set_frozen_aspects_comment(args.set_frozen_aspects_comment)
         print(
             "\nComment updated." if changed else "\nComment unchanged."
