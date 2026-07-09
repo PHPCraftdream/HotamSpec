@@ -359,7 +359,6 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-setup-hooks** — *generate the committable, portable project sensorium.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_setup_hooks`]
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]
 - **R-tool-spawn-log-isolation-status** — *reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_log_isolation_status`]
-- **R-tool-tick** — *the closed-loop diagnostic driver (advisory, M32 conservative).* [STRUCTURAL·tool · §Tick] [enforcer: (none)]
 - **R-tool-ticket-comment** — *append a stamped comment to a ticket (and a History "commented" entry).* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_comment`]
 - **R-tool-ticket-create** — *create a new on-disk ticket (auto-id, initial status, first History entry).* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_create`]
 - **R-tool-ticket-edit** — *edit a ticket's title/body, snapshotting the prior text into History.* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_edit`]

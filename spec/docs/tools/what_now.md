@@ -62,13 +62,15 @@ It aggregates, in priority order:
 Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)
   uv run python tools/what_now.py --demo     # diagnose the fixture demo graph
+  uv run python tools/what_now.py --report   # single advisory Tick report (was tools/tick.py)
 
 Dependency-light (stdlib + the hotam_spec package). Deterministic ordering.
 
 ## CLI usage
 
 ```
-usage: what_now.py [-h] [--demo] [--p5-limit P5_LIMIT]
+usage: what_now.py [-h] [--demo] [--p5-limit P5_LIMIT] [--report]
+                   [--cycle CYCLE]
 
 Canon: §Harness — derives the prioritized next correct action from any graph
 state, making being-lost structurally impossible.
@@ -79,4 +81,10 @@ options:
                        spec/content/.
   --p5-limit P5_LIMIT  cap on printed P5 LATENT_CONNECTOR lines (default 20);
                        truncation is disclosed, never silent.
+  --report             print a single advisory Tick report instead of the full
+                       action list (formerly tools/tick.py): load, diagnose,
+                       classify, and surface the top action. Always exits 0 —
+                       advisory, not a gate.
+  --cycle CYCLE        cycle counter for --report (caller-supplied; default
+                       1).
 ```

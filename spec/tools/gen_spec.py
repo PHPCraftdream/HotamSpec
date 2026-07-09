@@ -1689,7 +1689,7 @@ def build_constitution(g: TensionGraph) -> str:
         "  3. `python tools/what_now.py | head -20`               → what is the top action?"
     )
     lines.append(
-        "  4. `python tools/tick.py`                              → does the tick agree?"
+        "  4. `python tools/what_now.py --report`                  → does the tick agree?"
     )
     lines.append(
         "  5. Read `docs/gen/UNENFORCED.md`                      → what's claimed but not guaranteed?"
@@ -1752,7 +1752,7 @@ def build_constitution(g: TensionGraph) -> str:
         "  - propose Requirements / Conflict transitions / Rejections via the proposal"
     )
     lines.append("    protocol;")
-    lines.append("  - run `tick.py`, `what_now.py`, `gen_spec.py`;")
+    lines.append("  - run `what_now.py` (including `--report`), `gen_spec.py`;")
     lines.append("  - call `apply_proposal.py` with a steward-approved JSON;")
     lines.append("  - crystallize working knowledge into requirement-code;")
     lines.append("  - cite anchors in every communication.")

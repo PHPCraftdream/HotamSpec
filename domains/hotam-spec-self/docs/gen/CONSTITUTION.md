@@ -95,7 +95,7 @@ Run, in order:
   1. `cd D:/dev/HotamSpec/spec && python -m pytest -q`   → suite green?
   2. `python tools/gen_spec.py` (twice)                  → deterministic?
   3. `python tools/what_now.py | head -20`               → what is the top action?
-  4. `python tools/tick.py`                              → does the tick agree?
+  4. `python tools/what_now.py --report`                  → does the tick agree?
   5. Read `docs/gen/UNENFORCED.md`                      → what's claimed but not guaranteed?
   6. Read `docs/gen/HISTORY.md`                         → what's been decided / rejected?
   7. Read `docs/gen/DECISIONS.md`                       → which M-decisions are open?
@@ -158,7 +158,7 @@ YOUR scope (within the hard boundary):
 
   - propose Requirements / Conflict transitions / Rejections via the proposal
     protocol;
-  - run `tick.py`, `what_now.py`, `gen_spec.py`;
+  - run `what_now.py` (including `--report`), `gen_spec.py`;
   - call `apply_proposal.py` with a steward-approved JSON;
   - crystallize working knowledge into requirement-code;
   - cite anchors in every communication.

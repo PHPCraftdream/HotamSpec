@@ -135,7 +135,6 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 - [setup_hooks](spec/docs/tools/setup_hooks.md) — generate the committable, portable project sensorium.
 - [spawn_agent](spec/docs/tools/spawn_agent.md) — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).
 - [spawn_log_isolation_status](spec/docs/tools/spawn_log_isolation_status.md) — reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.
-- [tick](spec/docs/tools/tick.md) — the closed-loop diagnostic driver (advisory, M32 conservative).
 - [ticket_comment](spec/docs/tools/ticket_comment.md) — append a stamped comment to a ticket (and a History "commented" entry).
 - [ticket_create](spec/docs/tools/ticket_create.md) — create a new on-disk ticket (auto-id, initial status, first History entry).
 - [ticket_edit](spec/docs/tools/ticket_edit.md) — edit a ticket's title/body, snapshotting the prior text into History.
@@ -161,7 +160,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `R-axes-as-module-constant` — REJECTED requirement 'R-axes-as-module-constant' claims a REPLACES successor in prose but has NO structural `replaces` edge — migrate it via a ProposedRejection (with replaced_by) so the anti-relitigation relation becomes machine-traversable (R-rejected-preserved-not-deleted). Advisory; never a gate.
 - **debt:** 198/228 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 6 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26942 chars (headroom 123058)
+- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26842 chars (headroom 123158)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

@@ -94,13 +94,15 @@ def test_constitution_lists_all_constitution_requirements() -> None:
 
 
 def test_constitution_cites_apply_proposal_and_tick() -> None:
-    """The boot-sequence section names tools/apply_proposal.py and tools/tick.py."""
+    """The boot-sequence section names tools/apply_proposal.py and the tick
+    report (formerly tools/tick.py, folded into `what_now.py --report`)."""
     g = _content_graph()
     text = gen_spec.build_constitution(g)
 
     assert "tools/apply_proposal.py" in text, (
         "CONSTITUTION.md §6 boot-sequence must reference tools/apply_proposal.py"
     )
-    assert "tools/tick.py" in text, (
-        "CONSTITUTION.md §6 boot-sequence must reference tools/tick.py"
+    assert "what_now.py --report" in text, (
+        "CONSTITUTION.md §6 boot-sequence must reference the tick report "
+        "(what_now.py --report)"
     )

@@ -65,7 +65,6 @@ reader: ai-agent
 - `spec/tools/setup_hooks.py` — generate the committable, portable project sensorium.  →  R-tool-setup-hooks
 - `spec/tools/spawn_agent.py` — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).  →  R-tool-spawn-agent
 - `spec/tools/spawn_log_isolation_status.py` — reads spec/.runtime/spawn-log.jsonl and flags mutating agents recorded without worktree isolation.  →  R-tool-spawn-log-isolation-status
-- `spec/tools/tick.py` — the closed-loop diagnostic driver (advisory, M32 conservative).  →  R-tool-tick
 - `spec/tools/ticket_comment.py` — append a stamped comment to a ticket (and a History "commented" entry).  →  R-tool-ticket-comment
 - `spec/tools/ticket_create.py` — create a new on-disk ticket (auto-id, initial status, first History entry).  →  R-tool-ticket-create
 - `spec/tools/ticket_edit.py` — edit a ticket's title/body, snapshotting the prior text into History.  →  R-tool-ticket-edit
