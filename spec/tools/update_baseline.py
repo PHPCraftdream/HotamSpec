@@ -17,6 +17,7 @@ Usage (from spec/):
   .venv/Scripts/python.exe tools/update_baseline.py atomicity
   .venv/Scripts/python.exe tools/update_baseline.py enforcement_perimeter
   .venv/Scripts/python.exe tools/update_baseline.py --all
+  .venv/Scripts/python.exe tools/update_baseline.py --set-frozen-aspects-comment "..."
 """
 
 from __future__ import annotations
@@ -66,6 +67,31 @@ def _update_frozen_aspects() -> bool:
     else:
         print("  frozen_aspects_baseline.json: no changes")
     return changed
+
+
+def _set_frozen_aspects_comment(new_comment: str) -> bool:
+    """Replace the `_comment` field of frozen_aspects_baseline.json verbatim.
+
+    Sanctioned write path (same guard-bypass rationale as _update_frozen_aspects:
+    this writes via Python I/O, not Claude's Edit/Write tools). Used to keep the
+    guarded JSON's inline comment SHORT — a fixed pointer to the full narrative
+    history, which lives in a hand-authored doc outside the enforcement
+    perimeter (docs/development/FROZEN-ASPECTS-HISTORY.md) rather than growing
+    unboundedly inline in a machine-checked baseline file.
+    """
+    baseline_path = _TESTS_DIR / "frozen_aspects_baseline.json"
+    data = json.loads(baseline_path.read_text(encoding="utf-8"))
+    old_comment = data.get("_comment", "")
+    if old_comment == new_comment:
+        print("  frozen_aspects_baseline.json: _comment unchanged")
+        return False
+    data["_comment"] = new_comment
+    baseline_path.write_text(
+        json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(f"  _comment: {len(old_comment)} chars -> {len(new_comment)} chars")
+    print("  WRITTEN frozen_aspects_baseline.json (_comment only)")
+    return True
 
 
 def _update_atomicity() -> bool:
@@ -153,7 +179,23 @@ def main(argv: list[str] | None = None) -> int:
         help="Which baseline to update.",
     )
     parser.add_argument("--all", action="store_true", help="Update all baselines.")
+    parser.add_argument(
+        "--set-frozen-aspects-comment",
+        metavar="TEXT",
+        help=(
+            "replace frozen_aspects_baseline.json's _comment field verbatim "
+            "with TEXT (sanctioned write path; does not touch file hashes)."
+        ),
+    )
     args = parser.parse_args(argv)
+
+    if args.set_frozen_aspects_comment is not None:
+        print("[frozen_aspects._comment]")
+        changed = _set_frozen_aspects_comment(args.set_frozen_aspects_comment)
+        print(
+            "\nComment updated." if changed else "\nComment unchanged."
+        )
+        return 0
 
     if not args.baseline and not args.all:
         parser.error("specify a baseline name or --all")
