@@ -72,68 +72,38 @@ def test_composite_prompt_contains_crystal_and_task(
     assert "## Your task" in captured.out
 
 
-def test_refuses_unknown_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Exit 1 when the agent path cannot be resolved."""
-    import spawn_agent
-
-    monkeypatch.setattr(spawn_agent, "_DOMAINS_ROOT", tmp_path)
-    monkeypatch.setattr(spawn_agent, "_LEGACY_AGENTS_ROOT", tmp_path / "agents")
-    monkeypatch.setattr(spawn_agent, "_RUNTIME_DIR", tmp_path / ".runtime")
-
-    rc = spawn_agent.main(
-        [
-            "nonexistent/path/agent",
-            "--task",
-            "some task",
-            "--stamp",
-            "2026-01-01T00:00:00Z",
-        ]
-    )
-    assert rc == 1
-
-
-def test_refuses_missing_claude_md(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    "case",
+    ["unknown_agent", "missing_claude_md", "missing_stamp"],
+)
+def test_refuses_bad_invocation(
+    case: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Exit 1 when agent dir exists but has no CLAUDE.md."""
+    """Exit 1 for each of: unresolvable agent path, agent dir with no CLAUDE.md,
+    or a missing --stamp argument."""
     import spawn_agent
-
-    agent_dir = _make_agent(tmp_path, "no-crystal-agent", with_claude_md=False)
 
     monkeypatch.setattr(spawn_agent, "_DOMAINS_ROOT", tmp_path)
     monkeypatch.setattr(spawn_agent, "_LEGACY_AGENTS_ROOT", tmp_path / "agents")
     monkeypatch.setattr(spawn_agent, "_RUNTIME_DIR", tmp_path / ".runtime")
 
-    rc = spawn_agent.main(
-        [
+    if case == "unknown_agent":
+        agent_arg = "nonexistent/path/agent"
+        argv = [agent_arg, "--task", "some task", "--stamp", "2026-01-01T00:00:00Z"]
+    elif case == "missing_claude_md":
+        agent_dir = _make_agent(tmp_path, "no-crystal-agent", with_claude_md=False)
+        argv = [
             str(agent_dir),
             "--task",
             "some task",
             "--stamp",
             "2026-01-01T00:00:00Z",
         ]
-    )
-    assert rc == 1
+    else:  # missing_stamp
+        agent_dir = _make_agent(tmp_path, "stamped-agent")
+        argv = [str(agent_dir), "--task", "some task"]  # no --stamp
 
-
-def test_refuses_missing_stamp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Exit 1 when --stamp is omitted."""
-    import spawn_agent
-
-    agent_dir = _make_agent(tmp_path, "stamped-agent")
-
-    monkeypatch.setattr(spawn_agent, "_DOMAINS_ROOT", tmp_path)
-    monkeypatch.setattr(spawn_agent, "_LEGACY_AGENTS_ROOT", tmp_path / "agents")
-    monkeypatch.setattr(spawn_agent, "_RUNTIME_DIR", tmp_path / ".runtime")
-
-    rc = spawn_agent.main(
-        [
-            str(agent_dir),
-            "--task",
-            "some task",
-            # no --stamp
-        ]
-    )
+    rc = spawn_agent.main(argv)
     assert rc == 1
 
 

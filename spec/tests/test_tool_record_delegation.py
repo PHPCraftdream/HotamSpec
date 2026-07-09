@@ -15,6 +15,8 @@ from pathlib import Path
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 
 
+import pytest  # noqa: E402
+
 import record_delegation  # noqa: E402
 from hotam_spec.graph import TensionGraph  # noqa: E402
 from hotam_spec.stakeholder import Stakeholder  # noqa: E402
@@ -123,40 +125,26 @@ def test_unknown_steward_refused(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 3. Negative: empty verbatim / scope
+# 3. Negative: empty verbatim / scope / steward
 # ---------------------------------------------------------------------------
 
 
-def test_empty_verbatim_refused(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "steward,verbatim,scope",
+    [
+        pytest.param("domain-user", "   ", "campaign: test", id="empty-verbatim"),
+        pytest.param("domain-user", "some delegation", "   ", id="empty-scope"),
+        pytest.param("   ", "some delegation", "campaign: test", id="empty-steward"),
+    ],
+)
+def test_blank_required_field_refused(
+    tmp_path: Path, steward: str, verbatim: str, scope: str
+) -> None:
     path = tmp_path / "delegations.jsonl"
     rc = record_delegation.record_delegation(
-        steward="domain-user",
-        verbatim="   ",
-        scope="campaign: test",
-        graph=_g(),
-        delegations_path=path,
-    )
-    assert rc == 1
-
-
-def test_empty_scope_refused(tmp_path: Path) -> None:
-    path = tmp_path / "delegations.jsonl"
-    rc = record_delegation.record_delegation(
-        steward="domain-user",
-        verbatim="some delegation",
-        scope="   ",
-        graph=_g(),
-        delegations_path=path,
-    )
-    assert rc == 1
-
-
-def test_empty_steward_refused(tmp_path: Path) -> None:
-    path = tmp_path / "delegations.jsonl"
-    rc = record_delegation.record_delegation(
-        steward="   ",
-        verbatim="some delegation",
-        scope="campaign: test",
+        steward=steward,
+        verbatim=verbatim,
+        scope=scope,
         graph=_g(),
         delegations_path=path,
     )

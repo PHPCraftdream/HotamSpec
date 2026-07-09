@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 
 import gate_status  # noqa: E402
 
@@ -39,29 +40,26 @@ def _rec(stamp: str, tier: str, target: str = "R-foo") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_missing_log_is_not_satisfied(tmp_path: Path) -> None:
-    """No log file at all -> NOT satisfied (fail-closed: no trace = unverified)."""
+@pytest.mark.parametrize(
+    "case,contents",
+    [
+        pytest.param("missing", None, id="missing-log"),
+        pytest.param("empty", "", id="empty-file"),
+        pytest.param("corrupt", "not json\nalso bad\n", id="all-corrupt-lines"),
+    ],
+)
+def test_unusable_log_is_not_satisfied(
+    tmp_path: Path, case: str, contents: str | None
+) -> None:
+    """No log file, an empty log file, or a log file with only corrupt JSON ->
+    NOT satisfied (fail-closed: no trustworthy trace = unverified)."""
     log_path = tmp_path / "land-log.jsonl"
+    if contents is not None:
+        log_path.write_text(contents, encoding="utf-8")
     result = gate_status.compute_gate_status(log_path)
     assert result.satisfied is False
-    assert "NOT verified" in result.reason
-
-
-def test_empty_file_is_not_satisfied(tmp_path: Path) -> None:
-    """A log file that exists but is empty -> NOT satisfied (fail-closed)."""
-    log_path = tmp_path / "land-log.jsonl"
-    log_path.write_text("", encoding="utf-8")
-    result = gate_status.compute_gate_status(log_path)
-    assert result.satisfied is False
-    assert "NOT verified" in result.reason
-
-
-def test_all_corrupt_lines_is_not_satisfied(tmp_path: Path) -> None:
-    """A log file with only corrupt JSON -> NOT satisfied (fail-closed)."""
-    log_path = tmp_path / "land-log.jsonl"
-    log_path.write_text("not json\nalso bad\n", encoding="utf-8")
-    result = gate_status.compute_gate_status(log_path)
-    assert result.satisfied is False
+    if case in ("missing", "empty"):
+        assert "NOT verified" in result.reason
 
 
 def test_t1_then_t2_is_satisfied(tmp_path: Path) -> None:

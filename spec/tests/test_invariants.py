@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 
 from fixtures.seed import DEMO_AXES, seed_graph  # noqa: E402
 from hotam_spec.assumption import DEAD, Assumption  # noqa: E402
@@ -206,25 +207,18 @@ def test_dangling_relation_target_fires() -> None:
     assert any(x.target == "R-1" and "R-missing" in x.message for x in v)
 
 
-def test_missing_axis_fires() -> None:
-    """check_conflict_has_axis_context_steward fires on an empty axis."""
-    bad = _wellformed_conflict(axis="", id="C-manual")
+@pytest.mark.parametrize(
+    "blank_field",
+    ["axis", "context", "steward"],
+)
+def test_missing_axis_context_or_steward_fires(blank_field: str) -> None:
+    """check_conflict_has_axis_context_steward fires on an empty axis/context/steward."""
+    overrides = {blank_field: ""}
+    if blank_field != "steward":
+        overrides["id"] = "C-manual"
+    bad = _wellformed_conflict(**overrides)
     v = check_conflict_has_axis_context_steward(_graph_with(bad))
-    assert any("axis" in x.message for x in v)
-
-
-def test_missing_context_fires() -> None:
-    """check_conflict_has_axis_context_steward fires on an empty context."""
-    bad = _wellformed_conflict(context="", id="C-manual")
-    v = check_conflict_has_axis_context_steward(_graph_with(bad))
-    assert any("context" in x.message for x in v)
-
-
-def test_missing_steward_fires() -> None:
-    """check_conflict_has_axis_context_steward fires on an empty steward."""
-    bad = _wellformed_conflict(steward="")
-    v = check_conflict_has_axis_context_steward(_graph_with(bad))
-    assert any("steward" in x.message for x in v)
+    assert any(blank_field in x.message for x in v)
 
 
 def test_single_member_fires() -> None:
