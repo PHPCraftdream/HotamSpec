@@ -521,9 +521,15 @@ Canon: §Graph — hotam_spec package-root accessor.
 
 ## From `spec/src/hotam_spec/repo_paths.py::domains_root`
 
-Return the ``<repo>/domains`` directory.
+Return the consumer's ``domains`` directory.
 
-Canon: §Graph — domains-root accessor.
+Delegates to ``project_paths.project_root_or_raise()`` — domains are
+CONSUMER data, not framework-internal. In self-hosting mode the consumer
+root coincides with the framework repo, so this returns ``<repo>/domains``
+exactly as before; in consumer mode it returns
+``<consumer-project>/domains``.
+
+Canon: §Graph — domains-root accessor (R-project-root-not-hardcoded).
 
 ## From `spec/src/hotam_spec/repo_paths.py::tests_root`
 
@@ -552,8 +558,9 @@ Canon: §Graph — runtime-root accessor.
 
 Return the generated-docs directory for a domain (or the legacy fallback).
 
-When ``domain_name`` is given, returns ``<repo>/domains/<name>/docs/gen``.
-When ``None``, returns the legacy ``<repo>/docs/gen`` (used by --demo and
+When ``domain_name`` is given, returns ``<consumer-root>/domains/<name>/docs/gen``.
+When ``None``, returns the consumer-root ``docs/gen`` (used by --demo and
 by the framework's own anti-drift meta-tests when no domain is active).
+Both are CONSUMER docs, so the root comes from ``project_root_or_raise()``.
 
-Canon: §Graph — docs-gen-root accessor.
+Canon: §Graph — docs-gen-root accessor (R-project-root-not-hardcoded).

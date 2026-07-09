@@ -53,11 +53,18 @@ SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
 
+from hotam_spec.project_paths import (  # noqa: E402
+    project_root_or_raise as _project_root,
+)
 from hotam_spec.repo_paths import (  # noqa: E402
     domains_root as _domains_root,
     repo_root as _repo_root,
 )
-REPO_ROOT = _repo_root()  # .../HotamSpec
+# Consumer root: domains/CLAUDE.md/docs live in the CONSUMER's project, resolved
+# via project_root() (R1-R6 chain). In self-hosting mode R3 (CWD markers)
+# resolves to the same path as _repo_root(), so behavior is unchanged for the
+# dev cycle; consumer mode gets their own repo root (R-project-root-not-hardcoded).
+REPO_ROOT = _project_root()  # consumer project root
 SRC = SPEC_ROOT / "src" / "hotam_spec"
 DEMO_DIR = REPO_ROOT / "docs" / "demo"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"

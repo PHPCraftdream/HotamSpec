@@ -35,7 +35,7 @@ def _cmd_create(args: argparse.Namespace) -> None:
     )
     ds.save(delegation)
     try:
-        shown = delegation.path.relative_to(ds.REPO_ROOT)
+        shown = delegation.path.relative_to(ds.project_root_or_raise())
     except ValueError:
         shown = delegation.path
     sys.stdout.write(f"created {did} -> {shown}\n")

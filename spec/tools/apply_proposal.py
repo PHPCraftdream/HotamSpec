@@ -189,7 +189,17 @@ from hotam_spec.proposal import (  # noqa: E402
 _SLUG_RE = _re.compile(r"^[a-z][a-z0-9-]*$")
 from hotam_spec.repo_paths import domains_root as _domains_root  # noqa: E402
 
-_DOMAINS_ROOT = _domains_root()
+# Consumer domains root: CONSUMER data. Module-level override slot for tests;
+# when None, resolved FRESH each use via _domains_root() (§3.3 — NO import-time
+# resolver-result cache that would lock one root per pytest session).
+_DOMAINS_ROOT: "Path | None" = None
+
+
+def _domains_root_path() -> "Path":
+    """Resolve consumer domains root (fresh each call) or return override slot."""
+    if _DOMAINS_ROOT is not None:
+        return _DOMAINS_ROOT
+    return _domains_root()
 
 
 def _resolve_content_graph() -> "Path":
@@ -204,9 +214,9 @@ def _resolve_content_graph() -> "Path":
     """
     from hotam_spec.domain_resolution import resolve_active_domain  # noqa: PLC0415
 
-    name = resolve_active_domain(_DOMAINS_ROOT)
+    name = resolve_active_domain(_domains_root_path())
     if name is not None:
-        return _DOMAINS_ROOT / name / "graph.py"
+        return _domains_root_path() / name / "graph.py"
     return _SPEC_ROOT / "content" / "graph.py"
 
 
@@ -3248,7 +3258,7 @@ def apply(
     applied_domain = active_graph.parent.name if active_graph.parent.name else ""
     from hotam_spec.domain_resolution import pin_file_path  # noqa: PLC0415
 
-    _pin = pin_file_path(_DOMAINS_ROOT)
+    _pin = pin_file_path(_domains_root_path())
     pinned_domain = ""
     if _pin.exists():
         pinned_domain = _pin.read_text(encoding="utf-8").strip()

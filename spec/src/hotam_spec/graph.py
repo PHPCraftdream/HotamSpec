@@ -32,7 +32,7 @@ from hotam_spec.domain_resolution import resolve_active_domain
 from hotam_spec.entity import EntityInstance, EntityType
 from hotam_spec.operator import Operator
 from hotam_spec.process import Goal, Process
-from hotam_spec.repo_paths import domains_root, repo_root, spec_root, src_root
+from hotam_spec.repo_paths import domains_root, spec_root, src_root
 from hotam_spec.requirement import Requirement
 from hotam_spec.stakeholder import Stakeholder
 
@@ -141,13 +141,15 @@ CONTENT_DIR = spec_root() / "content"
 CONTENT_GRAPH_FILE = CONTENT_DIR / "graph.py"
 CONTENT_BUILDER_NAME = "build_graph"
 
-#: Repo root + domains root — centralized via hotam_spec.repo_paths.
+#: Domains root — centralized via hotam_spec.repo_paths.domains_root(), which
+#: delegates to project_root() (R-project-root-not-hardcoded). Resolved FRESH
+#: on each use inside _active_domain_graph_file(), NOT cached at module level
+#: (§3.3 — a module-level cache would lock one root per pytest session and
+#: break env-var override between calls).
 #: NOTE: the env→pin→alphabetical active-domain resolution order now lives in
 #: ONE place — hotam_spec.domain_resolution.resolve_active_domain — shared by
 #: graph.py, gen_spec.py and apply_proposal.py (R-active-domain-pin-not-
 #: alphabetical). The pin-file path is centralized there too.
-_REPO_ROOT = repo_root()
-_DOMAINS_ROOT = domains_root()
 
 
 def _active_domain_graph_file() -> Path | None:
@@ -177,17 +179,18 @@ def _active_domain_graph_file() -> Path | None:
     stays as the last-resort fallback so a fresh repo with no pin file yet
     is never "lost" (R-agent-never-lost).
     """
-    name = resolve_active_domain(_DOMAINS_ROOT)
+    _domains_root = domains_root()
+    name = resolve_active_domain(_domains_root)
     if name is not None:
-        candidate = _DOMAINS_ROOT / name / "graph.py"
+        candidate = _domains_root / name / "graph.py"
         if candidate.exists():
             return candidate
     # The resolved name's domain has no graph.py (fresh scaffold) — fall back
     # to the first domain alphabetically that DOES have one.
-    if not _DOMAINS_ROOT.exists():
+    if not _domains_root.exists():
         return None
     for d in sorted(
-        d for d in _DOMAINS_ROOT.iterdir() if d.is_dir() and not d.name.startswith("_")
+        d for d in _domains_root.iterdir() if d.is_dir() and not d.name.startswith("_")
     ):
         gf = d / "graph.py"
         if gf.exists():

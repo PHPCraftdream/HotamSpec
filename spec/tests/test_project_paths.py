@@ -416,3 +416,77 @@ def test_project_root_or_raise_returns_path_when_resolved(
 def test_project_root_unresolved_is_runtime_error() -> None:
     """ProjectRootUnresolved subclasses RuntimeError (catchable by broad handlers)."""
     assert issubclass(ProjectRootUnresolved, RuntimeError)
+
+
+# ---------------------------------------------------------------------------
+# §8-W2 acceptance #2: env-var override REALLY switches root between calls.
+# This is the direct verification that module-level resolver-result caches
+# (the §3.3 problem — _DOMAINS_ROOT = _domains_root() computed ONCE at import)
+# are gone: if any migrated module cached the root at import, two sequential
+# calls with different env would return the SAME (stale) root and this test
+# would fail. It MUST see two DIFFERENT roots.
+# ---------------------------------------------------------------------------
+
+
+def test_env_override_switches_root_between_calls(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Two consecutive project_root() calls with different env → different roots.
+
+    §3.3 / §8-W2 acceptance #2: the resolution MUST be re-evaluated on every
+    call, not locked at import time. We set env A, call, then set env B, call
+    again — the two results MUST differ and each MUST equal its env target.
+    """
+    dir_a = tmp_path / "project_a"
+    dir_b = tmp_path / "project_b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    monkeypatch.chdir(tmp_path)  # neutral CWD (no markers here)
+
+    monkeypatch.setenv(ENV_PROJECT_ROOT, str(dir_a))
+    root_a = project_root()
+    assert root_a == dir_a.resolve()
+
+    monkeypatch.setenv(ENV_PROJECT_ROOT, str(dir_b))
+    root_b = project_root()
+    assert root_b == dir_b.resolve()
+
+    assert root_a != root_b, (
+        "env override did not switch root between calls — a module-level "
+        "resolver-result cache (§3.3) is still locking the first result"
+    )
+
+
+def test_domains_root_accessor_reflects_env_change_between_calls(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """domains_root() (the migrated accessor) re-resolves when env changes.
+
+    §3.1/§3.3: repo_paths.domains_root() used to derive from _REPO_ROOT (a
+    module-level constant computed once). After W2 it derives from
+    project_root_or_raise(), so two calls with different HOTAM_SPEC_PROJECT_ROOT
+    MUST return different domains roots. This catches a regression where
+    domains_root is re-introduced as an import-time cache.
+    """
+    from hotam_spec.repo_paths import domains_root
+
+    proj_a = tmp_path / "consumer_a"
+    proj_b = tmp_path / "consumer_b"
+    proj_a.mkdir()
+    proj_b.mkdir()
+
+    monkeypatch.chdir(tmp_path)  # neutral CWD
+
+    monkeypatch.setenv(ENV_PROJECT_ROOT, str(proj_a))
+    dr_a = domains_root()
+
+    monkeypatch.setenv(ENV_PROJECT_ROOT, str(proj_b))
+    dr_b = domains_root()
+
+    assert dr_a == proj_a.resolve() / "domains"
+    assert dr_b == proj_b.resolve() / "domains"
+    assert dr_a != dr_b, (
+        "domains_root() returned the same path after env change — it is "
+        "cached at import (§3.3 regression)"
+    )

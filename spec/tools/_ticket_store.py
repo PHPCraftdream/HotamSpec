@@ -51,13 +51,35 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+# Make hotam_spec importable so this private helper resolves the consumer
+# project root via the shared R1-R6 chain (R-project-root-not-hardcoded).
+_SPEC_ROOT = Path(__file__).resolve().parents[1]
+if str(_SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_SPEC_ROOT / "src"))
+
+from hotam_spec.project_paths import project_root_or_raise  # noqa: E402
+
 # --- layout -----------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-TICKETS_DIR = REPO_ROOT / "tickets"
+# Consumer root: tickets/ is CONSUMER data, resolved via project_root().
+# In self-hosting R3 (CWD markers) yields the same path as parents[2].
+# Module-level names kept as override slots for tests; when None, resolved
+# FRESH each use via project_root() (§3.3 — NO import-time resolver-result
+# cache that would lock one root per pytest session).
+REPO_ROOT: Path | None = None
+TICKETS_DIR: Path | None = None
+
+
+def _tickets_dir() -> Path:
+    """Resolve consumer tickets dir (fresh each call) or return override slot."""
+    if TICKETS_DIR is not None:
+        return TICKETS_DIR
+    root = REPO_ROOT if REPO_ROOT is not None else project_root_or_raise()
+    return root / "tickets"
 
 STATUSES: tuple[str, ...] = ("backlog", "in-progress", "review", "done", "blocked")
 """The canonical status columns (= subfolders under tickets/)."""
@@ -110,13 +132,14 @@ def now_stamp() -> str:
 def status_dir(status: str) -> Path:
     if status not in STATUSES:
         raise ValueError(f"unknown status {status!r}; known: {', '.join(STATUSES)}")
-    return TICKETS_DIR / status
+    return _tickets_dir() / status
 
 
 def ensure_layout() -> None:
     """Create tickets/ and every status subfolder (idempotent)."""
+    tickets = _tickets_dir()
     for s in STATUSES:
-        (TICKETS_DIR / s).mkdir(parents=True, exist_ok=True)
+        (tickets / s).mkdir(parents=True, exist_ok=True)
 
 
 def _split_frontmatter(text: str) -> tuple[dict, str]:
@@ -142,7 +165,7 @@ def _render(header: dict, body: str) -> str:
 def find_path(ticket_id: str) -> Path | None:
     """Locate a ticket file by id across all status folders, or None."""
     for s in STATUSES:
-        p = TICKETS_DIR / s / f"{ticket_id}.md"
+        p = _tickets_dir() / s / f"{ticket_id}.md"
         if p.exists():
             return p
     return None
@@ -164,7 +187,7 @@ def all_ids() -> list[str]:
     """Every T-<n> id present on disk (any status)."""
     ids: list[str] = []
     for s in STATUSES:
-        d = TICKETS_DIR / s
+        d = _tickets_dir() / s
         if not d.exists():
             continue
         for p in d.glob("T-*.md"):
@@ -275,6 +298,6 @@ def counts_by_status() -> dict[str, int]:
     """Number of tickets per status folder (for the what_now pulse band)."""
     out: dict[str, int] = {}
     for s in STATUSES:
-        d = TICKETS_DIR / s
+        d = _tickets_dir() / s
         out[s] = len(list(d.glob("T-*.md"))) if d.exists() else 0
     return out

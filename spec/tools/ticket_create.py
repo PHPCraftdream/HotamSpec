@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     ts.save(ticket)
     try:
-        shown = ticket.path.relative_to(ts.REPO_ROOT)
+        shown = ticket.path.relative_to(ts.project_root_or_raise())
     except ValueError:
         shown = ticket.path
     sys.stdout.write(f"created {tid} -> {shown}\n")

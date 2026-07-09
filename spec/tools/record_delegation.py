@@ -63,7 +63,6 @@ if str(_SRC) not in sys.path:
 
 from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
 
-_DOMAINS_ROOT = _SPEC_ROOT.parent / "domains"
 _ID_RE = re.compile(r"^DEL-(\d+)$")
 
 

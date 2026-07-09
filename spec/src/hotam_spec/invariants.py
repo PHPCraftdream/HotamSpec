@@ -101,9 +101,9 @@ from hotam_spec.lifecycle import (
 )
 from hotam_spec.operator import OPERATOR_LIFECYCLE
 from hotam_spec.process import GOAL_LIFECYCLE, TARGET_KINDS
+from hotam_spec.project_paths import project_root_or_raise as _project_root
 from hotam_spec.repo_paths import (
     domains_root as _domains_root,
-    repo_root as _repo_root,
     spec_root as _spec_root,
 )
 from hotam_spec.requirement import (
@@ -2092,7 +2092,7 @@ def check_operator_within_budget(g: TensionGraph) -> list[Violation]:
                     )
                 )
         elif op.context_budget.measure == CRYSTAL_CHARS:
-            claude_md = _REPO_ROOT_FROM_INVARIANTS / "CLAUDE.md"
+            claude_md = _project_root() / "CLAUDE.md"
             size = len(claude_md.read_text(encoding="utf-8")) if claude_md.exists() else 0
             if size > limit:
                 out.append(
@@ -2712,8 +2712,32 @@ def check_typed_anchors_entity(g: TensionGraph) -> list[Violation]:
 # 14b. Entity-docs anti-drift — ENTITIES.md lists every declared EntityType
 # ---------------------------------------------------------------------------
 
-_DOMAINS_ROOT_FOR_ENTITY_CHECK = _domains_root()
-_REPO_ROOT_FOR_ENTITY_CHECK = _repo_root()
+#: Override slots for filesystem-coherence entity-docs checks. Tests may set
+#: these to a tmp_path; when None (default), the root is resolved FRESH on
+#: each call via _domains_root()/_project_root() (R-project-root-not-hardcoded,
+#: §3.3 — NO module-level resolver-result cache that would lock one root per
+#: pytest session).
+_DOMAINS_ROOT_FOR_ENTITY_CHECK: Path | None = None
+_REPO_ROOT_FOR_ENTITY_CHECK: Path | None = None
+
+
+def _entity_check_domains_root() -> Path:
+    """Resolve the domains root for entity-docs checks (fresh each call).
+
+    Returns the test override slot if set, otherwise the live project-root
+    domains root (re-resolved each call so different env vars / CWD between
+    calls yield different roots — the §3.3 anti-cache requirement).
+    """
+    if _DOMAINS_ROOT_FOR_ENTITY_CHECK is not None:
+        return _DOMAINS_ROOT_FOR_ENTITY_CHECK
+    return _domains_root()
+
+
+def _entity_check_repo_root() -> Path:
+    """Resolve the consumer project root for entity-docs checks (fresh each call)."""
+    if _REPO_ROOT_FOR_ENTITY_CHECK is not None:
+        return _REPO_ROOT_FOR_ENTITY_CHECK
+    return _project_root()
 
 
 def check_entities_md_lists_all_types(g: TensionGraph) -> list[Violation]:  # noqa: ARG001
@@ -2734,7 +2758,7 @@ def check_entities_md_lists_all_types(g: TensionGraph) -> list[Violation]:  # no
     WHY aspect-gated per domain: a domain with no entity_types need not have any
     ## type sections in its ENTITIES.md.
     """
-    domains_root = _DOMAINS_ROOT_FOR_ENTITY_CHECK
+    domains_root = _entity_check_domains_root()
     if not domains_root.exists():
         return []
 
@@ -2820,7 +2844,7 @@ def check_entity_type_constitution_projection(g: TensionGraph) -> list[Violation
     the committed generated docs, same shape as check_entities_md_lists_all_types
     (see that function's WHY for the full rationale on graph-argument unused).
     """
-    domains_root = _DOMAINS_ROOT_FOR_ENTITY_CHECK
+    domains_root = _entity_check_domains_root()
     if not domains_root.exists():
         return []
 
@@ -3032,30 +3056,55 @@ def check_bijection_r_to_enforcer(g: TensionGraph) -> list[Violation]:
 # compatibility with the check_* protocol but is not used.
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT_FROM_INVARIANTS = _repo_root()  # .../HotamSpec
-_DOMAINS_ROOT = _domains_root()
+#: Override slots for filesystem-coherence domain/agent checks. Tests may set
+#: these to a tmp_path; when None (default), the root is resolved FRESH on
+#: each call via _domains_root()/_project_root() (R-project-root-not-hardcoded,
+#: §3.3 — NO module-level resolver-result cache that would lock one root per
+#: pytest session).
+_DOMAINS_ROOT: Path | None = None
+_SPEC_AGENTS_ROOT: Path | None = None
 
 
-def _resolve_spec_agents_root() -> Path:
+def _check_domains_root() -> Path:
+    """Resolve the domains root for filesystem-coherence checks (fresh each call).
+
+    Returns the test override slot if set, otherwise the live project-root
+    domains root (re-resolved each call so different env vars / CWD between
+    calls yield different roots — the §3.3 anti-cache requirement).
+    """
+    if _DOMAINS_ROOT is not None:
+        return _DOMAINS_ROOT
+    return _domains_root()
+
+
+def _resolve_spec_agents_root(domains_root_path: Path) -> Path:
     """Return the active spec/agents root.
 
     After P17 migration, agents live inside domains/<first>/agents/director/agents/.
     Legacy fallback: spec/agents/ for pre-migration layouts.
     """
-    if _DOMAINS_ROOT.exists():
+    if domains_root_path.exists():
         domain_dirs = sorted(
             d
-            for d in _DOMAINS_ROOT.iterdir()
+            for d in domains_root_path.iterdir()
             if d.is_dir() and not d.name.startswith("_")
         )
         for domain_dir in domain_dirs:
             director_agents = domain_dir / "agents" / "director" / "agents"
             if director_agents.exists():
                 return director_agents
-    return _repo_root() / "spec" / "agents"
+    return _spec_root() / "agents"
 
 
-_SPEC_AGENTS_ROOT = _resolve_spec_agents_root()
+def _check_spec_agents_root() -> Path:
+    """Resolve the agents root for filesystem-coherence checks (fresh each call).
+
+    Returns the test override slot if set, otherwise resolves fresh via
+    _resolve_spec_agents_root(_check_domains_root()).
+    """
+    if _SPEC_AGENTS_ROOT is not None:
+        return _SPEC_AGENTS_ROOT
+    return _resolve_spec_agents_root(_check_domains_root())
 
 
 def _load_domain_manifest(domain_dir: Path) -> object | None:
@@ -3095,12 +3144,13 @@ def check_domain_manifest_exists_and_importable(  # noqa: ARG001
     WHY: The manifest is the stable identity anchor for a domain; if it cannot
     be loaded, no field checks are possible and the domain is structurally dark.
     """
-    if not _DOMAINS_ROOT.exists():
+    _dr = _check_domains_root()
+    if not _dr.exists():
         return []
     import importlib.util  # noqa: PLC0415
 
     out: list[Violation] = []
-    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+    for domain_dir in sorted(_dr.iterdir()):
         if not domain_dir.is_dir():
             continue
         manifest_py = domain_dir / "manifest.py"
@@ -3148,10 +3198,11 @@ def check_domain_manifest_id_matches_dirname(  # noqa: ARG001
     WHY: The manifest ID is the stable identity key; a mismatch makes the domain
     undiscoverable or discoverable under the wrong name (R-domain-has-manifest).
     """
-    if not _DOMAINS_ROOT.exists():
+    _dr = _check_domains_root()
+    if not _dr.exists():
         return []
     out: list[Violation] = []
-    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+    for domain_dir in sorted(_dr.iterdir()):
         if not domain_dir.is_dir():
             continue
         mod = _load_domain_manifest(domain_dir)
@@ -3180,10 +3231,11 @@ def check_domain_manifest_description_nonempty(  # noqa: ARG001
     WHY: The manifest DESCRIPTION is surfaced in gen_spec output; missing it
     breaks the generated domain map (R-domain-has-manifest).
     """
-    if not _DOMAINS_ROOT.exists():
+    _dr = _check_domains_root()
+    if not _dr.exists():
         return []
     out: list[Violation] = []
-    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+    for domain_dir in sorted(_dr.iterdir()):
         if not domain_dir.is_dir():
             continue
         mod = _load_domain_manifest(domain_dir)
@@ -3211,10 +3263,11 @@ def check_domain_manifest_goals_nonempty(  # noqa: ARG001
     WHY: GOALS drive the Goal objects in the domain graph; missing them makes
     the domain's purpose invisible (R-domain-has-manifest).
     """
-    if not _DOMAINS_ROOT.exists():
+    _dr = _check_domains_root()
+    if not _dr.exists():
         return []
     out: list[Violation] = []
-    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+    for domain_dir in sorted(_dr.iterdir()):
         if not domain_dir.is_dir():
             continue
         mod = _load_domain_manifest(domain_dir)
@@ -3242,10 +3295,11 @@ def check_domain_manifest_director_nonempty(  # noqa: ARG001
     WHY: The DIRECTOR is the entry point for all domain-level operator delegation;
     missing it means no agent can be discovered (R-domain-declares-director).
     """
-    if not _DOMAINS_ROOT.exists():
+    _dr = _check_domains_root()
+    if not _dr.exists():
         return []
     out: list[Violation] = []
-    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+    for domain_dir in sorted(_dr.iterdir()):
         if not domain_dir.is_dir():
             continue
         mod = _load_domain_manifest(domain_dir)
@@ -3290,12 +3344,13 @@ def check_domain_director_exists(g: TensionGraph) -> list[Violation]:  # noqa: A
     (R-domain-declares-director). Missing scope.py means the agent is not
     discoverable by gen_spec or invoke_agent.
     """
-    if not _DOMAINS_ROOT.exists():
+    _dr = _check_domains_root()
+    if not _dr.exists():
         return []
     import importlib.util  # noqa: PLC0415
 
     out: list[Violation] = []
-    for domain_dir in sorted(_DOMAINS_ROOT.iterdir()):
+    for domain_dir in sorted(_dr.iterdir()):
         if not domain_dir.is_dir():
             continue
         manifest_py = domain_dir / "manifest.py"
@@ -3335,10 +3390,11 @@ def check_agent_has_agents_subdir(g: TensionGraph) -> list[Violation]:  # noqa: 
     WHY: Without the subdir the recursive delegation pattern collapses —
     create_agent.py always scaffolds it; its absence indicates manual corruption.
     """
-    if not _SPEC_AGENTS_ROOT.exists():
+    _ar = _check_spec_agents_root()
+    if not _ar.exists():
         return []
     out: list[Violation] = []
-    for agent_dir in sorted(_SPEC_AGENTS_ROOT.iterdir()):
+    for agent_dir in sorted(_ar.iterdir()):
         if not agent_dir.is_dir():
             continue
         if not (agent_dir / "scope.py").exists():
@@ -3364,10 +3420,11 @@ def check_agent_has_docs_subdir(g: TensionGraph) -> list[Violation]:  # noqa: AR
     WHY: Without docs/ the agent cannot receive generated shared-docs links;
     create_agent.py always scaffolds it; its absence indicates manual corruption.
     """
-    if not _SPEC_AGENTS_ROOT.exists():
+    _ar = _check_spec_agents_root()
+    if not _ar.exists():
         return []
     out: list[Violation] = []
-    for agent_dir in sorted(_SPEC_AGENTS_ROOT.iterdir()):
+    for agent_dir in sorted(_ar.iterdir()):
         if not agent_dir.is_dir():
             continue
         if not (agent_dir / "scope.py").exists():
@@ -3394,10 +3451,11 @@ def check_agent_has_tools_subdir(g: TensionGraph) -> list[Violation]:  # noqa: A
     WHY: Without tools/ the private/shared tool boundary is invisible;
     create_agent.py always scaffolds it; its absence indicates manual corruption.
     """
-    if not _SPEC_AGENTS_ROOT.exists():
+    _ar = _check_spec_agents_root()
+    if not _ar.exists():
         return []
     out: list[Violation] = []
-    for agent_dir in sorted(_SPEC_AGENTS_ROOT.iterdir()):
+    for agent_dir in sorted(_ar.iterdir()):
         if not agent_dir.is_dir():
             continue
         if not (agent_dir / "scope.py").exists():

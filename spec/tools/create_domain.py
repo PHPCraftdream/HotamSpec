@@ -35,10 +35,20 @@ import sys
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_REPO_ROOT = _SPEC_ROOT.parent
 
-# Overridable in tests
-_DOMAINS_ROOT = _REPO_ROOT / "domains"
+from hotam_spec.repo_paths import domains_root as _domains_root  # noqa: E402
+
+# Consumer domains root: CONSUMER data, resolved via project_root().
+# Module-level override slot for tests; when None, resolved FRESH each use
+# via domains_root() (§3.3 — NO import-time resolver-result cache).
+_DOMAINS_ROOT: Path | None = None
+
+
+def _domains_root_path() -> Path:
+    """Resolve consumer domains root (fresh each call) or return override slot."""
+    if _DOMAINS_ROOT is not None:
+        return _DOMAINS_ROOT
+    return _domains_root()
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
@@ -334,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
         description=args.description,
         goals=goals,
         director_purpose=args.director_purpose,
-        domains_root=_DOMAINS_ROOT,
+        domains_root=_domains_root_path(),
         activate=args.activate,
     )
 

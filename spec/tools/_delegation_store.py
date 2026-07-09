@@ -20,13 +20,35 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+# Make hotam_spec importable so this private helper resolves the consumer
+# project root via the shared R1-R6 chain (R-project-root-not-hardcoded).
+_SPEC_ROOT = Path(__file__).resolve().parents[1]
+if str(_SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_SPEC_ROOT / "src"))
+
+from hotam_spec.project_paths import project_root_or_raise  # noqa: E402
+
 # --- layout -----------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DELEGATIONS_DIR = REPO_ROOT / "delegations"
+# Consumer root: delegations/ is CONSUMER data, resolved via project_root().
+# In self-hosting R3 (CWD markers) yields the same path as parents[2].
+# Module-level names kept as override slots for tests; when None, resolved
+# FRESH each use via project_root() (§3.3 — NO import-time resolver-result
+# cache that would lock one root per pytest session).
+REPO_ROOT: Path | None = None
+DELEGATIONS_DIR: Path | None = None
+
+
+def _delegations_dir() -> Path:
+    """Resolve consumer delegations dir (fresh each call) or return override slot."""
+    if DELEGATIONS_DIR is not None:
+        return DELEGATIONS_DIR
+    root = REPO_ROOT if REPO_ROOT is not None else project_root_or_raise()
+    return root / "delegations"
 
 VALID_STATUSES: tuple[str, ...] = ("open", "done")
 
@@ -67,7 +89,7 @@ def now_stamp() -> str:
 
 def ensure_layout() -> None:
     """Create delegations/ directory (idempotent)."""
-    DELEGATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    _delegations_dir().mkdir(parents=True, exist_ok=True)
 
 
 def _split_frontmatter(text: str) -> tuple[dict, str]:
@@ -89,7 +111,7 @@ def _render(header: dict, body: str) -> str:
 
 def find_path(delegation_id: str) -> Path | None:
     """Locate a delegation file by id, or None."""
-    p = DELEGATIONS_DIR / f"{delegation_id}.md"
+    p = _delegations_dir() / f"{delegation_id}.md"
     return p if p.exists() else None
 
 
@@ -110,9 +132,10 @@ def save(delegation: Delegation) -> None:
 def all_ids() -> list[str]:
     """Every DG-<n> id present on disk."""
     ids: list[str] = []
-    if not DELEGATIONS_DIR.exists():
+    delegations = _delegations_dir()
+    if not delegations.exists():
         return ids
-    for p in DELEGATIONS_DIR.glob("DG-*.md"):
+    for p in delegations.glob("DG-*.md"):
         if _ID_RE.match(p.stem):
             ids.append(p.stem)
     return ids
@@ -151,5 +174,5 @@ def new_delegation(
         f"## Task\n\n{task}\n\n"
         f"## Result\n\n_(pending)_\n"
     )
-    path = DELEGATIONS_DIR / f"{delegation_id}.md"
+    path = _delegations_dir() / f"{delegation_id}.md"
     return Delegation(header=header, body=body, path=path)

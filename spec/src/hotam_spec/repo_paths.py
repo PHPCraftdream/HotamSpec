@@ -32,6 +32,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from hotam_spec import project_paths
+
 #: This module lives at spec/src/hotam_spec/repo_paths.py.
 #: parents[0] = hotam_spec/, parents[1] = src/, parents[2] = spec/, parents[3] = repo root.
 _SRC_HOTAM_SPEC_DIR = Path(__file__).resolve().parent
@@ -73,11 +75,17 @@ def hotam_spec_root() -> Path:
 
 
 def domains_root() -> Path:
-    """Return the ``<repo>/domains`` directory.
+    """Return the consumer's ``domains`` directory.
 
-    Canon: §Graph — domains-root accessor.
+    Delegates to ``project_paths.project_root_or_raise()`` — domains are
+    CONSUMER data, not framework-internal. In self-hosting mode the consumer
+    root coincides with the framework repo, so this returns ``<repo>/domains``
+    exactly as before; in consumer mode it returns
+    ``<consumer-project>/domains``.
+
+    Canon: §Graph — domains-root accessor (R-project-root-not-hardcoded).
     """
-    return _REPO_ROOT / "domains"
+    return project_paths.project_root_or_raise() / "domains"
 
 
 def tests_root() -> Path:
@@ -112,12 +120,13 @@ def runtime_root() -> Path:
 def docs_gen_root(domain_name: str | None = None) -> Path:
     """Return the generated-docs directory for a domain (or the legacy fallback).
 
-    When ``domain_name`` is given, returns ``<repo>/domains/<name>/docs/gen``.
-    When ``None``, returns the legacy ``<repo>/docs/gen`` (used by --demo and
+    When ``domain_name`` is given, returns ``<consumer-root>/domains/<name>/docs/gen``.
+    When ``None``, returns the consumer-root ``docs/gen`` (used by --demo and
     by the framework's own anti-drift meta-tests when no domain is active).
+    Both are CONSUMER docs, so the root comes from ``project_root_or_raise()``.
 
-    Canon: §Graph — docs-gen-root accessor.
+    Canon: §Graph — docs-gen-root accessor (R-project-root-not-hardcoded).
     """
     if domain_name is not None:
         return domains_root() / domain_name / "docs" / "gen"
-    return _REPO_ROOT / "docs" / "gen"
+    return project_paths.project_root_or_raise() / "docs" / "gen"

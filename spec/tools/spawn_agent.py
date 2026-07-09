@@ -52,15 +52,40 @@ import json
 import sys
 from pathlib import Path
 
+# Make hotam_spec importable so this standalone tool resolves the consumer
+# project root via the shared R1-R6 chain (R-project-root-not-hardcoded).
+_SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
+if str(_SPEC_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_SPEC_ROOT / "src"))
+
+from hotam_spec.project_paths import project_root_or_raise  # noqa: E402
+from hotam_spec.repo_paths import domains_root as _domains_root  # noqa: E402
+
 # ---------------------------------------------------------------------------
-# Path constants — monkeypatchable in tests
+# Path constants — monkeypatchable in tests (override slots; None = resolve fresh)
 # ---------------------------------------------------------------------------
 
-_SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
-_REPO_ROOT = _SPEC_ROOT.parent  # .../HotamSpec
-_DOMAINS_ROOT = _REPO_ROOT / "domains"
+# Consumer roots: domains/ is CONSUMER data. Module-level names kept as
+# override slots for tests; when None, resolved FRESH via project_root()/domains_root()
+# on each use (§3.3 — NO import-time resolver-result cache).
+_REPO_ROOT: Path | None = None
+_DOMAINS_ROOT: Path | None = None
 _LEGACY_AGENTS_ROOT = _SPEC_ROOT / "agents"
 _RUNTIME_DIR = _SPEC_ROOT / ".runtime"
+
+
+def _project_root() -> Path:
+    """Resolve consumer project root (fresh each call) or return override slot."""
+    if _REPO_ROOT is not None:
+        return _REPO_ROOT
+    return project_root_or_raise()
+
+
+def _domains_root_path() -> Path:
+    """Resolve consumer domains root (fresh each call) or return override slot."""
+    if _DOMAINS_ROOT is not None:
+        return _DOMAINS_ROOT
+    return _domains_root()
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +143,7 @@ def _resolve_agent(
     if cwd_p.exists() and cwd_p.is_dir():
         return cwd_p
     # Relative from repo root
-    repo_p = (_REPO_ROOT / p).resolve()
+    repo_p = (_project_root() / p).resolve()
     if repo_p.exists() and repo_p.is_dir():
         return repo_p
 
@@ -262,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
     # agent (e.g. "oh"/"fx" fleet worker) that has no CLAUDE.md crystal. This is
     # the honest trace of what actually ran (R-host-spawn-leaves-trace).
     if args.log_only:
-        agent_dir = _resolve_agent(args.agent_path, _DOMAINS_ROOT, _LEGACY_AGENTS_ROOT)
+        agent_dir = _resolve_agent(args.agent_path, _domains_root_path(), _LEGACY_AGENTS_ROOT)
         logged_path = (
             agent_dir
             if agent_dir is not None
@@ -280,7 +305,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     # --- Resolve agent directory ---
-    domains_root = _DOMAINS_ROOT
+    domains_root = _domains_root_path()
     legacy_root = _LEGACY_AGENTS_ROOT
     agent_dir = _resolve_agent(args.agent_path, domains_root, legacy_root)
 
@@ -288,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
         all_agents = _all_agent_dirs(domains_root, legacy_root)
         avail = (
             ", ".join(
-                a.as_posix().replace(str(_REPO_ROOT).replace("\\", "/") + "/", "")
+                a.as_posix().replace(str(_project_root()).replace("\\", "/") + "/", "")
                 for a in all_agents
             )
             if all_agents
