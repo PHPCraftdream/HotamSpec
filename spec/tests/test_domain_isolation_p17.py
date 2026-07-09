@@ -17,7 +17,6 @@ test_domain_crystal_embedded... (deleted) and task #101's report.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 
@@ -32,8 +31,6 @@ SPEC_DOCS_TOOLS = SPEC_ROOT / "docs" / "tools"
 
 # Ensure gen_spec is importable.
 _tools_str = str(SPEC_ROOT / "tools")
-if _tools_str not in sys.path:
-    sys.path.insert(0, _tools_str)
 import gen_spec  # noqa: E402
 
 AGENTS_ROOT = gen_spec._AGENTS_ROOT

@@ -13,9 +13,6 @@ import json
 import sys
 from pathlib import Path
 
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
 
 import setup_context_hook as sch  # noqa: E402
 import context_producer as producer  # noqa: E402

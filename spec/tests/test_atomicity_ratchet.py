@@ -28,16 +28,9 @@ carried rather than silently ignored.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_SRC = _SPEC_ROOT / "src"
-_TOOLS = _SPEC_ROOT / "tools"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
 
 _BASELINE_PATH = _SPEC_ROOT / "tests" / "atomicity_compound_baseline.json"
 

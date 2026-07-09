@@ -12,28 +12,19 @@ DRAFT becomes real-not-proposed.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-_SRC = Path(__file__).resolve().parents[1] / "src"
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
-
 # Import every hotam_spec module explicitly (framework health).
-import hotam_spec.assumption  # noqa: E402, F401
-import hotam_spec.axis  # noqa: E402, F401
-import hotam_spec.conflict  # noqa: E402, F401
-import hotam_spec.graph  # noqa: E402, F401
-import hotam_spec.invariants  # noqa: E402, F401
-import hotam_spec.requirement  # noqa: E402, F401
-import hotam_spec.stakeholder  # noqa: E402, F401
+import hotam_spec.assumption  # noqa: F401
+import hotam_spec.axis  # noqa: F401
+import hotam_spec.conflict  # noqa: F401
+import hotam_spec.graph  # noqa: F401
+import hotam_spec.invariants  # noqa: F401
+import hotam_spec.requirement  # noqa: F401
+import hotam_spec.stakeholder  # noqa: F401
 
-from hotam_spec.graph import load_content_graph  # noqa: E402
-from hotam_spec.invariants import all_violations, holds  # noqa: E402
-import gen_spec  # noqa: E402
-import what_now  # noqa: E402
+from hotam_spec.graph import load_content_graph
+from hotam_spec.invariants import all_violations, holds
+import gen_spec
+import what_now
 
 
 def test_smoke() -> None:

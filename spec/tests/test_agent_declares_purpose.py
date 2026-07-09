@@ -22,11 +22,7 @@ import pytest
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _TOOLS = _SPEC_ROOT / "tools"
 
-import sys as _sys  # noqa: E402
-
-if str(_TOOLS) not in _sys.path:
-    _sys.path.insert(0, str(_TOOLS))
-import gen_spec as _gen_spec  # noqa: E402
+import gen_spec as _gen_spec
 
 _AGENTS_ROOT = _gen_spec._AGENTS_ROOT
 

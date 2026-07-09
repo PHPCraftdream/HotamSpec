@@ -11,15 +11,9 @@ Six tests covering:
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 # Add tools and tests to path.
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-_TESTS = Path(__file__).resolve().parent
-for _p in (_TOOLS, _TESTS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import gen_spec  # noqa: E402
 

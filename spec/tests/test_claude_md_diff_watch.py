@@ -1,9 +1,5 @@
 """Tests for tools/claude_md_diff_watch.py — CLAUDE.md diff-injection hook."""
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
 from claude_md_diff_watch import _DIFF_LINE_CAP, build_payload  # noqa: E402
 

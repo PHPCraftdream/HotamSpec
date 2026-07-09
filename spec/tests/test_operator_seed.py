@@ -11,16 +11,11 @@ so the seed stays genuinely resident.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
 
 import gen_spec  # noqa: E402
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOT_CLAUDE_MD = gen_spec.CLAUDE_MD
 
 _ROLE_BEGIN = gen_spec._OPERATOR_ROLE_BEGIN

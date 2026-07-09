@@ -20,10 +20,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 _TOOLS = Path(__file__).resolve().parents[1] / "tools"
-_SRC = Path(__file__).resolve().parents[1] / "src"
-for _p in (_TOOLS, _SRC):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import what_now as what_now_module  # noqa: E402
 from hotam_spec.graph import TensionGraph  # noqa: E402

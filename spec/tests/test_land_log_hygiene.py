@@ -15,13 +15,8 @@ runtime_dir leaves the real land-log byte-for-byte unchanged.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-_SPEC_ROOT = Path(__file__).resolve().parents[1]
-if str(_SPEC_ROOT / "tools") not in sys.path:
-    sys.path.insert(0, str(_SPEC_ROOT / "tools"))
 
 import apply_proposal  # noqa: E402
 from hotam_spec.proposal import ProposedRequirement  # noqa: E402

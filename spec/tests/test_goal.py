@@ -6,13 +6,8 @@ target-kind-known invariant; lifecycle-valid invariant; typed-anchor enforcement
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 # Make hotam_spec importable.
-_SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 from hotam_spec.graph import load_content_graph, operator_ids  # noqa: E402
 from hotam_spec.invariants import (  # noqa: E402

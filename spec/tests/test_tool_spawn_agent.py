@@ -8,7 +8,6 @@ and produce deterministic output.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
@@ -18,8 +17,6 @@ TOOLS_DIR = SPEC_ROOT / "tools"
 SPAWN_AGENT = TOOLS_DIR / "spawn_agent.py"
 
 # Make the tool importable for monkeypatching.
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
 
 
 # ---------------------------------------------------------------------------

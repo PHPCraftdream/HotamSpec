@@ -9,15 +9,9 @@ per pending file, age computed from a caller-supplied `now` for determinism.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-_SRC = Path(__file__).resolve().parents[1] / "src"
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import apply_proposal  # noqa: E402
 import what_now  # noqa: E402

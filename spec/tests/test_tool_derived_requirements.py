@@ -7,7 +7,6 @@ that the generated docs stay stable under regeneration.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]
@@ -16,10 +15,6 @@ TOOLS_DIR = SPEC_ROOT / "tools"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
 # Make gen_spec importable.
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
-if str(SPEC_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "src"))
 
 import gen_spec as _gen_spec_mod  # noqa: E402
 from gen_spec import _scan_tool_requirements  # noqa: E402

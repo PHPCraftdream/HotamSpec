@@ -6,7 +6,6 @@ spec/agents/<name>/CLAUDE.md CONSTITUTION block filtered by that agent's SCOPE.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import pytest
@@ -14,10 +13,6 @@ import pytest
 # Make gen_spec importable from spec/tools/.
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _TOOLS_DIR = _SPEC_ROOT / "tools"
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
-if str(_SPEC_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(_SPEC_ROOT / "src"))
 
 import gen_spec  # noqa: E402
 from hotam_spec.graph import load_content_graph  # noqa: E402

@@ -16,14 +16,6 @@ CRITICAL_CORE_INVARIANTS; the §Conscience sweep is this file.
 
 from __future__ import annotations
 
-import sys
-import pathlib
-
-_SRC = pathlib.Path(__file__).resolve().parents[1] / "src"
-_TESTS = pathlib.Path(__file__).resolve().parent
-for _p in (_SRC, _TESTS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 from hypothesis import given, settings, HealthCheck, strategies as st  # noqa: E402
 

@@ -7,14 +7,9 @@ double-close exit 1, unknown-id exit 1, list/show read-only.
 from __future__ import annotations
 
 import json
-import sys
-from pathlib import Path
 
 import pytest
 
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
 
 import _delegation_store as ds  # noqa: E402
 import delegate  # noqa: E402

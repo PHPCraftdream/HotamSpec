@@ -14,18 +14,11 @@ Covers:
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
-_SRC = Path(__file__).resolve().parents[1] / "src"
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
-
-import confront  # noqa: E402
-from hotam_spec.graph import TensionGraph  # noqa: E402
-from hotam_spec.requirement import Requirement  # noqa: E402
-from hotam_spec.stakeholder import Stakeholder  # noqa: E402
+import confront
+from hotam_spec.graph import TensionGraph
+from hotam_spec.requirement import Requirement
+from hotam_spec.stakeholder import Stakeholder
 
 
 def _g() -> TensionGraph:

@@ -14,13 +14,10 @@ dependency the moment it is written, no runtime environment needed.
 from __future__ import annotations
 
 import ast
-import sys
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _SRC = _SPEC_ROOT / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 _HOTAM_SPEC_SRC = _SRC / "hotam_spec"
 _SHARED_TOOLS = _SPEC_ROOT / "tools"

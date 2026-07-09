@@ -13,12 +13,6 @@ Two duties:
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-_SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 from hotam_spec.conflict import Conflict, conflict_identity  # noqa: E402
 from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402

@@ -6,15 +6,12 @@ hotam-spec (kebab-case for filesystem and PyPI).
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SPEC_ROOT.parent
 
 _SRC = SPEC_ROOT / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 
 def test_pyproject_name_is_kebab_hotam_spec() -> None:

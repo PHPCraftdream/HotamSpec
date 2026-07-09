@@ -23,14 +23,8 @@ checks in assertion 2; the graph side is the source of truth.
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
-_SRC = Path(__file__).resolve().parents[1] / "src"
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import gen_spec  # noqa: E402
 

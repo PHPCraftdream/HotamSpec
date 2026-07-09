@@ -14,25 +14,14 @@ from __future__ import annotations
 
 import ast
 import re
-import sys
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# Path setup — mirrors test_docs_gen.py
-# ---------------------------------------------------------------------------
-
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_TOOLS = _SPEC_ROOT / "tools"
-_TESTS = Path(__file__).resolve().parent
 _SRC = _SPEC_ROOT / "src" / "hotam_spec"
 
-for _p in (_TOOLS, _TESTS, _SPEC_ROOT / "src"):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+import gen_spec
 
-import gen_spec  # noqa: E402
-
-from hotam_spec.glossary import TERMS, term_slugs  # noqa: E402
+from hotam_spec.glossary import TERMS, term_slugs
 
 
 # ---------------------------------------------------------------------------

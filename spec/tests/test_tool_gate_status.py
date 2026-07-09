@@ -9,12 +9,8 @@ throughout — never touches the real spec/.runtime/land-log.jsonl.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
-TOOLS_DIR = Path(__file__).resolve().parents[1] / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
 
 import gate_status  # noqa: E402
 

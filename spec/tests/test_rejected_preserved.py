@@ -16,13 +16,9 @@ holds its dead ends — R-rejected-preserved-not-deleted).
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]
-_SRC = SPEC_ROOT / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 from hotam_spec.graph import load_content_graph  # noqa: E402
 from hotam_spec.requirement import REJECTED  # noqa: E402

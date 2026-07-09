@@ -17,12 +17,7 @@ domain's content; one positive check runs against the live hotam-dev graph
 from __future__ import annotations
 
 import os
-import sys
-from pathlib import Path
 
-_SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 from hotam_spec.graph import (  # noqa: E402
     TensionGraph,

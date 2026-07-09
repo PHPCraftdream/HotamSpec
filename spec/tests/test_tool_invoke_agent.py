@@ -18,8 +18,6 @@ TOOLS_DIR = SPEC_ROOT / "tools"
 INVOKE_AGENT = TOOLS_DIR / "invoke_agent.py"
 
 # Make the tool importable for monkeypatching.
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
 
 
 def _run(*args: str, extra_env: dict | None = None) -> subprocess.CompletedProcess:

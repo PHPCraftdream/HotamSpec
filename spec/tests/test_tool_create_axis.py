@@ -13,12 +13,7 @@ import sys
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_TOOLS = _SPEC_ROOT / "tools"
-_SRC = _SPEC_ROOT / "src"
 
-for _p in (_TOOLS, _SRC):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import apply_proposal  # noqa: E402
 import create_axis  # noqa: E402

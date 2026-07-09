@@ -13,15 +13,11 @@ from __future__ import annotations
 
 import ast
 import re
-import sys
 from pathlib import Path
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = SPEC_ROOT.parent
 
 _tools = str(SPEC_ROOT / "tools")
-if _tools not in sys.path:
-    sys.path.insert(0, _tools)
 
 import gen_spec  # noqa: E402
 

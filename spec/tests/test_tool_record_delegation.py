@@ -10,16 +10,10 @@ Covers:
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
-_TOOLS = _SPEC_ROOT / "tools"
-_SRC = _SPEC_ROOT / "src"
 
-for _p in (_TOOLS, _SRC):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import record_delegation  # noqa: E402
 from hotam_spec.graph import TensionGraph  # noqa: E402

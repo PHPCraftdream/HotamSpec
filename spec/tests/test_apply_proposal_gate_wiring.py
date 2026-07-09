@@ -15,15 +15,9 @@ explicit override.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-_SRC = Path(__file__).resolve().parents[1] / "src"
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import apply_proposal  # noqa: E402
 from hotam_spec.proposal import ProposedRejection, ProposedRequirement  # noqa: E402

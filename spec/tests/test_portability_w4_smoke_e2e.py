@@ -32,8 +32,6 @@ SPEC_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SPEC_ROOT.parent
 FRAMEWORK_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 _tools = str(SPEC_ROOT / "tools")
-if _tools not in sys.path:
-    sys.path.insert(0, _tools)
 
 #: Modules that are ALLOWED to use Path(__file__).resolve().parents[N] — they
 #: are the path-accessor modules themselves and compute INTRA-package paths

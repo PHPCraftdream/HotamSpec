@@ -14,14 +14,6 @@ number 3555 is the pre-fix suspect count on domains/hotam-spec-self/graph.py.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-_SRC = Path(__file__).resolve().parents[1] / "src"
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 from hotam_spec.graph import (  # noqa: E402
     GENERIC_ASSUMPTION_THRESHOLD,

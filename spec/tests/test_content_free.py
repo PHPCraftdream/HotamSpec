@@ -17,12 +17,9 @@ Reference: R-content-free-framework (SETTLED).
 from __future__ import annotations
 
 import importlib
-import sys
 from pathlib import Path
 
 _SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
 
 # Import the types we are scanning for AFTER adding src to path.
 from hotam_spec.assumption import Assumption  # noqa: E402
