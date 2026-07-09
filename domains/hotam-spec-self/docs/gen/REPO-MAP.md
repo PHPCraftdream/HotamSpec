@@ -31,6 +31,7 @@ reader: ai-agent
 - `spec/src/hotam_spec/scope_projection.py` — an operator's sub-domain as a PROJECTION, not a copy (design B).
 - `spec/src/hotam_spec/signoff.py` — the frozen provenance record of a human steward decision.
 - `spec/src/hotam_spec/stakeholder.py` — who owns requirements and stewards conflicts.
+- `spec/src/hotam_spec/template_loader.py` — template loader via importlib.resources (PEP 391).
 - `spec/src/hotam_spec/text.py` — text helpers for crystal rendering (stdlib-only).
 
 **Tools** (`spec/tools/`)
@@ -53,6 +54,7 @@ reader: ai-agent
 - `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.  →  R-tool-emit-cipher
 - `spec/tools/gate.py` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.  →  R-tool-gate
 - `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status
+- `spec/tools/gen_enforcer_map.py` — Build-time snapshot generator for the enforcer-name -> pytest node-id map.
 - `spec/tools/gen_spec.py` — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.  →  R-tool-gen-spec
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
 - `spec/tools/mark_revisit_evaluated.py` — record that a DECIDED conflict's revisit_marker was evaluated.  →  R-tool-mark-revisit-evaluated

@@ -260,17 +260,56 @@ def _save_persistent_scan(tests_dir_str: str, fingerprint: tuple[int, int], scan
         pass
 
 
+def _load_packaged_scan() -> _TestScan | None:
+    """Load the build-time snapshot from package data (§3.6 portability W3).
+
+    Reads ``hotam_spec/_data/enforcer_map.json`` via importlib.resources (PEP
+    391) — works for editable, wheel, and vendor-copy installs. Returns None
+    if the snapshot is absent or corrupt (callers fall back to an empty scan).
+
+    This is the FALLBACK layer, consulted only when no live tests/ directory
+    exists (pip-installed consumer scenario). In self-hosting mode the
+    live-scan always wins.
+    """
+    try:
+        from importlib.resources import files as _files
+        importlib_path = Path(str(_files("hotam_spec") / "_data" / "enforcer_map.json"))
+        if not importlib_path.is_file():
+            return None
+        data = json.loads(importlib_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    func_index_raw = data.get("func_index")
+    check_map_raw = data.get("check_map")
+    if not isinstance(func_index_raw, dict) or not isinstance(check_map_raw, dict):
+        return None
+    func_index: dict[str, str | None] = {
+        str(k): (str(v) if v is not None else None)
+        for k, v in func_index_raw.items()
+    }
+    check_map: dict[str, list[str]] = {
+        str(k): list(v) for k, v in check_map_raw.items() if isinstance(v, list)
+    }
+    return _TestScan(func_index, check_map)
+
+
 @functools.lru_cache(maxsize=None)
 def _test_scan_cached(tests_dir_str: str) -> _TestScan:
     """Return the unified test scan for ``tests_dir_str``, cached per process.
 
-    Two cache layers:
+    Three resolution layers (first wins):
       1. lru_cache (intra-process): free, always on.
       2. persistent mtime-index (cross-process): opt-in for canonical tests dir.
+      3. live-scan of ``tests_dir`` (the original self-hosting behavior).
 
-    On a cache miss at layer 1, the persistent index is consulted; on a hit
-    there, the scan is reused verbatim. On a miss, the scan is rebuilt and
-    persisted.
+    When the tests_dir does NOT exist (pip-installed framework — consumer has
+    no spec/tests/), the live-scan returns empty, so a FOURTH fallback kicks in:
+    the packaged snapshot at ``hotam_spec/_data/enforcer_map.json`` (read via
+    importlib.resources, §3.6 portability W3). This snapshot is generated at
+    build time by tools/gen_enforcer_map.py against the canonical spec/tests.
+
+    The package-data snapshot is ONLY consulted when tests_dir is absent or
+    empty — it never overrides a real live-scan (dev-cycle freshness wins).
     """
     tests_dir = Path(tests_dir_str)
     fingerprint = _compute_fingerprint(tests_dir)
@@ -278,10 +317,20 @@ def _test_scan_cached(tests_dir_str: str) -> _TestScan:
         cached = _load_persistent_scan(tests_dir_str, fingerprint)
         if cached is not None:
             return cached
-    scan = _build_scan_uncached(tests_dir)
-    if fingerprint is not None:
-        _save_persistent_scan(tests_dir_str, fingerprint, scan)
-    return scan
+        scan = _build_scan_uncached(tests_dir)
+        if fingerprint is not None:
+            _save_persistent_scan(tests_dir_str, fingerprint, scan)
+        return scan
+    # tests_dir absent or empty → fallback to packaged snapshot (§3.6 W3).
+    # This covers the pip-installed-consumer scenario where spec/tests/ is
+    # not shipped. The snapshot is a build-time artifact, never the source of
+    # truth in self-hosting mode.
+    packaged = _load_packaged_scan()
+    if packaged is not None:
+        return packaged
+    # No tests dir AND no packaged snapshot (shouldn't happen in a built
+    # wheel, but be defensive): return an empty scan rather than crash.
+    return _TestScan({}, {})
 
 
 @functools.lru_cache(maxsize=None)

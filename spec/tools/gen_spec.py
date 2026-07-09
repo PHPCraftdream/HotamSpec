@@ -53,6 +53,10 @@ SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
 
+from hotam_spec.template_loader import (  # noqa: E402
+    claude_md_template_path as _claude_md_template_path,
+    read_claude_md_template as _read_claude_md_template,
+)
 from hotam_spec.project_paths import (  # noqa: E402
     project_root_or_raise as _project_root,
 )
@@ -68,7 +72,13 @@ REPO_ROOT = _project_root()  # consumer project root
 SRC = SPEC_ROOT / "src" / "hotam_spec"
 DEMO_DIR = REPO_ROOT / "docs" / "demo"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
-CLAUDE_MD_TEMPLATE = REPO_ROOT / "CLAUDE.md.template.txt"
+# Template (§3.4 portability W3): lives inside the package at
+# hotam_spec/_templates/claude_md.template.txt, read via importlib.resources.
+# Optional consumer override: project_root()/"CLAUDE.md.template.txt".
+# CLAUDE_MD_TEMPLATE is kept as a module-level Path for backward-compat with
+# tests that reference gen_spec.CLAUDE_MD_TEMPLATE — it resolves to the
+# EFFECTIVE template (override or packaged).
+CLAUDE_MD_TEMPLATE = _claude_md_template_path()
 DOMAINS_ROOT = _domains_root()
 
 
@@ -4571,8 +4581,10 @@ def render_business_content(g: TensionGraph) -> str:
 def render_claude_md_from_template(g: TensionGraph) -> str:
     """Render root CLAUDE.md by substituting the two template placeholders.
 
-    Reads CLAUDE.md.template.txt (REPO_ROOT / "CLAUDE.md.template.txt") and
-    replaces the literal lines '<!-- mind -->' and '<!-- business -->' with
+    Reads the operator-crystal template via importlib.resources (packaged at
+    hotam_spec/_templates/claude_md.template.txt), with an optional consumer
+    override at project_root()/"CLAUDE.md.template.txt" (§3.4 portability W3).
+    Replaces the literal lines '<!-- mind -->' and '<!-- business -->' with
     the rendered MIND and BUSINESS content respectively. Every other line
     of the template -- including any hand-written notes below the
     placeholders -- is preserved byte-for-byte.
@@ -4582,15 +4594,18 @@ def render_claude_md_from_template(g: TensionGraph) -> str:
     so a missing template is a real misconfiguration, not something to
     silently paper over with a hardcoded fallback.
     """
-    if not CLAUDE_MD_TEMPLATE.exists():
+    template_path = _claude_md_template_path()
+    if not template_path.exists():
         raise FileNotFoundError(
-            f"CLAUDE.md.template.txt not found at {CLAUDE_MD_TEMPLATE}. "
+            f"CLAUDE.md.template.txt not found at {template_path}. "
             "This file is the human-editable source of root CLAUDE.md "
             "(R-claude-md-template-driven): a fixed header plus exactly two "
             "placeholder lines, '<!-- mind -->' and '<!-- business -->'. "
-            "Create it at the repo root before running gen_spec.py."
+            "The packaged template (hotam_spec/_templates/claude_md.template.txt) "
+            "or a consumer override (project_root/CLAUDE.md.template.txt) "
+            "must be present."
         )
-    template_text = _read(CLAUDE_MD_TEMPLATE)
+    template_text = _read_claude_md_template()
     mind_content = render_mind_content(g)
     business_content = render_business_content(g)
 

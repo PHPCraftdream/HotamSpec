@@ -564,3 +564,40 @@ by the framework's own anti-drift meta-tests when no domain is active).
 Both are CONSUMER docs, so the root comes from ``project_root_or_raise()``.
 
 Canon: §Graph — docs-gen-root accessor (R-project-root-not-hardcoded).
+
+## From `spec/src/hotam_spec/template_loader.py` (module)
+
+Canon: §Graph — template loader via importlib.resources (PEP 391).
+
+R-project-root-not-hardcoded (§3.4 of the portability requirement): the
+operator-crystal template (``CLAUDE.md.template.txt``) lives INSIDE the
+framework package at ``hotam_spec/_templates/claude_md.template.txt`` so it
+ships with every install (editable, wheel, vendor-copy). It is read through
+``importlib.resources.files()`` — the stdlib, install-method-agnostic accessor
+that works identically for all three install kinds.
+
+Optional override: if ``project_root() / "CLAUDE.md.template.txt"`` exists,
+that file is used INSTEAD of the packaged one. A consumer who wants a
+different crystal format (e.g. a domain-specific layout) drops their own
+template at their project root and it takes priority. If the override is
+absent, the packaged template is the fallback.
+
+This module is the ONE source of truth for template resolution (P6): gen_spec
+and any other consumer call ``read_claude_md_template()`` here rather than
+constructing their own path.
+
+## From `spec/src/hotam_spec/template_loader.py::claude_md_template_path`
+
+Return the effective template path: override if present, else packaged.
+
+Canon: §Graph — the single resolution entry point (P6). Priority:
+  1. ``project_root() / "CLAUDE.md.template.txt"`` (consumer override).
+  2. ``hotam_spec/_templates/claude_md.template.txt`` (packaged, via
+     importlib.resources).
+
+## From `spec/src/hotam_spec/template_loader.py::read_claude_md_template`
+
+Read and return the template text (utf-8, LF-normalized).
+
+Canon: §Graph — read accessor. Callers should use this rather than
+reading the path directly, so normalization stays in one place.

@@ -10,6 +10,38 @@ authors = [
 requires-python = ">=3.12"
 dependencies = []
 
+[project.scripts]
+# §4.1 portability W3 — CLI entry points (P4). Each delegates to cli/<tool>:main,
+# which re-exports the corresponding tools/<tool>.py main(). The tools/ scripts
+# remain runnable as `python tools/<tool>.py` for self-hosting dev.
+hotam-gen-spec = "hotam_spec.cli.gen_spec:main"
+hotam-what-now = "hotam_spec.cli.what_now:main"
+hotam-apply-proposal = "hotam_spec.cli.apply_proposal:main"
+hotam-create-domain = "hotam_spec.cli.create_domain:main"
+hotam-create-agent = "hotam_spec.cli.create_agent:main"
+hotam-create-axis = "hotam_spec.cli.create_axis:main"
+hotam-create-entity-type = "hotam_spec.cli.create_entity_type:main"
+hotam-confront = "hotam_spec.cli.confront:main"
+hotam-audit-atomicity = "hotam_spec.cli.audit_atomicity:main"
+hotam-audit-tensions = "hotam_spec.cli.audit_tensions:main"
+hotam-emit-cipher = "hotam_spec.cli.emit_cipher:main"
+hotam-attention = "hotam_spec.cli.attention:main"
+hotam-gate = "hotam_spec.cli.gate:main"
+hotam-gate-status = "hotam_spec.cli.gate_status:main"
+hotam-ticket = "hotam_spec.cli.ticket:main"           # one CLI with subcommands
+hotam-delegation = "hotam_spec.cli.delegation:main"   # one CLI with subcommands
+hotam-spawn-agent = "hotam_spec.cli.spawn_agent:main"
+hotam-invoke-agent = "hotam_spec.cli.invoke_agent:main"
+hotam-setup-hooks = "hotam_spec.cli.setup_hooks:main"
+hotam-setup-context-hook = "hotam_spec.cli.setup_context_hook:main"
+hotam-mark-revisit = "hotam_spec.cli.mark_revisit:main"
+hotam-record-delegation = "hotam_spec.cli.record_delegation:main"
+hotam-spawn-log-status = "hotam_spec.cli.spawn_log_isolation_status:main"
+hotam-update-baseline = "hotam_spec.cli.update_baseline:main"
+hotam-claude-md-diff = "hotam_spec.cli.claude_md_diff_watch:main"
+hotam-attention-hook = "hotam_spec.cli.attention_hook:main"
+hotam-tick = "hotam_spec.cli.tick:main"
+
 [build-system]
 requires = ["uv_build>=0.9.24,<0.10.0"]
 build-backend = "uv_build"
