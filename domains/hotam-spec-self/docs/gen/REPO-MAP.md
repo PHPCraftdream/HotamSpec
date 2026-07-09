@@ -59,6 +59,7 @@ reader: ai-agent
 - `spec/tools/gen_enforcer_map.py` — Build-time snapshot generator for the enforcer-name -> pytest node-id map.
 - `spec/tools/gen_spec.py` — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.  →  R-tool-gen-spec
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
+- `spec/tools/land.py` — single CLI entry point over gate.py/gate_status.py/closure.py.  →  R-tool-land
 - `spec/tools/mark_revisit_evaluated.py` — record that a DECIDED conflict's revisit_marker was evaluated.  →  R-tool-mark-revisit-evaluated
 - `spec/tools/record_delegation.py` — records a new steward delegation into the active domain's  →  R-tool-record-delegation
 - `spec/tools/setup_context_hook.py` — installs/removes the project-local hook that feeds tools/context_producer.py.  →  R-tool-setup-context-hook
@@ -74,21 +75,22 @@ reader: ai-agent
 - `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for protected hash baselines.
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
-**Domain content** (`domains/hotam-dev/`)
+**Domain content** (`domains/hotam-spec-self/`)
 
-- `domains/hotam-dev/graph.py` — content graph of domain 'hotam-dev'.
-- `domains/hotam-dev/manifest.py` — manifest of domain 'hotam-dev'.
+- `domains/hotam-spec-self/graph.py` — Hotam-Spec modeling itself — the meta-domain (the framework's own design).
+- `domains/hotam-spec-self/manifest.py` — manifest of domain 'hotam-spec-self'.
 
-**Generated docs** (`domains/hotam-dev/docs/gen/`)
+**Generated docs** (`domains/hotam-spec-self/docs/gen/`)
 
-- `domains/hotam-dev/docs/gen/CONSTITUTION.md` — The operator's boot sequence
-- `domains/hotam-dev/docs/gen/DECISIONS.md` — Open methodology decisions
-- `domains/hotam-dev/docs/gen/ENTITIES.md` — Entities
-- `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
-- `domains/hotam-dev/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
-- `domains/hotam-dev/docs/gen/HISTORY.md` — Methodology decision history
-- `domains/hotam-dev/docs/gen/OPEN.md` — Open registry
-- `domains/hotam-dev/docs/gen/REPO-MAP.md` — Repository file index
-- `domains/hotam-dev/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/hotam-dev/docs/gen/TENSIONS.md` — The tension map
-- `domains/hotam-dev/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit
+- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/hotam-spec-self/docs/gen/DECISIONS.md` — Open methodology decisions
+- `domains/hotam-spec-self/docs/gen/ENTITIES.md` — Entities
+- `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
+- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
+- `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
+- `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index
+- `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
+- `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
+- `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter
