@@ -39,6 +39,7 @@ from __future__ import annotations
 import argparse
 import ast
 import importlib.util
+import json
 import os
 import re
 import subprocess
@@ -4005,8 +4006,80 @@ def _load_domain_graph(domain_dir: Path) -> "TensionGraph | None":
     return result
 
 
+def _domain_dirty_state_file() -> Path:
+    """Return the path to the persistent domain dirty-tracking index.
+
+    Canon: §Generator — wave 6.3 Part 3. Stores per-domain graph.py+manifest.py
+    mtime so that _process_domains can SKIP regenerating docs/gen/<name>/ when
+    nothing in that domain's substrate has changed since the last gen_spec run.
+    """
+    from hotam_spec.repo_paths import runtime_root as _runtime_root
+
+    return _runtime_root() / "gen-domain-mtime.json"
+
+
+def _domain_fingerprint(domain_dir: Path) -> tuple[int, int] | None:
+    """Return (graph_mtime_ns, manifest_mtime_ns) for a domain, or None if no graph.py.
+
+    Canon: §Generator — wave 6.3 Part 3. The fingerprint captures the two files
+    whose change can alter docs/gen/<name>/ output: graph.py (the node data) and
+    manifest.py (the reader-stakeholder binding). If either changed mtime, the
+    domain is dirty and must be regenerated; if both are unchanged, the docs are
+    byte-identical to the last gen and can be skipped (the generator is pure and
+    deterministic — same inputs → same outputs).
+    """
+    graph_py = domain_dir / "graph.py"
+    manifest_py = domain_dir / "manifest.py"
+    if not graph_py.exists():
+        return None
+    g_mtime = int(graph_py.stat().st_mtime_ns)
+    m_mtime = int(manifest_py.stat().st_mtime_ns) if manifest_py.exists() else 0
+    return (g_mtime, m_mtime)
+
+
+def _load_domain_dirty_index() -> dict[str, list[int]]:
+    """Load the persistent dirty-tracking index (best-effort)."""
+    index_file = _domain_dirty_state_file()
+    if not index_file.exists():
+        return {}
+    try:
+        data = json.loads(index_file.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return {str(k): list(v) for k, v in data.items() if isinstance(v, list)}
+    except (OSError, ValueError):
+        pass
+    return {}
+
+
+def _save_domain_dirty_index(index: dict[str, list[int]]) -> None:
+    """Persist the dirty-tracking index (best-effort, never raises)."""
+    index_file = _domain_dirty_state_file()
+    try:
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        index_file.write_text(
+            json.dumps(index, sort_keys=True, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
 def _process_domains(g: TensionGraph) -> None:
-    """Walk domains/*/ and generate per-domain docs. No-op when domains/ is empty."""
+    """Walk domains/*/ and generate per-domain docs. No-op when domains/ is empty.
+
+    Wave 6.3 Part 3 (dirty-domain skip): a domain whose graph.py+manifest.py
+    mtimes are unchanged since the last gen_spec run is SKIPPED — its docs/gen/
+    are already byte-identical (the generator is pure + deterministic). The
+    ACTIVE domain is ALWAYS regenerated regardless of mtime: it is the "live
+    exit" the operator reads, and the root CLAUDE.md render (in main()) already
+    depends on it. Skipping a non-active domain is safe because its docs/gen/
+    feed only background reference, not the live operator crystal.
+
+    Determinism guarantee: dirty-skip produces the SAME on-disk result as full
+    regen — it just avoids re-writing identical bytes. test_generator_is_deterministic
+    (gen_spec twice → diff empty) holds because the second run sees unchanged
+    mtimes and skips, leaving the first run's (already correct) output untouched.
+    """
     if not DOMAINS_ROOT.exists():
         return
     domain_dirs = sorted(
@@ -4015,15 +4088,37 @@ def _process_domains(g: TensionGraph) -> None:
     if not domain_dirs:
         return
 
+    active_dir = _active_domain()
+    dirty_index = _load_domain_dirty_index()
+    new_index: dict[str, list[int]] = {}
+    wrote_any = False
+
     for domain_dir in domain_dirs:
         manifest = _load_domain_manifest(domain_dir)
         if not manifest:
             print(f"skipping domain {domain_dir.name}: no valid manifest.py")
             continue
 
+        fp = _domain_fingerprint(domain_dir)
+        is_active = active_dir is not None and domain_dir.name == active_dir.name
+        # Record the current fingerprint regardless of skip decisions.
+        if fp is not None:
+            new_index[domain_dir.name] = list(fp)
+
+        # Dirty check: skip regen if (a) not the active domain, (b) fingerprint
+        # matches the last recorded value, and (c) docs/gen/ already exists.
+        gen_dir = domain_dir / "docs" / "gen"
+        if (
+            not is_active
+            and fp is not None
+            and gen_dir.exists()
+            and dirty_index.get(domain_dir.name) == list(fp)
+        ):
+            print(f"skipping domain {domain_dir.name} (clean, mtime-unchanged)")
+            continue
+
         dg = _load_domain_graph(domain_dir) or g  # Fallback to root graph if missing.
 
-        gen_dir = domain_dir / "docs" / "gen"
         gen_dir.mkdir(parents=True, exist_ok=True)
 
         # Resolve the `reader:` header from THIS domain's manifest, not from the
@@ -4049,6 +4144,14 @@ def _process_domains(g: TensionGraph) -> None:
         for path, text in domain_targets.items():
             _write(path, text)
             print(f"written (domain {domain_dir.name}): {path}")
+        wrote_any = True
+
+    # Persist the updated dirty index (even if nothing was written, so the
+    # fingerprints are current for the next run).
+    if wrote_any or not new_index:
+        _save_domain_dirty_index(new_index)
+    else:
+        _save_domain_dirty_index(new_index)
 
 
 # ---------------------------------------------------------------------------

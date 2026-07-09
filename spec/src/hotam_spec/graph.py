@@ -325,6 +325,9 @@ def _manifest_self_hosting(domain_dir: Path) -> bool:
     return bool(getattr(mod, "SELF_HOSTING", False))
 
 
+_CONTENT_GRAPH_CACHE: dict[str, TensionGraph] = {}
+
+
 def load_content_graph() -> TensionGraph:
     """Canon: §Graph — load the user's graph from domains/<name>/ or spec/content/.
 
@@ -342,14 +345,39 @@ def load_content_graph() -> TensionGraph:
     lost" property requires a deterministic location every tool agrees on; the
     env var lets CI pin a domain without filesystem mutation
     (R-deterministic-generation, R-agent-never-lost).
+
+    Intra-process cache (wave 6.3, Part 2): the resolved graph file's path is
+    the cache key. Within a single process the content graph is immutable —
+    apply_proposal.py writes graph.py from a SEPARATE process, and test suites
+    that mutate a graph work against tmpdir copies via _load_graph_file (not
+    this function). So caching the loaded TensionGraph per path is safe and
+    avoids re-importing + re-executing build_graph() on every call (the graph
+    has ~290 nodes; the import+build is the dominant cost of any cold tool
+    invocation). Tests that need a fresh load call _load_content_graph_cache_clear().
     """
     domain_graph = _active_domain_graph_file()
-    if domain_graph is not None:
-        return _load_graph_file(domain_graph)
-    # Legacy fallback: spec/content/graph.py
-    if CONTENT_GRAPH_FILE.exists():
-        return _load_graph_file(CONTENT_GRAPH_FILE)
-    return TensionGraph()
+    source_file = domain_graph if domain_graph is not None else (
+        CONTENT_GRAPH_FILE if CONTENT_GRAPH_FILE.exists() else None
+    )
+    if source_file is None:
+        return TensionGraph()
+    key = str(source_file)
+    cached = _CONTENT_GRAPH_CACHE.get(key)
+    if cached is not None:
+        return cached
+    g = _load_graph_file(source_file)
+    _CONTENT_GRAPH_CACHE[key] = g
+    return g
+
+
+def _load_content_graph_cache_clear() -> None:
+    """Clear the intra-process content-graph cache (test hook only).
+
+    WHY: a small number of integration tests land a proposal via
+    apply_proposal in the SAME process (not a subprocess), then need a fresh
+    graph read. Production code never mutates the content graph in-process.
+    """
+    _CONTENT_GRAPH_CACHE.clear()
 
 
 # ---------------------------------------------------------------------------

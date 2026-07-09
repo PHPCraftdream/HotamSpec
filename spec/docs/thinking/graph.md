@@ -244,6 +244,15 @@ lost" property requires a deterministic location every tool agrees on; the
 env var lets CI pin a domain without filesystem mutation
 (R-deterministic-generation, R-agent-never-lost).
 
+Intra-process cache (wave 6.3, Part 2): the resolved graph file's path is
+the cache key. Within a single process the content graph is immutable —
+apply_proposal.py writes graph.py from a SEPARATE process, and test suites
+that mutate a graph work against tmpdir copies via _load_graph_file (not
+this function). So caching the loaded TensionGraph per path is safe and
+avoids re-importing + re-executing build_graph() on every call (the graph
+has ~290 nodes; the import+build is the dominant cost of any cold tool
+invocation). Tests that need a fresh load call _load_content_graph_cache_clear().
+
 ## From `spec/src/hotam_spec/graph.py::stakeholder_ids`
 
 Canon: §Graph — set of all Stakeholder ids (for dangling-ref checks).

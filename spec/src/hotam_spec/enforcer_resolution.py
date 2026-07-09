@@ -30,8 +30,11 @@ from __future__ import annotations
 
 import ast
 import functools
+import json
 import re
 from pathlib import Path
+
+from hotam_spec.repo_paths import runtime_root as _runtime_root
 
 __all__ = [
     "check_to_tests_map",
@@ -99,6 +102,188 @@ def _ast_referenced_names(tree: ast.Module) -> set[str]:
     return names
 
 
+# ---------------------------------------------------------------------------
+# Persistent mtime-indexed test scan (cross-process cache, Part 1 of wave 6.3).
+#
+# _func_to_file_index and _check_to_tests_index both walk the same test_*.py
+# files with the same AST parse — so they are unified into a single _TestScan
+# built once per process (lru_cache) AND cached cross-process in
+# .runtime/enforcer-index.json keyed by a fingerprint of the test directory.
+#
+# The fingerprint is (max_mtime_ns, file_count) — if NO test file changed mtime
+# since the last process wrote the index, the cached scan is reused verbatim,
+# skipping the glob + AST-parse loop entirely. If any file was touched, the
+# scan is rebuilt and re-persisted. This is the same invalidation strategy as
+# a build system (make/cargo): mtime is a sufficient staleness signal for
+# deterministic, filesystem-read-only computation.
+#
+# The persistent cache is OPT-IN: only the canonical spec/tests directory
+# participates (identified by path equality with repo_paths.tests_root()).
+# Arbitrary tmpdirs (test fixtures) always get a fresh scan — their mtime
+# fingerprint would be unstable across test runs and the cache adds no value.
+# ---------------------------------------------------------------------------
+
+_INDEX_PATH: Path | None = None
+
+
+def _index_file() -> Path:
+    """Lazily resolve the persistent index path under .runtime/."""
+    global _INDEX_PATH
+    if _INDEX_PATH is None:
+        _INDEX_PATH = _runtime_root() / "enforcer-index.json"
+    return _INDEX_PATH
+
+
+class _TestScan:
+    """Frozen snapshot of a test-directory scan: func index + check→tests map."""
+
+    __slots__ = ("func_index", "check_map")
+
+    def __init__(
+        self,
+        func_index: dict[str, str | None],
+        check_map: dict[str, list[str]],
+    ) -> None:
+        self.func_index = func_index
+        self.check_map = check_map
+
+
+def _compute_fingerprint(tests_dir: Path) -> tuple[int, int] | None:
+    """Return (max_mtime_ns, file_count) for test_*.py, or None if dir absent.
+
+    The fingerprint is a cheap staleness signal: if it matches the previously
+    recorded value, the AST scan cannot have changed (deterministic read of
+    the same bytes). A file_count change (add/delete) also invalidates.
+    """
+    if not tests_dir.exists():
+        return None
+    test_files = list(tests_dir.glob("test_*.py"))
+    if not test_files:
+        return (0, 0)
+    max_mtime = max(int(f.stat().st_mtime_ns) for f in test_files)
+    return (max_mtime, len(test_files))
+
+
+def _build_scan_uncached(tests_dir: Path) -> _TestScan:
+    """Build a _TestScan from scratch (glob + AST parse). No caching."""
+    func_index: dict[str, str | None] = {}
+    check_map: dict[str, list[str]] = {}
+    if not tests_dir.exists():
+        return _TestScan(func_index, check_map)
+    for test_file in sorted(tests_dir.glob("test_*.py")):
+        tree = _cached_parse_path(str(test_file.resolve()))
+        if tree is None:
+            continue
+        rel = f"tests/{test_file.name}"
+        for name in _ast_defined_test_funcs(tree):
+            if name in func_index:
+                func_index[name] = None  # collision -> ambiguous, fail-closed
+            else:
+                func_index[name] = rel
+        for name in _ast_referenced_names(tree):
+            if name.startswith("check_"):
+                check_map.setdefault(name, [])
+                if rel not in check_map[name]:
+                    check_map[name].append(rel)
+    return _TestScan(func_index, check_map)
+
+
+def _load_persistent_scan(tests_dir_str: str, fingerprint: tuple[int, int]) -> _TestScan | None:
+    """Load a scan from .runtime/enforcer-index.json if the fingerprint matches.
+
+    Returns None if the index file is absent, corrupt, stale (fingerprint
+    mismatch), or if the requested tests_dir is not the canonical spec/tests
+    (persistent cache is opt-in for the canonical dir only).
+    """
+    from hotam_spec.repo_paths import tests_root as _tests_root
+
+    # Opt-in: only the canonical spec/tests dir uses the persistent cache.
+    # A tmpdir from a test fixture would write garbage into the shared index.
+    if Path(tests_dir_str) != _tests_root().resolve():
+        return None
+    index_file = _index_file()
+    if not index_file.exists():
+        return None
+    try:
+        data = json.loads(index_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    entry = data.get(tests_dir_str)
+    if not isinstance(entry, dict):
+        return None
+    if tuple(entry.get("fingerprint", ())) != fingerprint:
+        return None
+    func_index = entry.get("func_index")
+    check_map = entry.get("check_map")
+    if not isinstance(func_index, dict) or not isinstance(check_map, dict):
+        return None
+    # Restore check_map lists (JSON round-trips them as lists already).
+    restored_check: dict[str, list[str]] = {
+        str(k): list(v) for k, v in check_map.items() if isinstance(v, list)
+    }
+    restored_func: dict[str, str | None] = {
+        str(k): (str(v) if v is not None else None)
+        for k, v in func_index.items()
+    }
+    return _TestScan(restored_func, restored_check)
+
+
+def _save_persistent_scan(tests_dir_str: str, fingerprint: tuple[int, int], scan: _TestScan) -> None:
+    """Persist a scan to .runtime/enforcer-index.json (best-effort, never raises).
+
+    Failures (disk full, permission) are swallowed: the persistent cache is a
+    performance optimization, not a correctness dependency — the lru_cache
+    layer still guarantees correctness within the process.
+    """
+    index_file = _index_file()
+    try:
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        if index_file.exists():
+            try:
+                data = json.loads(index_file.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                data = {}
+        else:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        data[tests_dir_str] = {
+            "fingerprint": list(fingerprint),
+            "func_index": dict(scan.func_index),
+            "check_map": {k: list(v) for k, v in scan.check_map.items()},
+        }
+        index_file.write_text(
+            json.dumps(data, sort_keys=True, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
+@functools.lru_cache(maxsize=None)
+def _test_scan_cached(tests_dir_str: str) -> _TestScan:
+    """Return the unified test scan for ``tests_dir_str``, cached per process.
+
+    Two cache layers:
+      1. lru_cache (intra-process): free, always on.
+      2. persistent mtime-index (cross-process): opt-in for canonical tests dir.
+
+    On a cache miss at layer 1, the persistent index is consulted; on a hit
+    there, the scan is reused verbatim. On a miss, the scan is rebuilt and
+    persisted.
+    """
+    tests_dir = Path(tests_dir_str)
+    fingerprint = _compute_fingerprint(tests_dir)
+    if fingerprint is not None:
+        cached = _load_persistent_scan(tests_dir_str, fingerprint)
+        if cached is not None:
+            return cached
+    scan = _build_scan_uncached(tests_dir)
+    if fingerprint is not None:
+        _save_persistent_scan(tests_dir_str, fingerprint, scan)
+    return scan
+
+
 @functools.lru_cache(maxsize=None)
 def _func_to_file_index(tests_dir_str: str) -> dict[str, str | None]:
     """Build `{test_func_name: rel_file | None}` via AST, memoized per dir.
@@ -107,21 +292,19 @@ def _func_to_file_index(tests_dir_str: str) -> dict[str, str | None]:
     with that name (fail-closed). Uses AST to find real `def test_*` at module
     level — a name in a comment or docstring does NOT count.
     """
-    index: dict[str, str | None] = {}
-    tests_dir = Path(tests_dir_str)
-    if not tests_dir.exists():
-        return index
-    for test_file in sorted(tests_dir.glob("test_*.py")):
-        tree = _cached_parse_path(str(test_file.resolve()))
-        if tree is None:
-            continue
-        rel = f"tests/{test_file.name}"
-        for name in _ast_defined_test_funcs(tree):
-            if name in index:
-                index[name] = None  # collision -> ambiguous, fail-closed
-            else:
-                index[name] = rel
-    return index
+    scan = _test_scan_cached(tests_dir_str)
+    return dict(scan.func_index)
+
+
+@functools.lru_cache(maxsize=None)
+def _check_to_tests_index(tests_dir_str: str) -> dict[str, list[str]]:
+    """Build `{check_name: [test_files]}` via AST, memoized per dir.
+
+    Cached alongside _func_to_file_index — both derive from the same scan.
+    """
+    scan = _test_scan_cached(tests_dir_str)
+    # Deep-copy the lists so callers cannot mutate the cached structures.
+    return {k: list(v) for k, v in scan.check_map.items()}
 
 
 def check_to_tests_map(tests_dir: Path) -> dict[str, list[str]]:
@@ -131,21 +314,9 @@ def check_to_tests_map(tests_dir: Path) -> dict[str, list[str]]:
     as a real Python identifier (Name or Attribute node) in the AST — NOT if
     it merely appears in a comment, docstring, or string literal.
     """
-    check_to_tests: dict[str, list[str]] = {}
     if not tests_dir.exists():
-        return check_to_tests
-    for test_file in sorted(tests_dir.glob("test_*.py")):
-        tree = _cached_parse_path(str(test_file.resolve()))
-        if tree is None:
-            continue
-        rel = f"tests/{test_file.name}"
-        referenced = _ast_referenced_names(tree)
-        for name in referenced:
-            if name.startswith("check_"):
-                check_to_tests.setdefault(name, [])
-                if rel not in check_to_tests[name]:
-                    check_to_tests[name].append(rel)
-    return check_to_tests
+        return {}
+    return _check_to_tests_index(str(tests_dir.resolve()))
 
 
 def bare_test_func_to_file(name: str, tests_dir: Path) -> str | None:
