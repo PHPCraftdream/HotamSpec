@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 198 / SETTLED 227; closeable debt 5; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
+**Burn-down: SETTLED-ENFORCED 198 / SETTLED 228; closeable debt 6; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
 
 ---
 
@@ -27,6 +27,7 @@ judgment calls no check_* could ever verify.
 | `R-conflict-resolved-in-members-or-mediator` | PROSE | `framework-author` | A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph. |
 | `R-crystal-carries-short-form` | STRUCTURAL | `framework-author` | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
 | `R-delegation-is-a-file` | STRUCTURAL | `framework-author` | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off. |
+| `R-project-root-not-hardcoded` | STRUCTURAL | `framework-author` | HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 

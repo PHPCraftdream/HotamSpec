@@ -3903,6 +3903,16 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_signoff_chosen_variant_resolves", "check_decided_conflict_carries_signoff",),
         ),
+        Requirement(
+            id="R-project-root-not-hardcoded",
+            claim=("HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Today spec/ and its own domains (domains/hotam-spec-self/, domains/hotam-dev/) share one repo, and the core assumes this coincidence: 13+ call sites compute the 'consumer root' as spec_root().parent (Path(__file__).resolve().parents[N]). This blocks using HotamSpec as tooling for a separate project (e.g. a domain 'prat' living in D:/ai_dev/prat/) -- the framework forces that domain to live inside D:/dev/HotamSpec/domains/prat/, inside the framework's own repo, instead of the consumer's project. This requirement makes the coincidence OPTIONAL: self-hosting remains a legitimate, fully-tested working case (R6 fallback, R-domain-self-hosting-flag unaffected), but every path that reads/writes CONSUMER content (domains/, tickets/, delegations/, CLAUDE.md, .claude/settings.json, runtime state) is derived from project_root(), resolved once per call through the documented priority chain, never guessed from __file__. This is philosophically continuous with R-work-within-launch-dir (the framework only ever acts within the directory it was invoked for, never reaches outside it) -- portability generalizes that same discipline to a project root that need not equal the framework's own install location. Full specification (priority chain rationale R1-R6, complete file inventory, 4-wave migration path W1-W4 with acceptance criteria AC1-AC10, package-data/entry-point layout): D:/ai_dev/prat/REQUIREMENTS-hotamspec-portable.md. Steward verdict 2026-07-09: accept, land as SETTLED, begin wave W1."),
+            enforcement=STRUCTURAL,
+            created_at="2026-07-09",
+            settled_at="2026-07-09",
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------
