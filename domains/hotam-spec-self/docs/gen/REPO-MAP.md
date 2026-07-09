@@ -53,7 +53,7 @@ reader: ai-agent
 - `spec/tools/create_domain.py` — scaffolds domains/<name>/ as a self-contained business domain with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.  →  R-tool-create-domain
 - `spec/tools/create_entity_type.py` — scaffolds an EntityType declaration into the active domain's graph via apply_proposal.  →  R-tool-create-entity-type
 - `spec/tools/delegate.py` — Canon: §Ticket (sibling) -- file-based delegation tool (create / close / show / list).
-- `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) extracted from the active domain's LIVE-STATE block.  →  R-tool-emit-cipher
+- `spec/tools/emit_cipher.py` — emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.  →  R-tool-emit-cipher
 - `spec/tools/gate.py` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.  →  R-tool-gate
 - `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status
 - `spec/tools/gen_enforcer_map.py` — Build-time snapshot generator for the enforcer-name -> pytest node-id map.
@@ -71,25 +71,24 @@ reader: ai-agent
 - `spec/tools/ticket_list.py` — list tickets, optionally filtered by status or assignee (read-only).  →  R-tool-ticket-list
 - `spec/tools/ticket_move.py` — move a ticket to a new status (relocates the file + records the transition in History).  →  R-tool-ticket-move
 - `spec/tools/ticket_show.py` — print one ticket's header, body, comments and full History (read-only).  →  R-tool-ticket-show
-- `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for enforcement-perimeter files.
+- `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for protected hash baselines.
 - `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
 
-**Domain content** (`domains/hotam-spec-self/`)
+**Domain content** (`domains/hotam-dev/`)
 
-- `domains/hotam-spec-self/graph.py` — Hotam-Spec modeling itself — the meta-domain (the framework's own design).
-- `domains/hotam-spec-self/manifest.py` — manifest of domain 'hotam-spec-self'.
+- `domains/hotam-dev/graph.py` — content graph of domain 'hotam-dev'.
+- `domains/hotam-dev/manifest.py` — manifest of domain 'hotam-dev'.
 
-**Generated docs** (`domains/hotam-spec-self/docs/gen/`)
+**Generated docs** (`domains/hotam-dev/docs/gen/`)
 
-- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit
-- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
-- `domains/hotam-spec-self/docs/gen/DECISIONS.md` — Open methodology decisions
-- `domains/hotam-spec-self/docs/gen/ENTITIES.md` — Entities
-- `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
-- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
-- `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
-- `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
-- `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index
-- `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
-- `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-dev/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/hotam-dev/docs/gen/DECISIONS.md` — Open methodology decisions
+- `domains/hotam-dev/docs/gen/ENTITIES.md` — Entities
+- `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
+- `domains/hotam-dev/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
+- `domains/hotam-dev/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-dev/docs/gen/OPEN.md` — Open registry
+- `domains/hotam-dev/docs/gen/REPO-MAP.md` — Repository file index
+- `domains/hotam-dev/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
+- `domains/hotam-dev/docs/gen/TENSIONS.md` — The tension map
+- `domains/hotam-dev/docs/gen/UNENFORCED.md` — Burn-down meter
