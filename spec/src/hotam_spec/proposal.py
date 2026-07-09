@@ -124,10 +124,29 @@ class ProposedRejection:
 
     Preserves the anti-relitigation discipline: REJECTED is kept in the graph
     (R-rejected-preserved-not-deleted), never deleted.
+
+    RULE (replaces edge): `replaced_by`, when non-empty, names the id of ONE
+    Requirement that supersedes this one. The apply_proposal writer then
+    materializes a STRUCTURAL `replaces` edge ON the replacing requirement
+    (target = this rejected id), in addition to the prose "REJECTED — REPLACES"
+    marker in `why`. The edge is directed: carrier (the replacing Requirement)
+    REPLACES target (this rejected one). When `replaced_by` names MULTIPLE
+    replacements (a 1→N split), each becomes its own `replaces` edge. Empty
+    tuple = a rejection with no named successor (kept for history, no edge).
+
+    WHY a structural edge (not just prose): the RECENTLY-REJECTED surface and
+    docs/gen/HISTORY.md previously matched "REPLACES" by regex over `why` text
+    — prose, not structure. A typed `replaces` edge makes the anti-relitigation
+    relation graph-traversable, queryable and enforced (the regex fallback stays
+    for the ~38 historical REJECTED nodes not yet migrated; see
+    reflect_replaces_edge_migration in §Reflection).
     """
 
     requirement_id: str
     reason: str  # the REJECTED — REPLACES … prose
+    replaced_by: tuple[str, ...] = field(default_factory=tuple)
+    # ^ id(s) of the Requirement(s) that supersede this one. The writer emits a
+    # `replaces` Relation edge on each named id (target = this rejected id).
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.
@@ -394,6 +413,48 @@ class ProposedAssumptionTransition:
 
 
 @dataclass(frozen=True)
+class ProposedConflictMemberUpdate:
+    """Canon: §Proposal / §Conflict — propose ADDING or REMOVING members on an existing Conflict.
+
+    RULE: kind='ConflictMemberUpdate'; `conflict_id` MUST already exist in the
+    active domain's graph. `add_members` and `remove_members` are tuples of
+    Requirement ids. The apply_proposal tool locates the Conflict(...) call,
+    computes the new members tuple (current − remove + add, deduped, order-
+    preserving) and writes it back. The post-update members count MUST remain
+    >= 2 (R-conflict-min-two-members) — the writer refuses an update that would
+    drop a conflict below two distinct members, surfacing the invariant early
+    rather than letting the graph gate fail.
+
+    WHY a separate proposal kind (not a field on ProposedConflictTransition): a
+    transition moves the conflict's LIFECYCLE (DETECTED→DECIDED etc.); member
+    churn is a DIFFERENT act — a participant leaves or joins while the lifecycle
+    stays put. Conflating them would force a lifecycle-stating signoff on every
+    membership edit, which is neither required nor honest. This kind is the
+    mechanical path by which a conflict survives member churn through the
+    protocol (R-no-hand-edit-graph) — previously impossible: editing members
+    required hand-editing graph.py, which the PreToolUse guard forbids.
+
+    SIGNOFF (decided_by): OPTIONAL. Adding/removing a member is a structural
+    edit to the tension's parties, not a lifecycle decision; the conflict's
+    existing lifecycle and steward are untouched. When the steward wants a
+    record of WHO authorized the membership change, decided_by carries that
+    provenance (mirroring AssumptionTransition's optional field); when absent,
+    no signoff is recorded. The graph-side invariants (check_conflict_min_two_
+    members, check_steward_not_a_member_owner, check_no_dangling_conflict_refs)
+    re-check the post-update graph regardless.
+    """
+
+    conflict_id: str  # the C-… anchor whose members change
+    add_members: tuple[str, ...] = field(default_factory=tuple)
+    remove_members: tuple[str, ...] = field(default_factory=tuple)
+    decided_by: str = ""  # OPTIONAL provenance (Stakeholder id); empty = no record
+
+    def target_anchor(self) -> str:
+        """Canon: §Closure — the Conflict id this update is meant to change."""
+        return self.conflict_id
+
+
+@dataclass(frozen=True)
 class ProposedEntityType:
     """Canon: §Proposal — propose a new EntityType to add to the active domain's graph.
 
@@ -432,4 +493,5 @@ Proposal = (
     | ProposedAssumption
     | ProposedStakeholder
     | ProposedAssumptionTransition
+    | ProposedConflictMemberUpdate
 )

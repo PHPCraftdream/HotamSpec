@@ -135,6 +135,16 @@ The JSON shapes:
     "why": "..."
   }
 
+  ProposedConflictMemberUpdate (add/remove members on an EXISTING conflict;
+  post-update members MUST stay >= 2 — R-conflict-min-two-members):
+  {
+    "kind": "ConflictMemberUpdate",
+    "conflict_id": "C-8600b1b8",
+    "add_members": ["R-new-party"],
+    "remove_members": ["R-old-party"],
+    "decided_by": "framework-reviewer"
+  }
+
 Exit codes:
   0 — success (write landed, tests green, and if --triggering-kind was supplied:
       closure confirmed — the action is no longer in the post-apply diagnosis).

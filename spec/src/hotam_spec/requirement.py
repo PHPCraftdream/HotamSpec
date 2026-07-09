@@ -67,10 +67,12 @@ ENFORCEABILITY_KINDS: frozenset[str] = frozenset({ENFORCEABLE, INHERENTLY_PROSE}
 class Relation:
     """Canon: §Requirement — one typed SUPPORTIVE edge to another Requirement.
 
-    RULE: `kind` is one of the supportive relation kinds (supports | refines |
-    depends_on); `target` MUST be the id of a Requirement in the graph
-    (invariants.check_no_dangling_ids). Conflict is deliberately NOT a relation
-    kind — see module docstring.
+    RULE: `kind` is one of the relation kinds (supports | refines |
+    depends_on | replaces); `target` MUST be the id of a Requirement in the
+    graph (invariants.check_no_dangling_ids). Conflict is deliberately NOT a
+    relation kind — see module docstring. `replaces` is directed: the carrier
+    (the Requirement whose `relations` carries the edge) REPLACES the `target`
+    (a REJECTED requirement it supersedes) — anti-relitigation as structure.
 
     WHY depends_on is supportive, not adversarial: it carries invisibility #2 —
     a depends_on chain can lead to an assumption a different requirement negates;
@@ -78,12 +80,18 @@ class Relation:
     this edge.
     """
 
-    kind: str  # "supports" | "refines" | "depends_on"
+    kind: str  # "supports" | "refines" | "depends_on" | "replaces"
     target: str
 
 
-#: The admitted supportive relation kinds (authority for the form invariant).
-RELATION_KINDS: frozenset[str] = frozenset({"supports", "refines", "depends_on"})
+#: The admitted relation kinds (authority for the form invariant). The first
+#: three are SUPPORTIVE edges (non-adversarial structure); `replaces` is the
+#: ANTI-RELITIGATION edge — a directed "this requirement supersedes that one"
+#: link, materialized structurally so the REJECTED↔SETTLED replacement relation
+#: is graph-traversable, not prose-only (R-rejected-preserved-not-deleted).
+RELATION_KINDS: frozenset[str] = frozenset(
+    {"supports", "refines", "depends_on", "replaces"}
+)
 
 
 @dataclass(frozen=True)

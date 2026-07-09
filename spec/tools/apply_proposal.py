@@ -122,6 +122,16 @@ The JSON shapes:
     "why": "..."
   }
 
+  ProposedConflictMemberUpdate (add/remove members on an EXISTING conflict;
+  post-update members MUST stay >= 2 — R-conflict-min-two-members):
+  {
+    "kind": "ConflictMemberUpdate",
+    "conflict_id": "C-8600b1b8",
+    "add_members": ["R-new-party"],
+    "remove_members": ["R-old-party"],
+    "decided_by": "framework-reviewer"
+  }
+
 Exit codes:
   0 — success (write landed, tests green, and if --triggering-kind was supplied:
       closure confirmed — the action is no longer in the post-apply diagnosis).
@@ -167,6 +177,7 @@ from hotam_spec.proposal import (  # noqa: E402
     ProposedAssumptionTransition,
     ProposedAxis,
     ProposedConflict,
+    ProposedConflictMemberUpdate,
     ProposedConflictTransition,
     ProposedEntityType,
     ProposedOperatorBudget,
@@ -282,11 +293,13 @@ def _validate_proposal(raw: dict) -> Proposal:
         return _validate_stakeholder(raw)
     if kind == "AssumptionTransition":
         return _validate_assumption_transition(raw)
+    if kind == "ConflictMemberUpdate":
+        return _validate_conflict_member_update(raw)
     raise ValueError(
         f"Unsupported proposal kind '{kind}'. "
         f"Supported: 'ConflictTransition', 'Conflict', 'Requirement', "
         f"'Rejection', 'EntityType', 'OperatorBudget', 'Axis', 'Assumption', "
-        f"'Stakeholder', 'AssumptionTransition'."
+        f"'Stakeholder', 'AssumptionTransition', 'ConflictMemberUpdate'."
     )
 
 
@@ -418,9 +431,52 @@ def _validate_rejection(raw: dict) -> ProposedRejection:
     reason = raw.get("reason", "").strip()
     if not reason:
         raise ValueError("'reason' is required and must be non-empty.")
+    replaced_by_raw = raw.get("replaced_by", [])
+    if isinstance(replaced_by_raw, str):
+        replaced_by_raw = [replaced_by_raw]
+    if not isinstance(replaced_by_raw, list):
+        raise ValueError("'replaced_by' must be a string or a list of R-id strings.")
+    replaced_by = tuple(str(x).strip() for x in replaced_by_raw if str(x).strip())
     return ProposedRejection(
         requirement_id=requirement_id,
         reason=reason,
+        replaced_by=replaced_by,
+    )
+
+
+def _validate_conflict_member_update(raw: dict) -> ProposedConflictMemberUpdate:
+    """Parse and validate a ConflictMemberUpdate proposal.
+
+    RULE: conflict_id non-empty; add_members and remove_members are lists of
+    R-id strings (or absent → empty). At least ONE of add/remove must be
+    non-empty (a no-op update is a mistake, not a proposal). The post-update
+    members count is checked at apply-time (must stay >= 2), not here — the
+    validator cannot see the current members without the graph source.
+    """
+    conflict_id = raw.get("conflict_id", "").strip()
+    if not conflict_id:
+        raise ValueError(
+            "'conflict_id' is required for a ConflictMemberUpdate proposal."
+        )
+    add_raw = raw.get("add_members", [])
+    rem_raw = raw.get("remove_members", [])
+    if not isinstance(add_raw, list):
+        raise ValueError("'add_members' must be a list of R-id strings.")
+    if not isinstance(rem_raw, list):
+        raise ValueError("'remove_members' must be a list of R-id strings.")
+    add_members = tuple(str(x).strip() for x in add_raw if str(x).strip())
+    remove_members = tuple(str(x).strip() for x in rem_raw if str(x).strip())
+    if not add_members and not remove_members:
+        raise ValueError(
+            "at least one of 'add_members' / 'remove_members' must be non-empty "
+            "(a ConflictMemberUpdate with neither is a no-op)."
+        )
+    decided_by = raw.get("decided_by", "").strip()
+    return ProposedConflictMemberUpdate(
+        conflict_id=conflict_id,
+        add_members=add_members,
+        remove_members=remove_members,
+        decided_by=decided_by,
     )
 
 
@@ -777,6 +833,48 @@ def _find_requirement_call(tree: ast.AST, req_id: str) -> ast.Call | None:
                 if kw.value.value == req_id:
                     return node  # type: ignore[return-value]
     return None
+
+
+def _extract_requirement_relations(call: ast.Call) -> tuple[tuple[str, str], ...]:
+    """Canon: §Proposal — read the (kind, target) pairs from a Requirement's relations=.
+
+    Parses the `relations=` kwarg of a Requirement(...) call from its AST,
+    handling both bare-string-tuple shorthand ("supports", "R-x") and the typed
+    Relation("kind", "target") constructor form. Returns a tuple of pairs;
+    empty if the kwarg is absent. Used by the replaces-edge writer to APPEND a
+    new edge to a replacing requirement's existing relations without clobbering.
+    """
+    for kw in call.keywords:
+        if kw.arg != "relations":
+            continue
+        val = kw.value
+        # Relation("kind", "target") constructor calls inside a tuple.
+        out: list[tuple[str, str]] = []
+        # The value is either a Tuple of calls/literals, or a single call.
+        elts: list[ast.expr] = []
+        if isinstance(val, ast.Tuple):
+            elts = list(val.elts)
+        else:
+            elts = [val]
+        for elt in elts:
+            if isinstance(elt, ast.Call):
+                func = elt.func
+                is_relation = (
+                    (isinstance(func, ast.Name) and func.id == "Relation")
+                    or (isinstance(func, ast.Attribute) and func.attr == "Relation")
+                )
+                if not is_relation:
+                    continue
+                args = [a for a in elt.args if isinstance(a, ast.Constant)]
+                if len(args) >= 2 and isinstance(args[0].value, str) and isinstance(args[1].value, str):
+                    out.append((args[0].value, args[1].value))
+            elif isinstance(elt, ast.Tuple):
+                # bare ("kind", "target") shorthand
+                consts = [a for a in elt.elts if isinstance(a, ast.Constant)]
+                if len(consts) >= 2 and isinstance(consts[0].value, str) and isinstance(consts[1].value, str):
+                    out.append((consts[0].value, consts[1].value))
+        return tuple(out)
+    return ()
 
 
 def _find_requirements_tuple_end(tree: ast.AST, source_lines: list[str]) -> int | None:
@@ -1530,7 +1628,17 @@ def _apply_requirement_to_source(
 
 
 def _apply_rejection_to_source(source_text: str, proposal: ProposedRejection) -> str:
-    """Apply a ProposedRejection: set status to REJECTED, prepend reason to why."""
+    """Apply a ProposedRejection: set status to REJECTED, prepend reason to why.
+
+    Replaces-edge materialization (R-rejected-preserved-not-decoded): when the
+    proposal names one or more `replaced_by` successors, the writer appends a
+    structural `replaces` Relation edge to EACH successor requirement (edge
+    target = this rejected id). The edge is directed: the successor REPLACES the
+    rejected node. Existing relations on the successor are preserved (append,
+    never clobber). The prose "REJECTED — REPLACES" marker in `why` is written
+    too — it remains the human-readable twin; the edge is the machine-traversable
+    twin.
+    """
     tree = ast.parse(source_text)
     call_node = _find_requirement_call(tree, proposal.requirement_id)
     if call_node is None:
@@ -1563,7 +1671,32 @@ def _apply_rejection_to_source(source_text: str, proposal: ProposedRejection) ->
         new_why = f"{proposal.reason} — (was: {existing_why})"
 
     lines = _replace_or_insert_field(lines, call_node, "why", new_why)
-    return "".join(lines)
+    new_src = "".join(lines)
+
+    # Materialize structural replaces edges on each named successor.
+    for successor_id in proposal.replaced_by:
+        tree = ast.parse(new_src)
+        successor_call = _find_requirement_call(tree, successor_id)
+        if successor_call is None:
+            raise RuntimeError(
+                f"replaced_by successor '{successor_id}' not found in "
+                f"{_CONTENT_GRAPH} — a replaces edge can only target an existing "
+                f"Requirement."
+            )
+        existing_rels = _extract_requirement_relations(successor_call)
+        # Append the replaces edge if not already present (idempotent — re-running
+        # a landed proposal must not duplicate the edge).
+        new_edge = ("replaces", proposal.requirement_id)
+        if new_edge in existing_rels:
+            continue
+        merged = existing_rels + (new_edge,)
+        succ_lines = new_src.splitlines(keepends=True)
+        succ_lines = _replace_or_insert_relations(succ_lines, successor_call, merged)
+        new_src = "".join(succ_lines)
+        # relations reference the Relation symbol; ensure it is imported.
+        new_src = _ensure_import(new_src, "hotam_spec.requirement", ["Relation"])
+
+    return new_src
 
 
 # ---------------------------------------------------------------------------
@@ -1728,6 +1861,75 @@ def _ensure_conflict_import(source_text: str, needed: list[str]) -> str:
     the new-Conflict writer (`Conflict`, `conflict_identity`).
     """
     return _ensure_import(source_text, "hotam_spec.conflict", needed)
+
+
+def _extract_conflict_members(call: ast.Call) -> tuple[str, ...]:
+    """Canon: §Proposal — read the members tuple from a Conflict(...) AST call.
+
+    Returns the literal string members in source order. Handles both a bare
+    Tuple of string Constants and a parenthesized tuple. Used by the
+    ConflictMemberUpdate writer to compute (current − remove + add) without
+    clobbering existing members.
+    """
+    for kw in call.keywords:
+        if kw.arg != "members":
+            continue
+        val = kw.value
+        elts: list[ast.expr] = []
+        if isinstance(val, ast.Tuple):
+            elts = list(val.elts)
+        else:
+            elts = [val]
+        out: list[str] = []
+        for elt in elts:
+            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                out.append(elt.value)
+        return tuple(out)
+    return ()
+
+
+def _apply_conflict_member_update(
+    source_text: str, proposal: ProposedConflictMemberUpdate
+) -> str:
+    """Apply a ProposedConflictMemberUpdate: add/remove members on an existing Conflict.
+
+    Computes new_members = (current − remove_members) + add_members, deduped,
+    order-preserving (existing order kept; new members appended). Refuses an
+    update that would leave fewer than 2 DISTINCT members
+    (R-conflict-min-two-members) — surfaces the invariant at write-time with a
+    clear message rather than letting the graph gate fail. Steward-distinctness
+    and dangling-ref invariants are re-checked graph-side after the write.
+    """
+    tree = ast.parse(source_text)
+    call_node = _find_conflict_call(tree, proposal.conflict_id)
+    if call_node is None:
+        raise RuntimeError(
+            f"Conflict '{proposal.conflict_id}' not found in {_CONTENT_GRAPH}. "
+            f"No changes made."
+        )
+
+    current = _extract_conflict_members(call_node)
+    # Remove members (those leaving the tension), preserving the rest in order.
+    remove_set = set(proposal.remove_members)
+    kept = tuple(m for m in current if m not in remove_set)
+    # Append add_members that are not already present (dedupe; idempotent).
+    existing_after_remove = set(kept)
+    appended = tuple(
+        m for m in proposal.add_members if m not in existing_after_remove
+    )
+    new_members = kept + appended
+
+    distinct = len(set(new_members))
+    if distinct < 2:
+        raise RuntimeError(
+            f"ConflictMemberUpdate on '{proposal.conflict_id}' would leave"
+            f" {distinct} distinct member(s) ({list(new_members)});"
+            f" R-conflict-min-two-members requires >= 2. Refusing to write."
+        )
+
+    lines = source_text.splitlines(keepends=True)
+    lines = _replace_or_insert_field(lines, call_node, "members", new_members)
+    return "".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -2971,6 +3173,11 @@ def apply(
         # assumption's own enforced_by cannot bound (assumptions carry none) —
         # fail closed to the T2 full suite (R-land-gate-tier-selector-fails-closed).
         target_preexisting = False
+    elif isinstance(proposal, ProposedConflictMemberUpdate):
+        # Member churn changes which requirements the conflict connects; the
+        # fallout (dangling refs, steward-distinctness) is not bounded by the
+        # conflict's own enforced_by — fail closed to the T2 full suite.
+        target_preexisting = False
     elif isinstance(proposal, ProposedRequirement):
         pre_tree = ast.parse(source_text)
         target_preexisting = _find_requirement_call(pre_tree, proposal.id) is not None
@@ -3005,6 +3212,9 @@ def apply(
             lines = new_source.splitlines(keepends=True)
         elif isinstance(proposal, ProposedAssumptionTransition):
             new_source = _apply_assumption_transition(source_text, proposal)
+            lines = new_source.splitlines(keepends=True)
+        elif isinstance(proposal, ProposedConflictMemberUpdate):
+            new_source = _apply_conflict_member_update(source_text, proposal)
             lines = new_source.splitlines(keepends=True)
         else:
             print(

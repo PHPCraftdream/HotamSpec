@@ -361,6 +361,9 @@ def test_real_meta_domain_reflection_today(active_graph) -> None:
       - OP-director budget=200 vs graph_size ~100 -> within budget -> NO over-budget
       - No DEAD assumptions -> no dead-assumption-on-enforcer
       - R-active-loop-playbooks is DECIDED derived but SETTLED -> no derived-unbuilt
+      - ~38 historical REJECTED nodes with prose REPLACES but no structural
+        replaces edge -> reflect_replaces_edge_migration fires (the migration
+        ratchet, advisory). This is the honest 'not yet migrated' signal.
     """
     # Task #46, Measure 3: read the session-scoped active graph (frozen, shared
     # read-only) instead of rebuilding it per-test.
@@ -368,9 +371,11 @@ def test_real_meta_domain_reflection_today(active_graph) -> None:
     actions = diagnose(g)
     reflection_actions = [a for a in actions if a.priority == P_REFLECTION]
 
-    # A small number of REFLECTION actions is reasonable.
-    assert 0 <= len(reflection_actions) <= 10, (
-        f"Expected 0-10 REFLECTION actions, got {len(reflection_actions)}: "
+    # The reflection band includes the migration-ratchet findings (~38 historical
+    # REJECTED nodes not yet on structural replaces edges). The range accommodates
+    # those plus the existing conditions; the migration ratchet only ever shrinks.
+    assert 0 <= len(reflection_actions) <= 60, (
+        f"Expected 0-60 REFLECTION actions, got {len(reflection_actions)}: "
         f"{reflection_actions}"
     )
 
@@ -384,6 +389,20 @@ def test_real_meta_domain_reflection_today(active_graph) -> None:
     ]
     assert not enforcer_dead, (
         f"No DEAD assumptions today; enforcer-dead must not fire; got {enforcer_dead}"
+    )
+
+    # The migration ratchet HONESTLY surfaces historical REJECTED nodes whose
+    # anti-relitigation relation is prose-only (no structural replaces edge yet).
+    # These are advisory; they must NOT block the graph.
+    migration = [
+        a for a in reflection_actions
+        if a.kind == "REFLECTION"
+        and "replaces" in a.imperative.lower()
+        and "migrate" in a.imperative.lower()
+    ]
+    assert migration, (
+        "reflect_replaces_edge_migration must fire on the historical REJECTED "
+        "nodes (they have prose REPLACES markers but no structural edge)."
     )
 
 
@@ -400,6 +419,8 @@ _PREDICATE_NAMES = [
     "reflect_dead_assumption_on_enforcer",
     "reflect_derived_but_unbuilt",
     "reflect_implements_decay",
+    "reflect_replaces_edge_migration",
+    "reflect_all_members_rejected",
 ]
 
 
@@ -434,9 +455,11 @@ def test_what_now_sources_reflection_predicates_from_module() -> None:
 
 
 def _all_conditions_violating_graph() -> TensionGraph:
-    """One synthetic graph that violates ALL six reflection conditions at once."""
+    """One synthetic graph that violates ALL eight reflection conditions at once."""
     from datetime import date as _date
     from datetime import timedelta as _timedelta
+
+    from hotam_spec.requirement import REJECTED  # noqa: PLC0415
 
     dead_a = Assumption(
         id="A-dead-all", statement="was true, now dead", status=DEAD, owner="s-a"
@@ -460,6 +483,16 @@ def _all_conditions_violating_graph() -> TensionGraph:
         enforcement=ENFORCED,
         enforced_by=("test_stale_all",),
     )
+    # A REJECTED requirement with a prose REPLACES marker but NO structural
+    # replaces edge — fires reflect_replaces_edge_migration.
+    prose_rejected = Requirement(
+        id="R-prose-rejected-all",
+        claim="old design, rejected",
+        owner="s-b",
+        status=REJECTED,
+        why="REJECTED -- REPLACES by R-successor-all; the old way.",
+    )
+    successor = _settled_req("R-successor-all")
     parents = (_settled_req("R-pa"), _settled_req("R-pb"))
     drafts = tuple(_draft_req(f"R-d{i}") for i in range(4)) + (
         _draft_req("R-unbuilt-all"),
@@ -475,6 +508,32 @@ def _all_conditions_violating_graph() -> TensionGraph:
         decided_by="s-c",
         derived=("R-unbuilt-all",),
     )
+    # A DETECTED conflict whose every member is REJECTED — fires
+    # reflect_all_members_rejected (the ghost-connector signal).
+    ghost_ax, ghost_ctx = "ax-two", "ghost-all-conditions context"
+    ghost = Conflict(
+        id=conflict_identity(ghost_ax, ghost_ctx),
+        axis=ghost_ax,
+        context=ghost_ctx,
+        members=("R-prose-rejected-all",),
+        steward="s-a",
+        lifecycle="DETECTED",
+    )
+    # Add a second REJECTED member so the ghost has >= 2 members.
+    ghost_member_two = Requirement(
+        id="R-ghost-second",
+        claim="another dead party",
+        owner="s-c",
+        status=REJECTED,
+    )
+    ghost = Conflict(
+        id=conflict_identity(ghost_ax, ghost_ctx),
+        axis=ghost_ax,
+        context=ghost_ctx,
+        members=("R-prose-rejected-all", "R-ghost-second"),
+        steward="s-a",
+        lifecycle="DETECTED",
+    )
     op = Operator(
         id="OP-over-all",
         stakeholder="s-a",
@@ -484,8 +543,11 @@ def _all_conditions_violating_graph() -> TensionGraph:
     return TensionGraph(
         axes=_DUMMY_AXES,
         stakeholders=_SH,
-        requirements=closeable + (stale,) + parents + drafts,
-        conflicts=(c,),
+        requirements=closeable
+        + (stale, prose_rejected, successor, ghost_member_two)
+        + parents
+        + drafts,
+        conflicts=(c, ghost),
         assumptions=(dead_a, decaying),
         operators=(op,),
     )

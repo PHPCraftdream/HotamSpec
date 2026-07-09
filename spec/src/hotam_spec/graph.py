@@ -435,6 +435,32 @@ def assumption_by_id(g: TensionGraph, aid: str) -> Assumption | None:
     return None
 
 
+def replaces_map(g: TensionGraph) -> dict[str, tuple[str, ...]]:
+    """Canon: §Graph — REJECTED-id → tuple of successor ids that structurally replace it.
+
+    RULE: scan every Requirement's `relations` for `replaces` edges (the directed
+    anti-relitigation edge: carrier REPLACES target). Returns a mapping from the
+    REPLACED (target) id to the tuple of successor (carrier) ids, in graph order.
+    A REJECTED id with no structural edge is ABSENT from the map (callers fall
+    back to prose "REPLACES" matching for the ~38 historical nodes not yet
+    migrated — R-rejected-preserved-not-deleted).
+
+    WHY a graph helper (not inlined in gen_spec/what_now): the replaces edge is
+    a first-class structural relation; concentrating the traversal here keeps a
+    single source of truth, mirroring requirement_ids/dependency_chains. The edge
+    is directed (carrier → target), but the anti-relitigation question is the
+    INVERSE — 'who replaced this REJECTED node?' — so this helper returns the
+    inverted index for that read pattern.
+    """
+    out: dict[str, tuple[str, ...]] = {}
+    for r in g.requirements:
+        for rel in r.relations:
+            if rel.kind == "replaces":
+                out.setdefault(rel.target, []).append(r.id)
+    # Freeze lists to tuples for hash-stable, order-deterministic output.
+    return {k: tuple(v) for k, v in out.items()}
+
+
 # ---------------------------------------------------------------------------
 # Dependency traversal — depends_on chains and independent subgraphs
 # ---------------------------------------------------------------------------

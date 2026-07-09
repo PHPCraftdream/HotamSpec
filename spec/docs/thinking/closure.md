@@ -120,4 +120,8 @@ Canon: §Closure — the Assumption id this transition is meant to change.
 
 ## From `spec/src/hotam_spec/proposal.py::target_anchor`
 
+Canon: §Closure — the Conflict id this update is meant to change.
+
+## From `spec/src/hotam_spec/proposal.py::target_anchor`
+
 Canon: §Closure — the entity slug is the anchor of this proposal.

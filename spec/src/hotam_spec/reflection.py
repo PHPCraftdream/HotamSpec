@@ -3,9 +3,9 @@
 RULE: every P0 REFLECTION condition the harness can raise MUST be a named,
 pure, graph-only predicate in this module — draft-overhang, unenforced-settled,
 over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt,
-implements-decay — composed by tools/what_now.py via all_findings() in
-REFLECTION_PREDICATES order, never re-inlined in tool code
-(R-reflection-predicates-first-class).
+implements-decay, replaces-edge-migration, all-members-rejected — composed by
+tools/what_now.py via all_findings() in REFLECTION_PREDICATES order, never
+re-inlined in tool code (R-reflection-predicates-first-class).
 
 CONTRACT of each predicate: `reflect_*(graph) -> list[Finding]`. An EMPTY list
 means the operator is ready on that condition. Each Finding names the offending
@@ -335,6 +335,131 @@ def reflect_implements_decay(g: TensionGraph) -> list[Finding]:
     return out
 
 
+# Marker reused from gen_spec.py's regex (em-dash, en-dash, --, -).
+_REPLACES_PROSE_RE = __import__("re").compile(r"REJECTED\s*(?:—|–|--|-)\s*REPLACES")
+
+
+def reflect_all_members_rejected(g: TensionGraph) -> list[Finding]:
+    """Canon: §Reflection — all-members-REJECTED: a live conflict whose every party is dead.
+
+    RULE: for each Conflict that is NOT itself in a terminal/archival state
+    (its lifecycle does NOT start with DECIDED — the resolved state — and is
+    NOT REVISIT_WHEN — the parked state), if EVERY one of its members is a
+    REJECTED Requirement, fire ONE advisory finding on the conflict id: the
+    tension's parties are all gone, yet the conflict is neither resolved nor
+    parked. The steward should DECIDE it (mark the tension exhausted) or
+    REVISIT_WHEN (park it) — a live DETECTED/ACKNOWLEDGED conflict with two
+    dead members is a structural ghost (C-c3911f28 is the live example: both
+    members are REJECTED, yet it was recorded as DECIDED, so it stays silent).
+
+    WHY ADVISORY, not a hard invariant: the methodology holds that a conflict
+    is closed only by a steward, never silently (R-decided-needs-human-signoff).
+    A hard invariant firing on 'all members REJECTED' would either (a) force the
+    conflict into a terminal state automatically (violating the hard boundary)
+    or (b) block the graph green until the steward acts (holding the whole
+    domain hostage to one historical node). The reflection signal instead
+    HONESTLY SURFACES the ghost so the steward can decide its fate, without
+    blocking. C-c3911f28 is the canonical case: a DECIDED conflict between two
+    REJECTED requirements, both superseded — it is a legitimate 'tension
+    exhausted' record, and a hard check would misfire on it. By excluding
+    DECIDED/REVISIT_WHEN (the terminal/archival states) from the trigger, the
+    predicate fires ONLY on the genuinely-ghosty DETECTED/ACKNOWLEDGED case.
+
+    WHY members are resolved defensively: a dangling member id (not a known
+    Requirement) is itself a P1 structural violation (check_no_dangling_conflict_
+    refs); here we treat an unresolvable member as NOT-REJECTED so the predicate
+    does not double-report a dangling id as a ghost. The structural check owns
+    the dangle; this predicate owns the all-dead-but-live signal.
+    """
+    out: list[Finding] = []
+    for c in g.conflicts:
+        # Terminal/archival states: DECIDED (resolved) and REVISIT_WHEN (parked)
+        # are steward outcomes — a conflict there with dead members is a resolved
+        # historical record, not a ghost. Only DETECTED/ACKNOWLEDGED can ghost.
+        if c.lifecycle.startswith(DECIDED_PREFIX):
+            continue
+        if c.lifecycle.startswith("REVISIT_WHEN"):
+            continue
+        if len(c.members) < 1:
+            continue  # min-two-members is a separate structural check
+        # Resolve members; treat unresolvable as NOT-rejected (don't double-report).
+        statuses: list[str] = []
+        for mid in c.members:
+            r = requirement_by_id(g, mid)
+            if r is None:
+                statuses.append("UNKNOWN")
+            else:
+                statuses.append(r.status)
+        if statuses and all(s == "REJECTED" for s in statuses):
+            out.append(
+                Finding(
+                    condition="reflect_all_members_rejected",
+                    target=c.id,
+                    imperative=(
+                        f"Conflict '{c.id}' is live ({c.lifecycle}) but ALL its"
+                        f" members are REJECTED ({list(c.members)}). The tension's"
+                        " parties are gone; DECIDE it (mark exhausted) or"
+                        " REVISIT_WHEN (park) so the graph stops holding a ghost"
+                        " connector. Advisory; never a gate (the steward closes a"
+                        " conflict, never the harness — R-decided-needs-human-signoff)."
+                    ),
+                )
+            )
+    return out
+
+
+def reflect_replaces_edge_migration(g: TensionGraph) -> list[Finding]:
+    """Canon: §Reflection — replaces-edge-migration: REJECTED prose without a structural edge.
+
+    RULE: for each REJECTED Requirement whose `why` contains a prose
+    'REJECTED <dash> REPLACES' marker but which is NOT the target of any
+    structural `replaces` Relation edge in the graph, fire ONE advisory finding
+    (P0 REFLECTION band surfaced via what_now, NEVER a gate). The finding tells
+    the operator to migrate that historical rejection onto a structural edge so
+    the anti-relitigation relation becomes machine-traversable.
+
+    WHY advisory and not a gate: the ~38 historical REJECTED nodes predate the
+    structural replaces edge (introduced in the K1 ontology wave). Migrating them
+    is a steward act (each requires confirming the successor and writing the edge
+    via apply_proposal); forcing it as a hard invariant would block the graph
+    until all 38 are hand-migrated. The predicate instead HONESTLY SURFACES the
+    not-yet-migrated set so a steward can work through it incrementally
+    (R-reflection-predicates-first-class — important-yet-invisible as a named
+    predicate, never silently extinguished). Once an edge is added, the finding
+    for that id goes silent — the migration ratchet only ever shrinks.
+
+    WHY the prose marker is the trigger (not just any REJECTED): a REJECTED
+    requirement with NO 'REPLACES' marker is an honest 'discarded, no successor'
+    node — it has nothing to migrate. Only nodes that ALREADY CLAIM a replacement
+    in prose but lack the structural twin are migration candidates.
+    """
+    from hotam_spec.graph import replaces_map  # noqa: PLC0415
+
+    rmap = replaces_map(g)
+    out: list[Finding] = []
+    for r in g.requirements:
+        if r.status != "REJECTED":
+            continue
+        if r.id in rmap:
+            continue  # already has a structural replaces edge
+        if not _REPLACES_PROSE_RE.search(r.why):
+            continue  # no prose marker — not a migration candidate
+        out.append(
+            Finding(
+                condition="reflect_replaces_edge_migration",
+                target=r.id,
+                imperative=(
+                    f"REJECTED requirement '{r.id}' claims a REPLACES successor in"
+                    " prose but has NO structural `replaces` edge — migrate it via"
+                    " a ProposedRejection (with replaced_by) so the anti-relitigation"
+                    " relation becomes machine-traversable"
+                    " (R-rejected-preserved-not-deleted). Advisory; never a gate."
+                ),
+            )
+        )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Registry + single entry point (mirror of invariants.ALL_INVARIANTS)
 # ---------------------------------------------------------------------------
@@ -346,6 +471,8 @@ REFLECTION_PREDICATES = (
     reflect_dead_assumption_on_enforcer,
     reflect_derived_but_unbuilt,
     reflect_implements_decay,
+    reflect_replaces_edge_migration,
+    reflect_all_members_rejected,
 )
 
 

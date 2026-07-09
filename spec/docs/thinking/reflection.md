@@ -12,9 +12,9 @@ Canon: §Reflection — the operator's P0 self-diagnosis conditions as named pre
 RULE: every P0 REFLECTION condition the harness can raise MUST be a named,
 pure, graph-only predicate in this module — draft-overhang, unenforced-settled,
 over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt,
-implements-decay — composed by tools/what_now.py via all_findings() in
-REFLECTION_PREDICATES order, never re-inlined in tool code
-(R-reflection-predicates-first-class).
+implements-decay, replaces-edge-migration, all-members-rejected — composed by
+tools/what_now.py via all_findings() in REFLECTION_PREDICATES order, never
+re-inlined in tool code (R-reflection-predicates-first-class).
 
 CONTRACT of each predicate: `reflect_*(graph) -> list[Finding]`. An EMPTY list
 means the operator is ready on that condition. Each Finding names the offending
@@ -168,6 +168,65 @@ the ~290 pre-timestamp nodes). The predicate only fires when an age is
 computable. decided_at (the last transition into IMPLEMENTS) takes
 precedence over created_at: re-typing an assumption to IMPLEMENTS resets
 the decay clock, so an aspiration actively worked on never ages out.
+
+## From `spec/src/hotam_spec/reflection.py::reflect_all_members_rejected`
+
+Canon: §Reflection — all-members-REJECTED: a live conflict whose every party is dead.
+
+RULE: for each Conflict that is NOT itself in a terminal/archival state
+(its lifecycle does NOT start with DECIDED — the resolved state — and is
+NOT REVISIT_WHEN — the parked state), if EVERY one of its members is a
+REJECTED Requirement, fire ONE advisory finding on the conflict id: the
+tension's parties are all gone, yet the conflict is neither resolved nor
+parked. The steward should DECIDE it (mark the tension exhausted) or
+REVISIT_WHEN (park it) — a live DETECTED/ACKNOWLEDGED conflict with two
+dead members is a structural ghost (C-c3911f28 is the live example: both
+members are REJECTED, yet it was recorded as DECIDED, so it stays silent).
+
+WHY ADVISORY, not a hard invariant: the methodology holds that a conflict
+is closed only by a steward, never silently (R-decided-needs-human-signoff).
+A hard invariant firing on 'all members REJECTED' would either (a) force the
+conflict into a terminal state automatically (violating the hard boundary)
+or (b) block the graph green until the steward acts (holding the whole
+domain hostage to one historical node). The reflection signal instead
+HONESTLY SURFACES the ghost so the steward can decide its fate, without
+blocking. C-c3911f28 is the canonical case: a DECIDED conflict between two
+REJECTED requirements, both superseded — it is a legitimate 'tension
+exhausted' record, and a hard check would misfire on it. By excluding
+DECIDED/REVISIT_WHEN (the terminal/archival states) from the trigger, the
+predicate fires ONLY on the genuinely-ghosty DETECTED/ACKNOWLEDGED case.
+
+WHY members are resolved defensively: a dangling member id (not a known
+Requirement) is itself a P1 structural violation (check_no_dangling_conflict_
+refs); here we treat an unresolvable member as NOT-REJECTED so the predicate
+does not double-report a dangling id as a ghost. The structural check owns
+the dangle; this predicate owns the all-dead-but-live signal.
+
+## From `spec/src/hotam_spec/reflection.py::reflect_replaces_edge_migration`
+
+Canon: §Reflection — replaces-edge-migration: REJECTED prose without a structural edge.
+
+RULE: for each REJECTED Requirement whose `why` contains a prose
+'REJECTED <dash> REPLACES' marker but which is NOT the target of any
+structural `replaces` Relation edge in the graph, fire ONE advisory finding
+(P0 REFLECTION band surfaced via what_now, NEVER a gate). The finding tells
+the operator to migrate that historical rejection onto a structural edge so
+the anti-relitigation relation becomes machine-traversable.
+
+WHY advisory and not a gate: the ~38 historical REJECTED nodes predate the
+structural replaces edge (introduced in the K1 ontology wave). Migrating them
+is a steward act (each requires confirming the successor and writing the edge
+via apply_proposal); forcing it as a hard invariant would block the graph
+until all 38 are hand-migrated. The predicate instead HONESTLY SURFACES the
+not-yet-migrated set so a steward can work through it incrementally
+(R-reflection-predicates-first-class — important-yet-invisible as a named
+predicate, never silently extinguished). Once an edge is added, the finding
+for that id goes silent — the migration ratchet only ever shrinks.
+
+WHY the prose marker is the trigger (not just any REJECTED): a REJECTED
+requirement with NO 'REPLACES' marker is an honest 'discarded, no successor'
+node — it has nothing to migrate. Only nodes that ALREADY CLAIM a replacement
+in prose but lack the structural twin are migration candidates.
 
 ## From `spec/src/hotam_spec/reflection.py::all_findings`
 
