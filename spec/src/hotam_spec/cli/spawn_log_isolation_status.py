@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import spawn_log_isolation_status  # noqa: E402
-
-
-def main() -> None:
-    """Entry point — delegates to spawn_log_isolation_status.main()."""
-    spawn_log_isolation_status.main()
-
+main = make_main("spawn_log_isolation_status")
 
 if __name__ == "__main__":
     main()

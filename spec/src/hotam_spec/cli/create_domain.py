@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import create_domain  # noqa: E402
-
-
-def main() -> None:
-    """Scaffold a new business domain."""
-    create_domain.main()
-
+main = make_main("create_domain")
 
 if __name__ == "__main__":
     main()

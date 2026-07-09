@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import setup_hooks  # noqa: E402
-
-
-def main() -> None:
-    """Entry point — delegates to setup_hooks.main()."""
-    setup_hooks.main()
-
+main = make_main("setup_hooks")
 
 if __name__ == "__main__":
     main()

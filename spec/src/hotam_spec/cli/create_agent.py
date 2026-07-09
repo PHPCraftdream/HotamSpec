@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import create_agent  # noqa: E402
-
-
-def main() -> None:
-    """Entry point — delegates to create_agent.main()."""
-    create_agent.main()
-
+main = make_main("create_agent")
 
 if __name__ == "__main__":
     main()

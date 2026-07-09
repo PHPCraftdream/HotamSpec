@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import apply_proposal  # noqa: E402
-
-
-def main() -> None:
-    """Apply a steward-approved JSON proposal to the graph."""
-    apply_proposal.main()
-
+main = make_main("apply_proposal")
 
 if __name__ == "__main__":
     main()

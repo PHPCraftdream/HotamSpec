@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import record_delegation  # noqa: E402
-
-
-def main() -> None:
-    """Entry point — delegates to record_delegation.main()."""
-    record_delegation.main()
-
+main = make_main("record_delegation")
 
 if __name__ == "__main__":
     main()

@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-from hotam_spec.cli._path_setup import ensure_tools_on_path
+from hotam_spec.cli._dispatch import make_main
 
-ensure_tools_on_path()
-
-import mark_revisit_evaluated as mark_revisit  # noqa: E402  -- module name != filename
-
-
-def main() -> None:
-    """Record that a DECIDED conflict's revisit_marker was evaluated."""
-    mark_revisit.main()
-
+# tool module filename (mark_revisit_evaluated.py) != this wrapper's short name
+main = make_main("mark_revisit_evaluated")
 
 if __name__ == "__main__":
     main()
