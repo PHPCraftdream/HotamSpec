@@ -1375,6 +1375,14 @@ def build_graph_json(g: TensionGraph) -> str:
                 "enforced_by": list(r.enforced_by),
                 "assumptions": list(r.assumptions),
                 "why": r.why,
+                "last_reviewed_at": getattr(r, "last_reviewed_at", ""),
+                "review_after": getattr(r, "review_after", ""),
+                "evidence": list(getattr(r, "evidence", ())),
+                "source_refs": list(getattr(r, "source_refs", ())),
+                "history": [
+                    {"at": h.at, "summary": h.summary, "decided_by": h.decided_by}
+                    for h in getattr(r, "history", ())
+                ],
             }
             for r in g.requirements
         ],
@@ -2672,7 +2680,39 @@ def _render_atoms(title: str, intro: str, reqs: list, reader: str = "") -> str:
                     "**Enforced by:** " + ", ".join(f"`{e}`" for e in r.enforced_by),
                     "",
                 ]
+            lines += _render_freshness_lines(r)
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_freshness_lines(r) -> list[str]:
+    """Canon: §Requirement — render the optional freshness fields for one requirement.
+
+    Emits a line each for last_reviewed_at / review_after / evidence /
+    source_refs when populated, and the derived change trail (history). Absent
+    fields render nothing (terse output for the common case). Shared so both the
+    atoms detail and any future per-requirement view stay consistent.
+    """
+    out: list[str] = []
+    reviewed = getattr(r, "last_reviewed_at", "")
+    review_after = getattr(r, "review_after", "")
+    evidence = getattr(r, "evidence", ())
+    source_refs = getattr(r, "source_refs", ())
+    history = getattr(r, "history", ())
+    if reviewed:
+        out += [f"**Last reviewed.** {reviewed}", ""]
+    if review_after:
+        out += [f"**Review after.** {review_after}", ""]
+    if evidence:
+        out += ["**Evidence.** " + "; ".join(evidence), ""]
+    if source_refs:
+        out += ["**Sources.** " + ", ".join(source_refs), ""]
+    if history:
+        out += ["**Change history.**", ""]
+        for h in history:
+            who = f" · {h.decided_by}" if h.decided_by else ""
+            out += [f"- {h.at}{who} — {h.summary}"]
+        out += [""]
+    return out
 
 
 def build_methodology_atoms_operator(g: TensionGraph) -> str:

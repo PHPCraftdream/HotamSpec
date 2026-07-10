@@ -227,7 +227,12 @@ of strings, default `[]`), `m_tag` (default `""`), `enforceability`
 (`ENFORCEABLE` | `INHERENTLY_PROSE`, default `"ENFORCEABLE"` — see
 [Enum reference](#enum-reference)), `summary` (default `""`), `created_at` (ISO
 `YYYY-MM-DD`, defaults to today when omitted), `settled_at` (ISO date, filled
-with today only when `status` is `SETTLED` and this is empty)
+with today only when `status` is `SETTLED` and this is empty), `last_reviewed_at`
+(ISO date the claim was last re-confronted and held, default `""`),
+`review_after` (ISO date after which re-confrontation is due, default `""`),
+`evidence` (list of free-form evidence strings backing the claim, default `[]`),
+`source_refs` (list of pointers to where the claim originated — doc paths, URLs,
+review ids, commit hashes — default `[]`)
 
 ```json
 {
@@ -237,9 +242,24 @@ with today only when `status` is `SETTLED` and this is empty)
   "owner": "alice",
   "status": "SETTLED",
   "why": "customers expect weekly releases",
-  "enforcement": "PROSE"
+  "enforcement": "PROSE",
+  "last_reviewed_at": "2026-07-10",
+  "review_after": "2026-12-01",
+  "evidence": ["p99 latency held under 200ms for 3 releases"],
+  "source_refs": ["docs/roadmap.md", "review-2026-07"]
 }
 ```
+
+**Per-node change history (`history`) — derived, never supplied.** Every time
+`apply_proposal.py` UPDATES an already-existing Requirement (not at first
+creation), it diffs the changed fields and appends one `HistoryEntry`
+(`at` · `summary` · optional `decided_by`) to the node's `history` tuple — the
+change trail lives IN the committed graph, next to the claim (not only in git
+blame or gitignored runtime JSON). `history` is a DERIVED field: it is **not** a
+proposal key, and supplying `"history"` in a Requirement proposal is rejected.
+Its structure (dated, non-empty entries, monotonic stamps) is enforced by
+`check_requirement_history_wellformed`; its CONTENT is never machine-judged
+(that would repeat the `R-boot-cite-measured` form-metric theatre).
 
 ## Conflict (creation)
 

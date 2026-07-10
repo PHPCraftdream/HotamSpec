@@ -951,7 +951,13 @@ def test_update_reattaches_assumptions_and_verify_passes() -> None:
     """An honest reattachment UPDATE lands and the post-check accepts it."""
     p = _proposed_req(assumptions=("A-new",))
     out = apply_proposal._apply_requirement_to_source(_REQ_UPDATE_SOURCE, p)
-    assert "A-new" in out and "A-old" not in out
+    # The assumptions FIELD now carries A-new and no longer A-old. (A-old may
+    # legitimately still appear inside the derived HistoryEntry summary
+    # "assumptions: [A-old]→[A-new]" — the change trail records the old value by
+    # design, §Requirement HistoryEntry — so assert on the FIELD, not the whole
+    # source blob.)
+    assert 'assumptions=("A-new",)' in out
+    assert 'assumptions=("A-old",)' not in out
     # Post-check runs inside _apply_requirement_to_source and did not raise.
 
 

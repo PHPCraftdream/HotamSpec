@@ -396,6 +396,22 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
     summary = raw.get("summary", "")
     created_at = (raw.get("created_at", "") or "").strip()
     settled_at = (raw.get("settled_at", "") or "").strip()
+    last_reviewed_at = (raw.get("last_reviewed_at", "") or "").strip()
+    review_after = (raw.get("review_after", "") or "").strip()
+    evidence_raw = raw.get("evidence", [])
+    if not isinstance(evidence_raw, list):
+        raise ValueError("'evidence' must be a list of strings.")
+    evidence = tuple(str(x) for x in evidence_raw)
+    source_refs_raw = raw.get("source_refs", [])
+    if not isinstance(source_refs_raw, list):
+        raise ValueError("'source_refs' must be a list of strings.")
+    source_refs = tuple(str(x) for x in source_refs_raw)
+    if "history" in raw:
+        raise ValueError(
+            "'history' is a DERIVED field and must NOT be supplied in a "
+            "Requirement proposal — apply_proposal.py computes it from the "
+            "field diff on each UPDATE (§Requirement — HistoryEntry)."
+        )
     return ProposedRequirement(
         id=req_id,
         claim=claim,
@@ -411,6 +427,10 @@ def _validate_requirement(raw: dict) -> ProposedRequirement:
         summary=summary if isinstance(summary, str) else "",
         created_at=created_at if isinstance(created_at, str) else "",
         settled_at=settled_at if isinstance(settled_at, str) else "",
+        last_reviewed_at=last_reviewed_at if isinstance(last_reviewed_at, str) else "",
+        review_after=review_after if isinstance(review_after, str) else "",
+        evidence=evidence,
+        source_refs=source_refs,
     )
 
 
@@ -1133,6 +1153,103 @@ def _render_relations_expr(relations: tuple[tuple[str, str], ...]) -> str:
     return f"({items},)"
 
 
+def _render_history_expr(entries: "tuple") -> str:
+    """Canon: §Proposal — render a history tuple as a HistoryEntry(...) source expr.
+
+    Each entry is a (at, summary, decided_by) triple; renders as
+    `HistoryEntry(at=..., summary=..., decided_by=...)` (decided_by omitted when
+    empty, matching the dataclass default). Whole becomes a parenthesized tuple
+    with a trailing comma. Mirrors _render_relations_expr — history entries are
+    typed constructor calls, not literals, so _python_repr cannot emit them.
+    """
+    items: list[str] = []
+    for at, summary, decided_by in entries:
+        parts = [f"at={_python_repr(at)}", f"summary={_python_repr(summary)}"]
+        if decided_by:
+            parts.append(f"decided_by={_python_repr(decided_by)}")
+        items.append("HistoryEntry(" + ", ".join(parts) + ")")
+    joined = ", ".join(items)
+    return f"({joined},)"
+
+
+def _read_history_entries(call: ast.Call) -> "tuple":
+    """Canon: §Proposal — read existing history entries from a Requirement call.
+
+    Returns a tuple of (at, summary, decided_by) triples parsed from the
+    `history=` kwarg's HistoryEntry(...) constructor calls (keyword args). Empty
+    tuple if the kwarg is absent. Used to APPEND a new entry without clobbering.
+    """
+    for kw in call.keywords:
+        if kw.arg != "history":
+            continue
+        val = kw.value
+        elts: list[ast.expr] = list(val.elts) if isinstance(val, ast.Tuple) else [val]
+        out: list[tuple[str, str, str]] = []
+        for elt in elts:
+            if not isinstance(elt, ast.Call):
+                continue
+            func = elt.func
+            is_he = (isinstance(func, ast.Name) and func.id == "HistoryEntry") or (
+                isinstance(func, ast.Attribute) and func.attr == "HistoryEntry"
+            )
+            if not is_he:
+                continue
+            fields = {"at": "", "summary": "", "decided_by": ""}
+            for ekw in elt.keywords:
+                if ekw.arg in fields and isinstance(ekw.value, ast.Constant):
+                    if isinstance(ekw.value.value, str):
+                        fields[ekw.arg] = ekw.value.value
+            out.append((fields["at"], fields["summary"], fields["decided_by"]))
+        return tuple(out)
+    return ()
+
+
+def _replace_or_insert_history(
+    source_lines: list[str],
+    call: ast.Call,
+    entries: "tuple",
+) -> list[str]:
+    """Canon: §Proposal — replace/insert the history= kwarg on a Requirement call.
+
+    Same line/col strategy as _replace_or_insert_relations, but the value is a
+    HistoryEntry(...) constructor tuple (rendered by _render_history_expr).
+    """
+    lines = list(source_lines)
+    new_repr = _render_history_expr(entries)
+    for kw in call.keywords:
+        if kw.arg != "history":
+            continue
+        val_node = kw.value
+        lineno = val_node.lineno - 1
+        line = lines[lineno]
+        col = _byte_col_to_char_col(line, val_node.col_offset)
+        end_lineno = getattr(val_node, "end_lineno", None)
+        end_col_bytes = getattr(val_node, "end_col_offset", None)
+        if end_lineno is not None and end_col_bytes is not None:
+            if end_lineno - 1 == lineno:
+                end_col = _byte_col_to_char_col(line, end_col_bytes)
+                lines[lineno] = line[:col] + new_repr + line[end_col:]
+            else:
+                end_line = lines[end_lineno - 1]
+                end_col = _byte_col_to_char_col(end_line, end_col_bytes)
+                suffix = end_line[end_col:]
+                del lines[lineno + 1 : end_lineno - 1 + 1]
+                line = lines[lineno]
+                lines[lineno] = line[:col] + new_repr + suffix
+        return lines
+    # Insert before the closing ')' of the call, indented like siblings.
+    end_lineno = getattr(call, "end_lineno", None)
+    if end_lineno is None:
+        raise RuntimeError("Cannot determine end line of Requirement call for history")
+    indent = "            "
+    if call.keywords:
+        kw_linetext = lines[call.keywords[0].value.lineno - 1]
+        stripped = kw_linetext.lstrip()
+        indent = kw_linetext[: len(kw_linetext) - len(stripped)]
+    lines.insert(end_lineno - 1, f"{indent}history={new_repr},\n")
+    return lines
+
+
 def _replace_or_insert_relations(
     source_lines: list[str],
     call: ast.Call,
@@ -1331,6 +1448,18 @@ def _render_requirement_source(proposal: ProposedRequirement, indent: str) -> st
     if proposal.status == "SETTLED":
         settled = proposal.settled_at or _date.today().isoformat()
         lines.append(f'{inner}settled_at="{settled}",')
+    # Freshness fields (all optional — emit only when non-empty; a freshly
+    # created node carries no history, so `history` is never emitted here).
+    if proposal.last_reviewed_at:
+        lines.append(f'{inner}last_reviewed_at="{proposal.last_reviewed_at}",')
+    if proposal.review_after:
+        lines.append(f'{inner}review_after="{proposal.review_after}",')
+    if proposal.evidence:
+        ev_items = ", ".join(_python_repr(e) for e in proposal.evidence)
+        lines.append(f"{inner}evidence=({ev_items},),")
+    if proposal.source_refs:
+        sr_items = ", ".join(_python_repr(s) for s in proposal.source_refs)
+        lines.append(f"{inner}source_refs=({sr_items},),")
     lines.append(f"{indent}),")
     return "\n".join(lines) + "\n"
 
@@ -1440,6 +1569,87 @@ def _verify_requirement_update_reflected(
             )
 
 
+def _abbrev(value: object, limit: int = 40) -> str:
+    """Canon: §Proposal — one-line, length-bounded rendering of a field value for
+    a HistoryEntry summary. Tuples render as their joined items; long strings are
+    truncated with an ellipsis so the change trail stays scannable.
+    """
+    if value is None:
+        value = ""
+    if isinstance(value, (tuple, list)):
+        text = "[" + ", ".join(str(v) for v in value) + "]"
+    else:
+        text = str(value)
+    text = " ".join(text.split())  # collapse newlines/runs of whitespace
+    if len(text) > limit:
+        text = text[: limit - 1] + "…"
+    return text
+
+
+def _summarize_field_diff(old: dict, new: dict) -> str:
+    """Canon: §Proposal / §Requirement — build a HistoryEntry summary from a diff.
+
+    Compares each tracked field's OLD value (read back from source; None/absent
+    normalized to "" or ()) against the proposal's NEW value. Only fields that
+    actually CHANGED contribute; returns "field: old→new; ..." or "" when nothing
+    moved (in which case the caller appends NO history entry — a no-op UPDATE
+    leaves no phantom record).
+    """
+    tuple_fields = {"assumptions", "enforced_by", "evidence", "source_refs"}
+    parts: list[str] = []
+    for field_name in new:
+        raw_old = old.get(field_name)
+        new_val = new[field_name]
+        if field_name in tuple_fields:
+            old_norm = tuple(raw_old) if isinstance(raw_old, tuple) else ()
+            new_norm = tuple(new_val) if new_val else ()
+        else:
+            old_norm = raw_old if raw_old is not None else ""
+            new_norm = new_val if new_val is not None else ""
+            # A default enforceability/enforcement elided from source reads back
+            # as None → "" ; normalize the common defaults so an unchanged field
+            # (absent in source, default in proposal) never reads as a change.
+            if field_name == "enforceability" and old_norm == "":
+                old_norm = "ENFORCEABLE"
+            if field_name == "enforcement" and old_norm == "":
+                old_norm = "PROSE"
+        if old_norm == new_norm:
+            continue
+        parts.append(f"{field_name}: {_abbrev(old_norm)}→{_abbrev(new_norm)}")
+    return "; ".join(parts)
+
+
+def _append_requirement_history(
+    source_text: str, proposal: ProposedRequirement, summary: str
+) -> str:
+    """Canon: §Proposal / §Requirement — append one derived HistoryEntry to a node.
+
+    Reads the target Requirement's existing history, appends a new
+    HistoryEntry(at=today, summary=summary, decided_by=…), and writes the merged
+    tuple back via _replace_or_insert_history. `decided_by` is left empty (the
+    Requirement proposal carries no steward-signature field — a signed change
+    would arrive through a Conflict/Assumption transition path, not here). The
+    date is writer-time (a fixed string), keeping graph.py deterministic on
+    import. Ensures HistoryEntry is imported.
+    """
+    from datetime import date as _date  # noqa: PLC0415
+
+    tree = ast.parse(source_text)
+    call = _find_requirement_call(tree, proposal.id)
+    if call is None:
+        raise RuntimeError(
+            f"Lost track of requirement '{proposal.id}' before appending history."
+        )
+    existing = _read_history_entries(call)
+    new_entry = (_date.today().isoformat(), summary, "")
+    merged = existing + (new_entry,)
+    lines = _replace_or_insert_history(
+        source_text.splitlines(keepends=True), call, merged
+    )
+    result = "".join(lines)
+    return _ensure_import(result, "hotam_spec.requirement", ["HistoryEntry"])
+
+
 def _apply_requirement_to_source(
     source_text: str, proposal: ProposedRequirement
 ) -> str:
@@ -1458,6 +1668,19 @@ def _apply_requirement_to_source(
         settled_stamp = proposal.settled_at
         if proposal.status == "SETTLED" and not settled_stamp:
             settled_stamp = _date.today().isoformat()
+        # Snapshot the OLD values BEFORE mutation so a per-node HistoryEntry can
+        # record what actually moved (§Requirement — HistoryEntry). Read only
+        # the scalar/tuple fields whose transition is meaningful to a reader; the
+        # derived `history` tuple itself is never part of the diff.
+        _history_tracked = (
+            "claim", "owner", "status", "why", "assumptions", "enforcement",
+            "enforced_by", "enforceability", "m_tag", "summary", "settled_at",
+            "last_reviewed_at", "review_after", "evidence", "source_refs",
+        )
+        _old_snapshot = {
+            fname: _read_requirement_kwarg(existing, fname)
+            for fname in _history_tracked
+        }
         # Detect whether status is actually changing to SETTLED (re-stamp) vs.
         # staying SETTLED (keep existing if proposal doesn't override). We
         # always write settled_at when the proposal's status is SETTLED.
@@ -1474,7 +1697,19 @@ def _apply_requirement_to_source(
             ("m_tag", proposal.m_tag),
             ("summary", proposal.summary),
             ("settled_at", settled_stamp if proposal.status == "SETTLED" else ""),
+            ("last_reviewed_at", proposal.last_reviewed_at),
+            ("review_after", proposal.review_after),
+            ("evidence", proposal.evidence),
+            ("source_refs", proposal.source_refs),
         ]:
+            # Freshness scalar/tuple fields: skip when empty and not already
+            # present (optional — keep terse output for the common case).
+            if field_name in ("last_reviewed_at", "review_after") and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
+            if field_name in ("evidence", "source_refs") and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
             # Skip empty optional fields not already present
             if field_name in ("assumptions", "enforced_by", "relations") and not new_value:
                 if _kwarg_line_col(call_node, field_name) is None:
@@ -1543,6 +1778,32 @@ def _apply_requirement_to_source(
                     f"replacing field '{field_name}'."
                 )
         result = "".join(lines)
+        # HISTORY (§Requirement — HistoryEntry): diff the tracked fields old→new
+        # and, when anything actually moved, APPEND one derived HistoryEntry so
+        # the change trail lives IN the node. Only fires on an UPDATE (this
+        # branch); a freshly-created node's first appearance needs no record.
+        summary = _summarize_field_diff(
+            _old_snapshot,
+            {
+                "claim": proposal.claim,
+                "owner": proposal.owner,
+                "status": proposal.status,
+                "why": proposal.why,
+                "assumptions": proposal.assumptions,
+                "enforcement": proposal.enforcement,
+                "enforced_by": proposal.enforced_by,
+                "enforceability": proposal.enforceability,
+                "m_tag": proposal.m_tag,
+                "summary": proposal.summary,
+                "settled_at": settled_stamp if proposal.status == "SETTLED" else "",
+                "last_reviewed_at": proposal.last_reviewed_at,
+                "review_after": proposal.review_after,
+                "evidence": proposal.evidence,
+                "source_refs": proposal.source_refs,
+            },
+        )
+        if summary:
+            result = _append_requirement_history(result, proposal, summary)
         # POST-CHECK (R-verify-closure-per-action): a mechanical writer that
         # reports success while silently NOT effecting the intended change is a
         # class of bug that bit the signature-wave-2 reattachment (a batch UPDATE

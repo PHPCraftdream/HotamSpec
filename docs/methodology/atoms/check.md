@@ -92,3 +92,11 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 **Why.** A SETTLED promise with no enforcer is not actually offloaded — the operator must still watch it by hand. UNENFORCED marks the gap between a claim and its reflex so it can be closed.
 
 **Enforced by:** `check_enforced_names_invariant`, `test_docs_gen.py::test_unenforced_md_up_to_date`
+
+## `R-requirement-freshness-fields` (ENFORCED)
+
+**Claim.** A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: tuple of HistoryEntry), where each HistoryEntry is written by apply_proposal.py from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.
+
+**Why.** External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.py -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. history is DERIVED by the mechanical writer from the old->new field diff on each UPDATE, mirroring the append-only ticket History form (tools/_ticket_store.py) so the two change-trails do not diverge into incompatible styles. The check is deliberately SYNTACTIC ONLY (non-empty fields + monotonic stamps): measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). This atom (Etap O, #117) lands only the ontology + writer + syntactic enforcer; the created_at/settled_at backfill of ~270 existing nodes is a separate act (Etap P, #118).
+
+**Enforced by:** `check_requirement_history_wellformed`

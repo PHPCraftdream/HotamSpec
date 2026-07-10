@@ -1845,6 +1845,71 @@ def check_requirement_status_in_lifecycle(g: TensionGraph) -> list[Violation]:
     return out
 
 
+def check_requirement_history_wellformed(g: TensionGraph) -> list[Violation]:
+    """Canon: §Requirement — every Requirement history tuple is STRUCTURALLY well-formed.
+
+    RULE (SYNTACTIC ONLY, three sub-rules over each Requirement's history
+    HistoryEntry tuple):
+      1. Every HistoryEntry MUST have a non-empty `at` stamp (an undated history
+         entry is a malformed history record).
+      2. Every HistoryEntry MUST have a non-empty `summary` (a history entry
+         that records nothing is a malformed history record).
+      3. The history entries MUST be monotonically non-decreasing in `at`: each
+         entry's stamp is >= the preceding entry's stamp, because the history
+         trail is append-only and never travels backwards in time. Stamps
+         compare as plain strings (ISO-8601 sorts lexicographically ==
+         chronologically).
+
+    WHY only structure, never content: this history check deliberately does NOT
+    judge whether a summary is 'accurate' or a review is 'current'. Measuring the
+    SUBSTANCE of a freshness/history record is the form-metric theatre that sank
+    R-boot-cite-measured (REJECTED — a lexical check of the first sentence that
+    logged 10-13% 'compliance' nobody read). The history trail is DERIVED by
+    apply_proposal.py from the field diff; the only thing this check_* can
+    honestly guarantee is that each derived history record is shaped correctly
+    (dated, non-empty, ordered), not that its prose is meaningful.
+    """
+    out: list[Violation] = []
+    for r in g.requirements:
+        history = getattr(r, "history", ()) or ()
+        prev_at: str | None = None
+        for idx, entry in enumerate(history):
+            at = getattr(entry, "at", "")
+            summary = getattr(entry, "summary", "")
+            if not at:
+                out.append(
+                    Violation(
+                        "check_requirement_history_wellformed",
+                        r.id,
+                        f"history entry [{idx}] has an empty `at` stamp — every "
+                        f"HistoryEntry MUST be dated (sub-rule 1).",
+                    )
+                )
+            if not summary:
+                out.append(
+                    Violation(
+                        "check_requirement_history_wellformed",
+                        r.id,
+                        f"history entry [{idx}] has an empty `summary` — every "
+                        f"HistoryEntry MUST record what changed (sub-rule 2).",
+                    )
+                )
+            if prev_at is not None and at and at < prev_at:
+                out.append(
+                    Violation(
+                        "check_requirement_history_wellformed",
+                        r.id,
+                        f"history entry [{idx}] stamp `at` '{at}' is earlier "
+                        f"than the preceding entry stamp '{prev_at}' — the "
+                        f"append-only history trail MUST be monotonically "
+                        f"non-decreasing (sub-rule 3).",
+                    )
+                )
+            if at:
+                prev_at = at
+    return out
+
+
 def check_conflict_lifecycle_in_lifecycle(g: TensionGraph) -> list[Violation]:
     """Canon: §Lifecycle / §Invariants — every Conflict.lifecycle matches CONFLICT_LIFECYCLE.
 
@@ -4040,6 +4105,11 @@ RULES_AS_DATA_TABLE: tuple[InvariantClassification, ...] = (
         "cross-field status/m_tag correlation, not single-field membership",
     ),
     InvariantClassification(
+        "check_requirement_history_wellformed",
+        BESPOKE,
+        "intra-entity ordered scan with a monotonic accumulator (prev_at) over each history tuple, not a per-row single-field membership test",
+    ),
+    InvariantClassification(
         "check_canonical_lifecycles_wellformed",
         BESPOKE,
         "structural self-check of the Lifecycle constants themselves (BFS reachability)",
@@ -4318,6 +4388,8 @@ ALL_INVARIANTS = (
     check_m_tag_valid_format,
     check_m_tag_unique,
     check_m_tag_open_only,
+    # §Requirement — per-node history structural well-formedness
+    check_requirement_history_wellformed,
     # §Lifecycle status (atomized; check_status_in_lifecycle is thin delegator)
     check_requirement_status_in_lifecycle,
     check_conflict_lifecycle_in_lifecycle,

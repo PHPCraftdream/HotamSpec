@@ -96,6 +96,40 @@ class Relation:
     target: str
 
 
+@dataclass(frozen=True)
+class HistoryEntry:
+    """Canon: §Requirement — one append-only record of a change to THIS node.
+
+    RULE: a HistoryEntry is DERIVED, never hand-authored. When
+    tools/apply_proposal.py UPDATES an already-existing Requirement (not at
+    first creation), it diffs the changed fields and appends exactly one
+    HistoryEntry describing what moved. The entry mirrors the FORM of the
+    on-disk ticket History line (tools/_ticket_store.py: stamp · actor ·
+    summary) so the two change-trails do not diverge into two incompatible
+    styles — but this is a graph-node payload dataclass, not the ticket's
+    Markdown line, so it lives here (Requirement is a different module).
+
+    Fields:
+      at       — ISO-8601 stamp (YYYY-MM-DD or full) the change was written.
+      summary  — human-readable "field X: old→new, ..." of what changed.
+      decided_by — Stakeholder id that signed the change, when applicable
+                   ("" for a mechanical edit that carries no steward decision).
+
+    WHY in the node (not only git blame / gitignored runtime JSON): git blame
+    tracks source lines, not semantic field transitions, and .runtime/ is
+    ephemeral (R-task-spawn-log-runtime). A per-node history keeps the change
+    trail IN the committed substrate, next to the claim it records — the same
+    durability argument tickets make (R-ticket-carries-history). Structure —
+    monotonic stamps, non-empty fields — is enforced
+    (check_requirement_history_wellformed); CONTENT is never machine-judged
+    (that would be the R-boot-cite-measured form-metric theatre, REJECTED).
+    """
+
+    at: str
+    summary: str
+    decided_by: str = ""
+
+
 #: The admitted relation kinds (authority for the form invariant). `refines`
 #: and `depends_on` are SUPPORTIVE edges (non-adversarial structure);
 #: `replaces` is the ANTI-RELITIGATION edge — a directed "this requirement
@@ -151,6 +185,14 @@ class Requirement:
                      INHERENTLY_PROSE means the claim is a disposition or
                      judgment call no check_* could ever verify — permanent
                      discipline, not debt (R-enforceability-kind-declared).
+      created_at / settled_at — ISO dates of creation / last SETTLED transition.
+      last_reviewed_at — ISO date the claim was last re-confronted and held.
+      review_after — ISO date after which re-confrontation is due.
+      evidence — tuple of free-form evidence strings backing the claim.
+      source_refs — tuple of pointers to where the claim originated.
+      history — DERIVED append-only tuple of HistoryEntry records; written by
+                apply_proposal.py on each UPDATE (never at first creation),
+                never hand-authored.
 
     WHY frozen + id-stable: a requirement may be renamed, split, or refined; the
     Conflict node that mediates it has identity from (axis, context), so it
@@ -177,6 +219,26 @@ class Requirement:
     # ^ ISO YYYY-MM-DD of the LAST transition into SETTLED; "" = unknown. A
     # requirement re-entering SETTLED from OPEN/REJECTED re-stamps this field.
     # Surfaces 'settled N days ago, not re-confronted' without a separate mechanism.
+    last_reviewed_at: str = ""
+    # ^ ISO YYYY-MM-DD the claim was last CONFRONTED against reality and found to
+    # still hold; "" = never explicitly re-reviewed since creation. Distinct from
+    # settled_at (which stamps a status transition): a claim can stay SETTLED for
+    # months yet never be re-confronted — this field measures that staleness.
+    review_after: str = ""
+    # ^ ISO YYYY-MM-DD after which the claim SHOULD be re-confronted (a
+    # steward-set 'expiry'); "" = no scheduled review. Surfaces 'due for review'
+    # without a separate scheduler.
+    evidence: tuple[str, ...] = field(default_factory=tuple)
+    # ^ free-form evidence strings backing the claim (measurements, incident refs,
+    # observations). Optional; "" tuple = no recorded evidence.
+    source_refs: tuple[str, ...] = field(default_factory=tuple)
+    # ^ pointers to where the claim originated (doc paths, URLs, review ids,
+    # commit hashes). Optional; "" tuple = no recorded source.
+    history: tuple[HistoryEntry, ...] = field(default_factory=tuple)
+    # ^ DERIVED append-only change trail (see HistoryEntry). Written by
+    # tools/apply_proposal.py on each UPDATE of an already-existing node; a
+    # freshly-created node starts with an empty tuple (first appearance needs no
+    # 'what changed' record). Never hand-authored in a proposal.
 
     def is_closeable_debt(self) -> bool:
         """Canon: §Requirement — True iff this is REAL enforcement-gradient debt.

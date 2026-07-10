@@ -50,6 +50,17 @@ class ProposedRequirement:
     settled_at: str = ""
     # ^ ISO YYYY-MM-DD of the LAST transition into SETTLED; the writer fills
     # today's date when the proposal's status is SETTLED and this is empty.
+    last_reviewed_at: str = ""
+    # ^ ISO YYYY-MM-DD the claim was last re-confronted and held (optional).
+    review_after: str = ""
+    # ^ ISO YYYY-MM-DD after which re-confrontation is due (optional).
+    evidence: tuple[str, ...] = field(default_factory=tuple)
+    # ^ free-form evidence strings backing the claim (optional).
+    source_refs: tuple[str, ...] = field(default_factory=tuple)
+    # ^ pointers to where the claim originated (optional).
+    # NB: `history` is NOT a proposal field — it is DERIVED by apply_proposal.py
+    # from the field diff on each UPDATE (§Requirement — HistoryEntry). A proposal
+    # never carries history; supplying it would be hand-authoring a derived trail.
 
     def target_anchor(self) -> str:
         """Canon: §Closure — the graph object this proposal is meant to change.
