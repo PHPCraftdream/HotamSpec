@@ -11,7 +11,7 @@ reader: ai-agent
 - `spec/src/hotam_spec/attention.py` — the agent-agnostic registry of "attention codes".
 - `spec/src/hotam_spec/axis.py` — controlled vocabulary of tension dimensions.
 - `spec/src/hotam_spec/claude_md.py` — reusable CLAUDE.md sentinel-block operations.
-- `spec/src/hotam_spec/conflict.py` — the first-class connector NODE (the centerpiece).
+- `spec/src/hotam_spec/conflict.py` — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8).
 - `spec/src/hotam_spec/doc_readers.py` — every generated doc names its reader (R-doc-names-reader).
 - `spec/src/hotam_spec/domain_resolution.py` — the single active-domain resolver (env → pin → alphabetical).
 - `spec/src/hotam_spec/enforcer_resolution.py` — shared enforcer-name -> pytest node-id resolution logic.

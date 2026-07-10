@@ -262,6 +262,13 @@ def build_graph() -> TensionGraph:
             status=HOLDS,
             owner="domain-user",
         ),
+        Assumption(
+            id="A-ontology-transfers",
+            statement="The Hotam-Spec ontology (Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process, plus the check_* invariant layer and the enforcement gradient PROSE->STRUCTURAL->ENFORCED) transfers to a real external, non-meta business domain (a first-time consumer populating an empty graph.py under domains/<name>/ for their own product/process) without needing to reshape the ontology itself.",
+            status=UNCERTAIN,
+            owner="framework-author",
+            created_at="2026-07-10",
+        ),
     )
 
     requirements = (
@@ -3915,8 +3922,10 @@ def build_graph() -> TensionGraph:
             claim=("The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word."),
             owner="framework-author",
             status="SETTLED",
-            why=("Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b)."),
-            enforcement="STRUCTURAL",
+            why=("Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed and covered exactly this claim (no-mid-word-cutoff, summary-priority, first-sentence fallback) but was never wired into enforced_by -- flipped STRUCTURAL -> ENFORCED, no new code written. Honest scope note: test_short_form.py enforces the short_form() MECHANISM itself; that the crystal generator actually CALLS it everywhere text is rendered is separately covered by the ENFORCED R-operator-crystal-embeds-* family, not re-verified here."),
+            enforcement="ENFORCED",
+            enforced_by=("test_short_form.py",),
+            settled_at="2026-07-10",
         ),
         Requirement(
             id="R-decided-by-verifiable-signature",
@@ -3960,11 +3969,12 @@ def build_graph() -> TensionGraph:
             claim=("Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off."),
             owner="framework-author",
             status="SETTLED",
-            why=("Steward verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их историю в гите'. REPLACES the graph-node Delegation design (R-domain-delegation-as-node, R-domain-delegation-persists): the steward chose file-based delegations over a new graph node type -- git history on committed files IS the audit trail, making a dedicated Delegation dataclass unnecessary."),
+            why=("Steward verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их историю в гите'. REPLACES the graph-node Delegation design (R-domain-delegation-as-node, R-domain-delegation-persists): the steward chose file-based delegations over a new graph node type -- git history on committed files IS the audit trail, making a dedicated Delegation dataclass unnecessary. Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed (test_tool_delegate.py, docstring says 'Enforcer/lift for R-delegation-is-a-file') and R-trust-anchor-delegation-explicit-only already cited the same tests as a SHARED enforcer while itself being ENFORCED -- but this donor rule, the one that actually established the file mechanism, had stayed STRUCTURAL. Flipped STRUCTURAL -> ENFORCED to close that accounting mismatch; no new code written."),
             assumptions=("A-finite-context-operators",),
-            enforcement=STRUCTURAL,
-            enforced_by=("test_tool_delegate.py::test_create_allocates_id_and_writes_file", "test_tool_delegate.py::test_close_sets_done_and_result",),
+            enforcement="ENFORCED",
+            enforced_by=("test_tool_delegate.py::test_create_allocates_id_and_writes_file", "test_tool_delegate.py::test_close_sets_done_and_result"),
             relations=(Relation("replaces", "R-domain-delegation-persists"),),
+            settled_at="2026-07-10",
         ),
         Requirement(
             id="R-signoff-preserved-in-substrate",

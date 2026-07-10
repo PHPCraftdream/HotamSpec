@@ -309,6 +309,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `A-framework-shared-infra-no-owner` | HOLDS | `framework-author` | The framework body (hotam_spec.*) is shared infrastructure any agent's code may import; it is owned by no single agent -- ownership is a governance convention, not a per-agent claim. |
 | `A-text-grounded-in-models` | HOLDS | `domain-user` | Text alone is air without ground: every claim is grounded in a model that has short readable methods, a textual description checkable against the method's implementation, tests that invoke those methods, and states (lifecycles). A requirement resting on this assumption is trustworthy only insofar as such a grounding model exists behind it. |
 | `A-single-human-wears-all-hats` | HOLDS | `domain-user` | In the current phase all stakeholder roles (domain-user/framework-reviewer/framework-author in self, dev-steward/pipeline-operator in hotam-dev) are worn by one human; role-separation checks guard structure, not real independence |
+| `A-ontology-transfers` | UNCERTAIN | `framework-author` | The Hotam-Spec ontology (Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process, plus the check_* invariant layer and the enforcement gradient PROSE->STRUCTURAL->ENFORCED) transfers to a real external, non-meta business domain (a first-time consumer populating an empty graph.py under domains/<name>/ for their own product/process) without needing to reshape the ontology itself. |
 
 ## Operators
 
@@ -644,7 +645,7 @@ Enforcement gradient (R-enforcement-gradient / R-requirement-enforced):
 
 ### 6. §Conflict — the connector node — `hotam_spec.conflict`
 
-Canon: §Conflict — the first-class connector NODE (the centerpiece).
+Canon: §Conflict — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8).
 
 A Conflict is NOT an edge between requirements. It is a mediator node through
 which two otherwise-unconnectable requirements first come to lie in one

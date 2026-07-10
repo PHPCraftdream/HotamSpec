@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 198 / SETTLED 228; closeable debt 6; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
+**Burn-down: SETTLED-ENFORCED 200 / SETTLED 228; closeable debt 4; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
 
 ---
 
@@ -25,8 +25,6 @@ judgment calls no check_* could ever verify.
 | `R-framework-suite-domain-independent` | PROSE | `framework-author` | The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned. |
 | `R-work-within-launch-dir` | PROSE | `framework-author` | The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise. |
 | `R-conflict-resolved-in-members-or-mediator` | PROSE | `framework-author` | A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph. |
-| `R-crystal-carries-short-form` | STRUCTURAL | `framework-author` | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
-| `R-delegation-is-a-file` | STRUCTURAL | `framework-author` | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off. |
 | `R-project-root-not-hardcoded` | STRUCTURAL | `framework-author` | HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
@@ -258,7 +256,9 @@ judgment calls no check_* could ever verify.
 | `R-unmeasured-cipher-names-host-boundary` | test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line | While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call. |
 | `R-enforcement-perimeter-baselines-guarded` | tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py | The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py. |
 | `R-enforcement-perimeter-visible` | tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged | A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py. |
+| `R-crystal-carries-short-form` | test_short_form.py | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
 | `R-run-speed-guarded` | test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression | Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline. |
+| `R-delegation-is-a-file` | test_tool_delegate.py::test_create_allocates_id_and_writes_file, test_tool_delegate.py::test_close_sets_done_and_result | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off. |
 | `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff | A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 
 ## DRAFT (not yet promoted)

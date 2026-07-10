@@ -351,7 +351,7 @@ Enforcement gradient (R-enforcement-gradient / R-requirement-enforced):
 
 ### 6. §Conflict — the connector node — `hotam_spec.conflict`
 
-Canon: §Conflict — the first-class connector NODE (the centerpiece).
+Canon: §Conflict — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8).
 
 A Conflict is NOT an edge between requirements. It is a mediator node through
 which two otherwise-unconnectable requirements first come to lie in one
