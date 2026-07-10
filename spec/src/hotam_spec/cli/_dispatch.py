@@ -32,6 +32,7 @@ CLI wrapper's short name.
 from __future__ import annotations
 
 import importlib
+import sys
 from typing import Callable
 
 from hotam_spec.cli._path_setup import ensure_tools_on_path
@@ -55,7 +56,9 @@ def make_main(tool_module_name: str, *, doc: str | None = None) -> Callable[[], 
 
     def main() -> None:
         module = importlib.import_module(tool_module_name)
-        module.main()
+        rc = module.main()
+        if rc:
+            sys.exit(rc)
 
     if doc is not None:
         main.__doc__ = doc

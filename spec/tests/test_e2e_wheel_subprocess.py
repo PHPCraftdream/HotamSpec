@@ -243,3 +243,16 @@ def test_wheel_install_full_quickstart_e2e(tmp_path: Path) -> None:
     assert "CONFLICT_STALLED" in r.stdout or "speed-vs-rigor" in r.stdout, (
         f"Final what-now should show the conflict, got:\n{r.stdout}"
     )
+
+    # -- 11. Full CRUD scenario via shared helper -------------------------
+    from _e2e_crud_helpers import run_crud_scenario
+
+    def _run_cli_shortcut(command: str, *args: str) -> subprocess.CompletedProcess[str]:
+        return _run_cli(venv_dir, consumer, command, *args)
+
+    graph_py = consumer / "domains" / "my-shop" / "graph.py"
+    run_crud_scenario(
+        _run_cli_shortcut,
+        consumer_dir=consumer,
+        graph_py=graph_py,
+    )

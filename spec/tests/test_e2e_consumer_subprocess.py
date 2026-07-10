@@ -152,6 +152,17 @@ def test_editable_install_consumer_cli_subprocess_e2e(tmp_path: Path) -> None:
         shutil.copytree(shared_dir, backup_dir)
         shared_doc_backups[shared_dir] = backup_dir
 
+    # -- snapshot the framework's .active-domain pin (editable-install
+    # create-domain --activate may set the pin to the test domain) --
+    fw_active_domain_pin = REPO_ROOT / "domains" / ".active-domain"
+    fw_pin_before = (
+        fw_active_domain_pin.read_bytes() if fw_active_domain_pin.exists() else None
+    )
+    # Track whether the framework's domains/my-shop gets created as a side
+    # effect (editable-install create-domain may write there).
+    fw_myshop = REPO_ROOT / "domains" / "my-shop"
+    fw_myshop_existed_before = fw_myshop.is_dir()
+
     # -- 1. create an isolated venv ------------------------------------
     venv_dir = tmp_path / "venv"
     venv.EnvBuilder(with_pip=True, clear=True).create(venv_dir)
@@ -210,10 +221,11 @@ def test_editable_install_consumer_cli_subprocess_e2e(tmp_path: Path) -> None:
             del child_env[key]
     child_env.pop("PYTHONPATH", None)
 
-    # -- 4. real subprocess call of the installed console script --------
-    # Wrapped in try/finally so the framework's shared docs are restored
-    # (see _SHARED_DOC_DIRS above) even if an assertion below fails.
+    # -- 4-10: all CLI calls wrapped in try/finally so the framework's
+    # shared docs are restored (see _SHARED_DOC_DIRS above) even if
+    # an assertion fails midway through the CRUD scenario.
     try:
+        # -- 4. hotam-create-domain --activate ----------------------------
         create_result = subprocess.run(
             [
                 str(create_domain_exe),
@@ -232,55 +244,120 @@ def test_editable_install_consumer_cli_subprocess_e2e(tmp_path: Path) -> None:
             text=True,
             timeout=_CLI_TIMEOUT_S,
         )
+        assert create_result.returncode == 0, (
+            "hotam-create-domain subprocess failed:\n"
+            f"--- stdout ---\n{create_result.stdout}\n--- stderr ---\n{create_result.stderr}"
+        )
+
+        # -- 5. consumer-side artifacts exist in the RIGHT place ---------
+        domain_dir = consumer_project / "domains" / "my-shop"
+        assert domain_dir.is_dir(), (
+            f"{domain_dir} not created; stdout:\n{create_result.stdout}"
+        )
+        assert (domain_dir / "manifest.py").exists()
+        assert (domain_dir / "graph.py").exists()
+
+        consumer_claude_md = consumer_project / "CLAUDE.md"
+        assert consumer_claude_md.exists(), (
+            f"{consumer_claude_md} not created by --activate; "
+            f"stdout:\n{create_result.stdout}"
+        )
+
+        active_domain_marker = consumer_project / "domains" / ".active-domain"
+        assert active_domain_marker.exists()
+        assert active_domain_marker.read_text(encoding="utf-8").strip() == "my-shop"
+
+        # -- 6. the FRAMEWORK's own CLAUDE.md must be untouched ----------
+        fw_claude_after = FRAMEWORK_CLAUDE_MD.read_bytes()
+        assert fw_claude_before == fw_claude_after, (
+            "The framework repo's own CLAUDE.md changed during the consumer "
+            "subprocess run — the editable-install consumer scenario must NEVER "
+            "write into the framework's own checkout."
+        )
+
+        # -- 7. hotam-what-now works from the consumer cwd ---------------
+        what_now_result = subprocess.run(
+            [str(what_now_exe)],
+            cwd=str(consumer_project),
+            env=child_env,
+            capture_output=True,
+            text=True,
+            timeout=_CLI_TIMEOUT_S,
+        )
+        assert what_now_result.returncode == 0, (
+            "hotam-what-now subprocess failed:\n"
+            f"--- stdout ---\n{what_now_result.stdout}\n--- stderr ---\n{what_now_result.stderr}"
+        )
+        assert what_now_result.stdout.strip(), (
+            "hotam-what-now produced no output from the consumer project"
+        )
+
+        # -- 8. Stakeholders (prerequisites for CRUD scenario) -----------
+        apply_exe = _venv_script(venv_dir, "hotam-apply-proposal")
+        assert apply_exe.exists(), f"hotam-apply-proposal not installed at {apply_exe}"
+
+        # Set HOTAM_SPEC_PROJECT_ROOT for consumer isolation
+        child_env["HOTAM_SPEC_PROJECT_ROOT"] = str(consumer_project)
+
+        def _run_cli_editable(command: str, *args: str) -> subprocess.CompletedProcess[str]:
+            exe = _venv_script(venv_dir, command)
+            return subprocess.run(
+                [str(exe), *args],
+                cwd=str(consumer_project),
+                env=child_env,
+                capture_output=True,
+                text=True,
+                timeout=_CLI_TIMEOUT_S,
+            )
+
+        import json as _json
+
+        for sid, sname, sdomain in [
+            ("alice", "Alice", "product"),
+            ("bob", "Bob", "engineering"),
+            ("carol", "Carol", "governance"),
+        ]:
+            sh_file = consumer_project / f"sh-{sid}.json"
+            sh_file.write_text(
+                _json.dumps({"kind": "Stakeholder", "id": sid, "name": sname, "domain": sdomain}),
+                encoding="utf-8",
+            )
+            r = _run_cli_editable("hotam-apply-proposal", str(sh_file))
+            assert r.returncode == 0, (
+                f"stakeholder {sid} failed:\n{r.stdout}\n{r.stderr}"
+            )
+
+        # -- 9. Axis (prerequisite for CRUD scenario) --------------------
+        r = _run_cli_editable(
+            "hotam-create-axis", "speed-vs-rigor",
+            "--description", "ship fast vs verify thoroughly",
+        )
+        assert r.returncode == 0, (
+            f"create-axis failed:\n{r.stdout}\n{r.stderr}"
+        )
+
+        # -- 10. Full CRUD scenario via shared helper ---------------------
+        from _e2e_crud_helpers import run_crud_scenario
+
+        graph_py = domain_dir / "graph.py"
+        run_crud_scenario(
+            _run_cli_editable,
+            consumer_dir=consumer_project,
+            graph_py=graph_py,
+        )
     finally:
         for shared_dir, backup_dir in shared_doc_backups.items():
             shutil.rmtree(shared_dir)
             shutil.copytree(backup_dir, shared_dir)
-
-    assert create_result.returncode == 0, (
-        "hotam-create-domain subprocess failed:\n"
-        f"--- stdout ---\n{create_result.stdout}\n--- stderr ---\n{create_result.stderr}"
-    )
-
-    # -- 5. consumer-side artifacts exist in the RIGHT place -------------
-    domain_dir = consumer_project / "domains" / "my-shop"
-    assert domain_dir.is_dir(), (
-        f"{domain_dir} not created; stdout:\n{create_result.stdout}"
-    )
-    assert (domain_dir / "manifest.py").exists()
-    assert (domain_dir / "graph.py").exists()
-
-    consumer_claude_md = consumer_project / "CLAUDE.md"
-    assert consumer_claude_md.exists(), (
-        f"{consumer_claude_md} not created by --activate; "
-        f"stdout:\n{create_result.stdout}"
-    )
-
-    active_domain_marker = consumer_project / "domains" / ".active-domain"
-    assert active_domain_marker.exists()
-    assert active_domain_marker.read_text(encoding="utf-8").strip() == "my-shop"
-
-    # -- 6. the FRAMEWORK's own CLAUDE.md must be untouched --------------
-    fw_claude_after = FRAMEWORK_CLAUDE_MD.read_bytes()
-    assert fw_claude_before == fw_claude_after, (
-        "The framework repo's own CLAUDE.md changed during the consumer "
-        "subprocess run — the editable-install consumer scenario must NEVER "
-        "write into the framework's own checkout."
-    )
-
-    # -- 7. hotam-what-now works from the consumer cwd -------------------
-    what_now_result = subprocess.run(
-        [str(what_now_exe)],
-        cwd=str(consumer_project),
-        env=child_env,
-        capture_output=True,
-        text=True,
-        timeout=_CLI_TIMEOUT_S,
-    )
-    assert what_now_result.returncode == 0, (
-        "hotam-what-now subprocess failed:\n"
-        f"--- stdout ---\n{what_now_result.stdout}\n--- stderr ---\n{what_now_result.stderr}"
-    )
-    assert what_now_result.stdout.strip(), (
-        "hotam-what-now produced no output from the consumer project"
-    )
+        # Restore the .active-domain pin if it was changed.
+        if fw_pin_before is not None:
+            fw_active_domain_pin.write_bytes(fw_pin_before)
+        elif fw_active_domain_pin.exists():
+            fw_active_domain_pin.unlink()
+        # Remove the framework's domains/my-shop if it was created as a
+        # side effect (editable-install cross-contamination).
+        if not fw_myshop_existed_before and fw_myshop.is_dir():
+            shutil.rmtree(fw_myshop)
+        # Restore the framework's CLAUDE.md (gen_spec may have overwritten
+        # it with consumer-domain content during the test).
+        FRAMEWORK_CLAUDE_MD.write_bytes(fw_claude_before)

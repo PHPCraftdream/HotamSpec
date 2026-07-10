@@ -3354,6 +3354,44 @@ def apply(
         full_suite=full_suite,
         triggering_kind=triggering_kind,
         proposal_file=proposal_file,
+        original_source=source_text,
+    )
+
+
+def _revert_graph(
+    active_graph: Path,
+    original_source: str,
+) -> None:
+    """Restore graph.py to its pre-write state and re-run gen_spec for consistency.
+
+    Called when the verify step (consumer in-process check or self-hosting pytest)
+    detects violations after a write. Restores the file, then re-runs gen_spec so
+    that generated docs are consistent with the restored graph.
+    """
+    active_graph.write_text(original_source, encoding="utf-8")
+    # Re-run gen_spec to restore generated docs to the pre-write state.
+    applied_domain = active_graph.parent.name if active_graph.parent.name else ""
+    docs_env = dict(_os.environ)
+    if applied_domain:
+        docs_env["HOTAM_SPEC_ACTIVE_DOMAIN"] = applied_domain
+    subprocess.run(
+        [sys.executable, str(_GEN_SPEC), "--docs-only"],
+        capture_output=True,
+        text=True,
+        env=docs_env,
+    )
+    root_env = dict(_os.environ)
+    root_env.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
+    subprocess.run(
+        [sys.executable, str(_GEN_SPEC)],
+        capture_output=True,
+        text=True,
+        env=root_env,
+    )
+    print(
+        "REVERTED: graph.py restored to its pre-write state; "
+        "the proposed change did NOT land.",
+        file=sys.stderr,
     )
 
 
@@ -3365,6 +3403,7 @@ def _regen_and_verify(
     full_suite: bool,
     triggering_kind: str | None,
     proposal_file: Path | None,
+    original_source: str | None = None,
 ) -> int:
     """Canon: §Proposal — regen docs/crystal + run the LAND-gate verify tier.
 
@@ -3455,7 +3494,26 @@ def _regen_and_verify(
     #     The in-process check validates the same structural invariants
     #     that check_* functions enforce, without needing the test runner.
 
-    if not _SELF_HOSTING:
+    # Determine RUNTIME self-hosting: True only when the graph being modified
+    # belongs to the framework's OWN project (not a consumer project). An
+    # editable install sets _SELF_HOSTING=True (spec/tests/ exists in the
+    # framework checkout), but a consumer project using hotam-apply-proposal
+    # via HOTAM_SPEC_PROJECT_ROOT must NOT run through the pytest path (the
+    # consumer's venv lacks pytest, and the framework's tests validate the
+    # framework, not the consumer). We detect this by checking whether
+    # HOTAM_SPEC_PROJECT_ROOT is set to a directory OUTSIDE the framework.
+    _is_self_hosting = _SELF_HOSTING
+    _project_root_env = _os.environ.get("HOTAM_SPEC_PROJECT_ROOT", "").strip()
+    if _project_root_env and _SELF_HOSTING:
+        try:
+            _pr = Path(_project_root_env).resolve()
+            _fw = _SPEC_ROOT.parent.resolve()
+            if _pr != _fw:
+                _is_self_hosting = False
+        except Exception:  # noqa: BLE001
+            pass
+
+    if not _is_self_hosting:
         # --- Consumer-mode verify: in-process structural check ---
         from hotam_spec.graph import load_content_graph  # noqa: PLC0415
         from hotam_spec.invariants import all_violations  # noqa: PLC0415
@@ -3490,11 +3548,8 @@ def _regen_and_verify(
                 print(f"  - {v}", file=sys.stderr)
             if len(violations) > 20:
                 print(f"  ... and {len(violations) - 20} more", file=sys.stderr)
-            print(
-                "NOTE: auto-revert is not implemented in P3. "
-                "Inspect the diff and revert manually if needed.",
-                file=sys.stderr,
-            )
+            if original_source is not None:
+                _revert_graph(active_graph, original_source)
             _append_land_log(
                 proposal=proposal,
                 tier=land_tier,
@@ -3547,15 +3602,12 @@ def _regen_and_verify(
         pytest_ok = pytest_result.returncode == 0
         if not pytest_ok:
             print(
-                "ERROR: pytest failed after apply. File written but tests are red.",
+                "ERROR: pytest failed after apply.",
                 file=sys.stderr,
             )
             print(pytest_result.stderr, file=sys.stderr)
-            print(
-                "NOTE: auto-revert is not implemented in P3. "
-                "Inspect the diff and revert manually if needed.",
-                file=sys.stderr,
-            )
+            if original_source is not None:
+                _revert_graph(active_graph, original_source)
             _append_land_log(
                 proposal=proposal,
                 tier=land_tier,
@@ -3722,6 +3774,8 @@ def main(argv: list[str] | None = None) -> int:
         # defer_verify=True (skips regen/verify/closure/land-log per item),
         # then run _regen_and_verify exactly ONCE after the loop, over the
         # final graph state — collapsing N regen+verify passes into 1.
+        # Capture original source BEFORE any batch item writes, for rollback.
+        batch_original_source = _CONTENT_GRAPH.read_text(encoding="utf-8") if _CONTENT_GRAPH.exists() else None
         last_proposal: Proposal | None = None
         for i, item in enumerate(raw):
             print(f"\n--- Proposal {i + 1}/{len(raw)} (write-only; verify deferred) ---")
@@ -3790,6 +3844,7 @@ def main(argv: list[str] | None = None) -> int:
             full_suite=args.full,
             triggering_kind=args.triggering_kind,
             proposal_file=None,
+            original_source=batch_original_source,
         )
         if rc != 0:
             return rc
