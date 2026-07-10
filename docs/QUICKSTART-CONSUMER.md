@@ -153,6 +153,23 @@ tree finds the same root automatically. If a command ever resolves the wrong
 root (or none at all), it raises a diagnostic listing exactly which of R1-R6
 it checked and what it found — nothing is guessed silently.
 
+## Everyday commands
+
+Once your domain has requirements, `hotam-req` gives you fast, graph-backed
+access without grepping generated docs:
+
+```bash
+hotam-req list --status SETTLED          # compact table: id / status / enforcement / owner
+hotam-req show R-ship-fast               # full node details (add --json for machine output)
+hotam-req search "verify"                # case-insensitive search across id / claim / why
+hotam-req context R-ship-fast --json     # agent-ready context package (owner + assumptions + conflicts)
+hotam-req patch R-ship-fast --set enforcement=STRUCTURAL --dry-run   # preview a field change
+```
+
+`patch` is pure UX sugar: it reads the current requirement, applies your
+`--set` overrides, and routes the result through `hotam-apply-proposal` --
+no new write path, no hand-edit.
+
 ## What's next
 
 - [PROPOSAL-REFERENCE.md](PROPOSAL-REFERENCE.md) — the full JSON reference for every proposal kind.

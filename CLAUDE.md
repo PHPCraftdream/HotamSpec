@@ -131,6 +131,7 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 - [gate](spec/docs/tools/gate.md) — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.
 - [gate_status](spec/docs/tools/gate_status.md) — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.
 - [gen_spec](spec/docs/tools/gen_spec.md) — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.
+- [hotam_req](spec/docs/tools/hotam_req.md) — CLI for browsing, searching, patching and contextualizing Requirements.
 - [invoke_agent](spec/docs/tools/invoke_agent.md) — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.
 - [land](spec/docs/tools/land.md) — single CLI entry point over gate.py/gate_status.py/closure.py.
 - [mark_revisit_evaluated](spec/docs/tools/mark_revisit_evaluated.md) — record that a DECIDED conflict's revisit_marker was evaluated.
@@ -164,7 +165,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P4] OPEN_ITEM on `R-decided-by-verifiable-signature` — OPEN requirement 'R-decided-by-verifiable-signature' (owner 'framework-author') awaits a decision: should decided_by be bound to git commit authorship / a cryptographic signature as a verifiable, unforgeable signature, or stay a free string trusted via review?
 - **debt:** 200/228 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 4 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 293 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 27371 chars (headroom 122629)
+- **graph:** 293 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 27489 chars (headroom 122511)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

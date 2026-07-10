@@ -59,6 +59,7 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-gate** — *T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate`]
 - **R-tool-gate-status** — *read spec/.runtime/land-log.jsonl and answer the commit-boundary question.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate_status`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]
+- **R-tool-hotam-req** — *CLI for browsing, searching, patching and contextualizing Requirements.* [STRUCTURAL·tool · §Requirement] [enforcer: `test_tool_hotam_req`]
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
 - **R-tool-land** — *single CLI entry point over gate.py/gate_status.py/closure.py.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_land`]
 - **R-tool-mark-revisit-evaluated** — *record that a DECIDED conflict's revisit_marker was evaluated.* [STRUCTURAL·tool · §Conflict] [enforcer: `test_tool_mark_revisit_evaluated`]

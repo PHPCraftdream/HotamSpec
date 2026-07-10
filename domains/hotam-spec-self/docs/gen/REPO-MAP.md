@@ -58,6 +58,7 @@ reader: ai-agent
 - `spec/tools/gate_status.py` — read spec/.runtime/land-log.jsonl and answer the commit-boundary question.  →  R-tool-gate-status
 - `spec/tools/gen_enforcer_map.py` — Build-time snapshot generator for the enforcer-name -> pytest node-id map.
 - `spec/tools/gen_spec.py` — regenerates docs/gen/ from the executable model (docstrings + graph), making drift structurally impossible.  →  R-tool-gen-spec
+- `spec/tools/hotam_req.py` — CLI for browsing, searching, patching and contextualizing Requirements.  →  R-tool-hotam-req
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
 - `spec/tools/land.py` — single CLI entry point over gate.py/gate_status.py/closure.py.  →  R-tool-land
 - `spec/tools/mark_revisit_evaluated.py` — record that a DECIDED conflict's revisit_marker was evaluated.  →  R-tool-mark-revisit-evaluated

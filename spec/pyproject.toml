@@ -52,6 +52,7 @@ hotam-attention-hook = "hotam_spec.cli.attention_hook:main"
 # resolve to the exact same tools/*.py main(), and either can be used.
 hotam-context = "hotam_spec.cli.context:main"                    # dispatcher: status (default) / produce / install
 hotam-setup-context-hook = "hotam_spec.cli.setup_context_hook:main"  # alias: same as `hotam-context install`
+hotam-req = "hotam_spec.cli.hotam_req:main"                       # dispatcher: list / show / search / patch / context
 hotam-review = "hotam_spec.cli.review:main"                      # dispatcher: tensions / revisit / spawn-isolation
 hotam-audit-tensions = "hotam_spec.cli.audit_tensions:main"          # alias: same as `hotam-review tensions`
 hotam-mark-revisit = "hotam_spec.cli.mark_revisit:main"              # alias: same as `hotam-review revisit`
