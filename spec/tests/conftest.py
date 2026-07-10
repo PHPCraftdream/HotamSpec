@@ -101,6 +101,11 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "domain: domain-tier test — asserts concrete self-domain content.",
     )
+    config.addinivalue_line(
+        "markers",
+        "slow: slow e2e test (real subprocess/venv/install) — skipped by "
+        "default, opt in via an explicit env var (see the test module).",
+    )
 
 
 def pytest_collection_modifyitems(

@@ -196,8 +196,9 @@ def test_r3_pyproject_without_hotam_spec_does_not_match(
     )
     monkeypatch.chdir(tmp_path)
 
-    # Falls through to R6 (repo_root).
-    assert project_root() == repo_root()
+    # Falls through to R6, which is gated on CWD being inside the framework
+    # repo (tmp_path is not) → None, not a silent framework-repo guess.
+    assert project_root() is None
 
 
 def test_r3_marker_in_parent_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -289,14 +290,39 @@ def test_r5_pyproject_project_root_nested(
 def test_r6_fallback_when_nothing_else_matches(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """R6: when the entire chain fails → repo_paths.repo_root().
+    """R6: when CWD is genuinely inside the framework repo → repo_paths.repo_root().
 
-    Uses an empty tmp_path with no markers, no env vars, no pyproject → R1-R5
-    all fail → R6 returns the framework's own repo root.
+    R6 is gated on CWD being inside repo_root() — it must NEVER fire for an
+    unrelated directory (e.g. a consumer's tmp_path), only for the true
+    self-hosting case (working inside the HotamSpec checkout itself). This
+    test simulates that by chdir-ing to a subdirectory it creates INSIDE the
+    real repo_root(), with no other R1-R5 markers active there.
+    """
+    self_hosting_subdir = repo_root() / ".hotam-spec-r6-test-scratch"
+    self_hosting_subdir.mkdir(exist_ok=True)
+    try:
+        monkeypatch.chdir(self_hosting_subdir)
+        assert project_root() == repo_root()
+    finally:
+        # chdir away first — Windows refuses to rmdir a process's own CWD.
+        monkeypatch.undo()
+        self_hosting_subdir.rmdir()
+
+
+def test_r6_does_not_fire_outside_the_framework_repo(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """R6 must NOT fire when CWD has no relation to the framework's own repo.
+
+    This is the regression guard for the bug tests/test_e2e_consumer_
+    subprocess.py caught: a brand-new, marker-less consumer directory
+    (tmp_path here stands in for it) used to silently resolve to the
+    framework's own repo_root() — R1-R5 all fail here (empty tmp_path,
+    no env), and R6 must now return None instead of guessing.
     """
     monkeypatch.chdir(tmp_path)
 
-    assert project_root() == repo_root()
+    assert project_root() is None
 
 
 # ---------------------------------------------------------------------------

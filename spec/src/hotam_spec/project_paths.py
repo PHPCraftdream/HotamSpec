@@ -26,7 +26,14 @@ The resolution chain (first non-empty result wins):
        resolved from the pyproject.toml's own directory).
   R6 — self-hosting fallback: ``repo_paths.repo_root()`` (framework repo ==
        consumer repo — the only assumption that holds for the self-modeling
-       core and its test suite).
+       core and its test suite), gated on CWD actually being inside the
+       framework repo. A consumer process running from a directory that is
+       NOT inside the framework's own checkout (the normal case for a
+       ``pip install``-ed consumer with no markers yet) must NOT silently
+       adopt the framework's install location as its project root — see
+       R6's guard below and tests/test_e2e_consumer_subprocess.py, which
+       caught this the hard way: a fresh, marker-less consumer directory
+       used to resolve to the framework repo and write into it.
 
 Uncertainty rule: if the entire chain is exhausted and nothing matched,
 ``project_root()`` returns ``None`` — it never guesses. Callers that NEED a
@@ -226,8 +233,21 @@ def project_root() -> Path | None:
     if r5 is not None:
         return r5
 
-    # R6 — self-hosting fallback (framework repo == consumer repo).
-    return repo_paths.repo_root()
+    # R6 — self-hosting fallback (framework repo == consumer repo), gated on
+    # CWD actually being inside the framework's own checkout. Without this
+    # guard, ANY process anywhere (e.g. a freshly pip-installed consumer, cwd
+    # unrelated to the framework install) whose CWD carries none of the R3-R5
+    # markers would silently adopt the framework's own repo as project root —
+    # a real bug caught by tests/test_e2e_consumer_subprocess.py: the first
+    # `hotam-create-domain` call from a brand-new, marker-less consumer
+    # directory wrote into the framework's install tree instead of failing
+    # or resolving locally.
+    repo_root = repo_paths.repo_root()
+    try:
+        cwd.relative_to(repo_root)
+    except ValueError:
+        return None
+    return repo_root
 
 
 def _build_diagnostic() -> str:

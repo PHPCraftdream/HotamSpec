@@ -166,9 +166,19 @@ def _activate_domain(name: str, domains_root: Path) -> int:
     pin = domains_root / ".active-domain"
     pin.write_text(name + "\n", encoding="utf-8")
     print(f"Pinned active domain: {pin} -> {name}")
+    # NOTE: deliberately no cwd= override here. gen_spec.py resolves its own
+    # project_root() from the CALLER's current working directory (R1-R6 chain
+    # in hotam_spec.project_paths). Forcing cwd=_SPEC_ROOT (the FRAMEWORK's
+    # own spec/ dir) used to make gen_spec regenerate the framework repo's
+    # OWN CLAUDE.md/docs instead of the consumer project's — invisible under
+    # self-hosting (where the framework repo IS the "consumer"), but a real
+    # portability bug for an installed consumer whose cwd is elsewhere
+    # (caught by tests/test_e2e_consumer_subprocess.py, a real subprocess+
+    # pip-install e2e test — in-process tests never exercised this path).
+    # Inheriting the parent's cwd (unset cwd=) lets gen_spec.py see the
+    # consumer's own project root correctly.
     result = subprocess.run(
         [sys.executable, str(Path(__file__).resolve().parent / "gen_spec.py")],
-        cwd=str(_SPEC_ROOT),
     )
     if result.returncode != 0:
         print(
