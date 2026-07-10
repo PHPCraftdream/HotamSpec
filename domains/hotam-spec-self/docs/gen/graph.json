@@ -484,6 +484,7 @@
     "R-user-request-decomposed-to-tickets",
     "R-variant-choice-is-decision",
     "R-verify-closure-per-action",
+    "R-wheel-build-atomic-verified",
     "R-work-within-launch-dir",
     "R-working-vs-substrate-budget",
     "ai-agent",
@@ -5755,6 +5756,25 @@
       "source_refs": [],
       "status": "SETTLED",
       "why": "Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). The minimal-core+plugins re-scope (D1) was deferred a third time in this same wave (Этап Q) with an explicit revisit trigger -- the first real external plugin/extension OR the first consumer request for a subset of functionality -- because the core/periphery stratification already exists cleanly IN CODE and there is nothing to physically split today. The only real cost of deferral was an unguaranteed future layering: a later commit could silently pull, e.g., attention.py into graph.py and quietly raise the cost of the eventual extraction. This cheap syntactic ratchet removes exactly that risk. Mechanically checkable via a static AST import scan (mirroring test_backend_neutral_scope.py's pattern), so promoted DRAFT->SETTLED with its real enforcer landing in the same wave (test_core_periphery_import_direction.py: a positive scan proving today's core is clean, plus a negative control proving the scanner is not vacuous), not left as claimed-but-unguaranteed debt."
+    },
+    {
+      "assumptions": [
+        "A-python-stack"
+      ],
+      "claim": "A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a member-count self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member count does not match spec/tools/*.py on disk.",
+      "enforced_by": [
+        "test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [],
+      "id": "R-wheel-build-atomic-verified",
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "why": "The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that counts the _tools/ members inside the produced .whl and deletes the artifact on mismatch makes the broken-wheel failure structurally impossible to publish."
     }
   ],
   "stakeholders": [

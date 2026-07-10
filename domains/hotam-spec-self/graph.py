@@ -4521,6 +4521,18 @@ def build_graph() -> TensionGraph:
             created_at="2026-07-10",
             settled_at="2026-07-10",
         ),
+        Requirement(
+            id="R-wheel-build-atomic-verified",
+            claim=("A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a member-count self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member count does not match spec/tools/*.py on disk."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that counts the _tools/ members inside the produced .whl and deletes the artifact on mismatch makes the broken-wheel failure structurally impossible to publish."),
+            assumptions=("A-python-stack",),
+            enforcement=ENFORCED,
+            enforced_by=("test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e",),
+            created_at="2026-07-10",
+            settled_at="2026-07-10",
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

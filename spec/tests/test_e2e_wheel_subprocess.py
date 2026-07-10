@@ -104,30 +104,23 @@ def _run_cli(
 def test_wheel_install_full_quickstart_e2e(tmp_path: Path) -> None:
     """Wheel install + full QUICKSTART: create-domain, stakeholders, axis, requirements, conflict, what-now."""
 
-    # -- 0. Populate _tools/ (build-time prerequisite) -------------------
-    populate_script = SPEC_ROOT / "scripts" / "populate_tools.py"
-    pop_result = subprocess.run(
-        [sys.executable, str(populate_script)],
-        cwd=str(SPEC_ROOT),
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert pop_result.returncode == 0, (
-        f"populate_tools.py failed:\n{pop_result.stdout}\n{pop_result.stderr}"
-    )
-
-    # -- 1. Build wheel -------------------------------------------------
+    # -- 0-1. Build wheel via the atomic self-verifying builder ----------
+    # build_wheel.py fuses populate + `uv build --wheel` + a member-count
+    # self-check into one command that refuses to emit a wheel missing its
+    # _tools/ scripts (R-wheel-build-atomic-verified). Using it here is what
+    # keeps that requirement ENFORCED end-to-end.
+    build_script = SPEC_ROOT / "scripts" / "build_wheel.py"
     wheel_dir = tmp_path / "dist"
     wheel_dir.mkdir()
     build_result = subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(wheel_dir), str(SPEC_ROOT)],
+        [sys.executable, str(build_script), "--out-dir", str(wheel_dir)],
+        cwd=str(SPEC_ROOT),
         capture_output=True,
         text=True,
         timeout=_BUILD_TIMEOUT_S,
     )
     assert build_result.returncode == 0, (
-        f"uv build --wheel failed:\n{build_result.stdout}\n{build_result.stderr}"
+        f"build_wheel.py failed:\n{build_result.stdout}\n{build_result.stderr}"
     )
     wheels = list(wheel_dir.glob("*.whl"))
     assert len(wheels) == 1, f"Expected 1 wheel, got {len(wheels)}: {wheels}"

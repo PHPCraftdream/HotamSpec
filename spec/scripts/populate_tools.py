@@ -11,6 +11,14 @@ Usage (from spec/):
     python scripts/populate_tools.py        # copy
     python scripts/populate_tools.py --clean  # remove copies
 
+RELEASE NOTE: to build a release wheel use ONLY ``scripts/build_wheel.py`` — do
+NOT invoke populate + ``uv build`` separately by hand for a release. build_wheel
+fuses populate + build + a member-count self-check that refuses to emit a wheel
+missing its ``_tools/`` scripts (R-wheel-build-atomic-verified); calling the two
+steps by hand re-opens the exact gap that requirement closes (a broken wheel).
+This module's ``populate()`` / ``clean()`` remain public only as the building
+blocks build_wheel imports.
+
 The _tools/ directory is .gitignored (except for the .gitignore itself), so the
 copies never appear in version control — the canonical source of truth remains
 spec/tools/.

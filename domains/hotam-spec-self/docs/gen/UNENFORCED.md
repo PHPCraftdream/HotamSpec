@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 202 / SETTLED 231; closeable debt 4; inherent discipline 25; DRAFT 2; OPEN 0; REJECTED 40.**
+**Burn-down: SETTLED-ENFORCED 203 / SETTLED 232; closeable debt 4; inherent discipline 25; DRAFT 2; OPEN 0; REJECTED 40.**
 
 ---
 
@@ -263,6 +263,7 @@ judgment calls no check_* could ever verify.
 | `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff | A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 | `R-requirement-freshness-fields` | check_requirement_history_wellformed | A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: tuple of HistoryEntry), where each HistoryEntry is written by apply_proposal.py from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing. |
 | `R-core-periphery-import-ratchet` | test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery | A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only. |
+| `R-wheel-build-atomic-verified` | test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e | A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a member-count self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member count does not match spec/tools/*.py on disk. |
 
 ## DRAFT (not yet promoted)
 
