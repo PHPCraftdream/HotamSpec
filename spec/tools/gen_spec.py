@@ -4957,19 +4957,34 @@ def main(argv: list[str] | None = None) -> None:
         # no-ops until a real second agent is scaffolded via create_agent.py.
         _regenerate_agent_constitutions(g)
 
-        # Concern 5a: shared thinking docs (spec/docs/thinking/*.md — still
-        # written to disk for standalone reference; also embedded in full
-        # above via EMBEDDED-THINKING).
-        thinking_paths = _write_shared_thinking_docs(
-            reader_stakeholder_ids=stakeholder_ids(g)
-        )
-        for p in thinking_paths:
-            print(f"written (thinking): {p}")
+        # Concern 5a/5b: shared thinking + tool docs (spec/docs/thinking/*.md,
+        # spec/docs/tools/*.md) document the FRAMEWORK's own source (docstrings
+        # under SPEC_ROOT, which is the loaded gen_spec.py module's own file
+        # location — NOT consumer-root-aware like REPO_ROOT/CLAUDE_MD is).
+        # Only write them when REPO_ROOT actually IS the framework's own repo
+        # (self-hosting): otherwise a consumer project (or a test loading
+        # gen_spec against a throwaway domain, e.g.
+        # test_portability_w4_smoke_e2e.py) would regenerate the FRAMEWORK's
+        # committed docs with whatever reader happens to be active for the
+        # unrelated domain being processed — the same class of contamination
+        # R-root-crystal-follows-pin already closed for CLAUDE.md and REPO-MAP.
+        if REPO_ROOT == SPEC_ROOT.parent:
+            thinking_paths = _write_shared_thinking_docs(
+                reader_stakeholder_ids=stakeholder_ids(g)
+            )
+            for p in thinking_paths:
+                print(f"written (thinking): {p}")
 
-        # Concern 5b: shared tool docs (spec/docs/tools/*.md — same duality).
-        tool_doc_paths = _write_shared_tool_docs(reader_stakeholder_ids=stakeholder_ids(g))
-        for p in tool_doc_paths:
-            print(f"written (tool-doc): {p}")
+            tool_doc_paths = _write_shared_tool_docs(
+                reader_stakeholder_ids=stakeholder_ids(g)
+            )
+            for p in tool_doc_paths:
+                print(f"written (tool-doc): {p}")
+        else:
+            print(
+                "skipping shared thinking/tool docs: REPO_ROOT != framework's "
+                "own repo (not self-hosting)"
+            )
 
         # Concern 5c: SHARED-DOCS block in agent CLAUDE.md files (no-op: no
         # agents exist).

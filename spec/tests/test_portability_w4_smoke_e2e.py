@@ -143,6 +143,51 @@ def test_consumer_gen_spec_writes_to_project_root_not_framework(
     )
 
 
+def test_consumer_gen_spec_never_touches_framework_thinking_or_tool_docs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A full (non-docs-only) gen_spec run for a consumer project must NOT
+    regenerate the framework's own spec/docs/thinking/*.md or
+    spec/docs/tools/*.md.
+
+    Regression guard (#102): those paths are anchored to SPEC_ROOT (the
+    loaded gen_spec.py module's own file location), NOT to the
+    consumer-root-aware REPO_ROOT/CLAUDE_MD -- unlike CLAUDE.md, they had no
+    self-hosting gate, so running main() for a throwaway consumer domain
+    silently rewrote the FRAMEWORK's committed thinking/tool docs with
+    whatever (usually unresolved) reader happened to be active for that
+    unrelated domain -- caught by a full T2 run leaving the working tree
+    dirty on every single run.
+    """
+    consumer_root = tmp_path / "consumer"
+    consumer_root.mkdir()
+    _scaffold_consumer_project(consumer_root)
+
+    thinking_dir = SPEC_ROOT / "docs" / "thinking"
+    tools_dir = SPEC_ROOT / "docs" / "tools"
+    before = {
+        p: p.read_bytes()
+        for p in list(thinking_dir.glob("*.md")) + list(tools_dir.glob("*.md"))
+    }
+    assert before, "expected committed thinking/tool docs to snapshot"
+
+    monkeypatch.setenv("HOTAM_SPEC_PROJECT_ROOT", str(consumer_root))
+    monkeypatch.chdir(consumer_root)
+
+    gs = _load_gen_spec_isolated("gen_spec_smoke_consumer_docs")
+    try:
+        gs.main([])  # type: ignore[attr-defined]
+    finally:
+        sys.modules.pop("gen_spec_smoke_consumer_docs", None)
+
+    after = {p: p.read_bytes() for p in before}
+    changed = [p for p in before if before[p] != after[p]]
+    assert not changed, (
+        f"gen_spec for a consumer project mutated framework thinking/tool "
+        f"docs: {changed[:5]}"
+    )
+
+
 # ===========================================================================
 # AC6 analog — no Path(__file__).resolve().parents[N] computing consumer paths
 # ===========================================================================
