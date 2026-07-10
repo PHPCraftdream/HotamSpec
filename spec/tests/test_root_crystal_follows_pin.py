@@ -78,6 +78,68 @@ def test_docs_only_never_touches_root_claude_md_under_foreign_env() -> None:
     )
 
 
+def test_docs_only_repo_map_describes_own_domain_under_foreign_env() -> None:
+    """gen_spec.py --docs-only with HOTAM_SPEC_ACTIVE_DOMAIN set to a NON-pinned
+    domain must leave the PINNED domain's own REPO-MAP.md byte-for-byte
+    identical — it must describe itself, never the env-active domain.
+
+    Regression guard (#99): build_repo_map_md() defaulted content_dir/gen_dir
+    to the module-level env/pin-resolved CONTENT_DIR/GEN_DIR globals, so
+    _process_domains() writing the PINNED domain's docs/gen/REPO-MAP.md under
+    a foreign HOTAM_SPEC_ACTIVE_DOMAIN described the FOREIGN domain's content
+    dir instead of its own -- real contamination of a committed file, caught
+    by a full T2 run leaving the working tree dirty.
+    """
+    pinned = PIN_FILE.read_text(encoding="utf-8").strip() if PIN_FILE.exists() else ""
+    if not pinned:
+        import pytest
+
+        pytest.skip("no pinned domain")
+    foreign = _non_pinned_domain()
+    if foreign is None:
+        import pytest
+
+        pytest.skip("need >= 2 domains to exercise cross-domain contamination")
+
+    repo_map = DOMAINS_ROOT / pinned / "docs" / "gen" / "REPO-MAP.md"
+    before = repo_map.read_bytes()
+
+    # Force a REAL regen of the pinned domain's docs: the dirty-index skip
+    # (gen-domain-mtime.json) would otherwise mask the bug whenever the
+    # pinned domain's graph.py/manifest.py mtimes are already cached from a
+    # prior run in this same working tree -- exactly why an isolated re-run
+    # of this test passed even with the bug present (only a full T2 run,
+    # which touches other state first, reliably invalidated the cache).
+    dirty_index_file = SPEC_ROOT / ".runtime" / "gen-domain-mtime.json"
+    saved_index = (
+        dirty_index_file.read_bytes() if dirty_index_file.exists() else None
+    )
+    if dirty_index_file.exists():
+        dirty_index_file.unlink()
+    try:
+        env = dict(os.environ)
+        env["HOTAM_SPEC_ACTIVE_DOMAIN"] = foreign
+        result = subprocess.run(
+            [sys.executable, str(GEN_SPEC), "--docs-only"],
+            capture_output=True,
+            text=True,
+            env=env,
+            cwd=str(SPEC_ROOT),
+        )
+    finally:
+        if saved_index is not None:
+            dirty_index_file.write_bytes(saved_index)
+        elif dirty_index_file.exists():
+            dirty_index_file.unlink()
+    after = repo_map.read_bytes()
+    assert result.returncode == 0, result.stderr
+    assert after == before, (
+        f"gen_spec --docs-only under a foreign HOTAM_SPEC_ACTIVE_DOMAIN "
+        f"mutated the PINNED domain's own REPO-MAP.md ({repo_map}) -- it "
+        f"must describe itself, not the env-active domain."
+    )
+
+
 def test_per_domain_reader_isolation() -> None:
     """domain_doc_readers(dir) resolves each domain's own DOC_READERS, so a
     domain's generated docs never carry the env-active domain's reader."""
