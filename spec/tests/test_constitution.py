@@ -204,3 +204,73 @@ def test_constitution_is_index() -> None:
         "CONSTITUTION block still contains full '[ENFORCED·...]' enforcer "
         "chains — expected the compact index format ([E]/[S]/[P] flags only)."
     )
+
+
+# ---------------------------------------------------------------------------
+# Structural contract (I1, additive) — build_constitution_index_model
+# ---------------------------------------------------------------------------
+#
+# The tests above assert on the RENDERED markdown block (byte-level contract,
+# unchanged). These assert on the STRUCTURAL model _render_constitution_block
+# now builds from before joining it into markdown — a PARALLEL contract, not
+# a replacement: if these ever diverge from the byte-level tests above, that
+# is a real bug (the render function is a thin string-join over this model).
+
+
+def test_constitution_index_model_covers_same_settled_set_as_block() -> None:
+    """build_constitution_index_model(g) covers exactly the non-plumbing
+    SETTLED ids that _render_constitution_block partitions into the root
+    block (mirrors test_constitution_partitions_all_settled's split, but
+    against the structural model instead of parsed markdown text)."""
+    g = gen_spec.load_content_graph()
+    categories = gen_spec.build_constitution_index_model(g)
+
+    model_ids = {r.id for cat in categories for r in cat.requirements}
+
+    all_settled = [r for r in g.requirements if r.status == gen_spec.SETTLED]
+    expected_ids = {r.id for r in all_settled if not gen_spec._is_framework_plumbing(r.id)}
+
+    assert model_ids == expected_ids, (
+        f"model/settled mismatch: missing={expected_ids - model_ids} "
+        f"extra={model_ids - expected_ids}"
+    )
+
+
+def test_constitution_index_model_categories_are_disjoint_and_sorted() -> None:
+    """Each requirement appears in exactly one category; within a category,
+    requirements are sorted by id (the same ordering _cluster_index_items
+    and the rendered block rely on)."""
+    g = gen_spec.load_content_graph()
+    categories = gen_spec.build_constitution_index_model(g)
+
+    seen: set[str] = set()
+    for cat in categories:
+        ids = [r.id for r in cat.requirements]
+        assert ids == sorted(ids), f"category {cat.label!r} not sorted by id: {ids}"
+        dup = seen & set(ids)
+        assert not dup, f"id(s) {dup} appear in more than one category"
+        seen.update(ids)
+
+
+def test_constitution_index_model_matches_rendered_block() -> None:
+    """The model's (category, id) pairs are exactly the ids that appear as
+    literal substrings of the rendered block under that category's heading —
+    the render is a faithful projection of the model, not a divergent path."""
+    g = gen_spec.load_content_graph()
+    categories = gen_spec.build_constitution_index_model(g)
+    block = gen_spec._render_constitution_block(g)
+
+    for cat in categories:
+        heading = f"**{cat.label}** —"
+        assert heading in block, f"category heading {heading!r} missing from rendered block"
+        # Locate this category's line (up to the next blank line, or EOF for
+        # the last category — the block is right-stripped by the renderer).
+        start = block.index(heading)
+        sep_idx = block.find("\n\n", start)
+        end = sep_idx if sep_idx != -1 else len(block)
+        line = block[start:end]
+        for r in cat.requirements:
+            assert r.id in line, (
+                f"requirement {r.id!r} (category {cat.label!r}) not found in its "
+                "rendered index line"
+            )
