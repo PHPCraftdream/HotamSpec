@@ -3371,15 +3371,24 @@ def _revert_graph(
     active_graph.write_text(original_source, encoding="utf-8")
     # Re-run gen_spec to restore generated docs to the pre-write state.
     applied_domain = active_graph.parent.name if active_graph.parent.name else ""
-    docs_env = dict(_os.environ)
-    if applied_domain:
-        docs_env["HOTAM_SPEC_ACTIVE_DOMAIN"] = applied_domain
-    subprocess.run(
-        [sys.executable, str(_GEN_SPEC), "--docs-only"],
-        capture_output=True,
-        text=True,
-        env=docs_env,
-    )
+    from hotam_spec.domain_resolution import pin_file_path  # noqa: PLC0415
+
+    _pin = pin_file_path(_domains_root_path())
+    pinned_domain = ""
+    if _pin.exists():
+        pinned_domain = _pin.read_text(encoding="utf-8").strip()
+    # Same optimization as _regen_and_verify: skip --docs-only pass when
+    # applied==pinned (the full pass covers both).
+    if not (applied_domain and pinned_domain and applied_domain == pinned_domain):
+        docs_env = dict(_os.environ)
+        if applied_domain:
+            docs_env["HOTAM_SPEC_ACTIVE_DOMAIN"] = applied_domain
+        subprocess.run(
+            [sys.executable, str(_GEN_SPEC), "--docs-only"],
+            capture_output=True,
+            text=True,
+            env=docs_env,
+        )
     root_env = dict(_os.environ)
     root_env.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
     subprocess.run(
@@ -3447,19 +3456,29 @@ def _regen_and_verify(
         pinned_domain = _pin.read_text(encoding="utf-8").strip()
 
     # Pass 1: applied domain's docs only (env carried through as-is).
-    docs_env = dict(_os.environ)
-    if applied_domain:
-        docs_env["HOTAM_SPEC_ACTIVE_DOMAIN"] = applied_domain
-    regen_docs = subprocess.run(
-        [sys.executable, str(_GEN_SPEC), "--docs-only"],
-        capture_output=True,
-        text=True,
-        env=docs_env,
+    # OPTIMIZATION (perf F10): when the applied domain IS the pinned domain
+    # (the common self-hosting case), pass 1 is fully redundant — the full
+    # pass 2 regenerates both the applied domain's docs AND the root crystal
+    # in a single run. Skip pass 1 to save ~1.8s per LAND.
+    skip_docs_pass = (
+        applied_domain
+        and pinned_domain
+        and applied_domain == pinned_domain
     )
-    if regen_docs.returncode != 0:
-        print("ERROR: gen_spec.py --docs-only failed:", file=sys.stderr)
-        print(regen_docs.stderr, file=sys.stderr)
-        return 1
+    if not skip_docs_pass:
+        docs_env = dict(_os.environ)
+        if applied_domain:
+            docs_env["HOTAM_SPEC_ACTIVE_DOMAIN"] = applied_domain
+        regen_docs = subprocess.run(
+            [sys.executable, str(_GEN_SPEC), "--docs-only"],
+            capture_output=True,
+            text=True,
+            env=docs_env,
+        )
+        if regen_docs.returncode != 0:
+            print("ERROR: gen_spec.py --docs-only failed:", file=sys.stderr)
+            print(regen_docs.stderr, file=sys.stderr)
+            return 1
 
     # Pass 2: root crystal from the pin (env var stripped so the pin wins).
     root_env = dict(_os.environ)
@@ -3474,10 +3493,15 @@ def _regen_and_verify(
         print("ERROR: gen_spec.py failed:", file=sys.stderr)
         print(regen_result.stderr, file=sys.stderr)
         return 1
-    print(
-        f"gen_spec.py: OK (docs pass: {applied_domain or 'default'}; "
-        f"root crystal from pin: {pinned_domain or 'alphabetical fallback'})"
-    )
+    if skip_docs_pass:
+        print(
+            f"gen_spec.py: OK (single pass — applied==pinned: {applied_domain})"
+        )
+    else:
+        print(
+            f"gen_spec.py: OK (docs pass: {applied_domain or 'default'}; "
+            f"root crystal from pin: {pinned_domain or 'alphabetical fallback'})"
+        )
 
     # Verify — two modes:
     #

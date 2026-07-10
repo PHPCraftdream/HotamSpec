@@ -3,7 +3,7 @@
     "comment": "sha256 hash pins for the enforcement-perimeter files (the check_* layer, T1 gate, enforcer_resolution, attention core, and the PreToolUse guard itself). Update via: .venv/Scripts/python.exe tools/update_baseline.py enforcement_perimeter",
     "files": {
       "src/hotam_spec/attention.py": "2a4bd224aaa81024a30ca527100635871e610f59293018b491fcfa7175662555",
-      "src/hotam_spec/enforcer_resolution.py": "998e313b9753469d9077b9494d843653513c6387fb9ade8788707eb1abef054e",
+      "src/hotam_spec/enforcer_resolution.py": "f15c6cc4b3cb1a9ab3ac5cee3c7ce6b6d1b3db52720e223faa9b3411e189aefa",
       "src/hotam_spec/invariants.py": "026f4f7b0c9c4a6a00cae584547b498da14c142f272afbeea0b2ff7af6ec69a6",
       "tools/_graph_guard.py": "9d99b40d1828b7fb9cd3913b5720bedb33fa14c2f28758a3b0fc42630971e9b0",
       "tools/gate.py": "4633e7f7f12454d29d01dbbc771fe4863a8959bff5dbfa24523302846324ad2b"

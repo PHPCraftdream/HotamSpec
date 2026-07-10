@@ -228,13 +228,44 @@ def _load_persistent_scan(tests_dir_str: str, fingerprint: tuple[int, int]) -> _
     return _TestScan(restored_func, restored_check)
 
 
+def _is_temp_dir_path(path_str: str) -> bool:
+    """Return True if ``path_str`` looks like a system temp directory.
+
+    Guard against polluting the persistent enforcer-index.json with entries
+    from tmpdir-based test fixtures (perf-investigation F12). Checks the
+    standard OS temp roots (Windows %TEMP%/%TMP%, Unix /tmp, /var/tmp) plus
+    pytest's own tmp_path pattern.
+    """
+    import tempfile  # noqa: PLC0415
+
+    tmp_root = Path(tempfile.gettempdir()).resolve()
+    try:
+        p = Path(path_str).resolve()
+        # Is p under the system temp directory?
+        try:
+            p.relative_to(tmp_root)
+            return True
+        except ValueError:
+            pass
+    except (OSError, ValueError):
+        pass
+    return False
+
+
 def _save_persistent_scan(tests_dir_str: str, fingerprint: tuple[int, int], scan: _TestScan) -> None:
     """Persist a scan to .runtime/enforcer-index.json (best-effort, never raises).
 
     Failures (disk full, permission) are swallowed: the persistent cache is a
     performance optimization, not a correctness dependency — the lru_cache
     layer still guarantees correctness within the process.
+
+    Guard (perf F12): entries whose tests_dir_str resolves into a system temp
+    directory are NEVER persisted — they come from test fixtures and would
+    pollute the index with unstable paths that invalidate every future read.
     """
+    # Guard: refuse to persist tmpdir-based scans (perf F12).
+    if _is_temp_dir_path(tests_dir_str):
+        return
     index_file = _index_file()
     try:
         index_file.parent.mkdir(parents=True, exist_ok=True)
@@ -247,6 +278,11 @@ def _save_persistent_scan(tests_dir_str: str, fingerprint: tuple[int, int], scan
             data = {}
         if not isinstance(data, dict):
             data = {}
+        # Purge any existing tmpdir entries (one-time cleanup for historical
+        # pollution, perf F12).
+        keys_to_remove = [k for k in data if _is_temp_dir_path(k)]
+        for k in keys_to_remove:
+            del data[k]
         data[tests_dir_str] = {
             "fingerprint": list(fingerprint),
             "func_index": dict(scan.func_index),

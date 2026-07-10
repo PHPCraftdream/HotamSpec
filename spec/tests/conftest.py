@@ -113,20 +113,39 @@ def pytest_collection_modifyitems(
             item.add_marker(pytest.mark.framework)
 
 
+# Session-scoped base directory for runtime isolation. Using a SINGLE
+# session-scoped tmpdir + a cheap counter avoids the per-test overhead of
+# pytest's tmp_path fixture (~8.5ms/test on Windows due to numbered-dir
+# creation + retention logic) across 1300+ tests (perf-investigation F4).
+# Isolation semantics are UNCHANGED: each test still gets its own directory.
+_ISOLATE_COUNTER = 0
+
+
+@pytest.fixture(scope="session")
+def _isolate_runtime_base(tmp_path_factory):
+    """Create ONE session-scoped base dir for runtime isolation."""
+    return tmp_path_factory.mktemp("runtime_iso")
+
+
 @pytest.fixture(autouse=True)
-def _isolate_runtime_dir(tmp_path, monkeypatch):
-    """Redirect apply_proposal's runtime dir into tmp_path for every test.
+def _isolate_runtime_dir(_isolate_runtime_base, monkeypatch):
+    """Redirect apply_proposal's runtime dir into a cheap per-test subdir.
 
     Best-effort: if apply_proposal is not importable in some minimal env, the
     fixture is a no-op rather than a collection error.
     """
+    global _ISOLATE_COUNTER  # noqa: PLW0603
+    _ISOLATE_COUNTER += 1
+
     try:
         import apply_proposal  # noqa: PLC0415
     except Exception:
         yield
         return
 
-    runtime = tmp_path / ".runtime"
+    test_dir = _isolate_runtime_base / str(_ISOLATE_COUNTER)
+    test_dir.mkdir()
+    runtime = test_dir / ".runtime"
     proposals = runtime / "proposals"
     applied = proposals / "applied"
     monkeypatch.setattr(apply_proposal, "_RUNTIME_DIR", runtime, raising=False)

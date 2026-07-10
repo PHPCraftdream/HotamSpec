@@ -3354,6 +3354,15 @@ def _collect_canon_docstrings(src_dir: Path) -> dict[str, list[tuple[str, str, s
     return result
 
 
+# Intra-process caches for the two shared-docs builders. Both are called
+# twice per gen_spec run: once by _render_embedded_*_block (CLAUDE.md crystal)
+# and once by _write_shared_*_docs (spec/docs/ disk write). The computation
+# is deterministic within a single run (same source files + same graph), so
+# caching the result avoids a full re-collect+render pass (~0.9s saved).
+_SHARED_THINKING_DOCS_CACHE: dict[str, str] | None = None
+_SHARED_TOOL_DOCS_CACHE: dict[str, str] | None = None
+
+
 def build_shared_thinking_docs(
     src_dir: Path | None = None,
     reader_stakeholder_ids: frozenset[str] | None = None,
@@ -3367,6 +3376,9 @@ def build_shared_thinking_docs(
 
     Returns dict mapping topic_slug -> markdown_content.
     """
+    global _SHARED_THINKING_DOCS_CACHE
+    if _SHARED_THINKING_DOCS_CACHE is not None:
+        return _SHARED_THINKING_DOCS_CACHE
     _src = src_dir or SRC
     if reader_stakeholder_ids is None:
         try:
@@ -3402,6 +3414,7 @@ def build_shared_thinking_docs(
             lines.append("")
         result[slug] = "\n".join(lines).rstrip() + "\n"
 
+    _SHARED_THINKING_DOCS_CACHE = result
     return result
 
 
@@ -3545,6 +3558,9 @@ def build_shared_tool_docs(
     `build_shared_thinking_docs` (R-doc-names-reader).
     Returns dict mapping basename -> markdown_content.
     """
+    global _SHARED_TOOL_DOCS_CACHE
+    if _SHARED_TOOL_DOCS_CACHE is not None:
+        return _SHARED_TOOL_DOCS_CACHE
     _tools = tools_dir or SPEC_TOOLS_DIR
     if reader_stakeholder_ids is None:
         try:
@@ -3602,6 +3618,7 @@ def build_shared_tool_docs(
 
         result[basename] = "\n".join(lines).rstrip() + "\n"
 
+    _SHARED_TOOL_DOCS_CACHE = result
     return result
 
 
