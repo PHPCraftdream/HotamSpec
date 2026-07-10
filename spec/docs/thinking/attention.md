@@ -89,7 +89,7 @@ graph sources may live in ATTENTION_SOURCES (asserted at import time).
 
 ## From `spec/src/hotam_spec/attention.py::diagnose_signals`
 
-Canon: §Attention — the deterministic graph-only diagnosis (P0..P5).
+Canon: §Attention — the deterministic graph-only diagnosis (P0..P5, P7).
 
 RULE: pure and graph-only. Signals are emitted band by band in stable
 graph/id order, then a final stable sort by (priority, target, message)

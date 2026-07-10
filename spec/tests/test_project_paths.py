@@ -32,6 +32,7 @@ from hotam_spec.project_paths import (
     ENV_DOMAINS_ROOT,
     ENV_PROJECT_ROOT,
     MARKER_FILENAME,
+    SECONDARY_MARKER_MIN_COUNT,
     ProjectRootUnresolved,
     project_root,
     project_root_or_raise,
@@ -129,43 +130,19 @@ def test_r2_env_domains_root_nonexistent_skipped(
 
 
 # ---------------------------------------------------------------------------
-# R3 — filesystem markers in CWD
+# R3 — filesystem markers in CWD (two-tier: RELIABLE alone vs SECONDARY 2+)
 # ---------------------------------------------------------------------------
 
 def test_r3_marker_domains_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """R3: CWD has domains/ → CWD is the project root."""
+    """R3 RELIABLE: CWD has domains/ alone → CWD is the project root."""
     (tmp_path / "domains").mkdir()
     monkeypatch.chdir(tmp_path)
 
     assert project_root() == tmp_path
 
 
-def test_r3_marker_claude_md(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """R3: CWD has CLAUDE.md → CWD is the project root."""
-    (tmp_path / "CLAUDE.md").write_text("# Test", encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
-
-    assert project_root() == tmp_path
-
-
-def test_r3_marker_claude_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """R3: CWD has .claude/ → CWD is the project root."""
-    (tmp_path / ".claude").mkdir()
-    monkeypatch.chdir(tmp_path)
-
-    assert project_root() == tmp_path
-
-
-def test_r3_marker_tickets_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """R3: CWD has tickets/ → CWD is the project root."""
-    (tmp_path / "tickets").mkdir()
-    monkeypatch.chdir(tmp_path)
-
-    assert project_root() == tmp_path
-
-
 def test_r3_marker_delegations_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """R3: CWD has delegations/ → CWD is the project root."""
+    """R3 RELIABLE: CWD has delegations/ alone → CWD is the project root."""
     (tmp_path / "delegations").mkdir()
     monkeypatch.chdir(tmp_path)
 
@@ -175,7 +152,7 @@ def test_r3_marker_delegations_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 def test_r3_marker_pyproject_with_hotam_spec(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """R3: CWD has pyproject.toml with [tool.hotam-spec] → CWD is the project root."""
+    """R3 RELIABLE: CWD has pyproject.toml with [tool.hotam-spec] alone → matches."""
     (tmp_path / "pyproject.toml").write_text(
         '[tool.hotam-spec]\nsome_key = "value"\n', encoding="utf-8"
     )
@@ -202,11 +179,75 @@ def test_r3_pyproject_without_hotam_spec_does_not_match(
 
 
 def test_r3_marker_in_parent_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """R3: marker is in a PARENT of CWD (bottom-up search)."""
+    """R3: RELIABLE marker is in a PARENT of CWD (bottom-up search)."""
     (tmp_path / "domains").mkdir()
     sub = tmp_path / "packages" / "myapp"
     sub.mkdir(parents=True)
     monkeypatch.chdir(sub)
+
+    assert project_root() == tmp_path
+
+
+def test_r3_secondary_marker_claude_md_alone_does_not_match(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """R3 SECONDARY: a lone CLAUDE.md must NOT match (G4 — too generic alone).
+
+    Regression guard for the false-positive this triage item fixed: any
+    foreign Claude-Code repo carries a CLAUDE.md; that alone must not make
+    project_root() adopt it as a Hotam-Spec project root.
+    """
+    (tmp_path / "CLAUDE.md").write_text("# Test", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    assert project_root() is None
+
+
+def test_r3_secondary_marker_claude_dir_alone_does_not_match(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """R3 SECONDARY: a lone .claude/ must NOT match (too generic alone)."""
+    (tmp_path / ".claude").mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    assert project_root() is None
+
+
+def test_r3_secondary_marker_tickets_dir_alone_does_not_match(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """R3 SECONDARY: a lone tickets/ must NOT match (common folder name elsewhere)."""
+    (tmp_path / "tickets").mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    assert project_root() is None
+
+
+def test_r3_secondary_markers_combined_match(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """R3 SECONDARY: 2+ secondary markers together DO match.
+
+    CLAUDE.md + .claude/ together are specific enough to count, even though
+    neither alone is sufficient (SECONDARY_MARKER_MIN_COUNT == 2).
+    """
+    assert SECONDARY_MARKER_MIN_COUNT == 2
+    (tmp_path / "CLAUDE.md").write_text("# Test", encoding="utf-8")
+    (tmp_path / ".claude").mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    assert project_root() == tmp_path
+
+
+def test_r3_reliable_plus_secondary_combined_match(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """R3: one RELIABLE marker alone still matches even with no SECONDARY markers,
+    and a RELIABLE + a SECONDARY marker together also match (sanity check that
+    the RELIABLE fast-path is untouched by the SECONDARY counting logic)."""
+    (tmp_path / "domains").mkdir()
+    (tmp_path / "CLAUDE.md").write_text("# Test", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
 
     assert project_root() == tmp_path
 

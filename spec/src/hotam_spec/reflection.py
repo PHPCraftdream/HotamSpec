@@ -11,7 +11,12 @@ CONTRACT of each predicate: `reflect_*(graph) -> list[Finding]`. An EMPTY list
 means the operator is ready on that condition. Each Finding names the offending
 object id and an imperative message, so the harness (tools/what_now.py) turns
 findings directly into P0 REFLECTION actions — the same shape §Invariants uses
-for P1 STRUCTURE (check_* -> Violation -> action).
+for P1 STRUCTURE (check_* -> Violation -> action). A Finding may set
+`advisory=True` (currently reflect_replaces_edge_migration and
+reflect_all_members_rejected) to declare itself NEVER a gate; hotam_spec.
+attention.diagnose_signals routes those to the lowest-urgency P_ADVISORY band
+instead of P_REFLECTION (§Attention, A2) — the field is the honest signal, not
+a string convention a consumer would have to grep for.
 
 WHY a first-class module (mirror of §Invariants): the check_* layer diagnoses
 the domain graph's structural form, but the operator's own readiness lived as
@@ -65,6 +70,15 @@ class Finding:
                    stable meter slug like 'burn-down' / 'enforcement-gradient').
       imperative — human-readable instruction, surfaced verbatim by the
                    harness as a P0 REFLECTION action.
+      advisory   — True for findings that are NEVER a gate/blocker (e.g.
+                   reflect_replaces_edge_migration, reflect_all_members_rejected):
+                   the predicate itself declares this explicitly, rather than
+                   a consumer grepping the imperative text for a marker
+                   phrase. hotam_spec.attention routes advisory findings to
+                   the lowest-urgency P_ADVISORY band instead of P_REFLECTION
+                   (§Attention, A2) — a field on the record is the honest,
+                   machine-checkable form of "this predicate is advisory",
+                   not a string convention future predicates could forget.
 
     WHY a record (not a string): the harness needs `target` to build a typed,
     addressable next-action — the exact reason invariants.Violation is a
@@ -74,6 +88,7 @@ class Finding:
     condition: str
     target: str
     imperative: str
+    advisory: bool = False
 
 
 def graph_size(g: TensionGraph) -> int:
@@ -92,7 +107,7 @@ def graph_size(g: TensionGraph) -> int:
 
 
 # ---------------------------------------------------------------------------
-# The five self-diagnosis predicates (P0 REFLECTION band, §Reflection, M35)
+# The self-diagnosis predicates (P0 REFLECTION / P_ADVISORY bands, §Reflection, M35)
 # ---------------------------------------------------------------------------
 
 
@@ -407,6 +422,7 @@ def reflect_all_members_rejected(g: TensionGraph) -> list[Finding]:
                         " connector. Advisory; never a gate (the steward closes a"
                         " conflict, never the harness — R-decided-needs-human-signoff)."
                     ),
+                    advisory=True,
                 )
             )
     return out
@@ -459,6 +475,7 @@ def reflect_replaces_edge_migration(g: TensionGraph) -> list[Finding]:
                     " relation becomes machine-traversable"
                     " (R-rejected-preserved-not-deleted). Advisory; never a gate."
                 ),
+                advisory=True,
             )
         )
     return out

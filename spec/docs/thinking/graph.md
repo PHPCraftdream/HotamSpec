@@ -414,9 +414,16 @@ The resolution chain (first non-empty result wins):
 
   R1 — ``HOTAM_SPEC_PROJECT_ROOT`` env (must exist, must be a directory).
   R2 — ``HOTAM_SPEC_DOMAINS_ROOT`` env (project = its parent, must exist).
-  R3 — markers in CWD, bottom-up search: any of ``domains/``, ``CLAUDE.md``,
-       ``.claude/``, ``tickets/``, ``delegations/``, ``pyproject.toml`` with
-       a ``[tool.hotam-spec]`` table.
+  R3 — markers in CWD, bottom-up search, two tiers:
+         * RELIABLE (one alone is enough): ``domains/``, ``delegations/``,
+           ``pyproject.toml`` with a ``[tool.hotam-spec]`` table. These are
+           specific to a Hotam-Spec project — no unrelated tool creates them.
+         * SECONDARY (need 2+, from RELIABLE+SECONDARY combined): ``CLAUDE.md``,
+           ``.claude/``, ``tickets/``. Any ONE of these alone is too generic —
+           any Claude-Code repo has a ``CLAUDE.md``/``.claude/``, and
+           ``tickets/`` is a common folder name in unrelated projects — so a
+           lone secondary marker must NOT false-trigger R3 for a foreign
+           Claude-Code repo that merely happens to have a ``CLAUDE.md``.
   R4 — ``.hotam-spec-project`` marker file, searched bottom-up up to 5 levels
        from CWD.
   R5 — ``pyproject.toml`` → ``[tool.hotam-spec].project_root`` (relative path

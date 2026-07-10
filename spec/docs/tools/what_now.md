@@ -56,8 +56,13 @@ It aggregates, in priority order:
                         (or its pending/ sub-folder) awaiting the steward's
                         verdict; not landed yet, so not in applied/. Pure file
                         surfacing, NOT a graph diagnosis — no new node type
-                        (R-presented-pending-decision-type). Lowest priority:
-                        ephemeral tooling state, not a defect in the graph.
+                        (R-presented-pending-decision-type).
+  P7 ADVISORY         — LOWEST priority: findings whose predicate declared
+                        itself Finding.advisory=True (e.g.
+                        reflect_replaces_edge_migration,
+                        reflect_all_members_rejected) — NEVER a gate/blocker,
+                        surfaced for awareness only, ranked below even the
+                        ephemeral PENDING_PROPOSAL band (§Attention, A2).
 
 Run:
   uv run python tools/what_now.py            # diagnose spec/content/ (your domain)

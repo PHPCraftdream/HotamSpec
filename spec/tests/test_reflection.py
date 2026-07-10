@@ -31,7 +31,7 @@ from hotam_spec.requirement import DRAFT, ENFORCED, PROSE, SETTLED, Requirement 
 from hotam_spec.stakeholder import Stakeholder  # noqa: E402
 
 import what_now  # noqa: E402
-from what_now import P_REFLECTION, P_STRUCTURE, diagnose  # noqa: E402
+from what_now import P_ADVISORY, P_REFLECTION, P_STRUCTURE, diagnose  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -356,20 +356,22 @@ def test_real_meta_domain_reflection_today(active_graph) -> None:
       - No DEAD assumptions -> no dead-assumption-on-enforcer
       - R-active-loop-playbooks is DECIDED derived but SETTLED -> no derived-unbuilt
       - ~38 historical REJECTED nodes with prose REPLACES but no structural
-        replaces edge -> reflect_replaces_edge_migration fires (the migration
-        ratchet, advisory). This is the honest 'not yet migrated' signal.
+        replaces edge -> reflect_replaces_edge_migration fires, but as an
+        ADVISORY finding (Finding.advisory=True) it is routed to the P_ADVISORY
+        band, not P_REFLECTION (§Attention, A2) — the honest 'not yet migrated'
+        signal, kept out of the operator's P0 self-diagnosis band.
     """
     # Task #46, Measure 3: read the session-scoped active graph (frozen, shared
     # read-only) instead of rebuilding it per-test.
     g = active_graph
     actions = diagnose(g)
     reflection_actions = [a for a in actions if a.priority == P_REFLECTION]
+    advisory_actions = [a for a in actions if a.priority == P_ADVISORY]
 
-    # The reflection band includes the migration-ratchet findings (~38 historical
-    # REJECTED nodes not yet on structural replaces edges). The range accommodates
-    # those plus the existing conditions; the migration ratchet only ever shrinks.
-    assert 0 <= len(reflection_actions) <= 60, (
-        f"Expected 0-60 REFLECTION actions, got {len(reflection_actions)}: "
+    # The reflection band no longer carries the migration-ratchet findings (they
+    # moved to P_ADVISORY); the range covers the remaining non-advisory conditions.
+    assert 0 <= len(reflection_actions) <= 20, (
+        f"Expected 0-20 REFLECTION actions, got {len(reflection_actions)}: "
         f"{reflection_actions}"
     )
 
@@ -387,17 +389,27 @@ def test_real_meta_domain_reflection_today(active_graph) -> None:
 
     # The migration ratchet HONESTLY surfaces historical REJECTED nodes whose
     # anti-relitigation relation is prose-only (no structural replaces edge yet).
-    # These are advisory; they must NOT block the graph.
+    # These are advisory; they must NOT block the graph and must live in the
+    # P_ADVISORY band, not P_REFLECTION.
     migration = [
-        a for a in reflection_actions
-        if a.kind == "REFLECTION"
+        a for a in advisory_actions
+        if a.kind == "ADVISORY"
         and "replaces" in a.imperative.lower()
         and "migrate" in a.imperative.lower()
     ]
     assert migration, (
         "reflect_replaces_edge_migration must fire on the historical REJECTED "
-        "nodes (they have prose REPLACES markers but no structural edge)."
+        "nodes (they have prose REPLACES markers but no structural edge), "
+        "surfaced in the P_ADVISORY band."
     )
+    assert len(migration) <= 60, f"unexpectedly large migration-ratchet count: {len(migration)}"
+
+    # No migration/advisory findings must leak back into P_REFLECTION.
+    leaked = [
+        a for a in reflection_actions
+        if "replaces" in a.imperative.lower() and "migrate" in a.imperative.lower()
+    ]
+    assert not leaked, f"advisory migration findings must not appear in P_REFLECTION: {leaked}"
 
 
 # ---------------------------------------------------------------------------
@@ -422,10 +434,10 @@ def test_what_now_sources_reflection_predicates_from_module() -> None:
     """diagnose() composes hotam_spec.reflection — the conditions are not tool code.
 
     Enforcer of R-reflection-predicates-first-class (together with
-    test_diagnose_p0_equals_reflection_findings): the harness imports the
-    module's single entry point by reference, the registry names exactly the
-    five canonical predicates, and no reflection imperative text remains
-    inlined in tools/what_now.py source.
+    test_diagnose_p0_and_advisory_partition_reflection_findings): the harness
+    imports the module's single entry point by reference, the registry names
+    exactly the eight canonical predicates, and no reflection imperative text
+    remains inlined in tools/what_now.py source.
     """
     assert what_now.all_findings is reflection.all_findings, (
         "what_now must compose hotam_spec.reflection.all_findings by reference"
@@ -547,25 +559,51 @@ def _all_conditions_violating_graph() -> TensionGraph:
     )
 
 
-def test_diagnose_p0_equals_reflection_findings() -> None:
-    """The P0 band of diagnose() IS reflection.all_findings — no more, no less.
+def test_diagnose_p0_and_advisory_partition_reflection_findings() -> None:
+    """diagnose()'s P0 + P_ADVISORY bands ARE reflection.all_findings, split by advisory.
 
-    Enforcer of R-reflection-predicates-first-class: on a graph violating all
-    five conditions, the (target, imperative) pairs the harness emits at
-    P_REFLECTION equal the module's findings exactly, and every predicate in
-    the registry contributed at least one finding.
+    Enforcer of R-reflection-predicates-first-class + §Attention A2: on a graph
+    violating all eight conditions, hotam_spec.reflection.all_findings(g) is
+    partitioned EXACTLY in two by Finding.advisory —
+
+      * non-advisory findings (advisory=False) == diagnose()'s P_REFLECTION (P0) band
+      * advisory findings (advisory=True) == diagnose()'s P_ADVISORY (P7) band
+
+    — no finding is lost, duplicated, or misclassified between the two bands,
+    and every predicate in the registry still contributed at least one
+    finding. This supersedes the pre-A2 1:1 P0-equals-all_findings bijection:
+    the invariant is now a bijection PER BAND instead of a single band.
     """
     g = _all_conditions_violating_graph()
     findings = reflection.all_findings(g)
     assert sorted({f.condition for f in findings}) == sorted(_PREDICATE_NAMES), (
         "the synthetic graph must fire every predicate in the registry"
     )
-    p0_pairs = [
-        (a.target, a.imperative) for a in diagnose(g) if a.priority == P_REFLECTION
-    ]
-    finding_pairs = [(f.target, f.imperative) for f in findings]
-    assert sorted(p0_pairs) == sorted(finding_pairs), (
-        "diagnose()'s P0 band must be exactly hotam_spec.reflection.all_findings"
+
+    non_advisory_findings = [f for f in findings if not f.advisory]
+    advisory_findings = [f for f in findings if f.advisory]
+    assert advisory_findings, (
+        "the synthetic graph must fire at least one advisory finding "
+        "(reflect_replaces_edge_migration / reflect_all_members_rejected)"
+    )
+    assert non_advisory_findings, (
+        "the synthetic graph must fire at least one non-advisory finding"
+    )
+
+    actions = diagnose(g)
+    p0_pairs = [(a.target, a.imperative) for a in actions if a.priority == P_REFLECTION]
+    p_advisory_pairs = [(a.target, a.imperative) for a in actions if a.priority == P_ADVISORY]
+
+    non_advisory_pairs = [(f.target, f.imperative) for f in non_advisory_findings]
+    advisory_pairs = [(f.target, f.imperative) for f in advisory_findings]
+
+    assert sorted(p0_pairs) == sorted(non_advisory_pairs), (
+        "diagnose()'s P0 band must be exactly the non-advisory subset of "
+        "hotam_spec.reflection.all_findings"
+    )
+    assert sorted(p_advisory_pairs) == sorted(advisory_pairs), (
+        "diagnose()'s P_ADVISORY band must be exactly the advisory subset of "
+        "hotam_spec.reflection.all_findings"
     )
 
 

@@ -74,6 +74,7 @@ P_CONFLICT_STALLED = 3
 P_OPEN_ITEM = 4
 P_LATENT_CONNECTOR = 5
 P_RUNTIME = 6  # runtime-fs bands (pending proposals, tickets, revisit, audit)
+P_ADVISORY = 7  # lowest — Finding.advisory=True: NEVER a gate (§Attention, A2)
 
 BAND_LABEL = {
     P_REFLECTION: "REFLECTION",
@@ -83,6 +84,7 @@ BAND_LABEL = {
     P_OPEN_ITEM: "OPEN_ITEM",
     P_LATENT_CONNECTOR: "LATENT_CONNECTOR",
     P_RUNTIME: "PENDING_PROPOSAL",
+    P_ADVISORY: "ADVISORY",
 }
 
 #: Canon: §Attention — UNCERTAIN-aging threshold (R-uncertain-assumptions-surface).
@@ -148,7 +150,7 @@ class AttentionSource:
 
 
 def diagnose_signals(g: TensionGraph) -> list[AttentionSignal]:
-    """Canon: §Attention — the deterministic graph-only diagnosis (P0..P5).
+    """Canon: §Attention — the deterministic graph-only diagnosis (P0..P5, P7).
 
     RULE: pure and graph-only. Signals are emitted band by band in stable
     graph/id order, then a final stable sort by (priority, target, message)
@@ -163,9 +165,14 @@ def diagnose_signals(g: TensionGraph) -> list[AttentionSignal]:
     """
     out: list[AttentionSignal] = []
 
-    # P0 REFLECTION — operator self-readiness (§Reflection).
+    # P0 REFLECTION — operator self-readiness (§Reflection). A Finding that
+    # declares itself advisory (Finding.advisory=True — NEVER a gate) is
+    # routed to the lowest-urgency P_ADVISORY band instead, so genuinely
+    # actionable self-diagnosis stays at P0 without advisory noise mixed in
+    # (§Attention, A2).
     for f in all_findings(g):
-        out.append(AttentionSignal("diagnose", P_REFLECTION, f.target, f.imperative))
+        priority = P_ADVISORY if f.advisory else P_REFLECTION
+        out.append(AttentionSignal("diagnose", priority, f.target, f.imperative))
 
     # P1 STRUCTURE — failing structural invariants.
     for v in all_violations(g):

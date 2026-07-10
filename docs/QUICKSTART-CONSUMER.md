@@ -109,10 +109,18 @@ the first thing that matches:
 3. **Markers in the current directory, searched upward** — this is the
    common case and needs **no configuration**. Starting at your current
    working directory and walking up through parent directories, the tool
-   looks for any of: a `domains/` folder, a `CLAUDE.md` file, a `.claude/`
-   folder, a `tickets/` folder, a `delegations/` folder, or a
-   `pyproject.toml` that contains a `[tool.hotam-spec]` table. The first
-   directory (bottom-up) that has any of these wins.
+   looks for two tiers of marker:
+   * **Reliable (any ONE is enough)** — a `domains/` folder, a `delegations/`
+     folder, or a `pyproject.toml` that contains a `[tool.hotam-spec]` table.
+     These are specific to a Hotam-Spec project, so one alone is trusted.
+   * **Secondary (need 2 or more together)** — a `CLAUDE.md` file, a
+     `.claude/` folder, or a `tickets/` folder. Any ONE of these alone is too
+     generic (lots of unrelated Claude-Code repos have a `CLAUDE.md`; many
+     projects have an unrelated `tickets/` folder), so a lone secondary
+     marker does **not** match — it takes two or more of them together
+     before the directory counts as your project root.
+
+   The first directory (bottom-up) that satisfies either tier wins.
 4. **A `.hotam-spec-project` marker file** — an empty file you can drop at
    your intended project root if none of the above markers apply yet (e.g.
    before you've run `hotam-create-domain` for the first time). Searched

@@ -4443,6 +4443,9 @@ _MEDIATION_LOOP_TEXT = """\
 ### Mediation loop (how ANY input is processed)
 
 Every input — idea, request, bug, hypothesis — six steps. Commands run from `spec/`.
+Read-only input (a question, an explanation, a status check) needs only ORIENT +
+a direct anchor-cited answer — steps 2-6 are for graph/code changes
+(R-agent-conduct-is-rules-not-tests: legalize actual practice, not aspirational rigor).
 
 1. **ORIENT** — reload pulse: top action · debt · context (LIVE-STATE below;
    re-injected each turn by emit_cipher hook). Full list:
