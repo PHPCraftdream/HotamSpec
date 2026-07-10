@@ -89,7 +89,11 @@ def produce(payload: dict) -> bool:
     return True
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point. ``argv`` defaults to ``sys.argv[1:]`` (argparse's own
+    default) but accepts an explicit list so `tools/context.py produce ...`
+    can forward argv without touching sys.argv (same convention as
+    tools/gate.py / tools/gate_status.py, forwarded by tools/land.py)."""
     parser = argparse.ArgumentParser(
         description="Write spec/.runtime/context.json from a hook JSON payload "
         "(stdin, or --stdin-file for testing/manual runs)."
@@ -99,7 +103,7 @@ def main() -> int:
         default=None,
         help="Read the payload from this file instead of stdin (manual/test use).",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     payload = _read_payload(args.stdin_file)
     produce(payload)

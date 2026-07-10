@@ -35,10 +35,11 @@ Usage (commands run from spec/):
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import time
 from pathlib import Path
+
+from _claude_settings import load_settings_json, write_settings_json
 
 # Make hotam_spec importable so this standalone tool can resolve the consumer
 # project root via the shared R1-R6 chain (R-project-root-not-hardcoded).
@@ -72,20 +73,18 @@ def _hook_command() -> str:
 
 
 def _load_settings() -> dict:
-    """Read the existing settings.local.json, or {} if absent/unparseable."""
-    if not _SETTINGS_LOCAL.exists():
-        return {}
-    try:
-        return json.loads(_SETTINGS_LOCAL.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
+    """Read the existing settings.local.json, or {} if absent/unparseable.
+
+    Delegates to _claude_settings.py (shared with setup_hooks.py, task #106 /
+    L1-#7) — only the target path (_SETTINGS_LOCAL, the personal file) is
+    specific to this tool."""
+    return load_settings_json(_SETTINGS_LOCAL)
 
 
 def _write_settings(data: dict) -> None:
-    _SETTINGS_LOCAL.parent.mkdir(parents=True, exist_ok=True)
-    _SETTINGS_LOCAL.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    """Write settings.local.json. No backup (a personal, disposable file) —
+    unlike setup_hooks.py's committed settings.json."""
+    write_settings_json(_SETTINGS_LOCAL, data, backup=False)
 
 
 def _has_marker(hook_group: dict) -> bool:
@@ -149,7 +148,11 @@ def status_report() -> str:
     return "\n".join(lines)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point. ``argv`` defaults to ``sys.argv[1:]`` (argparse's own
+    default) but accepts an explicit list so `tools/context.py install ...`
+    can forward argv without touching sys.argv (same convention as
+    tools/gate.py / tools/gate_status.py, forwarded by tools/land.py)."""
     parser = argparse.ArgumentParser(
         description=(
             "Install/remove the project-local PostToolUse+Stop hook that feeds "
@@ -166,7 +169,7 @@ def main() -> int:
     group.add_argument(
         "--off", action="store_true", help="Remove exactly the hook entries this tool added."
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.status:
         print(status_report())

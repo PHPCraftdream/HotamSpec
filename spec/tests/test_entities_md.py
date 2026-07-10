@@ -23,15 +23,32 @@ import gen_spec  # noqa: E402
 
 
 def test_entities_md_emitted_for_active_domain() -> None:
-    """domains/hotam-spec-self/docs/gen/ENTITIES.md exists with the empty-state placeholder."""
+    """domains/hotam-spec-self/docs/gen/ENTITIES.md: conditional materialization
+    (task #106 / L2-#6) — hotam-spec-self declares zero entity_types today, so
+    gen_spec.py does NOT write the file (a permanent empty-state placeholder
+    carries no information). build_entities_md() itself still renders the
+    opt-in placeholder text on request (test_entities_md_lists_types_when_present
+    and this assertion both cover the builder directly); only the unconditional
+    on-disk write changed."""
+    g = gen_spec.load_content_graph()
     path = gen_spec.ENTITIES_MD
+    if not gen_spec._entities_md_has_content(g):
+        assert not path.exists(), (
+            f"ENTITIES.md exists at {path} but entity_types is empty — "
+            "conditional materialization means gen_spec.py should not have "
+            "written it."
+        )
+        active = gen_spec._active_domain()
+        domain_name = active.name if active is not None else ""
+        text = gen_spec.build_entities_md(g, domain_name)
+        assert "§Entity aspect is opt-in" in text, (
+            "build_entities_md must still render the opt-in placeholder text "
+            "for an empty-entity_types domain (used on-demand, just not "
+            "written to disk unconditionally)"
+        )
+        return
     assert path.exists(), (
         f"ENTITIES.md not found at {path}: run `uv run python tools/gen_spec.py`."
-    )
-    text = path.read_text(encoding="utf-8")
-    assert "§Entity aspect is opt-in" in text, (
-        "ENTITIES.md for hotam-spec-self must contain the opt-in placeholder "
-        "(the domain has no entity_types)"
     )
 
 

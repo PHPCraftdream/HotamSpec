@@ -121,7 +121,7 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 - [claude_md_diff_watch](spec/docs/tools/claude_md_diff_watch.md) — auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.
 - [closure](spec/docs/tools/closure.md) — per-action verify: did the proposal remove its diagnosis?
 - [confront](spec/docs/tools/confront.md) — the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.
-- [context](spec/docs/tools/context.md) — the operator's working-context measurement (reader).
+- [context](spec/docs/tools/context.md) — the operator's working-context measurement (reader + CLI dispatcher).
 - [context_producer](spec/docs/tools/context_producer.md) — the producer half of the context cipher, writing spec/.runtime/context.json.
 - [create_agent](spec/docs/tools/create_agent.md) — scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.
 - [create_axis](spec/docs/tools/create_axis.md) — scaffolds a new Axis into the active domain's controlled-vocabulary
@@ -134,6 +134,7 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 - [invoke_agent](spec/docs/tools/invoke_agent.md) — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.
 - [land](spec/docs/tools/land.md) — single CLI entry point over gate.py/gate_status.py/closure.py.
 - [mark_revisit_evaluated](spec/docs/tools/mark_revisit_evaluated.md) — record that a DECIDED conflict's revisit_marker was evaluated.
+- [review](spec/docs/tools/review.md) — single CLI entry point over the low-traffic review tools.
 - [setup_context_hook](spec/docs/tools/setup_context_hook.md) — installs/removes the project-local hook that feeds tools/context_producer.py.
 - [setup_hooks](spec/docs/tools/setup_hooks.md) — generate the committable, portable project sensorium.
 - [spawn_agent](spec/docs/tools/spawn_agent.md) — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).
@@ -163,7 +164,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P4] OPEN_ITEM on `R-decided-by-verifiable-signature` — OPEN requirement 'R-decided-by-verifiable-signature' (owner 'framework-author') awaits a decision: should decided_by be bound to git commit authorship / a cryptographic signature as a verifiable, unforgeable signature, or stay a free string trusted via review?
 - **debt:** 200/228 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 4 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 293 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 27256 chars (headroom 122744)
+- **graph:** 293 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 27371 chars (headroom 122629)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

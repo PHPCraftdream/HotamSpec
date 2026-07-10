@@ -46,7 +46,7 @@ reader: (unresolved-reader)
 - `spec/tools/claude_md_diff_watch.py` — auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.  →  R-tool-claude-md-diff-watch
 - `spec/tools/closure.py` — per-action verify: did the proposal remove its diagnosis?  →  R-tool-closure
 - `spec/tools/confront.py` — the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.  →  R-tool-confront
-- `spec/tools/context.py` — the operator's working-context measurement (reader).  →  R-tool-context
+- `spec/tools/context.py` — the operator's working-context measurement (reader + CLI dispatcher).  →  R-tool-context
 - `spec/tools/context_producer.py` — the producer half of the context cipher, writing spec/.runtime/context.json.  →  R-tool-context-producer
 - `spec/tools/create_agent.py` — scaffolds spec/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope.py, tools/, agents/, and README.md.  →  R-tool-create-agent
 - `spec/tools/create_axis.py` — scaffolds a new Axis into the active domain's controlled-vocabulary  →  R-tool-create-axis
@@ -61,6 +61,7 @@ reader: (unresolved-reader)
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
 - `spec/tools/land.py` — single CLI entry point over gate.py/gate_status.py/closure.py.  →  R-tool-land
 - `spec/tools/mark_revisit_evaluated.py` — record that a DECIDED conflict's revisit_marker was evaluated.  →  R-tool-mark-revisit-evaluated
+- `spec/tools/review.py` — single CLI entry point over the low-traffic review tools.  →  R-tool-review
 - `spec/tools/setup_context_hook.py` — installs/removes the project-local hook that feeds tools/context_producer.py.  →  R-tool-setup-context-hook
 - `spec/tools/setup_hooks.py` — generate the committable, portable project sensorium.  →  R-tool-setup-hooks
 - `spec/tools/spawn_agent.py` — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).  →  R-tool-spawn-agent
@@ -82,7 +83,6 @@ reader: (unresolved-reader)
 **Generated docs** (`domains/hotam-dev/docs/gen/`)
 
 - `domains/hotam-dev/docs/gen/CONSTITUTION.md` — The operator's boot sequence
-- `domains/hotam-dev/docs/gen/DECISIONS.md` — Open methodology decisions
 - `domains/hotam-dev/docs/gen/ENTITIES.md` — Entities
 - `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
 - `domains/hotam-dev/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
@@ -92,3 +92,4 @@ reader: (unresolved-reader)
 - `domains/hotam-dev/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
 - `domains/hotam-dev/docs/gen/TENSIONS.md` — The tension map
 - `domains/hotam-dev/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-dev/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_

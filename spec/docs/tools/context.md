@@ -7,11 +7,11 @@
 
 ## Synopsis
 
-Canon: §Context — the operator's working-context measurement (reader).
+Canon: §Context — the operator's working-context measurement (reader + CLI dispatcher).
 
 ## Module docstring
 
-Canon: §Context — the operator's working-context measurement (reader).
+Canon: §Context — the operator's working-context measurement (reader + CLI dispatcher).
 
 The honesty organ: the operator's context % must be MEASURED, not guessed.
 This reader looks for a runtime stamp at spec/.runtime/context.json (written
@@ -35,3 +35,40 @@ Stop) do not receive context-window usage on stdin today; only the host
 statusline pipeline sees it, and the host is sovereign — the framework will
 NOT touch it (R-work-within-launch-dir). The requirement stays DRAFT until the
 host honestly delivers ctx_pct on the local stdin payload.
+
+CLI DISPATCHER (land.py precedent, task #106 / L2-#4): three tools orbit the
+same artifact (spec/.runtime/context.json) and the same question — "is the
+operator's context measured?": this reader (`context.py`), the stdin-payload
+writer (`tools/context_producer.py`), and the hook installer
+(`tools/setup_context_hook.py`). This module does NOT reimplement or move
+their logic — `python tools/context.py status|produce|install [--status|--off]`
+is a thin dispatcher that imports the sibling modules and forwards argv,
+exactly like `tools/land.py` does for gate.py/gate_status.py/closure.py.
+
+The three modules keep their own filenames and stay independently importable
+un-merged, for three concrete reasons:
+  - `.claude/settings.json`'s committed Stop hook (R-sensorium-committed)
+    invokes `spec/tools/context_producer.py` directly by path; changing that
+    filename means editing the committed sensorium, out of scope here.
+  - `enforced_by=("tools/context.py",)` on R-measure-context-size (DRAFT,
+    domains/hotam-spec-self/graph.py) names this reader module by path.
+  - tests/test_tool_context.py and tests/test_tool_setup_context_hook.py
+    `monkeypatch.setattr` module-level constants on each module by name
+    (`context._RUNTIME`, `producer._RUNTIME`, `sch._SETTINGS_LOCAL`) — merging
+    bodies would silently change what each patch target hits.
+
+Run (from spec/):
+  python tools/context.py status                    # render_line() (default if no subcommand)
+  python tools/context.py produce [--stdin-file P]   # context_producer.py forwarded
+  python tools/context.py install [--status] [--off] # setup_context_hook.py forwarded
+
+## CLI usage
+
+```
+usage: context.py [status|produce|install] [args]
+subcommands: status, produce, install
+
+  status                    print the context cipher line (default)
+  produce [--stdin-file P]  write context.json from a hook payload (context_producer.py)
+  install [--status|--off]  install/inspect/remove the local hook (setup_context_hook.py)
+```

@@ -95,8 +95,19 @@ def test_history_md_up_to_date() -> None:
 
 
 def test_decisions_md_up_to_date() -> None:
-    """docs/gen/DECISIONS.md matches regeneration from spec/content/."""
+    """docs/gen/DECISIONS.md matches regeneration from spec/content/ when the
+    M-registry is non-empty; conditional materialization (task #106 / L2-#6)
+    means gen_spec.py does not write the file at all when no Requirement
+    carries an m_tag — a currently-empty registry is the honest, un-drifted
+    steady state, verified without ever reading a placeholder file."""
     g = gen_spec.load_content_graph()
+    if not gen_spec._decisions_md_has_content(g):
+        assert not gen_spec.DECISIONS_MD.exists(), (
+            "DECISIONS.md exists but the M-registry is empty — conditional "
+            "materialization means gen_spec.py should not have written it; "
+            "run `uv run python tools/gen_spec.py` (or delete the stale file)."
+        )
+        return
     assert gen_spec.build_decisions(g) == _read_normalized(gen_spec.DECISIONS_MD), (
         "DECISIONS.md is stale: run `uv run python tools/gen_spec.py`."
     )
@@ -111,10 +122,22 @@ def test_constitution_md_up_to_date() -> None:
 
 
 def test_entities_md_up_to_date() -> None:
-    """docs/gen/ENTITIES.md matches regeneration from spec/content/."""
+    """docs/gen/ENTITIES.md matches regeneration from spec/content/ when the
+    domain declares at least one EntityType; conditional materialization
+    (task #106 / L2-#6) means gen_spec.py does not write the file at all when
+    entity_types is empty (hotam-spec-self today) — the §Entity aspect being
+    un-activated is the honest steady state, verified without ever reading a
+    placeholder file."""
     g = gen_spec.load_content_graph()
     active = gen_spec._active_domain()
     domain_name = active.name if active is not None else ""
+    if not gen_spec._entities_md_has_content(g):
+        assert not gen_spec.ENTITIES_MD.exists(), (
+            "ENTITIES.md exists but entity_types is empty — conditional "
+            "materialization means gen_spec.py should not have written it; "
+            "run `uv run python tools/gen_spec.py` (or delete the stale file)."
+        )
+        return
     assert gen_spec.build_entities_md(g, domain_name) == _read_normalized(
         gen_spec.ENTITIES_MD
     ), "ENTITIES.md is stale: run `uv run python tools/gen_spec.py`."

@@ -23,7 +23,6 @@ hotam-create-axis = "hotam_spec.cli.create_axis:main"
 hotam-create-entity-type = "hotam_spec.cli.create_entity_type:main"
 hotam-confront = "hotam_spec.cli.confront:main"
 hotam-audit-atomicity = "hotam_spec.cli.audit_atomicity:main"
-hotam-audit-tensions = "hotam_spec.cli.audit_tensions:main"
 hotam-emit-cipher = "hotam_spec.cli.emit_cipher:main"
 hotam-attention = "hotam_spec.cli.attention:main"
 # hotam-gate / hotam-gate-status: legacy standalone entries removed (task
@@ -39,12 +38,24 @@ hotam-delegation = "hotam_spec.cli.delegation:main"   # one CLI with subcommands
 hotam-spawn-agent = "hotam_spec.cli.spawn_agent:main"
 hotam-invoke-agent = "hotam_spec.cli.invoke_agent:main"
 hotam-setup-hooks = "hotam_spec.cli.setup_hooks:main"
-hotam-setup-context-hook = "hotam_spec.cli.setup_context_hook:main"
-hotam-mark-revisit = "hotam_spec.cli.mark_revisit:main"
-hotam-spawn-log-status = "hotam_spec.cli.spawn_log_isolation_status:main"
 hotam-update-baseline = "hotam_spec.cli.update_baseline:main"
 hotam-claude-md-diff = "hotam_spec.cli.claude_md_diff_watch:main"
 hotam-attention-hook = "hotam_spec.cli.attention_hook:main"
+# hotam-context / hotam-review: task #106 dispatchers, land.py precedent
+# (thin CLI over unmerged sibling tool modules -- see tools/context.py and
+# tools/review.py module docstrings for the full rationale). UNLIKE
+# hotam-gate/hotam-gate-status above, the OLD per-tool entry points below are
+# kept registered as aliases rather than removed: this wave's steward
+# guidance was "decide explicitly, prefer safety" -- these three commands
+# were low-traffic but had zero evidence ruling out an existing external
+# caller, so both surfaces (old direct command + new dispatcher subcommand)
+# resolve to the exact same tools/*.py main(), and either can be used.
+hotam-context = "hotam_spec.cli.context:main"                    # dispatcher: status (default) / produce / install
+hotam-setup-context-hook = "hotam_spec.cli.setup_context_hook:main"  # alias: same as `hotam-context install`
+hotam-review = "hotam_spec.cli.review:main"                      # dispatcher: tensions / revisit / spawn-isolation
+hotam-audit-tensions = "hotam_spec.cli.audit_tensions:main"          # alias: same as `hotam-review tensions`
+hotam-mark-revisit = "hotam_spec.cli.mark_revisit:main"              # alias: same as `hotam-review revisit`
+hotam-spawn-log-status = "hotam_spec.cli.spawn_log_isolation_status:main"  # alias: same as `hotam-review spawn-isolation`
 
 [build-system]
 requires = ["uv_build>=0.9.24,<0.10.0"]

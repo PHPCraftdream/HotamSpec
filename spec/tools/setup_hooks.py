@@ -24,10 +24,10 @@ Usage (from spec/):
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
+
+from _claude_settings import load_settings_json, write_settings_json
 
 # Make hotam_spec importable so this standalone tool can resolve the consumer
 # project root via the shared R1-R6 chain (R-project-root-not-hardcoded).
@@ -141,11 +141,8 @@ def redundant_local_commands() -> list[str]:
     tool never edits settings.local.json (it is the user's private file); it only
     reports.
     """
-    if not _SETTINGS_LOCAL.exists():
-        return []
-    try:
-        local = json.loads(_SETTINGS_LOCAL.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    local = load_settings_json(_SETTINGS_LOCAL)
+    if not local:
         return []
 
     committed_tools = {
@@ -168,26 +165,15 @@ def _tool_name(command: str) -> str | None:
     return m.group(1) if m else None
 
 
-def _backup_path(target: Path) -> Path:
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return target.with_name(f"{target.name}.bak-{stamp}")
-
-
 def _write(settings: dict) -> Path | None:
     """Write the committed settings.json (backing up any existing file first).
-    Returns the backup path if one was made, else None."""
-    _PROJECT_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-    backup: Path | None = None
-    if _PROJECT_SETTINGS.exists():
-        backup = _backup_path(_PROJECT_SETTINGS)
-        backup.write_text(
-            _PROJECT_SETTINGS.read_text(encoding="utf-8"), encoding="utf-8"
-        )
-    _PROJECT_SETTINGS.write_text(
-        json.dumps(settings, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
-    return backup
+    Returns the backup path if one was made, else None.
+
+    Delegates the actual read/write bytes to _claude_settings.py (shared with
+    setup_context_hook.py, task #106 / L1-#7) — only the target path
+    (_PROJECT_SETTINGS) and the backup=True policy (this is a committed
+    project asset, worth a recovery copy) are specific to this tool."""
+    return write_settings_json(_PROJECT_SETTINGS, settings, backup=True)
 
 
 def _plan_text(settings: dict) -> str:

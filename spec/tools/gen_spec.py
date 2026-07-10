@@ -1028,6 +1028,19 @@ def _render_entity_instances_table(g: TensionGraph, slug: str) -> list[str]:
     return lines
 
 
+def _entities_md_has_content(g: TensionGraph) -> bool:
+    """Canon: §Entity — True iff ENTITIES.md would render real content (task #106 / L2-#6).
+
+    ENTITIES.md is written ONLY when the domain declares at least one
+    EntityType — an opt-in aspect (§Entity). A domain with zero entity_types
+    would otherwise get a permanent 368-byte placeholder file that never
+    carries any information (build_entities_md's own empty-state branch).
+    Callers (_process_domains / main) skip the write entirely when this is
+    False, rather than materializing an always-empty projection.
+    """
+    return bool(g.entity_types)
+
+
 def build_entities_md(g: TensionGraph, domain_name: str = "") -> str:
     """Build ENTITIES.md (entity registry) as an LF string.
 
@@ -1318,6 +1331,17 @@ def build_history(g: TensionGraph) -> str:
 # ---------------------------------------------------------------------------
 # DECISIONS.md — generated M-registry (open decisions mirrored from graph)
 # ---------------------------------------------------------------------------
+
+
+def _decisions_md_has_content(g: TensionGraph) -> bool:
+    """Canon: §Requirement — True iff DECISIONS.md would render a real M-registry row (task #106 / L2-#6).
+
+    DECISIONS.md is written ONLY when at least one Requirement carries a
+    non-empty `m_tag` — otherwise it is a permanent "no M-tag yet" placeholder
+    that never carries information. Callers (_process_domains / main) skip
+    the write entirely when this is False.
+    """
+    return any(r.m_tag for r in g.requirements)
 
 
 def _extract_open_question(status: str) -> str:
@@ -3068,6 +3092,18 @@ def _scan_repo_map(
             lines.append(f"- `{_gen_rel}/{p.name}` — {title}")
     else:
         lines.append("- _(no generated docs yet)_")
+    # Conditional materialization (task #106 / L2-#6): DECISIONS.md /
+    # ENTITIES.md are only written when their registry is non-empty (see
+    # _decisions_md_has_content / _entities_md_has_content). When the
+    # registry is empty the file itself is absent from _gen — but its
+    # emptiness is still surfaced here as an explicit one-line note, so the
+    # reader learns "registry checked, currently empty" rather than seeing
+    # no trace of the M-registry / entity registry at all.
+    if graph is not None:
+        if not _decisions_md_has_content(graph) and not (_gen / "DECISIONS.md").exists():
+            lines.append(f"- `{_gen_rel}/DECISIONS.md` — _(not written: M-registry empty)_")
+        if not _entities_md_has_content(graph) and not (_gen / "ENTITIES.md").exists():
+            lines.append(f"- `{_gen_rel}/ENTITIES.md` — _(not written: no entity_types declared)_")
     lines.append("")
 
     return "\n".join(lines).rstrip()
@@ -4346,9 +4382,7 @@ def _process_domains(g: TensionGraph) -> None:
                 gen_dir / "UNENFORCED.md": build_unenforced(dg),
                 gen_dir / "GLOSSARY.md": build_glossary(dg),
                 gen_dir / "HISTORY.md": build_history(dg),
-                gen_dir / "DECISIONS.md": build_decisions(dg),
                 gen_dir / "CONSTITUTION.md": build_constitution(dg),
-                gen_dir / "ENTITIES.md": build_entities_md(dg, domain_dir.name),
                 gen_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(
                     dg, domain_name=domain_dir.name
                 ),
@@ -4357,6 +4391,19 @@ def _process_domains(g: TensionGraph) -> None:
                     dg, content_dir=domain_dir, gen_dir=gen_dir
                 ),
             }
+            # Conditional materialization (task #106 / L2-#6): DECISIONS.md /
+            # ENTITIES.md are projections of possibly-empty registries (open
+            # M-tagged requirements / declared EntityTypes). Writing them
+            # unconditionally produces a permanent placeholder file that never
+            # carries information once the registry is genuinely empty; write
+            # them only when there is real content to project. An existing
+            # file from before this aspect activated is left untouched here
+            # (no auto-delete on every run — only when the aspect activates
+            # does the file appear).
+            if _decisions_md_has_content(dg):
+                domain_targets[gen_dir / "DECISIONS.md"] = build_decisions(dg)
+            if _entities_md_has_content(dg):
+                domain_targets[gen_dir / "ENTITIES.md"] = build_entities_md(dg, domain_dir.name)
         for path, text in domain_targets.items():
             _write(path, text)
             print(f"written (domain {domain_dir.name}): {path}")
@@ -4917,12 +4964,17 @@ def main(argv: list[str] | None = None) -> None:
             out_dir / "UNENFORCED.md": build_unenforced(g),
             out_dir / "GLOSSARY.md": build_glossary(g),
             out_dir / "HISTORY.md": build_history(g),
-            out_dir / "DECISIONS.md": build_decisions(g),
             out_dir / "CONSTITUTION.md": build_constitution(g),
-            out_dir / "ENTITIES.md": build_entities_md(g, _domain_name_for_entities),
             out_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(g),
             out_dir / "REPO-MAP.md": build_repo_map_md(g),
         }
+        # Conditional materialization (task #106 / L2-#6) — see the matching
+        # comment in _process_domains for the full rationale: DECISIONS.md /
+        # ENTITIES.md are written only when their registry is non-empty.
+        if _decisions_md_has_content(g):
+            targets[out_dir / "DECISIONS.md"] = build_decisions(g)
+        if _entities_md_has_content(g):
+            targets[out_dir / "ENTITIES.md"] = build_entities_md(g, _domain_name_for_entities)
         for path, text in targets.items():
             _write(path, text)
             print(f"written: {path}")
