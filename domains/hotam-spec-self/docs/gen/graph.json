@@ -89,6 +89,12 @@
       "owner": "framework-author",
       "statement": "The Hotam-Spec ontology (Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process, plus the check_* invariant layer and the enforcement gradient PROSE->STRUCTURAL->ENFORCED) transfers to a real external, non-meta business domain (a first-time consumer populating an empty graph.py under domains/<name>/ for their own product/process) without needing to reshape the ontology itself.",
       "status": "UNCERTAIN"
+    },
+    {
+      "id": "A-core-periphery-layering-holds",
+      "owner": "framework-author",
+      "statement": "The framework body already splits, purely in code, into a core stratum (the typed node classes plus the graph/proposal/invariant layers built directly on them, including scope_projection which is consumed inside a core check) and a periphery stratum built OVER a fully-formed graph (attention, reflection, invariants_table_engine); the dependency arrow runs one way only -- periphery imports core, core never imports periphery.",
+      "status": "HOLDS"
     }
   ],
   "conflicts": [
@@ -188,6 +194,7 @@
     "A-compaction-loses-working",
     "A-conflict-is-a-node-not-an-edge",
     "A-content-free-honest",
+    "A-core-periphery-layering-holds",
     "A-finite-context-operators",
     "A-framework-shared-infra-no-owner",
     "A-graph-fits-memory",
@@ -271,6 +278,7 @@
     "R-context-budget-rule",
     "R-context-hook-piggybacks-cah-stamp",
     "R-core-imports-stdlib-or-hotam-spec-only",
+    "R-core-periphery-import-ratchet",
     "R-critical-core-methodology",
     "R-critical-core-per-domain",
     "R-critical-core-scope",
@@ -5728,6 +5736,25 @@
       "source_refs": [],
       "status": "SETTLED",
       "why": "External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.py -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. history is DERIVED by the mechanical writer from the old->new field diff on each UPDATE, mirroring the append-only ticket History form (tools/_ticket_store.py) so the two change-trails do not diverge into incompatible styles. The check is deliberately SYNTACTIC ONLY (non-empty fields + monotonic stamps): measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). This atom (Etap O, #117) lands only the ontology + writer + syntactic enforcer; the created_at/settled_at backfill of ~270 existing nodes is a separate act (Etap P, #118)."
+    },
+    {
+      "assumptions": [
+        "A-core-periphery-layering-holds"
+      ],
+      "claim": "A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only.",
+      "enforced_by": [
+        "test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [],
+      "id": "R-core-periphery-import-ratchet",
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "why": "Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). The minimal-core+plugins re-scope (D1) was deferred a third time in this same wave (Этап Q) with an explicit revisit trigger -- the first real external plugin/extension OR the first consumer request for a subset of functionality -- because the core/periphery stratification already exists cleanly IN CODE and there is nothing to physically split today. The only real cost of deferral was an unguaranteed future layering: a later commit could silently pull, e.g., attention.py into graph.py and quietly raise the cost of the eventual extraction. This cheap syntactic ratchet removes exactly that risk. Mechanically checkable via a static AST import scan (mirroring test_backend_neutral_scope.py's pattern), so promoted DRAFT->SETTLED with its real enforcer landing in the same wave (test_core_periphery_import_direction.py: a positive scan proving today's core is clean, plus a negative control proving the scanner is not vacuous), not left as claimed-but-unguaranteed debt."
     }
   ],
   "stakeholders": [

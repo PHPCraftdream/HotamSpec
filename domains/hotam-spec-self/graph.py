@@ -269,6 +269,13 @@ def build_graph() -> TensionGraph:
             owner="framework-author",
             created_at="2026-07-10",
         ),
+        Assumption(
+            id="A-core-periphery-layering-holds",
+            statement="The framework body already splits, purely in code, into a core stratum (the typed node classes plus the graph/proposal/invariant layers built directly on them, including scope_projection which is consumed inside a core check) and a periphery stratum built OVER a fully-formed graph (attention, reflection, invariants_table_engine); the dependency arrow runs one way only -- periphery imports core, core never imports periphery.",
+            status=HOLDS,
+            owner="framework-author",
+            created_at="2026-07-10",
+        ),
     )
 
     requirements = (
@@ -4499,6 +4506,18 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack", "A-most-knowledge-crystallizable",),
             enforcement=ENFORCED,
             enforced_by=("check_requirement_history_wellformed",),
+            created_at="2026-07-10",
+            settled_at="2026-07-10",
+        ),
+        Requirement(
+            id="R-core-periphery-import-ratchet",
+            claim=("A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only."),
+            owner="framework-author",
+            status="SETTLED",
+            why=("Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). The minimal-core+plugins re-scope (D1) was deferred a third time in this same wave (Этап Q) with an explicit revisit trigger -- the first real external plugin/extension OR the first consumer request for a subset of functionality -- because the core/periphery stratification already exists cleanly IN CODE and there is nothing to physically split today. The only real cost of deferral was an unguaranteed future layering: a later commit could silently pull, e.g., attention.py into graph.py and quietly raise the cost of the eventual extraction. This cheap syntactic ratchet removes exactly that risk. Mechanically checkable via a static AST import scan (mirroring test_backend_neutral_scope.py's pattern), so promoted DRAFT->SETTLED with its real enforcer landing in the same wave (test_core_periphery_import_direction.py: a positive scan proving today's core is clean, plus a negative control proving the scanner is not vacuous), not left as claimed-but-unguaranteed debt."),
+            assumptions=("A-core-periphery-layering-holds",),
+            enforcement=ENFORCED,
+            enforced_by=("test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery",),
             created_at="2026-07-10",
             settled_at="2026-07-10",
         ),
