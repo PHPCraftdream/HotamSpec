@@ -3,11 +3,11 @@
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-green.svg)](https://www.python.org)
 
-> Executable methodology for contradictory business requirements, modeled as a tension graph.
+> Executable memory and discipline for a human + LLM-agent fleet -- understand, evolve, protect, and support a shared model over time.
 
 ## What is Hotam-Spec?
 
-Hotam-Spec is a framework for managing the lifecycle of **contradictory business requirements**. Instead of pretending conflicts don't exist, it models them as first-class **tension nodes** in a graph -- visible, stewarded, and tracked through resolution.
+Hotam-Spec is a framework for a human team (and any LLM agents working alongside it) to hold a shared, disciplined understanding of a system as it grows -- what's true, who owns it, what's still open. One of its properties, not its whole purpose, is handling **contradictory requirements** explicitly: instead of pretending conflicts don't exist, it models them as first-class **tension nodes** in a graph -- visible, stewarded, and tracked through resolution.
 
 ### Glossary (six terms to get started)
 
@@ -25,10 +25,10 @@ using Hotam-Spec as a CLI discipline for your team.
 
 ### Key ideas
 
-- **Conflict is a connector node**, not an edge -- it carries axis, context, steward, and lifecycle
-- **Requirements contradict -- and that's expected** -- the methodology surfaces them, never hides them
-- **A human always decides** -- every conflict resolution stays with a named steward; an AI operator, if you use one, may only present options
+- **A typed, owned, atomic registry** -- every claim is a Requirement with an owner, a lifecycle, and an anchor; nothing important stays invisible or unattributed
 - **Docs-as-code with structural anti-drift** -- generated docs must match the model byte-for-byte
+- **A human always decides** -- every conflict resolution stays with a named steward; an AI operator, if you use one, may only present options
+- **Contradiction is a property, not an afterthought** -- when requirements genuinely conflict, that's expected; **Conflict is a connector node**, not an edge -- it carries axis, context, steward, and lifecycle, and is never silently hidden
 
 ### The tension graph
 

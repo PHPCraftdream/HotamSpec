@@ -1,7 +1,8 @@
 # hotam_spec (spec)
 
-Executable model for the **Hotam-Spec** methodology: managing the lifecycle of
-contradictory business requirements as a **tension graph**. The store IS this
+Executable model for the **Hotam-Spec** methodology: memory and discipline for
+a human + LLM-agent fleet, with contradictory requirements held explicitly as
+a **tension graph**. The store IS this
 Python code — frozen dataclasses in `src/hotam_spec/`, structural invariants as
 `check_*` functions, the human layer generated into `../docs/gen/`.
 

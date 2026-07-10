@@ -1,6 +1,6 @@
 # CLAUDE.md — Hotam-Spec framework
 
-**Hotam-Spec** — executable methodology for contradictory business requirements, modeled as a tension graph. License: MIT OR Apache-2.0.
+**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.
 
 Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/docs/thinking/`.
 
@@ -163,7 +163,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - **debt:** 198/228 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 6 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26917 chars (headroom 123083)
+- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 27071 chars (headroom 122929)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

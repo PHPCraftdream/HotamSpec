@@ -1,6 +1,6 @@
 # CLAUDE.md — Hotam-Spec framework
 
-**Hotam-Spec** — executable methodology for contradictory business requirements, modeled as a tension graph. License: MIT OR Apache-2.0.
+**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.
 
 Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/docs/thinking/`.
 

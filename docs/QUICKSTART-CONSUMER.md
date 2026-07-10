@@ -1,9 +1,10 @@
 # Quickstart for consumers
 
-This is the path for a team that wants to **use** Hotam-Spec to track its own
-contradictory requirements — as a `pip`/`git` dependency, in your own repo, not
-by cloning the framework repo and working inside `spec/`. If you *are* working
-inside a clone of the Hotam-Spec repo itself (self-hosting mode), see the
+This is the path for a team that wants to **use** Hotam-Spec to hold a shared,
+disciplined understanding of its own system — requirements, owners, open
+tensions — as a `pip`/`git` dependency, in your own repo, not by cloning the
+framework repo and working inside `spec/`. If you *are* working inside a clone
+of the Hotam-Spec repo itself (self-hosting mode), see the
 [root README](../README.md) instead.
 
 Everything below is CLI-only. No AI agent is required to follow this guide —
