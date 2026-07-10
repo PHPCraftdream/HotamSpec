@@ -5534,14 +5534,20 @@
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-10",
+          "decided_by": "",
+          "summary": "why: Steward verdict 2026-07-05, verbatim: '…→Names the legitimate resolution surface…; enforceability: ENFORCEABLE→INHERENTLY_PROSE"
+        }
+      ],
       "id": "R-conflict-resolved-in-members-or-mediator",
       "last_reviewed_at": "",
       "owner": "framework-author",
       "review_after": "",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-05, verbatim: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности, которая помогает им решить конфликт' + clarification 'это даже не либо, а может быть дополнением' -- the two paths are not exclusive; a conflict may be resolved by amending its members, by introducing a mediating entity (a Variant, a derived Requirement, or a new mediating node), or by BOTH together. The one forbidden path is resolution OUTSIDE the graph. Trigger: six-lens review (docs/reviews/, 2026-07-05) found the framework's own largest recent work -- the T2 223s->56s performance campaign -- materially relieved the tension of the single open conflict C-ec1ec532 (speed-vs-verification) in CODE, while the conflict still hangs DETECTED in the graph: a resolution taken outside the graph, which this rule names illegitimate. Names the legitimate resolution surface so 'solved in the chat / in the code, conflict left dangling' becomes a visible violation of the connector-node discipline (R-conflict-is-connector-node)."
+      "why": "Names the legitimate resolution surface (amend members, add a mediating entity, or both) so 'solved in the chat / in the code, conflict left dangling' is a visible violation of the connector-node discipline (R-conflict-is-connector-node). Steward verdict 2026-07-05: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности' -- the paths are not exclusive. Labeled INHERENTLY_PROSE 2026-07-10 (Этап T): the claim's essence -- that a resolution happened INSIDE the graph and not somewhere in the real world -- requires comparing the graph against the world, which no check_* can do; any 'enforcer' would only measure form (the R-boot-cite-measured form-metric theatre, REJECTED). The honestly-checkable remainder is already covered by check_decided_has_rationale_or_derived + the signoff checks (a DECIDED conflict must carry rationale-or-derived and a human signoff). This is permanent discipline, not closeable debt."
     },
     {
       "assumptions": [],
