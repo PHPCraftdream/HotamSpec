@@ -3998,6 +3998,16 @@ def build_graph() -> TensionGraph:
             created_at="2026-07-09",
             settled_at="2026-07-09",
         ),
+        Requirement(
+            id="R-per-node-json-store",
+            claim=("Each graph node (Requirement/Conflict/Assumption/...) shall be persisted in its own separate JSON file, with a schema validating each file on load, instead of living in the single graph.py."),
+            owner="framework-author",
+            status="REJECTED",
+            why=("REJECTED — REPLACES by storage = the Python code itself. (a) Technically this is NOT R-rdf-store: no RDF triples, no SHACL shapes, no SPARQL — just one plain JSON file per node plus a load-time schema check. (b) It is rejected anyway because it violates the same underlying principle the RDF proposal violated: storage = the Python code itself. Per-node JSON would introduce a parallel source of truth (files that can drift from graph.py's build_graph()) and a schema layer duplicating the frozen-dataclass constructors — the exact anti-pattern criticized in SHACL (validation that re-states the check_* invariants / the constructors). The generated docs/gen/graph.json snapshot already gives any reader a machine-readable export, read-only, with the Python code remaining the single writer. (c) REVISIT WHEN either of two triggers appears: a SECOND legitimate writer of the graph emerges (something other than apply_proposal.py editing graph.py), OR a real non-Python consumer appears for which the generated export is insufficient and needs the store itself to be language-neutral. — (was: External product review proposed per-node JSON files as the primary store.)"),
+            enforcement=PROSE,
+            created_at="2026-07-10",
+            settled_at="2026-07-10",
+        ),
     )
 
     # --- Live conflict NODES ----------------------------------------------

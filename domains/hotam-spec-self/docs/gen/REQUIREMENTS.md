@@ -281,6 +281,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-delegation-is-a-file` | SETTLED | `framework-author` | A-finite-context-operators | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off. |
 | `R-signoff-preserved-in-substrate` | SETTLED | `framework-author` | A-stakeholders-care, A-bootstrap-self-applies | A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 | `R-project-root-not-hardcoded` | SETTLED | `framework-author` | — | HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files. |
+| `R-per-node-json-store` | REJECTED | `framework-author` | — | Each graph node (Requirement/Conflict/Assumption/...) shall be persisted in its own separate JSON file, with a schema validating each file on load, instead of living in the single graph.py. |
 
 ## Stakeholders
 

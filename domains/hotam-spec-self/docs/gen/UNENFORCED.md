@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 200 / SETTLED 229; closeable debt 4; inherent discipline 25; DRAFT 2; OPEN 0; REJECTED 39.**
+**Burn-down: SETTLED-ENFORCED 200 / SETTLED 229; closeable debt 4; inherent discipline 25; DRAFT 2; OPEN 0; REJECTED 40.**
 
 ---
 

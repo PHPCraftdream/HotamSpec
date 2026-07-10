@@ -1340,6 +1340,79 @@ def build_history(g: TensionGraph) -> str:
 
 
 # ---------------------------------------------------------------------------
+# graph.json — machine-readable, READ-ONLY snapshot of the graph nodes
+# ---------------------------------------------------------------------------
+
+
+def build_graph_json(g: TensionGraph) -> str:
+    """Build graph.json — a machine-readable, read-only snapshot of the graph nodes.
+
+    Canon: §Graph — the single source of truth remains the active domain's
+    `graph.py:build_graph()` (storage = the Python code itself,
+    R-per-node-json-store REJECTED). graph.json is a GENERATED export, never a
+    writer: it lets a non-Python reader consume the node roster without parsing
+    Python, while the frozen dataclasses stay the one place a node is authored.
+
+    Exports the four core node families (requirements / conflicts / assumptions /
+    stakeholders) plus a flat `node_ids` list (every node id, sorted). Only
+    stable, primitive fields are emitted so the JSON never leaks dataclass
+    internals. Deterministic: keys are sorted, LF newline, utf-8, no timestamps.
+    """
+    payload = {
+        "generated_from": "domains/<active>/graph.py:build_graph()",
+        "note": (
+            "READ-ONLY generated snapshot. Source of truth is graph.py; edit "
+            "the graph only via tools/apply_proposal.py (R-no-hand-edit-graph, "
+            "R-per-node-json-store REJECTED)."
+        ),
+        "requirements": [
+            {
+                "id": r.id,
+                "claim": r.claim,
+                "owner": r.owner,
+                "status": r.status,
+                "enforcement": r.enforcement,
+                "enforced_by": list(r.enforced_by),
+                "assumptions": list(r.assumptions),
+                "why": r.why,
+            }
+            for r in g.requirements
+        ],
+        "conflicts": [
+            {
+                "id": c.id,
+                "axis": c.axis,
+                "context": c.context,
+                "members": list(c.members),
+                "steward": c.steward,
+                "lifecycle": c.lifecycle,
+            }
+            for c in g.conflicts
+        ],
+        "assumptions": [
+            {
+                "id": a.id,
+                "statement": a.statement,
+                "status": a.status,
+                "owner": a.owner,
+            }
+            for a in g.assumptions
+        ],
+        "stakeholders": [
+            {"id": s.id, "name": s.name, "domain": s.domain}
+            for s in g.stakeholders
+        ],
+    }
+    payload["node_ids"] = sorted(
+        [r.id for r in g.requirements]
+        + [c.id for c in g.conflicts]
+        + [a.id for a in g.assumptions]
+        + [s.id for s in g.stakeholders]
+    )
+    return json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+
+# ---------------------------------------------------------------------------
 # DECISIONS.md — generated M-registry (open decisions mirrored from graph)
 # ---------------------------------------------------------------------------
 
@@ -4418,6 +4491,7 @@ def _process_domains(g: TensionGraph) -> None:
                 / "REPO-MAP.md": build_repo_map_md(
                     dg, content_dir=domain_dir, gen_dir=gen_dir
                 ),
+                gen_dir / "graph.json": build_graph_json(dg),
             }
             # Conditional materialization (task #106 / L2-#6): DECISIONS.md /
             # ENTITIES.md are projections of possibly-empty registries (open
@@ -4995,6 +5069,7 @@ def main(argv: list[str] | None = None) -> None:
             out_dir / "CONSTITUTION.md": build_constitution(g),
             out_dir / "FRAMEWORK-INVARIANTS.md": build_framework_invariants(g),
             out_dir / "REPO-MAP.md": build_repo_map_md(g),
+            out_dir / "graph.json": build_graph_json(g),
         }
         # Conditional materialization (task #106 / L2-#6) — see the matching
         # comment in _process_domains for the full rationale: DECISIONS.md /
