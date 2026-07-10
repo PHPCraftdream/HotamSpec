@@ -38,18 +38,8 @@ if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
 from hotam_spec import attention as _attention  # noqa: E402
-from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
-
-
-def _load_graph(*, demo: bool) -> TensionGraph:
-    if demo:
-        tests_dir = str(Path(__file__).resolve().parents[1] / "tests")
-        if tests_dir not in sys.path:
-            sys.path.insert(0, tests_dir)
-        from fixtures.seed import seed_graph  # noqa: PLC0415
-
-        return seed_graph()
-    return load_content_graph()
+from hotam_spec.graph import TensionGraph  # noqa: E402
+from _graph_loader import load_graph as _load_graph  # noqa: E402
 
 
 def collect_signals(g: TensionGraph, *, graph_only: bool) -> list:

@@ -800,27 +800,40 @@ def _validate_entity_type(raw: dict) -> ProposedEntityType:
 # ---------------------------------------------------------------------------
 
 
-def _find_requirement_call(tree: ast.AST, req_id: str) -> ast.Call | None:
-    """Canon: §Proposal — locate the Requirement(...) AST call whose id matches.
+def _find_call_by_id(tree: ast.AST, constructor_name: str, id_value: str) -> ast.Call | None:
+    """Canon: §Proposal — locate the <constructor_name>(...) AST call whose id= matches.
 
-    Walks the AST looking for ast.Call nodes whose function is 'Requirement'. For
-    each, extracts the 'id' keyword arg (string literal only). Returns the matching
-    node or None.
+    Walks the AST looking for ast.Call nodes whose function is
+    `constructor_name`. For each, extracts the 'id' keyword arg (string
+    literal only). Returns the matching node or None.
+
+    Shared shape behind _find_requirement_call / _find_operator_call /
+    _find_assumption_call (precedent: _find_module_tuple_end) — every
+    "locate the Foo(...) call whose id kwarg equals X" lookup is the same
+    walk; only the target constructor name differs per proposal kind.
     """
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        if isinstance(func, ast.Name) and func.id != "Requirement":
+        if isinstance(func, ast.Name) and func.id != constructor_name:
             continue
-        if isinstance(func, ast.Attribute) and func.attr != "Requirement":
+        if isinstance(func, ast.Attribute) and func.attr != constructor_name:
             continue
-        # Extract id= kwarg
         for kw in node.keywords:
             if kw.arg == "id" and isinstance(kw.value, ast.Constant):
-                if kw.value.value == req_id:
+                if kw.value.value == id_value:
                     return node  # type: ignore[return-value]
     return None
+
+
+def _find_requirement_call(tree: ast.AST, req_id: str) -> ast.Call | None:
+    """Canon: §Proposal — locate the Requirement(...) AST call whose id matches.
+
+    Thin call-site-symmetric wrapper (delegates to the shared
+    _find_call_by_id, see above).
+    """
+    return _find_call_by_id(tree, "Requirement", req_id)
 
 
 def _extract_requirement_relations(call: ast.Call) -> tuple[tuple[str, str], ...]:
@@ -865,16 +878,13 @@ def _extract_requirement_relations(call: ast.Call) -> tuple[tuple[str, str], ...
     return ()
 
 
-def _find_requirements_tuple_end(tree: ast.AST, source_lines: list[str]) -> int | None:
+def _find_requirements_tuple_end(tree: ast.AST) -> int | None:
     """Find the line number (1-indexed) of the closing ')' of `requirements = (...)`.
 
     Looks for an assignment `requirements = (...)` inside `build_graph()` and
-    returns the end_lineno of the Tuple node (the line with the closing paren).
-    `source_lines` is accepted for backward-compat call-site symmetry with
-    sibling finders but is not needed by the AST-only lookup itself
+    returns the end_lineno of the Tuple node (the line with the closing paren)
     (delegates to the shared _find_module_tuple_end, see below).
     """
-    del source_lines
     return _find_module_tuple_end(tree, "requirements")
 
 
@@ -975,23 +985,10 @@ def _find_conflict_call(tree: ast.AST, conflict_id: str) -> ast.Call | None:
 def _find_operator_call(tree: ast.AST, operator_id: str) -> ast.Call | None:
     """Canon: §Proposal — locate the Operator(...) AST call whose id matches.
 
-    Walks the AST looking for ast.Call nodes whose function is 'Operator'. For
-    each, extracts the 'id' keyword arg (string literal only). Returns the
-    matching node or None.
+    Thin call-site-symmetric wrapper (delegates to the shared
+    _find_call_by_id, see above).
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Name) and func.id != "Operator":
-            continue
-        if isinstance(func, ast.Attribute) and func.attr != "Operator":
-            continue
-        for kw in node.keywords:
-            if kw.arg == "id" and isinstance(kw.value, ast.Constant):
-                if kw.value.value == operator_id:
-                    return node  # type: ignore[return-value]
-    return None
+    return _find_call_by_id(tree, "Operator", operator_id)
 
 
 # ---------------------------------------------------------------------------
@@ -1556,7 +1553,7 @@ def _apply_requirement_to_source(
     # ADD new requirement at end of requirements tuple
     lines = source_text.splitlines(keepends=True)
     tree = ast.parse(source_text)
-    tuple_end = _find_requirements_tuple_end(tree, lines)
+    tuple_end = _find_requirements_tuple_end(tree)
     if tuple_end is None:
         raise RuntimeError(
             "Cannot find `requirements = (...)` tuple in build_graph(). "
@@ -2444,22 +2441,10 @@ def _apply_assumption_to_source(source_text: str, proposal: ProposedAssumption) 
 def _find_assumption_call(tree: ast.AST, assumption_id: str) -> ast.Call | None:
     """Canon: §Proposal — locate the Assumption(...) AST call whose id matches.
 
-    Mirrors _find_requirement_call: walks the AST for ast.Call nodes named
-    'Assumption', matches on the id= string-literal kwarg.
+    Thin call-site-symmetric wrapper (delegates to the shared
+    _find_call_by_id, see above).
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Name) and func.id != "Assumption":
-            continue
-        if isinstance(func, ast.Attribute) and func.attr != "Assumption":
-            continue
-        for kw in node.keywords:
-            if kw.arg == "id" and isinstance(kw.value, ast.Constant):
-                if kw.value.value == assumption_id:
-                    return node  # type: ignore[return-value]
-    return None
+    return _find_call_by_id(tree, "Assumption", assumption_id)
 
 
 def _apply_assumption_transition(

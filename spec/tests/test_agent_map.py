@@ -27,9 +27,7 @@ SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
 REPO_ROOT = SPEC_ROOT.parent
 ROOT_CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
-_tools_am = str(SPEC_ROOT / "tools")
-if _tools_am not in sys.path:
-    sys.path.insert(0, _tools_am)
+# spec/tools is already on sys.path via conftest.py's suite-wide bootstrap.
 import gen_spec as _gen_spec_am  # noqa: E402
 
 # After P22.C, no agents exist anywhere in the repo; _AGENTS_ROOT resolves to
@@ -193,7 +191,7 @@ def test_agent_map_empty_when_no_agents() -> None:
     finally:
         sys.modules.pop("gen_spec_isolated", None)
 
-    sys.path.insert(0, str(SPEC_ROOT / "src"))
+    # spec/src is already on sys.path via conftest.py's suite-wide bootstrap.
     from hotam_spec.graph import load_content_graph  # noqa: PLC0415
 
     g = load_content_graph()

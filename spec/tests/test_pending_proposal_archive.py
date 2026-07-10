@@ -78,15 +78,18 @@ def test_pending_missing_dir_returns_empty(tmp_path: Path) -> None:
 
 def test_pending_sorted_oldest_first(tmp_path: Path) -> None:
     import os
-    import time
 
     proposals_dir = tmp_path / "proposals"
     proposals_dir.mkdir()
     older = proposals_dir / "older.json"
     newer = proposals_dir / "newer.json"
     older.write_text("{}", encoding="utf-8")
-    time.sleep(0.05)
     newer.write_text("{}", encoding="utf-8")
+    # Deterministic mtimes (no real sleep): older gets an explicitly earlier
+    # timestamp than newer, guaranteeing the sort order this test asserts.
+    now = 1_700_000_000.0
+    os.utime(older, (now, now))
+    os.utime(newer, (now + 100, now + 100))
     result = apply_proposal.pending_proposal_files(proposals_dir)
     assert [p.name for p in result] == ["older.json", "newer.json"]
 

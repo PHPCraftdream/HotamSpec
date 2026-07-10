@@ -37,8 +37,9 @@ from pathlib import Path
 import _bootstrap  # noqa: E402,F401  -- side effect: configures sys.path for hotam_spec
 SPEC_ROOT = Path(__file__).resolve().parents[1]
 
-from hotam_spec.graph import TensionGraph, load_content_graph  # noqa: E402
+from hotam_spec.graph import TensionGraph  # noqa: E402
 from hotam_spec.requirement import REJECTED, SETTLED  # noqa: E402
+from _graph_loader import load_graph as _load_graph  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Tokenization (stdlib, deterministic)
@@ -204,18 +205,6 @@ def render(matches: list[Match], *, text: str, top: int = 8) -> str:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
-
-
-def _load_graph(*, demo: bool) -> TensionGraph:
-    """Return the graph to confront against: demo fixture or domain content."""
-    if demo:
-        tests_dir = str(SPEC_ROOT / "tests")
-        if tests_dir not in sys.path:
-            sys.path.insert(0, tests_dir)
-        from fixtures.seed import seed_graph  # noqa: PLC0415
-
-        return seed_graph()
-    return load_content_graph()
 
 
 def main(argv: list[str] | None = None) -> int:

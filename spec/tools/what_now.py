@@ -705,16 +705,13 @@ def _load_graph(*, demo: bool) -> tuple[TensionGraph, str]:
 
     --demo loads the fixture seed (explicit opt-in to the example); default loads
     spec/content/ (the user's domain), which may be empty in a fresh framework.
+    Delegates to the shared _graph_loader (R-shared-tools-in-spec-tools) —
+    the same demo/content branch attention.py, audit_atomicity.py,
+    confront.py and audit_tensions.py use.
     """
-    if demo:
-        # Fixture lives outside src; add spec/tests to the import path.
-        tests_dir = str(Path(__file__).resolve().parents[1] / "tests")
-        if tests_dir not in sys.path:
-            sys.path.insert(0, tests_dir)
-        from fixtures.seed import seed_graph  # noqa: PLC0415
+    from _graph_loader import load_graph_with_label  # noqa: PLC0415
 
-        return seed_graph(), "demo fixture"
-    return load_content_graph(), "content"
+    return load_graph_with_label(demo=demo)
 
 
 def main(argv: list[str] | None = None) -> None:

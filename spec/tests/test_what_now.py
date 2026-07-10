@@ -177,8 +177,16 @@ def test_main_empty_content_prints_calm_banner(capsys, monkeypatch) -> None:
 
     We force `load_content_graph` to return an empty graph so the test is robust
     even if the developer later drops a real graph.py into spec/content/.
+
+    what_now.main()'s content-loading path goes through the shared
+    _graph_loader helper (R-shared-tools-in-spec-tools, dedup of the
+    --demo/content branch also used by attention.py, audit_atomicity.py,
+    confront.py, audit_tensions.py), so the patch target is
+    _graph_loader.load_content_graph, not what_now's own module-level name.
     """
-    monkeypatch.setattr(what_now, "load_content_graph", lambda: TensionGraph())
+    import _graph_loader  # noqa: PLC0415
+
+    monkeypatch.setattr(_graph_loader, "load_content_graph", lambda: TensionGraph())
     what_now.main([])  # default = content
     captured = capsys.readouterr()
     assert "no content yet" in captured.out

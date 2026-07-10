@@ -143,8 +143,7 @@ def test_docs_only_repo_map_describes_own_domain_under_foreign_env() -> None:
 def test_per_domain_reader_isolation() -> None:
     """domain_doc_readers(dir) resolves each domain's own DOC_READERS, so a
     domain's generated docs never carry the env-active domain's reader."""
-    if str(SPEC_ROOT / "tools") not in sys.path:
-        sys.path.insert(0, str(SPEC_ROOT / "tools"))
+    # spec/src is already on sys.path via conftest.py's suite-wide bootstrap.
     from hotam_spec.graph import domain_doc_readers  # noqa: PLC0415
 
     pinned = PIN_FILE.read_text(encoding="utf-8").strip() if PIN_FILE.exists() else ""
@@ -155,11 +154,15 @@ def test_per_domain_reader_isolation() -> None:
     pinned_dir = DOMAINS_ROOT / pinned
     # The pinned self-host domain declares DOC_READERS; resolving it directly
     # must not depend on the env var at all.
+    prev_env = os.environ.get("HOTAM_SPEC_ACTIVE_DOMAIN")
     os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = "hotam-dev"
     try:
         readers = domain_doc_readers(pinned_dir)
     finally:
-        os.environ.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
+        if prev_env is None:
+            os.environ.pop("HOTAM_SPEC_ACTIVE_DOMAIN", None)
+        else:
+            os.environ["HOTAM_SPEC_ACTIVE_DOMAIN"] = prev_env
     assert isinstance(readers, dict)
     # self-host declares at least the ai-agent / framework-author readers.
     assert readers, "pinned domain must declare DOC_READERS"

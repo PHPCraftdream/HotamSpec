@@ -25,12 +25,11 @@ from pathlib import Path
 
 import pytest
 
-# gen_spec lives in spec/tools (not a package) — add to path.
+# gen_spec lives in spec/tools (not a package); spec/tools and spec/tests
+# (this file's own directory, inserted by pytest's rootdir behavior) are
+# already on sys.path — spec/tools additionally via conftest.py's
+# suite-wide bootstrap.
 _TOOLS = Path(__file__).resolve().parents[1] / "tools"
-_TESTS = Path(__file__).resolve().parent
-for _p in (_TOOLS, _TESTS):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
 
 import gen_spec  # noqa: E402
 
@@ -231,9 +230,7 @@ def test_generated_docs_carry_reader_header() -> None:
     # AUDIT.md (tools/audit_atomicity.py) — same FRAMEWORK-INTERNAL family as
     # FRAMEWORK_INVARIANTS/GLOSSARY (R-doc-names-reader applies to every
     # generated doc, not just the docs/gen/*.md builders inside gen_spec.py).
-    _AUDIT_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-    if str(_AUDIT_TOOLS) not in sys.path:
-        sys.path.insert(0, str(_AUDIT_TOOLS))
+    # spec/tools is already on sys.path via conftest.py's suite-wide bootstrap.
     import audit_atomicity  # noqa: PLC0415
 
     audit_md = audit_atomicity._build_audit_md([], [], gen_spec.stakeholder_ids(g))

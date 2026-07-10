@@ -44,27 +44,10 @@ from hotam_spec.doc_readers import reader_line as _doc_reader_line  # noqa: E402
 from hotam_spec.graph import (  # noqa: E402
     TensionGraph,
     active_domain_doc_readers,
-    load_content_graph,
     stakeholder_ids,
 )
 from hotam_spec.invariants import ALL_INVARIANTS  # noqa: E402
-
-
-# ---------------------------------------------------------------------------
-# Graph loading (mirrors gen_spec.py pattern)
-# ---------------------------------------------------------------------------
-
-
-def _load_graph(*, demo: bool) -> TensionGraph:
-    """Return the graph to audit: demo fixture or domain content."""
-    if demo:
-        tests_dir = str(SPEC_ROOT / "tests")
-        if tests_dir not in sys.path:
-            sys.path.insert(0, tests_dir)
-        from fixtures.seed import seed_graph  # noqa: PLC0415
-
-        return seed_graph()
-    return load_content_graph()
+from _graph_loader import load_graph as _load_graph  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

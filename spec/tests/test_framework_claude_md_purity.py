@@ -183,7 +183,7 @@ def test_emit_cipher_aggregates_other_domain_open_actions() -> None:
     import emit_cipher  # noqa: PLC0415
 
     text = _read(ROOT_CLAUDE_MD)
-    n = emit_cipher._other_domains_open(text)
+    n = emit_cipher._other_domains_open()
     # n reflects real state; the CONTRACT is that when n>0 the aggregate is a
     # correct sum and >0 domains are non-pinned. We assert the parser is sound:
     # it never counts the pinned domain and returns a non-negative int.

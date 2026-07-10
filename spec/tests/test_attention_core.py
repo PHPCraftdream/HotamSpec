@@ -21,12 +21,11 @@ from pathlib import Path
 
 import pytest
 
+# spec/src and spec/tools are already on sys.path via conftest.py's
+# suite-wide bootstrap (loaded before any test module); no per-file insert
+# needed here (R-shared-tools-in-spec-tools hygiene: conftest is the ONE
+# sys.path bootstrap for the test suite).
 _SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
-    sys.path.insert(0, str(_SRC))
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
 
 from hotam_spec import attention  # noqa: E402
 from hotam_spec.attention import (  # noqa: E402

@@ -59,12 +59,14 @@ from pathlib import Path
 SPEC_ROOT = Path(__file__).resolve().parents[1]
 if str(SPEC_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(SPEC_ROOT / "src"))
+if str(SPEC_ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(SPEC_ROOT / "tools"))
 
 from hotam_spec.graph import (  # noqa: E402
     TensionGraph,
-    load_content_graph,
     members_pair_set,
 )
+from _graph_loader import load_graph as _load_graph  # noqa: E402
 from hotam_spec.requirement import SETTLED  # noqa: E402
 from hotam_spec.runtime_paths import runtime_dir as _runtime_dir  # noqa: E402
 
@@ -398,15 +400,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=MAX_CANDIDATES, help=f"shortlist cap (default {MAX_CANDIDATES})")
     args = parser.parse_args(argv)
 
-    if args.demo:
-        tests_dir = str(SPEC_ROOT / "tests")
-        if tests_dir not in sys.path:
-            sys.path.insert(0, tests_dir)
-        from fixtures.seed import seed_graph  # noqa: PLC0415
-
-        g = seed_graph()
-    else:
-        g = load_content_graph()
+    g = _load_graph(demo=args.demo)
 
     candidates = audit(g, limit=args.limit)
     sys.stdout.write(_render(g, candidates, limit=args.limit))

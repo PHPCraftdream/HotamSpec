@@ -26,8 +26,13 @@ hotam-audit-atomicity = "hotam_spec.cli.audit_atomicity:main"
 hotam-audit-tensions = "hotam_spec.cli.audit_tensions:main"
 hotam-emit-cipher = "hotam_spec.cli.emit_cipher:main"
 hotam-attention = "hotam_spec.cli.attention:main"
-hotam-gate = "hotam_spec.cli.gate:main"
-hotam-gate-status = "hotam_spec.cli.gate_status:main"
+# hotam-gate / hotam-gate-status: legacy standalone entries removed (task
+# #103) -- hotam-land's `select` / `status` subcommands are the same
+# gate.py/gate_status.py CLIs, forwarded byte-identically (see land.py's
+# module docstring). The underlying tools/gate.py, tools/gate_status.py and
+# their hotam_spec/cli/gate.py, hotam_spec/cli/gate_status.py wrappers are
+# untouched (gate.py is import-identity-pinned, R-enforcement-perimeter-
+# baselines-guarded) -- only the duplicate top-level command names are gone.
 hotam-land = "hotam_spec.cli.land:main"               # one CLI with subcommands (select/status/verify-closure)
 hotam-ticket = "hotam_spec.cli.ticket:main"           # one CLI with subcommands
 hotam-delegation = "hotam_spec.cli.delegation:main"   # one CLI with subcommands
