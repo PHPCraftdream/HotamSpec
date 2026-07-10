@@ -2215,6 +2215,94 @@ def _constitution_index_line(rid: str, claim: str, enforcement: str) -> str:
     return f"{rid} [{flag}]"
 
 
+#: Rule-clusters for Constitution-index rendering only (presentational —
+#: no graph node is merged, split or edited). Each tuple is
+#: (representative id, id-prefix). Every SETTLED requirement whose id
+#: starts with `prefix` collapses into ONE index token headed by
+#: `representative`, e.g. "R-land-gate-tier-selector [E] (+6 related: ...)"
+#: instead of 7 separate tokens. This is pure rendering: every member id
+#: still appears verbatim (as a literal substring) inside the token, so
+#: R-constitution-is-index's "every SETTLED id appears in the block"
+#: guarantee (test_constitution_lists_all_settled /
+#: test_constitution_partitions_all_settled) is untouched. Membership is by
+#: id-PREFIX (not a graph relation — none of these atoms carry a `refines`/
+#: `supports` edge to a common parent today), the simplest mechanism that
+#: needs no graph write (D5, 2026-07-10 steward delegation).
+_RULE_CLUSTER_PREFIXES: tuple[tuple[str, str], ...] = (
+    ("R-land-gate-tier-selector", "R-land-gate-"),
+    ("R-land-gate-tier-selector", "R-land-tier-"),
+    ("R-land-gate-tier-selector", "R-tiered-gate-"),
+    ("R-land-gate-tier-selector", "R-commit-boundary-checkable"),
+    ("R-attention-registry", "R-attention-"),
+    ("R-tension-audit-shortlist-tool", "R-tension-audit-"),
+    ("R-active-loop-protocol", "R-active-loop-"),
+)
+
+
+def _cluster_representative(rid: str) -> str | None:
+    """Return the cluster representative id for `rid`, or None if unclustered.
+
+    RULE: first matching prefix in _RULE_CLUSTER_PREFIXES wins (table is
+    small and non-overlapping by construction — see the module comment).
+    """
+    for representative, prefix in _RULE_CLUSTER_PREFIXES:
+        if rid.startswith(prefix):
+            return representative
+    return None
+
+
+def _cluster_index_items(reqs: list) -> list[str]:
+    """Canon: §Requirement — group a sorted requirement list into index tokens.
+
+    RULE (D5 rule-clusters): requirements sharing a cluster representative
+    (see _cluster_representative) collapse into ONE token:
+    "<representative> [<flag>] (+N related: <id> [<flag>], ...)". Every
+    other requirement renders as today, one token per id
+    (_constitution_index_line). Order of `reqs` is preserved for the
+    non-clustered items; clustered items are emitted at the position of
+    their first (alphabetically earliest, since callers pre-sort by id)
+    member.
+
+    WHY presentational only: this changes ONLY how the Constitution index
+    renders — no Requirement node is merged, renamed or edited. The full,
+    un-clustered id list still lives in docs/gen/REQUIREMENTS.md and
+    docs/gen/CONSTITUTION.md; every member id remains a literal substring
+    of this block (R-constitution-is-index unchanged).
+    """
+    by_representative: dict[str, list] = {}
+    for r in reqs:
+        rep = _cluster_representative(r.id)
+        if rep is not None:
+            by_representative.setdefault(rep, []).append(r)
+
+    emitted_reps: set[str] = set()
+    items: list[str] = []
+    for r in reqs:
+        rep = _cluster_representative(r.id)
+        if rep is None:
+            items.append(_constitution_index_line(r.id, r.claim, r.enforcement))
+            continue
+        if rep in emitted_reps:
+            continue
+        members = by_representative[rep]
+        if len(members) == 1:
+            # Solo membership (cluster prefix matched but no siblings present
+            # in this requirement set, e.g. a scoped/partial render) — no
+            # value in a "(+0 related)" token, fall back to the plain line.
+            items.append(_constitution_index_line(r.id, r.claim, r.enforcement))
+            emitted_reps.add(rep)
+            continue
+        head = next((m for m in members if m.id == rep), members[0])
+        rest = [m for m in members if m.id != head.id]
+        head_flag = _ENFORCEMENT_FLAG.get(head.enforcement, "?")
+        rest_str = ", ".join(
+            f"{m.id}[{_ENFORCEMENT_FLAG.get(m.enforcement, '?')}]" for m in rest
+        )
+        items.append(f"{head.id} [{head_flag}] (+{len(rest)} related: {rest_str})")
+        emitted_reps.add(rep)
+    return items
+
+
 def _render_constitution_block(g: TensionGraph) -> str:
     """Render the CONSTITUTION index block content (without sentinels).
 
@@ -2270,7 +2358,7 @@ def _render_constitution_block(g: TensionGraph) -> str:
         "",
     ]
     for cat in cat_order:
-        items = [_constitution_index_line(r.id, r.claim, r.enforcement) for r in groups[cat]]
+        items = _cluster_index_items(groups[cat])
         lines.append(f"**{cat}** — {' · '.join(items)}")
         lines.append("")
 
