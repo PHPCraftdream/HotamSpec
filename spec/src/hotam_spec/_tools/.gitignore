@@ -1,0 +1,9 @@
+# Build artifact: tool files are copied here from spec/tools/ before wheel
+# build so that `uv_build` (which only packages content under the module root)
+# includes them in the wheel.  The canonical copies live at spec/tools/.
+#
+# Populated by: python spec/scripts/populate_tools.py  (or `uv run` wrapper)
+# Consumed by:  hotam_spec.cli._path_setup (adds this dir to sys.path when
+#               the real spec/tools/ is absent, i.e. wheel-installed mode).
+*
+!.gitignore

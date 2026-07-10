@@ -50,8 +50,9 @@ from pathlib import Path
 # --- Make the hotam_spec package importable (model is the source of truth) ------
 
 SPEC_ROOT = Path(__file__).resolve().parents[1]  # .../spec
-if str(SPEC_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(SPEC_ROOT / "src"))
+_SRC = SPEC_ROOT / "src"
+if _SRC.is_dir() and str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
 
 from hotam_spec.template_loader import (  # noqa: E402
     claude_md_template_path as _claude_md_template_path,
@@ -69,7 +70,17 @@ from hotam_spec.repo_paths import (  # noqa: E402
 # resolves to the same path as _repo_root(), so behavior is unchanged for the
 # dev cycle; consumer mode gets their own repo root (R-project-root-not-hardcoded).
 REPO_ROOT = _project_root()  # consumer project root
-SRC = SPEC_ROOT / "src" / "hotam_spec"
+# In self-hosting mode (editable install), source files are at spec/src/hotam_spec/.
+# In wheel-installed mode, they're at site-packages/hotam_spec/ (SPEC_ROOT itself,
+# since __file__ is hotam_spec/_tools/gen_spec.py, SPEC_ROOT = parents[1] = hotam_spec/).
+_SRC_CANDIDATE = SPEC_ROOT / "src" / "hotam_spec"
+if _SRC_CANDIDATE.is_dir():
+    SRC = _SRC_CANDIDATE
+else:
+    # Wheel mode: hotam_spec package root IS the source directory.
+    import hotam_spec as _hs_pkg  # noqa: PLC0415
+
+    SRC = Path(_hs_pkg.__file__).resolve().parent
 DEMO_DIR = REPO_ROOT / "docs" / "demo"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 # Template (§3.4 portability W3): lives inside the package at

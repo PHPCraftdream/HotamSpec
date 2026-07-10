@@ -16,6 +16,21 @@ Side-effect-only import (no public API). The import itself is the contract:
 it MUST run before any ``from hotam_spec... import`` line. Idempotent: safe
 to import from multiple tools in the same process (guards with ``in sys.path``).
 
+This module works in TWO contexts:
+
+1. **Self-hosting** — this file lives at ``spec/tools/_bootstrap.py``.
+   ``parents[1]`` is ``spec/``, so ``_SRC = spec/src`` (hotam_spec package
+   parent) and ``_TOOLS = spec/tools`` (sibling tool modules).
+
+2. **Wheel-installed** — a copy of this file lives at
+   ``site-packages/hotam_spec/_tools/_bootstrap.py`` (shipped by the wheel
+   via ``scripts/populate_tools.py``). ``parents[1]`` is
+   ``site-packages/hotam_spec/``, where ``src/`` and ``tools/`` do NOT exist,
+   but ``hotam_spec`` is already importable (installed package) and sibling
+   tool modules live in the same ``_tools/`` directory as this file (i.e.
+   ``Path(__file__).parent``). The module detects this by checking whether
+   ``_SRC`` actually exists.
+
 WHY a private module (``_bootstrap.py``) and not ``__init__.py``: the tools
 are run as standalone scripts (``python tools/foo.py``), NOT as package
 members (``python -m tools.foo``). A package ``__init__.py`` would require
@@ -30,15 +45,22 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+_THIS_DIR = Path(__file__).resolve().parent
+
 #: spec/ root (this file lives at spec/tools/_bootstrap.py; parents[1] = spec/).
-_SPEC_ROOT = Path(__file__).resolve().parents[1]
+_SPEC_ROOT = _THIS_DIR.parent
 
 #: spec/src — the hotam_spec package parent.
 _SRC = _SPEC_ROOT / "src"
-if str(_SRC) not in sys.path:
+if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 #: spec/tools — sibling private modules (_ticket_store, _delegation_store, etc.).
+#: In self-hosting mode this is spec/tools/; in wheel mode it's the _tools/
+#: directory containing this very file (sibling modules are co-located).
 _TOOLS = _SPEC_ROOT / "tools"
-if str(_TOOLS) not in sys.path:
+if _TOOLS.is_dir() and str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
+elif not _TOOLS.is_dir() and str(_THIS_DIR) not in sys.path:
+    # Wheel-installed fallback: tool modules live alongside this file.
+    sys.path.insert(0, str(_THIS_DIR))

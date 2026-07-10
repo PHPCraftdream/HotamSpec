@@ -69,7 +69,7 @@ from pathlib import Path
 
 # hotam_spec lives in spec/src; make it importable whether run via uv or plain python.
 _SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
+if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from hotam_spec.graph import (  # noqa: E402

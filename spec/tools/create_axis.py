@@ -47,7 +47,7 @@ _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _SRC = _SPEC_ROOT / "src"
 _TOOLS = Path(__file__).resolve().parent
 for _p in (_SRC, _TOOLS):
-    if str(_p) not in sys.path:
+    if _p.is_dir() and str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 import confront  # noqa: E402

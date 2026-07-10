@@ -19,7 +19,7 @@ from pathlib import Path
 
 # Make hotam_spec importable (lives in spec/src)
 _SRC = Path(__file__).resolve().parents[1] / "src"
-if str(_SRC) not in sys.path:
+if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from hotam_spec.graph import load_content_graph  # noqa: E402

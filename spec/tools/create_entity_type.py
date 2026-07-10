@@ -29,7 +29,7 @@ _SLUG_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _SRC = _SPEC_ROOT / "src"
-if str(_SRC) not in sys.path:
+if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from hotam_spec.entity import ENTITY_FIELD_KINDS  # noqa: E402

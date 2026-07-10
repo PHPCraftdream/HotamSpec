@@ -37,9 +37,9 @@ _TESTS_DIR = _SPEC_ROOT / "tests"
 _SRC = _SPEC_ROOT / "src"
 _TOOLS = _SPEC_ROOT / "tools"
 
-if str(_SRC) not in sys.path:
+if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
-if str(_TOOLS) not in sys.path:
+if _TOOLS.is_dir() and str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
 _PROTECTED_BASELINES_PATH = _TESTS_DIR / "protected_baselines.json"

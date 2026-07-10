@@ -155,8 +155,11 @@ from pathlib import Path
 
 _SPEC_ROOT = Path(__file__).resolve().parents[1]
 _SRC = _SPEC_ROOT / "src"
-if str(_SRC) not in sys.path:
+if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+
+# Detect consumer/wheel-installed context: spec/tests/ does not exist.
+_SELF_HOSTING = (_SPEC_ROOT / "tests").is_dir()
 
 import re as _re  # noqa: E402
 
@@ -3437,72 +3440,130 @@ def _regen_and_verify(
         f"root crystal from pin: {pinned_domain or 'alphabetical fallback'})"
     )
 
-    # Verify — T1 targeted-enforcer gate by default, T2 full suite on --full,
-    # on a ProposedRejection (removal blast radius is not bounded by the
-    # rejected atom's own enforced_by — R-land-gate-tier-selector-fails-closed),
-    # on a node CREATION (new Requirement or new Conflict — a brand-new node's
-    # blast radius cannot be known from its own enforced_by, which is either
-    # absent or steward-supplied and unverified), or whenever the gate fails
-    # closed (R-land-gate-tier-selector).
-    pytest_args = [sys.executable, "-m", "pytest", "-q"]
-    gate_tier = "T2 (full suite, --full requested)"
-    land_tier = "T2"
-    land_node_ids: tuple[str, ...] | str = "full"
-    if full_suite:
-        pytest_args.append(str(_SPEC_ROOT / "tests"))
-    elif isinstance(proposal, ProposedRejection):
-        gate_tier = (
-            "T2 (full suite, ProposedRejection: a rejected atom's own "
-            "enforced_by does not bound its removal blast radius)"
-        )
-        pytest_args.append(str(_SPEC_ROOT / "tests"))
-    elif not target_preexisting:
-        gate_tier = (
-            "T2 (full suite, new node creation: no pre-existing enforced_by "
-            "can be trusted to bound a brand-new node's blast radius)"
-        )
-        pytest_args.append(str(_SPEC_ROOT / "tests"))
+    # Verify — two modes:
+    #
+    # (A) SELF-HOSTING (spec/tests/ exists) — the original tiered LAND gate:
+    #     T1 targeted-enforcer subset (R-land-gate-tier-selector) or T2 full
+    #     pytest suite. This is the framework's own test infrastructure.
+    #
+    # (B) CONSUMER / WHEEL-INSTALLED (spec/tests/ absent) — in-process
+    #     structural check via ``all_violations()`` on the live graph.
+    #     Consumers don't have the framework's test suite; running pytest
+    #     on a nonexistent spec/tests/ would return exit code 4 ("no tests
+    #     collected"), which the old code treated as a hard failure —
+    #     blocking every consumer ``hotam-apply-proposal`` call.
+    #     The in-process check validates the same structural invariants
+    #     that check_* functions enforce, without needing the test runner.
+
+    if not _SELF_HOSTING:
+        # --- Consumer-mode verify: in-process structural check ---
+        from hotam_spec.graph import load_content_graph  # noqa: PLC0415
+        from hotam_spec.invariants import all_violations  # noqa: PLC0415
+
+        print("verify mode: consumer (in-process structural check)")
+        try:
+            g = load_content_graph()
+            violations = all_violations(g)
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"ERROR: structural check failed: {exc}",
+                file=sys.stderr,
+            )
+            _append_land_log(
+                proposal=proposal,
+                tier="consumer",
+                node_ids="structural",
+                pytest_ok=False,
+                closure_exit=None,
+            )
+            return 1
+
+        pytest_ok = len(violations) == 0
+        land_tier = "consumer"
+        land_node_ids: tuple[str, ...] | str = "structural"
+        if not pytest_ok:
+            print(
+                f"ERROR: {len(violations)} structural violation(s) after apply:",
+                file=sys.stderr,
+            )
+            for v in violations[:20]:
+                print(f"  - {v}", file=sys.stderr)
+            if len(violations) > 20:
+                print(f"  ... and {len(violations) - 20} more", file=sys.stderr)
+            print(
+                "NOTE: auto-revert is not implemented in P3. "
+                "Inspect the diff and revert manually if needed.",
+                file=sys.stderr,
+            )
+            _append_land_log(
+                proposal=proposal,
+                tier=land_tier,
+                node_ids=land_node_ids,
+                pytest_ok=False,
+                closure_exit=None,
+            )
+            return 1
     else:
-        import gate as _gate  # noqa: PLC0415  (lives in tools/, not a package)
-
-        gate_result = _gate.select_tier1(proposal.target_anchor())
-        if gate_result.confident:
-            gate_tier = f"T1 (targeted, {len(gate_result.node_ids)} node-id(s))"
-            pytest_args.extend(gate_result.node_ids)
-            land_tier = "T1"
-            land_node_ids = tuple(gate_result.node_ids)
-        else:
-            gate_tier = f"T2 (full suite, gate fell back closed: {gate_result.reason})"
+        # --- Self-hosting verify: tiered pytest LAND gate ---
+        pytest_args = [sys.executable, "-m", "pytest", "-q"]
+        gate_tier = "T2 (full suite, --full requested)"
+        land_tier = "T2"
+        land_node_ids = "full"
+        if full_suite:
             pytest_args.append(str(_SPEC_ROOT / "tests"))
-    print(f"verify tier: {gate_tier}")
+        elif isinstance(proposal, ProposedRejection):
+            gate_tier = (
+                "T2 (full suite, ProposedRejection: a rejected atom's own "
+                "enforced_by does not bound its removal blast radius)"
+            )
+            pytest_args.append(str(_SPEC_ROOT / "tests"))
+        elif not target_preexisting:
+            gate_tier = (
+                "T2 (full suite, new node creation: no pre-existing enforced_by "
+                "can be trusted to bound a brand-new node's blast radius)"
+            )
+            pytest_args.append(str(_SPEC_ROOT / "tests"))
+        else:
+            import gate as _gate  # noqa: PLC0415  (lives in tools/, not a package)
 
-    pytest_result = subprocess.run(
-        pytest_args,
-        capture_output=True,
-        text=True,
-        cwd=str(_SPEC_ROOT),
-    )
-    print(pytest_result.stdout)
-    pytest_ok = pytest_result.returncode == 0
-    if not pytest_ok:
-        print(
-            "ERROR: pytest failed after apply. File written but tests are red.",
-            file=sys.stderr,
+            gate_result = _gate.select_tier1(proposal.target_anchor())
+            if gate_result.confident:
+                gate_tier = f"T1 (targeted, {len(gate_result.node_ids)} node-id(s))"
+                pytest_args.extend(gate_result.node_ids)
+                land_tier = "T1"
+                land_node_ids = tuple(gate_result.node_ids)
+            else:
+                gate_tier = f"T2 (full suite, gate fell back closed: {gate_result.reason})"
+                pytest_args.append(str(_SPEC_ROOT / "tests"))
+        print(f"verify tier: {gate_tier}")
+
+        pytest_result = subprocess.run(
+            pytest_args,
+            capture_output=True,
+            text=True,
+            cwd=str(_SPEC_ROOT),
         )
-        print(pytest_result.stderr, file=sys.stderr)
-        print(
-            "NOTE: auto-revert is not implemented in P3. "
-            "Inspect the diff and revert manually if needed.",
-            file=sys.stderr,
-        )
-        _append_land_log(
-            proposal=proposal,
-            tier=land_tier,
-            node_ids=land_node_ids,
-            pytest_ok=False,
-            closure_exit=None,
-        )
-        return 1
+        print(pytest_result.stdout)
+        pytest_ok = pytest_result.returncode == 0
+        if not pytest_ok:
+            print(
+                "ERROR: pytest failed after apply. File written but tests are red.",
+                file=sys.stderr,
+            )
+            print(pytest_result.stderr, file=sys.stderr)
+            print(
+                "NOTE: auto-revert is not implemented in P3. "
+                "Inspect the diff and revert manually if needed.",
+                file=sys.stderr,
+            )
+            _append_land_log(
+                proposal=proposal,
+                tier=land_tier,
+                node_ids=land_node_ids,
+                pytest_ok=False,
+                closure_exit=None,
+            )
+            return 1
 
     # Closure check (P4 feedback edge) — only when --triggering-kind is supplied.
     closure_exit: int | None = None
