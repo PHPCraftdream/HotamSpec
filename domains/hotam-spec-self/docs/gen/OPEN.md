@@ -5,15 +5,13 @@ reader: ai-agent
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `tools/what_now.py` for the prioritized next actions that close these.
 
-Open requirements: **1**. Unresolved conflicts: **0**.
+Open requirements: **0**. Unresolved conflicts: **0**.
 
 ---
 
 ## OPEN requirements
 
-| id | owner | question |
-|---|---|---|
-| `R-decided-by-verifiable-signature` | `framework-author` | should decided_by be bound to git commit authorship / a cryptographic signature as a verifiable, unforgeable signature, or stay a free string trusted via review? |
+_None._
 
 ## Unresolved conflicts (no steward resolution yet)
 

@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 200 / SETTLED 228; closeable debt 4; inherent discipline 24; DRAFT 2; OPEN 1; REJECTED 39.**
+**Burn-down: SETTLED-ENFORCED 200 / SETTLED 229; closeable debt 4; inherent discipline 25; DRAFT 2; OPEN 0; REJECTED 39.**
 
 ---
 
@@ -53,6 +53,7 @@ judgment calls no check_* could ever verify.
 | `R-unresolvable-classified-by-human` | STRUCTURAL | `framework-reviewer` | Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference. |
 | `R-user-request-decomposed-to-tickets` | STRUCTURAL | `ai-agent` | The operator shall, immediately on receiving a user request, decompose it into tickets in the dialogue and ask the addressee -- session tasks or the ticket engine -- before beginning any work. |
 | `R-ticket-mutation-via-tools-only` | STRUCTURAL | `framework-author` | A ticket's frontmatter header and History shall be changed only through the ticket_* tools, never by hand-editing the file. |
+| `R-decided-by-verifiable-signature` | PROSE | `framework-author` | Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review. |
 | `R-confront-includes-aspirations` | PROSE | `framework-author` | At the CONFRONT step the operator shall check every change not only against SETTLED rules but also against the graph's goals, IMPLEMENTS aspirations and values, surfacing any contradiction before writing. |
 | `R-agent-conduct-is-rules-not-tests` | PROSE | `framework-author` | Agent conduct -- the highest abstraction -- shall not be faked as code-checked: what code can verify is ENFORCED with a real test, what only conscience can verify is an honest PROSE rule, and the two are kept explicitly separate. |
 

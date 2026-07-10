@@ -23,6 +23,12 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline`
 
+## `R-decided-by-verifiable-signature` (PROSE)
+
+**Claim.** Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review.
+
+**Why.** Steward verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verification mechanism of its own. Verifying that a signature is unforgeable (git commit authorship, a cryptographic identity) is the job of an EXTERNAL authorization/identity system; a content-free discipline framework only holds the SEAM for one, it does not become the verifier. That seam already exists and is named: Signoff.instrument (spec/src/hotam_spec/signoff.py) records HOW a signoff was captured -- today 'personal' (a human approved it, trust the writer) or 'DEL-<n>' (a filed delegation authorizes the decider) -- and its docstring reserves 'git'/'crypto' explicitly for a future verifiable-signature wave. Because the record already carries this field, a future external system that supplies verifiable provenance changes only the VALUE of instrument, never the SHAPE of the Signoff record: a data edit, not a schema migration. Prior OPEN context is preserved as one revisit trigger among others, not the sole reason: the value of a verifiable signature is not yet FORCED under a single-human-wears-all-hats regime (A-single-human-wears-all-hats) -- when a second live human steward appears, the question of whether one steward's free-string signature can be trusted sharpens again and this decision should be revisited then (ties to the role model, #44). The original OPEN was recorded 2026-07-05 after DEL-1 (the standing campaign delegation) closed, which restored the requirement of an explicit steward signature per conflict resolution and first raised the 'signature is a blank form' concern (six-lens review Enf#2 / Vision#1).
+
 ## `R-decided-conflict-justifies-itself` (ENFORCED)
 
 **Claim.** Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement.
