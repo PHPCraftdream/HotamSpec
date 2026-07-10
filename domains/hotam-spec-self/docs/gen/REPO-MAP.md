@@ -61,7 +61,6 @@ reader: ai-agent
 - `spec/tools/invoke_agent.py` — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.  →  R-tool-invoke-agent
 - `spec/tools/land.py` — single CLI entry point over gate.py/gate_status.py/closure.py.  →  R-tool-land
 - `spec/tools/mark_revisit_evaluated.py` — record that a DECIDED conflict's revisit_marker was evaluated.  →  R-tool-mark-revisit-evaluated
-- `spec/tools/record_delegation.py` — records a new steward delegation into the active domain's  →  R-tool-record-delegation
 - `spec/tools/setup_context_hook.py` — installs/removes the project-local hook that feeds tools/context_producer.py.  →  R-tool-setup-context-hook
 - `spec/tools/setup_hooks.py` — generate the committable, portable project sensorium.  →  R-tool-setup-hooks
 - `spec/tools/spawn_agent.py` — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).  →  R-tool-spawn-agent

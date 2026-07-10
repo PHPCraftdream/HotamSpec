@@ -1,6 +1,6 @@
 """CLI wrapper for delegation tools (hotam-delegation entry point with subcommands).
 
-Subcommands: delegate (create/close/show/list), record (record_delegation).
+Subcommands: delegate (create/close/show/list).
 Each delegates to the corresponding tool's main().
 """
 
@@ -15,7 +15,6 @@ ensure_tools_on_path()
 
 _SUBCOMMANDS = {
     "delegate": "delegate",
-    "record": "record_delegation",
 }
 
 

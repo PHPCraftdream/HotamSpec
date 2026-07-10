@@ -64,14 +64,6 @@ DOMAIN_COUPLED: frozenset[tuple[str, str]] = frozenset(
             "test_constitution_gen.py",
             "test_constitution_lists_all_constitution_requirements",
         ),
-        (
-            "test_delegation_marker_honesty.py",
-            "test_active_domain_delegation_markers_resolve",
-        ),
-        (
-            "test_delegation_marker_honesty.py",
-            "test_del_1_specifically_resolves_the_core_vs_aspect_conflict",
-        ),
         ("test_docs_gen.py", "test_generated_docs_carry_reader_header"),
         ("test_entities_md.py", "test_entities_md_emitted_for_active_domain"),
         ("test_goal.py", "test_goal_burn_down_present"),

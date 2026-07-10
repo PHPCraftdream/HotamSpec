@@ -131,7 +131,6 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 - [invoke_agent](spec/docs/tools/invoke_agent.md) — invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.
 - [land](spec/docs/tools/land.md) — single CLI entry point over gate.py/gate_status.py/closure.py.
 - [mark_revisit_evaluated](spec/docs/tools/mark_revisit_evaluated.md) — record that a DECIDED conflict's revisit_marker was evaluated.
-- [record_delegation](spec/docs/tools/record_delegation.md) — records a new steward delegation into the active domain's
 - [setup_context_hook](spec/docs/tools/setup_context_hook.md) — installs/removes the project-local hook that feeds tools/context_producer.py.
 - [setup_hooks](spec/docs/tools/setup_hooks.md) — generate the committable, portable project sensorium.
 - [spawn_agent](spec/docs/tools/spawn_agent.md) — composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).
@@ -161,7 +160,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `R-axes-as-module-constant` — REJECTED requirement 'R-axes-as-module-constant' claims a REPLACES successor in prose but has NO structural `replaces` edge — migrate it via a ProposedRejection (with replaced_by) so the anti-relitigation relation becomes machine-traversable (R-rejected-preserved-not-deleted). Advisory; never a gate.
 - **debt:** 198/228 SETTLED ENFORCED · 2 DRAFT · 1 OPEN · 6 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26929 chars (headroom 123071)
+- **graph:** 292 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 26809 chars (headroom 123191)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -232,7 +231,7 @@ _(no sub-operators yet)_
 | **§Attention** | `spec/src/hotam_spec/attention.py` | _(none)_ | 2 tests |
 | **§Axis** | `spec/src/hotam_spec/axis.py` | 1 checks | 3 tests |
 | **§Closure** | `spec/src/hotam_spec/enforcer_resolution.py` | 2 checks | 3 tests |
-| **§Conflict** | `spec/src/hotam_spec/conflict.py` | 17 checks | 8 tests |
+| **§Conflict** | `spec/src/hotam_spec/conflict.py` | 17 checks | 7 tests |
 | **§Conscience** | _(not yet mapped)_ | _(none)_ | 2 tests |
 | **§Constitution** | _(not yet mapped)_ | _(none)_ | 3 tests |
 | **§Context** | _(not yet mapped)_ | _(none)_ | 1 tests |

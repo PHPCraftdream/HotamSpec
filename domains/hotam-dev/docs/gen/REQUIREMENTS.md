@@ -62,7 +62,6 @@ Projected from `spec/tools/*.py` module docstrings whose first line matches `Can
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its spec/agents/<name>/CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
 - **R-tool-land** — *single CLI entry point over gate.py/gate_status.py/closure.py.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_land`]
 - **R-tool-mark-revisit-evaluated** — *record that a DECIDED conflict's revisit_marker was evaluated.* [STRUCTURAL·tool · §Conflict] [enforcer: `test_tool_mark_revisit_evaluated`]
-- **R-tool-record-delegation** — *records a new steward delegation into the active domain's* [STRUCTURAL·tool · §Stakeholder] [enforcer: `test_tool_record_delegation`]
 - **R-tool-setup-context-hook** — *installs/removes the project-local hook that feeds tools/context_producer.py.* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_setup_context_hook`]
 - **R-tool-setup-hooks** — *generate the committable, portable project sensorium.* [STRUCTURAL·tool · §Operator] [enforcer: `test_tool_setup_hooks`]
 - **R-tool-spawn-agent** — *composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_spawn_agent`]
