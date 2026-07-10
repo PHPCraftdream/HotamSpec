@@ -67,7 +67,7 @@ from hotam_spec.process import (
     TARGET_KIND_GRAPH_PROPERTY,
     PROCESS_LIFECYCLE,
 )
-from hotam_spec.requirement import Relation, ENFORCED, PROSE, STRUCTURAL, Requirement
+from hotam_spec.requirement import Relation, ENFORCED, PROSE, STRUCTURAL, Requirement, HistoryEntry
 from hotam_spec.stakeholder import Stakeholder
 
 
@@ -4345,10 +4345,12 @@ def build_graph() -> TensionGraph:
             claim=("The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise."),
             owner="framework-author",
             status="SETTLED",
-            why=("Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node)."),
-            enforcement=PROSE,
-            settled_at="2026-07-05",
+            why=("Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node). ENFORCEMENT (Etap S, #121, 2026-07-10) -- PROSE->ENFORCED via a HONEST PARTIAL check, not theatre: tests/test_launch_dir_write_scope.py AST-scans every committed framework .py (spec/tools/ + spec/src/hotam_spec/) and fails RED if any file co-locates a home-rooted path reference (Path.home() / os.path.expanduser('~...') / a literal starting with '~/') with a filesystem-write sink (open(...,'w'/'a'/'x'/'+'), write_text/write_bytes/mkdir/touch/rmtree/unlink/replace/rename/symlink_to/chmod/makedirs/remove/copy*/move). This closes EXACTLY the committed-code write vector that actually fired: the real incident was --patch-global physically patching ~/.claude/cah-bin/.../cah-status.js -- a machine-visible shape. The scan does NOT and cannot catch a live agent shelling out through bash at runtime; that residual half remains discipline-of-prose (R-agent-conduct-is-rules-not-tests). Honest scope, documented in the enforcer's docstring: no data-flow (a home reference co-located with any writer in the same file trips conservatively); prose ~/.claude mentions that do not start with '~/' are deliberately not path references; the allowlist is empty today because every current Claude-config tool (setup_hooks.py / setup_context_hook.py / _claude_settings.py) writes into the CONSUMER repo root's <repo>/.claude/ resolved via project_root_or_raise(), never the home global, so none reference a home path at all. A non-vacuity negative control (test_scanner_catches_a_home_write_negative_control) proves the predicate flags synthetic ~/.claude writes and passes in-bounds shapes."),
+            enforcement="ENFORCED",
+            settled_at="2026-07-10",
             created_at="2026-07-05",
+            enforced_by=("test_launch_dir_write_scope.py::test_no_committed_code_writes_into_the_host_home", "test_launch_dir_write_scope.py::test_scanner_catches_a_home_write_negative_control"),
+            history=(HistoryEntry(at="2026-07-10", summary="why: Steward verdict 2026-07-05, verbatim: '…→Steward verdict 2026-07-05, verbatim: '…; enforcement: PROSE→ENFORCED; enforced_by: []→[test_launch_dir_write_scope.py::test_n…; settled_at: 2026-07-05→2026-07-10"),),
         ),
         Requirement(
             id="R-unmeasured-cipher-names-host-boundary",
