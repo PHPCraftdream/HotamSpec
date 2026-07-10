@@ -67,7 +67,7 @@ No RDF/SHACL/Postgres.
 CONTENT-FREE FRAMEWORK: the package itself ships ZERO business data — no example
 requirements, no example axes. Hotam-Spec is a blank kit; the framework hosts the
 ontology, the invariants, the generator and the harness. A real domain is loaded
-from `spec/content/graph.py` exposing `build_graph() -> TensionGraph`; an empty
+from `domains/<name>/graph.py` exposing `build_graph() -> TensionGraph`; an empty
 content slot is the legitimate ship state. The worked example lives outside the
 framework, in `spec/tests/fixtures/seed.py`, and is loaded only via the explicit
 `--demo` flag of the tools or by the tests.
@@ -79,7 +79,7 @@ Package structure (module = ontology section / methodology chapter):
   requirement — Requirement: the claim, its assumptions, owner, typed relations.
   conflict    — Conflict: the first-class connector NODE (axis, context, steward).
   graph       — TensionGraph container + content loader + traversal helpers
-                (no business data here; load_content_graph() reads spec/content/).
+                (no business data here; load_content_graph() reads domains/<name>/).
   invariants  — structural graph invariants (check_* functions returning the
                 violation list): the form of the tension graph that must always
                 hold (a stewardless conflict, a dangling member, an OPEN with no

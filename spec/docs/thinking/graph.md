@@ -104,9 +104,9 @@ below. No database, no RDF — the graph instance the invariants, the generator
 and the harness all read is the one assembled by the loader.
 
 CONTENT-FREE FRAMEWORK: this module ships ZERO business data. Hotam-Spec is a blank
-kit. Real domains populate `spec/content/graph.py` exposing `build_graph() ->
-TensionGraph`; an empty `spec/content/` is the legitimate ship state ("no
-content yet"). The example demo lives outside the framework in
+kit. Real domains populate `domains/<name>/graph.py` exposing `build_graph() ->
+TensionGraph`; an empty domain is the legitimate ship state ("no content yet").
+The example demo lives outside the framework in
 `spec/tests/fixtures/seed.py` and is loaded only via the explicit `--demo` flag
 of the tools or by the tests.
 
@@ -387,7 +387,7 @@ aspiration is not an unresolved doubt and must raise NO review-debt signal
 Canon: §Graph — True iff no domain content has been loaded.
 
 RULE: empty iff every collection is empty. An empty graph is the
-legitimate ship state of the framework (no content under spec/content/).
+legitimate ship state of the framework (no domain content loaded).
 Includes the §Process, §Goal, and §Entity aspect collections.
 
 WHY: the harness and generator use this to render a calm "no content

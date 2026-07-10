@@ -81,7 +81,10 @@ triggers the `RuntimeError` below):
 3. **The right-hand side must be a literal parenthesized tuple** — `(...)`,
    not `list(...)`, not a generator expression, not a function call that
    returns a tuple. An empty roster is still `()`  (or `(\n)`, both parse the
-   same), never omitted.
+   same), never omitted. Note: a non-tuple RHS (e.g. `requirements = list(...)`)
+   may not cause an immediate error at write time -- the locator accepts any
+   assignment RHS without checking its type. The breakage typically surfaces
+   later, during the regen/verify step, as corrupted source output.
 4. **`return TensionGraph(...)` must appear as a direct call expression** in
    `build_graph()`'s `return` statement — not built up across several
    statements (`g = TensionGraph(...); return g` is NOT recognized; this

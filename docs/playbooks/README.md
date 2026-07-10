@@ -24,6 +24,6 @@ what_now → band → playbook → ProposedConflictTransition / ProposedRequirem
                               tools/apply_proposal.py → graph.py → gen_spec → pytest
 ```
 
-The operator NEVER edits `spec/content/graph.py` by hand. Every change flows
+The operator NEVER edits the domain's `graph.py` by hand. Every change flows
 through a steward-approved JSON proposal written by the operator and applied
 mechanically (R-ai-presents-not-decides, §Proposal).

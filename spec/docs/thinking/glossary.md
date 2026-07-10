@@ -15,7 +15,7 @@ Violations are caught by tests/test_glossary_sync.py.
 
 Canon: §Glossary — this module IS the authoritative membership list of admitted
 methodology terms. Domain-side business terms (R-ids, axis slugs, stakeholders)
-live in spec/content/graph.py — not here.
+live in the domain's graph.py (domains/<name>/graph.py) — not here.
 
 WHY a generated controlled vocabulary: terminology drift is its own kind of
 invisibility — 'axis'/'dimension', 'steward'/'owner', 'conflict'/'tension'

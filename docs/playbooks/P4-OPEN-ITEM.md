@@ -7,7 +7,7 @@ What the harness says: "OPEN requirement 'R-…' (owner '…') awaits a decision
 R-ai-presents-not-decides binds. For each P4 action the operator:
 
 1. Reads the OPEN requirement's `claim` + `why` + assumptions (anchors all
-   live in `spec/content/graph.py`; the prose in `docs/gen/REQUIREMENTS.md`
+   live in the domain's `graph.py`; the prose in `docs/gen/REQUIREMENTS.md`
    is the human-friendly mirror).
 2. Surfaces hidden assumptions: name the assumption(s) the question rests on,
    and whether they are HOLDS/UNCERTAIN/DEAD.
@@ -23,7 +23,7 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
 ## What the operator MUST NOT do
 
 - Decide the OPEN question itself (R-ai-presents-not-decides).
-- Edit `spec/content/graph.py` by hand (use `apply_proposal.py`).
+- Edit the domain's `graph.py` by hand (use `apply_proposal.py`).
 - Skip naming the assumption(s) — silent assumption-binding is exactly the
   invisibility Hotam-Spec surfaces (the three invisibilities in CLAUDE.md).
 

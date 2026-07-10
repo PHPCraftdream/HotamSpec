@@ -347,7 +347,6 @@ def test_batch_collapses_regen_and_verify_to_a_single_pass(tmp_path: Path) -> No
     assert rc == 0, f"batch main() failed rc={rc}"
 
     gen_spec_calls = [c for c in calls if any("gen_spec.py" in a for a in c)]
-    pytest_calls = [c for c in calls if any(a == "pytest" or a.endswith("pytest") for a in c)]
     # pytest is invoked as `[sys.executable, "-m", "pytest", "-q", ...]` — "-m" a
     # module, not an argv token literally spelled "pytest"; match on the "-m"
     # "pytest" pair instead of a single-token check.

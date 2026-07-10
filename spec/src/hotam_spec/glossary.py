@@ -6,7 +6,7 @@ Violations are caught by tests/test_glossary_sync.py.
 
 Canon: §Glossary — this module IS the authoritative membership list of admitted
 methodology terms. Domain-side business terms (R-ids, axis slugs, stakeholders)
-live in spec/content/graph.py — not here.
+live in the domain's graph.py (domains/<name>/graph.py) — not here.
 
 WHY a generated controlled vocabulary: terminology drift is its own kind of
 invisibility — 'axis'/'dimension', 'steward'/'owner', 'conflict'/'tension'
@@ -199,7 +199,7 @@ TERMS: tuple[Term, ...] = (
     Term(
         "apply_proposal",
         "CONCEPT",
-        "The mechanical writer that lands a steward-approved proposal into spec/content/; the AI never edits the graph by hand.",
+        "The mechanical writer that lands a steward-approved proposal into the domain's graph.py; the AI never edits the graph by hand.",
     ),
     # §Closure section (P4 — Per-action verify/closure)
     Term(
@@ -290,7 +290,7 @@ TERMS: tuple[Term, ...] = (
     Term(
         "§Agent",
         "SECTION",
-        "A scoped sub-operator directory (spec/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories.",
+        "A scoped sub-operator directory (domains/<domain>/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories.",
     ),
     # §Domain section (P17 — domain isolation, per-domain graph and docs)
     Term(

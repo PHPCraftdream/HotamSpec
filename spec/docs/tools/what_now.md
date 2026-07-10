@@ -24,7 +24,7 @@ closed loop:
     State (graph + generated docs + test status)
       -> Diagnosis  (THIS tool: tools/what_now.py)
       -> Next-action (typed, prioritized, addressable)
-      -> Action     (edit the graph in spec/content)
+      -> Action     (edit the graph via apply_proposal)
       -> regenerate (tools/gen_spec.py)
       -> State.
 
@@ -65,7 +65,7 @@ It aggregates, in priority order:
                         ephemeral PENDING_PROPOSAL band (§Attention, A2).
 
 Run:
-  python tools/what_now.py            # diagnose spec/content/ (your domain)
+  python tools/what_now.py            # diagnose the active domain
   python tools/what_now.py --demo     # diagnose the fixture demo graph
   python tools/what_now.py --report   # single advisory Tick report (was tools/tick.py)
 
@@ -82,8 +82,8 @@ state, making being-lost structurally impossible.
 
 options:
   -h, --help           show this help message and exit
-  --demo               diagnose the fixture demo graph instead of
-                       spec/content/.
+  --demo               diagnose the fixture demo graph instead of the active
+                       domain.
   --p5-limit P5_LIMIT  cap on printed P5 LATENT_CONNECTOR lines (default 20);
                        truncation is disclosed, never silent.
   --report             print a single advisory Tick report instead of the full

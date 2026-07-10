@@ -14,7 +14,7 @@ vocabulary (invariants.check_axis_in_registry).
 
 WHY the vocabulary lives on TensionGraph.axes (not as a module constant): Hotam-Spec
 is a CONTENT-FREE framework. The framework ships zero axes; each domain owns its
-own vocabulary, declared on its graph in `spec/content/graph.py`. The framework
+own vocabulary, declared on its graph in `domains/<name>/graph.py`. The framework
 provides the Axis dataclass shape and the invariant; the slugs are the domain's.
 
 OPEN (methodology) — DEFERRED AI-gatekeeper: a new axis should be admitted only

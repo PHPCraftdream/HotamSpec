@@ -18,7 +18,7 @@ Generator: the human layer + structural anti-drift (docs-as-code, layer 9).
 The single source of truth is the executable model:
   - `spec/src/hotam_spec/*.py` docstrings (the methodology narrative: RULE + Canon:§
     + WHY) — they ship with the framework and are content-free;
-  - `spec/content/graph.py:build_graph()` (the domain's tension graph) — populated
+  - `domains/<name>/graph.py:build_graph()` (the domain's tension graph) — populated
     by the user; empty in a fresh framework.
 
 The normative human layer is GENERATED, never hand-written; drift is structurally
@@ -39,7 +39,7 @@ Outputs (committed under docs/gen/, banner-marked, LF):
     OPEN.md         — open registry: OPEN requirements + unresolved conflicts.
 
 Run:
-  python tools/gen_spec.py            # regenerate docs/gen/ from spec/content/
+  python tools/gen_spec.py            # regenerate docs/gen/ from the active domain
   python tools/gen_spec.py --demo     # regenerate docs/demo/ from the fixture
 
 Deterministic byte-for-byte: LF newlines, utf-8, no timestamps/randomness.

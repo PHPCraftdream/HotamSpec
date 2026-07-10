@@ -2,7 +2,7 @@
 
 Reads a steward-approved JSON proposal from a file path argument, validates it
 against the proposal shape (ProposedConflictTransition, ProposedRequirement, or
-ProposedRejection), locates the target node in spec/content/graph.py via AST,
+ProposedRejection), locates the target node in the active domain's graph.py via AST,
 applies the field changes via deterministic string replacement, regenerates docs
 via gen_spec.py, and runs pytest -q to verify the change is structurally clean.
 Optionally runs the P4 closure check to confirm the triggering diagnosis was
@@ -3196,7 +3196,7 @@ def apply(
       - ProposedAxis: insert a new Axis into the active domain's axes=() tuple
 
     Steps:
-      1. Read spec/content/graph.py.
+      1. Read the active domain's graph.py.
       2. Apply the proposal (type-dispatched).
       3. If dry_run: print diff and return 0 without writing.
       4. Write the file, run gen_spec.py, run the LAND-gate verify tier.
@@ -3696,7 +3696,7 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(
         description=(
-            "Mechanically apply a steward-approved JSON proposal to spec/content/graph.py. "
+            "Mechanically apply a steward-approved JSON proposal to the active domain's graph.py. "
             "Optionally verify P4 closure: that the triggering diagnosis was removed."
         )
     )
@@ -3808,31 +3808,20 @@ def main(argv: list[str] | None = None) -> int:
             # empty batch array is a no-op.
             return 0
 
-        # ONE regen + verify pass over the fully-written graph. The gate-tier
-        # decision (T1 vs T2) is driven by the LAST proposal's target/type —
-        # matching the pre-fix per-item behavior's own final call — using the
-        # EXACT same target_preexisting logic as apply() itself (see the
-        # R-land-gate-tier-selector-fails-closed comment a few dozen lines
-        # above apply()'s try/except): ProposedConflict/Axis/Assumption
-        # always create; ProposedAssumptionTransition/ConflictMemberUpdate
-        # fail closed regardless; ProposedRequirement checks whether its id
-        # pre-existed in the (now fully-written) graph; every other kind
-        # (Stakeholder/OperatorBudget/EntityType/Rejection/ConflictTransition)
-        # defaults to True, same as apply().
-        target_preexisting = True
-        if isinstance(
-            last_proposal, (ProposedConflict, ProposedAxis, ProposedAssumption)
-        ):
-            target_preexisting = False
-        elif isinstance(
-            last_proposal, (ProposedAssumptionTransition, ProposedConflictMemberUpdate)
-        ):
-            target_preexisting = False
-        elif isinstance(last_proposal, ProposedRequirement):
-            tree = ast.parse(_CONTENT_GRAPH.read_text(encoding="utf-8"))
-            target_preexisting = (
-                _find_requirement_call(tree, last_proposal.id) is not None
-            )
+        # ONE regen + verify pass over the fully-written graph.
+        #
+        # Gate-tier decision: ALWAYS T2 (full suite) for --batch.
+        # Rationale (fh-review F-1, 2026-07-10): the previous logic computed
+        # target_preexisting from the LAST proposal against the ALREADY-WRITTEN
+        # graph — so a batch where the last item was a new Requirement with
+        # explicit enforced_by would "find" itself in the post-write graph,
+        # set target_preexisting=True, and attempt T1 instead of the mandatory
+        # T2 fail-closed for creation operations. The correct fix would track
+        # per-item preexisting state across the loop, but --batch is a rare,
+        # heavy adoption-wave path where T1 savings are negligible; forcing T2
+        # is simpler, safer, and eliminates the bug class entirely
+        # (R-land-gate-tier-selector-fails-closed).
+        target_preexisting = False
         print(
             f"\n--- Batch write complete ({len(raw)} item(s)); "
             f"running ONE regen + verify pass ---"

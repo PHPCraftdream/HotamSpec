@@ -12,7 +12,7 @@ Canon: §Proposal — structured operator-→-steward change proposals.
 The closed loop's ACT half: the AI operator emits a structured proposal
 (ProposedRequirement / ProposedConflictTransition / ProposedRejection), the
 steward approves it (out-of-band: review + greenlight), and tools/apply_proposal.py
-mechanically writes the change to spec/content/graph.py + runs the regen+verify
+mechanically writes the change to the active domain's graph.py + runs the regen+verify
 pipeline. No free-text AI editing of source.
 
 This honors R-ai-presents-not-decides (the AI never closes a conflict silently)

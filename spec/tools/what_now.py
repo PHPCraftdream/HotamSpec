@@ -11,7 +11,7 @@ closed loop:
     State (graph + generated docs + test status)
       -> Diagnosis  (THIS tool: tools/what_now.py)
       -> Next-action (typed, prioritized, addressable)
-      -> Action     (edit the graph in spec/content)
+      -> Action     (edit the graph via apply_proposal)
       -> regenerate (tools/gen_spec.py)
       -> State.
 
@@ -52,7 +52,7 @@ It aggregates, in priority order:
                         ephemeral PENDING_PROPOSAL band (§Attention, A2).
 
 Run:
-  python tools/what_now.py            # diagnose spec/content/ (your domain)
+  python tools/what_now.py            # diagnose the active domain
   python tools/what_now.py --demo     # diagnose the fixture demo graph
   python tools/what_now.py --report   # single advisory Tick report (was tools/tick.py)
 
@@ -869,7 +869,7 @@ _EMPTY_GRAPH_BANNER = (
     f"No domain content under {CONTENT_GRAPH_FILE} — the framework is blank.\n"
     "\n"
     "Populate a domain (see CLAUDE.md §How to populate):\n"
-    "  1. create spec/content/graph.py exposing `build_graph() -> TensionGraph`;\n"
+    "  1. create domains/<name>/graph.py exposing `build_graph() -> TensionGraph`;\n"
     "  2. declare at least one Stakeholder and one Requirement (and the axes\n"
     "     vocabulary this domain admits);\n"
     "  3. re-run me, then `tools/gen_spec.py`, then `pytest -q`.\n"
@@ -932,7 +932,7 @@ def render(
         )
     lines.append("")
     lines.append(
-        "Loop: pick the top action -> edit spec/content -> "
+        "Loop: pick the top action -> apply proposal -> "
         "`python tools/gen_spec.py` -> `python -m pytest -q` -> re-run me."
     )
     return "\n".join(lines) + "\n"
@@ -945,7 +945,7 @@ def _load_graph(*, demo: bool) -> tuple[TensionGraph, str]:
     """Return (graph, source_label) per the --demo flag.
 
     --demo loads the fixture seed (explicit opt-in to the example); default loads
-    spec/content/ (the user's domain), which may be empty in a fresh framework.
+    the active domain (the user's domain), which may be empty in a fresh framework.
     Delegates to the shared _graph_loader (R-shared-tools-in-spec-tools) —
     the same demo/content branch attention.py, audit_atomicity.py,
     confront.py and audit_tensions.py use.
@@ -963,7 +963,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--demo",
         action="store_true",
-        help="diagnose the fixture demo graph instead of spec/content/.",
+        help="diagnose the fixture demo graph instead of the active domain.",
     )
     parser.add_argument(
         "--p5-limit",

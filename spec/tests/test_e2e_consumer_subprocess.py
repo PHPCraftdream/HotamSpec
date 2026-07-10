@@ -346,18 +346,36 @@ def test_editable_install_consumer_cli_subprocess_e2e(tmp_path: Path) -> None:
             graph_py=graph_py,
         )
     finally:
+        # Restoration order: critical pin/CLAUDE.md FIRST (cheap, reliable,
+        # and most likely to have leaked into the real checkout), then shared
+        # doc dirs (rmtree+copytree is the riskiest step on Windows due to
+        # lingering file handles). Each step is wrapped in its own try/except
+        # so a failure in one (e.g. a Windows file-handle rmtree error) does
+        # not block the remaining restorations.
+        try:
+            # Restore the .active-domain pin if it was changed.
+            if fw_pin_before is not None:
+                fw_active_domain_pin.write_bytes(fw_pin_before)
+            elif fw_active_domain_pin.exists():
+                fw_active_domain_pin.unlink()
+        except Exception:
+            pass
+        try:
+            # Restore the framework's CLAUDE.md (gen_spec may have overwritten
+            # it with consumer-domain content during the test).
+            FRAMEWORK_CLAUDE_MD.write_bytes(fw_claude_before)
+        except Exception:
+            pass
+        try:
+            # Remove the framework's domains/my-shop if it was created as a
+            # side effect (editable-install cross-contamination).
+            if not fw_myshop_existed_before and fw_myshop.is_dir():
+                shutil.rmtree(fw_myshop)
+        except Exception:
+            pass
         for shared_dir, backup_dir in shared_doc_backups.items():
-            shutil.rmtree(shared_dir)
-            shutil.copytree(backup_dir, shared_dir)
-        # Restore the .active-domain pin if it was changed.
-        if fw_pin_before is not None:
-            fw_active_domain_pin.write_bytes(fw_pin_before)
-        elif fw_active_domain_pin.exists():
-            fw_active_domain_pin.unlink()
-        # Remove the framework's domains/my-shop if it was created as a
-        # side effect (editable-install cross-contamination).
-        if not fw_myshop_existed_before and fw_myshop.is_dir():
-            shutil.rmtree(fw_myshop)
-        # Restore the framework's CLAUDE.md (gen_spec may have overwritten
-        # it with consumer-domain content during the test).
-        FRAMEWORK_CLAUDE_MD.write_bytes(fw_claude_before)
+            try:
+                shutil.rmtree(shared_dir)
+                shutil.copytree(backup_dir, shared_dir)
+            except Exception:
+                pass

@@ -15,7 +15,7 @@ Canon: §Proposal — mechanical writer for steward-approved JSON proposals.
 
 Reads a steward-approved JSON proposal from a file path argument, validates it
 against the proposal shape (ProposedConflictTransition, ProposedRequirement, or
-ProposedRejection), locates the target node in spec/content/graph.py via AST,
+ProposedRejection), locates the target node in the active domain's graph.py via AST,
 applies the field changes via deterministic string replacement, regenerates docs
 via gen_spec.py, and runs pytest -q to verify the change is structurally clean.
 Optionally runs the P4 closure check to confirm the triggering diagnosis was
@@ -160,8 +160,9 @@ usage: apply_proposal.py [-h] [--dry-run] [--triggering-kind KIND] [--batch]
                          [--full]
                          proposal_file
 
-Mechanically apply a steward-approved JSON proposal to spec/content/graph.py.
-Optionally verify P4 closure: that the triggering diagnosis was removed.
+Mechanically apply a steward-approved JSON proposal to the active domain's
+graph.py. Optionally verify P4 closure: that the triggering diagnosis was
+removed.
 
 positional arguments:
   proposal_file         Path to the steward-approved JSON proposal file.
