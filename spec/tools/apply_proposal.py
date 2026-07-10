@@ -870,22 +870,12 @@ def _find_requirements_tuple_end(tree: ast.AST, source_lines: list[str]) -> int 
 
     Looks for an assignment `requirements = (...)` inside `build_graph()` and
     returns the end_lineno of the Tuple node (the line with the closing paren).
+    `source_lines` is accepted for backward-compat call-site symmetry with
+    sibling finders but is not needed by the AST-only lookup itself
+    (delegates to the shared _find_module_tuple_end, see below).
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        if node.name != "build_graph":
-            continue
-        for stmt in node.body:
-            if not isinstance(stmt, ast.Assign):
-                continue
-            for target in stmt.targets:
-                if isinstance(target, ast.Name) and target.id == "requirements":
-                    # The value is a Tuple
-                    val = stmt.value
-                    end = getattr(val, "end_lineno", None)
-                    return end
-    return None
+    del source_lines
+    return _find_module_tuple_end(tree, "requirements")
 
 
 # ---------------------------------------------------------------------------
@@ -1950,20 +1940,10 @@ def _find_conflicts_tuple_end(tree: ast.AST) -> int | None:
 
     Looks for an assignment `conflicts = (...)` inside `build_graph()` and
     returns the end_lineno of the Tuple node (the line with the closing paren).
-    Mirrors _find_requirements_tuple_end.
+    Mirrors _find_requirements_tuple_end (delegates to the shared
+    _find_module_tuple_end, see below).
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        if node.name != "build_graph":
-            continue
-        for stmt in node.body:
-            if not isinstance(stmt, ast.Assign):
-                continue
-            for target in stmt.targets:
-                if isinstance(target, ast.Name) and target.id == "conflicts":
-                    return getattr(stmt.value, "end_lineno", None)
-    return None
+    return _find_module_tuple_end(tree, "conflicts")
 
 
 def _collect_call_kwarg_literals(tree: ast.AST, func_name: str, kwarg: str) -> set[str]:
@@ -1990,6 +1970,116 @@ def _collect_call_kwarg_literals(tree: ast.AST, func_name: str, kwarg: str) -> s
                 if isinstance(kw.value.value, str):
                     out.add(kw.value.value)
     return out
+
+
+def _find_module_tuple_end(tree: ast.AST, var_name: str) -> int | None:
+    """Find the line number (1-indexed) of the closing ')' of `var_name = (...)`.
+
+    Looks for a top-level assignment `<var_name> = (...)` inside `build_graph()`
+    and returns the end_lineno of the Tuple node (the line with the closing
+    paren). Shared shape behind _find_requirements_tuple_end /
+    _find_conflicts_tuple_end / _find_axes_tuple_end /
+    _find_stakeholders_tuple_end / _find_assumptions_tuple_end — every
+    top-level `name = (...)` roster inside build_graph() is located the same
+    way; only the target variable name differs per proposal kind.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if node.name != "build_graph":
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == var_name:
+                    return getattr(stmt.value, "end_lineno", None)
+    return None
+
+
+def _find_call_indent(
+    tree: ast.AST, lines: list[str], call_name: str, default: str = "        "
+) -> str:
+    """Return the indentation of the first `call_name(...)` call found in `lines`.
+
+    Walks the AST for an ast.Call node named `call_name` and reads the leading
+    whitespace of its source line; falls back to `default` (8 spaces, the
+    typical roster-tuple nesting depth) when no such call exists yet — the
+    first-of-its-kind case for a fresh roster. Shared by the flat single-line
+    "insert one call into a top-level tuple" writers (Axis/Stakeholder/
+    Assumption) which all previously duplicated this scan verbatim.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == call_name:
+            line_text = lines[node.lineno - 1]
+            stripped = line_text.lstrip()
+            return line_text[: len(line_text) - len(stripped)]
+    return default
+
+
+def _insert_into_flat_tuple(
+    source_text: str,
+    *,
+    var_name: str,
+    call_name: str,
+    rendered: str,
+) -> str:
+    """Insert `rendered` (one Call(...) source block) into `var_name = (...)`.
+
+    Shared write mechanics behind _apply_axis_to_source /
+    _apply_stakeholder_to_source / _apply_assumption_to_source: locate the
+    tuple's closing paren via _find_module_tuple_end, detect indentation via
+    _find_call_indent, and splice the rendered block in just before the close.
+    Raises RuntimeError if the tuple cannot be found (malformed graph.py).
+    Callers still own duplicate-id validation and import-injection — those
+    differ per kind (slug vs id, and which module/name to import).
+    """
+    tree = ast.parse(source_text)
+    lines = source_text.splitlines(keepends=True)
+    tuple_end = _find_module_tuple_end(tree, var_name)
+    if tuple_end is None:
+        raise RuntimeError(
+            f"Cannot find `{var_name} = (...)` tuple in build_graph(). "
+            "Is the domain graph.py well-formed?"
+        )
+    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
+    lines.insert(insert_at, rendered)
+    return "".join(lines)
+
+
+def _ensure_single_name_import(source_text: str, module: str, name: str) -> str:
+    """Ensure `name` is imported from `module`, adding it to an existing import
+    statement's tail or inserting a fresh `from module import name` line.
+
+    Shared "ensure the roster's own class name is importable" tail behind
+    _apply_axis_to_source / _apply_stakeholder_to_source (both insert exactly
+    one class name into `from <module> import ...`). Assumption's variant
+    checks for a status CONSTANT rather than the class name, so it keeps its
+    own inline logic (`_apply_assumption_transition`/`_apply_assumption_to_source`).
+    """
+    if _re.search(
+        rf"^from {_re.escape(module)} import\b.*\b{name}\b",
+        source_text,
+        _re.MULTILINE,
+    ):
+        return source_text
+    m = _re.search(rf"^from {_re.escape(module)} import ([^\n]+)", source_text, _re.MULTILINE)
+    if m:
+        existing = m.group(1)
+        new_import = existing.rstrip() + f", {name}"
+        return source_text.replace(
+            f"from {module} import {existing}",
+            f"from {module} import {new_import}",
+            1,
+        )
+    return source_text.replace(
+        "from __future__ import annotations\n",
+        f"from __future__ import annotations\n\nfrom {module} import {name}\n",
+        1,
+    )
 
 
 def _requirement_owner_literal(tree: ast.AST, req_id: str) -> str | None:
@@ -2138,20 +2228,10 @@ def _find_axes_tuple_end(tree: ast.AST) -> int | None:
 
     Looks for an assignment `axes = (...)` inside `build_graph()` and returns
     the end_lineno of the Tuple node (the line with the closing paren).
-    Mirrors _find_requirements_tuple_end / _find_conflicts_tuple_end.
+    Mirrors _find_requirements_tuple_end / _find_conflicts_tuple_end
+    (delegates to the shared _find_module_tuple_end, see above).
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        if node.name != "build_graph":
-            continue
-        for stmt in node.body:
-            if not isinstance(stmt, ast.Assign):
-                continue
-            for target in stmt.targets:
-                if isinstance(target, ast.Name) and target.id == "axes":
-                    return getattr(stmt.value, "end_lineno", None)
-    return None
+    return _find_module_tuple_end(tree, "axes")
 
 
 def _collect_axis_slugs(tree: ast.AST) -> set[str]:
@@ -2184,6 +2264,11 @@ def _apply_axis_to_source(source_text: str, proposal: ProposedAxis) -> str:
     structural invariant (exact-slug uniqueness) that the graph-side
     check_axis_in_registry family also depends on; the semantic near-duplicate
     judgment is a steward-facing decision, not a mechanical block.
+
+    Write mechanics (find tuple, detect indent, splice, ensure import) are
+    shared with _apply_stakeholder_to_source / _apply_assumption_to_source
+    via _insert_into_flat_tuple / _find_call_indent / _ensure_single_name_import
+    — only the duplicate-id check and the rendered shape differ per kind.
     """
     tree = ast.parse(source_text)
     existing_slugs = _collect_axis_slugs(tree)
@@ -2195,50 +2280,12 @@ def _apply_axis_to_source(source_text: str, proposal: ProposedAxis) -> str:
         )
 
     lines = source_text.splitlines(keepends=True)
-    tuple_end = _find_axes_tuple_end(tree)
-    if tuple_end is None:
-        raise RuntimeError(
-            "Cannot find `axes = (...)` tuple in build_graph(). "
-            "Is the domain graph.py well-formed?"
-        )
-
-    # Determine indentation from existing Axis calls (default 8 spaces).
-    indent = "        "
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Name) and func.id == "Axis":
-            line_text = lines[node.lineno - 1]
-            stripped = line_text.lstrip()
-            indent = line_text[: len(line_text) - len(stripped)]
-            break
-
+    indent = _find_call_indent(tree, lines, "Axis")
     new_axis = _render_axis_source(proposal, indent)
-    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
-    lines.insert(insert_at, new_axis)
-    result = "".join(lines)
-
-    # Ensure Axis is imported.
-    if not _re.search(
-        r"^from hotam_spec\.axis import\b.*\bAxis\b", result, _re.MULTILINE
-    ):
-        m = _re.search(r"^from hotam_spec\.axis import ([^\n]+)", result, _re.MULTILINE)
-        if m:
-            existing = m.group(1)
-            new_import = existing.rstrip() + ", Axis"
-            result = result.replace(
-                f"from hotam_spec.axis import {existing}",
-                f"from hotam_spec.axis import {new_import}",
-                1,
-            )
-        else:
-            result = result.replace(
-                "from __future__ import annotations\n",
-                "from __future__ import annotations\n\nfrom hotam_spec.axis import Axis\n",
-                1,
-            )
-    return result
+    result = _insert_into_flat_tuple(
+        source_text, var_name="axes", call_name="Axis", rendered=new_axis
+    )
+    return _ensure_single_name_import(result, "hotam_spec.axis", "Axis")
 
 
 def _find_stakeholders_tuple_end(tree: ast.AST) -> int | None:
@@ -2248,18 +2295,7 @@ def _find_stakeholders_tuple_end(tree: ast.AST) -> int | None:
     returns the end_lineno of the Tuple node (the line with the closing paren).
     Mirrors _find_axes_tuple_end.
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        if node.name != "build_graph":
-            continue
-        for stmt in node.body:
-            if not isinstance(stmt, ast.Assign):
-                continue
-            for target in stmt.targets:
-                if isinstance(target, ast.Name) and target.id == "stakeholders":
-                    return getattr(stmt.value, "end_lineno", None)
-    return None
+    return _find_module_tuple_end(tree, "stakeholders")
 
 
 def _collect_stakeholder_ids(tree: ast.AST) -> set[str]:
@@ -2298,43 +2334,17 @@ def _apply_stakeholder_to_source(
         )
 
     lines = source_text.splitlines(keepends=True)
-    tuple_end = _find_stakeholders_tuple_end(tree)
-    if tuple_end is None:
-        raise RuntimeError(
-            "Cannot find `stakeholders = (...)` tuple in build_graph(). "
-            "Is the domain graph.py well-formed?"
-        )
-
-    # Determine indentation from existing Stakeholder calls (default 8 spaces).
-    indent = "        "
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Name) and func.id == "Stakeholder":
-            line_text = lines[node.lineno - 1]
-            stripped = line_text.lstrip()
-            indent = line_text[: len(line_text) - len(stripped)]
-            break
-
+    indent = _find_call_indent(tree, lines, "Stakeholder")
     new_stakeholder = _render_stakeholder_source(proposal, indent)
-    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
-    lines.insert(insert_at, new_stakeholder)
-    result = "".join(lines)
-
-    # Ensure Stakeholder is imported.
-    if not _re.search(
-        r"^from hotam_spec\.stakeholder import\b.*\bStakeholder\b",
-        result,
-        _re.MULTILINE,
-    ):
-        result = result.replace(
-            "from __future__ import annotations\n",
-            "from __future__ import annotations\n\n"
-            "from hotam_spec.stakeholder import Stakeholder\n",
-            1,
-        )
-    return result
+    result = _insert_into_flat_tuple(
+        source_text,
+        var_name="stakeholders",
+        call_name="Stakeholder",
+        rendered=new_stakeholder,
+    )
+    return _ensure_single_name_import(
+        result, "hotam_spec.stakeholder", "Stakeholder"
+    )
 
 
 def _find_assumptions_tuple_end(tree: ast.AST) -> int | None:
@@ -2344,18 +2354,7 @@ def _find_assumptions_tuple_end(tree: ast.AST) -> int | None:
     returns the end_lineno of the Tuple node (the line with the closing paren).
     Mirrors _find_axes_tuple_end.
     """
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        if node.name != "build_graph":
-            continue
-        for stmt in node.body:
-            if not isinstance(stmt, ast.Assign):
-                continue
-            for target in stmt.targets:
-                if isinstance(target, ast.Name) and target.id == "assumptions":
-                    return getattr(stmt.value, "end_lineno", None)
-    return None
+    return _find_module_tuple_end(tree, "assumptions")
 
 
 def _collect_assumption_ids(tree: ast.AST) -> set[str]:
@@ -2386,6 +2385,12 @@ def _apply_assumption_to_source(source_text: str, proposal: ProposedAssumption) 
     Pre-write validation (raises RuntimeError, nothing written):
       - no Assumption with the same id may already exist (a duplicate id is a
         re-declaration, not a new assumption).
+
+    Import-ensure is NOT the shared _ensure_single_name_import: unlike
+    Axis/Stakeholder (which ensure their own class name is imported), an
+    Assumption's constructor call references a STATUS CONSTANT
+    (HOLDS/UNCERTAIN/DEAD) rather than the Assumption class name itself, so
+    this keeps its own inline logic below.
     """
     tree = ast.parse(source_text)
     existing_ids = _collect_assumption_ids(tree)
@@ -2397,29 +2402,14 @@ def _apply_assumption_to_source(source_text: str, proposal: ProposedAssumption) 
         )
 
     lines = source_text.splitlines(keepends=True)
-    tuple_end = _find_assumptions_tuple_end(tree)
-    if tuple_end is None:
-        raise RuntimeError(
-            "Cannot find `assumptions = (...)` tuple in build_graph(). "
-            "Is the domain graph.py well-formed?"
-        )
-
-    # Determine indentation from existing Assumption calls (default 8 spaces).
-    indent = "        "
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Name) and func.id == "Assumption":
-            line_text = lines[node.lineno - 1]
-            stripped = line_text.lstrip()
-            indent = line_text[: len(line_text) - len(stripped)]
-            break
-
+    indent = _find_call_indent(tree, lines, "Assumption")
     new_assumption = _render_assumption_source(proposal, indent)
-    insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
-    lines.insert(insert_at, new_assumption)
-    result = "".join(lines)
+    result = _insert_into_flat_tuple(
+        source_text,
+        var_name="assumptions",
+        call_name="Assumption",
+        rendered=new_assumption,
+    )
 
     # Ensure status constant (HOLDS/UNCERTAIN/DEAD) is imported.
     if not _re.search(
