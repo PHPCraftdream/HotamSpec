@@ -22,7 +22,7 @@ pip install hotam-spec
 pip install -e /path/to/HotamSpec/spec
 ```
 
-This installs the `hotam-spec` package and ~29 `hotam-*` console scripts
+This installs the `hotam-spec` package and 26 `hotam-*` console scripts
 (`hotam-create-domain`, `hotam-what-now`, `hotam-apply-proposal`, ...). Run
 `pip show -f hotam-spec` or check `spec/pyproject.toml`'s `[project.scripts]`
 table for the full list.
@@ -33,7 +33,9 @@ Run this **inside your own project directory** (not inside HotamSpec):
 
 ```bash
 mkdir my-project && cd my-project
-git init   # optional, but recommended — see "how project root is found" below
+touch .hotam-spec-project   # marks this directory as your project root -- see
+                            # "how project root is found" below. `git init`
+                            # does NOT count as a marker on its own.
 
 hotam-create-domain my-shop \
     --description "My shop's contradictory requirements" \
