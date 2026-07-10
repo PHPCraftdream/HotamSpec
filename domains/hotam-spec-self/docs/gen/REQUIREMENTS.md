@@ -149,7 +149,7 @@ Generated from the executable model: the methodology narrative comes from `spec/
 | `R-entity-typed-anchors` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes. |
 | `R-process-drives-existing-entities` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types. |
 | `R-step-invokes-known-transition` | SETTLED | `framework-author` | A-text-grounded-in-models, A-bootstrap-self-applies | Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle. |
-| `R-dependency-tracked` | SETTLED | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements via Requirement.relations (depends_on, supports, refines). |
+| `R-dependency-tracked` | SETTLED | `framework-author` | A-finite-context-operators | The system shall track the dependency network between requirements via Requirement.relations (depends_on, refines). |
 | `R-dependency-drives-parallel` | SETTLED | `framework-author` | A-finite-context-operators | Independent sub-graphs in the dependency network may be delegated to parallel sub-operators. |
 | `R-dependency-drives-sequential` | SETTLED | `framework-author` | A-finite-context-operators | Dependency chains in the network shall be processed sequentially. |
 | `R-crystal-is-claude-md` | SETTLED | `ai-agent` | A-compaction-loses-working, A-bootstrap-self-applies | Each operator's crystallized substrate shall be its own CLAUDE.md file. |
@@ -602,8 +602,12 @@ can die. The requirement carries everything needed to detect the three
 invisibilities AROUND it — but the contradiction itself never lives here; it
 lives on the Conflict connector node (see §Conflict).
 
-WHY relations are typed tuple-of-id fields (not a generic graph): `supports`,
-`refines`, `depends_on` are the SUPPORTIVE structure — the non-adversarial edges.
+WHY relations are typed tuple-of-id fields (not a generic graph): `refines` and
+`depends_on` are the SUPPORTIVE structure — the non-adversarial edges. (D2,
+2026-07-10: `supports` was merged into `refines` — no check_* invariant ever
+differentiated the two kinds semantically, so carrying both was an
+undifferentiated distinction; every existing `supports` edge was migrated to
+`refines` via a batch ProposedRequirement UPDATE, R-no-hand-edit-graph.)
 A contradiction is deliberately NOT among them: you cannot express a conflict as
 a Requirement field, because a conflict belongs to neither requirement. This is
 the structural enforcement of "conflict is a node, not an edge" — the ontology

@@ -827,7 +827,7 @@ def _extract_requirement_relations(call: ast.Call) -> tuple[tuple[str, str], ...
     """Canon: §Proposal — read the (kind, target) pairs from a Requirement's relations=.
 
     Parses the `relations=` kwarg of a Requirement(...) call from its AST,
-    handling both bare-string-tuple shorthand ("supports", "R-x") and the typed
+    handling both bare-string-tuple shorthand ("refines", "R-x") and the typed
     Relation("kind", "target") constructor form. Returns a tuple of pairs;
     empty if the kwarg is absent. Used by the replaces-edge writer to APPEND a
     new edge to a replacing requirement's existing relations without clobbering.

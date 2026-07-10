@@ -199,7 +199,7 @@ def test_dangling_owner_fires() -> None:
 def test_dangling_relation_target_fires() -> None:
     """check_no_dangling_ids fires on a relation pointing to a missing requirement."""
     reqs = (
-        _req("R-1", "sa", relations=(Relation(kind="supports", target="R-missing"),)),
+        _req("R-1", "sa", relations=(Relation(kind="refines", target="R-missing"),)),
         _req("R-2", "sb"),
     )
     g = _graph_with(_wellformed_conflict(), reqs=reqs)

@@ -79,9 +79,15 @@ def _rejected_req(rid: str, owner: str = "s-a", why: str = "") -> Requirement:
 
 
 def test_replaces_in_relation_kinds() -> None:
-    """'replaces' is admitted in RELATION_KINDS alongside the three supportive kinds."""
+    """'replaces' is admitted in RELATION_KINDS alongside the two supportive kinds.
+
+    D2 (2026-07-10): 'supports' was merged into 'refines' -- no check_*
+    invariant ever differentiated the two, so the vocabulary shrank from
+    four kinds to three (refines, depends_on, replaces).
+    """
     assert "replaces" in RELATION_KINDS
-    assert {"supports", "refines", "depends_on"} <= RELATION_KINDS
+    assert {"refines", "depends_on"} <= RELATION_KINDS
+    assert "supports" not in RELATION_KINDS
 
 
 def test_proposed_rejection_replaced_by_defaults_empty() -> None:

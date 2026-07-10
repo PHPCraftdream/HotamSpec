@@ -301,7 +301,7 @@ def seed_graph() -> TensionGraph:
             status="SETTLED",
             why="Checkout abandonment rises sharply past 200ms; latency is revenue.",
             assumptions=("A-sync-budget",),
-            relations=(Relation(kind="supports", target="R-90"),),
+            relations=(Relation(kind="refines", target="R-90"),),
         ),
         Requirement(
             id="R-203",

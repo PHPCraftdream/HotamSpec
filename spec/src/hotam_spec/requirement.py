@@ -7,8 +7,12 @@ can die. The requirement carries everything needed to detect the three
 invisibilities AROUND it — but the contradiction itself never lives here; it
 lives on the Conflict connector node (see §Conflict).
 
-WHY relations are typed tuple-of-id fields (not a generic graph): `supports`,
-`refines`, `depends_on` are the SUPPORTIVE structure — the non-adversarial edges.
+WHY relations are typed tuple-of-id fields (not a generic graph): `refines` and
+`depends_on` are the SUPPORTIVE structure — the non-adversarial edges. (D2,
+2026-07-10: `supports` was merged into `refines` — no check_* invariant ever
+differentiated the two kinds semantically, so carrying both was an
+undifferentiated distinction; every existing `supports` edge was migrated to
+`refines` via a batch ProposedRequirement UPDATE, R-no-hand-edit-graph.)
 A contradiction is deliberately NOT among them: you cannot express a conflict as
 a Requirement field, because a conflict belongs to neither requirement. This is
 the structural enforcement of "conflict is a node, not an edge" — the ontology
@@ -67,9 +71,9 @@ ENFORCEABILITY_KINDS: frozenset[str] = frozenset({ENFORCEABLE, INHERENTLY_PROSE}
 class Relation:
     """Canon: §Requirement — one typed SUPPORTIVE edge to another Requirement.
 
-    RULE: `kind` is one of the relation kinds (supports | refines |
-    depends_on | replaces); `target` MUST be the id of a Requirement in the
-    graph (invariants.check_no_dangling_ids). Conflict is deliberately NOT a
+    RULE: `kind` is one of the relation kinds (refines | depends_on |
+    replaces); `target` MUST be the id of a Requirement in the graph
+    (invariants.check_no_dangling_ids). Conflict is deliberately NOT a
     relation kind — see module docstring. `replaces` is directed: the carrier
     (the Requirement whose `relations` carries the edge) REPLACES the `target`
     (a REJECTED requirement it supersedes) — anti-relitigation as structure.
@@ -78,20 +82,28 @@ class Relation:
     a depends_on chain can lead to an assumption a different requirement negates;
     that latent contradiction is then materialized as a Conflict node, it is not
     this edge.
+
+    WHY no separate `supports` kind (D2, 2026-07-10): no check_* invariant ever
+    branched on `kind == "supports"` vs `kind == "refines"` — the two were
+    structurally identical (both admitted, both dangling-target-checked the
+    same way), so the distinction was undifferentiated vocabulary, not
+    semantics. Merged into `refines` (the more frequently used of the two)
+    by steward decision; every prior `supports` edge in the graph was
+    migrated via a batch ProposedRequirement UPDATE (R-no-hand-edit-graph).
     """
 
-    kind: str  # "supports" | "refines" | "depends_on" | "replaces"
+    kind: str  # "refines" | "depends_on" | "replaces"
     target: str
 
 
-#: The admitted relation kinds (authority for the form invariant). The first
-#: three are SUPPORTIVE edges (non-adversarial structure); `replaces` is the
-#: ANTI-RELITIGATION edge — a directed "this requirement supersedes that one"
-#: link, materialized structurally so the REJECTED↔SETTLED replacement relation
-#: is graph-traversable, not prose-only (R-rejected-preserved-not-deleted).
-RELATION_KINDS: frozenset[str] = frozenset(
-    {"supports", "refines", "depends_on", "replaces"}
-)
+#: The admitted relation kinds (authority for the form invariant). `refines`
+#: and `depends_on` are SUPPORTIVE edges (non-adversarial structure);
+#: `replaces` is the ANTI-RELITIGATION edge — a directed "this requirement
+#: supersedes that one" link, materialized structurally so the
+#: REJECTED↔SETTLED replacement relation is graph-traversable, not
+#: prose-only (R-rejected-preserved-not-deleted). (D2, 2026-07-10: `supports`
+#: merged into `refines` — see the Relation docstring WHY.)
+RELATION_KINDS: frozenset[str] = frozenset({"refines", "depends_on", "replaces"})
 
 
 @dataclass(frozen=True)
