@@ -2,7 +2,6 @@
 
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-green.svg)](https://www.python.org)
-[![Tests](https://img.shields.io/badge/tests-944%20passing-brightgreen.svg)](#testing)
 
 > Executable methodology for contradictory business requirements, modeled as a tension graph.
 
@@ -10,13 +9,26 @@
 
 Hotam-Spec is a framework for managing the lifecycle of **contradictory business requirements**. Instead of pretending conflicts don't exist, it models them as first-class **tension nodes** in a graph -- visible, stewarded, and tracked through resolution.
 
+### Glossary (six terms to get started)
+
+- **Stakeholder** -- an accountable party (a person, team, or role) who can own requirements or steward a conflict.
+- **Requirement** -- a business claim with a lifecycle (draft -> settled -> rejected).
+- **Axis** -- a named dimension along which requirements can pull in opposite directions (e.g. "speed vs rigor").
+- **Conflict** -- two or more requirements that contradict each other on an axis; tracked explicitly instead of silently overridden.
+- **Steward != owner** -- the person who decides how a conflict resolves must NOT be the owner of any requirement on either side of it. This keeps conflict resolution from being one side simply overruling the other.
+- **Assumption** -- a belief a requirement or conflict rests on, which can later turn out to be wrong ("drift").
+
+That's everything a human team needs to start. Everything past this point --
+operators, crystals, context budgets, spawn logs -- is internal machinery for
+running an **AI agent as an operator** of the graph; skip it if you're just
+using Hotam-Spec as a CLI discipline for your team.
+
 ### Key ideas
 
 - **Conflict is a connector node**, not an edge -- it carries axis, context, steward, and lifecycle
 - **Requirements contradict -- and that's expected** -- the methodology surfaces them, never hides them
-- **The AI presents, never decides** -- every resolution stays with a human steward
+- **A human always decides** -- every conflict resolution stays with a named steward; an AI operator, if you use one, may only present options
 - **Docs-as-code with structural anti-drift** -- generated docs must match the model byte-for-byte
-- **Substrate generates the operator** -- the spec writes the AI's own prompt, not the reverse
 
 ### The tension graph
 
@@ -59,17 +71,24 @@ framework code changes. Every graph write goes through `apply_proposal.py`; the
 graph is never hand-edited (`R-no-hand-edit-graph`, enforced by a committed
 PreToolUse guard).
 
+This section covers the self-hosting path (working inside a clone of this
+repo, running tools from `spec/`). **If you're installing Hotam-Spec into your
+own separate repo** (via `pip`, using the `hotam-*` console scripts), use
+[docs/QUICKSTART-CONSUMER.md](docs/QUICKSTART-CONSUMER.md) instead — same
+ideas, different install path.
+
+### Required for any team (no AI agent needed)
+
+Everything below works from a plain shell — no AI operator involved. This is
+the whole discipline: scaffold a domain, then add stakeholders/requirements/
+conflicts through the CLI or `apply_proposal.py`.
+
 ```bash
 cd spec && uv sync                                   # 1. install
 
-# 2. install the committed sensorium (SessionStart/PostCompact regen,
-#    UserPromptSubmit cipher, PreToolUse graph-guard, Stop context+boot-cite).
-#    Portable via $CLAUDE_PROJECT_DIR — writes <repo>/.claude/settings.json.
-uv run python tools/setup_hooks.py            # dry-run: prints the plan
-uv run python tools/setup_hooks.py --apply    # writes the committed settings.json
-
-# 3. scaffold YOUR domain and activate it (pins domains/.active-domain and
-#    regenerates the ROOT CLAUDE.md as your domain's operator crystal).
+# 2. scaffold YOUR domain and activate it (pins domains/.active-domain and
+#    regenerates the ROOT CLAUDE.md as your domain's operator crystal --
+#    the CLAUDE.md file itself only matters if you add an AI operator later).
 uv run python tools/create_domain.py my-shop \
     --description "My shop's contradictory requirements" \
     --goals "hold the first tension;decide honestly" \
@@ -81,7 +100,7 @@ Now populate the tension graph — each step is a `Proposed*` JSON fed to
 `apply_proposal.py`:
 
 ```bash
-# 4. at least TWO stakeholders (a conflict's steward may not own any member).
+# 3. at least TWO stakeholders (a conflict's steward may not own any member).
 echo '{"kind":"Stakeholder","id":"alice","name":"Alice","domain":"product"}'   > sh1.json
 echo '{"kind":"Stakeholder","id":"bob","name":"Bob","domain":"engineering"}'   > sh2.json
 echo '{"kind":"Stakeholder","id":"carol","name":"Carol","domain":"governance"}'> sh3.json
@@ -89,28 +108,50 @@ uv run python tools/apply_proposal.py sh1.json
 uv run python tools/apply_proposal.py sh2.json
 uv run python tools/apply_proposal.py sh3.json   # a NEUTRAL steward for the conflict
 
-# 5. an axis — the shared dimension your first tension lives on.
+# 4. an axis — the shared dimension your first tension lives on.
 uv run python tools/create_axis.py speed-vs-rigor --description "ship fast vs verify thoroughly"
 
-# 6. a few atomic requirements (enforcement is PROSE | STRUCTURAL | ENFORCED).
+# 5. a few atomic requirements (enforcement is PROSE | STRUCTURAL | ENFORCED).
 echo '{"kind":"Requirement","id":"R-ship-fast","claim":"Ship within one week.","owner":"alice","status":"SETTLED","enforcement":"PROSE"}'      > r1.json
 echo '{"kind":"Requirement","id":"R-verify-all","claim":"Verify every change before release.","owner":"bob","status":"SETTLED","enforcement":"PROSE"}' > r2.json
 uv run python tools/apply_proposal.py r1.json
 uv run python tools/apply_proposal.py r2.json
 
-# 7. your FIRST conflict — the tension between them, stewarded by the neutral party.
+# 6. your FIRST conflict — the tension between them, stewarded by the neutral party.
 echo '{"kind":"Conflict","axis":"speed-vs-rigor","context":"first release cadence","members":["R-ship-fast","R-verify-all"],"steward":"carol"}' > c1.json
 uv run python tools/apply_proposal.py c1.json
 
-# 8. regenerate the crystal and read your pulse.
+# 7. regenerate the crystal and read your pulse.
 uv run python tools/gen_spec.py
 uv run python tools/what_now.py     # your DETECTED conflict now awaits carol's ACKNOWLEDGE
 ```
 
-Your operator crystal is the repository-root `CLAUDE.md` (regenerated from
-whichever domain is pinned in `domains/.active-domain`); the per-domain
-`domains/my-shop/CLAUDE.md` is only a pointer to it. `what_now.py` is your live
-pulse — the next correct action, derived from the graph.
+`what_now.py` is your live pulse — the next correct action, derived from the
+graph. For the full JSON reference of every `Proposed*` kind, see
+[docs/PROPOSAL-REFERENCE.md](docs/PROPOSAL-REFERENCE.md).
+
+### Optional: only if you run an AI agent as an operator
+
+The following steps are **not needed** for a human team using the CLI
+directly. They matter only if you want an AI agent (e.g. Claude Code) to act
+as an **operator** of the graph — presenting proposals for the steward to
+approve, never deciding on its own (`R-ai-presents-not-decides`).
+
+```bash
+# install the committed sensorium (SessionStart/PostCompact regen,
+# UserPromptSubmit cipher, PreToolUse graph-guard, Stop context+boot-cite).
+# Portable via $CLAUDE_PROJECT_DIR — writes <repo>/.claude/settings.json.
+uv run python tools/setup_hooks.py            # dry-run: prints the plan
+uv run python tools/setup_hooks.py --apply    # writes the committed settings.json
+```
+
+With this installed, the repository-root `CLAUDE.md` (regenerated from
+whichever domain is pinned in `domains/.active-domain`) becomes the AI
+operator's **crystal** -- the substrate that generates the agent's own prompt,
+rather than the agent improvising one. The per-domain
+`domains/my-shop/CLAUDE.md` is only a pointer to it. None of this -- crystals,
+context budgets, spawn logs -- is required to use Hotam-Spec as a plain CLI
+discipline.
 
 ## Project structure
 
@@ -118,7 +159,7 @@ pulse — the next correct action, derived from the graph.
 spec/                          # Framework (shared, content-free)
 ├── src/hotam_spec/            # Ontology: Requirement, Conflict, Lifecycle, Entity, ...
 ├── tools/                     # Shared meta-tools (gen_spec, what_now, apply_proposal, ...)
-├── tests/                     # 944+ tests
+├── tests/                     # pytest suite (run `pytest -q` under spec/ for the current count)
 └── docs/                      # Generated thinking + tool docs (DRY source)
 
 domains/                       # Per-business domain content
