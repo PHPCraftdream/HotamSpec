@@ -286,6 +286,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement="ENFORCED",
             enforced_by=("test_what_now.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-drift-structurally-impossible",
@@ -307,6 +309,8 @@ def build_graph() -> TensionGraph:
                 "test_docs_gen.py::test_open_md_up_to_date",
                 "test_docs_gen.py::test_unenforced_md_up_to_date",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-conflict-is-connector-node",
@@ -321,6 +325,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-conflict-is-a-node-not-an-edge",),
             enforcement="ENFORCED",
             enforced_by=("check_conflict_has_axis", "check_conflict_has_context", "check_conflict_has_steward", "test_invariants.py::test_conflicts_with_is_not_a_relation_kind"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-content-free-framework",
@@ -334,6 +340,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-content-free-honest",),
             enforcement=ENFORCED,
             enforced_by=("test_content_free.py",),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-deterministic-generation",
@@ -351,6 +358,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_docs_gen.py::test_generator_is_deterministic",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-ai-presents-not-decides",
@@ -366,6 +375,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-steward-distinct-from-owners",
@@ -384,6 +395,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement=ENFORCED,
             enforced_by=("check_steward_not_a_member_owner",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-empty-content-is-legitimate",
@@ -401,6 +414,7 @@ def build_graph() -> TensionGraph:
                 "test_what_now.py::test_main_empty_content_prints_calm_banner",
                 "test_docs_gen.py::test_empty_graph_renders_no_content_notice",
             ),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-open-states-question",
@@ -415,6 +429,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("check_open_has_question",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-rejected-preserved-not-deleted",
@@ -429,6 +445,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement="ENFORCED",
             enforced_by=("test_rejected_preserved.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-axis-controlled-vocab",
@@ -443,6 +461,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("check_axis_in_registry",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-stable-conflict-identity",
@@ -459,6 +479,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("check_conflict_id_matches_identity",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-two-altitude-ontology",
@@ -474,6 +496,8 @@ def build_graph() -> TensionGraph:
             enforcement="PROSE",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-boot-from-substrate",
@@ -491,6 +515,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement=STRUCTURAL,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         # --- OPEN(question) — live methodology decisions M1–M9 ---------------
         Requirement(
@@ -508,6 +533,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_decided_has_nonempty_decided_by", "check_decided_by_is_known_stakeholder"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-critical-core-scope",
@@ -522,6 +549,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_conscience.py",),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-axis-gatekeeper-policy",
@@ -538,6 +566,8 @@ def build_graph() -> TensionGraph:
             assumptions=(),
             enforcement="ENFORCED",
             enforced_by=("tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper", "tests/test_tool_create_axis.py::test_near_duplicate_refused", "tests/test_tool_create_axis.py::test_near_duplicate_refusal_names_nearest", "tests/test_tool_create_axis.py::test_exact_slug_duplicate_always_refused_even_with_force", "tests/test_tool_create_axis.py::test_force_new_overrides_refusal", "tests/test_tool_create_axis.py::test_force_new_justification_recorded", "tests/test_tool_create_axis.py::test_writer_inserts_new_axis", "tests/test_tool_create_axis.py::test_writer_refuses_duplicate_slug"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-content-layout-evolution",
@@ -554,6 +584,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies", "A-graph-fits-memory"),
             enforcement="ENFORCED",
             enforced_by=("check_domain_manifest_exists_and_importable", "test_tool_create_domain.py::test_creates_required_files"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- DRAFT — proposed next-steps -----------------------------------
         Requirement(
@@ -569,6 +601,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care", "A-text-grounded-in-models"),
             enforcement="PROSE",
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-active-loop-protocol",
@@ -584,6 +617,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_proposal.py",),
             relations=(Relation("replaces", "R-active-loop-playbooks"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-active-loop-apply-tool",
@@ -604,6 +639,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal.py",),
             relations=(Relation("replaces", "R-active-loop-playbooks"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-active-loop-playbook-doc",
@@ -619,6 +656,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_playbooks_doc.py",),
             relations=(Relation("replaces", "R-active-loop-playbooks"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-decided-needs-human-signoff",
@@ -644,6 +683,8 @@ def build_graph() -> TensionGraph:
                 "check_decided_by_is_known_stakeholder",
                 "check_decided_by_not_member_owner",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-glossary-sync-test",
@@ -658,6 +699,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-python-stack"),
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py", "test_docs_gen.py::test_glossary_md_up_to_date"),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-history-from-rejected-markers",
@@ -672,6 +714,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-smoke-test",
@@ -692,6 +735,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("tests/test_smoke.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-lifecycle-abstraction",
@@ -708,6 +753,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_status_in_lifecycle", "test_lifecycle.py"),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-aspect-first",
@@ -722,6 +768,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("test_process.py", "check_process_lifecycle_wellformed", "check_process_roles_declared", "check_typed_anchors"),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-task-vs-action-distinct-altitudes",
@@ -737,6 +784,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- DRAFT — operators / budget / delegation / goals (dossier 2) -----
         Requirement(
@@ -758,6 +807,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-is-frozen-dataclass",
@@ -776,6 +826,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_typed_anchors_operator", "test_operator.py"),
             relations=(Relation("replaces", "R-operator-acting-facet"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-references-stakeholder",
@@ -792,6 +844,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_no_dangling_operator_refs", "test_operator.py"),
             relations=(Relation("replaces", "R-operator-acting-facet"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-has-context-budget",
@@ -809,6 +863,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_operator_within_budget", "test_operator.py"),
             relations=(Relation("replaces", "R-operator-acting-facet"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-may-have-parent",
@@ -824,6 +880,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_no_dangling_operator_refs",),
             relations=(Relation("replaces", "R-operator-acting-facet"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-context-budget-rule",
@@ -838,6 +896,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_operator_within_budget", "test_operator.py::test_check_operator_within_budget_fires", "test_operator.py::test_director_within_budget", "test_operator.py::test_check_operator_within_budget_crystal_chars_fires", "test_operator.py::test_check_operator_within_budget_crystal_chars_green_when_under"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-not-self-approve",
@@ -860,6 +920,8 @@ def build_graph() -> TensionGraph:
                 "test_operator.py::test_check_operator_steward_not_self_fires",
             ),
             m_tag="",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-delegation-conclusions-only",
@@ -875,6 +937,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-goal-as-target-state",
@@ -894,6 +958,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-goal-is-first-class-type",
@@ -912,6 +977,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_goal.py", "check_typed_anchors_goal"),
             relations=(Relation("replaces", "R-goal-as-target-state"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-goal-target-kind-known",
@@ -926,6 +993,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_goal_target_kind_known",),
             relations=(Relation("replaces", "R-goal-as-target-state"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-goal-owner-is-operator",
@@ -940,6 +1009,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_goal_owner_is_operator", "check_no_dangling_operator_refs"),
             relations=(Relation("replaces", "R-goal-as-target-state"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-context-bounded-delegation",
@@ -954,6 +1025,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_operator_within_budget", "test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-dependency-graph-parallelism",
@@ -972,6 +1045,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=STRUCTURAL,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-crystal-is-claude-md",
@@ -990,6 +1064,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement=STRUCTURAL,
             enforced_by=("test_constitution_gen.py",),
+            created_at="2026-06-30",
         ),
         # --- DRAFT — behavioral aspects (dossier 1) --------------------------
         Requirement(
@@ -1011,6 +1086,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-statemachine-reachable",
@@ -1029,6 +1105,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_canonical_lifecycles_wellformed",),
             relations=(Relation("replaces", "R-statemachine-wellformedness"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-statemachine-deterministic",
@@ -1046,6 +1124,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_canonical_lifecycles_wellformed",),
             relations=(Relation("replaces", "R-statemachine-wellformedness"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-statemachine-terminal-or-cyclic",
@@ -1063,6 +1143,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_canonical_lifecycles_wellformed",),
             relations=(Relation("replaces", "R-statemachine-wellformedness"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-statemachine-guard-on-assumption",
@@ -1078,6 +1160,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_transition_guard_assumption_resolves", "test_entity_invariants.py::test_transition_guard_assumption_resolves_clean", "test_entity_invariants.py::test_transition_guard_assumption_resolves_dangling_fires", "test_entity_invariants.py::test_transition_guard_assumption_dead_assumption_still_visible_in_dependents"),
             relations=(Relation("replaces", "R-statemachine-wellformedness"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- DRAFT — crystallization + anchoring super-rules (dossier 3) -----
         Requirement(
@@ -1094,6 +1178,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-verify-closure-per-action",
@@ -1108,6 +1194,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("test_closure.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-anchor-everything",
@@ -1139,6 +1227,8 @@ def build_graph() -> TensionGraph:
                 "check_section_anchors_known",
                 "test_glossary_sync.py",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-speak-by-reference",
@@ -1153,6 +1243,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py", "check_section_anchors_known", "test_playbooks_doc.py"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-crystallize-before-split",
@@ -1168,6 +1260,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-working-vs-substrate-budget",
@@ -1183,6 +1277,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_reflection.py",),
             relations=(Relation("replaces", "R-claude-md-budget-phi-cap"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-enforcement-gradient",
@@ -1202,6 +1298,7 @@ def build_graph() -> TensionGraph:
                 "check_enforced_names_invariant",
                 "test_docs_gen.py::test_unenforced_md_up_to_date",
             ),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-requirement-enforced",
@@ -1221,6 +1318,8 @@ def build_graph() -> TensionGraph:
                 "check_enforced_names_invariant",
                 "test_docs_gen.py::test_unenforced_md_up_to_date",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-uncrystallizable-is-missing-type",
@@ -1236,6 +1335,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=("test_conscience.py", "CRITICAL_CORE_INVARIANTS"),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-stale-substrate",
@@ -1250,6 +1351,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working",),
             enforcement="ENFORCED",
             enforced_by=("test_reflection.py::test_reflection_emits_dead_assumption_enforcer", "test_conscience.py::test_real_meta_domain_passes_critical_core"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- OPEN(question) — load-bearing open decisions (M17–M31) ----------
         Requirement(
@@ -1268,6 +1371,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_operator_within_budget", "test_operator.py"),
             relations=(Relation("replaces", "R-claude-md-budget-phi-cap"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-partition-vs-border",
@@ -1283,6 +1388,7 @@ def build_graph() -> TensionGraph:
             ),
             assumptions=("A-finite-context-operators",),
             enforcement="PROSE",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-goal-type-vs-facet",
@@ -1307,6 +1413,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("test_goal.py", "check_typed_anchors_goal"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-type-vs-facet",
@@ -1331,6 +1439,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_typed_anchors_operator", "test_operator.py"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-observation-evidence-scope",
@@ -1347,6 +1457,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-most-knowledge-crystallizable",),
             enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-rules-as-data",
@@ -1363,6 +1475,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_rules_as_data_classification_coherent",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-enforcement-first-class",
@@ -1379,6 +1493,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-most-knowledge-crystallizable",),
             enforcement="ENFORCED",
             enforced_by=("check_enforced_names_invariant", "check_bijection_r_to_enforcer"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-anchor-taxonomy",
@@ -1413,6 +1529,8 @@ def build_graph() -> TensionGraph:
                 "check_typed_anchors_entity",
                 "check_section_anchors_known",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-uncrystallizable-automated",
@@ -1428,6 +1546,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=("test_conscience.py", "CRITICAL_CORE_INVARIANTS"),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- P10a: generated LIVE-STATE block in CLAUDE.md -------------------
         Requirement(
@@ -1448,6 +1568,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_docs_gen.py::test_claude_md_live_state_up_to_date",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-measure-context-size",
@@ -1467,6 +1589,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=("tools/context.py",),
+            created_at="2026-06-30",
         ),
         # --- DRAFT/OPEN — P10c: deferred backend + budget + crystal-tree -----
         Requirement(
@@ -1485,6 +1608,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-claude-md-budget-phi-cap",
@@ -1501,6 +1625,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-claude-md-tree-of-crystals",
@@ -1516,6 +1641,7 @@ def build_graph() -> TensionGraph:
             enforcement="PROSE",
             enforced_by=(),
             relations=(Relation("replaces", "R-tree-of-crystals-cognitive-trigger"),),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-subagent-gets-its-claude-md",
@@ -1530,6 +1656,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("test_composite_prompt_contains_crystal_and_task",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-backend-scope",
@@ -1546,6 +1674,8 @@ def build_graph() -> TensionGraph:
             enforced_by=(),
             enforceability="INHERENTLY_PROSE",
             relations=(Relation("replaces", "R-operator-backend-protocol"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- SETTLED — P11 new: convergence, atomicity, agent-directory, tools, docs ---
         Requirement(
@@ -1562,6 +1692,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=("CLAUDE.md§Operator boot ritual", "docs/methodology/discipline.md"),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-shared-tools-in-spec-tools",
@@ -1574,6 +1706,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_shared_tools_location.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-docs-generated-from-requirements",
@@ -1588,6 +1722,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_methodology_atoms_up_to_date",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- SETTLED — orphan-check anchoring (framework-agent audit) ----------
         Requirement(
@@ -1612,6 +1748,8 @@ def build_graph() -> TensionGraph:
                 "check_conflict_has_context",
                 "check_conflict_has_steward",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-conflict-min-two-members",
@@ -1629,6 +1767,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement=ENFORCED,
             enforced_by=("check_conflict_min_two_members",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-decided-conflict-justifies-itself",
@@ -1648,6 +1788,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement=ENFORCED,
             enforced_by=("check_decided_has_rationale_or_derived",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-m-tag-format-valid",
@@ -1662,6 +1804,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("check_m_tag_valid_format", "check_m_tag_unique", "check_m_tag_open_only"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         # --- DRAFT — P11 new: convergence, atomicity, agent-dir, delegation, tools ---
         Requirement(
@@ -1682,6 +1826,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-compaction-loses-working", "A-bootstrap-self-applies"),
             enforcement=ENFORCED,
             enforced_by=("test_constitution_block_generated",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-constituting-requirements-converge",
@@ -1696,6 +1842,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_constituting_not_in_unresolved_conflict", "test_invariants.py::test_constituting_convergence_fires_on_self_host_detected"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-requirement-claim-is-atomic",
@@ -1711,6 +1859,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline",),
             relations=(Relation("replaces", "R-task-spawn-is-ephemeral"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-check-method-is-atomic",
@@ -1725,6 +1875,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="ENFORCED",
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-bijection-r-to-enforcer-draft",
@@ -1739,6 +1891,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="PROSE",
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-is-a-directory",
@@ -1753,6 +1906,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_agent_has_agents_subdir", "check_agent_has_docs_subdir", "test_tool_create_agent.py"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-has-own-crystal",
@@ -1768,6 +1923,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators", "A-compaction-loses-working"),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-has-own-tools-dir",
@@ -1782,6 +1938,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="ENFORCED",
             enforced_by=("check_agent_has_tools_subdir", "test_tool_create_agent.py::test_creates_required_files", "test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-imports-framework",
@@ -1797,6 +1955,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-content-free-honest",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-task-spawn-is-ephemeral",
@@ -1812,6 +1971,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-delegation-persists",
@@ -1827,6 +1987,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-task-spawn-log-runtime",
@@ -1842,6 +2003,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_spawn_log_written", "test_tool_spawn_agent.py::test_log_only_writes_row_without_composing_prompt"),
             settled_at="2026-07-10",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-tools-registry-generated",
@@ -1856,6 +2018,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_repo_map.py::test_repo_map_complete", "test_repo_map.py::test_repo_map_tool_xref_present"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-private-tools-in-agent-folder",
@@ -1870,6 +2034,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_agent_has_tools_subdir",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-tree-of-crystals-cognitive-trigger",
@@ -1886,6 +2052,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-delegation-as-node",
@@ -1902,6 +2069,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-setup-claude-generates-settings",
@@ -1918,6 +2086,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=PROSE,
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-audit-atomicity-tool",
@@ -1932,6 +2101,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_tool_audit_atomicity.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-context-hook-piggybacks-cah-stamp",
@@ -1946,6 +2117,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement="PROSE",
             enforced_by=(),
+            created_at="2026-06-30",
         ),
         # --- REJECTED — design dead-ends preserved for history ---------------
         Requirement(
@@ -1963,6 +2135,7 @@ def build_graph() -> TensionGraph:
                 "framework package, breaking the framework / content split."
             ),
             assumptions=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-rdf-store",
@@ -1980,6 +2153,7 @@ def build_graph() -> TensionGraph:
                 "the in-memory graph sizes we serve."
             ),
             assumptions=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-axes-as-module-constant",
@@ -1997,6 +2171,7 @@ def build_graph() -> TensionGraph:
                 "vocabulary."
             ),
             assumptions=(),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-content-free-no-business-data",
@@ -2012,6 +2187,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
             relations=(Relation("replaces", "R-content-free-framework"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-content-free-no-examples",
@@ -2027,6 +2204,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
             relations=(Relation("replaces", "R-content-free-framework"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-content-free-no-seed-graph",
@@ -2042,6 +2221,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
             relations=(Relation("replaces", "R-content-free-framework"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-empty-content-wellformed",
@@ -2057,6 +2238,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_invariants.py::test_empty_graph_is_wellformed",),
             relations=(Relation("replaces", "R-empty-content-is-legitimate"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-empty-content-calm-banner",
@@ -2074,6 +2257,8 @@ def build_graph() -> TensionGraph:
                 "test_what_now.py::test_main_empty_content_prints_calm_banner",
             ),
             relations=(Relation("replaces", "R-empty-content-is-legitimate"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-empty-content-gen-notice",
@@ -2091,6 +2276,8 @@ def build_graph() -> TensionGraph:
                 "test_docs_gen.py::test_empty_graph_renders_no_content_notice",
             ),
             relations=(Relation("replaces", "R-empty-content-is-legitimate"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-boot-reload-three-facts",
@@ -2106,6 +2293,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_reflection.py",),
             relations=(Relation("replaces", "R-boot-from-substrate"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-boot-cite-in-first-sentence",
@@ -2121,6 +2310,8 @@ def build_graph() -> TensionGraph:
             enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
             relations=(Relation("replaces", "R-boot-from-substrate"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-glossary-generated",
@@ -2136,6 +2327,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_glossary_md_up_to_date",),
             relations=(Relation("replaces", "R-glossary-sync-test"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-glossary-sync-fails-dead",
@@ -2151,6 +2344,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py",),
             relations=(Relation("replaces", "R-glossary-sync-test"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-glossary-sync-fails-unused",
@@ -2166,6 +2361,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_glossary_sync.py",),
             relations=(Relation("replaces", "R-glossary-sync-test"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-glossary-drift-stable",
@@ -2181,6 +2378,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_docs_gen.py::test_glossary_md_up_to_date",),
             relations=(Relation("replaces", "R-glossary-sync-test"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-history-generated-from-rejected",
@@ -2196,6 +2395,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
             relations=(Relation("replaces", "R-history-from-rejected-markers"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-history-generated-from-decided",
@@ -2211,6 +2412,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_history_gen.py", "test_docs_gen.py::test_history_md_up_to_date"),
             relations=(Relation("replaces", "R-history-from-rejected-markers"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-lifecycle-type-exists",
@@ -2226,6 +2429,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_lifecycle.py",),
             relations=(Relation("replaces", "R-lifecycle-abstraction"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-lifecycle-validates-requirement",
@@ -2241,6 +2446,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_requirement_status_in_lifecycle",),
             relations=(Relation("replaces", "R-lifecycle-abstraction"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-lifecycle-validates-conflict",
@@ -2256,6 +2463,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_conflict_lifecycle_in_lifecycle",),
             relations=(Relation("replaces", "R-lifecycle-abstraction"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-lifecycle-validates-operator",
@@ -2270,6 +2479,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_operator_lifecycle_in_lifecycle",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-lifecycle-validates-goal",
@@ -2284,6 +2495,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement="ENFORCED",
             enforced_by=("check_goal_lifecycle_in_lifecycle",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-types-exist",
@@ -2299,6 +2512,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_process.py",),
             relations=(Relation("replaces", "R-process-aspect-first"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-opt-in",
@@ -2314,6 +2529,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_process.py",),
             relations=(Relation("replaces", "R-process-aspect-first"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-lifecycle-wellformed-aspect",
@@ -2329,6 +2546,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_process_lifecycle_wellformed",),
             relations=(Relation("replaces", "R-process-aspect-first"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-roles-declared-aspect",
@@ -2344,6 +2563,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_process_roles_declared",),
             relations=(Relation("replaces", "R-process-aspect-first"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-goal-owner-is-operator-aspect",
@@ -2359,6 +2580,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_goal_owner_is_operator",),
             relations=(Relation("replaces", "R-process-aspect-first"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-typed-anchors-extended",
@@ -2374,6 +2597,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_typed_anchors_process", "check_typed_anchors_goal"),
             relations=(Relation("replaces", "R-process-aspect-first"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-type-lifecycle-wellformed",
@@ -2388,6 +2613,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_entity_type_lifecycle_wellformed",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-instance-state-in-lifecycle",
@@ -2402,6 +2629,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_entity_instance_state_in_lifecycle",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-instance-required-fields",
@@ -2416,6 +2645,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_entity_instance_required_fields",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-instance-id-prefix",
@@ -2430,6 +2661,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_entity_instance_id_prefix", "check_typed_anchors_entity"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-instance-refs-resolve",
@@ -2444,6 +2677,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_entity_instance_refs_resolve",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-field-kind-known",
@@ -2458,6 +2693,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_entity_field_kind_known",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-typed-anchors",
@@ -2472,6 +2709,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_typed_anchors_entity",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-process-drives-existing-entities",
@@ -2486,6 +2725,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_process_drives_existing_entities",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-step-invokes-known-transition",
@@ -2500,6 +2741,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models", "A-bootstrap-self-applies"),
             enforcement="ENFORCED",
             enforced_by=("check_step_invokes_known_transition",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-dependency-tracked",
@@ -2516,6 +2759,7 @@ def build_graph() -> TensionGraph:
             enforced_by=("check_no_dangling_requirement_relations",),
             relations=(Relation("replaces", "R-dependency-graph-parallelism"),),
             settled_at="2026-07-10",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-dependency-drives-parallel",
@@ -2531,6 +2775,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_dependency_traversal.py::test_disjoint_components_are_parallelizable",),
             relations=(Relation("replaces", "R-dependency-graph-parallelism"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-dependency-drives-sequential",
@@ -2544,6 +2790,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent",),
             relations=(Relation("replaces", "R-dependency-graph-parallelism"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-crystal-is-claude-md",
@@ -2559,6 +2807,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo",),
             relations=(Relation("replaces", "R-operator-crystal-is-claude-md"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-crystal-reload-by-reference",
@@ -2574,6 +2824,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_embedded_thinking_tools.py",),
             relations=(Relation("replaces", "R-operator-crystal-is-claude-md"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-crystal-tree-hierarchy",
@@ -2589,6 +2841,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_constitution_gen.py",),
             relations=(Relation("replaces", "R-operator-crystal-is-claude-md"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-enforcement-levels-declared",
@@ -2604,6 +2858,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_enforced_names_invariant",),
             relations=(Relation("replaces", "R-enforcement-gradient"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-enforced-names-enforcer",
@@ -2622,6 +2878,8 @@ def build_graph() -> TensionGraph:
                 "test_docs_gen.py::test_unenforced_md_up_to_date",
             ),
             relations=(Relation("replaces", "R-enforcement-gradient"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-critical-core-methodology",
@@ -2637,6 +2895,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_conscience.py", "check_no_dangling_assumption_owner", "check_no_dangling_requirement_owner", "check_no_dangling_requirement_assumptions", "check_no_dangling_requirement_relations", "check_no_dangling_conflict_refs"),
             relations=(Relation("replaces", "R-critical-core-scope"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-critical-core-per-domain",
@@ -2652,6 +2912,8 @@ def build_graph() -> TensionGraph:
             enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
             relations=(Relation("replaces", "R-critical-core-scope"),),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-bijection-r-to-enforcer",
@@ -2671,6 +2933,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_bijection_r_to_enforcer",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-tool-is-its-own-requirement",
@@ -2685,6 +2949,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_derived_requirements.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-scoped-constitution",
@@ -2699,6 +2965,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_agent_scoped_constitution.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-repo-map-generated",
@@ -2713,6 +2981,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_repo_map_complete",),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-declares-purpose",
@@ -2727,6 +2996,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_every_agent_declares_purpose",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-map-generated",
@@ -2741,6 +3012,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_agent_map.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-is-a-directory",
@@ -2755,6 +3028,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_domain_manifest_exists_and_importable", "test_tool_create_domain.py::test_creates_required_files"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-has-manifest",
@@ -2775,6 +3050,8 @@ def build_graph() -> TensionGraph:
                 "check_domain_manifest_goals_nonempty",
                 "check_domain_manifest_director_nonempty",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-declares-director",
@@ -2789,6 +3066,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("check_domain_director_exists",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-owns-graph-py",
@@ -2803,6 +3082,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_domain_manifest_exists_and_importable", "test_tool_create_domain.py::test_creates_required_files"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-owns-docs-gen",
@@ -2817,6 +3098,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_tool_create_domain.py::test_creates_required_files",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-owns-tools-and-agents",
@@ -2831,6 +3114,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_tool_create_domain.py::test_creates_required_files",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-owns-claude-md",
@@ -2845,6 +3130,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_domain_claude_md_has_all_5_blocks",),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-framework-claude-md-is-domain-free",
@@ -2859,6 +3145,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_framework_claude_md_no_domain_atoms",),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-map-generated",
@@ -2873,6 +3160,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_framework_claude_md_has_domain_map",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-director-agent-required-per-domain",
@@ -2890,6 +3179,8 @@ def build_graph() -> TensionGraph:
                 "check_domain_director_exists",
                 "test_tool_create_domain.py::test_director_agent_created",
             ),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-is-recursive-director",
@@ -2904,6 +3195,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("check_agent_has_agents_subdir",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-framework-shared-docs-generated",
@@ -2918,6 +3211,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_domain_isolation_p17.py::test_shared_thinking_docs_generated", "test_domain_isolation_p17.py::test_shared_tool_docs_generated"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-shared-tool-doc-from-docstring-and-help",
@@ -2932,6 +3227,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_domain_isolation_p17.py::test_shared_tool_docs_content",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-shared-thinking-doc-from-canon-sections",
@@ -2946,6 +3243,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_domain_isolation_p17.py::test_shared_thinking_docs_content",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-references-shared-docs",
@@ -2960,6 +3259,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_domain_isolation_p17.py::test_agent_shared_docs_block_present",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-agent-has-docs-dir",
@@ -2974,6 +3275,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("check_agent_has_docs_subdir",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-domain-has-docs-dir",
@@ -2988,6 +3291,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_create_domain.py::test_creates_docs_dir",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-no-hand-edit-graph",
@@ -2998,6 +3303,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_pretooluse_graph_guard_denies_graph_py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-method-matches-docstring",
@@ -3008,6 +3315,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_method_matches_docstring",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-root-claude-md-is-sentinel-only",
@@ -3018,6 +3327,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_root_claude_md_is_sentinel_only.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entities-md-generated",
@@ -3028,6 +3339,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("check_entities_md_lists_all_types",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-derived-requirement",
@@ -3038,6 +3351,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_entity_type_constitution_projection",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-is-declarative",
@@ -3048,6 +3363,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_content_free.py::test_no_domain_instances_in_tensio_src",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-reuses-lifecycle",
@@ -3058,6 +3375,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("check_entity_type_lifecycle_wellformed", "test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks"),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-checks-by-iteration",
@@ -3068,6 +3387,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-entity-state-conflict-surfaced",
@@ -3078,6 +3399,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-root-claude-md-contains-domain-crystal",
@@ -3088,6 +3411,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_domain_crystal_contains_domains_claude_md_content",),
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-recently-rejected-surfaced",
@@ -3098,6 +3422,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_recently_rejected_lists_known_rejections",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-operator-prompt-loaded-at-session-start",
@@ -3108,6 +3434,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_session_start_hook_runs_gen_spec",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-three-cipher-pulse-structurally-injected",
@@ -3118,6 +3446,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_user_prompt_submit_hook_emits_cipher",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-post-compact-regen-from-substrate",
@@ -3128,6 +3458,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_post_compact_hook_runs_gen_spec",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-project-name-hotam-spec",
@@ -3138,6 +3470,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_project_name.py",),
+            settled_at="2026-06-30",
+            created_at="2026-06-30",
         ),
         Requirement(
             id="R-enforceability-kind-declared",
@@ -3148,6 +3482,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("check_enforceability_kind_known",),
+            settled_at="2026-07-01",
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-parallel-mutating-agents-use-worktree",
@@ -3158,6 +3494,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-01",
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-claude-md-consolidates-when-single-agent",
@@ -3169,6 +3507,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo",),
             relations=(Relation("replaces", "R-agent-has-own-crystal"),),
+            settled_at="2026-07-01",
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-operator-crystal-embeds-thinking",
@@ -3179,6 +3519,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_embedded_thinking_tools.py::test_embedded_thinking_sentinels_present", "test_embedded_thinking_tools.py::test_embedded_thinking_contains_full_topic_content",),
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-operator-crystal-embeds-tools",
@@ -3189,6 +3530,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_embedded_thinking_tools.py::test_embedded_tools_sentinels_present", "test_embedded_thinking_tools.py::test_embedded_tools_contains_full_tool_content", "test_embedded_thinking_tools.py::test_embedded_blocks_regen_byte_identical",),
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-sub-agent-crystal-triad",
@@ -3200,6 +3542,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_agent_scoped_constitution.py", "test_tool_spawn_agent.py"),
             relations=(Relation("replaces", "R-agent-has-own-crystal"),),
+            settled_at="2026-07-01",
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-claude-md-template-driven",
@@ -3210,6 +3554,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement="ENFORCED",
             enforced_by=("test_hand_written_note_in_template_survives_regen", "test_claude_md_template.py::test_regen_byte_identical"),
+            settled_at="2026-07-01",
+            created_at="2026-07-01",
         ),
         Requirement(
             id="R-operator-crystal-embeds-thinking-distilled",
@@ -3221,6 +3567,8 @@ def build_graph() -> TensionGraph:
             relations=(),
             enforcement="ENFORCED",
             enforced_by=("test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content", "test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference", "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-operator-crystal-embeds-tools-distilled",
@@ -3232,6 +3580,8 @@ def build_graph() -> TensionGraph:
             relations=(),
             enforcement="ENFORCED",
             enforced_by=("test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content", "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-crystal-carries-role-seed",
@@ -3243,6 +3593,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-crystal-is-claude-md"),),
             enforcement=ENFORCED,
             enforced_by=("test_operator_seed.py::test_role_block_states_scope_and_law",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-crystal-carries-mediation-loop",
@@ -3255,6 +3607,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_operator_seed.py::test_mediation_loop_names_real_tools",),
             settled_at="2026-07-10",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-crystal-carries-recursion-seed",
@@ -3267,6 +3620,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_operator_seed.py::test_recursion_block_names_spawn_path",),
             settled_at="2026-07-10",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-constitution-is-index",
@@ -3278,6 +3632,8 @@ def build_graph() -> TensionGraph:
             relations=(),
             enforcement="ENFORCED",
             enforced_by=("test_constitution.py::test_constitution_is_index", "test_constitution.py::test_constitution_lists_all_settled"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-constitution-separates-plumbing",
@@ -3287,6 +3643,8 @@ def build_graph() -> TensionGraph:
             why=("hotam-spec-self is the framework modeling itself, so a majority of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery) rather than business claims the operator mediates as reality. Phase 3 (task #9) relocates those atoms out of the resident CONSTITUTION index into a generated FRAMEWORK-INVARIANTS.md, reachable by pointer, so the operator's resident index reflects what it actually mediates. This is presentational only: no atom's status changes and no atom is dropped from the full REQUIREMENTS.md roster (kept, not deleted, mirroring R-rejected-preserved-not-deleted's anti-loss discipline)."),
             enforcement=ENFORCED,
             enforced_by=("test_constitution.py::test_constitution_partitions_all_settled", "test_constitution.py::test_constitution_pointer_to_framework_invariants", "test_constitution.py::test_framework_invariants_md_up_to_date",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-speculative-aspects-frozen",
@@ -3296,6 +3654,8 @@ def build_graph() -> TensionGraph:
             why=("Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) now makes an inward edit to any frozen file (src/hotam_spec/entity.py; tools/create_agent.py, spawn_agent.py, invoke_agent.py; tools/create_domain.py) fail RED, with the failure message stating explicitly that unfreezing requires a recorded steward act (regenerating the baseline). Prose discipline alone could not detect a silent violation; the hash guard can."),
             enforcement="ENFORCED",
             enforced_by=("test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline", "test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_named_frozen_surfaces"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-reflection-predicates-first-class",
@@ -3307,6 +3667,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_reflection.py::test_what_now_sources_reflection_predicates_from_module", "test_reflection.py::test_diagnose_p0_and_advisory_partition_reflection_findings"),
             settled_at="2026-07-10",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-conflict-addressing-resolves-variables",
@@ -3316,6 +3677,8 @@ def build_graph() -> TensionGraph:
             why=("The C-8600b1b8 lesson: all six Conflict nodes in domains/hotam-spec-self/graph.py bind axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so _find_conflict_call's literal-only matching made every existing Conflict unaddressable and the standing P3 CONFLICT_STALLED action mechanically unlandable. Fixed by folding module/function-level `name = \"literal\"` assignments (_collect_string_assignments) with ambiguous rebindings dropped conservatively; literal support unchanged. This repairs the ACT half of the mediation loop for conflict transitions (R-active-loop-apply-tool)."),
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs", "test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addressable", "test_apply_proposal.py::test_all_real_domain_conflicts_are_addressable",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-proposed-conflict-kind-exists",
@@ -3325,6 +3688,8 @@ def build_graph() -> TensionGraph:
             why=("Closes recorded spec-tool drift: C-186c4347's DECIDED rationale already promised 'ProposedConflict' while only transitions existed, leaving surfaced tensions without a mechanical creation path (the loop could move conflicts but never materialize one). The writer computes id via conflict_identity(axis, context), never caller-supplied (R-stable-conflict-identity); requires the axis to already exist in the graph's axes tuple (R-axis-controlled-vocab; admitting a new axis is a separate act); requires >= 2 distinct existing members (R-conflict-min-two-members); refuses a steward who owns any member (R-steward-distinct-from-owners); lifecycle always starts DETECTED. Extends R-active-loop-protocol's floor exactly as EntityType and OperatorBudget did."),
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal.py::test_apply_conflict_creates_detected_node", "test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape", "test_proposal.py::test_proposed_conflict_target_anchor_is_computed_identity",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-latent-connectors-cluster-by-assumption",
@@ -3334,6 +3699,8 @@ def build_graph() -> TensionGraph:
             why=("Verified noise shape: 22 P5 lines were 21 pairs sharing A-most-knowledge-crystallizable (functional ref-count 7, just under GENERIC_ASSUMPTION_THRESHOLD=8 because the 8th referencing requirement is REJECTED) plus 1 genuinely distinct candidate (the A-content-free-honest pair) drowned by them. Clustering by the pairs' specific-shared-assumption signature (graph.latent_connector_clusters) renders the review surface at the size of the decision space while keeping every pair visible (LatentCluster.pairs; TENSIONS.md table). A threshold shift was rejected: it only moves the noise cliff (see test_latent_connector_noise_fix.py history)."),
             enforcement=ENFORCED,
             enforced_by=("test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster", "test_latent_connector_noise_fix.py::test_clusters_partition_suspects", "test_latent_connector_noise_fix.py::test_real_graph_p5_count_equals_cluster_count",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-presented-pending-decision-type",
@@ -3343,6 +3710,8 @@ def build_graph() -> TensionGraph:
             why=("Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). Landed: spec/.runtime/proposals/ now splits into pending/ (proposal awaiting steward verdict) and applied/ (landed proposal, moved there by tools/apply_proposal.py's apply() on a successful land -- write+regen+verify-tier green, closure advanced when --triggering-kind supplied). Backward compat preserved: files directly under proposals/ (the historical flat layout predating this split) are still treated as pending by pending_proposal_files(). tools/what_now.py gains a P6 PENDING_PROPOSAL band (pending_proposal_actions()) that lists each pending file with its age in days -- CLI-only (main()), deliberately NOT wired into diagnose(g) because diagnose() is pure-over-the-graph and gen_spec.py's generated docs must stay byte-stable (R-deterministic-generation); a filesystem-mtime-derived 'N days' figure would break that. No new graph node type was added -- Presented/Pending stays tooling ephemera in .runtime/ (gitignored), never crystallized substrate."),
             enforcement="ENFORCED",
             enforced_by=("tests/test_pending_proposal_archive.py::test_pending_sees_flat_layout_files", "tests/test_pending_proposal_archive.py::test_pending_sees_pending_subfolder", "tests/test_pending_proposal_archive.py::test_pending_excludes_applied_subfolder", "tests/test_pending_proposal_archive.py::test_apply_success_archives_proposal_file", "tests/test_pending_proposal_archive.py::test_apply_failure_does_not_archive", "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_one_per_file", "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_age_in_days", "tests/test_pending_proposal_archive.py::test_diagnose_never_includes_pending_band"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-land-gate-tier-selector",
@@ -3354,6 +3723,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-verify-closure-per-action"),),
             enforcement=ENFORCED,
             enforced_by=("test_tool_gate.py", "test_apply_proposal_gate_wiring.py::test_apply_uses_t1_targeted_selection_when_gate_confident",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-land-gate-tier-selector-fails-closed",
@@ -3365,6 +3736,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-land-gate-tier-selector"),),
             enforcement="ENFORCED",
             enforced_by=("test_tool_gate.py::test_fails_closed_on_unresolvable_entry", "test_tool_gate.py::test_fails_closed_on_partially_unresolvable_entries", "test_tool_gate.py::test_fails_closed_on_empty_enforced_by", "test_tool_gate.py::test_fails_closed_on_unknown_target", "test_tool_gate.py::test_fails_closed_on_conflict_target", "test_apply_proposal_gate_wiring.py::test_apply_falls_back_to_full_suite_when_gate_uncertain", "test_apply_proposal_gate_wiring.py::test_apply_rejection_always_uses_full_suite", "test_apply_proposal_gate_wiring.py::test_apply_new_requirement_creation_always_uses_full_suite"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-tiered-gate-not-a-commit-gate",
@@ -3377,6 +3750,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforced_by=("tools/apply_proposal.py::apply", "tools/gate.py"),
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-doc-names-reader",
@@ -3388,6 +3763,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_doc_reader_resolves_to_stakeholder", "test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered", "test_invariants.py::test_check_doc_reader_green_when_all_roles_resolve", "test_invariants.py::test_check_doc_reader_fires_on_partial_adoption", "test_invariants.py::test_check_doc_reader_fires_on_dangling_bound_id", "test_invariants.py::test_check_doc_reader_travel_agent_regression", "test_docs_gen.py::test_generated_docs_carry_reader_header"),
             settled_at="2026-07-10",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-initiator-supplies-domain-content",
@@ -3398,6 +3774,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-enforced-by-resolvable",
@@ -3409,6 +3787,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_enforced_by_resolvable", "check_enforced_by_test_has_teeth", "test_invariants.py::test_enforced_by_resolvable_registered", "test_invariants.py::test_enforced_by_typo_fires", "test_invariants.py::test_enforced_by_unknown_check_name_fires", "test_invariants.py::test_enforced_by_real_names_pass", "test_invariants.py::test_enforced_by_resolvable_green_on_seed"),
             settled_at="2026-07-10",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-land-tier-trace",
@@ -3420,6 +3799,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-land-gate-tier-selector"),),
             enforcement="ENFORCED",
             enforced_by=("test_apply_proposal_land_log.py::test_land_log_record_shape_t1", "test_apply_proposal_land_log.py::test_land_log_record_shape_t2", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit", "test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-commit-boundary-checkable",
@@ -3431,6 +3812,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-tiered-gate-not-a-commit-gate"), Relation("refines", "R-land-tier-trace"),),
             enforcement=ENFORCED,
             enforced_by=("test_tool_gate_status.py::test_t1_then_t2_is_satisfied", "test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied", "test_tool_gate_status.py::test_only_t1_records_never_t2_is_not_satisfied", "test_tool_gate_status.py::test_only_t2_records_is_satisfied", "test_tool_gate_status.py::test_mixed_only_t1_after_last_t2_are_unverified", "test_tool_gate_status.py::test_cli_exit_0_on_satisfied", "test_tool_gate_status.py::test_cli_exit_1_on_not_satisfied",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-unmeasured-cipher-names-user-action",
@@ -3441,6 +3824,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_context.py::test_absent_stamp_reads_unmeasured", "test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line",),
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-trust-anchor-delegation-explicit-only",
@@ -3453,6 +3837,7 @@ def build_graph() -> TensionGraph:
             enforced_by=("tests/test_tool_delegate.py::test_create_allocates_id_and_writes_file", "tests/test_tool_delegate.py::test_close_sets_done_and_result"),
             relations=(Relation("refines", "R-delegation-is-a-file"),),
             settled_at="2026-07-10",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-unresolvable-conflict-carries-variants",
@@ -3461,6 +3846,7 @@ def build_graph() -> TensionGraph:
             status="REJECTED",
             why=("REJECTED -- REPLACES split+answered by R-conflict-held-state + R-held-carries-variants + R-variant-choice-is-decision + R-unresolvable-classified-by-human (Wave 3, decided by framework-reviewer 2026-07-02). Both OPEN design questions are now answered: (1) attachment shape -- Variant is a payload field on Conflict.variants (frozen dataclass, anti-RDF, NOT a new graph node), landed via R-held-carries-variants; (2) when a conflict is classified unresolvable-by-members -- this is a human judgment recorded via the HELD lifecycle's decided_by signoff lock (check_held_has_decided_by family), never an AI inference, landed via R-unresolvable-classified-by-human. The original claim's three concerns (variants attach to Conflict; operator presents; steward chooses) are now separately atomized: R-held-carries-variants (the payload shape), R-conflict-held-state (the lifecycle state that carries it), and R-variant-choice-is-decision (the steward's choice moving HELD to DECIDED). REJECTED rather than promoted to SETTLED because the original claim's own OPEN(question) is a compound design-question node whose answer is now four separate, atomic, honestly-graded requirements -- keeping the original as a live SETTLED atom would duplicate their claims (R-requirement-claim-is-atomic). — (was: Steward-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test).)"),
             enforcement=PROSE,
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-no-observation-type",
@@ -3472,6 +3858,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-observation-evidence-scope"),),
             enforcement=ENFORCED,
             enforced_by=("test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec", "test_no_observation_type_scope.py::test_assumption_is_the_only_belief_carrying_dataclass_by_convention",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-core-imports-stdlib-or-hotam-spec-only",
@@ -3483,6 +3871,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-backend-scope"),),
             enforcement=ENFORCED,
             enforced_by=("test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-agent-code-imports-framework",
@@ -3494,6 +3884,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir", "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir"),
             relations=(Relation("replaces", "R-agent-imports-framework"),),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-task-spawn-is-a-hand",
@@ -3505,6 +3897,8 @@ def build_graph() -> TensionGraph:
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
             relations=(Relation("replaces", "R-task-spawn-is-ephemeral"),),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-atomicity-ratchet-no-growth",
@@ -3516,6 +3910,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-requirement-claim-is-atomic"), Relation("refines", "R-check-method-is-atomic"),),
             enforcement="ENFORCED",
             enforced_by=("test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline", "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline"),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-framework-owned-by-no-agent",
@@ -3527,6 +3923,8 @@ def build_graph() -> TensionGraph:
             enforcement="STRUCTURAL",
             enforceability="INHERENTLY_PROSE",
             relations=(Relation("replaces", "R-agent-imports-framework"),),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-conflict-held-state",
@@ -3537,6 +3935,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_conflict_lifecycle_in_lifecycle", "check_canonical_lifecycles_wellformed",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-held-carries-variants",
@@ -3547,6 +3947,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_held_has_min_two_variants", "check_typed_anchors_variant", "check_held_has_nonempty_decided_by", "check_held_by_is_known_stakeholder", "check_held_by_not_member_owner",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-variant-choice-is-decision",
@@ -3557,6 +3959,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-unresolvable-classified-by-human",
@@ -3567,6 +3971,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care",),
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-scope-is-projection",
@@ -3578,6 +3984,8 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_scope_projection.py::test_project_scope_selects_by_prefix", "test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly"),
             relations=(Relation("replaces", "R-partition-vs-border"),),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-scope-overlap-generated",
@@ -3589,6 +3997,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption", "test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty",),
             relations=(Relation("replaces", "R-partition-vs-border"),),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-overlap-single-presenter",
@@ -3600,6 +4010,8 @@ def build_graph() -> TensionGraph:
             enforcement=ENFORCED,
             enforced_by=("check_scoped_node_has_single_presenter", "test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter",),
             relations=(Relation("replaces", "R-partition-vs-border"),),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-spawn-log-carries-isolation",
@@ -3610,6 +4022,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields",),
+            settled_at="2026-07-02",
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-boot-cite-measured",
@@ -3620,6 +4034,7 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_boot_cite_status.py::test_write_from_payload_cited_true", "test_tool_boot_cite_status.py::test_compute_status_mixed_and_windowed",),
+            created_at="2026-07-02",
         ),
         Requirement(
             id="R-domain-self-hosting-flag",
@@ -3630,6 +4045,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("test_framework_scoped_invariants_skipped_when_not_self_hosting", "test_framework_scoped_invariants_run_when_self_hosting", "test_hotam_dev_pulse_has_no_framework_scoped_violations", "test_hotam_spec_self_pulse_unchanged_by_self_hosting_gate", "test_synthetic_non_self_domain_with_framework_checks_not_flagged",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-land-tier-trace-skips-dry-run",
@@ -3641,6 +4058,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-land-tier-trace"),),
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal_land_log.py::test_dry_run_writes_no_log",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-land-tier-trace-best-effort",
@@ -3652,6 +4071,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-land-tier-trace"),),
             enforcement=ENFORCED,
             enforced_by=("test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-domain-map-shows-pulse",
@@ -3662,6 +4083,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain", "test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_domain_open_actions",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-tension-audit-shortlist-tool",
@@ -3671,6 +4094,8 @@ def build_graph() -> TensionGraph:
             why=("The framework held tensions well but historically did not FIND them (0 of 8 conflicts machine-surfaced over its whole history; latent-mining covered 0 pairs; 3 axes never fired). confront.py checks ONE candidate claim against reality; this tool closes the missing first-act-of-sight half of the mediation loop by sweeping the WHOLE settled graph. Each surfaced pair is tagged with the signal that found it (POLE axis-pole pull / MODAL prohibition-vs-obligation / NOUN cross-owner overlap) and a suggested axis, so a human can review the shortlist. Deterministic and stdlib-only so the shortlist is reproducible and gate-safe."),
             enforcement="ENFORCED",
             enforced_by=("tests/test_tool_audit_tensions.py::test_pole_tension_is_found", "tests/test_tool_audit_tensions.py::test_modal_opposition_is_found", "tests/test_tool_audit_tensions.py::test_empty_graph_is_vacuous", "tests/test_tool_audit_tensions.py::test_two_runs_identical_candidates", "tests/test_tool_audit_tensions.py::test_mediated_pair_is_excluded", "tests/test_tool_audit_tensions.py::test_refine_siblings_excluded"),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-tension-audit-presents-only",
@@ -3681,6 +4106,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("depends_on", "R-tension-audit-shortlist-tool"),),
             enforcement=ENFORCED,
             enforced_by=("tests/test_tool_audit_tensions.py::test_audit_never_writes_graph_py",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-tension-audit-staleness-visible",
@@ -3691,6 +4118,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("depends_on", "R-tension-audit-shortlist-tool"),),
             enforcement=ENFORCED,
             enforced_by=("tests/test_what_now.py::test_staleness_never_run_fires", "tests/test_what_now.py::test_staleness_fresh_is_silent", "tests/test_what_now.py::test_staleness_after_growth_fires", "tests/test_what_now.py::test_staleness_never_enters_diagnose",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-revisit-markers-evaluated",
@@ -3700,6 +4129,8 @@ def build_graph() -> TensionGraph:
             why=("A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but nothing tracked whether anyone LOOKED at it again -- an unread trigger lets the decision silently ossify while its stated revisit condition may already have come true. tools/mark_revisit_evaluated.py appends a {stamp, conflict, settled_count} record to spec/.runtime/revisit-eval.jsonl when the steward evaluates a marker; the harness reads the last evaluation per conflict and re-surfaces the marker as 'evaluate revisit marker' when never evaluated or stale by more than GENERATIVE_AUDIT_STALE_DELTA SETTLED atoms. The band is CLI-only (never in diagnose(g)) for the same determinism reason as the pending-proposal and generative-audit bands: it reads the filesystem, which gen_spec must not render. Evaluating a marker is an OBSERVATION; re-opening the conflict is a separate ProposedConflict the steward drafts (R-ai-presents-not-decides)."),
             enforcement=ENFORCED,
             enforced_by=("tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_when_never_evaluated", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_silent_after_evaluation", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_refires_after_growth", "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_never_enters_diagnose",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-assumption-transition-kind-exists",
@@ -3711,6 +4142,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_assumption_transition.py::test_validate_uncertain_needs_no_signoff", "test_assumption_transition.py::test_validate_dead_and_holds_require_signoff", "test_assumption_transition.py::test_holds_uncertain_dead_cycle", "test_assumption_transition.py::test_transition_missing_assumption_is_refused", "test_assumption_transition.py::test_dead_transition_surfaces_drift_fallout"),
             settled_at="2026-07-10",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-machine-check-syntactic",
@@ -3722,6 +4154,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_assumption_machine_checks_syntactic", "test_assumption_machine_check.py::test_registered_in_all_invariants", "test_assumption_machine_check.py::test_compilable_formula_passes", "test_assumption_machine_check.py::test_python_version_formula_passes", "test_assumption_machine_check.py::test_empty_machine_check_is_skipped", "test_assumption_machine_check.py::test_prose_formula_fires_violation", "test_assumption_machine_check.py::test_real_domain_machine_checks_are_syntactic"),
             settled_at="2026-07-10",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-uncertain-assumptions-surface",
@@ -3733,6 +4166,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_uncertain_aging.py::test_uncertain_assumptions_filter", "test_uncertain_aging.py::test_below_threshold_is_silent", "test_uncertain_aging.py::test_at_threshold_surfaces_one_p4_action", "test_uncertain_aging.py::test_holds_assumption_never_ages", "test_uncertain_aging.py::test_real_graph_surfaces_three_uncertain_assumptions"),
             settled_at="2026-07-10",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-proposed-stakeholder-kind-exists",
@@ -3742,6 +4176,8 @@ def build_graph() -> TensionGraph:
             why=("Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_member_owner requires a steward who is NOT the owner of any member Requirement, i.e. at least two distinct Stakeholders must exist before any tension can be held. Yet every Requirement, Axis and Assumption already had a Proposed* door while Stakeholder did not, trapping the newcomer between R-no-hand-edit-graph (the graph is writable only through apply_proposal) and the absence of a door. ProposedStakeholder(id, name, domain) is that missing door: a frozen dataclass in proposal.py with kind='Stakeholder', a _validate_stakeholder parser (id/name/domain all required), and an _apply_stakeholder_to_source writer that appends a Stakeholder(...) into the stakeholders = (...) tuple, ensuring the import, and refusing a duplicate id as a re-declaration. Models the exact ProposedAxis/ProposedAssumption pattern (append-to-tuple, exact-id-uniqueness); extends R-active-loop-protocol's floor exactly as EntityType, OperatorBudget, Axis and Assumption did."),
             enforcement=ENFORCED,
             enforced_by=("test_tool_apply_proposal_stakeholder.py::test_validate_proposal_dispatches_stakeholder_kind", "test_tool_apply_proposal_stakeholder.py::test_apply_stakeholder_appends_new_node", "test_tool_apply_proposal_stakeholder.py::test_apply_stakeholder_refuses_duplicate_id",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-sensorium-committed",
@@ -3751,6 +4187,8 @@ def build_graph() -> TensionGraph:
             why=("Claim refreshed 2026-07-05: the Stop boot_cite hook was removed (R-boot-cite-measured REJECTED per R-agent-conduct-is-rules-not-tests -- form-metric theatre), and the UserPromptSubmit attention_hook (wave 16) was missing from the enumeration. The enumeration now matches the actual generated settings.json exactly. Original WHY stands: hooks lived only in the personal git-ignored settings.local.json, so a fresh clone got no pulse and no graph-guard; the committed settings.json is the portable sensorium."),
             enforcement="ENFORCED",
             enforced_by=("test_tool_setup_hooks.py::test_build_settings_has_universal_events", "test_tool_setup_hooks.py::test_build_settings_commands_are_portable", "test_tool_setup_hooks.py::test_build_settings_covers_every_universal_tool", "test_tool_setup_hooks.py::test_dry_run_writes_nothing"),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-assumption-implements-state",
@@ -3762,6 +4200,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("check_assumption_status_valid", "test_assumption_transition.py::test_implements_is_valid_assumption_state", "test_assumption_transition.py::test_implements_requires_signoff", "test_assumption_transition.py::test_implements_transition_directions_apply", "test_assumption_transition.py::test_implements_status_valid_invariant", "test_assumption_transition.py::test_implements_neither_ages_nor_falls_out"),
             settled_at="2026-07-10",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-user-request-decomposed-to-tickets",
@@ -3771,6 +4210,8 @@ def build_graph() -> TensionGraph:
             why=("Steward verdict 2026-07-03 (verbatim): 'всё, что просит пользователь - сразу декомпоизровать на тикеты в чате и справшить куда их оптравить - в таски сессии или в движок тикетов'. Decomposition-before-work is a behavioral discipline of the operator: it makes the unit of work explicit and routable BEFORE effort is spent, so a multi-part request is never silently collapsed into one undifferentiated action (R-anchor-everything at the work-item altitude; R-ai-presents-not-decides -- the routing choice is the steward's, presented not assumed). It is machine-unverifiable (INHERENTLY_PROSE): whether the operator actually paused to decompose and ask lives in the dialogue, not the graph."),
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-ticket-engine-on-disk",
@@ -3781,6 +4222,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_ticket_create.py", "test_tool_ticket_move.py",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-ticket-carries-history",
@@ -3791,6 +4234,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_ticket_create.py", "test_tool_ticket_move.py", "test_tool_ticket_comment.py", "test_tool_ticket_edit.py",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-ticket-mutation-via-tools-only",
@@ -3801,6 +4246,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement=STRUCTURAL,
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-open-tickets-visible",
@@ -3811,6 +4258,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement=ENFORCED,
             enforced_by=("test_open_tickets_band.py",),
+            settled_at="2026-07-03",
+            created_at="2026-07-03",
         ),
         Requirement(
             id="R-attention-registry",
@@ -3821,6 +4270,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-text-grounded-in-models",),
             enforcement=ENFORCED,
             enforced_by=("test_attention_core.py",),
+            settled_at="2026-07-04",
+            created_at="2026-07-04",
         ),
         Requirement(
             id="R-attention-agent-agnostic-core",
@@ -3832,6 +4283,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-backend-scope"),),
             enforcement="ENFORCED",
             enforced_by=("test_attention_core.py::test_core_names_no_platform_token",),
+            settled_at="2026-07-04",
+            created_at="2026-07-04",
         ),
         Requirement(
             id="R-attention-superset-of-diagnose",
@@ -3843,6 +4296,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-attention-registry"),),
             enforcement="ENFORCED",
             enforced_by=("test_attention_core.py",),
+            settled_at="2026-07-04",
+            created_at="2026-07-04",
         ),
         Requirement(
             id="R-attention-claude-adapter",
@@ -3854,6 +4309,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-sensorium-committed"),),
             enforcement=ENFORCED,
             enforced_by=("test_attention_claude_adapter.py",),
+            settled_at="2026-07-04",
+            created_at="2026-07-04",
         ),
         Requirement(
             id="R-framework-suite-tiered",
@@ -3863,6 +4320,8 @@ def build_graph() -> TensionGraph:
             why=("Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin."),
             enforcement="ENFORCED",
             enforced_by=("test_framework_domain_tiering.py::test_every_test_is_tiered", "test_framework_domain_tiering.py::test_tiers_partition_the_suite"),
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-framework-suite-domain-independent",
@@ -3871,6 +4330,8 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. PROSE-enforced (not a single-run pytest invariant): proving it requires re-running `-m framework` under a FOREIGN pin (a nested pytest inside one run would recurse); the proof is executed at wave/commit boundary -- Wave 17 demonstrated 982 passed / 18 deselected under HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev."),
             enforcement=PROSE,
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-work-within-launch-dir",
@@ -3879,6 +4340,8 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node)."),
             enforcement=PROSE,
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-unmeasured-cipher-names-host-boundary",
@@ -3889,6 +4352,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-finite-context-operators",),
             enforcement=ENFORCED,
             enforced_by=("test_tool_context.py::test_absent_stamp_reads_unmeasured", "test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line",),
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-conflict-resolved-in-members-or-mediator",
@@ -3897,6 +4362,8 @@ def build_graph() -> TensionGraph:
             status="SETTLED",
             why=("Steward verdict 2026-07-05, verbatim: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности, которая помогает им решить конфликт' + clarification 'это даже не либо, а может быть дополнением' -- the two paths are not exclusive; a conflict may be resolved by amending its members, by introducing a mediating entity (a Variant, a derived Requirement, or a new mediating node), or by BOTH together. The one forbidden path is resolution OUTSIDE the graph. Trigger: six-lens review (docs/reviews/, 2026-07-05) found the framework's own largest recent work -- the T2 223s->56s performance campaign -- materially relieved the tension of the single open conflict C-ec1ec532 (speed-vs-verification) in CODE, while the conflict still hangs DETECTED in the graph: a resolution taken outside the graph, which this rule names illegitimate. Names the legitimate resolution surface so 'solved in the chat / in the code, conflict left dangling' becomes a visible violation of the connector-node discipline (R-conflict-is-connector-node)."),
             enforcement=PROSE,
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-enforcement-perimeter-baselines-guarded",
@@ -3907,6 +4374,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-no-hand-edit-graph"),),
             enforcement="ENFORCED",
             enforced_by=("tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py",),
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-enforcement-perimeter-visible",
@@ -3917,6 +4386,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-no-hand-edit-graph"),),
             enforcement=ENFORCED,
             enforced_by=("tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged",),
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-crystal-carries-short-form",
@@ -3927,6 +4398,7 @@ def build_graph() -> TensionGraph:
             enforcement="ENFORCED",
             enforced_by=("test_short_form.py",),
             settled_at="2026-07-10",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-decided-by-verifiable-signature",
@@ -3937,6 +4409,7 @@ def build_graph() -> TensionGraph:
             enforcement="PROSE",
             enforceability="INHERENTLY_PROSE",
             settled_at="2026-07-10",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-run-speed-guarded",
@@ -3946,6 +4419,8 @@ def build_graph() -> TensionGraph:
             why=("Steward's verbatim need (2026-07-05): real speed must be guarded by code-law; machines differ so no hardcoded constant — first 5 runs calibrate, +20% headroom, per-machine gitignored file. Closes the speed-vs-verification tension (C-ec1ec532 in hotam-dev) with a mediating rule: speed cannot silently regress."),
             enforcement=ENFORCED,
             enforced_by=("test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression",),
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-confront-includes-aspirations",
@@ -3955,6 +4430,8 @@ def build_graph() -> TensionGraph:
             why=("Steward verdict 2026-07-05, verbatim: 'кажется, не получится [таймер-будильник для IMPLEMENTS]. Это просто нужно модели помнить при внесении изменений - нет ли противоречий нашим целям, правилам, ценностям'. Context: the six-lens review flagged IMPLEMENTS aspirations as a silent corner (no aging, no fallout, no progress measure) and proposed a decay timer; the steward rejected the timer as unworkable -- aliveness of an aspiration is not measured by a calendar but verified at the moment of every change, by the operator's own conscience. So the duty lands on the CONFRONT step of the mediation loop: the confrontation scope explicitly includes goals, aspirations and values, not just SETTLED claims. INHERENTLY_PROSE: this is an operator-conscience discipline; the lexical confront tool cannot see semantic contradiction with values (its honesty boundary is already documented)."),
             enforcement=PROSE,
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-agent-conduct-is-rules-not-tests",
@@ -3965,6 +4442,8 @@ def build_graph() -> TensionGraph:
             relations=(Relation("refines", "R-enforcement-first-class"), Relation("refines", "R-enforceability-kind-declared"),),
             enforcement=PROSE,
             enforceability="INHERENTLY_PROSE",
+            settled_at="2026-07-05",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-delegation-is-a-file",
@@ -3977,6 +4456,7 @@ def build_graph() -> TensionGraph:
             enforced_by=("test_tool_delegate.py::test_create_allocates_id_and_writes_file", "test_tool_delegate.py::test_close_sets_done_and_result"),
             relations=(Relation("replaces", "R-domain-delegation-persists"),),
             settled_at="2026-07-10",
+            created_at="2026-07-05",
         ),
         Requirement(
             id="R-signoff-preserved-in-substrate",
@@ -3987,6 +4467,8 @@ def build_graph() -> TensionGraph:
             assumptions=("A-stakeholders-care", "A-bootstrap-self-applies",),
             enforcement=ENFORCED,
             enforced_by=("check_signoff_chosen_variant_resolves", "check_decided_conflict_carries_signoff",),
+            settled_at="2026-07-06",
+            created_at="2026-07-06",
         ),
         Requirement(
             id="R-project-root-not-hardcoded",
