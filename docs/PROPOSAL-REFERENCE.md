@@ -51,8 +51,8 @@ this JSON, since the CLI runs a similarity check against existing axes first
 
 Adds or updates a business claim.
 
-**Required:** `id`, `claim`, `owner` (a Stakeholder id), `status`, `why`
-**Optional:** `assumptions` (list of Assumption ids, default `[]`),
+**Required:** `id`, `claim`, `owner` (a Stakeholder id), `status`
+**Optional:** `why` (default `""`), `assumptions` (list of Assumption ids, default `[]`),
 `relations` (list of `[kind, target]` pairs, default `[]`), `enforcement`
 (`PROSE` | `STRUCTURAL` | `ENFORCED`, default `"PROSE"`), `enforced_by` (list
 of strings, default `[]`), `m_tag` (default `""`), `enforceability`
@@ -215,14 +215,14 @@ Adds a domain-declared business concept with its own lifecycle (states +
 transitions) and optional typed fields. The most structurally involved kind —
 prefer `hotam-create-entity-type` for interactive scaffolding when possible.
 
-**Required:** `slug` (kebab-case), `description`, `why`, `states` (non-empty
+**Required:** `slug` (kebab-case), `description`, `states` (non-empty
 list of `[name, kind]` or `[name, kind, why]` triples; `kind` is one of the
 framework's `STATE_KINDS` and exactly one state must have `kind == "initial"`),
 `transitions` (list of `[src, dst, event]` triples, optionally with
 guard/why — see `proposal.py` for the full serialized shape)
-**Optional:** `cyclic` (bool, default `false`), `fields` (list of
-`[name, kind, required, ref_target]` quadruples, default `[]`; `kind` is one
-of the framework's `ENTITY_FIELD_KINDS`)
+**Optional:** `why` (default `""`), `cyclic` (bool, default `false`), `fields`
+(list of `[name, kind, required, ref_target]` quadruples, default `[]`;
+`kind` is one of the framework's `ENTITY_FIELD_KINDS`)
 
 ```json
 {
