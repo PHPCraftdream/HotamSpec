@@ -247,6 +247,7 @@
     "R-backend-scope",
     "R-bijection-r-to-enforcer",
     "R-bijection-r-to-enforcer-draft",
+    "R-binary-enforcement-gradient",
     "R-boot-cite-in-first-sentence",
     "R-boot-cite-measured",
     "R-boot-from-substrate",
@@ -5790,6 +5791,21 @@
       "source_refs": [],
       "status": "SETTLED",
       "why": "The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that counts the _tools/ members inside the produced .whl and deletes the artifact on mismatch makes the broken-wheel failure structurally impossible to publish."
+    },
+    {
+      "assumptions": [],
+      "claim": "The three-level enforcement gradient (PROSE/STRUCTURAL/ENFORCED) shall be collapsed into a binary ENFORCED/NOT_ENFORCED distinction plus a separate inherently_prose flag, because the middle STRUCTURAL tier is redundant.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [],
+      "id": "R-binary-enforcement-gradient",
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "REJECTED",
+      "why": "REJECTED — REPLACES by enforceability (ENFORCEABLE | INHERENTLY_PROSE) + Requirement.is_closeable_debt(). The ratchet pressure the binarization was meant to deliver is ALREADY binary and lives on a different axis than the descriptive enforcement gradient. is_closeable_debt() returns `enforcement != ENFORCED and enforceability == ENFORCEABLE` — it ignores the PROSE-vs-STRUCTURAL distinction entirely and keys the only normative pressure (real, closeable debt) off enforceability, not off which of the three descriptive tiers a claim sits in. Concretely: most STRUCTURAL nodes already carry enforceability=INHERENTLY_PROSE and are therefore NOT counted as debt; after Этап T (#122) real closeable debt is down to 2 nodes. Binarizing PROSE/STRUCTURAL/ENFORCED would be a ~50-site code refactor (proposal.py, apply_proposal.py, gen_spec.py, PROPOSAL-REFERENCE.md, ~270 existing graph nodes) for exactly zero change to the debt metric. The three-level enforcement value is retained as a DESCRIPTIVE, non-normative scale (how deeply a claim is crystallized: recorded / addressable / auto-checked) — useful for reading and reporting — while all normative convergence pressure stays on the already-binary enforceability + is_closeable_debt() pair. REVISIT WHEN a second, independent normative consumer of the STRUCTURAL tier appears (something that must treat STRUCTURAL differently from PROSE for a gate/metric, not merely for display). — (was: external-review backlog item D3 — binarize the enforcement gradient.) — (was: External-review backlog item D3. Proposed to binarize the enforcement scale.)"
     }
   ],
   "stakeholders": [
