@@ -543,6 +543,220 @@ def open_ticket_actions() -> list[Action]:
     ]
 
 
+STALE_TICKET_AGE_DAYS = 14
+"""Canon: §Harness — age (in days since `created`) past which a non-done ticket
+counts as STALE. Moderate on purpose (etap E, task #107): tickets are a
+single-steward backlog, not a live SLA queue; 14 days is long enough that a
+ticket genuinely parked in backlog/blocked for a normal working cadence does
+NOT fire, short enough that a ticket forgotten across several sessions does.
+Advisory only — mirrors the P6 PENDING_PROPOSAL band used by every other
+runtime-fs source (never a gate, R-attention-superset-of-diagnose)."""
+
+
+def stale_ticket_actions(*, now: float | None = None) -> list[Action]:
+    """Canon: §Harness — CLI-only band: non-done tickets older than STALE_TICKET_AGE_DAYS.
+
+    RULE: NOT part of diagnose(g). Like open_ticket_actions (the sibling band
+    this refines), this reads the FILESYSTEM (tickets/ at the repo root), so it
+    stays OUT of diagnose()/LIVE-STATE (R-deterministic-generation) and is
+    surfaced only by the interactive CLI / attention adapter.
+
+    Distinct from open_ticket_actions: that band answers "how many tickets are
+    open" (a load gauge); this one answers "which ones have been sitting long
+    enough to be worth a second look" (an AGE gauge) — the ticket's `created`
+    field (ISO-8601 UTC, written once by ticket_create.py and never touched by
+    later moves/comments/edits — R-ticket-carries-history) is compared against
+    `now`. One action per stale ticket, in ticket-id order.
+
+    `now` (unix seconds) defaults to time.time(); tests pass a fixed value for
+    determinism of THIS function's own unit tests, exactly like
+    pending_proposal_actions's `now` parameter.
+
+    WHY: R-open-tickets-visible surfaces the QUEUE, not its AGE — a ticket can
+    sit in backlog indefinitely and still only ever show up as "backlog: 1",
+    indistinguishable from a ticket created five minutes ago. Under J1 ("memory
+    and discipline for a fleet") an item nobody has touched in weeks is exactly
+    the kind of silently-decaying state the attention registry exists to catch
+    (lens-2/lens-4 finding, etap E task #107).
+    """
+    import time as _time  # noqa: PLC0415
+    import datetime as _dt  # noqa: PLC0415
+
+    _tools = Path(__file__).resolve().parent
+    if str(_tools) not in sys.path:
+        sys.path.insert(0, str(_tools))
+    try:
+        import _ticket_store as _ts  # noqa: PLC0415
+    except Exception:
+        return []
+
+    ref_time = now if now is not None else _time.time()
+    out: list[Action] = []
+    for tid in sorted(_ts.all_ids(), key=lambda i: int(i.split("-")[1])):
+        try:
+            t = _ts.load(tid)
+        except (FileNotFoundError, ValueError, KeyError):
+            continue
+        if t.status == "done":
+            continue
+        created = t.header.get("created")
+        if not isinstance(created, str):
+            continue
+        try:
+            created_dt = _dt.datetime.strptime(created, "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=_dt.timezone.utc
+            )
+        except ValueError:
+            continue
+        age_days = (ref_time - created_dt.timestamp()) / 86400.0
+        if age_days <= STALE_TICKET_AGE_DAYS:
+            continue
+        out.append(
+            Action(
+                priority=P_PENDING_PROPOSAL,
+                kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+                target=tid,
+                imperative=(
+                    f"stale ticket {tid} ({t.status}): open {int(age_days)} day(s)"
+                    f" (> {STALE_TICKET_AGE_DAYS}, created {created})"
+                    " — `python tools/ticket_show.py "
+                    f"{tid}` and either move it or close it."
+                ),
+            )
+        )
+    return out
+
+
+STALE_DELEGATION_AGE_DAYS = 14
+"""Canon: §Harness — age (in days since `date`) past which an open (non-done)
+delegations/DG-<n>.md counts as STALE. Same magnitude as STALE_TICKET_AGE_DAYS
+and for the same reason (etap E, task #107): a single-steward hand-off queue,
+not an SLA — 14 days catches a delegation that fell off the radar without
+firing on ordinary in-flight work."""
+
+
+def stale_delegation_actions(*, now: float | None = None) -> list[Action]:
+    """Canon: §Harness — CLI-only band: open DG-<n>.md delegations older than
+    STALE_DELEGATION_AGE_DAYS.
+
+    RULE: NOT part of diagnose(g). Reads the FILESYSTEM (delegations/ at the
+    repo root — R-delegation-is-a-file), so it stays OUT of diagnose()/
+    LIVE-STATE (R-deterministic-generation) and is surfaced only by the
+    interactive CLI / attention adapter, exactly like the ticket/proposal/
+    revisit/audit bands.
+
+    A delegation's header carries `status` ("open"|"done") and `date`
+    (YYYY-MM-DD, the day it was created — see spec/tools/_delegation_store.py).
+    One action per stale open delegation, in DG-id order.
+
+    `now` (unix seconds) defaults to time.time(); tests pass a fixed value,
+    exactly like pending_proposal_actions/stale_ticket_actions.
+
+    WHY: delegations/DG-*.md is the ONE spawn/hand-off trace mechanism this
+    codebase's own audit (etap E, task #107 inventory) found to be actually,
+    consistently used in practice (spawn-log.jsonl and land-log.jsonl cover
+    different event classes — see the task's PRESENT inventory). A file-based
+    mechanism that is used is worth protecting from silent staleness the same
+    way tickets are: an open DG-file nobody closed is a hand-off that may have
+    finished without anyone recording the result, or stalled without anyone
+    noticing.
+    """
+    import time as _time  # noqa: PLC0415
+    import datetime as _dt  # noqa: PLC0415
+
+    _tools = Path(__file__).resolve().parent
+    if str(_tools) not in sys.path:
+        sys.path.insert(0, str(_tools))
+    try:
+        import _delegation_store as _ds  # noqa: PLC0415
+    except Exception:
+        return []
+
+    ref_time = now if now is not None else _time.time()
+    out: list[Action] = []
+    for did in sorted(_ds.all_ids(), key=lambda i: int(i.split("-")[1])):
+        try:
+            d = _ds.load(did)
+        except (FileNotFoundError, ValueError, KeyError):
+            continue
+        if d.status == "done":
+            continue
+        date_str = d.header.get("date")
+        if not isinstance(date_str, str):
+            continue
+        try:
+            created_dt = _dt.datetime.strptime(date_str, "%Y-%m-%d").replace(
+                tzinfo=_dt.timezone.utc
+            )
+        except ValueError:
+            continue
+        age_days = (ref_time - created_dt.timestamp()) / 86400.0
+        if age_days <= STALE_DELEGATION_AGE_DAYS:
+            continue
+        out.append(
+            Action(
+                priority=P_PENDING_PROPOSAL,
+                kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+                target=did,
+                imperative=(
+                    f"stale delegation {did} (open): {int(age_days)} day(s) since"
+                    f" {date_str} (> {STALE_DELEGATION_AGE_DAYS})"
+                    f" — `python tools/delegate.py show {did}` and either close it"
+                    " or check on it."
+                ),
+            )
+        )
+    return out
+
+
+def mutating_spawn_without_isolation_actions() -> list[Action]:
+    """Canon: §Harness — CLI-only band: mutating spawn-log records without
+    worktree isolation (surfaces spawn_log_isolation_status.py's structural
+    scan through the attention registry).
+
+    RULE: NOT part of diagnose(g). Reads the FILESYSTEM
+    (spec/.runtime/spawn-log.jsonl), so it stays OUT of diagnose()/LIVE-STATE
+    (R-deterministic-generation), exactly like the other runtime-fs bands.
+
+    Thin adapter: tools/spawn_log_isolation_status.py (built under task #106,
+    R-spawn-log-carries-isolation) already computes the honest, log-internal
+    slice of R-parallel-mutating-agents-use-worktree — whether any spawn-log
+    record was written with mutating=true and isolation="shared". That tool
+    had no attention-registry entry point yet (confirmed absent by etap E task
+    #107's inventory: `grep spawn_log_isolation` over what_now.py/attention.py
+    found no wiring) — this function is that missing wiring, not a duplicate.
+
+    Fires ONE action naming every flagged stamp when the scan is dirty; silent
+    when clean (including the vacuous case of an empty/absent log —
+    R-empty-content-wellformed).
+    """
+    _tools = Path(__file__).resolve().parent
+    if str(_tools) not in sys.path:
+        sys.path.insert(0, str(_tools))
+    try:
+        import spawn_log_isolation_status as _sl  # noqa: PLC0415
+    except Exception:
+        return []
+
+    result = _sl.compute_isolation_status()
+    if result.clean:
+        return []
+    stamps = ", ".join(result.flagged_stamps)
+    return [
+        Action(
+            priority=P_PENDING_PROPOSAL,
+            kind=_BAND_LABEL[P_PENDING_PROPOSAL],
+            target="spawn-log-isolation",
+            imperative=(
+                f"{len(result.flagged_stamps)} spawn-log record(s) are"
+                f" mutating=true with isolation=shared (stamps: {stamps})"
+                " — `python tools/spawn_log_isolation_status.py` for detail"
+                " (R-parallel-mutating-agents-use-worktree, log-internal slice)."
+            ),
+        )
+    ]
+
+
 # --- Runtime-fs attention sources (the injected superset half) --------------
 
 
@@ -564,17 +778,23 @@ def _actions_to_signals(source_id: str, actions: list[Action]) -> list[Attention
 def runtime_fs_sources() -> tuple[AttentionSource, ...]:
     """Canon: §Attention — the RUNTIME-FS half of the attention registry.
 
-    These four sources read the FILESYSTEM (spec/.runtime/*, tickets/, pending
-    proposals), so they are NON-deterministic and MUST NOT flow into diagnose()
-    / LIVE-STATE. They live here in the tool (not in the stdlib-only core) and
-    are INJECTED into hotam_spec.attention.collect(runtime_sources=...) by the
-    live consumer (this CLI, the Claude hook, any agent). That injection seam is
-    the architectural guarantee behind R-attention-superset-of-diagnose: the
-    deterministic core has no reference to them, so they can never leak into the
-    substrate.
+    These sources read the FILESYSTEM (spec/.runtime/*, tickets/, delegations/,
+    pending proposals), so they are NON-deterministic and MUST NOT flow into
+    diagnose() / LIVE-STATE. They live here in the tool (not in the
+    stdlib-only core) and are INJECTED into
+    hotam_spec.attention.collect(runtime_sources=...) by the live consumer
+    (this CLI, the Claude hook, any agent). That injection seam is the
+    architectural guarantee behind R-attention-superset-of-diagnose: the
+    deterministic core has no reference to them, so they can never leak into
+    the substrate.
 
     Each is tagged READS_RUNTIME_FS; collect() rejects any READS_GRAPH source
     passed as a runtime source.
+
+    stale-tickets / stale-delegations / spawn-log-isolation (etap E, task
+    #107) are ADVISORY additions on top of the original four: age-threshold
+    and structural-scan bands, never gating, following the same P6
+    PENDING_PROPOSAL band as their siblings.
     """
     return (
         AttentionSource(
@@ -603,6 +823,27 @@ def runtime_fs_sources() -> tuple[AttentionSource, ...]:
             reads=READS_RUNTIME_FS,
             collect=lambda g: _actions_to_signals(
                 "open-tickets", open_ticket_actions()
+            ),
+        ),
+        AttentionSource(
+            id="stale-tickets",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "stale-tickets", stale_ticket_actions()
+            ),
+        ),
+        AttentionSource(
+            id="stale-delegations",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "stale-delegations", stale_delegation_actions()
+            ),
+        ),
+        AttentionSource(
+            id="spawn-log-isolation",
+            reads=READS_RUNTIME_FS,
+            collect=lambda g: _actions_to_signals(
+                "spawn-log-isolation", mutating_spawn_without_isolation_actions()
             ),
         ),
     )
@@ -770,6 +1011,9 @@ def main(argv: list[str] | None = None) -> None:
         + generative_audit_staleness_actions(g)
         + revisit_marker_actions(g)
         + open_ticket_actions()
+        + stale_ticket_actions()
+        + stale_delegation_actions()
+        + mutating_spawn_without_isolation_actions()
     )
     if cli_only:
         sys.stdout.write(f"\n--- P{P_PENDING_PROPOSAL} PENDING_PROPOSAL ---\n")
