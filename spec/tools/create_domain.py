@@ -72,15 +72,33 @@ from hotam_spec.assumption import Assumption
 from hotam_spec.axis import Axis
 from hotam_spec.conflict import Conflict, conflict_identity
 from hotam_spec.graph import TensionGraph
-from hotam_spec.requirement import Requirement
+from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL, Requirement
 from hotam_spec.stakeholder import Stakeholder
 
 # These imports (Assumption/Axis/Conflict/conflict_identity/Requirement/
-# Stakeholder) are pre-declared so tools/apply_proposal.py can append nodes
-# into the tuples below without having to inject an import. They are referenced
+# Stakeholder/ENFORCED/PROSE/STRUCTURAL) are pre-declared so tools/apply_proposal.py
+# can append nodes into the tuples below without having to inject an import.
+# ENFORCED/PROSE/STRUCTURAL matter from the FIRST Requirement onward: the writer
+# (apply_proposal._render_requirement_source) emits `enforcement=PROSE` etc. as a
+# bare name reference (mirroring how hotam-spec-self's own graph.py renders it),
+# not a string literal -- a ProposedRequirement with no explicit `enforcement`
+# defaults to "PROSE", so even the very first mechanically-added Requirement in a
+# freshly scaffolded domain needs this name in scope, or the write is a
+# NameError at graph-load time (caught by the 30+-item batch stress test in
+# spec/tests/test_apply_proposal_batch_stress.py). The others are referenced
 # only after the first node of each kind is added; the F401 until then is
 # intentional scaffolding.
-_ = (Assumption, Axis, Conflict, conflict_identity, Requirement, Stakeholder)
+_ = (
+    Assumption,
+    Axis,
+    Conflict,
+    conflict_identity,
+    ENFORCED,
+    PROSE,
+    STRUCTURAL,
+    Requirement,
+    Stakeholder,
+)
 
 
 def build_graph() -> TensionGraph:

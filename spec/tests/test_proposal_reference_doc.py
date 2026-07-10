@@ -34,6 +34,14 @@ DOC_PATH = REPO_ROOT / "docs" / "PROPOSAL-REFERENCE.md"
 # Maps the doc's "## <Heading>" text to the Proposed* dataclass it documents.
 # "Enum reference" is a shared-vocabulary section, not a proposal kind, and is
 # deliberately excluded (there is no single dataclass it maps to).
+# "The consumer graph.py AST contract" (added Etap F, 2026-07-10) is likewise
+# not a proposal-kind section -- it documents the WRITER's structural
+# requirements on a consumer's graph.py (the shape apply_proposal.py's AST
+# locators depend on), which has no corresponding Proposed* dataclass to map
+# fields against.
+_NON_KIND_SECTIONS: frozenset[str] = frozenset(
+    {"Enum reference", "The consumer graph.py AST contract"}
+)
 HEADING_TO_CLASS: dict[str, type] = {
     "Stakeholder": proposal_mod.ProposedStakeholder,
     "Axis": proposal_mod.ProposedAxis,
@@ -155,14 +163,15 @@ def test_doc_fields_match_dataclass_fields(heading: str) -> None:
 
 
 def test_no_stray_headings_without_a_known_kind() -> None:
-    """Every '## <Heading>' in the doc (besides 'Enum reference') maps to a known kind.
+    """Every '## <Heading>' in the doc (besides the non-kind sections) maps to
+    a known kind.
 
     Catches the opposite drift direction: a NEW Proposed* kind gets a doc
     section, but nobody added it to HEADING_TO_CLASS in this test -- this
     would otherwise let a section silently go unchecked forever.
     """
     sections = _doc_sections()
-    known = set(HEADING_TO_CLASS) | {"Enum reference"}
+    known = set(HEADING_TO_CLASS) | _NON_KIND_SECTIONS
     stray = [h for h in sections if h not in known]
     assert not stray, (
         f"PROPOSAL-REFERENCE.md has section(s) {stray} not covered by this "

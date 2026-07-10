@@ -18,6 +18,114 @@ hotam-apply-proposal --dry-run proposal.json
 hotam-apply-proposal --batch proposals_array.json   # array of proposal objects
 ```
 
+## The consumer graph.py AST contract
+
+`apply_proposal.py` never re-parses your whole graph into an AST and rewrites
+it wholesale — it locates a small number of exact source shapes with `ast`
+and splices new source text in via targeted line/column edits, so the rest of
+your file's formatting is left untouched. That speed and formatting-fidelity
+trade-off means the writer requires your `graph.py` to hold a handful of
+shapes EXACTLY — reformatting them (even functionally-equivalently, e.g. with
+`ruff format` / `black` collapsing a multi-line tuple onto one line) can make
+the writer unable to find where to append, in which case `apply_proposal.py`
+fails fast with a `RuntimeError` naming exactly what it looked for and what it
+found instead, rather than silently doing nothing.
+
+**Required shape** (this is exactly what `tools/create_domain.py` scaffolds
+for every new domain — see `domains/<name>/graph.py` after `hotam-create-domain`
+for a live example):
+
+```python
+def build_graph() -> TensionGraph:
+    stakeholders = (
+        Stakeholder(id="...", name="...", domain="..."),
+    )
+    axes = (
+        Axis(slug="...", description="..."),
+    )
+    requirements = (
+        Requirement(id="R-...", claim="...", owner="...", status="...", why="..."),
+    )
+    conflicts = (
+        Conflict(axis="...", context="...", members=(...), steward="..."),
+    )
+    assumptions = (
+        Assumption(id="A-...", statement="...", status=HOLDS, owner="...", created_at="..."),
+    )
+    return TensionGraph(
+        axes=axes,
+        stakeholders=stakeholders,
+        requirements=requirements,
+        conflicts=conflicts,
+        assumptions=assumptions,
+    )
+```
+
+Load-bearing rules the locator depends on (breaking any one of these is what
+triggers the `RuntimeError` below):
+
+1. **A `def build_graph():` function must exist.** This is the ONLY place the
+   writer looks for the tuples below — a graph assembled some other way (a
+   module-level constant, a class method, a factory with a different name) is
+   invisible to `apply_proposal.py`.
+2. **Each roster is a top-level, bare-name assignment inside `build_graph()`**
+   — `requirements = (...)`, `conflicts = (...)`, `axes = (...)`,
+   `stakeholders = (...)`, `assumptions = (...)`. "Top-level" means a direct
+   statement in the function body, not nested inside an `if`/`for`/`with`; "bare
+   name" means the assignment target is a single identifier (`requirements`),
+   not an attribute (`self.requirements`), not a tuple-unpack
+   (`requirements, x = ...`), and not inlined directly as a `TensionGraph(...)`
+   kwarg (`TensionGraph(requirements=(...))` with no separate variable). The
+   NAME matters too — renaming `requirements` to `reqs` breaks every
+   `Requirement`-kind proposal.
+3. **The right-hand side must be a literal parenthesized tuple** — `(...)`,
+   not `list(...)`, not a generator expression, not a function call that
+   returns a tuple. An empty roster is still `()`  (or `(\n)`, both parse the
+   same), never omitted.
+4. **`return TensionGraph(...)` must appear as a direct call expression** in
+   `build_graph()`'s `return` statement — not built up across several
+   statements (`g = TensionGraph(...); return g` is NOT recognized; this
+   matters specifically for `EntityType` proposals, which locate the
+   `TensionGraph(...)` call itself to insert or extend `entity_types=`).
+5. **Requirement's `enforcement=` values (`PROSE`/`STRUCTURAL`/`ENFORCED`) are
+   written as bare name references, not string literals** (mirroring how
+   `hotam-spec-self`'s own graph.py renders them) — so your `graph.py` MUST
+   `from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL` even
+   before you have hand-authored a single `Requirement` yourself, because a
+   `ProposedRequirement` with no explicit `enforcement` defaults to `"PROSE"`
+   and the FIRST mechanically-added requirement will already need the name in
+   scope (a `NameError` at graph-load time otherwise — caught by
+   `spec/tests/test_apply_proposal_batch_stress.py`, which stress-tests a
+   30+-item mixed batch against a freshly `create_domain.py`-scaffolded
+   graph). `tools/create_domain.py`'s scaffold template pre-declares this
+   import for exactly this reason; keep it if you hand-edit the template.
+
+**What happens when the contract breaks**: every locator that depends on
+these shapes fails CLOSED — it raises `RuntimeError` (surfaced as
+`apply_proposal.py` exit code 1, nothing written) rather than guessing or
+silently no-op'ing. The message names which tuple/function it was looking
+for, whether `build_graph()` exists at all, and — when `build_graph()` exists
+but the target roster doesn't — which OTHER top-level tuple names it DID find
+(so a rename is easy to spot). Example, after a hypothetical reformat that
+renamed `requirements` to `reqs`:
+
+```
+ERROR: Cannot find `requirements = (...)` tuple in build_graph(). `build_graph()`
+DOES contain these top-level tuple assignment(s): ['axes', 'assumptions', 'conflicts',
+'reqs', 'stakeholders'] — was `requirements` renamed to one of these, or inlined as a
+TensionGraph(...) kwarg instead of a separate variable? See docs/PROPOSAL-REFERENCE.md,
+'The consumer graph.py AST contract', for the exact shape required (a bare top-level
+`requirements = (...)` assignment, one Requirement/Conflict/Axis/Stakeholder/Assumption
+call per element, never reformatted into an inline TensionGraph(...) kwarg or renamed).
+```
+
+**Practical guidance**: run your formatter/linter on everything EXCEPT the
+five roster tuples inside `build_graph()` and the `return TensionGraph(...)`
+call, or configure it to leave `graph.py` alone entirely and only run it on
+your own domain code elsewhere. `tools/gen_spec.py`'s own regeneration never
+touches `graph.py` (it is hand/proposal-authored, never generated), so there
+is no round-trip formatting concern beyond your own tool choices.
+
 ## Enum reference
 
 These value sets are reused across several proposal kinds below.

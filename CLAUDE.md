@@ -240,7 +240,7 @@ _(no sub-operators yet)_
 | **§Constitution** | _(not yet mapped)_ | _(none)_ | 3 tests |
 | **§Context** | _(not yet mapped)_ | _(none)_ | 1 tests |
 | **§ContextBudget** | _(not yet mapped)_ | 1 checks | 3 tests |
-| **§Domain** | `spec/src/hotam_spec/domain_resolution.py` | 7 checks | 6 tests |
+| **§Domain** | `spec/src/hotam_spec/domain_resolution.py` | 7 checks | 7 tests |
 | **§Entity** | `spec/src/hotam_spec/entity.py` | 12 checks | 6 tests |
 | **§Glossary** | `spec/src/hotam_spec/glossary.py` | 1 checks | 3 tests |
 | **§Goal** | _(not yet mapped)_ | 2 checks | 2 tests |

@@ -1555,10 +1555,7 @@ def _apply_requirement_to_source(
     tree = ast.parse(source_text)
     tuple_end = _find_requirements_tuple_end(tree)
     if tuple_end is None:
-        raise RuntimeError(
-            "Cannot find `requirements = (...)` tuple in build_graph(). "
-            "Is spec/content/graph.py well-formed?"
-        )
+        raise RuntimeError(_tuple_not_found_message(tree, "requirements"))
 
     # Determine indentation from existing Requirement calls
     indent = "        "  # default: 8 spaces
@@ -1994,6 +1991,86 @@ def _find_module_tuple_end(tree: ast.AST, var_name: str) -> int | None:
     return None
 
 
+def _tuple_not_found_message(tree: ast.AST, var_name: str) -> str:
+    """Canon: §Proposal — build a precise diagnostic when `_find_module_tuple_end`
+    (or any of its per-kind wrappers) returns None.
+
+    The AST contract this tool requires of a CONSUMER graph.py (documented in
+    full in docs/PROPOSAL-REFERENCE.md, "The consumer graph.py AST contract"):
+    a `def build_graph():` function whose body contains a TOP-LEVEL assignment
+    `<var_name> = (...)` — a bare `Name` target (not `self.foo`, not a tuple-
+    unpack, not an inline `TensionGraph(<var_name>=(...))` kwarg) bound to a
+    parenthesized tuple literal. Any of the following breaks the locator and
+    lands here:
+      - no `def build_graph(...)` function exists in the module at all;
+      - `build_graph()` exists but has no top-level `<var_name> = (...)`
+        assignment (e.g. the roster was inlined directly as a TensionGraph(...)
+        kwarg instead of a named variable — the ORIGINAL shape create_domain.py
+        scaffolds and the shape every hand-authored domain graph.py MUST keep);
+      - the assignment exists under a DIFFERENT name (a rename/refactor, e.g.
+        `reqs = (...)` instead of `requirements = (...)`);
+      - a formatter/refactor turned the RHS into something other than a bare
+        parenthesized tuple (e.g. `requirements = list(...)` or a generator
+        expression) — the locator only recognizes a literal `(...)` tuple.
+    Distinguishing "build_graph is missing entirely" from "build_graph exists
+    but var_name is absent/renamed" is the single most useful fact for a
+    consumer debugging a silent-looking `apply_proposal.py` failure after
+    reformatting their graph.py with a tool like ruff/black (lens-4-applicability
+    review, 2026-07-10, §3 point 5 / §4 point 6).
+    """
+    has_build_graph = any(
+        isinstance(node, ast.FunctionDef) and node.name == "build_graph"
+        for node in ast.walk(tree)
+    )
+    if not has_build_graph:
+        return (
+            f"Cannot find `{var_name} = (...)` tuple: no `def build_graph():` "
+            f"function exists in this graph.py at all. The AST contract "
+            f"(docs/PROPOSAL-REFERENCE.md, 'The consumer graph.py AST "
+            f"contract') requires a top-level `def build_graph():` function "
+            f"whose body assigns `{var_name} = (...)` as a separate, named, "
+            f"top-level tuple (not inlined as a TensionGraph(...) kwarg). "
+            f"Fix: add `def build_graph():` containing "
+            f"`{var_name} = (\n    ...,\n)` and return it via "
+            f"TensionGraph({var_name}={var_name}, ...)."
+        )
+    # build_graph() exists; look for OTHER top-level assignments to report
+    # what variable names ARE present, in case var_name was renamed.
+    other_names: list[str] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.FunctionDef) and node.name == "build_graph"):
+            continue
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Assign):
+                continue
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and isinstance(
+                    stmt.value, ast.Tuple
+                ):
+                    other_names.append(target.id)
+    found_note = (
+        f" `build_graph()` DOES contain these top-level tuple assignment(s): "
+        f"{sorted(set(other_names))} — was `{var_name}` renamed to one of "
+        f"these, or inlined as a TensionGraph(...) kwarg instead of a "
+        f"separate variable?"
+        if other_names
+        else " `build_graph()` contains NO top-level `name = (...)` tuple "
+        "assignments at all (the roster may have been inlined directly as "
+        "TensionGraph(...) kwargs, or the RHS is not a bare parenthesized "
+        "tuple literal — e.g. `list(...)` / a generator expression / a "
+        "multi-target assignment are not recognized)."
+    )
+    return (
+        f"Cannot find `{var_name} = (...)` tuple in build_graph()."
+        + found_note
+        + " See docs/PROPOSAL-REFERENCE.md, 'The consumer graph.py AST "
+        "contract', for the exact shape required (a bare top-level "
+        f"`{var_name} = (...)` assignment, one Requirement/Conflict/Axis/"
+        "Stakeholder/Assumption call per element, never reformatted into an "
+        "inline TensionGraph(...) kwarg or renamed)."
+    )
+
+
 def _find_call_indent(
     tree: ast.AST, lines: list[str], call_name: str, default: str = "        "
 ) -> str:
@@ -2038,10 +2115,7 @@ def _insert_into_flat_tuple(
     lines = source_text.splitlines(keepends=True)
     tuple_end = _find_module_tuple_end(tree, var_name)
     if tuple_end is None:
-        raise RuntimeError(
-            f"Cannot find `{var_name} = (...)` tuple in build_graph(). "
-            "Is the domain graph.py well-formed?"
-        )
+        raise RuntimeError(_tuple_not_found_message(tree, var_name))
     insert_at = tuple_end - 1  # 0-indexed: the ')' line of the tuple
     lines.insert(insert_at, rendered)
     return "".join(lines)
@@ -2188,10 +2262,7 @@ def _apply_conflict_to_source(source_text: str, proposal: ProposedConflict) -> s
     lines = source_text.splitlines(keepends=True)
     tuple_end = _find_conflicts_tuple_end(tree)
     if tuple_end is None:
-        raise RuntimeError(
-            "Cannot find `conflicts = (...)` tuple in build_graph(). "
-            "Is the domain graph.py well-formed?"
-        )
+        raise RuntimeError(_tuple_not_found_message(tree, "conflicts"))
 
     # Determine indentation from existing Conflict calls (default 8 spaces)
     indent = "        "
@@ -2795,9 +2866,25 @@ def _apply_entity_type_to_source(
         # or before the TensionGraph closing paren.
         tg_end = _find_tension_graph_call_end(tree)
         if tg_end is None:
+            has_build_graph = any(
+                isinstance(node, ast.FunctionDef) and node.name == "build_graph"
+                for node in ast.walk(tree)
+            )
             raise RuntimeError(
-                "Cannot locate TensionGraph(...) call in build_graph(). "
-                "Is the domain graph.py well-formed?"
+                "Cannot locate a `return TensionGraph(...)` call inside "
+                "build_graph()."
+                + (
+                    " No `def build_graph():` function exists in this "
+                    "graph.py at all."
+                    if not has_build_graph
+                    else " `build_graph()` exists but does not `return "
+                    "TensionGraph(...)` as a direct call expression — a "
+                    "wrapped/aliased/multi-step construction (e.g. `g = "
+                    "TensionGraph(...); return g`) is not recognized by this "
+                    "locator."
+                )
+                + " See docs/PROPOSAL-REFERENCE.md, 'The consumer graph.py "
+                "AST contract', for the exact required shape."
             )
 
         # Try to find 'entities=' kwarg to insert before it
@@ -3092,6 +3179,7 @@ def apply(
     content_graph: Path | None = None,
     full_suite: bool = False,
     proposal_file: Path | None = None,
+    defer_verify: bool = False,
 ) -> int:
     """Canon: §Proposal — apply a validated Proposal to the graph.
 
@@ -3135,6 +3223,21 @@ def apply(
     this target anyway. R-tiered-gate-not-a-commit-gate: this tiering applies
     ONLY to the per-proposal LAND step; wave/commit boundaries remain governed
     by the unabridged full suite (`uv run pytest -q` from spec/), never T1.
+
+    `defer_verify` (default False, backward-compatible with every existing
+    caller): when True, apply() WRITES the proposal's change to the graph file
+    and then returns 0 immediately — it skips gen_spec.py regen, the LAND-gate
+    verify tier, the closure check, the land-log append, and per-item archiving.
+    Used exclusively by main()'s `--batch` path (see _apply_batch below): a
+    30+-item adoption batch that ran the full two-pass gen_spec regen + a
+    pytest verify subprocess (T1 targeted, or T2 full-suite whenever the gate
+    fails closed — which it does for EVERY brand-new node, i.e. most of a
+    fresh-domain batch) once PER ITEM measured at ~60-75s/item for the T2 full
+    suite (spec/.runtime/run-speed-baseline.json) — a 30-item batch cost
+    30-40 minutes of redundant, byte-identical regen+verify work, since only
+    the LAST regen+verify (over the fully-written graph) is actually load-
+    bearing. `defer_verify=True` lets the batch driver write all N proposals
+    first, then run gen_spec + verify exactly ONCE over the final state.
     """
     active_graph = content_graph if content_graph is not None else _CONTENT_GRAPH
     source_text = active_graph.read_text(encoding="utf-8")
@@ -3231,6 +3334,48 @@ def apply(
     active_graph.write_text(new_source, encoding="utf-8")
     print(f"Written: {active_graph}")
 
+    if defer_verify:
+        # Batch fast path (see the defer_verify docstring paragraph above):
+        # the caller (main()'s --batch loop) is writing many proposals in
+        # sequence and will run gen_spec + the verify tier exactly once, over
+        # the fully-written graph, after the loop. Skip regen/verify/closure/
+        # land-log/archive here — none of them are meaningful for an
+        # intermediate, not-yet-final batch state.
+        print("(defer_verify: skipping regen + verify tier for this batch item)")
+        return 0
+
+    return _regen_and_verify(
+        active_graph,
+        proposal,
+        target_preexisting=target_preexisting,
+        full_suite=full_suite,
+        triggering_kind=triggering_kind,
+        proposal_file=proposal_file,
+    )
+
+
+def _regen_and_verify(
+    active_graph: Path,
+    proposal: Proposal,
+    *,
+    target_preexisting: bool,
+    full_suite: bool,
+    triggering_kind: str | None,
+    proposal_file: Path | None,
+) -> int:
+    """Canon: §Proposal — regen docs/crystal + run the LAND-gate verify tier.
+
+    Factored out of apply() so the `--batch` driver (see _apply_batch) can run
+    this EXACTLY ONCE after writing N proposals to the graph, instead of once
+    per item (see the defer_verify docstring paragraph on apply() for the
+    measured cost of the naive N-times approach). Single-proposal callers
+    (apply() itself, when defer_verify=False) still get this immediately
+    after their own write — behavior is unchanged for every existing caller.
+
+    `proposal` is the LAST-applied proposal in a batch (or the only one, for
+    the single-proposal path) — its target_anchor()/type drive the T1/T2 gate
+    tier decision and the closure check, exactly as before this refactor.
+    """
     # Regen — contamination-safe (R-root-crystal-follows-pin).
     #
     # The applied graph (active_graph) may belong to a NON-pinned domain when
@@ -3503,8 +3648,22 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
+        # R-run-speed-guarded / stress-test finding (2026-07-10): apply()'s
+        # regen (2x gen_spec subprocess) + verify (pytest subprocess, T1 OR
+        # T2-fail-closed-for-every-new-node) tier costs ~60-75s per call when
+        # the gate falls back to T2 (spec/.runtime/run-speed-baseline.json) —
+        # and a fresh-domain batch is ALMOST ENTIRELY new-node creation, so
+        # the gate fails closed on nearly every item. Calling apply() N times
+        # (the pre-fix behavior) therefore cost N * ~60-75s of redundant,
+        # byte-identical regen+verify work for a 30+-item adoption batch
+        # (30-40 minutes measured) when only the LAST regen+verify (over the
+        # fully-written graph) is load-bearing. Fix: write every item with
+        # defer_verify=True (skips regen/verify/closure/land-log per item),
+        # then run _regen_and_verify exactly ONCE after the loop, over the
+        # final graph state — collapsing N regen+verify passes into 1.
+        last_proposal: Proposal | None = None
         for i, item in enumerate(raw):
-            print(f"\n--- Proposal {i + 1}/{len(raw)} ---")
+            print(f"\n--- Proposal {i + 1}/{len(raw)} (write-only; verify deferred) ---")
             try:
                 proposal = _validate_proposal(item)
             except ValueError as exc:
@@ -3518,6 +3677,7 @@ def main(argv: list[str] | None = None) -> int:
                 # A --batch file holds MANY proposals; the file itself is not
                 # 1:1 with any single one, so it is not archived per-item.
                 proposal_file=None,
+                defer_verify=not args.dry_run,
             )
             if rc != 0:
                 print(
@@ -3526,9 +3686,54 @@ def main(argv: list[str] | None = None) -> int:
                     file=sys.stderr,
                 )
                 return rc
+            last_proposal = proposal
+
+        if args.dry_run or last_proposal is None:
+            # dry-run never writes, so there is nothing to regen/verify; an
+            # empty batch array is a no-op.
+            return 0
+
+        # ONE regen + verify pass over the fully-written graph. The gate-tier
+        # decision (T1 vs T2) is driven by the LAST proposal's target/type —
+        # matching the pre-fix per-item behavior's own final call — using the
+        # EXACT same target_preexisting logic as apply() itself (see the
+        # R-land-gate-tier-selector-fails-closed comment a few dozen lines
+        # above apply()'s try/except): ProposedConflict/Axis/Assumption
+        # always create; ProposedAssumptionTransition/ConflictMemberUpdate
+        # fail closed regardless; ProposedRequirement checks whether its id
+        # pre-existed in the (now fully-written) graph; every other kind
+        # (Stakeholder/OperatorBudget/EntityType/Rejection/ConflictTransition)
+        # defaults to True, same as apply().
+        target_preexisting = True
+        if isinstance(
+            last_proposal, (ProposedConflict, ProposedAxis, ProposedAssumption)
+        ):
+            target_preexisting = False
+        elif isinstance(
+            last_proposal, (ProposedAssumptionTransition, ProposedConflictMemberUpdate)
+        ):
+            target_preexisting = False
+        elif isinstance(last_proposal, ProposedRequirement):
+            tree = ast.parse(_CONTENT_GRAPH.read_text(encoding="utf-8"))
+            target_preexisting = (
+                _find_requirement_call(tree, last_proposal.id) is not None
+            )
+        print(
+            f"\n--- Batch write complete ({len(raw)} item(s)); "
+            f"running ONE regen + verify pass ---"
+        )
+        rc = _regen_and_verify(
+            _CONTENT_GRAPH,
+            last_proposal,
+            target_preexisting=target_preexisting,
+            full_suite=args.full,
+            triggering_kind=args.triggering_kind,
+            proposal_file=None,
+        )
+        if rc != 0:
+            return rc
         # All batch items landed — archive the batch file itself.
-        if not args.dry_run:
-            _archive_proposal_file(proposal_path)
+        _archive_proposal_file(proposal_path)
         return 0
 
     try:
