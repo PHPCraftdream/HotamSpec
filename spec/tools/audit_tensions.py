@@ -41,9 +41,9 @@ timestamps in the printed shortlist (the stamp file carries the only clock).
 Two runs on the same graph print byte-identical shortlists.
 
 Run (from spec/):
-  uv run python tools/audit_tensions.py            # audit the active content graph
-  uv run python tools/audit_tensions.py --demo     # audit the fixture demo graph
-  uv run python tools/audit_tensions.py --no-stamp  # print only, do not append the stamp
+  python tools/audit_tensions.py            # audit the active content graph
+  python tools/audit_tensions.py --demo     # audit the fixture demo graph
+  python tools/audit_tensions.py --no-stamp  # print only, do not append the stamp
 """
 
 from __future__ import annotations

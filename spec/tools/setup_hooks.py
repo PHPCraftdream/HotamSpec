@@ -17,8 +17,8 @@ does NOT touch settings.local.json (it is the user's private file); instead
 remove by hand.
 
 Usage (from spec/):
-  uv run python tools/setup_hooks.py            # DRY-RUN: print the plan, write nothing
-  uv run python tools/setup_hooks.py --apply    # write <repo>/.claude/settings.json (backup if present)
+  python tools/setup_hooks.py            # DRY-RUN: print the plan, write nothing
+  python tools/setup_hooks.py --apply    # write <repo>/.claude/settings.json (backup if present)
 """
 
 from __future__ import annotations

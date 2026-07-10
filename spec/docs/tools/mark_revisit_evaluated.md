@@ -35,8 +35,8 @@ un-met); acting on it — re-opening the conflict — is a separate ProposedConf
 the steward drafts (R-ai-presents-not-decides).
 
 Usage (from spec/):
-  uv run python tools/mark_revisit_evaluated.py C-06e2d84e
-  uv run python tools/mark_revisit_evaluated.py C-06e2d84e --note "backlog still shrinking"
+  python tools/mark_revisit_evaluated.py C-06e2d84e
+  python tools/mark_revisit_evaluated.py C-06e2d84e --note "backlog still shrinking"
 
 Exit codes:
   0 — evaluation recorded (or --dry-run print).

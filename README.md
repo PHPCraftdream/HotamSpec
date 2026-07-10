@@ -47,29 +47,37 @@ Two requirements that contradict on an axis (e.g. "latency vs completeness") are
 git clone https://github.com/PHPCraftdream/HotamSpec.git
 cd HotamSpec
 
-# Install dependencies
-cd spec && uv sync
+# Create a virtualenv and install the package + dev tools (from spec/)
+cd spec
+python -m venv .venv
+.venv/Scripts/activate   # Windows; on macOS/Linux: source .venv/bin/activate
+pip install -e .
+pip install pytest hypothesis ruff   # dev-only tooling (see [dependency-groups] in pyproject.toml)
 
 # Run tests
-uv run pytest -q
+python -m pytest -q
 
 # See what the harness recommends
-uv run python tools/what_now.py
+python tools/what_now.py
 
 # Generate docs from the model
-uv run python tools/gen_spec.py
+python tools/gen_spec.py
 
 # Audit atomicity
-uv run python tools/audit_atomicity.py
+python tools/audit_atomicity.py
 ```
+
+Or, if you use [uv](https://docs.astral.sh/uv/): `cd spec && uv sync`, then
+prefix any command above with `uv run` (e.g. `uv run pytest -q`).
 
 ## Adopt: your domain in 15 minutes
 
 Hotam-Spec ships modeling *itself* (the `hotam-spec-self` domain). To model **your
 own** contradictory business requirements, you seat a fresh domain beside it — no
 framework code changes. Every graph write goes through `apply_proposal.py`; the
-graph is never hand-edited (`R-no-hand-edit-graph`, enforced by a committed
-PreToolUse guard).
+graph is never hand-edited (rule `R-no-hand-edit-graph` — rules are themselves
+Requirements in the self-hosting graph, hence the `R-` ids; this one is
+enforced by a committed PreToolUse guard).
 
 This section covers the self-hosting path (working inside a clone of this
 repo, running tools from `spec/`). **If you're installing Hotam-Spec into your
@@ -84,12 +92,12 @@ the whole discipline: scaffold a domain, then add stakeholders/requirements/
 conflicts through the CLI or `apply_proposal.py`.
 
 ```bash
-cd spec && uv sync                                   # 1. install
+cd spec && pip install -e .                          # 1. install
 
 # 2. scaffold YOUR domain and activate it (pins domains/.active-domain and
 #    regenerates the ROOT CLAUDE.md as your domain's operator crystal --
 #    the CLAUDE.md file itself only matters if you add an AI operator later).
-uv run python tools/create_domain.py my-shop \
+python tools/create_domain.py my-shop \
     --description "My shop's contradictory requirements" \
     --goals "hold the first tension;decide honestly" \
     --director-purpose "steward my-shop" \
@@ -104,26 +112,26 @@ Now populate the tension graph — each step is a `Proposed*` JSON fed to
 echo '{"kind":"Stakeholder","id":"alice","name":"Alice","domain":"product"}'   > sh1.json
 echo '{"kind":"Stakeholder","id":"bob","name":"Bob","domain":"engineering"}'   > sh2.json
 echo '{"kind":"Stakeholder","id":"carol","name":"Carol","domain":"governance"}'> sh3.json
-uv run python tools/apply_proposal.py sh1.json
-uv run python tools/apply_proposal.py sh2.json
-uv run python tools/apply_proposal.py sh3.json   # a NEUTRAL steward for the conflict
+python tools/apply_proposal.py sh1.json
+python tools/apply_proposal.py sh2.json
+python tools/apply_proposal.py sh3.json   # a NEUTRAL steward for the conflict
 
 # 4. an axis — the shared dimension your first tension lives on.
-uv run python tools/create_axis.py speed-vs-rigor --description "ship fast vs verify thoroughly"
+python tools/create_axis.py speed-vs-rigor --description "ship fast vs verify thoroughly"
 
 # 5. a few atomic requirements (enforcement is PROSE | STRUCTURAL | ENFORCED).
 echo '{"kind":"Requirement","id":"R-ship-fast","claim":"Ship within one week.","owner":"alice","status":"SETTLED","enforcement":"PROSE"}'      > r1.json
 echo '{"kind":"Requirement","id":"R-verify-all","claim":"Verify every change before release.","owner":"bob","status":"SETTLED","enforcement":"PROSE"}' > r2.json
-uv run python tools/apply_proposal.py r1.json
-uv run python tools/apply_proposal.py r2.json
+python tools/apply_proposal.py r1.json
+python tools/apply_proposal.py r2.json
 
 # 6. your FIRST conflict — the tension between them, stewarded by the neutral party.
 echo '{"kind":"Conflict","axis":"speed-vs-rigor","context":"first release cadence","members":["R-ship-fast","R-verify-all"],"steward":"carol"}' > c1.json
-uv run python tools/apply_proposal.py c1.json
+python tools/apply_proposal.py c1.json
 
-# 7. regenerate the crystal and read your pulse.
-uv run python tools/gen_spec.py
-uv run python tools/what_now.py     # your DETECTED conflict now awaits carol's ACKNOWLEDGE
+# 7. regenerate docs and read your pulse.
+python tools/gen_spec.py
+python tools/what_now.py     # your DETECTED conflict now awaits carol's ACKNOWLEDGE
 ```
 
 `what_now.py` is your live pulse — the next correct action, derived from the
@@ -141,8 +149,8 @@ approve, never deciding on its own (`R-ai-presents-not-decides`).
 # install the committed sensorium (SessionStart/PostCompact regen,
 # UserPromptSubmit cipher, PreToolUse graph-guard, Stop context+boot-cite).
 # Portable via $CLAUDE_PROJECT_DIR — writes <repo>/.claude/settings.json.
-uv run python tools/setup_hooks.py            # dry-run: prints the plan
-uv run python tools/setup_hooks.py --apply    # writes the committed settings.json
+python tools/setup_hooks.py            # dry-run: prints the plan
+python tools/setup_hooks.py --apply    # writes the committed settings.json
 ```
 
 With this installed, the repository-root `CLAUDE.md` (regenerated from
@@ -172,15 +180,22 @@ domains/                       # Per-business domain content
 
 ## Framework concepts
 
-| Concept | What it is |
-|---------|-----------|
-| **Requirement** | A business claim with lifecycle (DRAFT -> SETTLED -> REJECTED) |
-| **Conflict** | A first-class connector node between contradicting requirements |
-| **Assumption** | A claim with its own lifecycle -- the root of context drift |
-| **EntityType** | A domain-declared business concept with lifecycle and fields |
-| **Process** | Ordered steps driving entity state transitions |
-| **Operator** | An acting facet with context budget; delegates via agent tree |
-| **Goal** | A target-state predicate the operator pursues |
+The core, battle-tested working surface is **Requirement / Conflict /
+Assumption / Axis / Stakeholder** -- these are what a new domain actually
+writes. EntityType / Process / Operator / Goal exist and are exercised by the
+framework's own self-hosting graph, but real-world usage so far is thin
+(mostly one or a handful of instances each) -- treat them as experimental
+until you've seen them carry real domain content.
+
+| Concept | What it is | Status |
+|---------|-----------|--------|
+| **Requirement** | A business claim with lifecycle (DRAFT -> SETTLED -> REJECTED) | core |
+| **Conflict** | A first-class connector node between contradicting requirements | core |
+| **Assumption** | A claim with its own lifecycle -- the root of context drift | core |
+| **EntityType** | A domain-declared business concept with lifecycle and fields | experimental, minimal real usage |
+| **Process** | Ordered steps driving entity state transitions | experimental, minimal real usage |
+| **Operator** | An acting facet with context budget; delegates via agent tree | self-hosting only so far |
+| **Goal** | A target-state predicate the operator pursues | self-hosting only so far |
 
 ## Tools
 
@@ -197,11 +212,13 @@ domains/                       # Per-business domain content
 ## Testing
 
 ```bash
-cd spec && uv run pytest -q
+cd spec && python -m pytest -q
 ```
 
+Or, with uv: `uv run pytest -q`.
+
 The test suite includes:
-- Structural invariants (50+ check_* functions)
+- Dozens of structural invariants (`check_*` functions)
 - Anti-drift meta-tests (regenerated docs == committed bytes)
 - Property tests via Hypothesis (critical-core conscience boundary)
 - Entity/Process coupling tests

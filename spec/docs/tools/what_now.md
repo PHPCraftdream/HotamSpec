@@ -65,9 +65,9 @@ It aggregates, in priority order:
                         ephemeral PENDING_PROPOSAL band (§Attention, A2).
 
 Run:
-  uv run python tools/what_now.py            # diagnose spec/content/ (your domain)
-  uv run python tools/what_now.py --demo     # diagnose the fixture demo graph
-  uv run python tools/what_now.py --report   # single advisory Tick report (was tools/tick.py)
+  python tools/what_now.py            # diagnose spec/content/ (your domain)
+  python tools/what_now.py --demo     # diagnose the fixture demo graph
+  python tools/what_now.py --report   # single advisory Tick report (was tools/tick.py)
 
 Dependency-light (stdlib + the hotam_spec package). Deterministic ordering.
 

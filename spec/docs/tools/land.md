@@ -43,9 +43,9 @@ modules and forwards argv. This is a deliberate choice over a physical merge:
     existing direct callers.
 
 Run (from spec/):
-  uv run python tools/land.py select R-smoke-test [--explain]
-  uv run python tools/land.py status [--json] [--log-path PATH]
-  uv run python tools/land.py verify-closure <target_anchor> <triggering_kind>
+  python tools/land.py select R-smoke-test [--explain]
+  python tools/land.py status [--json] [--log-path PATH]
+  python tools/land.py verify-closure <target_anchor> <triggering_kind>
 
 `select` and `status` forward exit codes and stdout/stderr formatting exactly
 as `gate.py`/`gate_status.py` would standalone (this module parses only the

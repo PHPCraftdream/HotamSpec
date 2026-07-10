@@ -18,6 +18,59 @@ hotam-apply-proposal --dry-run proposal.json
 hotam-apply-proposal --batch proposals_array.json   # array of proposal objects
 ```
 
+## Enum reference
+
+These value sets are reused across several proposal kinds below.
+
+### Requirement `status`
+
+| Value | Meaning |
+|-------|---------|
+| `DRAFT` | Proposed, not yet accepted into the canon. |
+| `SETTLED` | Accepted and currently held. |
+| `OPEN(<question>)` | Accepted-with-a-hole; the literal string `OPEN(` followed by a non-empty question and `)`. Surfaced by the harness until resolved. |
+
+`REJECTED` is **not** a `status` value you set directly on a `ProposedRequirement`
+— use the separate `Rejection` kind below, which moves an existing requirement
+to `REJECTED` and preserves it for history (`R-rejected-preserved-not-deleted`).
+
+### Requirement / EntityType `enforcement`
+
+| Value | Meaning | When to choose it |
+|-------|---------|--------------------|
+| `PROSE` | Recorded only; no structural or automated check enforces it. The promise is held by human discipline alone. | Default for a fresh claim, or a claim that is inherently a human judgment call. |
+| `STRUCTURAL` | Visible and addressable (surfaced by the harness, listed in docs) but no `check_*` invariant or test fires automatically on violation. | The claim is real and trackable, but writing an automated check is not yet worth the cost — an honest middle step, not a reflex. |
+| `ENFORCED` | A `check_*` invariant or test fires automatically on violation; `enforced_by` MUST name the enforcer(s). | The claim has a real, running enforcer today. Never set this without also filling `enforced_by`. |
+
+The intended direction of progress is `PROSE` → `STRUCTURAL` → `ENFORCED`.
+
+### Requirement `enforceability` (default `"ENFORCEABLE"`)
+
+| Value | Meaning |
+|-------|---------|
+| `ENFORCEABLE` | A `check_*` or test COULD exist for this claim (even if `enforcement` is still `PROSE`/`STRUCTURAL` today — that gap is real, trackable debt). |
+| `INHERENTLY_PROSE` | The claim is a disposition or social/judgment discipline that cannot be mechanically checked even in principle (e.g. "be respectful in code review"). Staying `PROSE` forever is honest labeling, not debt. |
+
+### Requirement `relations` — relation kinds
+
+Each entry in `relations` is a `[kind, target]` pair, where `target` is the id
+of another Requirement already in the graph.
+
+| Kind | Meaning | Direction |
+|------|---------|-----------|
+| `refines` | A supportive, non-adversarial edge -- this requirement elaborates or narrows the target. (Also covers what used to be a separate `supports` kind, merged into `refines`.) | carrier → target |
+| `depends_on` | This requirement's guarantee relies on the target holding. | carrier → target |
+| `replaces` | Anti-relitigation edge -- this requirement (the carrier) REPLACES the target (normally a REJECTED requirement). Usually written automatically by a `Rejection` proposal's `replaced_by` field, rather than hand-authored. | carrier → target (carrier replaces target) |
+
+### Assumption `status` / `AssumptionTransition new_status`
+
+| Value | Meaning |
+|-------|---------|
+| `HOLDS` | The belief is currently trusted as true. |
+| `UNCERTAIN` | Under question, not yet falsified -- a doubt has been raised but nothing is decided. |
+| `DEAD` | Falsified / abandoned; kills the premise and any requirements resting on it are flagged as drifted. |
+| `IMPLEMENTS` | A volitional status: an aspiration being worked toward, not a fact-claim. |
+
 ---
 
 ## Stakeholder
@@ -51,12 +104,17 @@ this JSON, since the CLI runs a similarity check against existing axes first
 
 Adds or updates a business claim.
 
-**Required:** `id`, `claim`, `owner` (a Stakeholder id), `status`
+**Required:** `id`, `claim`, `owner` (a Stakeholder id), `status` (`DRAFT` |
+`SETTLED` | `OPEN(<question>)` — see [Enum reference](#enum-reference) above;
+`REJECTED` is set only via the `Rejection` kind below, never directly)
 **Optional:** `why` (default `""`), `assumptions` (list of Assumption ids, default `[]`),
-`relations` (list of `[kind, target]` pairs, default `[]`), `enforcement`
-(`PROSE` | `STRUCTURAL` | `ENFORCED`, default `"PROSE"`), `enforced_by` (list
+`relations` (list of `[kind, target]` pairs — kind is `refines` | `depends_on` |
+`replaces`, see [Enum reference](#enum-reference); default `[]`), `enforcement`
+(`PROSE` | `STRUCTURAL` | `ENFORCED`, default `"PROSE"` — see
+[Enum reference](#enum-reference) for what each means), `enforced_by` (list
 of strings, default `[]`), `m_tag` (default `""`), `enforceability`
-(default `"ENFORCEABLE"`), `summary` (default `""`), `created_at` (ISO
+(`ENFORCEABLE` | `INHERENTLY_PROSE`, default `"ENFORCEABLE"` — see
+[Enum reference](#enum-reference)), `summary` (default `""`), `created_at` (ISO
 `YYYY-MM-DD`, defaults to today when omitted), `settled_at` (ISO date, filled
 with today only when `status` is `SETTLED` and this is empty)
 
@@ -150,7 +208,8 @@ supersede this one; default `[]` = no successor edge)
 Adds a new falsifiable belief that Requirements or Conflicts can rest on.
 
 **Required:** `id` (must start with `A-`), `statement`, `status` (one of
-`HOLDS` | `UNCERTAIN` | `DEAD` | `IMPLEMENTS`), `owner` (a Stakeholder id)
+`HOLDS` | `UNCERTAIN` | `DEAD` | `IMPLEMENTS` — see [Enum reference](#enum-reference)
+above for what each means), `owner` (a Stakeholder id)
 **Optional:** `why` (default `""`), `created_at` (ISO date, defaults to today)
 
 ```json
@@ -165,7 +224,7 @@ signoff; moving to `HOLDS`, `DEAD`, or `IMPLEMENTS` all *reduce* live signal
 or re-type the claim, and require `decided_by`.
 
 **Required:** `assumption_id`, `new_status` (`HOLDS` | `UNCERTAIN` | `DEAD` |
-`IMPLEMENTS`), `reason` (non-empty)
+`IMPLEMENTS` — see [Enum reference](#enum-reference) above), `reason` (non-empty)
 **Optional:** `decided_by` (required when `new_status` is `HOLDS`, `DEAD`, or
 `IMPLEMENTS`; optional for `UNCERTAIN`), `date` (ISO date, defaults to
 today), `verbatim` (default `""`), `instrument` (default `"personal"`)

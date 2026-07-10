@@ -39,9 +39,9 @@ slice of the policy -- see module docstring above for exactly what is and is
 not covered).
 
 Run (from spec/):
-  uv run python tools/spawn_log_isolation_status.py                  # human-readable
-  uv run python tools/spawn_log_isolation_status.py --json           # machine-readable
-  uv run python tools/spawn_log_isolation_status.py --log-path <p>   # override log location (tests)
+  python tools/spawn_log_isolation_status.py                  # human-readable
+  python tools/spawn_log_isolation_status.py --json           # machine-readable
+  python tools/spawn_log_isolation_status.py --log-path <p>   # override log location (tests)
 
 ## CLI usage
 

@@ -25,10 +25,10 @@ Supported proposal kinds:
   - Stakeholder — add a new Stakeholder to the active domain's `stakeholders` tuple
 
 Usage:
-  uv run python tools/apply_proposal.py proposal.json
-  uv run python tools/apply_proposal.py --dry-run proposal.json
-  uv run python tools/apply_proposal.py --triggering-kind CONFLICT_STALLED proposal.json
-  uv run python tools/apply_proposal.py --batch proposals_array.json
+  python tools/apply_proposal.py proposal.json
+  python tools/apply_proposal.py --dry-run proposal.json
+  python tools/apply_proposal.py --triggering-kind CONFLICT_STALLED proposal.json
+  python tools/apply_proposal.py --batch proposals_array.json
 
 The JSON shapes:
 

@@ -32,7 +32,7 @@ table for the full list.
 Run this **inside your own project directory** (not inside HotamSpec):
 
 ```bash
-mkdir my-project && cd my-project
+mkdir my-project && cd my-project   # or cd into your existing project instead
 touch .hotam-spec-project   # marks this directory as your project root -- see
                             # "how project root is found" below. `git init`
                             # does NOT count as a marker on its own.
@@ -49,6 +49,12 @@ scaffold, generated-docs placeholder) right there in `my-project/`, pins it as
 the active domain (`domains/.active-domain`), and writes a `CLAUDE.md` at your
 project root — that file is only relevant if you later add an AI operator
 (see the note at the end).
+
+**Already have a project?** Skip the `mkdir` — just `cd` into its root and run
+`touch .hotam-spec-project` there before `hotam-create-domain`. The marker
+file (or, once you've run `hotam-create-domain`, the `domains/` folder itself)
+is all the tooling needs to find your project root; nothing about it requires
+a fresh directory.
 
 ## 3. Check your pulse
 
@@ -109,10 +115,10 @@ the first thing that matches:
 2. **Domains-root env var** — if `HOTAM_SPEC_DOMAINS_ROOT` is set, its
    *parent* directory is your project root (use this if you keep `domains/`
    somewhere unusual).
-3. **Markers in the current directory, searched upward** — this is the
-   common case and needs **no configuration**. Starting at your current
-   working directory and walking up through parent directories, the tool
-   looks for two tiers of marker:
+3. **Markers in the current directory, searched upward (up to 5 levels)** —
+   this is the common case and needs **no configuration**. Starting at your
+   current working directory and walking up through parent directories (at
+   most 5 levels up), the tool looks for two tiers of marker:
    * **Reliable (any ONE is enough)** — a `domains/` folder, a `delegations/`
      folder, or a `pyproject.toml` that contains a `[tool.hotam-spec]` table.
      These are specific to a Hotam-Spec project, so one alone is trusted.
@@ -123,14 +129,19 @@ the first thing that matches:
      marker does **not** match — it takes two or more of them together
      before the directory counts as your project root.
 
-   The first directory (bottom-up) that satisfies either tier wins.
+   The first directory (bottom-up) that satisfies either tier wins. In a deep
+   monorepo, a project root more than 5 levels above your working directory
+   will not be found this way — use the explicit `HOTAM_SPEC_PROJECT_ROOT`
+   env var (R1) instead; it has no depth limit.
 4. **A `.hotam-spec-project` marker file** — an empty file you can drop at
    your intended project root if none of the above markers apply yet (e.g.
    before you've run `hotam-create-domain` for the first time). Searched
-   upward the same way.
+   upward the same way (up to 5 levels).
 5. **`pyproject.toml` config** — a `[tool.hotam-spec]` table with a
    `project_root = "..."` key (a path relative to that `pyproject.toml`),
    for projects that want to pin the root explicitly in version control.
+   Searched upward the same way (up to 5 levels) to find the `pyproject.toml`
+   itself.
 6. **Self-hosting fallback** — only relevant if you are working *inside a
    clone of the Hotam-Spec repo itself*; consumers installing via `pip`
    will never hit this.
@@ -144,7 +155,7 @@ it checked and what it found — nothing is guessed silently.
 
 ## What's next
 
-- `docs/PROPOSAL-REFERENCE.md` — the full JSON reference for every proposal kind.
+- [PROPOSAL-REFERENCE.md](PROPOSAL-REFERENCE.md) — the full JSON reference for every proposal kind.
 - The root [README.md](../README.md) — concepts (Requirement/Conflict/Axis/...),
   and the AI-operator-only extras (hooks, sensorium, operator crystal) if you
   choose to add an AI agent as an operator later. None of that is required to

@@ -3,8 +3,8 @@
 Atomicity audit: detect compound claims and compound invariants.
 
 Run:
-  uv run python tools/audit_atomicity.py            # audit domain content
-  uv run python tools/audit_atomicity.py --demo      # audit demo fixture
+  python tools/audit_atomicity.py            # audit domain content
+  python tools/audit_atomicity.py --demo      # audit demo fixture
 
 Output: AUDIT.md is written to the ACTIVE domain's docs/gen/ dir
 (domains/<active>/docs/gen/AUDIT.md), resolved through the same

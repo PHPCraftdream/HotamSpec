@@ -39,8 +39,8 @@ Outputs (committed under docs/gen/, banner-marked, LF):
     OPEN.md         — open registry: OPEN requirements + unresolved conflicts.
 
 Run:
-  uv run python tools/gen_spec.py            # regenerate docs/gen/ from spec/content/
-  uv run python tools/gen_spec.py --demo     # regenerate docs/demo/ from the fixture
+  python tools/gen_spec.py            # regenerate docs/gen/ from spec/content/
+  python tools/gen_spec.py --demo     # regenerate docs/demo/ from the fixture
 
 Deterministic byte-for-byte: LF newlines, utf-8, no timestamps/randomness.
 Narrative docstrings are read via ast (no code execution); the graph is loaded

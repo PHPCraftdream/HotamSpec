@@ -30,9 +30,9 @@ not semantic proof. The operator/steward judges; the tool never blocks
 (exit code 0 always). Writing nothing remains a valid CONFRONT outcome.
 
 Run (from spec/):
-  uv run python tools/confront.py "the framework shall ship no business data"
-  echo "claim text" | uv run python tools/confront.py -
-  uv run python tools/confront.py --demo "orders ship within 24 hours"
+  python tools/confront.py "the framework shall ship no business data"
+  echo "claim text" | python tools/confront.py -
+  python tools/confront.py --demo "orders ship within 24 hours"
 
 Deterministic: sorted output, fixed score formatting, LF, utf-8, no timestamps.
 

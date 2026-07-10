@@ -12,10 +12,10 @@ unread revisit markers), and renders the flat text via
 hotam_spec.attention.render_flat.
 
 Usage (from spec/):
-  uv run python tools/attention.py            # active-domain live attention list
-  uv run python tools/attention.py --demo     # the fixture demo graph
-  uv run python tools/attention.py --graph-only   # deterministic subset only
-  uv run python tools/attention.py --json     # machine-readable signals
+  python tools/attention.py            # active-domain live attention list
+  python tools/attention.py --demo     # the fixture demo graph
+  python tools/attention.py --graph-only   # deterministic subset only
+  python tools/attention.py --json     # machine-readable signals
 
 WHY separate from what_now.py: what_now renders the operator's banded action
 report (a rich human console). attention.py is the minimal, machine-consumable

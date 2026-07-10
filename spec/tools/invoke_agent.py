@@ -19,10 +19,10 @@ constitution step explicit and auditable. The tool REFUSES on a missing
 directory or missing CLAUDE.md so that silent misconfiguration is impossible.
 
 Usage:
-  uv run python tools/invoke_agent.py <name>
-  uv run python tools/invoke_agent.py <name> --show-tools
-  uv run python tools/invoke_agent.py <name> --show-scope
-  uv run python tools/invoke_agent.py <name> --show-tools --show-scope
+  python tools/invoke_agent.py <name>
+  python tools/invoke_agent.py <name> --show-tools
+  python tools/invoke_agent.py <name> --show-scope
+  python tools/invoke_agent.py <name> --show-tools --show-scope
 """
 
 from __future__ import annotations

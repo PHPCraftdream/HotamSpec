@@ -22,9 +22,9 @@ Axis proposal's `why` field so the override is recorded, never silent
 never letting an override vanish into free text).
 
 Usage:
-  uv run python tools/create_axis.py <slug> --description "..."
-  uv run python tools/create_axis.py <slug> --description "..." --dry-run
-  uv run python tools/create_axis.py <slug> --description "..." --force-new "justification text"
+  python tools/create_axis.py <slug> --description "..."
+  python tools/create_axis.py <slug> --description "..." --dry-run
+  python tools/create_axis.py <slug> --description "..." --force-new "justification text"
 
 Exit codes:
   0 — success (Axis landed, docs regenerated, tests green) or a --dry-run print.

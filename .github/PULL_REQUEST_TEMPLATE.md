@@ -9,9 +9,9 @@
 ## Test plan
 
 <!-- How was this tested? -->
-- [ ] `uv run pytest -q` passes (all tests green)
-- [ ] `uv run python tools/gen_spec.py` produces no diff
-- [ ] `uv run python tools/audit_atomicity.py` shows no new compound claims
+- [ ] `python -m pytest -q` passes (all tests green) -- or `uv run pytest -q` if you use uv
+- [ ] `python tools/gen_spec.py` produces no diff
+- [ ] `python tools/audit_atomicity.py` shows no new compound claims
 
 ## Checklist
 

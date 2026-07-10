@@ -5,10 +5,11 @@ Thank you for your interest in contributing!
 ## How to contribute
 
 1. **Fork the repository** and create your branch from `master`.
-2. **Install dependencies**: `cd spec && uv sync`
+2. **Install dependencies**: `cd spec && python -m venv .venv && .venv/Scripts/activate && pip install -e .`
+   (or, if you use [uv](https://docs.astral.sh/uv/): `cd spec && uv sync`)
 3. **Make your changes** -- follow the patterns below.
-4. **Run the full test suite**: `uv run pytest -q` -- all tests must pass.
-5. **Regenerate docs**: `uv run python tools/gen_spec.py` -- commit the regenerated files.
+4. **Run the full test suite**: `python -m pytest -q` -- all tests must pass.
+5. **Regenerate docs**: `python tools/gen_spec.py` -- commit the regenerated files.
 6. **Open a Pull Request** with a clear description.
 
 ## Development workflow
@@ -18,7 +19,7 @@ Thank you for your interest in contributing!
 All changes to the domain graph (`domains/*/graph.py`) go through `tools/apply_proposal.py`:
 
 1. Construct a JSON proposal (ProposedRequirement / ProposedConflictTransition / ProposedRejection / ProposedEntityType).
-2. Apply: `uv run python tools/apply_proposal.py proposal.json`
+2. Apply: `python tools/apply_proposal.py proposal.json` (or `uv run python tools/apply_proposal.py proposal.json` if you use uv)
 3. The tool validates, writes, regenerates docs, and runs tests automatically.
 
 Direct hand-editing of `graph.py` is discouraged.
@@ -60,7 +61,7 @@ The tool auto-projects as `R-tool-your-tool` in the constitution on the next `ge
 ### Adding an entity type
 
 ```bash
-uv run python tools/create_entity_type.py your-entity \
+python tools/create_entity_type.py your-entity \
   --description "What this entity represents" \
   --states "ACTIVE:initial,CLOSED:quiescent" \
   --transitions "close:ACTIVE->CLOSED" \

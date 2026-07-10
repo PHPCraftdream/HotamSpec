@@ -56,9 +56,9 @@ datetime.fromisoformat() for comparison, but the current lexicographic
 order is sufficient for single-machine, single-clock workflows.
 
 Run (from spec/):
-  uv run python tools/gate_status.py                       # human-readable
-  uv run python tools/gate_status.py --json                 # machine-readable
-  uv run python tools/gate_status.py --log-path <path>      # override log location (tests)
+  python tools/gate_status.py                       # human-readable
+  python tools/gate_status.py --json                 # machine-readable
+  python tools/gate_status.py --log-path <path>      # override log location (tests)
 
 ## CLI usage
 

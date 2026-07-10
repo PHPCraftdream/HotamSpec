@@ -6,7 +6,7 @@
       "src/hotam_spec/enforcer_resolution.py": "998e313b9753469d9077b9494d843653513c6387fb9ade8788707eb1abef054e",
       "src/hotam_spec/invariants.py": "026f4f7b0c9c4a6a00cae584547b498da14c142f272afbeea0b2ff7af6ec69a6",
       "tools/_graph_guard.py": "9d99b40d1828b7fb9cd3913b5720bedb33fa14c2f28758a3b0fc42630971e9b0",
-      "tools/gate.py": "fa39be0ce7ac6dde817efc05f80346ab7d18a890e67e62216c756bb79e7ef9f9"
+      "tools/gate.py": "4633e7f7f12454d29d01dbbc771fe4863a8959bff5dbfa24523302846324ad2b"
     },
     "rule": "R-enforcement-perimeter-visible"
   },
@@ -16,8 +16,8 @@
       "src/hotam_spec/entity.py": "c859f43180db20e9bc785901e073886dcfefbb70a6e3038f047c744109fa3efe",
       "tools/create_agent.py": "f660394447f069d64b4473f13212717203671ce0d95579908b4238bc4f5b2d35",
       "tools/create_domain.py": "6eb5e48919ea602fc147b1c7e23f612f847e7b45668c8b7355b2cff057d36bed",
-      "tools/invoke_agent.py": "e74b194056056e24d96163386f10648e8e81487a844b01d347dac1f958ba7a07",
-      "tools/spawn_agent.py": "2c58009a7226d710a310689efa65cd1b5266d99fff3cb640bcb0f24eafa00fd6"
+      "tools/invoke_agent.py": "71f8e22b036ad7836e439350c4652faad95c22eee59bdfe1c18d185cf01d754b",
+      "tools/spawn_agent.py": "a66894c5cc05e8e129158f97465f3f51a75782d2b619d3083c077bb7b2055fdd"
     },
     "rule": "R-speculative-aspects-frozen"
   }

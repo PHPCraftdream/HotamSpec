@@ -38,13 +38,13 @@ Fails soft: any error prints nothing and exits 0, so a sensing hiccup never
 blocks the agent's turn.
 
 Usage (from spec/):
-  uv run python tools/attention_hook.py
+  python tools/attention_hook.py
 
 ## CLI usage
 
 ```
 Usage (from spec/):
-  uv run python tools/attention_hook.py
+  python tools/attention_hook.py
 
 Thin Claude-Code UserPromptSubmit hook. Loads the active-domain graph,
 calls hotam_spec.attention.collect() and prints the flat attention list

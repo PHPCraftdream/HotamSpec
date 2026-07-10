@@ -40,8 +40,8 @@ in order; first match wins):
      fails the whole selection closed.
 
 Run (from spec/):
-  uv run python tools/gate.py R-smoke-test          # print the T1 selection for an R-id
-  uv run python tools/gate.py C-8600b1b8 --explain  # show why (or why not)
+  python tools/gate.py R-smoke-test          # print the T1 selection for an R-id
+  python tools/gate.py C-8600b1b8 --explain  # show why (or why not)
 
 Deterministic: sorted node-id output, no timestamps/randomness.
 """

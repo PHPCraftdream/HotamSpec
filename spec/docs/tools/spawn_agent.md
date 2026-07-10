@@ -47,14 +47,14 @@ inputs produce identical stdout bytes (R-deterministic-generation). The tool
 exits 1 if --stamp is missing.
 
 Usage:
-  uv run python tools/spawn_agent.py <agent-path> --task "<task description>" --stamp <iso8601>
+  python tools/spawn_agent.py <agent-path> --task "<task description>" --stamp <iso8601>
 
 Examples:
-  uv run python tools/spawn_agent.py domains/hotam-spec-self/agents/director/agents/framework-agent \
+  python tools/spawn_agent.py domains/hotam-spec-self/agents/director/agents/framework-agent \
       --task "audit all check_* for atomicity" --stamp 2026-06-29T12:00:00Z
 
   # Short form — trailing path segment resolved under active domain:
-  uv run python tools/spawn_agent.py director/framework-agent \
+  python tools/spawn_agent.py director/framework-agent \
       --task "run bijection check" --stamp 2026-06-29T12:00:00Z
 
 ## CLI usage
