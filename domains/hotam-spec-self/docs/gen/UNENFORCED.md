@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 204 / SETTLED 232; closeable debt 2; inherent discipline 26; DRAFT 2; OPEN 0; REJECTED 41.**
+**Burn-down: SETTLED-ENFORCED 205 / SETTLED 232; closeable debt 1; inherent discipline 26; DRAFT 2; OPEN 0; REJECTED 41.**
 
 ---
 
@@ -23,7 +23,6 @@ judgment calls no check_* could ever verify.
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-framework-suite-domain-independent` | PROSE | `framework-author` | The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned. |
-| `R-project-root-not-hardcoded` | STRUCTURAL | `framework-author` | HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files. |
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 
@@ -261,6 +260,7 @@ judgment calls no check_* could ever verify.
 | `R-run-speed-guarded` | test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression | Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline. |
 | `R-delegation-is-a-file` | test_tool_delegate.py::test_create_allocates_id_and_writes_file, test_tool_delegate.py::test_close_sets_done_and_result | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off. |
 | `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff | A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
+| `R-project-root-not-hardcoded` | test_project_root_not_hardcoded.py::test_no_committed_code_guesses_consumer_root_from_file, test_project_root_not_hardcoded.py::test_scanner_catches_a_hardcoded_root_negative_control | HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files. |
 | `R-requirement-freshness-fields` | check_requirement_history_wellformed | A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: tuple of HistoryEntry), where each HistoryEntry is written by apply_proposal.py from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing. |
 | `R-core-periphery-import-ratchet` | test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery | A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only. |
 | `R-wheel-build-atomic-verified` | test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e | A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a member-count self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member count does not match spec/tools/*.py on disk. |
