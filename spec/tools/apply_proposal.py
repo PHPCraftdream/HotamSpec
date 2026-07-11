@@ -1051,6 +1051,8 @@ def _replace_or_insert_field(
     call: ast.Call,
     field: str,
     new_value: object,
+    *,
+    raw_expr: str | None = None,
 ) -> list[str]:
     """Canon: §Proposal — replace or insert a keyword arg in a Conflict(...) call.
 
@@ -1063,8 +1065,24 @@ def _replace_or_insert_field(
 
     This preserves existing formatting/indentation and avoids ast.unparse
     roundtrip reformatting.
+
+    `raw_expr`, when supplied, is used VERBATIM as the source expression
+    instead of `_python_repr(new_value)` — for fields whose on-disk convention
+    is a bare NAME reference rather than a string literal (e.g. Requirement's
+    `enforcement=ENFORCED`, see PROPOSAL-REFERENCE.md "bare name references,
+    not string literals"). `_python_repr` only knows str/tuple/Variant/Signoff
+    literals; without this escape hatch, coalescing an existing bare-name
+    `enforcement=ENFORCED` back onto itself during a patch-semantics UPDATE
+    (Этап X #126) would re-render it as the quoted string `"ENFORCED"` —
+    changing the value's TYPE (str literal vs. imported constant) even though
+    its meaning is unchanged, breaking the bare-name-import convention (and
+    the module import that the ADD path already threads through for exactly
+    this reason at `_render_requirement_source`).
     """
     lines = list(source_lines)
+
+    def _rendered(value: object) -> str:
+        return raw_expr if raw_expr is not None else _python_repr(value)
 
     # Try to find an existing kwarg
     for kw in call.keywords:
@@ -1090,11 +1108,11 @@ def _replace_or_insert_field(
             if end_lineno - 1 == lineno:
                 # Single-line value: replace col..end_col
                 end_col = _byte_col_to_char_col(line, end_col_bytes)
-                new_repr = _python_repr(new_value)
+                new_repr = _rendered(new_value)
                 lines[lineno] = line[:col] + new_repr + line[end_col:]
             else:
                 # Multi-line value (e.g. long string): replace from col to end
-                new_repr = _python_repr(new_value)
+                new_repr = _rendered(new_value)
                 # Grab the suffix after the value on the end line (e.g. ",\n")
                 end_line = lines[end_lineno - 1]
                 end_col = _byte_col_to_char_col(end_line, end_col_bytes)
@@ -1125,7 +1143,7 @@ def _replace_or_insert_field(
             indent = kw_linetext[: len(kw_linetext) - len(stripped)]
             break
 
-    new_repr = _python_repr(new_value)
+    new_repr = _rendered(new_value)
     insert_line = f"{indent}{field}={new_repr},\n"
     # Insert before the line that contains only/mostly the closing paren
     insert_at = end_lineno - 1  # 0-indexed: the '),' or ')' line
@@ -1499,26 +1517,51 @@ def _read_requirement_kwarg(call: ast.Call, field: str) -> object | None:
 
 
 def _verify_requirement_update_reflected(
-    emitted_source: str, proposal: ProposedRequirement
+    emitted_source: str,
+    proposal: ProposedRequirement,
+    expected: "dict[str, object] | None" = None,
 ) -> None:
     """Canon: §Proposal — confirm an UPDATE actually wrote its load-bearing fields.
 
     RULE (R-verify-closure-per-action): after the UPDATE loop emits new source,
     re-parse it, locate the target Requirement, and assert that its
     `assumptions`, `status`, `enforcement`, and `enforceability` read back
-    exactly what the proposal intended. A mismatch means the writer silently
-    failed to effect the change (a no-op edit, a lost line-shift, a matcher that
-    resolved to the wrong node) — raise RuntimeError so the land fails LOUDLY
-    instead of reporting a clean write over an unchanged graph.
+    exactly what the writer INTENDED to write. A mismatch means the writer
+    silently failed to effect the change (a no-op edit, a lost line-shift, a
+    matcher that resolved to the wrong node) — raise RuntimeError so the land
+    fails LOUDLY instead of reporting a clean write over an unchanged graph.
+
+    `expected`, when supplied, is the writer's COALESCED intent for this UPDATE
+    (the `_new_values` dict built by _apply_requirement_to_source's patch-
+    semantics step, P-1 fix Этап X #126) — NOT the raw proposal fields. A
+    minimal proposal that omits `assumptions`/`enforcement` intends to PRESERVE
+    the node's existing value (patch semantics), so checking the emitted source
+    against the coalesced value (which may equal the OLD value, not the
+    dataclass default) is what "the writer effected its own intent" means here;
+    checking against raw `proposal.assumptions` would false-positive on every
+    patch UPDATE that legitimately preserved a non-empty existing value. When
+    `expected` is None (the default — kept for callers that construct a
+    ProposedRequirement directly with EVERY field pre-filled, e.g. existing
+    tests), falls back to raw `proposal.*` fields, preserving old behavior.
 
     WHY only these four fields: they are the ones a signature/reattachment wave
     turns on (assumptions re-point; status/enforcement/enforceability flip).
     claim/why/relations/m_tag are verified structurally elsewhere (docs-gen,
     bijection, m-tag invariants); the silent-loss class this guard closes is the
     assumptions-reattach no-op that the Wave-2 batch exposed. enforcement/
-    enforceability are only checked when the proposal carries a non-default
-    value that must be present in source.
+    enforceability are only checked when the intended value is non-default and
+    must be present in source.
     """
+    if expected is None:
+        expected = {
+            "assumptions": proposal.assumptions,
+            "enforcement": proposal.enforcement,
+            "enforceability": proposal.enforceability,
+        }
+    want_assumptions = expected.get("assumptions", proposal.assumptions)
+    want_enforcement = expected.get("enforcement", proposal.enforcement)
+    want_enforceability = expected.get("enforceability", proposal.enforceability)
+
     tree = ast.parse(emitted_source)
     call = _find_requirement_call(tree, proposal.id)
     if call is None:
@@ -1528,19 +1571,19 @@ def _verify_requirement_update_reflected(
         )
     # assumptions: the reattach field. Absent-in-source == empty tuple.
     got_assumptions = _read_requirement_kwarg(call, "assumptions")
-    want_assumptions = proposal.assumptions
     if got_assumptions is None:
         got_assumptions = ()
     if isinstance(got_assumptions, tuple) and tuple(got_assumptions) != tuple(
         want_assumptions
     ):
         raise RuntimeError(
-            f"Post-write verify FAILED for '{proposal.id}': proposal set "
+            f"Post-write verify FAILED for '{proposal.id}': writer intended "
             f"assumptions={list(want_assumptions)} but the emitted source reads "
             f"back assumptions={list(got_assumptions)}. The writer silently did "
             f"NOT effect the reattachment (R-verify-closure-per-action)."
         )
-    # status: a bare string kwarg — must match exactly.
+    # status: a bare string kwarg — must match exactly. status is a REQUIRED
+    # proposal field (never coalesced/patched — every proposal states it).
     got_status = _read_requirement_kwarg(call, "status")
     if got_status is not None and got_status != proposal.status:
         raise RuntimeError(
@@ -1548,22 +1591,23 @@ def _verify_requirement_update_reflected(
             f"status='{proposal.status}' but the emitted source reads back "
             f"status='{got_status}' (R-verify-closure-per-action)."
         )
-    # enforcement: only verify when non-default (default PROSE may be elided).
+    # enforcement: only verify when the INTENDED value is non-default (default
+    # PROSE may be elided from source).
     got_enf = _read_requirement_kwarg(call, "enforcement")
-    if got_enf is not None and got_enf != proposal.enforcement:
+    if got_enf is not None and got_enf != want_enforcement:
         raise RuntimeError(
-            f"Post-write verify FAILED for '{proposal.id}': proposal set "
-            f"enforcement='{proposal.enforcement}' but the emitted source reads "
+            f"Post-write verify FAILED for '{proposal.id}': writer intended "
+            f"enforcement='{want_enforcement}' but the emitted source reads "
             f"back enforcement='{got_enf}' (R-verify-closure-per-action)."
         )
-    # enforceability: only verify when the proposal carries a non-default label
-    # that must be present in source.
-    if proposal.enforceability and proposal.enforceability != "ENFORCEABLE":
+    # enforceability: only verify when the INTENDED value carries a non-default
+    # label that must be present in source.
+    if want_enforceability and want_enforceability != "ENFORCEABLE":
         got_enfy = _read_requirement_kwarg(call, "enforceability")
-        if got_enfy != proposal.enforceability:
+        if got_enfy != want_enforceability:
             raise RuntimeError(
-                f"Post-write verify FAILED for '{proposal.id}': proposal set "
-                f"enforceability='{proposal.enforceability}' but the emitted "
+                f"Post-write verify FAILED for '{proposal.id}': writer intended "
+                f"enforceability='{want_enforceability}' but the emitted "
                 f"source reads back enforceability='{got_enfy}' "
                 f"(R-verify-closure-per-action)."
             )
@@ -1674,37 +1718,112 @@ def _apply_requirement_to_source(
         # derived `history` tuple itself is never part of the diff.
         _history_tracked = (
             "claim", "owner", "status", "why", "assumptions", "enforcement",
-            "enforced_by", "enforceability", "m_tag", "summary", "settled_at",
-            "last_reviewed_at", "review_after", "evidence", "source_refs",
+            "enforced_by", "enforceability", "m_tag", "summary", "created_at",
+            "settled_at", "last_reviewed_at", "review_after", "evidence",
+            "source_refs",
         )
         _old_snapshot = {
             fname: _read_requirement_kwarg(existing, fname)
             for fname in _history_tracked
         }
+        # `relations` is NOT read by _read_requirement_kwarg (its elements are
+        # typed Relation(...) constructor calls, not string/tuple literals —
+        # see _read_requirement_kwarg's "non-string element: unverifiable"
+        # fallback); it has its own reader, _extract_requirement_relations.
+        # Snapshot it separately so the coalesce step below can patch-preserve
+        # existing relation edges the same way it does every other optional
+        # field (previously: an UPDATE proposal that omitted relations= wrote
+        # a bare `()` literal over any existing Relation edges — silently
+        # dropping refines/depends_on/replaces edges, AND corrupting the field
+        # to the wrong literal shape since relations must render as
+        # Relation(...) calls, not bare strings).
+        _old_snapshot["relations"] = _extract_requirement_relations(existing)
+        # PATCH SEMANTICS (P-1 fix, fh finding, Этап X, #126): a ProposedRequirement
+        # is a plain dataclass, not a sentinel-tracked patch object — every optional
+        # field the caller did NOT set in the proposal JSON arrives here at its
+        # dataclass DEFAULT ("", (), "PROSE", "ENFORCEABLE" ...), indistinguishable
+        # from a caller who explicitly wants to CLEAR the field to that value. Prior
+        # behavior wrote the default over the node unconditionally — a minimal
+        # {id, ...one field} proposal silently erased why/assumptions/enforcement/
+        # enforced_by/etc. Convention (matching ConflictTransition's shared_assumption
+        # / variants rule: "empty proposal value = leave existing untouched"): for
+        # every OPTIONAL field, when the proposal's value equals that field's
+        # dataclass default, coalesce to the EXISTING node value instead — a true
+        # value is only ever written when the proposal actually diverges from the
+        # default. This does mean "explicitly reset to the default" is not
+        # distinguishable from "field omitted" (a known, accepted limitation of a
+        # plain-dataclass proposal shape); resetting an optional field to its bare
+        # default requires a follow-up proposal that sets it non-default then a
+        # human hand-edit, or a future sentinel-based proposal shape — out of scope
+        # here (steward decision, Этап X).
+        _optional_defaults = {
+            "why": "",
+            "assumptions": (),
+            "enforcement": "PROSE",
+            "enforced_by": (),
+            "relations": (),
+            "enforceability": "ENFORCEABLE",
+            "m_tag": "",
+            "summary": "",
+            "created_at": "",
+            "last_reviewed_at": "",
+            "review_after": "",
+            "evidence": (),
+            "source_refs": (),
+        }
+
+        def _coalesce(field_name: str, new_value: object) -> object:
+            """Return new_value unless it's the field's default AND an old
+            value exists to preserve — then return the OLD value (patch)."""
+            default = _optional_defaults.get(field_name)
+            if default is None or new_value != default:
+                return new_value
+            old = _old_snapshot.get(field_name)
+            if old is None:
+                return new_value  # nothing to preserve; keep the default
+            return old
+
         # Detect whether status is actually changing to SETTLED (re-stamp) vs.
         # staying SETTLED (keep existing if proposal doesn't override). We
         # always write settled_at when the proposal's status is SETTLED.
-        for field_name, new_value in [
-            ("claim", proposal.claim),
-            ("owner", proposal.owner),
-            ("status", proposal.status),
-            ("why", proposal.why),
-            ("assumptions", proposal.assumptions),
-            ("enforcement", proposal.enforcement),
-            ("enforced_by", proposal.enforced_by),
-            ("relations", proposal.relations),
-            ("enforceability", proposal.enforceability),
-            ("m_tag", proposal.m_tag),
-            ("summary", proposal.summary),
-            ("settled_at", settled_stamp if proposal.status == "SETTLED" else ""),
-            ("last_reviewed_at", proposal.last_reviewed_at),
-            ("review_after", proposal.review_after),
-            ("evidence", proposal.evidence),
-            ("source_refs", proposal.source_refs),
-        ]:
+        # Coalesced once into a plain dict so the write loop below AND the
+        # history-diff summary (further down) agree on what actually changed —
+        # diffing proposal.<field> directly against the OLD snapshot would
+        # report a phantom "change" for every field this patch step silently
+        # preserved at its old value instead of the dataclass default.
+        _new_values: dict[str, object] = {
+            "claim": proposal.claim,
+            "owner": proposal.owner,
+            "status": proposal.status,
+            "why": _coalesce("why", proposal.why),
+            "assumptions": _coalesce("assumptions", proposal.assumptions),
+            "enforcement": _coalesce("enforcement", proposal.enforcement),
+            "enforced_by": _coalesce("enforced_by", proposal.enforced_by),
+            "relations": _coalesce("relations", proposal.relations),
+            "enforceability": _coalesce("enforceability", proposal.enforceability),
+            "m_tag": _coalesce("m_tag", proposal.m_tag),
+            "summary": _coalesce("summary", proposal.summary),
+            "created_at": _coalesce("created_at", proposal.created_at),
+            "settled_at": settled_stamp if proposal.status == "SETTLED" else "",
+            "last_reviewed_at": _coalesce(
+                "last_reviewed_at", proposal.last_reviewed_at
+            ),
+            "review_after": _coalesce("review_after", proposal.review_after),
+            "evidence": _coalesce("evidence", proposal.evidence),
+            "source_refs": _coalesce("source_refs", proposal.source_refs),
+        }
+        for field_name, new_value in _new_values.items():
             # Freshness scalar/tuple fields: skip when empty and not already
             # present (optional — keep terse output for the common case).
             if field_name in ("last_reviewed_at", "review_after") and not new_value:
+                if _kwarg_line_col(call_node, field_name) is None:
+                    continue
+            # created_at: a birth-fact field (§Requirement docstring) — skip
+            # entirely when empty (proposal supplied none AND the node has none
+            # already) rather than insert created_at="" (an empty creation date
+            # is a lie, not a value). When non-empty (coalesced from the old
+            # node or explicitly supplied), fall through and write it.
+            if field_name == "created_at" and not new_value:
                 if _kwarg_line_col(call_node, field_name) is None:
                     continue
             if field_name in ("evidence", "source_refs") and not new_value:
@@ -1768,7 +1887,22 @@ def _apply_requirement_to_source(
                 and _kwarg_line_col(call_node, field_name) is None
             ):
                 continue
-            lines = _replace_or_insert_field(lines, call_node, field_name, new_value)
+            # enforcement: PROSE/STRUCTURAL/ENFORCED are written as bare NAME
+            # references (imported constants), never string literals — see
+            # PROPOSAL-REFERENCE.md "bare name references, not string literals"
+            # and _render_requirement_source's ADD-path rendering. Route
+            # through raw_expr so a patch-coalesced value (which may be the
+            # OLD node's already-bare-name enforcement, read back as a plain
+            # str by _read_requirement_kwarg) round-trips as the bare name
+            # again instead of degrading into a quoted string.
+            raw_expr = None
+            if field_name == "enforcement" and new_value in (
+                "PROSE", "STRUCTURAL", "ENFORCED",
+            ):
+                raw_expr = str(new_value)
+            lines = _replace_or_insert_field(
+                lines, call_node, field_name, new_value, raw_expr=raw_expr
+            )
             new_src = "".join(lines)
             tree = ast.parse(new_src)
             call_node = _find_requirement_call(tree, proposal.id)
@@ -1782,25 +1916,27 @@ def _apply_requirement_to_source(
         # and, when anything actually moved, APPEND one derived HistoryEntry so
         # the change trail lives IN the node. Only fires on an UPDATE (this
         # branch); a freshly-created node's first appearance needs no record.
+        # Diffs the COALESCED _new_values (post patch-semantics), not the raw
+        # proposal fields — a field this UPDATE silently preserved at its old
+        # value (proposal omitted it) must never read as a phantom "change" in
+        # the trail; only fields that actually diverge from the old snapshot do.
+        #
+        # created_at is DELIBERATELY EXCLUDED from this diff (O-1 asymmetry,
+        # steward decision Этап X #126): created_at is the node's BIRTH fact —
+        # unlike settled_at (which stamps a repeatable status TRANSITION worth
+        # narrating each time it recurs), a node is created exactly once, so
+        # its creation date is not a "content change" a reader benefits from
+        # seeing in the change trail. The one write path this fix adds for
+        # created_at is BACKFILL (a previously-empty node gaining a real date,
+        # e.g. the Этап P history-dates backfill, commit 09a2646) — recording
+        # that as a HistoryEntry would misrepresent a bookkeeping correction as
+        # a substantive edit to the requirement. created_at is still tracked in
+        # _old_snapshot/_history_tracked (so the coalesce-patch logic above can
+        # preserve an existing value) and IS written to source by the field
+        # loop above; it is only exempt from the derived history NARRATIVE.
         summary = _summarize_field_diff(
             _old_snapshot,
-            {
-                "claim": proposal.claim,
-                "owner": proposal.owner,
-                "status": proposal.status,
-                "why": proposal.why,
-                "assumptions": proposal.assumptions,
-                "enforcement": proposal.enforcement,
-                "enforced_by": proposal.enforced_by,
-                "enforceability": proposal.enforceability,
-                "m_tag": proposal.m_tag,
-                "summary": proposal.summary,
-                "settled_at": settled_stamp if proposal.status == "SETTLED" else "",
-                "last_reviewed_at": proposal.last_reviewed_at,
-                "review_after": proposal.review_after,
-                "evidence": proposal.evidence,
-                "source_refs": proposal.source_refs,
-            },
+            {k: v for k, v in _new_values.items() if k != "created_at"},
         )
         if summary:
             result = _append_requirement_history(result, proposal, summary)
@@ -1811,7 +1947,10 @@ def _apply_requirement_to_source(
         # only the DEAD-fallout net later surfaced the loss). Confirm the emitted
         # source actually reflects the proposal's load-bearing fields for THIS
         # target; if not, raise (exit != 0) rather than let a no-op land quietly.
-        _verify_requirement_update_reflected(result, proposal)
+        # Verified against the COALESCED _new_values (the writer's actual
+        # intent under patch semantics), not raw proposal fields — see
+        # _verify_requirement_update_reflected's `expected` param docstring.
+        _verify_requirement_update_reflected(result, proposal, expected=_new_values)
         return result
 
     # ADD new requirement at end of requirements tuple

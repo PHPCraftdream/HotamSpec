@@ -213,7 +213,8 @@ this JSON, since the CLI runs a similarity check against existing axes first
 
 ## Requirement
 
-Adds or updates a business claim.
+Adds a new business claim, or UPDATES an existing one (when `id` already
+resolves to a node in the graph).
 
 **Required:** `id`, `claim`, `owner` (a Stakeholder id), `status` (`DRAFT` |
 `SETTLED` | `OPEN(<question>)` — see [Enum reference](#enum-reference) above;
@@ -226,13 +227,14 @@ Adds or updates a business claim.
 of strings, default `[]`), `m_tag` (default `""`), `enforceability`
 (`ENFORCEABLE` | `INHERENTLY_PROSE`, default `"ENFORCEABLE"` — see
 [Enum reference](#enum-reference)), `summary` (default `""`), `created_at` (ISO
-`YYYY-MM-DD`, defaults to today when omitted), `settled_at` (ISO date, filled
-with today only when `status` is `SETTLED` and this is empty), `last_reviewed_at`
-(ISO date the claim was last re-confronted and held, default `""`),
-`review_after` (ISO date after which re-confrontation is due, default `""`),
-`evidence` (list of free-form evidence strings backing the claim, default `[]`),
-`source_refs` (list of pointers to where the claim originated — doc paths, URLs,
-review ids, commit hashes — default `[]`)
+`YYYY-MM-DD`; on a NEW node, defaults to today when omitted — see the UPDATE
+subsection below for how this field behaves on an existing node), `settled_at`
+(ISO date, filled with today only when `status` is `SETTLED` and this is
+empty), `last_reviewed_at` (ISO date the claim was last re-confronted and
+held, default `""`), `review_after` (ISO date after which re-confrontation is
+due, default `""`), `evidence` (list of free-form evidence strings backing the
+claim, default `[]`), `source_refs` (list of pointers to where the claim
+originated — doc paths, URLs, review ids, commit hashes — default `[]`)
 
 ```json
 {
@@ -250,16 +252,72 @@ review ids, commit hashes — default `[]`)
 }
 ```
 
+### UPDATE semantics: a real patch, not a full replace
+
+When `id` already names an existing Requirement, `apply_proposal.py` UPDATES
+it in place rather than adding a second node. `claim`/`owner`/`status` are
+**required on every UPDATE too** (there's no partial identity — you always
+restate what the node currently is/should be for those three), but every
+OTHER field is **patched**: if you omit an optional field (or send it at its
+bare dataclass default — `""`, `[]`, `"PROSE"`, `"ENFORCEABLE"`), the
+**existing value on the node is left untouched**, not overwritten with the
+default. Only a field whose value you actually set to something non-default
+is written. This means a minimal UPDATE proposal —
+
+```json
+{"kind": "Requirement", "id": "R-ship-fast", "claim": "Ship within one week.", "owner": "alice", "status": "SETTLED", "why": "", "summary": "clarified after the retro"}
+```
+
+— changes ONLY `summary`; `assumptions`, `enforcement`, `enforced_by`,
+`relations`, `enforceability`, `evidence`, `source_refs`, `last_reviewed_at`,
+`review_after`, and `created_at` all keep whatever they already held on the
+node. (Prior to the Этап X / #126 fix, the UPDATE path did NOT patch — any
+field missing from the proposal JSON was silently reset to its bare default,
+which made a minimal UPDATE proposal a quiet data-loss trap. This is fixed;
+the behavior described here is current.)
+
+One known limitation of this patch convention: because "field omitted" and
+"field explicitly set to its own default" are indistinguishable in a plain
+JSON/dataclass proposal, there is no way to EXPLICITLY reset an optional
+field back to its bare default (e.g. clear `enforced_by` to `[]`) via a single
+UPDATE proposal — that requires setting it to a distinguishable non-default
+value first, or a direct hand-edit. In practice this is rarely a real
+constraint (fields are extended far more often than they are cleared), but
+it's the honest edge case of the coalescing rule above.
+
+**`created_at` on UPDATE.** `created_at` is the node's birth date, not a
+repeatable transition — it is normally set once, at creation, and left alone.
+The writer CAN write `created_at` on an UPDATE (this was previously impossible
+— the field was entirely absent from the UPDATE path), which exists for the
+BACKFILL case: a legacy node created before the timestamp layer existed (or
+before this proposal system covered it) can have its true creation date filled
+in later via an UPDATE that supplies `created_at` explicitly. Per the usual
+patch rule, omitting `created_at` on an UPDATE preserves whatever the node
+already has (or leaves it absent, if it was never set) — it is never
+overwritten with today's date on an UPDATE (unlike on a brand-new node, where
+omitting it means "stamp today", since there is no existing value to
+preserve). A `created_at` change is **not** narrated in the derived `history`
+trail below — see that subsection for why.
+
 **Per-node change history (`history`) — derived, never supplied.** Every time
 `apply_proposal.py` UPDATES an already-existing Requirement (not at first
-creation), it diffs the changed fields and appends one `HistoryEntry`
-(`at` · `summary` · optional `decided_by`) to the node's `history` tuple — the
-change trail lives IN the committed graph, next to the claim (not only in git
-blame or gitignored runtime JSON). `history` is a DERIVED field: it is **not** a
-proposal key, and supplying `"history"` in a Requirement proposal is rejected.
-Its structure (dated, non-empty entries, monotonic stamps) is enforced by
-`check_requirement_history_wellformed`; its CONTENT is never machine-judged
-(that would repeat the `R-boot-cite-measured` form-metric theatre).
+creation), it diffs the changed fields (after the patch-coalescing above — a
+field the UPDATE left untouched never appears as a phantom "change") and
+appends one `HistoryEntry` (`at` · `summary` · optional `decided_by`) to the
+node's `history` tuple — the change trail lives IN the committed graph, next
+to the claim (not only in git blame or gitignored runtime JSON). `history` is
+a DERIVED field: it is **not** a proposal key, and supplying `"history"` in a
+Requirement proposal is rejected. Its structure (dated, non-empty entries,
+monotonic stamps) is enforced by `check_requirement_history_wellformed`; its
+CONTENT is never machine-judged (that would repeat the `R-boot-cite-measured`
+form-metric theatre).
+
+`created_at` is deliberately EXCLUDED from this diff, unlike every other
+tracked field (including `settled_at`, which DOES narrate — it stamps a
+repeatable status *transition* worth recording each time it recurs).
+`created_at` is a one-time birth fact, not content; writing or backfilling it
+is a bookkeeping correction, not a substantive edit to the requirement, so it
+would misrepresent the change trail to narrate it there.
 
 ## Conflict (creation)
 

@@ -995,3 +995,193 @@ def test_read_requirement_kwarg_resolves_bare_name_and_tuple() -> None:
     assert apply_proposal._read_requirement_kwarg(call, "assumptions") == ("A-old",)
     assert apply_proposal._read_requirement_kwarg(call, "status") == "SETTLED"
     assert apply_proposal._read_requirement_kwarg(call, "nonexistent") is None
+
+
+# ---------------------------------------------------------------------------
+# P-1 fix (fh finding, Этап X, #126): UPDATE-path true patch semantics +
+# created_at write support. Prior behavior: ANY field NOT explicitly supplied
+# in a Requirement UPDATE proposal was silently overwritten with its dataclass
+# DEFAULT (why->"", assumptions->(), enforcement->PROSE, enforced_by->()),
+# and created_at could not be written on UPDATE at all. These tests prove the
+# fix non-vacuously: a rich, fully-populated node survives a MINIMAL UPDATE
+# proposal (only id + one changed field) with every other field untouched.
+# ---------------------------------------------------------------------------
+
+_REQ_RICH_SOURCE = '''"""sample"""
+from __future__ import annotations
+
+from hotam_spec.requirement import ENFORCED, Relation, Requirement
+
+
+def build_graph():
+    requirements = (
+        Requirement(
+            id="R-rich",
+            claim=("original claim"),
+            owner="alice",
+            status="SETTLED",
+            why=("original rationale"),
+            assumptions=("A-one", "A-two"),
+            relations=(Relation("refines", "R-other"),),
+            enforcement=ENFORCED,
+            enforced_by=("check_something",),
+            enforceability="INHERENTLY_PROSE",
+            summary=("original summary"),
+            created_at="2025-03-01",
+            settled_at="2025-03-02",
+            last_reviewed_at="2025-06-01",
+            review_after="2025-12-01",
+            evidence=("incident-1",),
+            source_refs=("docs/x.md",),
+        ),
+    )
+    return requirements
+'''
+
+
+def _minimal_update_proposal(**over):
+    """A minimal ProposedRequirement: only the REQUIRED fields set, every
+    optional field left at its dataclass default (the shape an operator
+    naturally sends when they intend to change ONE field and leave the rest
+    alone — the exact shape that used to erase the node under the old bug).
+    """
+    from hotam_spec.proposal import ProposedRequirement
+
+    base = dict(
+        id="R-rich",
+        claim="original claim",
+        owner="alice",
+        status="SETTLED",
+        why="",
+    )
+    base.update(over)
+    return ProposedRequirement(**base)
+
+
+def test_minimal_update_does_not_erase_unspecified_fields() -> None:
+    """(a) A minimal UPDATE proposal (id + required fields only) must NOT wipe
+    why/assumptions/enforcement/enforced_by/enforceability/summary/evidence/
+    source_refs/last_reviewed_at/review_after — every field the proposal did
+    not mention stays at its OLD value (true patch semantics, not vacuous:
+    the assertions below would FAIL under the pre-fix behavior, where all of
+    these fields were silently reset to "" / () / PROSE / ENFORCEABLE)."""
+    p = _minimal_update_proposal()
+    out = apply_proposal._apply_requirement_to_source(_REQ_RICH_SOURCE, p)
+
+    assert 'why=("original rationale")' in out
+    assert 'assumptions=("A-one", "A-two")' in out
+    assert 'Relation("refines", "R-other")' in out  # relations preserved
+    assert "enforcement=ENFORCED" in out
+    assert 'enforced_by=("check_something",)' in out
+    assert 'enforceability="INHERENTLY_PROSE"' in out
+    assert 'summary=("original summary")' in out
+    assert 'evidence=("incident-1",)' in out
+    assert 'source_refs=("docs/x.md",)' in out
+    assert 'last_reviewed_at="2025-06-01"' in out
+    assert 'review_after="2025-12-01"' in out
+    # created_at is preserved too (was previously not even writable on UPDATE).
+    assert 'created_at="2025-03-01"' in out
+    # Sanity: nothing was blanked to the old-bug defaults.
+    assert 'why=""' not in out
+    assert "enforcement=PROSE" not in out
+    assert 'enforceability="ENFORCEABLE"' not in out
+
+
+def test_update_can_change_one_field_without_disturbing_others() -> None:
+    """A targeted UPDATE (only `summary` changes) leaves every other
+    already-set field untouched, proving patch semantics is per-field, not
+    all-or-nothing."""
+    p = _minimal_update_proposal(summary="a new summary")
+    out = apply_proposal._apply_requirement_to_source(_REQ_RICH_SOURCE, p)
+    assert 'summary=("a new summary")' in out
+    assert 'summary=("original summary")' not in out
+    # Everything else is still the old value.
+    assert 'why=("original rationale")' in out
+    assert 'assumptions=("A-one", "A-two")' in out
+    assert "enforcement=ENFORCED" in out
+    assert 'enforced_by=("check_something",)' in out
+
+
+def test_update_can_write_created_at() -> None:
+    """(b) An UPDATE proposal MAY set created_at explicitly (e.g. a backfill of
+    a previously-missing creation date, the Этап P precedent, commit 09a2646).
+    A source WITHOUT created_at gains it; the explicit value is honored."""
+    src_no_created_at = '''"""sample"""
+from __future__ import annotations
+
+from hotam_spec.requirement import Requirement
+
+
+def build_graph():
+    requirements = (
+        Requirement(
+            id="R-backfill",
+            claim=("c"),
+            owner="o",
+            status="SETTLED",
+        ),
+    )
+    return requirements
+'''
+    p_backfill = _minimal_update_proposal(
+        id="R-backfill", claim="c", owner="o", created_at="2024-11-20"
+    )
+    out = apply_proposal._apply_requirement_to_source(src_no_created_at, p_backfill)
+    assert 'created_at="2024-11-20"' in out
+
+
+def test_update_created_at_explicit_value_overrides_old() -> None:
+    """An UPDATE that explicitly supplies a DIFFERENT created_at overwrites the
+    old one (created_at is writable, not frozen after first creation — the
+    steward may correct a wrong backfilled date)."""
+    p = _minimal_update_proposal(created_at="2020-01-01")
+    out = apply_proposal._apply_requirement_to_source(_REQ_RICH_SOURCE, p)
+    assert 'created_at="2020-01-01"' in out
+    assert 'created_at="2025-03-01"' not in out
+
+
+def test_update_created_at_never_appears_in_history_narrative() -> None:
+    """(c) The history-tracking asymmetry decision (O-1, Этап X #126):
+    created_at is a BIRTH fact, not a repeatable transition like settled_at —
+    changing it (e.g. a backfill) must NOT produce a HistoryEntry mentioning
+    'created_at' in its summary, even though the field value visibly changes
+    in source. settled_at (a real transition) DOES still narrate."""
+    p = _minimal_update_proposal(created_at="2020-01-01", status="SETTLED")
+    out = apply_proposal._apply_requirement_to_source(_REQ_RICH_SOURCE, p)
+    assert "history=(" in out
+    history_block = out[out.index("history=(") :]
+    assert "created_at" not in history_block, (
+        f"created_at must never appear in the derived history narrative "
+        f"(O-1 decision, Этап X); history block:\n{history_block}"
+    )
+
+
+def test_update_still_narrates_real_changes_in_history() -> None:
+    """A field that DOES actually move (summary) still produces a HistoryEntry
+    — the O-1 created_at exclusion is narrow, not a blanket history disablement."""
+    p = _minimal_update_proposal(summary="a changed summary")
+    out = apply_proposal._apply_requirement_to_source(_REQ_RICH_SOURCE, p)
+    assert "history=(" in out
+    assert "summary:" in out
+
+
+def test_verify_requirement_update_reflected_accepts_coalesced_expected() -> None:
+    """The post-write verify guard, given the writer's actual coalesced intent
+    (`expected=`), does NOT false-positive when a minimal proposal preserved a
+    non-default assumptions/enforcement value instead of writing the raw
+    proposal default — this is the regression the naive fix would introduce
+    if the verify guard were left comparing against raw proposal fields."""
+    p = _minimal_update_proposal()
+    out = apply_proposal._apply_requirement_to_source(_REQ_RICH_SOURCE, p)
+    # _apply_requirement_to_source calls the verify internally; reaching here
+    # without raising already proves it passed. Re-invoke it explicitly too,
+    # with the same coalesced expectation shape, as a direct unit check.
+    apply_proposal._verify_requirement_update_reflected(
+        out,
+        p,
+        expected={
+            "assumptions": ("A-one", "A-two"),
+            "enforcement": "ENFORCED",
+            "enforceability": "INHERENTLY_PROSE",
+        },
+    )
