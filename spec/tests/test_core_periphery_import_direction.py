@@ -103,7 +103,7 @@ def _offending_core_imports(files: list[Path]) -> list[str]:
 
 def test_core_modules_do_not_import_periphery() -> None:
     """AST-scan every core hotam_spec/*.py module: none may import a periphery
-    module (attention / reflection / scope_projection / invariants_table_engine).
+    module (attention / reflection / invariants_table_engine).
     The core→periphery dependency arrow is one-way; core stays graph-only.
     """
     core_files = _core_module_files()

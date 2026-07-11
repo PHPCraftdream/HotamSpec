@@ -5734,7 +5734,13 @@
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-11",
+          "decided_by": "",
+          "summary": "settled_at: 2026-07-10→"
+        }
+      ],
       "id": "R-per-node-json-store",
       "last_reviewed_at": "",
       "owner": "framework-author",
@@ -5786,20 +5792,26 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a member-count self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member count does not match spec/tools/*.py on disk.",
+      "claim": "A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a name-set self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member names do not match the set of spec/tools/*.py file names on disk (Etap Y, #127 -- upgraded from a bare member-count comparison, which a wheel with the right count of wrong-named files would have passed).",
       "enforced_by": [
         "test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-11",
+          "decided_by": "",
+          "summary": "claim: A release wheel is produced only by spe…→A release wheel is produced only by spe…; why: The uv_build backend packages only cont…→The uv_build backend packages only cont…; settled_at: 2026-07-10→2026-07-11"
+        }
+      ],
       "id": "R-wheel-build-atomic-verified",
       "last_reviewed_at": "",
       "owner": "framework-author",
       "review_after": "",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that counts the _tools/ members inside the produced .whl and deletes the artifact on mismatch makes the broken-wheel failure structurally impossible to publish."
+      "why": "The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that compares the SET of _tools/ member names inside the produced .whl against spec/tools/*.py on disk (not merely their count) and deletes the artifact on any mismatch makes the broken-wheel failure structurally impossible to publish. (Etap Y, #127, fh finding R-1: the original self-check compared counts only, so a wheel carrying the right number of wrong-named files would have passed; upgraded to a name-set comparison with an explicit missing/extra diff in the failure message.)"
     },
     {
       "assumptions": [],
@@ -5807,7 +5819,13 @@
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-11",
+          "decided_by": "",
+          "summary": "settled_at: 2026-07-10→"
+        }
+      ],
       "id": "R-binary-enforcement-gradient",
       "last_reviewed_at": "",
       "owner": "framework-author",

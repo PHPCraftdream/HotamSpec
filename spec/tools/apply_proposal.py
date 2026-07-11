@@ -1613,10 +1613,18 @@ def _verify_requirement_update_reflected(
             )
 
 
-def _abbrev(value: object, limit: int = 40) -> str:
+def _abbrev(value: object, limit: int = 150) -> str:
     """Canon: §Proposal — one-line, length-bounded rendering of a field value for
     a HistoryEntry summary. Tuples render as their joined items; long strings are
     truncated with an ellipsis so the change trail stays scannable.
+
+    limit=150 (Etap Y, #127, fh findings O-2/T-1): the prior 40-char limit made
+    summaries for long prose fields like `why` nearly content-free (e.g.
+    "Steward verdict…→Steward verdict…" for two DIFFERENT verdicts sharing the
+    same opening words) — the reader could tell a field changed but not get any
+    sense of WHAT changed without leaving history for git blame. 150 chars keeps
+    each side of the arrow long enough to carry a distinguishing fragment of
+    prose while still fitting one scannable line per HistoryEntry.
     """
     if value is None:
         value = ""

@@ -14,9 +14,11 @@ backend only packages content under the module root (``src/hotam_spec/``). The
 imports cleanly but has zero working CLI commands for the consumer. The failure
 is invisible in the repo (``_tools/`` is .gitignored) and only surfaces after a
 consumer ``pip install``. So the release path must be a single command that
-counts the ``hotam_spec/_tools/*.py`` members inside the produced ``.whl`` and
-compares that against the number of ``spec/tools/*.py`` files on disk — on any
-mismatch it deletes the wheel and exits non-zero, leaving no broken artifact.
+collects the set of ``hotam_spec/_tools/*.py`` member NAMES inside the produced
+``.whl`` and compares that against the set of ``spec/tools/*.py`` file names on
+disk — on any mismatch (missing, extra, or swapped names — not just a count
+that happens to match) it deletes the wheel and exits non-zero, leaving no
+broken artifact.
 
 Usage (from spec/):
     python scripts/build_wheel.py                 # build into dist/
@@ -45,28 +47,30 @@ _TOOLS_SRC = _SPEC_ROOT / "tools"
 _WHEEL_TOOLS_PREFIX = "hotam_spec/_tools/"
 
 
-def _count_disk_tools() -> int:
-    """Number of *.py tool scripts on disk (the source of truth in spec/tools/)."""
-    return len(list(_TOOLS_SRC.glob("*.py")))
+def _disk_tool_names() -> set[str]:
+    """Basenames of *.py tool scripts on disk (the source of truth in spec/tools/)."""
+    return {p.name for p in _TOOLS_SRC.glob("*.py")}
 
 
-def _count_wheel_tools(wheel_path: Path) -> int:
-    """Number of hotam_spec/_tools/*.py members inside the built wheel."""
+def _wheel_tool_names(wheel_path: Path) -> set[str]:
+    """Basenames of hotam_spec/_tools/*.py members inside the built wheel."""
     with zipfile.ZipFile(wheel_path) as zf:
-        return sum(
-            1
+        return {
+            name[len(_WHEEL_TOOLS_PREFIX) :]
             for name in zf.namelist()
             if name.startswith(_WHEEL_TOOLS_PREFIX) and name.endswith(".py")
-        )
+        }
 
 
 def build_wheel(out_dir: Path) -> Path:
     """Populate, build, and verify a release wheel; return the .whl path.
 
-    Raises SystemExit(1) — after deleting any produced wheel — if the number of
-    ``hotam_spec/_tools/*.py`` members in the archive does not match the number
-    of ``spec/tools/*.py`` files on disk. The ``_tools/`` copies are removed in
-    a ``finally`` block regardless of outcome (R-wheel-build-atomic-verified).
+    Raises SystemExit(1) — after deleting any produced wheel — if the SET of
+    ``hotam_spec/_tools/*.py`` member names in the archive does not match the
+    set of ``spec/tools/*.py`` file names on disk (not merely a matching count
+    — a wheel carrying the right number of wrong-named files would otherwise
+    pass). The ``_tools/`` copies are removed in a ``finally`` block regardless
+    of outcome (R-wheel-build-atomic-verified).
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     wheels_before = set(out_dir.glob("*.whl"))
@@ -95,13 +99,16 @@ def build_wheel(out_dir: Path) -> Path:
             raise SystemExit(1)
         wheel_path = new_wheels[0]
 
-        disk_count = _count_disk_tools()
-        wheel_count = _count_wheel_tools(wheel_path)
-        if wheel_count != disk_count:
+        disk_names = _disk_tool_names()
+        wheel_names = _wheel_tool_names(wheel_path)
+        if wheel_names != disk_names:
+            missing = sorted(disk_names - wheel_names)
+            extra = sorted(wheel_names - disk_names)
             print(
-                f"build_wheel: REFUSING artifact — wheel carries {wheel_count} "
-                f"{_WHEEL_TOOLS_PREFIX}*.py members but spec/tools/ has "
-                f"{disk_count} *.py files. The wheel is missing tool scripts "
+                f"build_wheel: REFUSING artifact — wheel's {_WHEEL_TOOLS_PREFIX}*.py "
+                f"members do not match spec/tools/*.py on disk (name-set mismatch, "
+                f"not just a count). Missing from wheel: {missing}. Unexpected in "
+                f"wheel: {extra}. The wheel is missing or mis-shipping tool scripts "
                 f"and every hotam-* CLI would break for the consumer "
                 f"(R-wheel-build-atomic-verified). Deleting {wheel_path.name}.",
                 file=sys.stderr,
@@ -110,8 +117,8 @@ def build_wheel(out_dir: Path) -> Path:
             raise SystemExit(1)
 
         print(
-            f"build_wheel: OK — {wheel_path.name} carries {wheel_count} tool "
-            f"scripts (matches spec/tools/)."
+            f"build_wheel: OK — {wheel_path.name} carries {len(wheel_names)} tool "
+            f"scripts (name-set matches spec/tools/)."
         )
         return wheel_path
     finally:

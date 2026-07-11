@@ -4502,7 +4502,8 @@ def build_graph() -> TensionGraph:
             why=("REJECTED — REPLACES by storage = the Python code itself. (a) Technically this is NOT R-rdf-store: no RDF triples, no SHACL shapes, no SPARQL — just one plain JSON file per node plus a load-time schema check. (b) It is rejected anyway because it violates the same underlying principle the RDF proposal violated: storage = the Python code itself. Per-node JSON would introduce a parallel source of truth (files that can drift from graph.py's build_graph()) and a schema layer duplicating the frozen-dataclass constructors — the exact anti-pattern criticized in SHACL (validation that re-states the check_* invariants / the constructors). The generated docs/gen/graph.json snapshot already gives any reader a machine-readable export, read-only, with the Python code remaining the single writer. (c) REVISIT WHEN either of two triggers appears: a SECOND legitimate writer of the graph emerges (something other than apply_proposal.py editing graph.py), OR a real non-Python consumer appears for which the generated export is insufficient and needs the store itself to be language-neutral. — (was: External product review proposed per-node JSON files as the primary store.)"),
             enforcement=PROSE,
             created_at="2026-07-10",
-            settled_at="2026-07-10",
+            settled_at="",
+            history=(HistoryEntry(at="2026-07-11", summary="settled_at: 2026-07-10→"),),
         ),
         Requirement(
             id="R-requirement-freshness-fields",
@@ -4530,15 +4531,16 @@ def build_graph() -> TensionGraph:
         ),
         Requirement(
             id="R-wheel-build-atomic-verified",
-            claim=("A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a member-count self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member count does not match spec/tools/*.py on disk."),
+            claim=("A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a name-set self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member names do not match the set of spec/tools/*.py file names on disk (Etap Y, #127 -- upgraded from a bare member-count comparison, which a wheel with the right count of wrong-named files would have passed)."),
             owner="framework-author",
             status="SETTLED",
-            why=("The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that counts the _tools/ members inside the produced .whl and deletes the artifact on mismatch makes the broken-wheel failure structurally impossible to publish."),
+            why=("The uv_build backend packages only content under src/hotam_spec/. The 26 hotam-* CLI entry points import their tool scripts from a shipped _tools/ directory that is populated OUT-OF-BAND just before the build by populate_tools.py. Forgetting that manual step ships a wheel that imports cleanly but has zero working CLI commands, and the gap is invisible in the repo (_tools/ is .gitignored) — it only surfaces after a consumer pip install. Fusing populate+build+verify into one atomic command that compares the SET of _tools/ member names inside the produced .whl against spec/tools/*.py on disk (not merely their count) and deletes the artifact on any mismatch makes the broken-wheel failure structurally impossible to publish. (Etap Y, #127, fh finding R-1: the original self-check compared counts only, so a wheel carrying the right number of wrong-named files would have passed; upgraded to a name-set comparison with an explicit missing/extra diff in the failure message.)"),
             assumptions=("A-python-stack",),
             enforcement=ENFORCED,
             enforced_by=("test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e",),
             created_at="2026-07-10",
-            settled_at="2026-07-10",
+            settled_at="2026-07-11",
+            history=(HistoryEntry(at="2026-07-11", summary="claim: A release wheel is produced only by spe…→A release wheel is produced only by spe…; why: The uv_build backend packages only cont…→The uv_build backend packages only cont…; settled_at: 2026-07-10→2026-07-11"),),
         ),
         Requirement(
             id="R-binary-enforcement-gradient",
@@ -4548,7 +4550,8 @@ def build_graph() -> TensionGraph:
             why=("REJECTED — REPLACES by enforceability (ENFORCEABLE | INHERENTLY_PROSE) + Requirement.is_closeable_debt(). The ratchet pressure the binarization was meant to deliver is ALREADY binary and lives on a different axis than the descriptive enforcement gradient. is_closeable_debt() returns `enforcement != ENFORCED and enforceability == ENFORCEABLE` — it ignores the PROSE-vs-STRUCTURAL distinction entirely and keys the only normative pressure (real, closeable debt) off enforceability, not off which of the three descriptive tiers a claim sits in. Concretely: most STRUCTURAL nodes already carry enforceability=INHERENTLY_PROSE and are therefore NOT counted as debt; after Этап T (#122) real closeable debt is down to 2 nodes. Binarizing PROSE/STRUCTURAL/ENFORCED would be a ~50-site code refactor (proposal.py, apply_proposal.py, gen_spec.py, PROPOSAL-REFERENCE.md, ~270 existing graph nodes) for exactly zero change to the debt metric. The three-level enforcement value is retained as a DESCRIPTIVE, non-normative scale (how deeply a claim is crystallized: recorded / addressable / auto-checked) — useful for reading and reporting — while all normative convergence pressure stays on the already-binary enforceability + is_closeable_debt() pair. REVISIT WHEN a second, independent normative consumer of the STRUCTURAL tier appears (something that must treat STRUCTURAL differently from PROSE for a gate/metric, not merely for display). — (was: external-review backlog item D3 — binarize the enforcement gradient.) — (was: External-review backlog item D3. Proposed to binarize the enforcement scale.)"),
             enforcement=PROSE,
             created_at="2026-07-10",
-            settled_at="2026-07-10",
+            settled_at="",
+            history=(HistoryEntry(at="2026-07-11", summary="settled_at: 2026-07-10→"),),
         ),
     )
 

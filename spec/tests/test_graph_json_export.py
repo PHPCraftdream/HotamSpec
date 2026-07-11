@@ -11,9 +11,6 @@ matches the nodes actually in the graph, (4) generation is deterministic.
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-_TOOLS = Path(__file__).resolve().parents[1] / "tools"
 
 import gen_spec  # noqa: E402
 
