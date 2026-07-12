@@ -98,10 +98,11 @@ Commands:
         Compact agentic read interface over the domain graph (hotam req -h for details).
   due [--domain <path>] [--today YYYY-MM-DD] [--json]
         Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
-  inspect [--domain <path>] [--json] [--limit N]
+  inspect [--domain <path>] [--json] [--limit N] [--min-score N]
         Advisory listing of semantic conflict candidates with evidence
         (shared-assumption clusters, entity-state suspects, lexical claim
-        overlap, axis co-reference). Never gates; exit code always 0.
+        overlap, axis co-reference). --min-score (default 5) suppresses
+        low-signal candidates; 0 shows all. Never gates; exit code always 0.
   version, --version
         Print the hotam binary version.
 
