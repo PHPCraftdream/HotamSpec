@@ -111,12 +111,20 @@ def export_graph(g: TensionGraph) -> dict:
 
     Collections are keyed in TensionGraph declaration order; each node list is
     sorted by identity string. Node fields keep their dataclass declaration
-    order.
+    order. A `decl_order` field (0-based position of the node in the ORIGINAL
+    unsorted tuple as produced by build_graph, before identity sorting) is
+    appended as the LAST field of each node dict, so the author's declaration
+    order — which gen_spec.py renders but identity-sorting discards — travels
+    with the export.
     """
     payload: dict[str, list] = {}
     for name in COLLECTIONS:
         nodes = getattr(g, name)
-        payload[name] = [_to_jsonable(n) for n in sorted(nodes, key=_identity_key)]
+        original_index = {id(n): i for i, n in enumerate(nodes)}
+        payload[name] = [
+            {**_to_jsonable(n), "decl_order": original_index[id(n)]}
+            for n in sorted(nodes, key=_identity_key)
+        ]
     return payload
 
 
