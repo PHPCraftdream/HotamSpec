@@ -238,8 +238,11 @@ func mapKeysSorted(m map[string]struct{}) []string {
 	return keys
 }
 
-func BuildEntities(g *ontology.Graph) string {
+func BuildEntities(g *ontology.Graph, domainName string) string {
 	sourceHint := "from the active domain's `graph.py:build_graph()`"
+	if domainName != "" {
+		sourceHint = "from `domains/" + domainName + "/graph.py:build_graph()`"
+	}
 
 	lines := []string{Banner, ReaderHeaderLine("ENTITIES", g), ""}
 	lines = append(lines, "# Entities")

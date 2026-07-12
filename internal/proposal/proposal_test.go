@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpecGo/internal/paths"
 )
 
 func TestApply_Requirement_Add(t *testing.T) {
@@ -197,6 +198,12 @@ func TestApply_Conflict_StewardOwnsMemberFails(t *testing.T) {
 }
 
 func TestApply_OperatorBudget(t *testing.T) {
+	// Hermetic isolation: check_operator_within_budget's CRYSTAL_CHARS branch
+	// deliberately reads the REAL <project-root>/CLAUDE.md off disk (resident
+	// crystal budget check; see internal/invariants/lifecycle_checks.go). Pin
+	// paths.ProjectRoot() to an empty temp dir (no CLAUDE.md) so this test's
+	// pass/fail does not depend on the size of the ambient repo's CLAUDE.md.
+	t.Setenv(paths.EnvProjectRoot, t.TempDir())
 	path := writeTempGraph(t, graphWithOperator())
 	p := ProposedOperatorBudget{
 		OperatorID: "OP-1",

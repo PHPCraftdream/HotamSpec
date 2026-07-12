@@ -83,7 +83,6 @@ reader: ai-agent
 
 **Generated docs** (`domains/hotam-spec-self/docs/gen/`)
 
-- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit
 - `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
 - `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
 - `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary

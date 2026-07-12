@@ -2,7 +2,11 @@ package generator
 
 import "strings"
 
-var repoMapContent = strings.Join([]string{
+// repoMapFrameworkAndToolsContent holds the domain-independent "Framework
+// body" and "Tools" sections of REPO-MAP.md — these scan spec/src/hotam_spec/
+// and spec/tools/, which are the same regardless of which domain the doc is
+// generated for.
+var repoMapFrameworkAndToolsContent = strings.Join([]string{
 	"### Repository Map",
 	"",
 	"**Framework body** (`spec/src/hotam_spec/`)",
@@ -75,24 +79,47 @@ var repoMapContent = strings.Join([]string{
 	"- `spec/tools/ticket_show.py` — print one ticket's header, body, comments and full History (read-only).  →  R-tool-ticket-show",
 	"- `spec/tools/update_baseline.py` — Canon: §Invariants -- sanctioned baseline updater for protected hash baselines.",
 	"- `spec/tools/what_now.py` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now",
-	"",
-	"**Domain content** (`domains/hotam-spec-self/`)",
-	"",
-	"- `domains/hotam-spec-self/graph.py` — Hotam-Spec modeling itself — the meta-domain (the framework's own design).",
-	"- `domains/hotam-spec-self/manifest.py` — manifest of domain 'hotam-spec-self'.",
-	"",
-	"**Generated docs** (`domains/hotam-spec-self/docs/gen/`)",
-	"",
-	"- `domains/hotam-spec-self/docs/gen/AUDIT.md` — Atomicity Audit",
-	"- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence",
-	"- `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index",
-	"- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary",
-	"- `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history",
-	"- `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry",
-	"- `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index",
-	"- `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology",
-	"- `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map",
-	"- `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter",
-	"- `domains/hotam-spec-self/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_",
-	"- `domains/hotam-spec-self/docs/gen/ENTITIES.md` — _(not written: no entity_types declared)_",
 }, "\n")
+
+// domainGraphPyRole returns the one-line role text for domains/<name>/graph.py
+// in the "Domain content" section — mirrors Python's _docstring_role(), which
+// reads the first line of that domain's graph.py module docstring (with any
+// "Canon: §X — " prefix stripped). The Go port has no per-domain graph.py
+// source file to introspect (domains carry graph.json instead), so the
+// known domains' role text is captured here verbatim from the Python
+// reference; any other domain falls back to the generic phrasing Python's
+// create_domain.py scaffold uses for a fresh domain's graph.py docstring.
+func domainGraphPyRole(domainName string) string {
+	switch domainName {
+	case "hotam-spec-self":
+		return "Hotam-Spec modeling itself — the meta-domain (the framework's own design)."
+	default:
+		return "content graph of domain '" + domainName + "'."
+	}
+}
+
+// GenDocEntry describes one file written into a domain's docs/gen/ during
+// this run, for the REPO-MAP.md "Generated docs" section.
+type GenDocEntry struct {
+	Filename string
+	Content  string
+}
+
+// mdTitle extracts the first H1/H2 heading from generated Markdown content as
+// a short title — mirrors Python's _md_title(): take the first line starting
+// with '#', drop everything up to (and including) the last " — ", then strip
+// a trailing " (...)" suffix.
+func mdTitle(content string) string {
+	for _, line := range strings.Split(content, "\n") {
+		stripped := strings.TrimSpace(strings.TrimLeft(line, "#"))
+		if strings.HasPrefix(line, "#") && stripped != "" {
+			parts := strings.Split(stripped, " — ")
+			title := parts[len(parts)-1]
+			if idx := strings.Index(title, " ("); idx >= 0 {
+				title = title[:idx]
+			}
+			return strings.TrimSpace(title)
+		}
+	}
+	return ""
+}

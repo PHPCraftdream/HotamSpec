@@ -7,6 +7,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpecGo/internal/generator"
+	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpecGo/internal/paths"
 )
 
 func cmdGenSpec(args []string) error {
@@ -40,9 +42,16 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 	if claudeMDPath != "" {
 		data, err := os.ReadFile(claudeMDPath)
 		if err != nil {
-			return nil, fmt.Errorf("read --claude-md %s: %w", claudeMDPath, err)
+			// A first-ever render has no prior CLAUDE.md to measure; the
+			// Python reference treats this the same way (used = 0 when
+			// CLAUDE_MD.exists() is False) rather than erroring — only a
+			// genuine I/O failure (permissions, etc.) is fatal.
+			if !os.IsNotExist(err) {
+				return nil, fmt.Errorf("read --claude-md %s: %w", claudeMDPath, err)
+			}
+		} else {
+			charCount = utf8.RuneCountInString(string(data))
 		}
-		charCount = utf8.RuneCountInString(string(data))
 	}
 
 	var written []string
@@ -51,27 +60,69 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 		filename string
 		content  string
 	}
+
+	decisionsWritten := generator.DecisionsMDHasContent(g)
+	entitiesWritten := generator.EntitiesMDHasContent(g)
+
+	// repoMapDocs mirrors what Python's _process_domains actually writes into
+	// domains/<name>/docs/gen/ (REQUIREMENTS/TENSIONS/OPEN/UNENFORCED/
+	// GLOSSARY/HISTORY/CONSTITUTION/FRAMEWORK-INVARIANTS/REPO-MAP.md, plus
+	// conditional DECISIONS/ENTITIES.md) — it deliberately excludes
+	// atoms-*.md and live-state.md, which the Python reference only ever
+	// materializes at the repo-root docs/methodology/atoms/ (and inside root
+	// CLAUDE.md's LIVE-STATE block) for the single active domain, never
+	// per-domain under docs/gen/. REPO-MAP.md's own "Generated docs" section
+	// must list exactly this Python-equivalent set to stay byte-identical,
+	// even though the Go CLI additionally writes atoms-*.md/live-state.md
+	// alongside them on disk (see mdDocs below).
+	repoMapDocs := []generator.GenDocEntry{
+		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g)},
+		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
+		{Filename: "OPEN.md", Content: generator.BuildOpen(g)},
+		{Filename: "UNENFORCED.md", Content: generator.BuildUnenforced(g)},
+		{Filename: "GLOSSARY.md", Content: generator.BuildGlossary(g)},
+		{Filename: "HISTORY.md", Content: generator.BuildHistory(g)},
+		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g)},
+		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
+	}
+	// REPO-MAP.md lists itself too (Python's _scan_repo_map globs docs/gen/*.md
+	// including the file it is about to (re)write); its own title is fixed by
+	// the H1 line BuildRepoMap always emits, so a placeholder with just that
+	// heading is enough for mdTitle() to extract "Repository file index".
+	repoMapSelfEntry := generator.GenDocEntry{Filename: "REPO-MAP.md", Content: "# REPO-MAP.md — Repository file index (Hotam-Spec)"}
+	fullRepoMapDocs := append(append([]generator.GenDocEntry{}, repoMapDocs...), repoMapSelfEntry)
+	var decisionsMD, entitiesMD string
+	if decisionsWritten {
+		decisionsMD = generator.BuildDecisions(g)
+		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "DECISIONS.md", Content: decisionsMD})
+	}
+	if entitiesWritten {
+		entitiesMD = generator.BuildEntities(g, domainName)
+		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "ENTITIES.md", Content: entitiesMD})
+	}
+	repoMapMD := generator.BuildRepoMap(g, domainName, fullRepoMapDocs, decisionsWritten, entitiesWritten)
+
 	mdDocs := []docEntry{
-		{"REQUIREMENTS.md", generator.BuildRequirements(g)},
-		{"TENSIONS.md", generator.BuildTensions(g)},
-		{"OPEN.md", generator.BuildOpen(g)},
-		{"UNENFORCED.md", generator.BuildUnenforced(g)},
-		{"GLOSSARY.md", generator.BuildGlossary(g)},
-		{"HISTORY.md", generator.BuildHistory(g)},
-		{"CONSTITUTION.md", generator.BuildConstitution(g)},
-		{"FRAMEWORK-INVARIANTS.md", generator.BuildFrameworkInvariants(g, domainName)},
-		{"REPO-MAP.md", generator.BuildRepoMap(g)},
+		{"REQUIREMENTS.md", repoMapDocs[0].Content},
+		{"TENSIONS.md", repoMapDocs[1].Content},
+		{"OPEN.md", repoMapDocs[2].Content},
+		{"UNENFORCED.md", repoMapDocs[3].Content},
+		{"GLOSSARY.md", repoMapDocs[4].Content},
+		{"HISTORY.md", repoMapDocs[5].Content},
+		{"CONSTITUTION.md", repoMapDocs[6].Content},
+		{"FRAMEWORK-INVARIANTS.md", repoMapDocs[7].Content},
+		{"REPO-MAP.md", repoMapMD},
 		{"atoms-operator.md", generator.BuildAtomsOperator(g)},
 		{"atoms-substrate.md", generator.BuildAtomsSubstrate(g)},
 		{"atoms-discipline.md", generator.BuildAtomsDiscipline(g)},
 		{"atoms-check.md", generator.BuildAtomsCheck(g)},
 		{"live-state.md", generator.BuildLiveState(g, charCount)},
 	}
-	if generator.DecisionsMDHasContent(g) {
-		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", generator.BuildDecisions(g)})
+	if decisionsWritten {
+		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", decisionsMD})
 	}
-	if generator.EntitiesMDHasContent(g) {
-		mdDocs = append(mdDocs, docEntry{"ENTITIES.md", generator.BuildEntities(g)})
+	if entitiesWritten {
+		mdDocs = append(mdDocs, docEntry{"ENTITIES.md", entitiesMD})
 	}
 
 	for _, d := range mdDocs {
@@ -105,6 +156,27 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 			return written, err
 		}
 		written = append(written, p)
+	}
+
+	// Root CLAUDE.md (R-claude-md-template-driven): only rendered when
+	// --claude-md points at a path, mirroring the Python reference's
+	// unconditional root-crystal regen except that the Go CLI is also used
+	// against non-root domain checkouts / tests where no CLAUDE.md is
+	// wanted — the flag opts in. charCount (read above, from whatever
+	// CLAUDE.md already exists at that path, 0 if absent) feeds the
+	// LIVE-STATE CRYSTAL_CHARS budget line; the freshly rendered file is
+	// then written back to the SAME path.
+	if claudeMDPath != "" {
+		repoRoot, err := paths.ProjectRootOrRaise()
+		if err != nil {
+			return written, fmt.Errorf("resolve project root for --claude-md: %w", err)
+		}
+		domainGraphs := map[string]*ontology.Graph{domainName: g}
+		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs)
+		if err := writeFileMkdir(claudeMDPath, []byte(claudeMD)); err != nil {
+			return written, err
+		}
+		written = append(written, claudeMDPath)
 	}
 
 	return written, nil

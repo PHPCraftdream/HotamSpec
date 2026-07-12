@@ -1,0 +1,608 @@
+{
+  "axes": [
+    {
+      "slug": "sequential-vs-isolated-parallel",
+      "description": "Waves touching overlapping scopes run strictly sequentially to avoid racing a shared working tree, vs mutating agents running in parallel when isolated in per-agent git worktrees so their edits cannot collide.",
+      "decl_order": 1
+    },
+    {
+      "slug": "speed-vs-verification",
+      "description": "T1 targeted-enforcer gate on every apply_proposal call (fast, per-move) vs the mandatory full T2 pytest suite at wave/commit boundaries (slow, complete). T2 has hit multi-minute timeouts in this repo, creating real pressure to skip or shrink it -- which would undermine wave atomicity.",
+      "decl_order": 0
+    }
+  ],
+  "stakeholders": [
+    {
+      "id": "dev-steward",
+      "name": "Dev steward",
+      "domain": "reviews and approves waves/commits; sole authority to request a push",
+      "decl_order": 0
+    },
+    {
+      "id": "pipeline-operator",
+      "name": "Pipeline operator",
+      "domain": "executes waves, applies proposals, spawns sub-agents",
+      "decl_order": 1
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "A-runtime-logs-append-only",
+      "statement": "spec/.runtime/*.jsonl logs (land-log.jsonl, spawn-log.jsonl, boot-cite-log.jsonl) are append-only -- no tool ever rewrites or truncates a prior entry.",
+      "status": "HOLDS",
+      "owner": "pipeline-operator",
+      "machine_check": null,
+      "signoff": null,
+      "created_at": "",
+      "decided_at": "",
+      "decl_order": 0
+    },
+    {
+      "id": "A-single-steward-session",
+      "statement": "At most one human dev-steward session drives waves at a time -- no concurrent multi-steward editing of the same graph.",
+      "status": "HOLDS",
+      "owner": "dev-steward",
+      "machine_check": null,
+      "signoff": null,
+      "created_at": "",
+      "decided_at": "",
+      "decl_order": 1
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R-commit-follows-review",
+      "claim": "A commit shall land only after review of the diff by a human or an agent code-review step.",
+      "owner": "dev-steward",
+      "status": "SETTLED",
+      "why": "Review is the last human-in-the-loop check before a change becomes permanent history; this is a judgment call about diff quality and intent that no mechanical check can substitute for, so enforcement stays honestly PROSE.",
+      "assumptions": [
+        "A-single-steward-session"
+      ],
+      "relations": [
+        {
+          "kind": "depends_on",
+          "target": "R-wave-lands-atomically"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "INHERENTLY_PROSE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 4
+    },
+    {
+      "id": "R-host-spawn-leaves-trace",
+      "claim": "Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "Refines R-spawn-logged with the coverage the mechanism test cannot prove. audit 2026-07-03: the spawn-log was empty despite ~30+ real host spawns, because host-level Task/Agent spawns never routed through spawn_agent.py's crystal-composition path -- the only writer. spawn_agent.py --log-only (Wave 10 move 2a) closes that gap: it appends a spawn-log row (agent, task first line, stamp, isolation, mutating) WITHOUT composing a crystal, so a host spawn that names a logical agent with no on-disk CLAUDE.md can still leave a trace. STRUCTURAL, not ENFORCED: whether the operator ACTUALLY calls --log-only per spawn is operator discipline, not mechanically provable from the graph -- honest scope. The mechanism itself is covered by test_log_only_writes_row_without_composing_prompt. LANDED Wave 10 review: the referencing why-texts (R-task-spawn-log-runtime, R-spawn-logged, spawn_agent.py/.md, test_tool_spawn_agent.py) all cited this anchor, but the node itself was missing from the graph (the honesty-proposal's second atom never applied) -- landing it here resolves the dangling R-speak-by-reference anchor.",
+      "assumptions": [
+        "A-runtime-logs-append-only"
+      ],
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-spawn-logged"
+        }
+      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 7
+    },
+    {
+      "id": "R-land-leaves-trace",
+      "claim": "Every applied proposal shall append a trace entry to spec/.runtime/land-log.jsonl.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "The land-log is the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- the basis for gate_status.py's commit-boundary answer (R-commit-boundary-checkable, hotam-spec-self); without it there is no auditable trail of what actually got verified before landing.",
+      "assumptions": [
+        "A-runtime-logs-append-only"
+      ],
+      "relations": [
+        {
+          "kind": "depends_on",
+          "target": "R-t1-gate-is-default"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "test_apply_proposal_land_log.py::test_land_log_record_shape_t1"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 3
+    },
+    {
+      "id": "R-push-only-on-request",
+      "claim": "Push to remote shall occur only on the dev-steward's explicit request, never autonomously.",
+      "owner": "dev-steward",
+      "status": "SETTLED",
+      "why": "A push is externally visible and hard to undo cleanly (shared history); reserving it strictly to explicit steward request keeps the irreversible action under human authority, mirroring the project's global CLAUDE.md discipline. Not mechanically checkable from inside this repo (no push actually happens in tests), so PROSE.",
+      "assumptions": [
+        "A-single-steward-session"
+      ],
+      "relations": [
+        {
+          "kind": "depends_on",
+          "target": "R-commit-follows-review"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "INHERENTLY_PROSE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 5
+    },
+    {
+      "id": "R-spawn-logged",
+      "claim": "Every sub-agent spawn shall be appended to spec/.runtime/spawn-log.jsonl.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "Without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact; the append-only log is the mechanical proof a spawn happened, with what kind/parent/child. REQUALIFIED ENFORCED->STRUCTURAL (Wave 10 move 2, honesty of the spawn seam): the enforcer test_spawn_log_written proves only the MECHANISM (spawn_agent.py appends a row when invoked against a tmp runtime dir), NOT coverage of real host spawns. audit 2026-07-03: spec/.runtime/spawn-log.jsonl did not exist at all despite ~30+ real host-agent spawns across the two pipelines; the test proves the mechanism, not the coverage. Coverage is now refined into R-host-spawn-leaves-trace (--log-only path); this atom stands as the STRUCTURAL discipline that the trace SHOULD exist for every spawn.",
+      "assumptions": [
+        "A-runtime-logs-append-only"
+      ],
+      "relations": [],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 2
+    },
+    {
+      "id": "R-t1-gate-is-default",
+      "claim": "tools/apply_proposal.py shall run the T1 targeted-enforcer gate by default on every individual proposal apply, deferring the full T2 suite to wave/commit boundaries.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "Per-move full-suite verification is too slow for the conveyor's normal cadence (observed multi-minute T2 runs); T1 keeps the loop responsive while T2 remains the mandatory boundary gate (see R-wave-lands-atomically).",
+      "assumptions": [
+        "A-runtime-logs-append-only"
+      ],
+      "relations": [],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "test_tool_gate.py"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 0
+    },
+    {
+      "id": "R-wave-lands-atomically",
+      "claim": "A wave shall land as a whole with a green T2 (full pytest suite) run at its boundary before the next wave starts.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. Enforcement is honestly STRUCTURAL: what_now/apply_proposal make the T2 boundary visible and addressable (gate_status.py, land-log.jsonl tier trace) but no single check_* fires automatically if a steward skips a wave-boundary T2 run by hand outside the tool.",
+      "assumptions": [
+        "A-runtime-logs-append-only",
+        "A-single-steward-session"
+      ],
+      "relations": [
+        {
+          "kind": "depends_on",
+          "target": "R-t1-gate-is-default"
+        }
+      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 1
+    },
+    {
+      "id": "R-wave-strictly-sequential",
+      "claim": "Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "Concurrent edits to the same files/scope would race and corrupt state (the graph, the docs, the .runtime logs); git history in this repo is evidence of sequential waves but is not itself a cheap mechanical gate, so enforcement stays honestly STRUCTURAL/PROSE rather than a fabricated git-log parser.",
+      "assumptions": [
+        "A-single-steward-session"
+      ],
+      "relations": [],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 6
+    },
+    {
+      "id": "R-worktree-parallel-permitted",
+      "claim": "Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide.",
+      "owner": "pipeline-operator",
+      "status": "SETTLED",
+      "why": "This atom reflects, inside the hotam-dev domain, the self-practice crystallized by the framework atom R-parallel-mutating-agents-use-worktree (hotam-spec-self): after the 2026-06-30/07-01 incident where two parallel agents in one shared tree lost work to a history-rewrite, the pipeline adopted per-agent worktree isolation (isolation:'worktree') as the sanctioned way to run mutating agents concurrently. It is honestly modeled here as a hotam-dev requirement (not a cross-domain reference) because a Conflict's members must be co-domain: it lets the sequential-vs-isolated-parallel tension between overlapping-scope waves (R-wave-strictly-sequential) and isolated parallelism be modeled as a first-class Conflict node in the domain that actually runs the pipeline. Enforcement is PROSE: whether an agent ACTUALLY runs in a worktree is operator discipline, not mechanically provable from this graph.",
+      "assumptions": [
+        "A-single-steward-session"
+      ],
+      "relations": [],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "INHERENTLY_PROSE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 8
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "C-80687260",
+      "axis": "sequential-vs-isolated-parallel",
+      "context": "R-wave-strictly-sequential demands that waves touching overlapping files/scopes run strictly sequentially (never concurrently) to avoid racing a shared working tree, while R-worktree-parallel-permitted sanctions running mutating pipeline agents in parallel when each is isolated in its own git worktree -- the same pipeline both forbids overlapping-scope concurrency and permits isolated concurrency, and the boundary (when is isolation sufficient to relax strict sequencing?) is undecided",
+      "members": [
+        "R-wave-strictly-sequential",
+        "R-worktree-parallel-permitted"
+      ],
+      "steward": "dev-steward",
+      "lifecycle": "DECIDED(no real tension: worktree isolation removes the shared-files premise; the sequentiality rule governs shared working copies only. Steward verdict 2026-07-03 (V5), verbatim: «здесь нет противоерчия. Worktree - это как бы не параллельно». A worktree is not truly parallel work on the same files -- each worktree is an isolated copy, so the strict-sequential wave rule (which exists to prevent two agents clobbering one shared working tree) simply does not apply there; the two requirements never actually collide. Decided by dev-steward, 2026-07-03.)",
+      "shared_assumption": "A-single-steward-session",
+      "derived": [],
+      "revisit_marker": "",
+      "decided_by": "dev-steward",
+      "variants": [],
+      "signoff": null,
+      "created_at": "",
+      "decided_at": "",
+      "decl_order": 1
+    },
+    {
+      "id": "C-ec1ec532",
+      "axis": "speed-vs-verification",
+      "context": "T1 targeted-enforcer gate on every apply_proposal call vs mandatory full T2 pytest suite at wave/commit boundaries -- T2 runs have hit multi-minute timeouts in this repo (observed Wave 2), creating real pressure to skip or shrink T2, which would undermine R-wave-lands-atomically",
+      "members": [
+        "R-t1-gate-is-default",
+        "R-wave-lands-atomically"
+      ],
+      "steward": "dev-steward",
+      "lifecycle": "DECIDED(Resolved 2026-07-05 both ways per R-conflict-resolved-in-members-or-mediator: members amended (test suite sped 223s->~55s, gen_spec 20s->3s) AND a mediating rule created (R-run-speed-guarded self-calibrating guard) so the speed need cannot silently regress. Steward verdict.)",
+      "shared_assumption": "A-runtime-logs-append-only",
+      "derived": [],
+      "revisit_marker": "REVISIT if at larger scale (600+ atoms / 5+ domains) the run-speed guard trips persistently despite Python-side optimizations -- then reconsider deeper (compiled snapshot / language).",
+      "decided_by": "dev-steward",
+      "variants": [],
+      "signoff": null,
+      "created_at": "",
+      "decided_at": "",
+      "decl_order": 0
+    }
+  ],
+  "operators": [],
+  "processes": [],
+  "goals": [],
+  "entity_types": [
+    {
+      "slug": "wave",
+      "description": "A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed steward review and a commit.",
+      "lifecycle": {
+        "slug": "wave-lifecycle",
+        "states": [
+          {
+            "name": "planned",
+            "kind": "initial",
+            "why": ""
+          },
+          {
+            "name": "running",
+            "kind": "normal",
+            "why": ""
+          },
+          {
+            "name": "review",
+            "kind": "normal",
+            "why": ""
+          },
+          {
+            "name": "committed",
+            "kind": "terminal",
+            "why": ""
+          }
+        ],
+        "transitions": [
+          {
+            "src": "planned",
+            "dst": "running",
+            "event": "start",
+            "guard": "",
+            "guard_assumption": null,
+            "why": ""
+          },
+          {
+            "src": "running",
+            "dst": "review",
+            "event": "submit",
+            "guard": "",
+            "guard_assumption": null,
+            "why": ""
+          },
+          {
+            "src": "review",
+            "dst": "committed",
+            "event": "commit",
+            "guard": "",
+            "guard_assumption": null,
+            "why": ""
+          }
+        ],
+        "cyclic": false,
+        "prefix_states": []
+      },
+      "fields": [
+        {
+          "name": "number",
+          "kind": "number",
+          "required": true,
+          "ref_target": ""
+        },
+        {
+          "name": "commit_hash",
+          "kind": "string",
+          "required": false,
+          "ref_target": ""
+        },
+        {
+          "name": "review_verdict",
+          "kind": "string",
+          "required": false,
+          "ref_target": ""
+        }
+      ],
+      "why": "Domain entity type 'wave' declared via create_entity_type.",
+      "decl_order": 0
+    }
+  ],
+  "entities": [
+    {
+      "id": "ENT-wave-case-be22cdd1",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "0"
+        ],
+        [
+          "commit_hash",
+          "a6dd56e"
+        ],
+        [
+          "review_verdict",
+          "C-be22cdd1 DECIDED via V-unfreeze-entity-projection + entity projection guard -- committed"
+        ]
+      ],
+      "decl_order": 8
+    },
+    {
+      "id": "ENT-wave-w1",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "1"
+        ],
+        [
+          "commit_hash",
+          "0b9dc5d"
+        ],
+        [
+          "review_verdict",
+          "crystal budget honesty wave 1 -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 0
+    },
+    {
+      "id": "ENT-wave-w2",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "2"
+        ],
+        [
+          "commit_hash",
+          "08b7534"
+        ],
+        [
+          "review_verdict",
+          "DRAFT cleanup + atomicity ratchets wave 2 -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 1
+    },
+    {
+      "id": "ENT-wave-w3",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "3"
+        ],
+        [
+          "commit_hash",
+          "e498c1b"
+        ],
+        [
+          "review_verdict",
+          "wave 3 atomization + OPEN closures + DRAFT promotions -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 2
+    },
+    {
+      "id": "ENT-wave-w4",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "4"
+        ],
+        [
+          "commit_hash",
+          "5ed7c02"
+        ],
+        [
+          "review_verdict",
+          "scope-as-projection + overlap visibility + single presenter -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 3
+    },
+    {
+      "id": "ENT-wave-w5",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "5"
+        ],
+        [
+          "commit_hash",
+          "f543212"
+        ],
+        [
+          "review_verdict",
+          "discipline slices measured -- spawn-log isolation + boot-cite meter -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 4
+    },
+    {
+      "id": "ENT-wave-w6",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "6"
+        ],
+        [
+          "commit_hash",
+          "cc3dee3"
+        ],
+        [
+          "review_verdict",
+          "second domain hotam-dev + conditional consolidation + active-domain fix -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 5
+    },
+    {
+      "id": "ENT-wave-w7",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "7"
+        ],
+        [
+          "commit_hash",
+          "2bf332c"
+        ],
+        [
+          "review_verdict",
+          "domain jurisdictions + axis gatekeeper + delegation ledger + assumption split -- self pulse clean"
+        ]
+      ],
+      "decl_order": 6
+    },
+    {
+      "id": "ENT-wave-w8",
+      "entity_type": "wave",
+      "state": "committed",
+      "field_values": [
+        [
+          "number",
+          "8"
+        ],
+        [
+          "commit_hash",
+          "f287a0a"
+        ],
+        [
+          "review_verdict",
+          "compound burn-down 21+6 -> 0, atomicity cores ENFORCED -- landed & T2-green"
+        ]
+      ],
+      "decl_order": 7
+    }
+  ]
+}

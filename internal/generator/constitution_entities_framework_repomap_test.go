@@ -5,6 +5,29 @@ import (
 	"testing"
 )
 
+// hotamSpecSelfFixtureGenDocs reconstructs the docs/gen/ file listing that
+// the Go port writes for domains/hotam-spec-self — matching the frozen
+// testdata/REPO-MAP.md snapshot. It excludes AUDIT.md (a separate,
+// low-traffic review-tool artifact the Go port does not generate at all) and
+// DECISIONS.md/ENTITIES.md (both legitimately absent for hotam-spec-self: no
+// M-tagged OPEN requirements, no entity_types declared).
+func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
+	title := func(filename, h1 string) GenDocEntry {
+		return GenDocEntry{Filename: filename, Content: "# " + h1}
+	}
+	return []GenDocEntry{
+		title("CONSTITUTION.md", "CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)"),
+		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
+		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
+		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
+		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
+		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
+		title("REQUIREMENTS.md", "REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)"),
+		title("TENSIONS.md", "TENSIONS.md — The tension map (Hotam-Spec)"),
+		title("UNENFORCED.md", "UNENFORCED.md — Burn-down meter (Hotam-Spec)"),
+	}
+}
+
 func TestBuildConstitution_ByteIdenticalToPython(t *testing.T) {
 	g := loadDomainGraph(t)
 	got := BuildConstitution(g)
@@ -27,7 +50,7 @@ func TestBuildFrameworkInvariants_ByteIdenticalToPython(t *testing.T) {
 
 func TestBuildRepoMap_ByteIdenticalToPython(t *testing.T) {
 	g := loadDomainGraph(t)
-	got := BuildRepoMap(g)
+	got := BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
 	want, err := os.ReadFile("testdata/REPO-MAP.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
@@ -37,7 +60,7 @@ func TestBuildRepoMap_ByteIdenticalToPython(t *testing.T) {
 
 func TestBuildEntities_MatchesPythonOutput(t *testing.T) {
 	g := loadDomainGraph(t)
-	got := BuildEntities(g)
+	got := BuildEntities(g, "hotam-spec-self")
 	want, err := os.ReadFile("testdata/ENTITIES.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
@@ -55,7 +78,7 @@ func TestBuildConstitutionFrameworkRepoMap_AgainstOriginalHotamSpecPath(t *testi
 	}{
 		{"CONSTITUTION.md", `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\CONSTITUTION.md`, BuildConstitution(g)},
 		{"FRAMEWORK-INVARIANTS.md", `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\FRAMEWORK-INVARIANTS.md`, BuildFrameworkInvariants(g, "hotam-spec-self")},
-		{"REPO-MAP.md", `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\REPO-MAP.md`, BuildRepoMap(g)},
+		{"REPO-MAP.md", `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\REPO-MAP.md`, BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)},
 	} {
 		want, err := os.ReadFile(c.path)
 		if err != nil {
