@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-tension-audit-shortlist-tool",
+  "claim": "A tool shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension.",
+  "why": "The framework held tensions well but historically did not FIND them (0 of 8 conflicts machine-surfaced over its whole history; latent-mining covered 0 pairs; 3 axes never fired). This tool closes the missing first-act-of-sight half of the mediation loop by sweeping the WHOLE settled graph. In the Go port this capability is realized as `hotam inspect` (internal/diagnose/inspect.go): a deterministic, LLM-free advisory that surfaces tension candidates via four heuristics — InspectSharedAssumptionClusters (pairs sharing a DEAD/HOLDS assumption that one alone cannot break), InspectEntityStateConflicts (two requirements asserting incompatible states on the same entity), InspectLexicalClaimOverlap (natural-language claim pairs with high token overlap but different owners), and InspectAxisCoReference (requirements co-referencing the same Axis with opposing pull). Each surfaced Candidate carries its heuristic name, the member ids, an evidence string, and a score, so a human can review the shortlist. The historical Python tool (tools/audit_tensions.py) used different heuristics (POLE axis-pole pull / MODAL prohibition-vs-obligation / NOUN cross-owner overlap) and is Declared (not ported); the Go successor reimagines the same first-act-of-sight with graph-structural signals better suited to the Go ontology. Deterministic and stdlib-only so the shortlist is reproducible and gate-safe (exit code always 0; never gates). PROSE (not ENFORCED): the shortlist is an advisory tool with no enforcer test asserting its heuristics fire on specific fixtures (the Python-era pole/modal/noun tests were not ported; the Go inspect heuristics are exercised by table-driven tests in inspect_test.go but as correctness checks, not as enforcement of this requirement).",
+  "source_refs": [
+    "internal/diagnose/inspect.go",
+    "internal/diagnose/inspect_test.go",
+    "cmd/hotam/inspect.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-verify-closure-per-action",
+  "claim": "After an applied proposal lands (write + regen), the system shall verify the action that triggered the proposal is no longer present in the post-apply what-now diagnosis.",
+  "why": "P4 -- the feedback edge that makes Drive (P5) safe to automate. Without per-action closure, an apply can technically land (tests green) yet the same diagnosis re-surface -- the tick would spin without advancing. Not yet ported in the Go port as a dedicated per-action closure tool. The historical mechanism was tools/closure.py (check_closure), which asserted no Action with the original (kind, target) pair remained after a proposal apply; it is Declared (not ported) in methodology.Tools. The Go port DOES provide the diagnosis half: internal/diagnose (DiagnoseSignals / AllFindings, internal/diagnose/finding.go) emits the prioritized Finding list that `hotam what-now` renders, and `hotam land` (cmd/hotam/land.go) runs apply -> gen-spec -> all-violations (structural re-verification) on every proposal batch. The missing piece is the PER-ACTION comparison: a tool that captures the pre-apply Finding (Condition, Target) pair and asserts the post-apply diagnosis no longer contains it. `hotam what-now` / `hotam all-violations` serve as the manual closure check (the Mediation loop step 6 cites both for closure verification, R-verify-closure-per-action), but no automated diff-and-assert tool exists. The original WHY stands: per-action closure prevents an apply from landing technically green while the same diagnosis re-surfaces. PROSE (not ENFORCED): no enforcer exists in the Go port (the historical test_closure.py was Python-only).",
+  "source_refs": [
+    "internal/diagnose/finding.go",
+    "cmd/hotam/land.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "ai-agent",
+  "status": "SETTLED"
+}

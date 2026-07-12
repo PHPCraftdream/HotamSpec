@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-wheel-build-atomic-verified",
+  "claim": "A release artifact shall be produced by a single atomic build command that fuses population + build + a self-check refusing to emit an artifact whose shipped tool-member names do not match the source-of-truth tool set on disk.",
+  "why": "Not yet ported in the Go port; the Python-era mechanism does not apply to Go's build model. Historically: the uv_build backend packaged only content under src/hotam_spec/; the 26 hotam-* CLI entry points imported their tool scripts from a shipped _tools/ directory populated OUT-OF-BAND just before the build by populate_tools.py; forgetting that manual step shipped a wheel that imported cleanly but had zero working CLI commands, invisible in the repo (_tools/ was .gitignored). spec/scripts/build_wheel.py fused populate+`uv build --wheel`+verify into one atomic command comparing the SET of _tools/ member names inside the produced .whl against spec/tools/*.py on disk (Etap Y #127, upgraded from a bare member-count comparison to a name-set comparison with an explicit missing/extra diff). In the Go port this concern does not arise in the same form: `go build ./cmd/hotam` compiles all packages natively via the import graph — there is no out-of-band populate step, no shipped _tools/ directory, and no gap between 'imports cleanly' and 'has working CLI commands'. A release is `go build` producing a single binary; a missing tool would be a compile error, not a silently-broken artifact. The original WHY stands as a design principle (an atomic build with a self-check makes the broken-artifact failure structurally impossible to publish), but the Go build model achieves this by construction (the compiler IS the self-check) rather than via a separate verification script. PROSE (not ENFORCED): no enforcer exists in the Go port (the historical enforcer was test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e — Python-only).",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

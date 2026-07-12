@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-task-spawn-log-runtime",
+  "claim": "The spawn_agent tool shall append a spawn-log entry to .runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation.",
+  "why": "Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py, which composed a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal (R-agent-is-recursive-director, R-sub-agent-crystal-triad) and appended a spawn-log entry to spec/.runtime/spawn-log.jsonl, proven by test_spawn_log_written and test_log_only_writes_row_without_composing_prompt. spawn-agent is Declared (not ported) in methodology.Tools, so neither the prompt-composition nor the spawn-log append exists in the Go CLI today. The 2026-07-10 re-audit's category distinction still holds: 'spawn' here means an explicit spawn_agent invocation composing a domain sub-operator's CLAUDE.md crystal -- there are currently ZERO such sub-operators in this domain (Agent Map: '(no sub-operators yet)'), so zero real invocations is the EXPECTED, honest state, not a broken rule. A host-level Agent-tool spawn (a platform primitive, external to the framework's own code) is category-distinct, covered by R-host-spawn-leaves-trace (hotam-dev). The claim itself stays a single atomic assertion (R-requirement-claim-is-atomic). PROSE (not ENFORCED): no enforcer exists in the Go port. The original WHY stands: every explicit spawn must leave a durable runtime trace so the isolation discipline (R-parallel-mutating-agents-use-worktree) is auditable.",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "ai-agent",
+  "status": "SETTLED"
+}

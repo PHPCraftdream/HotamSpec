@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-ticket-carries-history",
+  "claim": "Every ticket shall carry an append-only ## History section in which each mutation (create, status move, comment, text change) records one machine-recognisable entry, with a text change snapshotting the prior text.",
+  "why": "Not yet ported in the Go port. The historical mechanism was the ticket_* tool family (tools/ticket_create.py, ticket_move.py, ticket_comment.py, ticket_edit.py): every ticket_* mutator appended exactly one History line; ticket_edit snapshotted the OLD title/body into that line so the edit trail survived the edit. All ticket-* tools are Declared (not ported) in methodology.Tools, so neither the on-disk ticket format nor the History-append mechanism exists in the Go CLI today. The steward's original intent still stands: status history AND text-change history should be kept automatically so a ticket's audit trail is durable across mutations. When the ticket engine is ported to Go, each mutator (create/move/comment/edit) must append exactly one History entry, with ticket_edit snapshotting the prior title/body. PROSE (not ENFORCED): no enforcer exists in the Go port (the historical mutation tests were tests/test_tool_ticket_create.py, test_tool_ticket_move.py, test_tool_ticket_comment.py, test_tool_ticket_edit.py — all Python-only).",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

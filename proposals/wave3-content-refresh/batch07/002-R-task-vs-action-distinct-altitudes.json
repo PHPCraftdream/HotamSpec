@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-task-vs-action-distinct-altitudes",
+  "claim": "The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged.",
+  "why": "SETTLED (P9): the discipline is structural by omission. Hotam-Spec's framework has NO Task type — only the harness Finding (internal/diagnose/finding.go: the typed instruction a what-now Action carries, with Condition/Target/Imperative/Advisory fields). Process.steps carry a forward-compat prose `invokes` field (not a Task type) so the behavioral altitude stays separable from the harness altitude. The two are typed differently by construction: Finding is the harness's typed instruction emitted by diagnose.AllFindings / DiagnoseSignals; any future Task would be a domain-modeled work item under the §Process aspect (internal/ontology/process.go). The altitudes cannot collapse because they live in different namespaces. Implementation: internal/diagnose/finding.go (Finding) + internal/ontology/process.go (Process.steps.invokes) + docs/gen/CONSTITUTION.md.",
+  "source_refs": [
+    "internal/diagnose/finding.go",
+    "internal/ontology/process.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

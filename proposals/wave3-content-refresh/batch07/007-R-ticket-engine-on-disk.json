@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-ticket-engine-on-disk",
+  "claim": "Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.",
+  "why": "Not yet ported in the Go port. The historical mechanism was the ticket_* tool family (tools/ticket_create.py, ticket_move.py): a ticket was a committed file whose status was its folder, so a status change was a visible file move with a git footprint; JSON-between-sentinels frontmatter kept the machine header exact under a stdlib-only parser (R-core-imports-stdlib-or-hotam-spec-only). All ticket-* tools (ticket_create, ticket_move, ticket_edit, ticket_comment, ticket_list, ticket_show) are Declared (not ported) in methodology.Tools, so neither the on-disk ticket format nor the folder-move lifecycle exists in the Go CLI today. The steward's original WHY stands: a chat-based queue evaporates between sessions; a committed file whose status is its folder makes a status change a visible file move with a git footprint. When the ticket engine is ported to Go, the format (tickets/<status>/T-<n>.md with JSON-frontmatter header + Markdown body) and the folder-as-status lifecycle should be preserved. PROSE (not ENFORCED): no enforcer exists in the Go port (the historical engine tests were tests/test_tool_ticket_create.py, test_tool_ticket_move.py — all Python-only).",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

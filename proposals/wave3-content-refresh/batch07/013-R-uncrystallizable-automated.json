@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-uncrystallizable-automated",
+  "claim": "Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type.",
+  "why": "M30. DECIDED 2026-06-30: human judgment, not automated. Rationale: R-uncrystallizable-is-missing-type (SETTLED P6) already establishes that the operator records the signal as a node; the §Conscience property-sweep surfaces the meta-signal structurally when a class of contradictions cannot be expressed by existing critical-core invariants. Automating the type-creation decision would violate R-ai-presents-not-decides. The whole audit-backlog-residue checkpoint pattern + the DRAFT queue IS the recording mechanism. The steward is the decider; the graph is the recorder. In the Go port the §Conscience concept exists as methodology prose (internal/methodology/sections_data.go: §Conscience section, noting 'go test ./internal/invariants/...' as the conceptual sweep over the critical-core invariants named in internal/generator/constitution.go criticalCoreNames). The historical Python property-test sweep (test_conscience.py, a Hypothesis-based property test over CRITICAL_CORE_INVARIANTS) was NOT ported to Go: there is no equivalent Go test that property-sweeps the critical core to flag a class of contradictions no existing invariant can express. The §Conscience concept-map entry reflects this (0 checks, tests counted from static data, no mapped definition). The human-judgment core of this claim is unchanged and inherently unautomatable: the operator records the signal as a graph node, the steward decides. STRUCTURAL / INHERENTLY_PROSE: the claim's own nature is a human-judgment decision boundary that no machine check_* can honestly enforce (R-enforceability-kind-declared).",
+  "source_refs": [
+    "internal/methodology/sections_data.go",
+    "internal/generator/constitution.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-02-12",
+  "owner": "framework-reviewer",
+  "status": "SETTLED"
+}

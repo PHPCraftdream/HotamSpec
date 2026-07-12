@@ -69,7 +69,7 @@ Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-im
 
 **BUDGET** (R-working-vs-substrate-budget):
   Claim: The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded.
-  Why: SETTLED (P8): the P8 REFLECTION band emits the over-budget Action sourced FROM the operator's budget field, measuring only the live graph nodes (requirements+conflicts+assumptions) — the substrate itself is never counted. Bounding the substrate would punish the very act — crystallizing — that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. Implementation: tools/what_now.py + tools/tick.py.
+  Why: SETTLED (P8): in the Go port the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live graph nodes -- graphSize(g) = len(g.Requirements) + len(g.Conflicts) + len(g.Assumptions) -- never the crystallized substrate. When an operator's NODE_COUNT measure exceeds its budget limit, it emits a Finding (Condition: reflect_over_budget_operators) telling the operator to crystallize first (R-crystallize-before-split) and, if still over, delegate a sub-domain (R-context-bounded-delegation). This Finding is composed by AllFindings (internal/diagnose/finding.go), surfaced by `hotam what-now`, and rendered into the LIVE-STATE budget line by BuildLiveState (internal/generator/livestate.go) on every gen-spec / land. Bounding the substrate would punish the very act -- crystallizing -- that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. The CRYSTAL_CHARS measure (when an operator's budget uses chars instead of node count) is rendered in the LIVE-STATE crystal/budget line (internal/generator/livestate.go) from the resident CLAUDE.md char count. PROSE (not ENFORCED): the over-budget predicate is a diagnosis signal (advisory Finding), not a gate -- it fires when budget is exceeded but does not block a write; the historical enforcer test_reflection.py was Python-only.
 
 ## 5. The conscience
 
@@ -145,7 +145,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | `R-requirement-enforced` | ENFORCED | A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt). |
 | **Loop machinery** | | |
 | `R-active-loop-playbooks` | PROSE | Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/. |
-| `R-verify-closure-per-action` | PROSE | After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis. |
+| `R-verify-closure-per-action` | PROSE | After an applied proposal lands (write + regen), the system shall verify the action that triggered the proposal is no longer present in the post-apply what-now diagnosis. |
 | **Conscience** | | |
 | `R-critical-core-scope` | ENFORCED | The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared. |
 | `R-uncrystallizable-is-missing-type` | STRUCTURAL | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
