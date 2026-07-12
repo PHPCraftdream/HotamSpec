@@ -236,9 +236,10 @@ func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
 }
 
 // TestVersion_DefaultAndLdflagsOverride checks both a plain (default
-// version = "dev") build and one with -ldflags "-X main.version=..." print
-// the expected `version`/`--version` string. The plain build is shared
-// (buildSharedHotamBinary); only the ldflags build is specific to this test.
+// version = "dev") build and one with -ldflags "-X main.version=..."
+// (plus commit/buildDate) print the expected `version`/`--version` line.
+// The plain build is shared (buildSharedHotamBinary); only the ldflags build
+// is specific to this test.
 // See external_e2e_test.go for the full external e2e which also uses the
 // shared binary.
 func TestVersion_DefaultAndLdflagsOverride(t *testing.T) {
@@ -249,6 +250,8 @@ func TestVersion_DefaultAndLdflagsOverride(t *testing.T) {
 	repoRoot := repoRootForTest(t)
 	binDir := t.TempDir()
 
+	const defaultLine = "hotam dev (commit: unknown, built: unknown)"
+
 	// Default (no ldflags) build is shared across this package's tests
 	// (see testbinary_test.go) — only the ldflags-injected build below is
 	// specific to this test and needs its own `go build`.
@@ -257,19 +260,22 @@ func TestVersion_DefaultAndLdflagsOverride(t *testing.T) {
 	if err != nil {
 		t.Fatalf("hotam version: %v\n%s", err, out)
 	}
-	if strings.TrimSpace(string(out)) != "hotam dev" {
-		t.Errorf("hotam version = %q, want %q", strings.TrimSpace(string(out)), "hotam dev")
+	if strings.TrimSpace(string(out)) != defaultLine {
+		t.Errorf("hotam version = %q, want %q", strings.TrimSpace(string(out)), defaultLine)
 	}
 	out, err = exec.Command(binPath, "--version").CombinedOutput()
 	if err != nil {
 		t.Fatalf("hotam --version: %v\n%s", err, out)
 	}
-	if strings.TrimSpace(string(out)) != "hotam dev" {
-		t.Errorf("hotam --version = %q, want %q", strings.TrimSpace(string(out)), "hotam dev")
+	if strings.TrimSpace(string(out)) != defaultLine {
+		t.Errorf("hotam --version = %q, want %q", strings.TrimSpace(string(out)), defaultLine)
 	}
 
+	// Inject all three ldflags vars to verify the full wiring.
 	binPathLdflags := filepath.Join(binDir, "hotam-ldflags"+filepath.Ext(binPath))
-	buildLd := exec.Command("go", "build", "-ldflags", "-X main.version=v0.9.9", "-o", binPathLdflags, "./cmd/hotam")
+	buildLd := exec.Command("go", "build", "-ldflags",
+		"-X main.version=v0.9.9 -X main.commit=abc1234 -X main.buildDate=2026-01-02",
+		"-o", binPathLdflags, "./cmd/hotam")
 	buildLd.Dir = repoRoot
 	if out, err := buildLd.CombinedOutput(); err != nil {
 		t.Fatalf("go build (ldflags version): %v\n%s", err, out)
@@ -278,7 +284,8 @@ func TestVersion_DefaultAndLdflagsOverride(t *testing.T) {
 	if err != nil {
 		t.Fatalf("hotam-ldflags version: %v\n%s", err, out)
 	}
-	if strings.TrimSpace(string(out)) != "hotam v0.9.9" {
-		t.Errorf("hotam version (ldflags) = %q, want %q", strings.TrimSpace(string(out)), "hotam v0.9.9")
+	const ldflagsLine = "hotam v0.9.9 (commit: abc1234, built: 2026-01-02)"
+	if strings.TrimSpace(string(out)) != ldflagsLine {
+		t.Errorf("hotam version (ldflags) = %q, want %q", strings.TrimSpace(string(out)), ldflagsLine)
 	}
 }

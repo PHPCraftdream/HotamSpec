@@ -6,13 +6,24 @@ import (
 	"strings"
 )
 
-// version is set at build time via:
+// Build-time metadata, injected via -ldflags:
 //
-//	go build -ldflags "-X main.version=v0.1.0" ...
+//	go build -ldflags \
+//	  "-X main.version=v0.1.0 -X main.commit=abc1234 -X main.buildDate=2026-07-12" ...
 //
-// Left as "dev" for local/unreleased builds (go run, plain go build, go install
-// without -ldflags).
-var version = "dev"
+// Left as defaults for local/unreleased builds (go run, plain go build,
+// go install without -ldflags).
+var (
+	version   = "dev"
+	commit    = "unknown"
+	buildDate = "unknown"
+)
+
+// versionString renders the single line printed by `hotam version` /
+// `hotam --version`.
+func versionString() string {
+	return fmt.Sprintf("hotam %s (commit: %s, built: %s)", version, commit, buildDate)
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -24,7 +35,7 @@ func main() {
 	var err error
 	switch cmd {
 	case "version", "--version":
-		fmt.Println("hotam " + version)
+		fmt.Println(versionString())
 		return
 	case "init":
 		err = cmdInit(args)
