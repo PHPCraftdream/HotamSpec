@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-process-opt-in",
+  "claim": "The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

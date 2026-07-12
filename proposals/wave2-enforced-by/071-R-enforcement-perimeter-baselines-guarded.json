@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforcement-perimeter-baselines-guarded",
+  "claim": "The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

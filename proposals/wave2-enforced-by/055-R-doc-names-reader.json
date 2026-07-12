@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-doc-names-reader",
+  "claim": "Every generated doc shall name its reader as an existing Stakeholder id in its header.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_doc_reader_resolves_to_stakeholder"
+  ]
+}

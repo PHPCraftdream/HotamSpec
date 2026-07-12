@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-references-stakeholder",
+  "claim": "An Operator.stakeholder shall reference an existing Stakeholder.id.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_no_dangling_operator_refs"
+  ]
+}

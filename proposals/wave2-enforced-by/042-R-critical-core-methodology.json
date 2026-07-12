@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-critical-core-methodology",
+  "claim": "The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py.",
+  "owner": "domain-user",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_no_dangling_assumption_owner",
+    "check_no_dangling_requirement_owner",
+    "check_no_dangling_requirement_assumptions",
+    "check_no_dangling_requirement_relations",
+    "check_no_dangling_conflict_refs"
+  ]
+}

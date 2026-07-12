@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-layout-evolution",
+  "claim": "Domain content shall live in per-domain directories under domains/\u003cname\u003e/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_domain_manifest_exists_and_importable"
+  ]
+}

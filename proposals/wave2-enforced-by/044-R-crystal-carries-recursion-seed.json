@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-carries-recursion-seed",
+  "claim": "Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope, naming the create_agent → gen_spec → spawn_agent path.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

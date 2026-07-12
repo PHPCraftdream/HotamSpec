@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-goal-type-vs-facet",
+  "claim": "Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE.",
+  "owner": "domain-user",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_typed_anchors_goal"
+  ]
+}

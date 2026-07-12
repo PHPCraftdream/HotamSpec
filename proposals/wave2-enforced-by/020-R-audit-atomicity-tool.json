@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-audit-atomicity-tool",
+  "claim": "An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

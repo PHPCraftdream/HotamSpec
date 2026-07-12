@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-docs-generated-from-requirements",
+  "claim": "Per-topic narrative files under `docs/methodology/atoms/\u003ctopic\u003e.md` shall be generated from SETTLED requirements grouped by topic, with hand-edits forbidden by a meta-test.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

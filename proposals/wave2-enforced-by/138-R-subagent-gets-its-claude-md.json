@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-subagent-gets-its-claude-md",
+  "claim": "A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

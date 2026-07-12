@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-core-imports-stdlib-or-hotam-spec-only",
+  "claim": "Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

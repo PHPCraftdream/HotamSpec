@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-shared-tools-in-spec-tools",
+  "claim": "Tools available to all agents shall live in `spec/tools/`.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

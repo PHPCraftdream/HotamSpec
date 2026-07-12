@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-entity-reuses-lifecycle",
+  "claim": "Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_entity_type_lifecycle_wellformed"
+  ]
+}

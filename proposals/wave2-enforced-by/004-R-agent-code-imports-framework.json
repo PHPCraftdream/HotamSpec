@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-code-imports-framework",
+  "claim": "An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

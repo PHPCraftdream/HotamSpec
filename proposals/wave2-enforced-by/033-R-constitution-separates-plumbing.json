@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-constitution-separates-plumbing",
+  "claim": "The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildFrameworkInvariants_ByteIdenticalToFixture"
+  ]
+}

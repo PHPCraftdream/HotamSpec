@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-recently-rejected-surfaced",
+  "claim": "Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every REJECTED requirement whose why contains 'REJECTED — REPLACES' to surface anti-relitigation evidence before re-derivation.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

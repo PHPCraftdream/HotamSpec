@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-agent-agnostic-core",
+  "claim": "The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

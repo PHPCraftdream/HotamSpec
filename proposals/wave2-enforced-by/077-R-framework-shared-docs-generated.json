@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-framework-shared-docs-generated",
+  "claim": "The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings plus argparse --help output.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildThinkingDocsCountMatchesSections"
+  ]
+}

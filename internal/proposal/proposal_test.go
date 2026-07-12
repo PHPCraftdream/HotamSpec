@@ -74,6 +74,56 @@ func TestApply_Requirement_UpdateAppendsHistory(t *testing.T) {
 	}
 }
 
+// TestApply_Requirement_ClearEnforcedBy covers the wave-2 rebind enabler: a
+// ProposedRequirement UPDATE whose enforced_by is exactly ["<clear>"] empties
+// a previously-populated enforced_by. Without the sentinel this is impossible
+// — coalesceSlice treats an empty incoming slice as "preserve old" (patch
+// semantics), so downgrading ENFORCED → PROSE/STRUCTURAL could not drop the
+// stale enforcer list. See clearSliceSentinel in mutate.go.
+func TestApply_Requirement_ClearEnforcedBy(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].Enforcement = ontology.EnforcementENFORCED
+	g.Requirements[0].EnforcedBy = []string{"test_legacy.py::test_old", "CRITICAL_CORE_INVARIANTS"}
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:          "R-1",
+		Claim:       "claim R-1",
+		Owner:       "sa",
+		Status:      ontology.StatusSETTLED,
+		Enforcement: ontology.EnforcementPROSE,
+		EnforcedBy:  []string{clearSliceSentinel},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.Enforcement != ontology.EnforcementPROSE {
+		t.Errorf("Enforcement = %q, want PROSE", r.Enforcement)
+	}
+	if len(r.EnforcedBy) != 0 {
+		t.Errorf("EnforcedBy = %v, want empty (cleared by sentinel)", r.EnforcedBy)
+	}
+}
+
+func TestApply_Requirement_ClearSentinelMixedWithRealFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:         "R-1",
+		Claim:      "claim R-1",
+		Owner:      "sa",
+		Status:     ontology.StatusSETTLED,
+		EnforcedBy: []string{clearSliceSentinel, "check_typed_anchors"},
+	}
+	assertApplyFails(t, path, p, clearSliceSentinel)
+}
+
 func TestApply_ConflictTransition_Decided(t *testing.T) {
 	t.Parallel()
 	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")

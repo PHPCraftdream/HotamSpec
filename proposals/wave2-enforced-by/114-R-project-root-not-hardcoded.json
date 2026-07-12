@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-project-root-not-hardcoded",
+  "claim": "HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestProjectRoot_Priority_NativeMarkerBeatsPyproject"
+  ]
+}

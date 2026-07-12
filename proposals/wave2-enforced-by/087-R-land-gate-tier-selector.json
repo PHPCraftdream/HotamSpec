@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-gate-tier-selector",
+  "claim": "The per-proposal LAND verify step (tools/apply_proposal.py) shall, by default, run the T1 targeted-enforcer pytest subset resolved by tools/gate.py from the proposal's target enforced_by tuple (plus a small always-run determinism+smoke baseline), instead of the full pytest suite.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestSelectTier1_MultipleChecksUnion"
+  ]
+}

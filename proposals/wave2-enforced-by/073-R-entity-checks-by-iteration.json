@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-entity-checks-by-iteration",
+  "claim": "The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_entity_type_lifecycle_wellformed"
+  ]
+}

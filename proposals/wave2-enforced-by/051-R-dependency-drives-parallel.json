@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-dependency-drives-parallel",
+  "claim": "Independent sub-graphs in the dependency network may be delegated to parallel sub-operators.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestIndependentSubgraphs"
+  ]
+}

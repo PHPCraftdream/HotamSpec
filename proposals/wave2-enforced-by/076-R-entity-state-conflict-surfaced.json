@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-entity-state-conflict-surfaced",
+  "claim": "Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects().",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestEntityStateConflictSuspects"
+  ]
+}

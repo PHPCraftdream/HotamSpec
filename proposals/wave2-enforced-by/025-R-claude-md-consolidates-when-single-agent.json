@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-claude-md-consolidates-when-single-agent",
+  "claim": "While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

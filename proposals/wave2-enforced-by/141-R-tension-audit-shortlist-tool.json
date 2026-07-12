@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-tension-audit-shortlist-tool",
+  "claim": "A tool tools/audit_tensions.py shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

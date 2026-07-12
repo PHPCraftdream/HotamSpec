@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-speculative-aspects-frozen",
+  "claim": "The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

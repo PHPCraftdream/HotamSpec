@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-glossary-drift-stable",
+  "claim": "The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildGlossary_ByteIdenticalToFixture"
+  ]
+}

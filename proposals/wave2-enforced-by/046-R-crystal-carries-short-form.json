@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-carries-short-form",
+  "claim": "The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

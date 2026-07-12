@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-uncertain-assumptions-surface",
+  "claim": "The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestDiagnoseSignals_P4UncertainAgingHighFanOut"
+  ]
+}

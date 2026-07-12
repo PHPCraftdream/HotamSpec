@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-core-periphery-import-ratchet",
+  "claim": "A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

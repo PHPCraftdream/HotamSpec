@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-spawn-log-carries-isolation",
+  "claim": "Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

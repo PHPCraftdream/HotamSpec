@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-crystal-embeds-thinking-distilled",
+  "claim": "The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (via short_form) plus a path link to spec/docs/thinking/\u003cslug\u003e.md, not a multi-line RULE+WHY distillate.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-constituting-requirements-converge",
+  "claim": "The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_constituting_not_in_unresolved_conflict"
+  ]
+}

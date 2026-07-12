@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-overlap-single-presenter",
+  "claim": "Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_scoped_node_has_single_presenter"
+  ]
+}

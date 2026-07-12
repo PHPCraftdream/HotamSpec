@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-speak-by-reference",
+  "claim": "An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_section_anchors_known"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-prompt-from-substrate",
+  "claim": "The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildConstitution_ByteIdenticalToFixture"
+  ]
+}

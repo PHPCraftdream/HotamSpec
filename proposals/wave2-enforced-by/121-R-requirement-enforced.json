@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-requirement-enforced",
+  "claim": "A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt).",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_enforced_names_invariant"
+  ]
+}

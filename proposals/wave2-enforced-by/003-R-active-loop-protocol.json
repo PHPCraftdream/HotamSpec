@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-active-loop-protocol",
+  "claim": "Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestProposedStructs_JSONTagsRoundTrip"
+  ]
+}

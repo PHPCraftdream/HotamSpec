@@ -266,13 +266,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_apply_proposal.py"
+        "TestApply_Requirement_UpdateAppendsHistory"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -281,6 +281,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_apply_proposal.py]→[TestApply_Requirement_UpdateAppendsHistory]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -299,15 +304,13 @@
           "target": "R-active-loop-playbooks"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_playbooks_doc.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -316,6 +319,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_playbooks_doc.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -364,13 +372,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_proposal.py"
+        "TestProposedStructs_JSONTagsRoundTrip"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -379,6 +387,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_proposal.py]→[TestProposedStructs_JSONTagsRoundTrip]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -399,16 +412,13 @@
           "target": "R-agent-imports-framework"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir",
-        "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -417,6 +427,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_i…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -473,15 +488,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_every_agent_declares_purpose"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -490,6 +503,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -564,15 +582,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_agent_has_tools_subdir",
-        "test_tool_create_agent.py::test_creates_required_files",
-        "test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools"
+        "check_agent_has_tools_subdir"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -581,6 +597,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on…→[check_agent_has_tools_subdir]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -623,14 +644,13 @@
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_agent_has_agents_subdir",
-        "check_agent_has_docs_subdir",
-        "test_tool_create_agent.py"
+        "check_agent_has_docs_subdir"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -639,6 +659,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_agent_has_agents_subdir, check_agent_has_docs_subdir, test_tool_create_agent.py]→[check_agent_has_agents_subdir, check_agent_has_docs_subdir]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -686,15 +711,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_agent_map.py"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -703,6 +726,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -720,13 +748,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_what_now.py"
+        "TestTopAction_RealGraph"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -735,6 +763,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_what_now.py]→[TestTopAction_RealGraph]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -750,15 +783,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_domain_isolation_p17.py::test_agent_shared_docs_block_present"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -767,6 +798,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_domain_isolation_p17.py::test_agent_shared_docs_block_present]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -782,15 +818,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_agent_scoped_constitution.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -799,6 +833,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -853,14 +892,13 @@
         "check_typed_anchors_process",
         "check_typed_anchors_goal",
         "check_typed_anchors_entity",
-        "check_section_anchors_known",
-        "test_glossary_sync.py"
+        "check_section_anchors_known"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -869,6 +907,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…→[check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -928,18 +971,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_assumption_status_valid",
-        "test_assumption_transition.py::test_implements_is_valid_assumption_state",
-        "test_assumption_transition.py::test_implements_requires_signoff",
-        "test_assumption_transition.py::test_implements_transition_directions_apply",
-        "test_assumption_transition.py::test_implements_status_valid_invariant",
-        "test_assumption_transition.py::test_implements_neither_ages_nor_falls_out"
+        "check_assumption_status_valid"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -948,6 +986,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_assumption_status_valid, test_assumption_transition.py::test_implements_is_valid_assumption_state, test_assumption_transition.py::test_impleme…→[check_assumption_status_valid]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -968,17 +1011,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_assumption_transition.py::test_validate_uncertain_needs_no_signoff",
-        "test_assumption_transition.py::test_validate_dead_and_holds_require_signoff",
-        "test_assumption_transition.py::test_holds_uncertain_dead_cycle",
-        "test_assumption_transition.py::test_transition_missing_assumption_is_refused",
-        "test_assumption_transition.py::test_dead_transition_surfaces_drift_fallout"
+        "TestApply_AssumptionTransition_Dead"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -987,6 +1026,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_assumption_transition.py::test_validate_uncertain_needs_no_signoff, test_assumption_transition.py::test_validate_dead_and_holds_require_signoff…→[TestApply_AssumptionTransition_Dead]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1011,16 +1055,13 @@
           "target": "R-check-method-is-atomic"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline",
-        "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -1029,6 +1070,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_base…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1049,15 +1095,13 @@
           "target": "R-backend-scope"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_attention_core.py::test_core_names_no_platform_token"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-04",
-      "settled_at": "2026-07-04",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-04",
       "review_after": "2027-01-04",
       "evidence": [],
@@ -1066,6 +1110,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py::test_core_names_no_platform_token]→[]; settled_at: 2026-07-04→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1086,15 +1135,13 @@
           "target": "R-sensorium-committed"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_attention_claude_adapter.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-04",
-      "settled_at": "2026-07-04",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-04",
       "review_after": "2027-01-04",
       "evidence": [],
@@ -1103,6 +1150,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_claude_adapter.py]→[]; settled_at: 2026-07-04→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1118,15 +1170,13 @@
         "A-text-grounded-in-models"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_attention_core.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-04",
-      "settled_at": "2026-07-04",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-04",
       "review_after": "2027-01-04",
       "evidence": [],
@@ -1135,6 +1185,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py]→[]; settled_at: 2026-07-04→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1155,15 +1210,13 @@
           "target": "R-attention-registry"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_attention_core.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-04",
-      "settled_at": "2026-07-04",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-04",
       "review_after": "2027-01-04",
       "evidence": [],
@@ -1172,6 +1225,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py]→[]; settled_at: 2026-07-04→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1187,15 +1245,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_audit_atomicity.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1204,6 +1260,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_audit_atomicity.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1276,22 +1337,13 @@
       "why": "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. tools/create_axis.py now exists: it reuses confront.py's lexical token/stem overlap scorer against every existing Axis's slug+description, refuses (exit 1) on a score >= threshold (default 0.35, naming the nearest existing axis), and admits only via --force-new '<justification>' which is folded into the landed proposal's why field (never a silent override). Exact-slug duplicates are refused unconditionally (no --force-new escape -- that is re-declaration, not creation). ENFORCED by spec/tests/test_tool_create_axis.py covering: positive (novel axis passes), negative (near-duplicate refused, exit != 0, nearest match named), force-new override path (justification recorded), exact-slug duplicate always refused, and the apply-side writer (_apply_axis_to_source: insert + duplicate-slug refusal).",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper",
-        "tests/test_tool_create_axis.py::test_near_duplicate_refused",
-        "tests/test_tool_create_axis.py::test_near_duplicate_refusal_names_nearest",
-        "tests/test_tool_create_axis.py::test_exact_slug_duplicate_always_refused_even_with_force",
-        "tests/test_tool_create_axis.py::test_force_new_overrides_refusal",
-        "tests/test_tool_create_axis.py::test_force_new_justification_recorded",
-        "tests/test_tool_create_axis.py::test_writer_inserts_new_axis",
-        "tests/test_tool_create_axis.py::test_writer_refuses_duplicate_slug"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1300,6 +1352,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper, tests/test_tool_create_axis.py::test_near_duplicate_refused, tests/test_tool_crea…→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1530,13 +1587,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_reflection.py"
+        "TestBuildLiveState_RendersOnFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1545,6 +1602,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_reflection.py]→[TestBuildLiveState_RendersOnFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1567,14 +1629,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_operator.py"
+        "check_operator_within_budget"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1583,6 +1644,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_operator_within_budget, test_operator.py]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1598,15 +1664,13 @@
         "A-text-grounded-in-models"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1615,6 +1679,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1671,15 +1740,13 @@
           "target": "R-root-claude-md-contains-domain-crystal"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-01",
-      "settled_at": "2026-07-01",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-01",
       "review_after": "2027-01-01",
       "evidence": [],
@@ -1688,6 +1755,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-07-01→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1705,13 +1777,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_docs_gen.py::test_claude_md_live_state_up_to_date"
+        "TestBuildLiveState_RendersOnFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1720,6 +1792,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_docs_gen.py::test_claude_md_live_state_up_to_date]→[TestBuildLiveState_RendersOnFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1735,16 +1812,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_hand_written_note_in_template_survives_regen",
-        "test_claude_md_template.py::test_regen_byte_identical"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-01",
-      "settled_at": "2026-07-01",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-01",
       "review_after": "2027-01-01",
       "evidence": [],
@@ -1753,6 +1827,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_hand_written_note_in_template_survives_regen, test_claude_md_template.py::test_regen_byte_identical]→[]; settled_at: 2026-07-01→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1807,21 +1886,13 @@
           "target": "R-land-tier-trace"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_gate_status.py::test_t1_then_t2_is_satisfied",
-        "test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied",
-        "test_tool_gate_status.py::test_only_t1_records_never_t2_is_not_satisfied",
-        "test_tool_gate_status.py::test_only_t2_records_is_satisfied",
-        "test_tool_gate_status.py::test_mixed_only_t1_after_last_t2_are_unverified",
-        "test_tool_gate_status.py::test_cli_exit_0_on_satisfied",
-        "test_tool_gate_status.py::test_cli_exit_1_on_not_satisfied"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -1830,6 +1901,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_gate_status.py::test_t1_then_t2_is_satisfied, test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied, test_tool_gate_status.py::test_o…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1843,17 +1919,13 @@
       "why": "The C-8600b1b8 lesson: all six Conflict nodes in domains/hotam-spec-self/graph.py bind axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so _find_conflict_call's literal-only matching made every existing Conflict unaddressable and the standing P3 CONFLICT_STALLED action mechanically unlandable. Fixed by folding module/function-level `name = \"literal\"` assignments (_collect_string_assignments) with ambiguous rebindings dropped conservatively; literal support unchanged. This repairs the ACT half of the mediation loop for conflict transitions (R-active-loop-apply-tool).",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs",
-        "test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addressable",
-        "test_apply_proposal.py::test_all_real_domain_conflicts_are_addressable"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -1862,6 +1934,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs, test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addre…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -1919,14 +1996,13 @@
       "enforced_by": [
         "check_conflict_has_axis",
         "check_conflict_has_context",
-        "check_conflict_has_steward",
-        "test_invariants.py::test_conflicts_with_is_not_a_relation_kind"
+        "check_conflict_has_steward"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -1935,6 +2011,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward, test_invariants.py::test_conflicts_with_is_not_a_relation_kind]→[check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2079,14 +2160,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_constituting_not_in_unresolved_conflict",
-        "test_invariants.py::test_constituting_convergence_fires_on_self_host_detected"
+        "check_constituting_not_in_unresolved_conflict"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2095,6 +2175,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_constituting_not_in_unresolved_conflict, test_invariants.py::test_constituting_convergence_fires_on_self_host_detected]→[check_constituting_not_in_unresolved_conflict]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2113,14 +2198,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_constitution.py::test_constitution_is_index",
-        "test_constitution.py::test_constitution_lists_all_settled"
+        "TestBuildConstitution_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -2129,6 +2213,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_constitution.py::test_constitution_is_index, test_constitution.py::test_constitution_lists_all_settled]→[TestBuildConstitution_ByteIdenticalToFixture]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2144,15 +2233,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_constitution.py::test_constitution_partitions_all_settled",
-        "test_constitution.py::test_constitution_pointer_to_framework_invariants",
-        "test_constitution.py::test_framework_invariants_md_up_to_date"
+        "TestBuildFrameworkInvariants_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -2161,6 +2248,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_constitution.py::test_constitution_partitions_all_settled, test_constitution.py::test_constitution_pointer_to_framework_invariants, test_consti…→[TestBuildFrameworkInvariants_ByteIdenticalToFixture]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2212,15 +2304,13 @@
           "target": "R-content-free-framework"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2229,6 +2319,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2249,15 +2344,13 @@
           "target": "R-content-free-framework"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2266,6 +2359,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2286,15 +2384,13 @@
           "target": "R-content-free-framework"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2303,6 +2399,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2321,14 +2422,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_domain_manifest_exists_and_importable",
-        "test_tool_create_domain.py::test_creates_required_files"
+        "check_domain_manifest_exists_and_importable"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2337,6 +2437,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2354,14 +2459,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate"
+        "check_operator_within_budget"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2370,6 +2474,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_operator_within_budget, test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2387,17 +2496,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_operator.py::test_check_operator_within_budget_fires",
-        "test_operator.py::test_director_within_budget",
-        "test_operator.py::test_check_operator_within_budget_crystal_chars_fires",
-        "test_operator.py::test_check_operator_within_budget_crystal_chars_green_when_under"
+        "check_operator_within_budget"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2406,6 +2511,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget, test_operato…→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2450,15 +2560,13 @@
           "target": "R-backend-scope"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -2467,6 +2575,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only]→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2482,15 +2595,13 @@
         "A-core-periphery-layering-holds"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-10",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -2499,6 +2610,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2521,7 +2637,6 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_conscience.py",
         "check_no_dangling_assumption_owner",
         "check_no_dangling_requirement_owner",
         "check_no_dangling_requirement_assumptions",
@@ -2532,7 +2647,7 @@
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2541,6 +2656,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_conscience.py, check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dan…→[check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dangling_requirement_re…; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2626,15 +2746,13 @@
           "target": "R-ai-presents-not-decides"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_operator_seed.py::test_mediation_loop_names_real_tools"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -2643,6 +2761,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_mediation_loop_names_real_tools]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2667,15 +2790,13 @@
           "target": "R-sub-agent-crystal-triad"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_operator_seed.py::test_recursion_block_names_spawn_path"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -2684,6 +2805,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_recursion_block_names_spawn_path]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2704,15 +2830,13 @@
           "target": "R-crystal-is-claude-md"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_operator_seed.py::test_role_block_states_scope_and_law"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -2721,6 +2845,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_role_block_states_scope_and_law]→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2734,15 +2863,13 @@
       "why": "Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed and covered exactly this claim (no-mid-word-cutoff, summary-priority, first-sentence fallback) but was never wired into enforced_by -- flipped STRUCTURAL -> ENFORCED, no new code written. Honest scope note: test_short_form.py enforces the short_form() MECHANISM itself; that the crystal generator actually CALLS it everywhere text is rendered is separately covered by the ENFORCED R-operator-crystal-embeds-* family, not re-verified here.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_short_form.py"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -2751,6 +2878,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_short_form.py]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2772,15 +2904,13 @@
           "target": "R-operator-crystal-is-claude-md"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2789,6 +2919,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2810,15 +2945,13 @@
           "target": "R-operator-crystal-is-claude-md"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_embedded_thinking_tools.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2827,6 +2960,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_embedded_thinking_tools.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -2848,15 +2986,13 @@
           "target": "R-operator-crystal-is-claude-md"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_constitution_gen.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -2865,6 +3001,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_constitution_gen.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3073,16 +3214,13 @@
           "target": "R-domain-delegation-as-node"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_delegate.py::test_create_allocates_id_and_writes_file",
-        "test_tool_delegate.py::test_close_sets_done_and_result"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -3091,6 +3229,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_delegate.py::test_create_allocates_id_and_writes_file, test_tool_delegate.py::test_close_sets_done_and_result]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3113,13 +3256,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_dependency_traversal.py::test_disjoint_components_are_parallelizable"
+        "TestIndependentSubgraphs"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3128,6 +3271,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_dependency_traversal.py::test_disjoint_components_are_parallelizable]→[TestIndependentSubgraphs]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3150,13 +3298,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent"
+        "TestDependencyChains"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3165,6 +3313,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent]→[TestDependencyChains]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3243,13 +3396,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_docs_gen.py::test_generator_is_deterministic"
+        "TestGenerator_DoubleRegenerateIsIdentical"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3258,6 +3411,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_docs_gen.py::test_generator_is_deterministic]→[TestGenerator_DoubleRegenerateIsIdentical]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3275,14 +3433,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_domain_director_exists",
-        "test_tool_create_domain.py::test_director_agent_created"
+        "check_domain_director_exists"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3291,6 +3448,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_domain_director_exists, test_tool_create_domain.py::test_director_agent_created]→[check_domain_director_exists]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3315,19 +3477,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_doc_reader_resolves_to_stakeholder",
-        "test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered",
-        "test_invariants.py::test_check_doc_reader_green_when_all_roles_resolve",
-        "test_invariants.py::test_check_doc_reader_fires_on_partial_adoption",
-        "test_invariants.py::test_check_doc_reader_fires_on_dangling_bound_id",
-        "test_invariants.py::test_check_doc_reader_travel_agent_regression",
-        "test_docs_gen.py::test_generated_docs_carry_reader_header"
+        "check_doc_reader_resolves_to_stakeholder"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -3336,6 +3492,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_doc_reader_resolves_to_stakeholder, test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered, test_invariants.py::test_che…→[check_doc_reader_resolves_to_stakeholder]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3351,15 +3512,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_docs_gen.py::test_methodology_atoms_up_to_date"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3368,6 +3527,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_docs_gen.py::test_methodology_atoms_up_to_date]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3463,15 +3627,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_create_domain.py::test_creates_docs_dir"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3480,6 +3642,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_create_domain.py::test_creates_docs_dir]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3533,14 +3700,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_domain_manifest_exists_and_importable",
-        "test_tool_create_domain.py::test_creates_required_files"
+        "check_domain_manifest_exists_and_importable"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3549,6 +3715,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3564,15 +3735,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_framework_claude_md_has_domain_map"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3581,6 +3750,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_has_domain_map]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3596,16 +3770,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain",
-        "test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_domain_open_actions"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -3614,6 +3785,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain, test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_do…→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3655,15 +3831,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_create_domain.py::test_creates_required_files"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3672,6 +3846,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_create_domain.py::test_creates_required_files]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3698,14 +3877,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_domain_manifest_exists_and_importable",
-        "test_tool_create_domain.py::test_creates_required_files"
+        "check_domain_manifest_exists_and_importable"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3714,6 +3892,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3729,15 +3912,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_create_domain.py::test_creates_required_files"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3746,6 +3927,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_create_domain.py::test_creates_required_files]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3761,19 +3947,13 @@
         "A-bootstrap-self-applies"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_framework_scoped_invariants_skipped_when_not_self_hosting",
-        "test_framework_scoped_invariants_run_when_self_hosting",
-        "test_hotam_dev_pulse_has_no_framework_scoped_violations",
-        "test_hotam_spec_self_pulse_unchanged_by_self_hosting_gate",
-        "test_synthetic_non_self_domain_with_framework_checks_not_flagged"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -3782,6 +3962,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_scoped_invariants_skipped_when_not_self_hosting, test_framework_scoped_invariants_run_when_self_hosting, test_hotam_dev_pulse_has_no_…→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3799,16 +3984,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_docs_gen.py::test_requirements_md_up_to_date",
-        "test_docs_gen.py::test_tensions_md_up_to_date",
-        "test_docs_gen.py::test_open_md_up_to_date",
-        "test_docs_gen.py::test_unenforced_md_up_to_date"
+        "TestGenerator_GraphJSONDoubleRegenerateIsIdentical"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3817,6 +3999,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_docs_gen.py::test_requirements_md_up_to_date, test_docs_gen.py::test_tensions_md_up_to_date, test_docs_gen.py::test_open_md_up_to_date, test_do…→[TestGenerator_GraphJSONDoubleRegenerateIsIdentical]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3837,15 +4024,13 @@
           "target": "R-empty-content-is-legitimate"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_what_now.py::test_main_empty_content_prints_calm_banner"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3854,6 +4039,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_what_now.py::test_main_empty_content_prints_calm_banner]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3874,15 +4064,13 @@
           "target": "R-empty-content-is-legitimate"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_docs_gen.py::test_empty_graph_renders_no_content_notice"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3891,6 +4079,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_docs_gen.py::test_empty_graph_renders_no_content_notice]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -3938,15 +4131,13 @@
           "target": "R-empty-content-is-legitimate"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_invariants.py::test_empty_graph_is_wellformed"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -3955,6 +4146,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_invariants.py::test_empty_graph_is_wellformed]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4012,18 +4208,13 @@
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_enforced_by_resolvable",
-        "check_enforced_by_test_has_teeth",
-        "test_invariants.py::test_enforced_by_resolvable_registered",
-        "test_invariants.py::test_enforced_by_typo_fires",
-        "test_invariants.py::test_enforced_by_unknown_check_name_fires",
-        "test_invariants.py::test_enforced_by_real_names_pass",
-        "test_invariants.py::test_enforced_by_resolvable_green_on_seed"
+        "check_enforced_by_test_has_teeth"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -4032,6 +4223,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_enforced_by_resolvable, check_enforced_by_test_has_teeth, test_invariants.py::test_enforced_by_resolvable_registered, test_invariants.py::test…→[check_enforced_by_resolvable, check_enforced_by_test_has_teeth]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4054,14 +4250,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_enforced_names_invariant",
-        "test_docs_gen.py::test_unenforced_md_up_to_date"
+        "check_enforced_names_invariant"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4070,6 +4265,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date]→[check_enforced_names_invariant]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4190,15 +4390,13 @@
           "target": "R-no-hand-edit-graph"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-05",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-05",
       "review_after": "2027-01-05",
       "evidence": [],
@@ -4207,6 +4405,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py]→[]; settled_at: 2026-07-05→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4225,15 +4428,13 @@
           "target": "R-no-hand-edit-graph"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-05",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-05",
       "review_after": "2027-01-05",
       "evidence": [],
@@ -4242,6 +4443,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged]→[]; settled_at: 2026-07-05→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4291,13 +4497,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks"
+        "check_entity_type_lifecycle_wellformed"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4306,6 +4512,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks]→[check_entity_type_lifecycle_wellformed]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4519,15 +4730,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4536,6 +4745,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4553,14 +4767,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_entity_type_lifecycle_wellformed",
-        "test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks"
+        "check_entity_type_lifecycle_wellformed"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4569,6 +4782,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_entity_type_lifecycle_wellformed, test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks]→[check_entity_type_lifecycle_wellformed]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4586,13 +4804,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict"
+        "TestEntityStateConflictSuspects"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4601,6 +4819,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict]→[TestEntityStateConflictSuspects]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4745,14 +4968,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_domain_isolation_p17.py::test_shared_thinking_docs_generated",
-        "test_domain_isolation_p17.py::test_shared_tool_docs_generated"
+        "TestBuildThinkingDocsCountMatchesSections"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4761,6 +4983,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_thinking_docs_generated, test_domain_isolation_p17.py::test_shared_tool_docs_generated]→[TestBuildThinkingDocsCountMatchesSections]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4802,16 +5029,13 @@
       "why": "Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_framework_domain_tiering.py::test_every_test_is_tiered",
-        "test_framework_domain_tiering.py::test_tiers_partition_the_suite"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-05",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-05",
       "review_after": "2027-01-05",
       "evidence": [],
@@ -4820,6 +5044,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_domain_tiering.py::test_every_test_is_tiered, test_framework_domain_tiering.py::test_tiers_partition_the_suite]→[]; settled_at: 2026-07-05→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4843,13 +5072,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_docs_gen.py::test_glossary_md_up_to_date"
+        "TestBuildGlossary_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4858,6 +5087,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_docs_gen.py::test_glossary_md_up_to_date]→[TestBuildGlossary_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4881,13 +5115,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_docs_gen.py::test_glossary_md_up_to_date"
+        "TestBuildGlossary_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4896,6 +5130,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_docs_gen.py::test_glossary_md_up_to_date]→[TestBuildGlossary_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4917,15 +5156,13 @@
           "target": "R-glossary-sync-test"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_glossary_sync.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4934,6 +5171,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_glossary_sync.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -4955,15 +5197,13 @@
           "target": "R-glossary-sync-test"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_glossary_sync.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -4972,6 +5212,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_glossary_sync.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5046,14 +5291,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_goal.py",
         "check_typed_anchors_goal"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -5062,6 +5306,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_goal.py, check_typed_anchors_goal]→[check_typed_anchors_goal]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5154,14 +5403,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_goal.py",
         "check_typed_anchors_goal"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -5170,6 +5418,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_goal.py, check_typed_anchors_goal]→[check_typed_anchors_goal]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5260,14 +5513,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_history_gen.py",
-        "test_docs_gen.py::test_history_md_up_to_date"
+        "TestBuildHistory_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -5276,6 +5528,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date]→[TestBuildHistory_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5298,14 +5555,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_history_gen.py",
-        "test_docs_gen.py::test_history_md_up_to_date"
+        "TestBuildHistory_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -5314,6 +5570,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date]→[TestBuildHistory_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5366,14 +5627,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_tool_gate.py",
-        "test_apply_proposal_gate_wiring.py::test_apply_uses_t1_targeted_selection_when_gate_confident"
+        "TestSelectTier1_MultipleChecksUnion"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -5382,6 +5642,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_tool_gate.py, test_apply_proposal_gate_wiring.py::test_apply_uses_t1_targeted_selection_when_gate_confident]→[TestSelectTier1_MultipleChecksUnion]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5404,20 +5669,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_tool_gate.py::test_fails_closed_on_unresolvable_entry",
-        "test_tool_gate.py::test_fails_closed_on_partially_unresolvable_entries",
-        "test_tool_gate.py::test_fails_closed_on_empty_enforced_by",
-        "test_tool_gate.py::test_fails_closed_on_unknown_target",
-        "test_tool_gate.py::test_fails_closed_on_conflict_target",
-        "test_apply_proposal_gate_wiring.py::test_apply_falls_back_to_full_suite_when_gate_uncertain",
-        "test_apply_proposal_gate_wiring.py::test_apply_rejection_always_uses_full_suite",
-        "test_apply_proposal_gate_wiring.py::test_apply_new_requirement_creation_always_uses_full_suite"
+        "TestSelectTier1_FailClosed_EmptyEnforcedBy"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -5426,6 +5684,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_tool_gate.py::test_fails_closed_on_unresolvable_entry, test_tool_gate.py::test_fails_closed_on_partially_unresolvable_entries, test_tool_gate.p…→[TestSelectTier1_FailClosed_EmptyEnforcedBy]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5446,18 +5709,13 @@
           "target": "R-land-gate-tier-selector"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_land_log_record_shape_t1",
-        "test_apply_proposal_land_log.py::test_land_log_record_shape_t2",
-        "test_apply_proposal_land_log.py::test_land_log_records_closure_exit",
-        "test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -5466,6 +5724,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_record_shape_t1, test_apply_proposal_land_log.py::test_land_log_record_shape_t2, test_apply_proposal_…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5486,15 +5749,13 @@
           "target": "R-land-tier-trace"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -5503,6 +5764,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort]→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5523,15 +5789,13 @@
           "target": "R-land-tier-trace"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_dry_run_writes_no_log"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -5540,6 +5804,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_dry_run_writes_no_log]→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5555,15 +5824,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster",
-        "test_latent_connector_noise_fix.py::test_clusters_partition_suspects",
-        "test_latent_connector_noise_fix.py::test_real_graph_p5_count_equals_cluster_count"
+        "TestLatentConnectorSuspectsAndClusters"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -5572,6 +5839,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster, test_latent_connector_noise_fix.py::test_clusters_partition_suspects, tes…→[TestLatentConnectorSuspectsAndClusters]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5621,13 +5893,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_lifecycle.py"
+        "TestCanonicalLifecyclesSanity"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -5636,6 +5908,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_lifecycle.py]→[TestCanonicalLifecyclesSanity]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5828,19 +6105,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_assumption_machine_checks_syntactic",
-        "test_assumption_machine_check.py::test_registered_in_all_invariants",
-        "test_assumption_machine_check.py::test_compilable_formula_passes",
-        "test_assumption_machine_check.py::test_python_version_formula_passes",
-        "test_assumption_machine_check.py::test_empty_machine_check_is_skipped",
-        "test_assumption_machine_check.py::test_prose_formula_fires_violation",
-        "test_assumption_machine_check.py::test_real_domain_machine_checks_are_syntactic"
+        "check_assumption_machine_checks_syntactic"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -5849,6 +6120,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_assumption_machine_checks_syntactic, test_assumption_machine_check.py::test_registered_in_all_invariants, test_assumption_machine_check.py::te…→[check_assumption_machine_checks_syntactic]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5922,15 +6198,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_pretooluse_graph_guard_denies_graph_py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -5939,6 +6213,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_pretooluse_graph_guard_denies_graph_py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -5959,16 +6238,13 @@
           "target": "R-observation-evidence-scope"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec",
-        "test_no_observation_type_scope.py::test_assumption_is_the_only_belief_carrying_dataclass_by_convention"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -5977,6 +6253,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec, test_no_observation_type_scope.py::test_ass…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6054,15 +6335,13 @@
         "A-text-grounded-in-models"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_open_tickets_band.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -6071,6 +6350,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_open_tickets_band.py]→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6166,17 +6450,13 @@
           "target": "R-operator-crystal-embeds-thinking"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content",
-        "test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference",
-        "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -6185,6 +6465,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content, test_embedded_thinking_tools.py::test_embedded_thinking_bl…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6237,16 +6522,13 @@
           "target": "R-repo-map-generated"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content",
-        "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -6255,6 +6537,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content, test_embedded_thinking_tools.py::test_embedded_thinking_block_…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6304,14 +6591,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_operator.py"
+        "check_operator_within_budget"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6320,6 +6606,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_operator_within_budget, test_operator.py]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6342,14 +6633,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_typed_anchors_operator",
-        "test_operator.py"
+        "check_typed_anchors_operator"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6358,6 +6648,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6412,14 +6707,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_operator_steward_not_self",
-        "test_operator.py::test_check_operator_steward_not_self_fires"
+        "check_operator_steward_not_self"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6428,6 +6722,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires]→[check_operator_steward_not_self]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6446,13 +6745,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_constitution_block_generated"
+        "TestBuildConstitution_ByteIdenticalToFixture"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6461,6 +6760,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_constitution_block_generated]→[TestBuildConstitution_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6476,15 +6780,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_session_start_hook_runs_gen_spec"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6493,6 +6795,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_session_start_hook_runs_gen_spec]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6515,14 +6822,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_no_dangling_operator_refs",
-        "test_operator.py"
+        "check_no_dangling_operator_refs"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6531,6 +6837,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_no_dangling_operator_refs, test_operator.py]→[check_no_dangling_operator_refs]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6548,14 +6859,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_typed_anchors_operator",
-        "test_operator.py"
+        "check_typed_anchors_operator"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6564,6 +6874,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6586,14 +6901,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_scoped_node_has_single_presenter",
-        "test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter"
+        "check_scoped_node_has_single_presenter"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -6602,6 +6916,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_scoped_node_has_single_presenter, test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter]→[check_scoped_node_has_single_presenter]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6699,15 +7018,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_post_compact_hook_runs_gen_spec"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6716,6 +7033,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_post_compact_hook_runs_gen_spec]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6732,15 +7054,12 @@
       ],
       "relations": [],
       "enforcement": "STRUCTURAL",
-      "enforced_by": [
-        "CLAUDE.md§Operator boot ritual",
-        "docs/methodology/discipline.md"
-      ],
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "INHERENTLY_PROSE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6749,6 +7068,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [CLAUDE.md§Operator boot ritual, docs/methodology/discipline.md]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6762,22 +7086,13 @@
       "why": "Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). Landed: spec/.runtime/proposals/ now splits into pending/ (proposal awaiting steward verdict) and applied/ (landed proposal, moved there by tools/apply_proposal.py's apply() on a successful land -- write+regen+verify-tier green, closure advanced when --triggering-kind supplied). Backward compat preserved: files directly under proposals/ (the historical flat layout predating this split) are still treated as pending by pending_proposal_files(). tools/what_now.py gains a P6 PENDING_PROPOSAL band (pending_proposal_actions()) that lists each pending file with its age in days -- CLI-only (main()), deliberately NOT wired into diagnose(g) because diagnose() is pure-over-the-graph and gen_spec.py's generated docs must stay byte-stable (R-deterministic-generation); a filesystem-mtime-derived 'N days' figure would break that. No new graph node type was added -- Presented/Pending stays tooling ephemera in .runtime/ (gitignored), never crystallized substrate.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_pending_proposal_archive.py::test_pending_sees_flat_layout_files",
-        "tests/test_pending_proposal_archive.py::test_pending_sees_pending_subfolder",
-        "tests/test_pending_proposal_archive.py::test_pending_excludes_applied_subfolder",
-        "tests/test_pending_proposal_archive.py::test_apply_success_archives_proposal_file",
-        "tests/test_pending_proposal_archive.py::test_apply_failure_does_not_archive",
-        "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_one_per_file",
-        "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_age_in_days",
-        "tests/test_pending_proposal_archive.py::test_diagnose_never_includes_pending_band"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -6786,6 +7101,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_pending_proposal_archive.py::test_pending_sees_flat_layout_files, tests/test_pending_proposal_archive.py::test_pending_sees_pending_subfo…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -6978,15 +7298,13 @@
           "target": "R-process-aspect-first"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_process.py"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -6995,6 +7313,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_process.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7095,13 +7418,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_process.py"
+        "TestCanonicalLifecyclesSanity"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7110,6 +7433,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_process.py]→[TestCanonicalLifecyclesSanity]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7125,15 +7453,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_project_name.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7142,6 +7468,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_project_name.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7157,14 +7488,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_project_root_not_hardcoded.py::test_no_committed_code_guesses_consumer_root_from_file",
-        "test_project_root_not_hardcoded.py::test_scanner_catches_a_hardcoded_root_negative_control"
+        "TestProjectRoot_Priority_NativeMarkerBeatsPyproject"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-09",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -7178,6 +7508,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_project_root_not_hardcoded.py::test_no_committed_code_guesses_consumer_root_from_file, test_project_root_not_hardcoded.py::test_scanner_catches…→[TestProjectRoot_Priority_NativeMarkerBeatsPyproject]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7193,15 +7528,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_apply_proposal.py::test_apply_conflict_creates_detected_node",
-        "test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape",
-        "test_proposal.py::test_proposed_conflict_target_anchor_is_computed_identity"
+        "TestApply_Conflict_Create"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -7210,6 +7543,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_apply_proposal.py::test_apply_conflict_creates_detected_node, test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape,…→[TestApply_Conflict_Create]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7225,15 +7563,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_tool_apply_proposal_stakeholder.py::test_validate_proposal_dispatches_stakeholder_kind",
-        "test_tool_apply_proposal_stakeholder.py::test_apply_stakeholder_appends_new_node",
-        "test_tool_apply_proposal_stakeholder.py::test_apply_stakeholder_refuses_duplicate_id"
+        "TestApply_Stakeholder"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -7242,6 +7578,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_tool_apply_proposal_stakeholder.py::test_validate_proposal_dispatches_stakeholder_kind, test_tool_apply_proposal_stakeholder.py::test_apply_sta…→[TestApply_Stakeholder]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7279,15 +7620,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_recently_rejected_lists_known_rejections"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7296,6 +7635,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_recently_rejected_lists_known_rejections]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7316,14 +7660,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_reflection.py::test_what_now_sources_reflection_predicates_from_module",
-        "test_reflection.py::test_diagnose_p0_and_advisory_partition_reflection_findings"
+        "TestAllFindings_OrderFollowsRegistry"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -7332,6 +7675,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_reflection.py::test_what_now_sources_reflection_predicates_from_module, test_reflection.py::test_diagnose_p0_and_advisory_partition_reflection_…→[TestAllFindings_OrderFollowsRegistry]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7349,13 +7697,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_rejected_preserved.py"
+        "TestApply_Rejection"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7364,6 +7712,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_rejected_preserved.py]→[TestApply_Rejection]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7410,15 +7763,13 @@
           "target": "R-task-spawn-is-ephemeral"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7427,6 +7778,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7444,14 +7800,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_enforced_names_invariant",
-        "test_docs_gen.py::test_unenforced_md_up_to_date"
+        "check_enforced_names_invariant"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7460,6 +7815,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date]→[check_enforced_names_invariant]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7506,19 +7866,13 @@
       "why": "A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but nothing tracked whether anyone LOOKED at it again -- an unread trigger lets the decision silently ossify while its stated revisit condition may already have come true. tools/mark_revisit_evaluated.py appends a {stamp, conflict, settled_count} record to spec/.runtime/revisit-eval.jsonl when the steward evaluates a marker; the harness reads the last evaluation per conflict and re-surfaces the marker as 'evaluate revisit marker' when never evaluated or stale by more than GENERATIVE_AUDIT_STALE_DELTA SETTLED atoms. The band is CLI-only (never in diagnose(g)) for the same determinism reason as the pending-proposal and generative-audit bands: it reads the filesystem, which gen_spec must not render. Evaluating a marker is an OBSERVATION; re-opening the conflict is a separate ProposedConflict the steward drafts (R-ai-presents-not-decides).",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_when_never_evaluated",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_silent_after_evaluation",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_refires_after_growth",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_never_enters_diagnose"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -7527,6 +7881,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_…→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7568,15 +7927,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_root_claude_md_is_sentinel_only.py"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7585,6 +7942,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_root_claude_md_is_sentinel_only.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7630,15 +7992,13 @@
       "why": "Steward's verbatim need (2026-07-05): real speed must be guarded by code-law; machines differ so no hardcoded constant — first 5 runs calibrate, +20% headroom, per-machine gitignored file. Closes the speed-vs-verification tension (C-ec1ec532 in hotam-dev) with a mediating rule: speed cannot silently regress.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-05",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-05",
       "review_after": "2027-01-05",
       "evidence": [],
@@ -7647,6 +8007,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression]→[]; settled_at: 2026-07-05→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7667,16 +8032,13 @@
           "target": "R-partition-vs-border"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_scope_projection.py::test_project_scope_selects_by_prefix",
-        "test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -7685,6 +8047,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_scope_projection.py::test_project_scope_selects_by_prefix, test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly]→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7705,16 +8072,13 @@
           "target": "R-partition-vs-border"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption",
-        "test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -7723,6 +8087,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption, test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_e…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7758,18 +8127,13 @@
       "why": "Claim refreshed 2026-07-05: the Stop boot_cite hook was removed (R-boot-cite-measured REJECTED per R-agent-conduct-is-rules-not-tests -- form-metric theatre), and the UserPromptSubmit attention_hook (wave 16) was missing from the enumeration. The enumeration now matches the actual generated settings.json exactly. Original WHY stands: hooks lived only in the personal git-ignored settings.local.json, so a fresh clone got no pulse and no graph-guard; the committed settings.json is the portable sensorium.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_setup_hooks.py::test_build_settings_has_universal_events",
-        "test_tool_setup_hooks.py::test_build_settings_commands_are_portable",
-        "test_tool_setup_hooks.py::test_build_settings_covers_every_universal_tool",
-        "test_tool_setup_hooks.py::test_dry_run_writes_nothing"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -7778,6 +8142,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_setup_hooks.py::test_build_settings_has_universal_events, test_tool_setup_hooks.py::test_build_settings_commands_are_portable, test_tool_s…→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7819,13 +8188,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_domain_isolation_p17.py::test_shared_thinking_docs_content"
+        "TestBuildThinkingDocsSemanticCompleteness"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7834,6 +8203,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_thinking_docs_content]→[TestBuildThinkingDocsSemanticCompleteness]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7851,13 +8225,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_domain_isolation_p17.py::test_shared_tool_docs_content"
+        "TestBuildToolDocsSemanticCompleteness"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7866,6 +8240,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_tool_docs_content]→[TestBuildToolDocsSemanticCompleteness]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7881,15 +8260,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_shared_tools_location.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7898,6 +8275,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_shared_tools_location.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7947,15 +8329,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_smoke.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -7964,6 +8344,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_smoke.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -7979,15 +8364,13 @@
         "A-finite-context-operators"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -7996,6 +8379,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields]→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8013,15 +8401,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_glossary_sync.py",
-        "check_section_anchors_known",
-        "test_playbooks_doc.py"
+        "check_section_anchors_known"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8030,6 +8416,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_glossary_sync.py, check_section_anchors_known, test_playbooks_doc.py]→[check_section_anchors_known]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8043,16 +8434,13 @@
       "why": "Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) now makes an inward edit to any frozen file (src/hotam_spec/entity.py; tools/create_agent.py, spawn_agent.py, invoke_agent.py; tools/create_domain.py) fail RED, with the failure message stating explicitly that unfreezing requires a recorded steward act (regenerating the baseline). Prose discipline alone could not detect a silent violation; the hash guard can.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline",
-        "test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_named_frozen_surfaces"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -8061,6 +8449,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline, test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_…→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8110,14 +8503,13 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_reflection.py::test_reflection_emits_dead_assumption_enforcer",
-        "test_conscience.py::test_real_meta_domain_passes_critical_core"
+        "TestReflectDeadAssumptionOnEnforcer_Fires"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8126,6 +8518,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_reflection.py::test_reflection_emits_dead_assumption_enforcer, test_conscience.py::test_real_meta_domain_passes_critical_core]→[TestReflectDeadAssumptionOnEnforcer_Fires]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8185,16 +8582,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_transition_guard_assumption_resolves",
-        "test_entity_invariants.py::test_transition_guard_assumption_resolves_clean",
-        "test_entity_invariants.py::test_transition_guard_assumption_resolves_dangling_fires",
-        "test_entity_invariants.py::test_transition_guard_assumption_dead_assumption_still_visible_in_dependents"
+        "check_transition_guard_assumption_resolves"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8203,6 +8597,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [check_transition_guard_assumption_resolves, test_entity_invariants.py::test_transition_guard_assumption_resolves_clean, test_entity_invariants.py::t…→[check_transition_guard_assumption_resolves]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8387,16 +8786,13 @@
           "target": "R-agent-has-own-crystal"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_agent_scoped_constitution.py",
-        "test_tool_spawn_agent.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-01",
-      "settled_at": "2026-07-01",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-01",
       "review_after": "2027-01-01",
       "evidence": [],
@@ -8405,6 +8801,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py, test_tool_spawn_agent.py]→[]; settled_at: 2026-07-01→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8420,15 +8821,13 @@
         "A-finite-context-operators"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_composite_prompt_contains_crystal_and_task"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8437,6 +8836,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_composite_prompt_contains_crystal_and_task]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8511,16 +8915,13 @@
         "A-finite-context-operators"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_spawn_log_written",
-        "test_tool_spawn_agent.py::test_log_only_writes_row_without_composing_prompt"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -8529,6 +8930,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_spawn_log_written, test_tool_spawn_agent.py::test_log_only_writes_row_without_composing_prompt]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8577,15 +8983,13 @@
           "target": "R-tension-audit-shortlist-tool"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_tool_audit_tensions.py::test_audit_never_writes_graph_py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -8594,6 +8998,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_audit_tensions.py::test_audit_never_writes_graph_py]→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8607,20 +9016,13 @@
       "why": "The framework held tensions well but historically did not FIND them (0 of 8 conflicts machine-surfaced over its whole history; latent-mining covered 0 pairs; 3 axes never fired). confront.py checks ONE candidate claim against reality; this tool closes the missing first-act-of-sight half of the mediation loop by sweeping the WHOLE settled graph. Each surfaced pair is tagged with the signal that found it (POLE axis-pole pull / MODAL prohibition-vs-obligation / NOUN cross-owner overlap) and a suggested axis, so a human can review the shortlist. Deterministic and stdlib-only so the shortlist is reproducible and gate-safe.",
       "assumptions": [],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_tool_audit_tensions.py::test_pole_tension_is_found",
-        "tests/test_tool_audit_tensions.py::test_modal_opposition_is_found",
-        "tests/test_tool_audit_tensions.py::test_empty_graph_is_vacuous",
-        "tests/test_tool_audit_tensions.py::test_two_runs_identical_candidates",
-        "tests/test_tool_audit_tensions.py::test_mediated_pair_is_excluded",
-        "tests/test_tool_audit_tensions.py::test_refine_siblings_excluded"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -8629,6 +9031,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_audit_tensions.py::test_pole_tension_is_found, tests/test_tool_audit_tensions.py::test_modal_opposition_is_found, tests/test_tool_au…→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8647,18 +9054,13 @@
           "target": "R-tension-audit-shortlist-tool"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_what_now.py::test_staleness_never_run_fires",
-        "tests/test_what_now.py::test_staleness_fresh_is_silent",
-        "tests/test_what_now.py::test_staleness_after_growth_fires",
-        "tests/test_what_now.py::test_staleness_never_enters_diagnose"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -8667,6 +9069,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_what_now.py::test_staleness_never_run_fires, tests/test_what_now.py::test_staleness_fresh_is_silent, tests/test_what_now.py::test_stalene…→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8682,15 +9089,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_user_prompt_submit_hook_emits_cipher"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8699,6 +9104,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_user_prompt_submit_hook_emits_cipher]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8714,18 +9124,13 @@
         "A-text-grounded-in-models"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_ticket_create.py",
-        "test_tool_ticket_move.py",
-        "test_tool_ticket_comment.py",
-        "test_tool_ticket_edit.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -8734,6 +9139,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_ticket_create.py, test_tool_ticket_move.py, test_tool_ticket_comment.py, test_tool_ticket_edit.py]→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8749,16 +9159,13 @@
         "A-text-grounded-in-models"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_ticket_create.py",
-        "test_tool_ticket_move.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-03",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-03",
       "review_after": "2027-01-03",
       "evidence": [],
@@ -8767,6 +9174,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_ticket_create.py, test_tool_ticket_move.py]→[]; settled_at: 2026-07-03→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8818,15 +9230,12 @@
         }
       ],
       "enforcement": "STRUCTURAL",
-      "enforced_by": [
-        "tools/apply_proposal.py::apply",
-        "tools/gate.py"
-      ],
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "INHERENTLY_PROSE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-02",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-02",
       "review_after": "2027-01-02",
       "evidence": [],
@@ -8835,6 +9244,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [tools/apply_proposal.py::apply, tools/gate.py]→[]; settled_at: 2026-07-02→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8855,15 +9269,13 @@
           "target": "R-setup-claude-generates-settings"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_derived_requirements.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8872,6 +9284,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_derived_requirements.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8887,16 +9304,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_repo_map.py::test_repo_map_complete",
-        "test_repo_map.py::test_repo_map_tool_xref_present"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -8905,6 +9319,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_repo_map.py::test_repo_map_complete, test_repo_map.py::test_repo_map_tool_xref_present]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -8950,16 +9369,13 @@
           "target": "R-delegation-is-a-file"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "tests/test_tool_delegate.py::test_create_allocates_id_and_writes_file",
-        "tests/test_tool_delegate.py::test_close_sets_done_and_result"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-02",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -8968,6 +9384,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_delegate.py::test_create_allocates_id_and_writes_file, tests/test_tool_delegate.py::test_close_sets_done_and_result]→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9052,17 +9473,13 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "test_uncertain_aging.py::test_uncertain_assumptions_filter",
-        "test_uncertain_aging.py::test_below_threshold_is_silent",
-        "test_uncertain_aging.py::test_at_threshold_surfaces_one_p4_action",
-        "test_uncertain_aging.py::test_holds_assumption_never_ages",
-        "test_uncertain_aging.py::test_real_graph_surfaces_three_uncertain_assumptions"
+        "TestDiagnoseSignals_P4UncertainAgingHighFanOut"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-03",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -9071,6 +9488,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_uncertain_aging.py::test_uncertain_assumptions_filter, test_uncertain_aging.py::test_below_threshold_is_silent, test_uncertain_aging.py::test_a…→[TestDiagnoseSignals_P4UncertainAgingHighFanOut]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9087,15 +9509,12 @@
       ],
       "relations": [],
       "enforcement": "STRUCTURAL",
-      "enforced_by": [
-        "test_conscience.py",
-        "CRITICAL_CORE_INVARIANTS"
-      ],
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "INHERENTLY_PROSE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -9104,6 +9523,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_conscience.py, CRITICAL_CORE_INVARIANTS]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9120,15 +9544,12 @@
       ],
       "relations": [],
       "enforcement": "STRUCTURAL",
-      "enforced_by": [
-        "test_conscience.py",
-        "CRITICAL_CORE_INVARIANTS"
-      ],
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "INHERENTLY_PROSE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -9137,6 +9558,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforced_by: [test_conscience.py, CRITICAL_CORE_INVARIANTS]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9161,16 +9587,13 @@
           "target": "R-measure-context-size"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_context.py::test_absent_stamp_reads_unmeasured",
-        "test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-05",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-05",
       "review_after": "2027-01-05",
       "evidence": [],
@@ -9179,6 +9602,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line]→[]; settled_at: 2026-07-05→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9341,15 +9769,13 @@
         "A-finite-context-operators"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_closure.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -9358,6 +9784,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_closure.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9373,15 +9804,13 @@
         "A-python-stack"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-10",
-      "settled_at": "2026-07-11",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-11",
       "review_after": "2027-01-11",
       "evidence": [],
@@ -9395,6 +9824,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-11; review_after: →2027-01-11",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e]→[]; settled_at: 2026-07-11→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9417,16 +9851,13 @@
           "target": "R-measure-context-size"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_launch_dir_write_scope.py::test_no_committed_code_writes_into_the_host_home",
-        "test_launch_dir_write_scope.py::test_scanner_catches_a_home_write_negative_control"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-05",
-      "settled_at": "2026-07-10",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-10",
       "review_after": "2027-01-10",
       "evidence": [],
@@ -9440,6 +9871,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_launch_dir_write_scope.py::test_no_committed_code_writes_into_the_host_home, test_launch_dir_write_scope.py::test_scanner_catches_a_home_write_…→[]; settled_at: 2026-07-10→2026-07-12",
           "decided_by": ""
         }
       ],
@@ -9460,15 +9896,13 @@
           "target": "R-claude-md-budget-phi-cap"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_reflection.py"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
       "evidence": [],
@@ -9477,6 +9911,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_reflection.py]→[]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
         }
       ],

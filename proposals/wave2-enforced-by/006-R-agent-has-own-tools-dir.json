@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-has-own-tools-dir",
+  "claim": "Each domain-agent shall carry a `tools/` subdirectory holding its private tools.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_agent_has_tools_subdir"
+  ]
+}

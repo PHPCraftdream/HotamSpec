@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-axis-gatekeeper-policy",
+  "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.py), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

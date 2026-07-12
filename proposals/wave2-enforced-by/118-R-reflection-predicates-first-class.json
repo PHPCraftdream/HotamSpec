@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-reflection-predicates-first-class",
+  "claim": "The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined in tool code.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestAllFindings_OrderFollowsRegistry"
+  ]
+}

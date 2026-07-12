@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-history-generated-from-decided",
+  "claim": "docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildHistory_ByteIdenticalToFixture"
+  ]
+}

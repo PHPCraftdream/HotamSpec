@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-graph-py",
+  "claim": "Each `domains/\u003cname\u003e/` owns its `graph.py` defining `build_graph() -\u003e TensionGraph`.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_domain_manifest_exists_and_importable"
+  ]
+}

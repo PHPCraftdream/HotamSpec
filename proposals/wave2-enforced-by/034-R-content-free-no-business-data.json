@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-free-no-business-data",
+  "claim": "The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

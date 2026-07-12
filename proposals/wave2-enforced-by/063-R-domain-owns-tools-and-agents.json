@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-tools-and-agents",
+  "claim": "Each `domains/\u003cname\u003e/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

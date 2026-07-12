@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-revisit-markers-evaluated",
+  "claim": "The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

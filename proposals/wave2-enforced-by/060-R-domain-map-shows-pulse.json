@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-map-shows-pulse",
+  "claim": "The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

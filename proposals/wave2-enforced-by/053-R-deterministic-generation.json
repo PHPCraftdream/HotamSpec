@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-deterministic-generation",
+  "claim": "tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestGenerator_DoubleRegenerateIsIdentical"
+  ]
+}

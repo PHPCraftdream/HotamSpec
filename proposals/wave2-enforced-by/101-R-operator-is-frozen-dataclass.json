@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-is-frozen-dataclass",
+  "claim": "An Operator shall be a frozen dataclass in hotam_spec.operator with typed anchor 'OP-'.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_typed_anchors_operator"
+  ]
+}

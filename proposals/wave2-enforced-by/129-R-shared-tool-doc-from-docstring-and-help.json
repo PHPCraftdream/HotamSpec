@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-shared-tool-doc-from-docstring-and-help",
+  "claim": "Each spec/docs/tools/\u003cbasename\u003e.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between sentinels.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildToolDocsSemanticCompleteness"
+  ]
+}

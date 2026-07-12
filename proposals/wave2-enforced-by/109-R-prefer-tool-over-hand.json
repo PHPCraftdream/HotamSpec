@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-prefer-tool-over-hand",
+  "claim": "The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

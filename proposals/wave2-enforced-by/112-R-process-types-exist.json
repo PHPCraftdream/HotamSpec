@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-process-types-exist",
+  "claim": "hotam_spec.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestCanonicalLifecyclesSanity"
+  ]
+}

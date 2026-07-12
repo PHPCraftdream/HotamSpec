@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-wellformed",
+  "claim": "A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

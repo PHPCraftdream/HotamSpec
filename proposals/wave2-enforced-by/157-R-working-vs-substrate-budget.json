@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-working-vs-substrate-budget",
+  "claim": "The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-no-observation-type",
+  "claim": "hotam_spec shall define no Observation or Evidence class anywhere in its package -- Assumption remains the ontology's sole belief-carrying node type.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

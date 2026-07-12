@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-unmeasured-cipher-names-host-boundary",
+  "claim": "While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

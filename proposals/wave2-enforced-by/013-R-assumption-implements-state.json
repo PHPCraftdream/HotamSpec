@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-assumption-implements-state",
+  "claim": "An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_assumption_status_valid"
+  ]
+}

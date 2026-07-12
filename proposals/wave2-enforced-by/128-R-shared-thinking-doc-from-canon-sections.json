@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-shared-thinking-doc-from-canon-sections",
+  "claim": "Each spec/docs/thinking/\u003ctopic-slug\u003e.md shall be generated as the union of all framework docstrings carrying Canon: §\u003cTopic\u003e markers, never hand-written.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildThinkingDocsSemanticCompleteness"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-has-docs-dir",
+  "claim": "Every domains/\u003cname\u003e/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

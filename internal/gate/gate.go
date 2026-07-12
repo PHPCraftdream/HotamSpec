@@ -64,14 +64,13 @@ func selectFromRequirement(targetAnchor string, enforcedBy []string) GateResult 
 		}
 	}
 
-	testsDir := defaultInvariantsDir()
-	scan, err := scanTestDir(testsDir)
+	scan, err := buildScan()
 	if err != nil {
 		return GateResult{
 			Confident: false,
 			Reason: fmt.Sprintf(
-				"target %q: could not scan test directory %q: %v — fail-closed to full suite.",
-				targetAnchor, testsDir, err),
+				"target %q: could not scan internal test tree: %v — fail-closed to full suite.",
+				targetAnchor, err),
 		}
 	}
 
@@ -208,6 +207,81 @@ func defaultInvariantsDir() string {
 		return ""
 	}
 	return filepath.Join(filepath.Dir(file), "..", "invariants")
+}
+
+// defaultInternalRoot returns the internal/ directory (the parent of
+// internal/gate). It is the root for the Test*-name half of resolution:
+// mechanism #1 (an enforced_by entry that is a literal Test* function name)
+// matches a Go test function ANYWHERE under internal/**/*_test.go, because a
+// real test enforcer in internal/proposal or internal/generator is just as
+// load-bearing as one in internal/invariants. Mechanism #2 (the check_*
+// literal -> tests map) stays scoped to internal/invariants via
+// defaultInvariantsDir, because check_* string literals appear as real
+// enforcer references only there; elsewhere (gate_test.go, ontology/query
+// fixtures) they appear as TEST FIXTURE DATA, and widening the check_ scan to
+// those would make fake names like "check_full" /
+// "check_nonexistent_fake_check" falsely resolve. See resolveOne.
+func defaultInternalRoot() string {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(file), "..")
+}
+
+// buildScan constructs the resolver's combined view: the check_ literal map
+// comes from internal/invariants only (scanTestDir), and the Test* function
+// name set comes from ALL internal/**/*_test.go (walkTestFuncs). This split
+// is what makes mechanism #1 repo-wide while keeping mechanism #2 free of
+// fixture pollution — see defaultInternalRoot.
+func buildScan() (*testScan, error) {
+	invScan, err := scanTestDir(defaultInvariantsDir())
+	if err != nil {
+		return nil, err
+	}
+	funcSet := make(map[string]struct{})
+	if err := walkTestFuncs(defaultInternalRoot(), funcSet); err != nil {
+		return nil, err
+	}
+	return &testScan{checkToTests: invScan.checkToTests, testFuncs: funcSet}, nil
+}
+
+// walkTestFuncs walks root recursively and collects every top-level Test*
+// function name from *_test.go files into funcSet. It deliberately does NOT
+// collect check_ string literals — those are handled per-directory by
+// scanTestFile (scoped to invariants) to avoid fixture pollution.
+func walkTestFuncs(root string, funcSet map[string]struct{}) error {
+	return filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		return collectTestFuncNames(path, funcSet)
+	})
+}
+
+// collectTestFuncNames parses one test file and adds its top-level Test*
+// function names to funcSet (the Test*-only half of scanTestFile, without the
+// check_ literal collection that scanTestFile also performs).
+func collectTestFuncNames(path string, funcSet map[string]struct{}) error {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, path, nil, 0)
+	if err != nil {
+		return err
+	}
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Recv != nil {
+			continue
+		}
+		if !strings.HasPrefix(fn.Name.Name, "Test") {
+			continue
+		}
+		funcSet[fn.Name.Name] = struct{}{}
+	}
+	return nil
 }
 
 func keysSorted(set map[string]struct{}) []string {

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-tree-hierarchy",
+  "claim": "The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

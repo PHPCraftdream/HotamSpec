@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-root-claude-md-is-sentinel-only",
+  "claim": "The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

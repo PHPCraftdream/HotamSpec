@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-ticket-engine-on-disk",
+  "claim": "Work items shall be tracked as durable on-disk tickets under tickets/\u003cstatus\u003e/T-\u003cn\u003e.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

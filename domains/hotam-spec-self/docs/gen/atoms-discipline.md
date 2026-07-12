@@ -13,7 +13,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Why.** SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_section_anchors_known fires when any §-token in framework docstrings is absent from the glossary — an unresolved anchor. test_glossary_sync.py cross-checks the same invariant at test-time. Together these three make the anchor discipline machine-checkable at every invariant run.
 
-**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_typed_anchors_entity`, `check_section_anchors_known`, `test_glossary_sync.py`
+**Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_typed_anchors_entity`, `check_section_anchors_known`
 
 **Last reviewed.** 2026-06-30
 
@@ -22,6 +22,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…→[check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…; settled_at: 2026-06-30→2026-07-12
 
 ## `R-anchor-taxonomy` (ENFORCED)
 
@@ -73,8 +74,6 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Why.** Today's third architectural principle. Cannot be algorithmically enforced (no AST detection of 'you did it by hand'); STRUCTURAL via prose discipline in the operator-prompt + a generated discipline doc. Use SETTLED (not DRAFT) — the principle is now in force; the structural enforcement is the prose.
 
-**Enforced by:** `CLAUDE.md§Operator boot ritual`, `docs/methodology/discipline.md`
-
 **Last reviewed.** 2026-06-30
 
 **Review after.** 2026-12-30
@@ -82,15 +81,14 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [CLAUDE.md§Operator boot ritual, docs/methodology/discipline.md]→[]; settled_at: 2026-06-30→2026-07-12
 
-## `R-shared-tools-in-spec-tools` (ENFORCED)
+## `R-shared-tools-in-spec-tools` (PROSE)
 
 **Claim.** Tools available to all agents shall live in `spec/tools/`.
 
 **Why.** Scoping rule, structurally enforced by file layout. SETTLED — already true today.
 
-**Enforced by:** `test_shared_tools_location.py`
-
 **Last reviewed.** 2026-06-30
 
 **Review after.** 2026-12-30
@@ -98,6 +96,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_shared_tools_location.py]→[]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-speak-by-reference` (ENFORCED)
 
@@ -105,7 +104,7 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Why.** SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every SS-anchor cited in framework docstrings resolves in the glossary -- an operator that invents a SS-token immediately fires a P1 STRUCTURE violation. test_glossary_sync.py provides the test-time mirror. docs/playbooks/ mandates that every proposal cites the R-/C-/SS anchor it acts on; test_playbooks_doc.py is the test-time mirror of that doc's presence and content. The SSTick advisory output itself cites anchor ids in every action (target field). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by's third entry was a bare doc path 'docs/playbooks/' rather than a resolvable test reference -- corrected to name the test file that guards that doc, caught by the new check_enforced_by_resolvable invariant.)
 
-**Enforced by:** `test_glossary_sync.py`, `check_section_anchors_known`, `test_playbooks_doc.py`
+**Enforced by:** `check_section_anchors_known`
 
 **Last reviewed.** 2026-06-30
 
@@ -114,3 +113,4 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [test_glossary_sync.py, check_section_anchors_known, test_playbooks_doc.py]→[check_section_anchors_known]; settled_at: 2026-06-30→2026-07-12

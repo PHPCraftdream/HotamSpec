@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-atomicity-ratchet-no-growth",
+  "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

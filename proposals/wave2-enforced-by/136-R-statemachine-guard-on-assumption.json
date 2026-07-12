@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-statemachine-guard-on-assumption",
+  "claim": "A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_transition_guard_assumption_resolves"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-never-lost",
+  "claim": "The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestTopAction_RealGraph"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-delegation-is-a-file",
+  "claim": "Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-\u003cn\u003e.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

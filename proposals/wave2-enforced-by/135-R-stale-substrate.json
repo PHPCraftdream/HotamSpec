@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-stale-substrate",
+  "claim": "Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestReflectDeadAssumptionOnEnforcer_Fires"
+  ]
+}

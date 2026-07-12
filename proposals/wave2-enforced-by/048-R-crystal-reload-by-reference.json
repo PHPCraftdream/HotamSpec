@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-reload-by-reference",
+  "claim": "An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

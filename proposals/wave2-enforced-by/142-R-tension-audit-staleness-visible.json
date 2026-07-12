@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-tension-audit-staleness-visible",
+  "claim": "The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the tension audit has never run or the live SETTLED graph has grown by more than GENERATIVE_AUDIT_STALE_DELTA atoms since the last recorded sweep.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

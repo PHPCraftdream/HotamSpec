@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-glossary-generated",
+  "claim": "A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildGlossary_ByteIdenticalToFixture"
+  ]
+}

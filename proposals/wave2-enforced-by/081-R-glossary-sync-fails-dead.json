@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-glossary-sync-fails-dead",
+  "claim": "The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

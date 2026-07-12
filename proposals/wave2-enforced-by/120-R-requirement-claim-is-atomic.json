@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-requirement-claim-is-atomic",
+  "claim": "Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

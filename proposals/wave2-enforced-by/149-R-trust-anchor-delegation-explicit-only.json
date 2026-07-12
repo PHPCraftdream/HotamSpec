@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-trust-anchor-delegation-explicit-only",
+  "claim": "Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default, recorded durably as a versioned file under delegations/DG-\u003cn\u003e.md (created and closed only via spec/tools/delegate.py, git history as the audit trail).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-self-hosting-flag",
+  "claim": "Framework-jurisdiction invariants (FRAMEWORK_SCOPED_INVARIANTS) shall run only against a graph whose manifest declares SELF_HOSTING=True.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

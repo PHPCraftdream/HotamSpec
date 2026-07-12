@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-history-generated-from-rejected",
+  "claim": "docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildHistory_ByteIdenticalToFixture"
+  ]
+}

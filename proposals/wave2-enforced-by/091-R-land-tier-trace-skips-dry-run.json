@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-tier-trace-skips-dry-run",
+  "claim": "A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

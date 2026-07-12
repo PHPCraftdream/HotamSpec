@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-dependency-drives-sequential",
+  "claim": "Dependency chains in the network shall be processed sequentially.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestDependencyChains"
+  ]
+}

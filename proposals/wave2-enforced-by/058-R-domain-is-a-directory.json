@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-is-a-directory",
+  "claim": "A business domain is represented as a directory at `domains/\u003cname\u003e/`.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_domain_manifest_exists_and_importable"
+  ]
+}

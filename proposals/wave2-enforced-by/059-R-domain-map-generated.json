@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-map-generated",
+  "claim": "The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/\u003cname\u003e/` with id, description, goals, director, path, atoms-count.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

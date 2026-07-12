@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-verify-closure-per-action",
+  "claim": "After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

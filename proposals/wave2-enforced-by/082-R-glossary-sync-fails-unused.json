@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-glossary-sync-fails-unused",
+  "claim": "The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

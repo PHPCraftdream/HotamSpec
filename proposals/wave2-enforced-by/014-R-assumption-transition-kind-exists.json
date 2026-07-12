@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-assumption-transition-kind-exists",
+  "claim": "The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD) in place via tools/apply_proposal.py, appending the reason to its statement and never deleting the node.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestApply_AssumptionTransition_Dead"
+  ]
+}

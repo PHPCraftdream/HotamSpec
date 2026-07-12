@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-map-generated",
+  "claim": "CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/\u003cname\u003e/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

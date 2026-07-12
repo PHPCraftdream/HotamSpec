@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-uncrystallizable-is-missing-type",
+  "claim": "Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted).",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

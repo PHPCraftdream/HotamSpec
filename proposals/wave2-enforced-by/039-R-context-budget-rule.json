@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-context-budget-rule",
+  "claim": "An operator's RESIDENT working set shall not exceed its context budget (measured by budget.measure — for CRYSTAL_CHARS the char-length of root CLAUDE.md vs the host cap), with any excess flagged as a structural OVERLOADED contradiction by the harness.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_operator_within_budget"
+  ]
+}

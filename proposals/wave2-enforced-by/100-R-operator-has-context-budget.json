@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-has-context-budget",
+  "claim": "An Operator shall carry a ContextBudget with a positive limit and a declared measure.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_operator_within_budget"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-superset-of-diagnose",
+  "claim": "The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

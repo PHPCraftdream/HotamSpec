@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-latent-connectors-cluster-by-assumption",
+  "claim": "The what_now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestLatentConnectorSuspectsAndClusters"
+  ]
+}

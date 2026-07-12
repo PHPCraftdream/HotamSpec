@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforced-by-resolvable",
+  "claim": "Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node-id via the shared enforcer-resolution algorithm, and every bare test_* enforcer shall have real assertions (not a pass-only stub).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_enforced_by_resolvable",
+    "check_enforced_by_test_has_teeth"
+  ]
+}

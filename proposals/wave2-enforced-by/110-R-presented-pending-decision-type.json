@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-presented-pending-decision-type",
+  "claim": "The presented-awaiting-decision state shall live in a dedicated folder (spec/.runtime/proposals/pending/ vs applied/), surfaced by the harness -- not as a new graph node type.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

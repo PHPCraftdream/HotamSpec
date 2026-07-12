@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-scope-overlap-generated",
+  "claim": "When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

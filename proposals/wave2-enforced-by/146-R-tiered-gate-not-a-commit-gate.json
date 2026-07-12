@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-tiered-gate-not-a-commit-gate",
+  "claim": "The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier applies only to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

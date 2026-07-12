@@ -12,4 +12,4 @@ Ported — this is a real `hotam` CLI subcommand; running it does something.
 
 ## Purpose
 
-Usage: hotam inspect [--domain <path>] [--json] [--limit N]. Advisory listing of semantic conflict candidates with evidence (internal/diagnose): shared-assumption clusters, entity-state suspects, lexical claim overlap, axis co-reference. Never gates; exit code always 0.
+Usage: hotam inspect [--domain <path>] [--json] [--limit N] [--min-score N]. Advisory listing of semantic conflict candidates with evidence (internal/diagnose): shared-assumption clusters, entity-state suspects, lexical claim overlap, axis co-reference. --min-score (default 5) suppresses low-signal candidates; 0 shows all. Never gates; exit code always 0.

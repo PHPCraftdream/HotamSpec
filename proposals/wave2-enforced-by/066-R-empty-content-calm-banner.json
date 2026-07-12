@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-calm-banner",
+  "claim": "When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -29,6 +29,31 @@ func coalesceSlice(newVal, oldVal []string) []string {
 	return cp
 }
 
+// clearSliceSentinel is the explicit opt-in marker a proposal author writes in
+// enforced_by to mean "clear this slice to empty" — exactly ["<clear>"]. It
+// exists because coalesceSlice treats an empty incoming slice as "leave the
+// old value alone" (partial-update / patch semantics, asserted by
+// TestApply_Requirement_UpdateAppendsHistory), so without an explicit signal
+// there is no way for a ProposedRequirement UPDATE to empty a populated
+// enforced_by. The wave-2 enforced_by rebind NEEDS that: downgrading a
+// requirement from ENFORCED to PROSE/STRUCTURAL must be able to drop its
+// (now-misleading) stale enforcer list, and the convention for
+// PROSE/STRUCTURAL requirements in this graph is enforced_by == []. The
+// sentinel is consumed during apply (it never reaches graph.json); a proposal
+// that pairs it with other entries, or uses it on the create path, is
+// rejected by validateEnforcedByClearSentinel.
+const clearSliceSentinel = "<clear>"
+
+// resolveEnforcedBy is the enforced_by-specific coalesce: a single-element
+// ["<clear>"] clears to an empty slice; any other non-empty value replaces;
+// empty preserves the old value (patch semantics).
+func resolveEnforcedBy(newVal, oldVal []string) []string {
+	if len(newVal) == 1 && newVal[0] == clearSliceSentinel {
+		return []string{}
+	}
+	return coalesceSlice(newVal, oldVal)
+}
+
 func coalesceRelations(newVal, oldVal []ontology.Relation) []ontology.Relation {
 	if len(newVal) == 0 {
 		return oldVal
@@ -95,8 +120,17 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.Status = p.Status
 		applied.Why = coalesceStr(p.Why, "", existing.Why)
 		applied.Assumptions = coalesceSlice(p.Assumptions, existing.Assumptions)
-		applied.Enforcement = coalesceStr(defaultStr(p.Enforcement, ontology.EnforcementPROSE), ontology.EnforcementPROSE, existing.Enforcement)
-		applied.EnforcedBy = coalesceSlice(p.EnforcedBy, existing.EnforcedBy)
+		// Enforcement coalesce: an empty incoming value preserves the old
+		// (patch semantics); any explicit value — including PROSE, the
+		// CREATE-path default — REPLACES. The previous form
+		// coalesceStr(defaultStr(p.Enforcement, PROSE), PROSE, old) made PROSE
+		// unreachable on UPDATE (it was indistinguishable from "omitted", both
+		// collapsed to the default and preserved the old value), so a
+		// downgrade ENFORCED -> PROSE was impossible. Passing "" as the
+		// defaultVal keeps "omitted == preserve" while letting an explicit
+		// PROSE/STRUCTURAL/ENFORCED take effect.
+		applied.Enforcement = coalesceStr(p.Enforcement, "", existing.Enforcement)
+		applied.EnforcedBy = resolveEnforcedBy(p.EnforcedBy, existing.EnforcedBy)
 		applied.Relations = coalesceRelations(p.Relations, existing.Relations)
 		applied.Enforceability = coalesceStr(defaultStr(p.Enforceability, ontology.EnforceabilityENFORCEABLE), ontology.EnforceabilityENFORCEABLE, existing.Enforceability)
 		applied.MTag = coalesceStr(p.MTag, "", existing.MTag)

@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-proposed-stakeholder-kind-exists",
+  "claim": "The proposal protocol shall include a ProposedStakeholder kind (kind='Stakeholder') that materializes a new Stakeholder node in the active domain's stakeholders tuple via tools/apply_proposal.py, refusing a duplicate id.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestApply_Stakeholder"
+  ]
+}

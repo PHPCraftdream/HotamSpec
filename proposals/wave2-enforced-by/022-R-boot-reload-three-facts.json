@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-boot-reload-three-facts",
+  "claim": "The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildLiveState_RendersOnFixture"
+  ]
+}

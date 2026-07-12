@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-active-loop-apply-tool",
+  "claim": "A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestApply_Requirement_UpdateAppendsHistory"
+  ]
+}

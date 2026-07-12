@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-framework-suite-tiered",
+  "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

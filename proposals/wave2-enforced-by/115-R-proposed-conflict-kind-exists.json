@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-proposed-conflict-kind-exists",
+  "claim": "The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via tools/apply_proposal.py.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestApply_Conflict_Create"
+  ]
+}

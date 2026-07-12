@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-three-cipher-pulse-structurally-injected",
+  "claim": "A UserPromptSubmit hook in .claude/settings.local.json shall extract the three-cipher pulse from the LIVE-STATE block and inject it as additionalContext into every user turn.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "Requirement",
+  "id": "R-anchor-everything",
+  "claim": "Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_typed_anchors_requirement",
+    "check_typed_anchors_assumption",
+    "check_typed_anchors_conflict",
+    "check_typed_anchors_operator",
+    "check_typed_anchors_process",
+    "check_typed_anchors_goal",
+    "check_typed_anchors_entity",
+    "check_section_anchors_known"
+  ]
+}

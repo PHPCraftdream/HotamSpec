@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-scope-is-projection",
+  "claim": "An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-open-tickets-visible",
+  "claim": "The what_now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into diagnose().",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

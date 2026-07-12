@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-wheel-build-atomic-verified",
+  "claim": "A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a name-set self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member names do not match the set of spec/tools/*.py file names on disk (Etap Y, #127 -- upgraded from a bare member-count comparison, which a wheel with the right count of wrong-named files would have passed).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

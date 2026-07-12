@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-free-no-seed-graph",
+  "claim": "The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph().",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

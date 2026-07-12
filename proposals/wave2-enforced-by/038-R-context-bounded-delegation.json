@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-context-bounded-delegation",
+  "claim": "The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_operator_within_budget"
+  ]
+}

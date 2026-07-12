@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-director-agent-required-per-domain",
+  "claim": "Every domain must contain a `director` agent at `domains/\u003cname\u003e/agents/director/` as the entry point operator.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_domain_director_exists"
+  ]
+}

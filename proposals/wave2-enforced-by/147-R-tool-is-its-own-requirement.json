@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-tool-is-its-own-requirement",
+  "claim": "Every tool in spec/tools/ whose module docstring opens with 'Canon: §\u003ctopic\u003e — \u003cclaim\u003e' shall be projected into a SETTLED requirement R-tool-\u003cbasename\u003e with that claim text, enforced by spec/tests/test_tool_\u003cbasename\u003e.py when it exists.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

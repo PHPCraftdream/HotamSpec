@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-budget-measure",
+  "claim": "An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_operator_within_budget"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-check-method-is-atomic",
+  "claim": "Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

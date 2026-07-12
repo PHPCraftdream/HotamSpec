@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-entity-is-declarative",
+  "claim": "The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph().",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

@@ -270,13 +270,21 @@ func TestSelectTier1_RealGraph_AxisControlledVocab(t *testing.T) {
 	}
 }
 
-func TestSelectTier1_RealGraph_PythonEnforcedByFailsClosed(t *testing.T) {
+func TestSelectTier1_PythonEnforcedByFailsClosed(t *testing.T) {
 	t.Parallel()
-	g, err := loader.LoadGraph("../../domains/hotam-spec-self/graph.json")
-	if err != nil {
-		t.Fatalf("LoadGraph: %v", err)
+	// Previously this asserted the behavior against the real graph's
+	// R-active-loop-apply-tool (which carried legacy Python pytest enforced_by).
+	// After the wave-2 enforced_by rebind the real graph no longer has any
+	// SETTLED requirement with a Python enforced_by entry, so the assertion is
+	// rebuilt on a synthetic graph: a Python path / node-id is resolvable by
+	// neither mechanism (not a literal Test* function name, not a check_*
+	// literal), so the gate must fail closed to the full suite.
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-legacy-py", EnforcedBy: []string{"test_apply_proposal.py", "test_tool_create_domain.py::test_creates_required_files"}},
+		},
 	}
-	result := SelectTier1("R-active-loop-apply-tool", g)
+	result := SelectTier1("R-legacy-py", g)
 	if result.Confident {
 		t.Fatalf("expected confident=false for a requirement whose enforced_by is Python test paths, got true: %v", result.NodeIDs)
 	}

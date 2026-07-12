@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-conflict-addressing-resolves-variables",
+  "claim": "tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when locating the Conflict node a proposal addresses.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

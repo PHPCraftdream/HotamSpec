@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-active-loop-playbook-doc",
+  "claim": "At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

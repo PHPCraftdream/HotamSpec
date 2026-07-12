@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-lifecycle-type-exists",
+  "claim": "A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestCanonicalLifecyclesSanity"
+  ]
+}

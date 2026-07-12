@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-docs-gen",
+  "claim": "Each `domains/\u003cname\u003e/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

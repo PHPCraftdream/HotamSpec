@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-machine-check-syntactic",
+  "claim": "Every non-empty Assumption.machine_check shall be a well-formed Python expression (compilable in eval mode), never free prose.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_assumption_machine_checks_syntactic"
+  ]
+}

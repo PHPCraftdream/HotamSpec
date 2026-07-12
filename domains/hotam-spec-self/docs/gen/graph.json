@@ -501,7 +501,7 @@
       ],
       "claim": "The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.",
       "enforced_by": [
-        "test_what_now.py"
+        "TestTopAction_RealGraph"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -510,6 +510,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_what_now.py]→[TestTopAction_RealGraph]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-never-lost",
@@ -526,10 +531,7 @@
       ],
       "claim": "The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte.",
       "enforced_by": [
-        "test_docs_gen.py::test_requirements_md_up_to_date",
-        "test_docs_gen.py::test_tensions_md_up_to_date",
-        "test_docs_gen.py::test_open_md_up_to_date",
-        "test_docs_gen.py::test_unenforced_md_up_to_date"
+        "TestGenerator_GraphJSONDoubleRegenerateIsIdentical"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -538,6 +540,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_docs_gen.py::test_requirements_md_up_to_date, test_docs_gen.py::test_tensions_md_up_to_date, test_docs_gen.py::test_open_md_up_to_date, test_do…→[TestGenerator_GraphJSONDoubleRegenerateIsIdentical]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-drift-structurally-impossible",
@@ -556,8 +563,7 @@
       "enforced_by": [
         "check_conflict_has_axis",
         "check_conflict_has_context",
-        "check_conflict_has_steward",
-        "test_invariants.py::test_conflicts_with_is_not_a_relation_kind"
+        "check_conflict_has_steward"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -566,6 +572,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward, test_invariants.py::test_conflicts_with_is_not_a_relation_kind]→[check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-conflict-is-connector-node",
@@ -601,7 +612,7 @@
       ],
       "claim": "tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.",
       "enforced_by": [
-        "test_docs_gen.py::test_generator_is_deterministic"
+        "TestGenerator_DoubleRegenerateIsIdentical"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -610,6 +621,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_docs_gen.py::test_generator_is_deterministic]→[TestGenerator_DoubleRegenerateIsIdentical]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-deterministic-generation",
@@ -719,7 +735,7 @@
       ],
       "claim": "Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted.",
       "enforced_by": [
-        "test_rejected_preserved.py"
+        "TestApply_Rejection"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -728,6 +744,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_rejected_preserved.py]→[TestApply_Rejection]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-rejected-preserved-not-deleted",
@@ -878,23 +899,19 @@
     {
       "assumptions": [],
       "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.py), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
-      "enforced_by": [
-        "tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper",
-        "tests/test_tool_create_axis.py::test_near_duplicate_refused",
-        "tests/test_tool_create_axis.py::test_near_duplicate_refusal_names_nearest",
-        "tests/test_tool_create_axis.py::test_exact_slug_duplicate_always_refused_even_with_force",
-        "tests/test_tool_create_axis.py::test_force_new_overrides_refusal",
-        "tests/test_tool_create_axis.py::test_force_new_justification_recorded",
-        "tests/test_tool_create_axis.py::test_writer_inserts_new_axis",
-        "tests/test_tool_create_axis.py::test_writer_refuses_duplicate_slug"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper, tests/test_tool_create_axis.py::test_near_duplicate_refused, tests/test_tool_crea…→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-axis-gatekeeper-policy",
@@ -912,8 +929,7 @@
       ],
       "claim": "Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17.",
       "enforced_by": [
-        "check_domain_manifest_exists_and_importable",
-        "test_tool_create_domain.py::test_creates_required_files"
+        "check_domain_manifest_exists_and_importable"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -922,6 +938,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-content-layout-evolution",
@@ -957,7 +978,7 @@
       ],
       "claim": "Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes.",
       "enforced_by": [
-        "test_proposal.py"
+        "TestProposedStructs_JSONTagsRoundTrip"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -966,6 +987,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_proposal.py]→[TestProposedStructs_JSONTagsRoundTrip]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-active-loop-protocol",
@@ -980,7 +1006,7 @@
       "assumptions": [],
       "claim": "A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/.",
       "enforced_by": [
-        "test_apply_proposal.py"
+        "TestApply_Requirement_UpdateAppendsHistory"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -989,6 +1015,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_apply_proposal.py]→[TestApply_Requirement_UpdateAppendsHistory]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-active-loop-apply-tool",
@@ -1002,16 +1033,19 @@
     {
       "assumptions": [],
       "claim": "At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band.",
-      "enforced_by": [
-        "test_playbooks_doc.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_playbooks_doc.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-active-loop-playbook-doc",
@@ -1095,16 +1129,19 @@
         "A-python-stack"
       ],
       "claim": "spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs.",
-      "enforced_by": [
-        "tests/test_smoke.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_smoke.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-smoke-test",
@@ -1204,8 +1241,7 @@
       ],
       "claim": "An Operator shall be a frozen dataclass in hotam_spec.operator with typed anchor 'OP-'.",
       "enforced_by": [
-        "check_typed_anchors_operator",
-        "test_operator.py"
+        "check_typed_anchors_operator"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1214,6 +1250,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-is-frozen-dataclass",
@@ -1230,8 +1271,7 @@
       ],
       "claim": "An Operator.stakeholder shall reference an existing Stakeholder.id.",
       "enforced_by": [
-        "check_no_dangling_operator_refs",
-        "test_operator.py"
+        "check_no_dangling_operator_refs"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1240,6 +1280,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_no_dangling_operator_refs, test_operator.py]→[check_no_dangling_operator_refs]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-references-stakeholder",
@@ -1256,8 +1301,7 @@
       ],
       "claim": "An Operator shall carry a ContextBudget with a positive limit and a declared measure.",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_operator.py"
+        "check_operator_within_budget"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1266,6 +1310,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_operator_within_budget, test_operator.py]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-has-context-budget",
@@ -1307,11 +1356,7 @@
       ],
       "claim": "An operator's RESIDENT working set shall not exceed its context budget (measured by budget.measure — for CRYSTAL_CHARS the char-length of root CLAUDE.md vs the host cap), with any excess flagged as a structural OVERLOADED contradiction by the harness.",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_operator.py::test_check_operator_within_budget_fires",
-        "test_operator.py::test_director_within_budget",
-        "test_operator.py::test_check_operator_within_budget_crystal_chars_fires",
-        "test_operator.py::test_check_operator_within_budget_crystal_chars_green_when_under"
+        "check_operator_within_budget"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1320,6 +1365,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_operator_within_budget, test_operator.py::test_check_operator_within_budget_fires, test_operator.py::test_director_within_budget, test_operato…→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-context-budget-rule",
@@ -1336,8 +1386,7 @@
       ],
       "claim": "An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.",
       "enforced_by": [
-        "check_operator_steward_not_self",
-        "test_operator.py::test_check_operator_steward_not_self_fires"
+        "check_operator_steward_not_self"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1346,6 +1395,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires]→[check_operator_steward_not_self]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-not-self-approve",
@@ -1402,7 +1456,6 @@
       ],
       "claim": "Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'.",
       "enforced_by": [
-        "test_goal.py",
         "check_typed_anchors_goal"
       ],
       "enforcement": "ENFORCED",
@@ -1412,6 +1465,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_goal.py, check_typed_anchors_goal]→[check_typed_anchors_goal]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-goal-is-first-class-type",
@@ -1479,8 +1537,7 @@
       ],
       "claim": "The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever).",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate"
+        "check_operator_within_budget"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1489,6 +1546,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_operator_within_budget, test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-context-bounded-delegation",
@@ -1634,10 +1696,7 @@
       ],
       "claim": "A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced.",
       "enforced_by": [
-        "check_transition_guard_assumption_resolves",
-        "test_entity_invariants.py::test_transition_guard_assumption_resolves_clean",
-        "test_entity_invariants.py::test_transition_guard_assumption_resolves_dangling_fires",
-        "test_entity_invariants.py::test_transition_guard_assumption_dead_assumption_still_visible_in_dependents"
+        "check_transition_guard_assumption_resolves"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1646,6 +1705,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_transition_guard_assumption_resolves, test_entity_invariants.py::test_transition_guard_assumption_resolves_clean, test_entity_invariants.py::t…→[check_transition_guard_assumption_resolves]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-statemachine-guard-on-assumption",
@@ -1684,16 +1748,19 @@
         "A-finite-context-operators"
       ],
       "claim": "After an applied proposal lands (write + regen + pytest pass), the system shall verify the action that triggered the proposal is no longer present in the post-apply what_now diagnosis.",
-      "enforced_by": [
-        "test_closure.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_closure.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-verify-closure-per-action",
@@ -1717,8 +1784,7 @@
         "check_typed_anchors_process",
         "check_typed_anchors_goal",
         "check_typed_anchors_entity",
-        "check_section_anchors_known",
-        "test_glossary_sync.py"
+        "check_section_anchors_known"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1727,6 +1793,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…→[check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-anchor-everything",
@@ -1743,9 +1814,7 @@
       ],
       "claim": "An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.",
       "enforced_by": [
-        "test_glossary_sync.py",
-        "check_section_anchors_known",
-        "test_playbooks_doc.py"
+        "check_section_anchors_known"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1754,6 +1823,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_glossary_sync.py, check_section_anchors_known, test_playbooks_doc.py]→[check_section_anchors_known]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-speak-by-reference",
@@ -1792,16 +1866,19 @@
         "A-finite-context-operators"
       ],
       "claim": "The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded.",
-      "enforced_by": [
-        "test_reflection.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_reflection.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-working-vs-substrate-budget",
@@ -1838,8 +1915,7 @@
       ],
       "claim": "A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt).",
       "enforced_by": [
-        "check_enforced_names_invariant",
-        "test_docs_gen.py::test_unenforced_md_up_to_date"
+        "check_enforced_names_invariant"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1848,6 +1924,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date]→[check_enforced_names_invariant]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-requirement-enforced",
@@ -1863,10 +1944,7 @@
         "A-most-knowledge-crystallizable"
       ],
       "claim": "Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted).",
-      "enforced_by": [
-        "test_conscience.py",
-        "CRITICAL_CORE_INVARIANTS"
-      ],
+      "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
@@ -1874,6 +1952,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_conscience.py, CRITICAL_CORE_INVARIANTS]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-uncrystallizable-is-missing-type",
@@ -1890,8 +1973,7 @@
       ],
       "claim": "Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit).",
       "enforced_by": [
-        "test_reflection.py::test_reflection_emits_dead_assumption_enforcer",
-        "test_conscience.py::test_real_meta_domain_passes_critical_core"
+        "TestReflectDeadAssumptionOnEnforcer_Fires"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1900,6 +1982,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_reflection.py::test_reflection_emits_dead_assumption_enforcer, test_conscience.py::test_real_meta_domain_passes_critical_core]→[TestReflectDeadAssumptionOnEnforcer_Fires]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-stale-substrate",
@@ -1916,8 +2003,7 @@
       ],
       "claim": "An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts.",
       "enforced_by": [
-        "check_operator_within_budget",
-        "test_operator.py"
+        "check_operator_within_budget"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1926,6 +2012,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_operator_within_budget, test_operator.py]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-budget-measure",
@@ -1959,7 +2050,6 @@
       ],
       "claim": "Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE.",
       "enforced_by": [
-        "test_goal.py",
         "check_typed_anchors_goal"
       ],
       "enforcement": "ENFORCED",
@@ -1969,6 +2059,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_goal.py, check_typed_anchors_goal]→[check_typed_anchors_goal]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-goal-type-vs-facet",
@@ -1985,8 +2080,7 @@
       ],
       "claim": "Operator shall be its own first-class frozen-dataclass type in hotam_spec.operator (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.",
       "enforced_by": [
-        "check_typed_anchors_operator",
-        "test_operator.py"
+        "check_typed_anchors_operator"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -1995,6 +2089,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-type-vs-facet",
@@ -2116,10 +2215,7 @@
         "A-most-knowledge-crystallizable"
       ],
       "claim": "Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type.",
-      "enforced_by": [
-        "test_conscience.py",
-        "CRITICAL_CORE_INVARIANTS"
-      ],
+      "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
@@ -2127,6 +2223,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_conscience.py, CRITICAL_CORE_INVARIANTS]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-uncrystallizable-automated",
@@ -2143,7 +2244,7 @@
       ],
       "claim": "The live numeric state in CLAUDE.md (top action, debt counts, graph size, crystal headroom, context) shall be generated by gen_spec into a sentinel-delimited block, never hand-written.",
       "enforced_by": [
-        "test_docs_gen.py::test_claude_md_live_state_up_to_date"
+        "TestBuildLiveState_RendersOnFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -2152,6 +2253,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_docs_gen.py::test_claude_md_live_state_up_to_date]→[TestBuildLiveState_RendersOnFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-claude-md-live-state-generated",
@@ -2238,16 +2344,19 @@
         "A-finite-context-operators"
       ],
       "claim": "A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain.",
-      "enforced_by": [
-        "test_composite_prompt_contains_crystal_and_task"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_composite_prompt_contains_crystal_and_task]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-subagent-gets-its-claude-md",
@@ -2286,10 +2395,7 @@
         "A-stakeholders-care"
       ],
       "claim": "The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events.",
-      "enforced_by": [
-        "CLAUDE.md§Operator boot ritual",
-        "docs/methodology/discipline.md"
-      ],
+      "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
@@ -2297,6 +2403,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [CLAUDE.md§Operator boot ritual, docs/methodology/discipline.md]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-prefer-tool-over-hand",
@@ -2312,16 +2423,19 @@
         "A-python-stack"
       ],
       "claim": "Tools available to all agents shall live in `spec/tools/`.",
-      "enforced_by": [
-        "test_shared_tools_location.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_shared_tools_location.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-shared-tools-in-spec-tools",
@@ -2337,16 +2451,19 @@
         "A-python-stack"
       ],
       "claim": "Per-topic narrative files under `docs/methodology/atoms/<topic>.md` shall be generated from SETTLED requirements grouped by topic, with hand-edits forbidden by a meta-test.",
-      "enforced_by": [
-        "test_docs_gen.py::test_methodology_atoms_up_to_date"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_docs_gen.py::test_methodology_atoms_up_to_date]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-docs-generated-from-requirements",
@@ -2468,7 +2585,7 @@
       ],
       "claim": "The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically from spec/content/graph.py.",
       "enforced_by": [
-        "test_constitution_block_generated"
+        "TestBuildConstitution_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -2477,6 +2594,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_constitution_block_generated]→[TestBuildConstitution_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-prompt-from-substrate",
@@ -2493,8 +2615,7 @@
       ],
       "claim": "The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden.",
       "enforced_by": [
-        "check_constituting_not_in_unresolved_conflict",
-        "test_invariants.py::test_constituting_convergence_fires_on_self_host_detected"
+        "check_constituting_not_in_unresolved_conflict"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -2503,6 +2624,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_constituting_not_in_unresolved_conflict, test_invariants.py::test_constituting_convergence_fires_on_self_host_detected]→[check_constituting_not_in_unresolved_conflict]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-constituting-requirements-converge",
@@ -2518,16 +2644,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.",
-      "enforced_by": [
-        "test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-requirement-claim-is-atomic",
@@ -2543,16 +2672,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.",
-      "enforced_by": [
-        "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-check-method-is-atomic",
@@ -2587,8 +2719,7 @@
       "claim": "A domain-agent shall be represented as a directory at `spec/agents/<name>/`.",
       "enforced_by": [
         "check_agent_has_agents_subdir",
-        "check_agent_has_docs_subdir",
-        "test_tool_create_agent.py"
+        "check_agent_has_docs_subdir"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -2597,6 +2728,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_agent_has_agents_subdir, check_agent_has_docs_subdir, test_tool_create_agent.py]→[check_agent_has_agents_subdir, check_agent_has_docs_subdir]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-is-a-directory",
@@ -2631,9 +2767,7 @@
       ],
       "claim": "Each domain-agent shall carry a `tools/` subdirectory holding its private tools.",
       "enforced_by": [
-        "check_agent_has_tools_subdir",
-        "test_tool_create_agent.py::test_creates_required_files",
-        "test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools"
+        "check_agent_has_tools_subdir"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -2642,6 +2776,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on…→[check_agent_has_tools_subdir]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-has-own-tools-dir",
@@ -2708,17 +2847,19 @@
         "A-finite-context-operators"
       ],
       "claim": "The spawn_agent tool shall append a spawn-log entry to spec/.runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation.",
-      "enforced_by": [
-        "test_spawn_log_written",
-        "test_tool_spawn_agent.py::test_log_only_writes_row_without_composing_prompt"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_spawn_log_written, test_tool_spawn_agent.py::test_log_only_writes_row_without_composing_prompt]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-task-spawn-log-runtime",
@@ -2734,17 +2875,19 @@
         "A-python-stack"
       ],
       "claim": "The list of available tools shall be generated by scanning `spec/tools/*.py` (and per-agent `spec/agents/<name>/tools/*.py`), never hand-maintained.",
-      "enforced_by": [
-        "test_repo_map.py::test_repo_map_complete",
-        "test_repo_map.py::test_repo_map_tool_xref_present"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_repo_map.py::test_repo_map_complete, test_repo_map.py::test_repo_map_tool_xref_present]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-tools-registry-generated",
@@ -2836,16 +2979,19 @@
         "A-python-stack"
       ],
       "claim": "An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation.",
-      "enforced_by": [
-        "test_tool_audit_atomicity.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_audit_atomicity.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-audit-atomicity-tool",
@@ -2923,16 +3069,19 @@
         "A-python-stack"
       ],
       "claim": "The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders).",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-content-free-no-business-data",
@@ -2948,16 +3097,19 @@
         "A-python-stack"
       ],
       "claim": "The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo.",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-content-free-no-examples",
@@ -2973,16 +3125,19 @@
         "A-python-stack"
       ],
       "claim": "The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph().",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-content-free-no-seed-graph",
@@ -2998,16 +3153,19 @@
         "A-python-stack"
       ],
       "claim": "A freshly-cloned framework with no spec/content/graph.py shall pass all structural invariants — an empty graph is well-formed.",
-      "enforced_by": [
-        "test_invariants.py::test_empty_graph_is_wellformed"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_invariants.py::test_empty_graph_is_wellformed]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-empty-content-wellformed",
@@ -3023,16 +3181,19 @@
         "A-python-stack"
       ],
       "claim": "When spec/content/graph.py is absent, tools/what_now.py shall render a calm 'no content yet' banner, not an error.",
-      "enforced_by": [
-        "test_what_now.py::test_main_empty_content_prints_calm_banner"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_what_now.py::test_main_empty_content_prints_calm_banner]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-empty-content-calm-banner",
@@ -3048,16 +3209,19 @@
         "A-python-stack"
       ],
       "claim": "When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail.",
-      "enforced_by": [
-        "test_docs_gen.py::test_empty_graph_renders_no_content_notice"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_docs_gen.py::test_empty_graph_renders_no_content_notice]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-empty-content-gen-notice",
@@ -3075,7 +3239,7 @@
       ],
       "claim": "The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio.",
       "enforced_by": [
-        "test_reflection.py"
+        "TestBuildLiveState_RendersOnFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3084,6 +3248,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_reflection.py]→[TestBuildLiveState_RendersOnFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-boot-reload-three-facts",
@@ -3125,7 +3294,7 @@
       ],
       "claim": "A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md.",
       "enforced_by": [
-        "test_docs_gen.py::test_glossary_md_up_to_date"
+        "TestBuildGlossary_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3134,6 +3303,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_docs_gen.py::test_glossary_md_up_to_date]→[TestBuildGlossary_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-glossary-generated",
@@ -3150,16 +3324,19 @@
         "A-python-stack"
       ],
       "claim": "The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework.",
-      "enforced_by": [
-        "test_glossary_sync.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_glossary_sync.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-glossary-sync-fails-dead",
@@ -3176,16 +3353,19 @@
         "A-python-stack"
       ],
       "claim": "The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary.",
-      "enforced_by": [
-        "test_glossary_sync.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_glossary_sync.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-glossary-sync-fails-unused",
@@ -3203,7 +3383,7 @@
       ],
       "claim": "The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte.",
       "enforced_by": [
-        "test_docs_gen.py::test_glossary_md_up_to_date"
+        "TestBuildGlossary_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3212,6 +3392,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_docs_gen.py::test_glossary_md_up_to_date]→[TestBuildGlossary_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-glossary-drift-stable",
@@ -3228,8 +3413,7 @@
       ],
       "claim": "docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks.",
       "enforced_by": [
-        "test_history_gen.py",
-        "test_docs_gen.py::test_history_md_up_to_date"
+        "TestBuildHistory_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3238,6 +3422,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date]→[TestBuildHistory_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-history-generated-from-rejected",
@@ -3254,8 +3443,7 @@
       ],
       "claim": "docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts.",
       "enforced_by": [
-        "test_history_gen.py",
-        "test_docs_gen.py::test_history_md_up_to_date"
+        "TestBuildHistory_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3264,6 +3452,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_history_gen.py, test_docs_gen.py::test_history_md_up_to_date]→[TestBuildHistory_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-history-generated-from-decided",
@@ -3280,7 +3473,7 @@
       ],
       "claim": "A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types.",
       "enforced_by": [
-        "test_lifecycle.py"
+        "TestCanonicalLifecyclesSanity"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3289,6 +3482,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_lifecycle.py]→[TestCanonicalLifecyclesSanity]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-lifecycle-type-exists",
@@ -3406,7 +3604,7 @@
       ],
       "claim": "hotam_spec.process shall define Process, Step, Goal, TargetState, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE types.",
       "enforced_by": [
-        "test_process.py"
+        "TestCanonicalLifecyclesSanity"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3415,6 +3613,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_process.py]→[TestCanonicalLifecyclesSanity]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-process-types-exist",
@@ -3431,16 +3634,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple.",
-      "enforced_by": [
-        "test_process.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_process.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-process-opt-in",
@@ -3822,7 +4028,7 @@
       ],
       "claim": "Independent sub-graphs in the dependency network may be delegated to parallel sub-operators.",
       "enforced_by": [
-        "test_dependency_traversal.py::test_disjoint_components_are_parallelizable"
+        "TestIndependentSubgraphs"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3831,6 +4037,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_dependency_traversal.py::test_disjoint_components_are_parallelizable]→[TestIndependentSubgraphs]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-dependency-drives-parallel",
@@ -3847,7 +4058,7 @@
       ],
       "claim": "Dependency chains in the network shall be processed sequentially.",
       "enforced_by": [
-        "test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent"
+        "TestDependencyChains"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3856,6 +4067,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_dependency_traversal.py::test_chain_is_emitted_dependency_before_dependent]→[TestDependencyChains]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-dependency-drives-sequential",
@@ -3872,16 +4088,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "Each operator's crystallized substrate shall be its own CLAUDE.md file.",
-      "enforced_by": [
-        "test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-crystal-is-claude-md",
@@ -3898,16 +4117,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context.",
-      "enforced_by": [
-        "test_embedded_thinking_tools.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_embedded_thinking_tools.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-crystal-reload-by-reference",
@@ -3924,16 +4146,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget.",
-      "enforced_by": [
-        "test_constitution_gen.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_constitution_gen.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-crystal-tree-hierarchy",
@@ -3975,8 +4200,7 @@
       ],
       "claim": "An ENFORCED requirement shall name its enforcing invariant or test in enforced_by.",
       "enforced_by": [
-        "check_enforced_names_invariant",
-        "test_docs_gen.py::test_unenforced_md_up_to_date"
+        "check_enforced_names_invariant"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -3985,6 +4209,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_enforced_names_invariant, test_docs_gen.py::test_unenforced_md_up_to_date]→[check_enforced_names_invariant]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-enforced-names-enforcer",
@@ -4001,7 +4230,6 @@
       ],
       "claim": "The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py.",
       "enforced_by": [
-        "test_conscience.py",
         "check_no_dangling_assumption_owner",
         "check_no_dangling_requirement_owner",
         "check_no_dangling_requirement_assumptions",
@@ -4015,6 +4243,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_conscience.py, check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dan…→[check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dangling_requirement_re…; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-critical-core-methodology",
@@ -4078,16 +4311,19 @@
         "A-python-stack"
       ],
       "claim": "Every tool in spec/tools/ whose module docstring opens with 'Canon: §<topic> — <claim>' shall be projected into a SETTLED requirement R-tool-<basename> with that claim text, enforced by spec/tests/test_tool_<basename>.py when it exists.",
-      "enforced_by": [
-        "test_tool_derived_requirements.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_derived_requirements.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-tool-is-its-own-requirement",
@@ -4103,16 +4339,19 @@
         "A-python-stack"
       ],
       "claim": "For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.",
-      "enforced_by": [
-        "test_agent_scoped_constitution.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-scoped-constitution",
@@ -4147,16 +4386,19 @@
         "A-python-stack"
       ],
       "claim": "Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.",
-      "enforced_by": [
-        "test_every_agent_declares_purpose"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-declares-purpose",
@@ -4172,16 +4414,19 @@
         "A-python-stack"
       ],
       "claim": "CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.",
-      "enforced_by": [
-        "test_agent_map.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-map-generated",
@@ -4198,8 +4443,7 @@
       ],
       "claim": "A business domain is represented as a directory at `domains/<name>/`.",
       "enforced_by": [
-        "check_domain_manifest_exists_and_importable",
-        "test_tool_create_domain.py::test_creates_required_files"
+        "check_domain_manifest_exists_and_importable"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4208,6 +4452,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-domain-is-a-directory",
@@ -4278,8 +4527,7 @@
       ],
       "claim": "Each `domains/<name>/` owns its `graph.py` defining `build_graph() -> TensionGraph`.",
       "enforced_by": [
-        "check_domain_manifest_exists_and_importable",
-        "test_tool_create_domain.py::test_creates_required_files"
+        "check_domain_manifest_exists_and_importable"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4288,6 +4536,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-domain-owns-graph-py",
@@ -4303,16 +4556,19 @@
         "A-python-stack"
       ],
       "claim": "Each `domains/<name>/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files.",
-      "enforced_by": [
-        "test_tool_create_domain.py::test_creates_required_files"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_create_domain.py::test_creates_required_files]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-domain-owns-docs-gen",
@@ -4328,16 +4584,19 @@
         "A-python-stack"
       ],
       "claim": "Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty.",
-      "enforced_by": [
-        "test_tool_create_domain.py::test_creates_required_files"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_create_domain.py::test_creates_required_files]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-domain-owns-tools-and-agents",
@@ -4391,16 +4650,19 @@
         "A-python-stack"
       ],
       "claim": "The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count.",
-      "enforced_by": [
-        "test_framework_claude_md_has_domain_map"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_has_domain_map]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-domain-map-generated",
@@ -4417,8 +4679,7 @@
       ],
       "claim": "Every domain must contain a `director` agent at `domains/<name>/agents/director/` as the entry point operator.",
       "enforced_by": [
-        "check_domain_director_exists",
-        "test_tool_create_domain.py::test_director_agent_created"
+        "check_domain_director_exists"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4427,6 +4688,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_domain_director_exists, test_tool_create_domain.py::test_director_agent_created]→[check_domain_director_exists]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-director-agent-required-per-domain",
@@ -4468,8 +4734,7 @@
       ],
       "claim": "The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings plus argparse --help output.",
       "enforced_by": [
-        "test_domain_isolation_p17.py::test_shared_thinking_docs_generated",
-        "test_domain_isolation_p17.py::test_shared_tool_docs_generated"
+        "TestBuildThinkingDocsCountMatchesSections"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4478,6 +4743,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_thinking_docs_generated, test_domain_isolation_p17.py::test_shared_tool_docs_generated]→[TestBuildThinkingDocsCountMatchesSections]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-framework-shared-docs-generated",
@@ -4494,7 +4764,7 @@
       ],
       "claim": "Each spec/docs/tools/<basename>.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between sentinels.",
       "enforced_by": [
-        "test_domain_isolation_p17.py::test_shared_tool_docs_content"
+        "TestBuildToolDocsSemanticCompleteness"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4503,6 +4773,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_tool_docs_content]→[TestBuildToolDocsSemanticCompleteness]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-shared-tool-doc-from-docstring-and-help",
@@ -4519,7 +4794,7 @@
       ],
       "claim": "Each spec/docs/thinking/<topic-slug>.md shall be generated as the union of all framework docstrings carrying Canon: §<Topic> markers, never hand-written.",
       "enforced_by": [
-        "test_domain_isolation_p17.py::test_shared_thinking_docs_content"
+        "TestBuildThinkingDocsSemanticCompleteness"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4528,6 +4803,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_thinking_docs_content]→[TestBuildThinkingDocsSemanticCompleteness]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-shared-thinking-doc-from-canon-sections",
@@ -4543,16 +4823,19 @@
         "A-python-stack"
       ],
       "claim": "Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content.",
-      "enforced_by": [
-        "test_domain_isolation_p17.py::test_agent_shared_docs_block_present"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_domain_isolation_p17.py::test_agent_shared_docs_block_present]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-agent-references-shared-docs",
@@ -4593,16 +4876,19 @@
         "A-python-stack"
       ],
       "claim": "Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material.",
-      "enforced_by": [
-        "test_tool_create_domain.py::test_creates_docs_dir"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_create_domain.py::test_creates_docs_dir]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-domain-has-docs-dir",
@@ -4618,16 +4904,19 @@
         "A-python-stack"
       ],
       "claim": "Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events.",
-      "enforced_by": [
-        "test_pretooluse_graph_guard_denies_graph_py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_pretooluse_graph_guard_denies_graph_py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-no-hand-edit-graph",
@@ -4668,16 +4957,19 @@
         "A-python-stack"
       ],
       "claim": "The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels.",
-      "enforced_by": [
-        "test_root_claude_md_is_sentinel_only.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_root_claude_md_is_sentinel_only.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-root-claude-md-is-sentinel-only",
@@ -4743,16 +5035,19 @@
         "A-python-stack"
       ],
       "claim": "The framework shall supply no built-in EntityType values — all entity types are declared by domains in build_graph().",
-      "enforced_by": [
-        "test_content_free.py::test_no_domain_instances_in_tensio_src"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-entity-is-declarative",
@@ -4769,8 +5064,7 @@
       ],
       "claim": "Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.",
       "enforced_by": [
-        "check_entity_type_lifecycle_wellformed",
-        "test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks"
+        "check_entity_type_lifecycle_wellformed"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4779,6 +5073,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_entity_type_lifecycle_wellformed, test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks]→[check_entity_type_lifecycle_wellformed]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-entity-reuses-lifecycle",
@@ -4795,7 +5094,7 @@
       ],
       "claim": "The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type.",
       "enforced_by": [
-        "test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks"
+        "check_entity_type_lifecycle_wellformed"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4804,6 +5103,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks]→[check_entity_type_lifecycle_wellformed]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-entity-checks-by-iteration",
@@ -4820,7 +5124,7 @@
       ],
       "claim": "Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects().",
       "enforced_by": [
-        "test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict"
+        "TestEntityStateConflictSuspects"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -4829,6 +5133,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_demo_fixture.py::test_demo_fixture_what_now_emits_p5_entity_state_conflict]→[TestEntityStateConflictSuspects]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-entity-state-conflict-surfaced",
@@ -4863,16 +5172,19 @@
         "A-python-stack"
       ],
       "claim": "Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every REJECTED requirement whose why contains 'REJECTED — REPLACES' to surface anti-relitigation evidence before re-derivation.",
-      "enforced_by": [
-        "test_recently_rejected_lists_known_rejections"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_recently_rejected_lists_known_rejections]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-recently-rejected-surfaced",
@@ -4888,16 +5200,19 @@
         "A-python-stack"
       ],
       "claim": "A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.",
-      "enforced_by": [
-        "test_session_start_hook_runs_gen_spec"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_session_start_hook_runs_gen_spec]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-operator-prompt-loaded-at-session-start",
@@ -4913,16 +5228,19 @@
         "A-python-stack"
       ],
       "claim": "A UserPromptSubmit hook in .claude/settings.local.json shall extract the three-cipher pulse from the LIVE-STATE block and inject it as additionalContext into every user turn.",
-      "enforced_by": [
-        "test_user_prompt_submit_hook_emits_cipher"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_user_prompt_submit_hook_emits_cipher]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-three-cipher-pulse-structurally-injected",
@@ -4938,16 +5256,19 @@
         "A-python-stack"
       ],
       "claim": "A PostCompact hook in .claude/settings.local.json shall run gen_spec.py after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version.",
-      "enforced_by": [
-        "test_post_compact_hook_runs_gen_spec"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_post_compact_hook_runs_gen_spec]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-post-compact-regen-from-substrate",
@@ -4963,16 +5284,19 @@
         "A-python-stack"
       ],
       "claim": "The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1.",
-      "enforced_by": [
-        "test_project_name.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_project_name.py]→[]; settled_at: 2026-06-30→2026-07-12"
         }
       ],
       "id": "R-project-name-hotam-spec",
@@ -5036,16 +5360,19 @@
         "A-python-stack"
       ],
       "claim": "While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.",
-      "enforced_by": [
-        "test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-07-01→2026-07-12"
         }
       ],
       "id": "R-claude-md-consolidates-when-single-agent",
@@ -5103,17 +5430,19 @@
         "A-finite-context-operators"
       ],
       "claim": "Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).",
-      "enforced_by": [
-        "test_agent_scoped_constitution.py",
-        "test_tool_spawn_agent.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py, test_tool_spawn_agent.py]→[]; settled_at: 2026-07-01→2026-07-12"
         }
       ],
       "id": "R-sub-agent-crystal-triad",
@@ -5129,17 +5458,19 @@
         "A-python-stack"
       ],
       "claim": "CLAUDE.md shall be generated by substituting <!-- mind --> and <!-- business --> placeholders in CLAUDE.md.template.txt with rendered content, preserving all other template text verbatim.",
-      "enforced_by": [
-        "test_hand_written_note_in_template_survives_regen",
-        "test_claude_md_template.py::test_regen_byte_identical"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_hand_written_note_in_template_survives_regen, test_claude_md_template.py::test_regen_byte_identical]→[]; settled_at: 2026-07-01→2026-07-12"
         }
       ],
       "id": "R-claude-md-template-driven",
@@ -5155,18 +5486,19 @@
         "A-python-stack"
       ],
       "claim": "The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (via short_form) plus a path link to spec/docs/thinking/<slug>.md, not a multi-line RULE+WHY distillate.",
-      "enforced_by": [
-        "test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content",
-        "test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference",
-        "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content, test_embedded_thinking_tools.py::test_embedded_thinking_bl…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-operator-crystal-embeds-thinking-distilled",
@@ -5182,17 +5514,19 @@
         "A-python-stack"
       ],
       "claim": "The operator's CLAUDE.md shall embed a table of tool name + Canon sentence (via short_form) plus a path link to spec/docs/tools/<basename>.md, not a multi-line distillate.",
-      "enforced_by": [
-        "test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content",
-        "test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content, test_embedded_thinking_tools.py::test_embedded_thinking_block_…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-operator-crystal-embeds-tools-distilled",
@@ -5208,16 +5542,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
-      "enforced_by": [
-        "test_operator_seed.py::test_role_block_states_scope_and_law"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_role_block_states_scope_and_law]→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-crystal-carries-role-seed",
@@ -5233,16 +5570,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop — ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND — each step naming its real tool command.",
-      "enforced_by": [
-        "test_operator_seed.py::test_mediation_loop_names_real_tools"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_mediation_loop_names_real_tools]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-crystal-carries-mediation-loop",
@@ -5258,16 +5598,19 @@
         "A-finite-context-operators"
       ],
       "claim": "Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope, naming the create_agent → gen_spec → spawn_agent path.",
-      "enforced_by": [
-        "test_operator_seed.py::test_recursion_block_names_spawn_path"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_recursion_block_names_spawn_path]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-crystal-carries-recursion-seed",
@@ -5285,8 +5628,7 @@
       ],
       "claim": "The CONSTITUTION block in root CLAUDE.md shall render each SETTLED requirement as id + enforcement flag [E/S/P] grouped by category, with a pointer to docs/gen/REQUIREMENTS.md for full claims.",
       "enforced_by": [
-        "test_constitution.py::test_constitution_is_index",
-        "test_constitution.py::test_constitution_lists_all_settled"
+        "TestBuildConstitution_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5295,6 +5637,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_constitution.py::test_constitution_is_index, test_constitution.py::test_constitution_lists_all_settled]→[TestBuildConstitution_ByteIdenticalToFixture]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-constitution-is-index",
@@ -5309,9 +5656,7 @@
       "assumptions": [],
       "claim": "The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms.",
       "enforced_by": [
-        "test_constitution.py::test_constitution_partitions_all_settled",
-        "test_constitution.py::test_constitution_pointer_to_framework_invariants",
-        "test_constitution.py::test_framework_invariants_md_up_to_date"
+        "TestBuildFrameworkInvariants_ByteIdenticalToFixture"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5320,6 +5665,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_constitution.py::test_constitution_partitions_all_settled, test_constitution.py::test_constitution_pointer_to_framework_invariants, test_consti…→[TestBuildFrameworkInvariants_ByteIdenticalToFixture]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-constitution-separates-plumbing",
@@ -5333,17 +5683,19 @@
     {
       "assumptions": [],
       "claim": "The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need.",
-      "enforced_by": [
-        "test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline",
-        "test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_named_frozen_surfaces"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline, test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-speculative-aspects-frozen",
@@ -5358,8 +5710,7 @@
       "assumptions": [],
       "claim": "The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined in tool code.",
       "enforced_by": [
-        "test_reflection.py::test_what_now_sources_reflection_predicates_from_module",
-        "test_reflection.py::test_diagnose_p0_and_advisory_partition_reflection_findings"
+        "TestAllFindings_OrderFollowsRegistry"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5368,6 +5719,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_reflection.py::test_what_now_sources_reflection_predicates_from_module, test_reflection.py::test_diagnose_p0_and_advisory_partition_reflection_…→[TestAllFindings_OrderFollowsRegistry]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-reflection-predicates-first-class",
@@ -5381,18 +5737,19 @@
     {
       "assumptions": [],
       "claim": "tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when locating the Conflict node a proposal addresses.",
-      "enforced_by": [
-        "test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs",
-        "test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addressable",
-        "test_apply_proposal.py::test_all_real_domain_conflicts_are_addressable"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs, test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addre…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-conflict-addressing-resolves-variables",
@@ -5407,9 +5764,7 @@
       "assumptions": [],
       "claim": "The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via tools/apply_proposal.py.",
       "enforced_by": [
-        "test_apply_proposal.py::test_apply_conflict_creates_detected_node",
-        "test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape",
-        "test_proposal.py::test_proposed_conflict_target_anchor_is_computed_identity"
+        "TestApply_Conflict_Create"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5418,6 +5773,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_apply_proposal.py::test_apply_conflict_creates_detected_node, test_apply_proposal.py::test_apply_conflict_written_graph_loads_and_passes_shape,…→[TestApply_Conflict_Create]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-proposed-conflict-kind-exists",
@@ -5432,9 +5792,7 @@
       "assumptions": [],
       "claim": "The what_now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.",
       "enforced_by": [
-        "test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster",
-        "test_latent_connector_noise_fix.py::test_clusters_partition_suspects",
-        "test_latent_connector_noise_fix.py::test_real_graph_p5_count_equals_cluster_count"
+        "TestLatentConnectorSuspectsAndClusters"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5443,6 +5801,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster, test_latent_connector_noise_fix.py::test_clusters_partition_suspects, tes…→[TestLatentConnectorSuspectsAndClusters]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-latent-connectors-cluster-by-assumption",
@@ -5456,23 +5819,19 @@
     {
       "assumptions": [],
       "claim": "The presented-awaiting-decision state shall live in a dedicated folder (spec/.runtime/proposals/pending/ vs applied/), surfaced by the harness -- not as a new graph node type.",
-      "enforced_by": [
-        "tests/test_pending_proposal_archive.py::test_pending_sees_flat_layout_files",
-        "tests/test_pending_proposal_archive.py::test_pending_sees_pending_subfolder",
-        "tests/test_pending_proposal_archive.py::test_pending_excludes_applied_subfolder",
-        "tests/test_pending_proposal_archive.py::test_apply_success_archives_proposal_file",
-        "tests/test_pending_proposal_archive.py::test_apply_failure_does_not_archive",
-        "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_one_per_file",
-        "tests/test_pending_proposal_archive.py::test_pending_proposal_actions_age_in_days",
-        "tests/test_pending_proposal_archive.py::test_diagnose_never_includes_pending_band"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_pending_proposal_archive.py::test_pending_sees_flat_layout_files, tests/test_pending_proposal_archive.py::test_pending_sees_pending_subfo…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-presented-pending-decision-type",
@@ -5489,8 +5848,7 @@
       ],
       "claim": "The per-proposal LAND verify step (tools/apply_proposal.py) shall, by default, run the T1 targeted-enforcer pytest subset resolved by tools/gate.py from the proposal's target enforced_by tuple (plus a small always-run determinism+smoke baseline), instead of the full pytest suite.",
       "enforced_by": [
-        "test_tool_gate.py",
-        "test_apply_proposal_gate_wiring.py::test_apply_uses_t1_targeted_selection_when_gate_confident"
+        "TestSelectTier1_MultipleChecksUnion"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5499,6 +5857,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_tool_gate.py, test_apply_proposal_gate_wiring.py::test_apply_uses_t1_targeted_selection_when_gate_confident]→[TestSelectTier1_MultipleChecksUnion]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-land-gate-tier-selector",
@@ -5515,14 +5878,7 @@
       ],
       "claim": "The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY selection uncertainty or blast-radius-unbounded case -- an unknown/new target, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), any single enforced_by entry gate.py cannot resolve to a concrete pytest node-id, a ProposedRejection (a rejected atom's own enforced_by does not bound its removal blast radius), or the creation of a brand-new Requirement or Conflict node (a new node's enforced_by, if any, is steward-supplied and unverified) -- never returning a partial or best-effort subset in an uncertain or unbounded case.",
       "enforced_by": [
-        "test_tool_gate.py::test_fails_closed_on_unresolvable_entry",
-        "test_tool_gate.py::test_fails_closed_on_partially_unresolvable_entries",
-        "test_tool_gate.py::test_fails_closed_on_empty_enforced_by",
-        "test_tool_gate.py::test_fails_closed_on_unknown_target",
-        "test_tool_gate.py::test_fails_closed_on_conflict_target",
-        "test_apply_proposal_gate_wiring.py::test_apply_falls_back_to_full_suite_when_gate_uncertain",
-        "test_apply_proposal_gate_wiring.py::test_apply_rejection_always_uses_full_suite",
-        "test_apply_proposal_gate_wiring.py::test_apply_new_requirement_creation_always_uses_full_suite"
+        "TestSelectTier1_FailClosed_EmptyEnforcedBy"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5531,6 +5887,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_tool_gate.py::test_fails_closed_on_unresolvable_entry, test_tool_gate.py::test_fails_closed_on_partially_unresolvable_entries, test_tool_gate.p…→[TestSelectTier1_FailClosed_EmptyEnforcedBy]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-land-gate-tier-selector-fails-closed",
@@ -5546,10 +5907,7 @@
         "A-python-stack"
       ],
       "claim": "The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier applies only to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing.",
-      "enforced_by": [
-        "tools/apply_proposal.py::apply",
-        "tools/gate.py"
-      ],
+      "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
@@ -5557,6 +5915,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [tools/apply_proposal.py::apply, tools/gate.py]→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-tiered-gate-not-a-commit-gate",
@@ -5571,13 +5934,7 @@
       "assumptions": [],
       "claim": "Every generated doc shall name its reader as an existing Stakeholder id in its header.",
       "enforced_by": [
-        "check_doc_reader_resolves_to_stakeholder",
-        "test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered",
-        "test_invariants.py::test_check_doc_reader_green_when_all_roles_resolve",
-        "test_invariants.py::test_check_doc_reader_fires_on_partial_adoption",
-        "test_invariants.py::test_check_doc_reader_fires_on_dangling_bound_id",
-        "test_invariants.py::test_check_doc_reader_travel_agent_regression",
-        "test_docs_gen.py::test_generated_docs_carry_reader_header"
+        "check_doc_reader_resolves_to_stakeholder"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5586,6 +5943,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_doc_reader_resolves_to_stakeholder, test_invariants.py::test_check_doc_reader_resolves_to_stakeholder_registered, test_invariants.py::test_che…→[check_doc_reader_resolves_to_stakeholder]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-doc-names-reader",
@@ -5624,12 +5986,7 @@
       "claim": "Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node-id via the shared enforcer-resolution algorithm, and every bare test_* enforcer shall have real assertions (not a pass-only stub).",
       "enforced_by": [
         "check_enforced_by_resolvable",
-        "check_enforced_by_test_has_teeth",
-        "test_invariants.py::test_enforced_by_resolvable_registered",
-        "test_invariants.py::test_enforced_by_typo_fires",
-        "test_invariants.py::test_enforced_by_unknown_check_name_fires",
-        "test_invariants.py::test_enforced_by_real_names_pass",
-        "test_invariants.py::test_enforced_by_resolvable_green_on_seed"
+        "check_enforced_by_test_has_teeth"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -5638,6 +5995,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_enforced_by_resolvable, check_enforced_by_test_has_teeth, test_invariants.py::test_enforced_by_resolvable_registered, test_invariants.py::test…→[check_enforced_by_resolvable, check_enforced_by_test_has_teeth]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-enforced-by-resolvable",
@@ -5653,19 +6015,19 @@
         "A-python-stack"
       ],
       "claim": "Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran.",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_land_log_record_shape_t1",
-        "test_apply_proposal_land_log.py::test_land_log_record_shape_t2",
-        "test_apply_proposal_land_log.py::test_land_log_records_closure_exit",
-        "test_apply_proposal_land_log.py::test_land_log_records_closure_exit_2_on_not_advanced"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_record_shape_t1, test_apply_proposal_land_log.py::test_land_log_record_shape_t2, test_apply_proposal_…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-land-tier-trace",
@@ -5681,22 +6043,19 @@
         "A-python-stack"
       ],
       "claim": "tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
-      "enforced_by": [
-        "test_tool_gate_status.py::test_t1_then_t2_is_satisfied",
-        "test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied",
-        "test_tool_gate_status.py::test_only_t1_records_never_t2_is_not_satisfied",
-        "test_tool_gate_status.py::test_only_t2_records_is_satisfied",
-        "test_tool_gate_status.py::test_mixed_only_t1_after_last_t2_are_unverified",
-        "test_tool_gate_status.py::test_cli_exit_0_on_satisfied",
-        "test_tool_gate_status.py::test_cli_exit_1_on_not_satisfied"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_gate_status.py::test_t1_then_t2_is_satisfied, test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied, test_tool_gate_status.py::test_o…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-commit-boundary-checkable",
@@ -5733,17 +6092,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default, recorded durably as a versioned file under delegations/DG-<n>.md (created and closed only via spec/tools/delegate.py, git history as the audit trail).",
-      "enforced_by": [
-        "tests/test_tool_delegate.py::test_create_allocates_id_and_writes_file",
-        "tests/test_tool_delegate.py::test_close_sets_done_and_result"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_delegate.py::test_create_allocates_id_and_writes_file, tests/test_tool_delegate.py::test_close_sets_done_and_result]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-trust-anchor-delegation-explicit-only",
@@ -5774,17 +6135,19 @@
         "A-most-knowledge-crystallizable"
       ],
       "claim": "hotam_spec shall define no Observation or Evidence class anywhere in its package -- Assumption remains the ontology's sole belief-carrying node type.",
-      "enforced_by": [
-        "test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec",
-        "test_no_observation_type_scope.py::test_assumption_is_the_only_belief_carrying_dataclass_by_convention"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_no_observation_type_scope.py::test_no_observation_or_evidence_class_defined_anywhere_in_hotam_spec, test_no_observation_type_scope.py::test_ass…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-no-observation-type",
@@ -5800,16 +6163,19 @@
         "A-finite-context-operators"
       ],
       "claim": "Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency.",
-      "enforced_by": [
-        "test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only]→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-core-imports-stdlib-or-hotam-spec-only",
@@ -5825,17 +6191,19 @@
         "A-agent-code-imports-framework-directionally"
       ],
       "claim": "An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory.",
-      "enforced_by": [
-        "test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir",
-        "test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_i…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-agent-code-imports-framework",
@@ -5874,17 +6242,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json.",
-      "enforced_by": [
-        "test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline",
-        "test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_base…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-atomicity-ratchet-no-growth",
@@ -6024,17 +6394,19 @@
         "A-finite-context-operators"
       ],
       "claim": "An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node.",
-      "enforced_by": [
-        "test_scope_projection.py::test_project_scope_selects_by_prefix",
-        "test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_scope_projection.py::test_project_scope_selects_by_prefix, test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly]→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-scope-is-projection",
@@ -6050,17 +6422,19 @@
         "A-finite-context-operators"
       ],
       "claim": "When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged.",
-      "enforced_by": [
-        "test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption",
-        "test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_empty"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption, test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_e…→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-scope-overlap-generated",
@@ -6077,8 +6451,7 @@
       ],
       "claim": "Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter.",
       "enforced_by": [
-        "check_scoped_node_has_single_presenter",
-        "test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter"
+        "check_scoped_node_has_single_presenter"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6087,6 +6460,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_scoped_node_has_single_presenter, test_scope_projection.py::test_two_operators_overlapping_scope_resolves_to_one_presenter]→[check_scoped_node_has_single_presenter]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-overlap-single-presenter",
@@ -6102,16 +6480,19 @@
         "A-finite-context-operators"
       ],
       "claim": "Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating.",
-      "enforced_by": [
-        "test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields]→[]; settled_at: 2026-07-02→2026-07-12"
         }
       ],
       "id": "R-spawn-log-carries-isolation",
@@ -6147,20 +6528,19 @@
         "A-bootstrap-self-applies"
       ],
       "claim": "Framework-jurisdiction invariants (FRAMEWORK_SCOPED_INVARIANTS) shall run only against a graph whose manifest declares SELF_HOSTING=True.",
-      "enforced_by": [
-        "test_framework_scoped_invariants_skipped_when_not_self_hosting",
-        "test_framework_scoped_invariants_run_when_self_hosting",
-        "test_hotam_dev_pulse_has_no_framework_scoped_violations",
-        "test_hotam_spec_self_pulse_unchanged_by_self_hosting_gate",
-        "test_synthetic_non_self_domain_with_framework_checks_not_flagged"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_scoped_invariants_skipped_when_not_self_hosting, test_framework_scoped_invariants_run_when_self_hosting, test_hotam_dev_pulse_has_no_…→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-domain-self-hosting-flag",
@@ -6176,16 +6556,19 @@
         "A-python-stack"
       ],
       "claim": "A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record.",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_dry_run_writes_no_log"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_dry_run_writes_no_log]→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-land-tier-trace-skips-dry-run",
@@ -6201,16 +6584,19 @@
         "A-python-stack"
       ],
       "claim": "A broken or unwritable spec/.runtime/land-log.jsonl location shall never fail an otherwise-green apply -- the write is best-effort, warn only.",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort]→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-land-tier-trace-best-effort",
@@ -6226,17 +6612,19 @@
         "A-python-stack"
       ],
       "claim": "The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse.",
-      "enforced_by": [
-        "test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain",
-        "test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_domain_open_actions"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_claude_md_purity.py::test_domain_map_shows_pulse_per_domain, test_framework_claude_md_purity.py::test_emit_cipher_aggregates_other_do…→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-domain-map-shows-pulse",
@@ -6250,21 +6638,19 @@
     {
       "assumptions": [],
       "claim": "A tool tools/audit_tensions.py shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension.",
-      "enforced_by": [
-        "tests/test_tool_audit_tensions.py::test_pole_tension_is_found",
-        "tests/test_tool_audit_tensions.py::test_modal_opposition_is_found",
-        "tests/test_tool_audit_tensions.py::test_empty_graph_is_vacuous",
-        "tests/test_tool_audit_tensions.py::test_two_runs_identical_candidates",
-        "tests/test_tool_audit_tensions.py::test_mediated_pair_is_excluded",
-        "tests/test_tool_audit_tensions.py::test_refine_siblings_excluded"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_audit_tensions.py::test_pole_tension_is_found, tests/test_tool_audit_tensions.py::test_modal_opposition_is_found, tests/test_tool_au…→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-tension-audit-shortlist-tool",
@@ -6278,16 +6664,19 @@
     {
       "assumptions": [],
       "claim": "tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict.",
-      "enforced_by": [
-        "tests/test_tool_audit_tensions.py::test_audit_never_writes_graph_py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_audit_tensions.py::test_audit_never_writes_graph_py]→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-tension-audit-presents-only",
@@ -6301,19 +6690,19 @@
     {
       "assumptions": [],
       "claim": "The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the tension audit has never run or the live SETTLED graph has grown by more than GENERATIVE_AUDIT_STALE_DELTA atoms since the last recorded sweep.",
-      "enforced_by": [
-        "tests/test_what_now.py::test_staleness_never_run_fires",
-        "tests/test_what_now.py::test_staleness_fresh_is_silent",
-        "tests/test_what_now.py::test_staleness_after_growth_fires",
-        "tests/test_what_now.py::test_staleness_never_enters_diagnose"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_what_now.py::test_staleness_never_run_fires, tests/test_what_now.py::test_staleness_fresh_is_silent, tests/test_what_now.py::test_stalene…→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-tension-audit-staleness-visible",
@@ -6327,20 +6716,19 @@
     {
       "assumptions": [],
       "claim": "The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.",
-      "enforced_by": [
-        "tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_when_never_evaluated",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_silent_after_evaluation",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_refires_after_growth",
-        "tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_never_enters_diagnose"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_…→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-revisit-markers-evaluated",
@@ -6355,11 +6743,7 @@
       "assumptions": [],
       "claim": "The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD) in place via tools/apply_proposal.py, appending the reason to its statement and never deleting the node.",
       "enforced_by": [
-        "test_assumption_transition.py::test_validate_uncertain_needs_no_signoff",
-        "test_assumption_transition.py::test_validate_dead_and_holds_require_signoff",
-        "test_assumption_transition.py::test_holds_uncertain_dead_cycle",
-        "test_assumption_transition.py::test_transition_missing_assumption_is_refused",
-        "test_assumption_transition.py::test_dead_transition_surfaces_drift_fallout"
+        "TestApply_AssumptionTransition_Dead"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6368,6 +6752,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_assumption_transition.py::test_validate_uncertain_needs_no_signoff, test_assumption_transition.py::test_validate_dead_and_holds_require_signoff…→[TestApply_AssumptionTransition_Dead]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-assumption-transition-kind-exists",
@@ -6382,13 +6771,7 @@
       "assumptions": [],
       "claim": "Every non-empty Assumption.machine_check shall be a well-formed Python expression (compilable in eval mode), never free prose.",
       "enforced_by": [
-        "check_assumption_machine_checks_syntactic",
-        "test_assumption_machine_check.py::test_registered_in_all_invariants",
-        "test_assumption_machine_check.py::test_compilable_formula_passes",
-        "test_assumption_machine_check.py::test_python_version_formula_passes",
-        "test_assumption_machine_check.py::test_empty_machine_check_is_skipped",
-        "test_assumption_machine_check.py::test_prose_formula_fires_violation",
-        "test_assumption_machine_check.py::test_real_domain_machine_checks_are_syntactic"
+        "check_assumption_machine_checks_syntactic"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6397,6 +6780,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_assumption_machine_checks_syntactic, test_assumption_machine_check.py::test_registered_in_all_invariants, test_assumption_machine_check.py::te…→[check_assumption_machine_checks_syntactic]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-machine-check-syntactic",
@@ -6411,11 +6799,7 @@
       "assumptions": [],
       "claim": "The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt.",
       "enforced_by": [
-        "test_uncertain_aging.py::test_uncertain_assumptions_filter",
-        "test_uncertain_aging.py::test_below_threshold_is_silent",
-        "test_uncertain_aging.py::test_at_threshold_surfaces_one_p4_action",
-        "test_uncertain_aging.py::test_holds_assumption_never_ages",
-        "test_uncertain_aging.py::test_real_graph_surfaces_three_uncertain_assumptions"
+        "TestDiagnoseSignals_P4UncertainAgingHighFanOut"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6424,6 +6808,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_uncertain_aging.py::test_uncertain_assumptions_filter, test_uncertain_aging.py::test_below_threshold_is_silent, test_uncertain_aging.py::test_a…→[TestDiagnoseSignals_P4UncertainAgingHighFanOut]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-uncertain-assumptions-surface",
@@ -6438,9 +6827,7 @@
       "assumptions": [],
       "claim": "The proposal protocol shall include a ProposedStakeholder kind (kind='Stakeholder') that materializes a new Stakeholder node in the active domain's stakeholders tuple via tools/apply_proposal.py, refusing a duplicate id.",
       "enforced_by": [
-        "test_tool_apply_proposal_stakeholder.py::test_validate_proposal_dispatches_stakeholder_kind",
-        "test_tool_apply_proposal_stakeholder.py::test_apply_stakeholder_appends_new_node",
-        "test_tool_apply_proposal_stakeholder.py::test_apply_stakeholder_refuses_duplicate_id"
+        "TestApply_Stakeholder"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6449,6 +6836,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_tool_apply_proposal_stakeholder.py::test_validate_proposal_dispatches_stakeholder_kind, test_tool_apply_proposal_stakeholder.py::test_apply_sta…→[TestApply_Stakeholder]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-proposed-stakeholder-kind-exists",
@@ -6462,19 +6854,19 @@
     {
       "assumptions": [],
       "claim": "The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-guard, Stop context_producer) shall live in a committed project settings.json generated by tools/setup_hooks.py with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json.",
-      "enforced_by": [
-        "test_tool_setup_hooks.py::test_build_settings_has_universal_events",
-        "test_tool_setup_hooks.py::test_build_settings_commands_are_portable",
-        "test_tool_setup_hooks.py::test_build_settings_covers_every_universal_tool",
-        "test_tool_setup_hooks.py::test_dry_run_writes_nothing"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_setup_hooks.py::test_build_settings_has_universal_events, test_tool_setup_hooks.py::test_build_settings_commands_are_portable, test_tool_s…→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-sensorium-committed",
@@ -6489,12 +6881,7 @@
       "assumptions": [],
       "claim": "An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD.",
       "enforced_by": [
-        "check_assumption_status_valid",
-        "test_assumption_transition.py::test_implements_is_valid_assumption_state",
-        "test_assumption_transition.py::test_implements_requires_signoff",
-        "test_assumption_transition.py::test_implements_transition_directions_apply",
-        "test_assumption_transition.py::test_implements_status_valid_invariant",
-        "test_assumption_transition.py::test_implements_neither_ages_nor_falls_out"
+        "check_assumption_status_valid"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6503,6 +6890,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [check_assumption_status_valid, test_assumption_transition.py::test_implements_is_valid_assumption_state, test_assumption_transition.py::test_impleme…→[check_assumption_status_valid]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-assumption-implements-state",
@@ -6539,17 +6931,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.",
-      "enforced_by": [
-        "test_tool_ticket_create.py",
-        "test_tool_ticket_move.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_ticket_create.py, test_tool_ticket_move.py]→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-ticket-engine-on-disk",
@@ -6565,19 +6959,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "Every ticket shall carry an append-only ## History section in which each mutation (create, status move, comment, text change) records one machine-recognisable entry, with a text change snapshotting the prior text.",
-      "enforced_by": [
-        "test_tool_ticket_create.py",
-        "test_tool_ticket_move.py",
-        "test_tool_ticket_comment.py",
-        "test_tool_ticket_edit.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_ticket_create.py, test_tool_ticket_move.py, test_tool_ticket_comment.py, test_tool_ticket_edit.py]→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-ticket-carries-history",
@@ -6616,16 +7010,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "The what_now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into diagnose().",
-      "enforced_by": [
-        "test_open_tickets_band.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_open_tickets_band.py]→[]; settled_at: 2026-07-03→2026-07-12"
         }
       ],
       "id": "R-open-tickets-visible",
@@ -6641,16 +7038,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs.",
-      "enforced_by": [
-        "test_attention_core.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py]→[]; settled_at: 2026-07-04→2026-07-12"
         }
       ],
       "id": "R-attention-registry",
@@ -6666,16 +7066,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
-      "enforced_by": [
-        "test_attention_core.py::test_core_names_no_platform_token"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py::test_core_names_no_platform_token]→[]; settled_at: 2026-07-04→2026-07-12"
         }
       ],
       "id": "R-attention-agent-agnostic-core",
@@ -6691,16 +7094,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected.",
-      "enforced_by": [
-        "test_attention_core.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py]→[]; settled_at: 2026-07-04→2026-07-12"
         }
       ],
       "id": "R-attention-superset-of-diagnose",
@@ -6716,16 +7122,19 @@
         "A-text-grounded-in-models"
       ],
       "claim": "The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
-      "enforced_by": [
-        "test_attention_claude_adapter.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_claude_adapter.py]→[]; settled_at: 2026-07-04→2026-07-12"
         }
       ],
       "id": "R-attention-claude-adapter",
@@ -6739,17 +7148,19 @@
     {
       "assumptions": [],
       "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset.",
-      "enforced_by": [
-        "test_framework_domain_tiering.py::test_every_test_is_tiered",
-        "test_framework_domain_tiering.py::test_tiers_partition_the_suite"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_domain_tiering.py::test_every_test_is_tiered, test_framework_domain_tiering.py::test_tiers_partition_the_suite]→[]; settled_at: 2026-07-05→2026-07-12"
         }
       ],
       "id": "R-framework-suite-tiered",
@@ -6784,11 +7195,8 @@
     {
       "assumptions": [],
       "claim": "The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise.",
-      "enforced_by": [
-        "test_launch_dir_write_scope.py::test_no_committed_code_writes_into_the_host_home",
-        "test_launch_dir_write_scope.py::test_scanner_catches_a_home_write_negative_control"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
@@ -6800,6 +7208,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_launch_dir_write_scope.py::test_no_committed_code_writes_into_the_host_home, test_launch_dir_write_scope.py::test_scanner_catches_a_home_write_…→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-work-within-launch-dir",
@@ -6815,17 +7228,19 @@
         "A-finite-context-operators"
       ],
       "claim": "While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call.",
-      "enforced_by": [
-        "test_tool_context.py::test_absent_stamp_reads_unmeasured",
-        "test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_context.py::test_absent_stamp_reads_unmeasured, test_tool_context.py::test_stamp_without_pct_renders_unmeasured_line]→[]; settled_at: 2026-07-05→2026-07-12"
         }
       ],
       "id": "R-unmeasured-cipher-names-host-boundary",
@@ -6865,16 +7280,19 @@
     {
       "assumptions": [],
       "claim": "The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py.",
-      "enforced_by": [
-        "tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py]→[]; settled_at: 2026-07-05→2026-07-12"
         }
       ],
       "id": "R-enforcement-perimeter-baselines-guarded",
@@ -6888,16 +7306,19 @@
     {
       "assumptions": [],
       "claim": "A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py.",
-      "enforced_by": [
-        "tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged]→[]; settled_at: 2026-07-05→2026-07-12"
         }
       ],
       "id": "R-enforcement-perimeter-visible",
@@ -6911,16 +7332,19 @@
     {
       "assumptions": [],
       "claim": "The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.",
-      "enforced_by": [
-        "test_short_form.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_short_form.py]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-crystal-carries-short-form",
@@ -6955,16 +7379,19 @@
     {
       "assumptions": [],
       "claim": "Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline.",
-      "enforced_by": [
-        "test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression]→[]; settled_at: 2026-07-05→2026-07-12"
         }
       ],
       "id": "R-run-speed-guarded",
@@ -7022,17 +7449,19 @@
         "A-finite-context-operators"
       ],
       "claim": "Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off.",
-      "enforced_by": [
-        "test_tool_delegate.py::test_create_allocates_id_and_writes_file",
-        "test_tool_delegate.py::test_close_sets_done_and_result"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_delegate.py::test_create_allocates_id_and_writes_file, test_tool_delegate.py::test_close_sets_done_and_result]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-delegation-is-a-file",
@@ -7074,8 +7503,7 @@
       "assumptions": [],
       "claim": "HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files.",
       "enforced_by": [
-        "test_project_root_not_hardcoded.py::test_no_committed_code_guesses_consumer_root_from_file",
-        "test_project_root_not_hardcoded.py::test_scanner_catches_a_hardcoded_root_negative_control"
+        "TestProjectRoot_Priority_NativeMarkerBeatsPyproject"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -7089,6 +7517,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforced_by: [test_project_root_not_hardcoded.py::test_no_committed_code_guesses_consumer_root_from_file, test_project_root_not_hardcoded.py::test_scanner_catches…→[TestProjectRoot_Priority_NativeMarkerBeatsPyproject]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-project-root-not-hardcoded",
@@ -7151,16 +7584,19 @@
         "A-core-periphery-layering-holds"
       ],
       "claim": "A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only.",
-      "enforced_by": [
-        "test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery]→[]; settled_at: 2026-07-10→2026-07-12"
         }
       ],
       "id": "R-core-periphery-import-ratchet",
@@ -7176,10 +7612,8 @@
         "A-python-stack"
       ],
       "claim": "A release wheel is produced only by spec/scripts/build_wheel.py, which fuses populate + `uv build --wheel` + a name-set self-check and refuses to emit a wheel whose hotam_spec/_tools/*.py member names do not match the set of spec/tools/*.py file names on disk (Etap Y, #127 -- upgraded from a bare member-count comparison, which a wheel with the right count of wrong-named files would have passed).",
-      "enforced_by": [
-        "test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
@@ -7191,6 +7625,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-11; review_after: →2027-01-11"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_e2e_wheel_subprocess.py::test_wheel_install_full_quickstart_e2e]→[]; settled_at: 2026-07-11→2026-07-12"
         }
       ],
       "id": "R-wheel-build-atomic-verified",

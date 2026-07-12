@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-prompt-loaded-at-session-start",
+  "claim": "A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

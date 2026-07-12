@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-drift-structurally-impossible",
+  "claim": "The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestGenerator_GraphJSONDoubleRegenerateIsIdentical"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-rejected-preserved-not-deleted",
+  "claim": "Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestApply_Rejection"
+  ]
+}

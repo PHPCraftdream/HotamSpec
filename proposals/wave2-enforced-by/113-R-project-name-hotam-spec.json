@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-project-name-hotam-spec",
+  "claim": "The project's name shall be Hotam-Spec (display), hotam_spec (Python package), hotam-spec (kebab-case for filesystem and PyPI), closing M1.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

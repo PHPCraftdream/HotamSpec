@@ -7,13 +7,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ---
 
-## `R-agent-code-imports-framework` (ENFORCED)
+## `R-agent-code-imports-framework` (PROSE)
 
 **Claim.** An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory.
 
 **Why.** First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-agent-code-imports-framework-directionally, which names this requirement's actual premise.
-
-**Enforced by:** `test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir`, `test_agent_import_direction.py::test_shared_tools_never_import_from_an_agent_tools_dir`
 
 **Last reviewed.** 2026-07-02
 
@@ -22,6 +20,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
+- 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_i…→[]; settled_at: 2026-07-02→2026-07-12
 
 ## `R-agent-conduct-is-rules-not-tests` (PROSE)
 
@@ -37,13 +36,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-07-05; review_after: →2027-01-05
 
-## `R-agent-declares-purpose` (ENFORCED)
+## `R-agent-declares-purpose` (PROSE)
 
 **Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.
 
 **Why.** An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine-readable (vs README which is prose); placing it next to SCOPE keeps the agent's contract in one file. Enforced structurally so the absence of PURPOSE = missing operator visibility = red test, not silent gap.
-
-**Enforced by:** `test_every_agent_declares_purpose`
 
 **Last reviewed.** 2026-06-30
 
@@ -52,6 +49,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-agent-has-docs-dir` (ENFORCED)
 
@@ -75,7 +73,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/tools/ exists as concrete evidence.
 
-**Enforced by:** `check_agent_has_tools_subdir`, `test_tool_create_agent.py::test_creates_required_files`, `test_invariants.py::test_check_agent_has_tools_subdir_fires_on_missing_tools`
+**Enforced by:** `check_agent_has_tools_subdir`
 
 **Last reviewed.** 2026-06-30
 
@@ -84,6 +82,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on…→[check_agent_has_tools_subdir]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-agent-is-a-directory` (ENFORCED)
 
@@ -91,7 +90,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence.
 
-**Enforced by:** `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`, `test_tool_create_agent.py`
+**Enforced by:** `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`
 
 **Last reviewed.** 2026-06-30
 
@@ -100,6 +99,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_agent_has_agents_subdir, check_agent_has_docs_subdir, test_tool_create_agent.py]→[check_agent_has_agents_subdir, check_agent_has_docs_subdir]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-agent-is-recursive-director` (ENFORCED)
 
@@ -117,13 +117,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 
-## `R-agent-map-generated` (ENFORCED)
+## `R-agent-map-generated` (STRUCTURAL)
 
 **Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
 
 **Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)
-
-**Enforced by:** `test_agent_map.py`
 
 **Last reviewed.** 2026-06-30
 
@@ -132,6 +130,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-agent-never-lost` (ENFORCED)
 
@@ -139,7 +138,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
 
-**Enforced by:** `test_what_now.py`
+**Enforced by:** `TestTopAction_RealGraph`
 
 **Last reviewed.** 2026-06-30
 
@@ -148,15 +147,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [test_what_now.py]→[TestTopAction_RealGraph]; settled_at: 2026-06-30→2026-07-12
 
-## `R-agent-references-shared-docs` (ENFORCED)
+## `R-agent-references-shared-docs` (PROSE)
 
 **Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content.
 
 **Why.** Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility.
 
-**Enforced by:** `test_domain_isolation_p17.py::test_agent_shared_docs_block_present`
-
 **Last reviewed.** 2026-06-30
 
 **Review after.** 2026-12-30
@@ -164,15 +162,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_domain_isolation_p17.py::test_agent_shared_docs_block_present]→[]; settled_at: 2026-06-30→2026-07-12
 
-## `R-agent-scoped-constitution` (ENFORCED)
+## `R-agent-scoped-constitution` (PROSE)
 
 **Claim.** For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
 
 **Why.** Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_scoped_constitution' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)
 
-**Enforced by:** `test_agent_scoped_constitution.py`
-
 **Last reviewed.** 2026-06-30
 
 **Review after.** 2026-12-30
@@ -180,6 +177,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py]→[]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-boot-cite-in-first-sentence` (PROSE)
 
@@ -201,7 +199,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-boot-from-substrate (WHAT to load). Without re-loading from the substrate, the operator lives in session memory and drifts from the graph's live state.
 
-**Enforced by:** `test_reflection.py`
+**Enforced by:** `TestBuildLiveState_RendersOnFixture`
 
 **Last reviewed.** 2026-06-30
 
@@ -210,15 +208,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [test_reflection.py]→[TestBuildLiveState_RendersOnFixture]; settled_at: 2026-06-30→2026-07-12
 
-## `R-operator-crystal-embeds-thinking-distilled` (ENFORCED)
+## `R-operator-crystal-embeds-thinking-distilled` (STRUCTURAL)
 
 **Claim.** The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (via short_form) plus a path link to spec/docs/thinking/<slug>.md, not a multi-line RULE+WHY distillate.
 
 **Why.** REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach: even compressed RULE+WHY pairs consumed ~19k chars across 22 topics. A single RULE sentence (via short_form, R-crystal-carries-short-form) plus a path link achieves the same navigation goal in ~2.4k chars — the full text is on disk at the linked path, loaded only when needed (R-crystal-reload-by-reference).
 
-**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_has_tier3_reference`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded`
-
 **Last reviewed.** 2026-07-02
 
 **Review after.** 2027-01-02
@@ -226,15 +223,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
+- 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content, test_embedded_thinking_tools.py::test_embedded_thinking_bl…→[]; settled_at: 2026-07-02→2026-07-12
 
-## `R-operator-crystal-embeds-tools-distilled` (ENFORCED)
+## `R-operator-crystal-embeds-tools-distilled` (STRUCTURAL)
 
 **Claim.** The operator's CLAUDE.md shall embed a table of tool name + Canon sentence (via short_form) plus a path link to spec/docs/tools/<basename>.md, not a multi-line distillate.
 
 **Why.** REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed ~12k chars across 30+ tools. A single Canon sentence (via short_form, R-crystal-carries-short-form) plus a path link achieves navigation in ~2.9k chars while the full text stays on disk (R-crystal-reload-by-reference).
 
-**Enforced by:** `test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content`, `test_embedded_thinking_tools.py::test_embedded_thinking_block_is_bounded`
-
 **Last reviewed.** 2026-07-02
 
 **Review after.** 2027-01-02
@@ -242,6 +238,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
+- 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content, test_embedded_thinking_tools.py::test_embedded_thinking_block_…→[]; settled_at: 2026-07-02→2026-07-12
 
 ## `R-operator-has-context-budget` (ENFORCED)
 
@@ -249,7 +246,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-operator-acting-facet (budget concern). check_operator_within_budget validates the budget.
 
-**Enforced by:** `check_operator_within_budget`, `test_operator.py`
+**Enforced by:** `check_operator_within_budget`
 
 **Last reviewed.** 2026-06-30
 
@@ -258,6 +255,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_operator_within_budget, test_operator.py]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-operator-is-frozen-dataclass` (ENFORCED)
 
@@ -265,7 +263,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-operator-acting-facet (type identity concern). hotam_spec.operator.Operator is a frozen dataclass; OP-director is the first instance.
 
-**Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
+**Enforced by:** `check_typed_anchors_operator`
 
 **Last reviewed.** 2026-06-30
 
@@ -274,6 +272,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-operator-may-have-parent` (ENFORCED)
 
@@ -297,7 +296,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** M36 — the reflexive twin of check_steward_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the steward-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.
 
-**Enforced by:** `check_operator_steward_not_self`, `test_operator.py::test_check_operator_steward_not_self_fires`
+**Enforced by:** `check_operator_steward_not_self`
 
 **Last reviewed.** 2026-06-30
 
@@ -306,6 +305,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires]→[check_operator_steward_not_self]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-operator-prompt-from-substrate` (ENFORCED)
 
@@ -313,7 +313,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from code. The atomized SETTLEDs are now the actual constitution; gen_spec emits them into CLAUDE.md between CONSTITUTION sentinels.
 
-**Enforced by:** `test_constitution_block_generated`
+**Enforced by:** `TestBuildConstitution_ByteIdenticalToFixture`
 
 **Last reviewed.** 2026-06-30
 
@@ -322,15 +322,14 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [test_constitution_block_generated]→[TestBuildConstitution_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12
 
-## `R-operator-prompt-loaded-at-session-start` (ENFORCED)
+## `R-operator-prompt-loaded-at-session-start` (PROSE)
 
 **Claim.** A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.
 
 **Why.** Closes the boot edge of the sensor-substrate inversion. Without SessionStart regen, Claude Code may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL block reflects an older graph state. The hook ensures the substrate writes the operator's prompt at every session boot — physically, not aspirationally (R-operator-prompt-from-substrate).
 
-**Enforced by:** `test_session_start_hook_runs_gen_spec`
-
 **Last reviewed.** 2026-06-30
 
 **Review after.** 2026-12-30
@@ -338,6 +337,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_session_start_hook_runs_gen_spec]→[]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-operator-references-stakeholder` (ENFORCED)
 
@@ -345,7 +345,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Atom of R-operator-acting-facet (stakeholder reference concern). check_no_dangling_ids validates the reference.
 
-**Enforced by:** `check_no_dangling_operator_refs`, `test_operator.py`
+**Enforced by:** `check_no_dangling_operator_refs`
 
 **Last reviewed.** 2026-06-30
 
@@ -354,6 +354,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_no_dangling_operator_refs, test_operator.py]→[check_no_dangling_operator_refs]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-operator-type-vs-facet` (ENFORCED)
 
@@ -361,7 +362,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** M20. DECIDED 2026-06-30: Operator is a new type. Rationale: a Stakeholder facet cannot carry a ContextBudget, enforce check_operator_within_budget, or be referenced by Goal.owner — all of which are live ENFORCED requirements. The clean separation (Stakeholder = party, Operator = acting facet with budget + capabilities) prevents conflation at the single-altitude-vs-multi-altitude axis. Evidence: spec/src/hotam_spec/operator.py:Operator frozen dataclass; R-operator-is-frozen-dataclass SETTLED ENFORCED; check_typed_anchors_operator live.
 
-**Enforced by:** `check_typed_anchors_operator`, `test_operator.py`
+**Enforced by:** `check_typed_anchors_operator`
 
 **Last reviewed.** 2026-06-30
 
@@ -370,6 +371,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-prefer-tool-over-hand` (STRUCTURAL)
 
@@ -377,8 +379,6 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Why.** Today's third architectural principle. Cannot be algorithmically enforced (no AST detection of 'you did it by hand'); STRUCTURAL via prose discipline in the operator-prompt + a generated discipline doc. Use SETTLED (not DRAFT) — the principle is now in force; the structural enforcement is the prose.
 
-**Enforced by:** `CLAUDE.md§Operator boot ritual`, `docs/methodology/discipline.md`
-
 **Last reviewed.** 2026-06-30
 
 **Review after.** 2026-12-30
@@ -386,3 +386,4 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — enforced_by: [CLAUDE.md§Operator boot ritual, docs/methodology/discipline.md]→[]; settled_at: 2026-06-30→2026-07-12

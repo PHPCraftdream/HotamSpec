@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-no-hand-edit-graph",
+  "claim": "Changes to domains/*/graph.py shall be made only through tools/apply_proposal.py, with direct hand-edits prohibited outside of bootstrap events.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

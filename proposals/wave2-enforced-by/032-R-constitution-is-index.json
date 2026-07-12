@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-constitution-is-index",
+  "claim": "The CONSTITUTION block in root CLAUDE.md shall render each SETTLED requirement as id + enforcement flag [E/S/P] grouped by category, with a pointer to docs/gen/REQUIREMENTS.md for full claims.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "TestBuildConstitution_ByteIdenticalToFixture"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-crystal-embeds-tools-distilled",
+  "claim": "The operator's CLAUDE.md shall embed a table of tool name + Canon sentence (via short_form) plus a path link to spec/docs/tools/\u003cbasename\u003e.md, not a multi-line distillate.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

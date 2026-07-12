@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-gen-notice",
+  "claim": "When spec/content/graph.py is absent, tools/gen_spec.py shall emit a 'no content yet' notice into docs/gen/*.md, not fail.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "STRUCTURAL",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}

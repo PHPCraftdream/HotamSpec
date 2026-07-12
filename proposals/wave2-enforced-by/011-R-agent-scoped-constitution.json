@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-scoped-constitution",
+  "claim": "For each spec/agents/\u003cname\u003e/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "enforced_by": [
+    "\u003cclear\u003e"
+  ]
+}
