@@ -177,6 +177,20 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 			return written, err
 		}
 		written = append(written, claudeMDPath)
+
+		// Mirror the identical rendered crystal into AGENTS.md and GEMINI.md
+		// alongside CLAUDE.md so Codex (AGENTS.md convention) and Gemini CLI
+		// pick up the exact same operating instructions as Claude Code — same
+		// render, same byte slice, written in the same pass, so the three
+		// files can never drift apart.
+		claudeMDDir := filepath.Dir(claudeMDPath)
+		for _, name := range []string{"AGENTS.md", "GEMINI.md"} {
+			p := filepath.Join(claudeMDDir, name)
+			if err := writeFileMkdir(p, []byte(claudeMD)); err != nil {
+				return written, err
+			}
+			written = append(written, p)
+		}
 	}
 
 	return written, nil
