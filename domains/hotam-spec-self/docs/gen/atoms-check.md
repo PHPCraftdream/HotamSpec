@@ -9,34 +9,40 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ## `R-bijection-r-to-enforcer` (ENFORCED)
 
-**Claim.** Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.
+**Claim.** Every SETTLED/ENFORCED requirement shall name an existing check_* in the invariant registry (internal/invariants, registered via MustRegister) or a real Test* function in the Go test suite.
 
-**Why.** Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. WAVE 3 outcome.
+**Why.** Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. ENFORCED by check_bijection_r_to_enforcer (internal/invariants/self_reference.go), which resolves check_* names against the All registry and test_* names against the Go test-function resolver (internal/gate). WAVE 3 outcome.
 
 **Enforced by:** `check_bijection_r_to_enforcer`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-09-12
+
+**Sources.** internal/invariants/self_reference.go, internal/invariants/enforcement.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — claim: Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.→Every SETTLED/ENFORCED requirement shall name an existing check_* in the invariant registry (internal/invariants, registered via MustRegister) or a r…; why: Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable en…→Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable en…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/invariants/self_reference.go, internal/invariants/enforcement.go]
 
 ## `R-check-method-is-atomic` (PROSE)
 
 **Claim.** Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.
 
-**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. ENFORCED Wave 8 move 2 (2026-07-03): the check_* (invariant) side of the atomicity_compound_baseline.json ratchet baseline was already empty coming into this wave (porция 1's AST-loop + N-sub-rules classifier fixes burned it down to 0 with no false positives remaining). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline is now a STRICT zero-COMPOUND gate for every registered check_* function -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism; this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty.
+**Why.** Not yet ported in the Go port: the audit-atomicity command (which flagged check_* functions with compound conditions) is Declared, not ported (internal/methodology/tools_data.go). Historically implemented as spec/tools/audit_atomicity.py, which walked invariants.py and reported multi-rule families into docs/gen/AUDIT.md, making the discipline machine-auditable. The Python-era strict zero-COMPOUND gate (test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline) has no Go equivalent. R-atomicity-ratchet-no-growth remains the permanent, more general growth-direction mechanism; this atom's own enforcement is honest PROSE debt in the Go port until the audit tool is ported.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-09-12
+
+**Sources.** internal/methodology/tools_data.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — why: SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-require…→Not yet ported in the Go port: the audit-atomicity command (which flagged check_* functions with compound conditions) is Declared, not ported (intern…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/methodology/tools_data.go]
 
 ## `R-decided-by-verifiable-signature` (PROSE)
 

@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-backend-scope",
+  "claim": "The framework names no target backends: the core (graph/JSON proposals/CLI/Go test suite) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (cmd/hotam CLIs, JSON Proposed* shapes, go test verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'no target backend is named' or 'adapting the skin is the adopting agent's own concern' as a runtime property of the committed graph (it is a design-stance/non-decision about scope, not a structural fact). This is the same honesty class as R-initiator-supplies-domain-content and R-observation-evidence-scope: a real, permanent positional discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this claim already reached ENFORCED separately: R-core-imports-stdlib-or-hotam-spec-only mechanically verifies the CONSTRUCTION half -- go.mod proving the module imports nothing beyond the Go standard library -- so no backend dependency has silently crept into the core; R-backend-scope itself states the broader naming/positional stance, which stays INHERENTLY_PROSE.",
+  "source_refs": [
+    "go.mod"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}

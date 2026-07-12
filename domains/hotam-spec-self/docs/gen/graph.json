@@ -906,7 +906,7 @@
     },
     {
       "assumptions": [],
-      "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.py), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
+      "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -920,22 +920,30 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_create_axis.py::test_novel_axis_passes_gatekeeper, tests/test_tool_create_axis.py::test_near_duplicate_refused, tests/test_tool_crea…→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.p…→Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-dupl…; why: M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on late…→M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on late…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/diagnose/confront.go, internal/methodology/tools_data.go]"
         }
       ],
       "id": "R-axis-gatekeeper-policy",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/diagnose/confront.go",
+        "internal/methodology/tools_data.go"
+      ],
       "status": "SETTLED",
-      "why": "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. tools/create_axis.py now exists: it reuses confront.py's lexical token/stem overlap scorer against every existing Axis's slug+description, refuses (exit 1) on a score >= threshold (default 0.35, naming the nearest existing axis), and admits only via --force-new '<justification>' which is folded into the landed proposal's why field (never a silent override). Exact-slug duplicates are refused unconditionally (no --force-new escape -- that is re-declaration, not creation). ENFORCED by spec/tests/test_tool_create_axis.py covering: positive (novel axis passes), negative (near-duplicate refused, exit != 0, nearest match named), force-new override path (justification recorded), exact-slug duplicate always refused, and the apply-side writer (_apply_axis_to_source: insert + duplicate-slug refusal)."
+      "why": "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists. The confront engine that would power the similarity check IS ported (internal/diagnose/confront.go, `hotam confront`), but the create-axis command itself is Declared, not ported (internal/methodology/tools_data.go). The policy stands for the moment create-axis is built: it would reuse confront's lexical token/stem overlap scorer against every existing Axis's slug+description, refuse on a score >= threshold (default 0.35, naming the nearest existing axis), and admit only via --force-new '<justification>' folded into the landed proposal's why field (never a silent override). Exact-slug duplicates would be refused unconditionally (no --force-new escape -- that is re-declaration, not creation)."
     },
     {
       "assumptions": [
         "A-bootstrap-self-applies",
         "A-graph-fits-memory"
       ],
-      "claim": "Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17.",
+      "claim": "Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.",
       "enforced_by": [
         "check_domain_manifest_exists_and_importable"
       ],
@@ -951,15 +959,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout i…→Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.; why: M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file …→M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go, internal/invariants/domain_structure.go, cmd/hotam/gen_spec.go]"
         }
       ],
       "id": "R-content-layout-evolution",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/loader/loader.go",
+        "internal/invariants/domain_structure.go",
+        "cmd/hotam/gen_spec.go"
+      ],
       "status": "SETTLED",
-      "why": "M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.py, with gen_spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. Evidence: domains/hotam-spec-self/graph.py, spec/tools/gen_spec.py load_content_graph, R-domain-owns-graph-py SETTLED. (Wave 1 seed-coherence pass: enforced_by's second entry was the bare requirement id 'R-domain-owns-graph-py' rather than a resolvable test/check reference -- corrected to name the actual test that guards the domain-owns-graph-py claim, caught by the new check_enforced_by_resolvable invariant.)"
+      "why": "M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.json, with gen-spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. In the Go port: domains/<name>/graph.json is the graph source, internal/loader (LoadGraph) discovers it, and `hotam gen-spec` (internal/generator) regenerates docs/gen/*.md from it. ENFORCED by check_domain_manifest_exists_and_importable (internal/invariants/domain_structure.go)."
     },
     {
       "assumptions": [
@@ -1577,15 +1594,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_operator_within_budget, test_reflection.py::test_reflect_over_budget_operators_names_crystallize_then_delegate]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: SETTLED (P8): the P8 REFLECTION band fires 'over-budget' → crystallize first → if still over, delegate. The signal path is structural: check_oper…→SETTLED (P8): the P8 REFLECTION band fires 'over-budget' then crystallize first then if still over, delegate. The signal path is structural: check_op…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/diagnose/finding.go, internal/invariants/lifecycle_checks.go, cmd/hotam/what_now.go]"
         }
       ],
       "id": "R-context-bounded-delegation",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/diagnose/finding.go",
+        "internal/invariants/lifecycle_checks.go",
+        "cmd/hotam/what_now.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (P8): the P8 REFLECTION band fires 'over-budget' → crystallize first → if still over, delegate. The signal path is structural: check_operator_within_budget (P1) detects the breach; the REFLECTION band (P0, tools/what_now.py::P_REFLECTION) names the path; docs/playbooks/ documents the procedure. DomainScope narrowing (per-operator sub-graph) remains a later phase but the SIGNAL — over-budget → delegate — exists today. Makes the methodology scale-free; generalizes 'agent never lost' to 'agent never overloaded'. Implementation: tools/what_now.py::P_REFLECTION + docs/playbooks/. Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- reflect_over_budget_operators (hotam_spec.reflection) already names the crystallize-then-delegate sequence in its Finding.imperative; a new synthetic-graph unit test (test_reflect_over_budget_operators_names_crystallize_then_delegate) proves the ordered sequence is actually rendered, not merely claimed in prose."
+      "why": "SETTLED (P8): the P8 REFLECTION band fires 'over-budget' then crystallize first then if still over, delegate. The signal path is structural: check_operator_within_budget (internal/invariants/lifecycle_checks.go) detects the breach; ReflectOverBudgetOperators (internal/diagnose/finding.go) names the path in its Finding.imperative -- 'crystallize first (R-crystallize-before-split); if still over, delegate a sub-domain (R-context-bounded-delegation)'; `hotam what-now` composes these via the diagnose package. DomainScope narrowing (per-operator sub-graph) remains a later phase but the SIGNAL -- over-budget then delegate -- exists today. Makes the methodology scale-free; generalizes 'agent never lost' to 'agent never overloaded'."
     },
     {
       "assumptions": [
@@ -1885,15 +1911,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies adv…→SETTLED (P7): the order discipline is structurally bound. The apply-proposal mechanism (internal/proposal) crystallizes via Proposal types; the const…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/proposal/apply.go, internal/diagnose/finding.go, internal/generator/constitution.go]"
         }
       ],
       "id": "R-crystallize-before-split",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/proposal/apply.go",
+        "internal/diagnose/finding.go",
+        "internal/generator/constitution.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies advancement before any split is even considered; the constitution §4 (super-rules) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. Implementation: tools/apply_proposal.py + tools/closure.py + docs/gen/CONSTITUTION.md."
+      "why": "SETTLED (P7): the order discipline is structurally bound. The apply-proposal mechanism (internal/proposal) crystallizes via Proposal types; the constitution (internal/generator/constitution.go, docs/gen/CONSTITUTION.md) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. The over-budget REFLECTION finding (ReflectOverBudgetOperators, internal/diagnose/finding.go) renders the ordered imperative: 'crystallize first (R-crystallize-before-split); if still over, delegate a sub-domain (R-context-bounded-delegation).' The closure tool that would verify advancement before any split is considered is Declared, not ported (internal/methodology/tools_data.go)."
     },
     {
       "assumptions": [
@@ -2051,15 +2086,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_operator_within_budget, test_operator.py]→[check_operator_within_budget]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: M17. Steward verdict 2026-07-02 (verbatim): «наверно, это размер бизнес-требований. Лучше в байтах ил�…→M17. Steward verdict 2026-07-02 (verbatim): «наверное, это размер бизнес-требований. Лучше в байтах и�…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/ontology/operator.go, internal/invariants/lifecycle_checks.go]"
         }
       ],
       "id": "R-budget-measure",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/ontology/operator.go",
+        "internal/invariants/lifecycle_checks.go"
+      ],
       "status": "SETTLED",
-      "why": "M17. Steward verdict 2026-07-02 (verbatim): «наверно, это размер бизнес-требований. Лучше в байтах или в токенах» (English: 'probably it's the size of the business requirements. Better in bytes or in tokens'). Landed reality already matches: hotam_spec.operator.CRYSTAL_CHARS ('measure = len(root CLAUDE.md) in characters') is the current byte-approximation of resident business content, wired into check_operator_within_budget and used by the live meta-domain operator (context_budget=ContextBudget(limit=150000, measure=\"CRYSTAL_CHARS\")). TOKEN_ESTIMATE is declared in BUDGET_MEASURES as the token-exact seam the steward names ('в токенах') for when the host exposes token counts, but is deferred (not measured yet) since no host API is wired. NODE_COUNT (the original M17 default, size = |requirements|+|conflicts|+|assumptions|) is DEMOTED to a legacy/backward-compat measure: it counts the crystallized SUBSTRATE, which R-working-vs-substrate-budget declares free, so it over-penalizes crystallizing; it remains selectable only for operators/tests that opted into it before CRYSTAL_CHARS existed. No wording change needed elsewhere: check_operator_within_budget's docstring already states this hierarchy verbatim."
+      "why": "M17. Steward verdict 2026-07-02 (verbatim): «наверное, это размер бизнес-требований. Лучше в байтах или в токенах» (English: 'probably it's the size of the business requirements. Better in bytes or in tokens'). Landed reality already matches: BudgetMeasureCRYSTAL_CHARS ('measure = len(root CLAUDE.md) in characters') in internal/ontology/operator.go is the current byte-approximation of resident business content, wired into check_operator_within_budget (internal/invariants/lifecycle_checks.go) and used by the live meta-domain operator. BudgetMeasureTOKEN_ESTIMATE is declared in the BudgetMeasures map (internal/ontology/operator.go) as the token-exact seam the steward names ('в токенах') for when the host exposes token counts, but is deferred (not measured yet) since no host API is wired. BudgetMeasureNODE_COUNT (the original M17 default, size = len(requirements)+len(conflicts)+len(assumptions)) is DEMOTED to a legacy measure: it counts the crystallized SUBSTRATE, which R-working-vs-substrate-budget declares free, so it over-penalizes crystallizing; it remains selectable only for operators/tests that opted into it before CRYSTAL_CHARS existed."
     },
     {
       "assumptions": [
@@ -2413,7 +2456,7 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "The framework names no target backends: the core (graph/JSON proposals/CLI/pytest) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern.",
+      "claim": "The framework names no target backends: the core (graph/JSON proposals/CLI/Go test suite) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -2422,15 +2465,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The framework names no target backends: the core (graph/JSON proposals/CLI/pytest) stays backend-neutral by construction, and adapting the skin is th…→The framework names no target backends: the core (graph/JSON proposals/CLI/Go test suite) stays backend-neutral by construction, and adapting the ski…; why: M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it do…→M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it do…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[go.mod]"
         }
       ],
       "id": "R-backend-scope",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "go.mod"
+      ],
       "status": "SETTLED",
-      "why": "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'no target backend is named' or 'adapting the skin is the adopting agent's own concern' as a runtime property of the committed graph (it is a design-stance/non-decision about scope, not a structural fact). This is the same honesty class as R-initiator-supplies-domain-content and R-observation-evidence-scope: a real, permanent positional discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this claim already reached ENFORCED separately: R-core-imports-stdlib-or-hotam-spec-only (SETTLED, ENFORCED) mechanically verifies the CONSTRUCTION half -- an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core -- that narrower, structural half is where the machine-checkable guarantee correctly lives; R-backend-scope itself states the broader naming/positional stance, which stays INHERENTLY_PROSE. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."
+      "why": "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (cmd/hotam CLIs, JSON Proposed* shapes, go test verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'no target backend is named' or 'adapting the skin is the adopting agent's own concern' as a runtime property of the committed graph (it is a design-stance/non-decision about scope, not a structural fact). This is the same honesty class as R-initiator-supplies-domain-content and R-observation-evidence-scope: a real, permanent positional discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this claim already reached ENFORCED separately: R-core-imports-stdlib-or-hotam-spec-only mechanically verifies the CONSTRUCTION half -- go.mod proving the module imports nothing beyond the Go standard library -- so no backend dependency has silently crept into the core; R-backend-scope itself states the broader naming/positional stance, which stays INHERENTLY_PROSE."
     },
     {
       "assumptions": [
@@ -2727,15 +2777,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-require…→Not yet ported in the Go port: the audit-atomicity command (which flagged check_* functions with compound conditions) is Declared, not ported (intern…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/methodology/tools_data.go]"
         }
       ],
       "id": "R-check-method-is-atomic",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-reviewer",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/methodology/tools_data.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py flags check_* functions with compound conditions in docs/gen/AUDIT.md (same wave as R-requirement-claim-is-atomic). The tool walks invariants.py and reports multi-rule families, making the discipline machine-auditable. ENFORCED Wave 8 move 2 (2026-07-03): the check_* (invariant) side of the atomicity_compound_baseline.json ratchet baseline was already empty coming into this wave (porция 1's AST-loop + N-sub-rules classifier fixes burned it down to 0 with no false positives remaining). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline is now a STRICT zero-COMPOUND gate for every registered check_* function -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism; this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty."
+      "why": "Not yet ported in the Go port: the audit-atomicity command (which flagged check_* functions with compound conditions) is Declared, not ported (internal/methodology/tools_data.go). Historically implemented as spec/tools/audit_atomicity.py, which walked invariants.py and reported multi-rule families into docs/gen/AUDIT.md, making the discipline machine-auditable. The Python-era strict zero-COMPOUND gate (test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline) has no Go equivalent. R-atomicity-ratchet-no-growth remains the permanent, more general growth-direction mechanism; this atom's own enforcement is honest PROSE debt in the Go port until the audit tool is ported."
     },
     {
       "assumptions": [
@@ -3153,7 +3210,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo.",
+      "claim": "The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -3167,21 +3224,28 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/see…→The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are…; why: Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture…→Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go]"
         }
       ],
       "id": "R-content-free-no-examples",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/loader/loader.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture and misleads adopters into thinking it is real content."
+      "why": "Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user's real content and misleads adopters into thinking it is real content. In the Go port this holds by construction: there are no Python-style Requirement(...) builder calls anywhere in source; all business content lives in domains/<name>/graph.json loaded by internal/loader at runtime, never compiled into the framework's Go source."
     },
     {
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph().",
+      "claim": "The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -3195,15 +3259,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_g…→The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.j…; why: Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…→Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go]"
         }
       ],
       "id": "R-content-free-no-seed-graph",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/loader/loader.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts."
+      "why": "Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts. In the Go port this holds by construction: internal/loader/loader.go (LoadGraph) reads domains/<name>/graph.json from disk; no graph content is compiled into the framework's Go source."
     },
     {
       "assumptions": [
@@ -4285,7 +4356,7 @@
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py.",
+      "claim": "The methodology's own critical core shall be the six invariants named in criticalCoreNames (internal/generator/constitution.go), guarding every path by which a contradiction could be introduced without being seen.",
       "enforced_by": [
         "check_no_dangling_assumption_owner",
         "check_no_dangling_requirement_owner",
@@ -4305,15 +4376,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_conscience.py, check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dan…→[check_no_dangling_assumption_owner, check_no_dangling_requirement_owner, check_no_dangling_requirement_assumptions, check_no_dangling_requirement_re…; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The methodology's own critical core shall be the six invariants in CRITICAL_CORE_INVARIANTS, property-tested by test_conscience.py.→The methodology's own critical core shall be the six invariants named in criticalCoreNames (internal/generator/constitution.go), guarding every path …; why: Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being…→Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/generator/constitution.go]"
         }
       ],
       "id": "R-critical-core-methodology",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "domain-user",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/generator/constitution.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being seen."
+      "why": "Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being seen. In the Go port the six are named in internal/generator/constitution.go (criticalCoreNames: check_steward_not_a_member_owner, check_operator_steward_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question) and rendered into docs/gen/CONSTITUTION.md by the generator."
     },
     {
       "assumptions": [
@@ -4342,7 +4420,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.",
+      "claim": "Every SETTLED/ENFORCED requirement shall name an existing check_* in the invariant registry (internal/invariants, registered via MustRegister) or a real Test* function in the Go test suite.",
       "enforced_by": [
         "check_bijection_r_to_enforcer"
       ],
@@ -4353,15 +4431,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every SETTLED/ENFORCED requirement shall name an existing check_* in hotam_spec.invariants.ALL_INVARIANTS or a real test_* in spec/tests/.→Every SETTLED/ENFORCED requirement shall name an existing check_* in the invariant registry (internal/invariants, registered via MustRegister) or a r…; why: Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable en…→Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable en…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/invariants/self_reference.go, internal/invariants/enforcement.go]"
         }
       ],
       "id": "R-bijection-r-to-enforcer",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/invariants/self_reference.go",
+        "internal/invariants/enforcement.go"
+      ],
       "status": "SETTLED",
-      "why": "Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. WAVE 3 outcome."
+      "why": "Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. ENFORCED by check_bijection_r_to_enforcer (internal/invariants/self_reference.go), which resolves check_* names against the All registry and test_* names against the Go test-function resolver (internal/gate). WAVE 3 outcome."
     },
     {
       "assumptions": [
@@ -5449,7 +5535,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.",
+      "claim": "While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -5463,15 +5549,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-07-01→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at r…→While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file…; why: Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…→Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…; last_reviewed_at: 2026-07-01→2026-07-12; review_after: 2027-01-01→2026-09-12; source_refs: []→[internal/generator/claudemd.go, cmd/hotam/gen_spec.go]"
         }
       ],
       "id": "R-claude-md-consolidates-when-single-agent",
-      "last_reviewed_at": "2026-07-01",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-01",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "cmd/hotam/gen_spec.go"
+      ],
       "status": "SETTLED",
-      "why": "Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads (the deleted domains/hotam-spec-self/CLAUDE.md and agents/director/agents/framework-agent/ tree, task #101) is premature complexity. ENFORCED by test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo, which fails the moment a second CLAUDE.md file reappears anywhere in the repo."
+      "why": "Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads is premature complexity. `hotam gen-spec` (internal/generator/claudemd.go) emits a single CLAUDE.md from the active domain's graph; the AGENT-MAP block (RenderAgentMapBlock) renders '_(no sub-operators yet)_' because no agent has been scaffolded in the Go port yet (the agents/ infrastructure -- create-agent -- is Declared, not ported)."
     },
     {
       "assumptions": [
@@ -5659,7 +5753,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop — ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND — each step naming its real tool command.",
+      "claim": "Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND -- each step naming its real tool command.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -5673,21 +5767,29 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_mediation_loop_names_real_tools]→[]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop — ORIENT, LOCATE, CONFRONT, TRA…→Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRAN…; why: The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist — what_n…→The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist -- `hotam …; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-09-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_static.go]"
         }
       ],
       "id": "R-crystal-carries-mediation-loop",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "internal/generator/claudemd_static.go"
+      ],
       "status": "SETTLED",
-      "why": "The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist — what_now.py (ORIENT), the Constitution index and generated docs (LOCATE), RECENTLY-REJECTED anti-relitigation scan (CONFRONT), Proposed* JSON (TRANSLATE), steward decision (PRESENT, R-ai-presents-not-decides), apply_proposal → gen_spec → pytest → closure (LAND, R-verify-closure-per-action). Naming real commands keeps the loop executable rather than aspirational; a pass that writes nothing is a valid conclusion."
+      "why": "The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist -- `hotam what-now` (ORIENT), the Constitution index and generated docs (LOCATE), `hotam confront` + RECENTLY-REJECTED anti-relitigation scan (CONFRONT), Proposed* JSON in internal/proposal (TRANSLATE), steward decision (PRESENT, R-ai-presents-not-decides), `hotam apply-proposal` then `hotam gen-spec` then `go test` then closure via `hotam what-now` / `hotam all-violations` (LAND, R-verify-closure-per-action). Naming real commands keeps the loop executable rather than aspirational; a pass that writes nothing is a valid conclusion. The block is emitted by RenderMediationLoopBlock (internal/generator/claudemd.go) as static text baked in claudemd_static.go."
     },
     {
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope, naming the create_agent → gen_spec → spawn_agent path.",
+      "claim": "Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -5701,15 +5803,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_operator_seed.py::test_recursion_block_names_spawn_path]→[]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope…→Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.; why: Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, …→Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, …; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-09-12; source_refs: []→[internal/generator/claudemd.go, internal/methodology/tools_data.go]"
         }
       ],
       "id": "R-crystal-carries-recursion-seed",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "internal/methodology/tools_data.go"
+      ],
       "status": "SETTLED",
-      "why": "Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, zero active sub-agents), agent crystals must not exist, so the crystal carries the description of HOW to spawn — the same Role/Loop seed with a narrower scope filter (R-sub-agent-crystal-triad) — plus the real machinery path (create_agent.py, gen_spec.py, spawn_agent.py with --stamp, spawn-log per R-task-spawn-log-runtime) and the conclusions-only return contract (R-delegation-conclusions-only)."
+      "why": "Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, zero active sub-agents), agent crystals must not exist, so the crystal carries the description of HOW to spawn -- the same Role/Loop seed with a narrower scope filter (R-sub-agent-crystal-triad) -- plus the conclusions-only return contract (R-delegation-conclusions-only). The block is emitted by RenderOperatorRecursionBlock (internal/generator/claudemd.go) with the active domain name interpolated into the spawn-path example. The spawn machinery itself (create-agent, spawn-agent commands) is Declared, not ported (internal/methodology/tools_data.go); the OPERATOR-RECURSION block documents the procedure for when the machinery is built."
     },
     {
       "assumptions": [
@@ -5826,7 +5936,7 @@
     },
     {
       "assumptions": [],
-      "claim": "tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when locating the Conflict node a proposal addresses.",
+      "claim": "`hotam apply-proposal` shall resolve a Conflict by its string ID when locating the Conflict node a proposal addresses, whether the ID is given directly or via a variable-style alias.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -5840,15 +5950,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal.py::test_find_conflict_call_resolves_variable_bound_kwargs, test_apply_proposal.py::test_real_domain_conflict_c8600b1b8_is_addre…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: tools/apply_proposal.py shall resolve a Conflict's axis and context kwargs through simple string-variable assignments as well as string literals when…→`hotam apply-proposal` shall resolve a Conflict by its string ID when locating the Conflict node a proposal addresses, whether the ID is given direct…; why: The C-8600b1b8 lesson: all six Conflict nodes in domains/hotam-spec-self/graph.py bind axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6…→The C-8600b1b8 lesson: in the pre-port Python graph, all six Conflict nodes in domains/hotam-spec-self/graph.py bound axis/context to local variables…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-09-12; source_refs: []→[internal/proposal/mutate.go, internal/proposal/apply.go]"
         }
       ],
       "id": "R-conflict-addressing-resolves-variables",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/proposal/mutate.go",
+        "internal/proposal/apply.go"
+      ],
       "status": "SETTLED",
-      "why": "The C-8600b1b8 lesson: all six Conflict nodes in domains/hotam-spec-self/graph.py bind axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so _find_conflict_call's literal-only matching made every existing Conflict unaddressable and the standing P3 CONFLICT_STALLED action mechanically unlandable. Fixed by folding module/function-level `name = \"literal\"` assignments (_collect_string_assignments) with ambiguous rebindings dropped conservatively; literal support unchanged. This repairs the ACT half of the mediation loop for conflict transitions (R-active-loop-apply-tool)."
+      "why": "The C-8600b1b8 lesson: in the pre-port Python graph, all six Conflict nodes in domains/hotam-spec-self/graph.py bound axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6_ctx), so literal-only matching in _find_conflict_call made every existing Conflict unaddressable and the standing P3 CONFLICT_STALLED action mechanically unlandable; the fix folded module/function-level `name = \"literal\"` assignments. In the Go port this concern is structurally moot: the graph is JSON (graph.json), not executable Python source, so Conflict nodes carry plain string IDs with no variable indirection. findConflictIndex (internal/proposal/mutate.go) locates a conflict by exact ID match on the JSON graph -- no variable resolution is needed. This repairs the ACT half of the mediation loop for conflict transitions (R-active-loop-apply-tool)."
     },
     {
       "assumptions": [],
@@ -6132,7 +6250,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
+      "claim": "A gate-status command shall answer, from a runtime land-log, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -6146,15 +6264,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_gate_status.py::test_t1_then_t2_is_satisfied, test_tool_gate_status.py::test_t2_then_t1_is_not_satisfied, test_tool_gate_status.py::test_o…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated …→A gate-status command shall answer, from a runtime land-log, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exi…; why: R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace i…→R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace i…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-09-12; source_refs: []→[internal/methodology/tools_data.go]"
         }
       ],
       "id": "R-commit-boundary-checkable",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/methodology/tools_data.go"
+      ],
       "status": "SETTLED",
-      "why": "R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace introduced by R-land-tier-trace makes ONE part of that claim mechanically answerable after the fact -- whether the log shows a covering T2 run. Splitting this into its own atom (rather than flipping R-tiered-gate-not-a-commit-gate to ENFORCED) keeps both claims honest: the parent claim stays INHERENTLY_PROSE because it genuinely cannot be machine-verified end to end (the human-invocation half is unreachable by any test); this new atom claims only the reachable half, with real enforced_by tests -- avoiding the exact self-contradiction (ENFORCEABLE default vs. an admittedly-unenforceable claim) the 2026-07-02 honesty wave requalified the parent to fix."
+      "why": "R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace introduced by R-land-tier-trace makes ONE part of that claim mechanically answerable after the fact -- whether the log shows a covering T2 run. Splitting this into its own atom (rather than flipping R-tiered-gate-not-a-commit-gate to ENFORCED) keeps both claims honest: the parent claim stays INHERENTLY_PROSE because it genuinely cannot be machine-verified end to end (the human-invocation half is unreachable by any test); this new atom claims only the reachable half. Not yet ported in the Go port: the gate-status command is Declared, not ported (internal/methodology/tools_data.go); historically implemented as spec/tools/gate_status.py reading spec/.runtime/land-log.jsonl."
     },
     {
       "assumptions": [
@@ -6252,7 +6377,7 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency.",
+      "claim": "Every import in the core Go packages (internal/*, cmd/hotam/*) shall resolve to the Go standard library or the hotam module itself -- no third-party backend/runtime dependency.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -6266,15 +6391,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_backend_neutral_scope.py::test_hotam_spec_core_imports_stdlib_or_self_only]→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtim…→Every import in the core Go packages (internal/*, cmd/hotam/*) shall resolve to the Go standard library or the hotam module itself -- no third-party …; why: Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 steward verdict) makes the broader design-stance claim that the core stays b…→Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 steward verdict) makes the broader design-stance claim that the core stays b…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-09-12; source_refs: []→[go.mod]"
         }
       ],
       "id": "R-core-imports-stdlib-or-hotam-spec-only",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "go.mod"
+      ],
       "status": "SETTLED",
-      "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 steward verdict) makes the broader design-stance claim that the core stays backend-neutral 'by construction' and names no target backends -- a claim that is largely a prose non-decision (declining to build an OperatorBackend protocol), not itself machine-checkable end-to-end. But the CONSTRUCTION half of 'by construction' IS mechanically checkable: an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core. Split out as its own atom (same slice pattern as R-no-observation-type / R-commit-boundary-checkable) so this narrow, mechanical guarantee can honestly reach ENFORCED while R-backend-scope itself remains PROSE."
+      "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 steward verdict) makes the broader design-stance claim that the core stays backend-neutral 'by construction' and names no target backends -- a claim that is largely a prose non-decision (declining to build an OperatorBackend protocol), not itself machine-checkable end-to-end. But the CONSTRUCTION half of 'by construction' IS mechanically checkable: go.mod has zero third-party require directives (module github.com/PHPCraftdream/HotamSpecGo, go 1.25.0, no dependencies), proving every internal/* and cmd/hotam/* import resolves to stdlib + the hotam module itself. Split out as its own atom so this narrow, mechanical guarantee can honestly reach ENFORCED while R-backend-scope itself remains PROSE. The automated AST import-scan enforcer from the Python era (test_backend_neutral_scope.py) is not yet ported to Go; the property is structurally verifiable via go.mod today."
     },
     {
       "assumptions": [
@@ -7483,15 +7615,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_short_form.py]→[]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid…→Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid…; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-09-12; source_refs: []→[internal/generator/claudemd.go, internal/ontology/requirement.go]"
         }
       ],
       "id": "R-crystal-carries-short-form",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "internal/ontology/requirement.go"
+      ],
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed and covered exactly this claim (no-mid-word-cutoff, summary-priority, first-sentence fallback) but was never wired into enforced_by -- flipped STRUCTURAL -> ENFORCED, no new code written. Honest scope note: test_short_form.py enforces the short_form() MECHANISM itself; that the crystal generator actually CALLS it everywhere text is rendered is separately covered by the ENFORCED R-operator-crystal-embeds-* family, not re-verified here."
+      "why": "Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Not yet ported in the Go port: the Python short_form() mechanism (summary-priority, first-sentence fallback) is not ported. The Go generator (internal/generator/claudemd.go) currently uses runeTruncate for imperative text -- mechanical rune-count truncation that is exactly the pattern this requirement prohibits. The Requirement struct carries a Summary field (internal/ontology/requirement.go) that the ported short-form mechanism would consult first; wiring that field into a meaningful short-form renderer across all crystal text is follow-up work."
     },
     {
       "assumptions": [],
@@ -7721,7 +7861,7 @@
       "assumptions": [
         "A-core-periphery-layering-holds"
       ],
-      "claim": "A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module (attention, reflection, invariants_table_engine) -- the core/periphery dependency arrow points one way only.",
+      "claim": "A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7735,15 +7875,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_core_periphery_import_direction.py::test_core_modules_do_not_import_periphery]→[]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A core hotam_spec module (a typed-node / graph / proposal / invariant-layer module, scope_projection included) shall never import a periphery module …→A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- th…; why: Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). The minimal-core+plugins re-scope (D1) was …→Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). Not yet ported in the Go port: the automate…; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-09-12; source_refs: []→[internal/ontology, internal/invariants, internal/proposal]"
         }
       ],
       "id": "R-core-periphery-import-ratchet",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2026-09-12",
+      "source_refs": [
+        "internal/ontology",
+        "internal/invariants",
+        "internal/proposal"
+      ],
       "status": "SETTLED",
-      "why": "Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). The minimal-core+plugins re-scope (D1) was deferred a third time in this same wave (Этап Q) with an explicit revisit trigger -- the first real external plugin/extension OR the first consumer request for a subset of functionality -- because the core/periphery stratification already exists cleanly IN CODE and there is nothing to physically split today. The only real cost of deferral was an unguaranteed future layering: a later commit could silently pull, e.g., attention.py into graph.py and quietly raise the cost of the eventual extraction. This cheap syntactic ratchet removes exactly that risk. Mechanically checkable via a static AST import scan (mirroring test_backend_neutral_scope.py's pattern), so promoted DRAFT->SETTLED with its real enforcer landing in the same wave (test_core_periphery_import_direction.py: a positive scan proving today's core is clean, plus a negative control proving the scanner is not vacuous), not left as claimed-but-unguaranteed debt."
+      "why": "Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). Not yet ported in the Go port: the automated AST import-ratchet enforcer is not ported. Historically implemented as spec/tests/test_core_periphery_import_direction.py, a static AST import scan mirroring test_backend_neutral_scope.py, that proved today's core was clean plus a negative control proving the scanner was not vacuous. The Python core/periphery package split (attention.py, reflection, invariants_table_engine) does not map directly to the Go package layout (internal/ontology, internal/invariants, internal/proposal, internal/diagnose, internal/generator); the property holds structurally in the current Go dependency graph but no automated Go enforcer exists yet."
     },
     {
       "assumptions": [

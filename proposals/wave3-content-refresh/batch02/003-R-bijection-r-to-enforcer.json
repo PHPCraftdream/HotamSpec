@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-bijection-r-to-enforcer",
+  "claim": "Every SETTLED/ENFORCED requirement shall name an existing check_* in the invariant registry (internal/invariants, registered via MustRegister) or a real Test* function in the Go test suite.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Substrate-generates-operator (R-operator-prompt-from-substrate) requires that each atomic claim point to its actual machine verifier. Unresolvable enforcer names break the bijection between claim and check, hiding compoundness. ENFORCED by check_bijection_r_to_enforcer (internal/invariants/self_reference.go), which resolves check_* names against the All registry and test_* names against the Go test-function resolver (internal/gate). WAVE 3 outcome.",
+  "source_refs": [
+    "internal/invariants/self_reference.go",
+    "internal/invariants/enforcement.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}

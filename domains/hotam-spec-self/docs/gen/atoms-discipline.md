@@ -50,15 +50,18 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Claim.** On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget.
 
-**Why.** SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies advancement before any split is even considered; the constitution §4 (super-rules) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. Implementation: tools/apply_proposal.py + tools/closure.py + docs/gen/CONSTITUTION.md.
+**Why.** SETTLED (P7): the order discipline is structurally bound. The apply-proposal mechanism (internal/proposal) crystallizes via Proposal types; the constitution (internal/generator/constitution.go, docs/gen/CONSTITUTION.md) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. The over-budget REFLECTION finding (ReflectOverBudgetOperators, internal/diagnose/finding.go) renders the ordered imperative: 'crystallize first (R-crystallize-before-split); if still over, delegate a sub-domain (R-context-bounded-delegation).' The closure tool that would verify advancement before any split is considered is Declared, not ported (internal/methodology/tools_data.go).
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-09-12
+
+**Sources.** internal/proposal/apply.go, internal/diagnose/finding.go, internal/generator/constitution.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — why: SETTLED (P7): the order discipline is structurally bound. The apply_proposal protocol crystallizes via Proposal types; the closure check verifies adv…→SETTLED (P7): the order discipline is structurally bound. The apply-proposal mechanism (internal/proposal) crystallizes via Proposal types; the const…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/proposal/apply.go, internal/diagnose/finding.go, internal/generator/constitution.go]
 
 ## `R-crystallize-knowledge-to-code` (STRUCTURAL)
 

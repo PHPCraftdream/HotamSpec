@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-core-periphery-import-ratchet",
+  "claim": "A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). Not yet ported in the Go port: the automated AST import-ratchet enforcer is not ported. Historically implemented as spec/tests/test_core_periphery_import_direction.py, a static AST import scan mirroring test_backend_neutral_scope.py, that proved today's core was clean plus a negative control proving the scanner was not vacuous. The Python core/periphery package split (attention.py, reflection, invariants_table_engine) does not map directly to the Go package layout (internal/ontology, internal/invariants, internal/proposal, internal/diagnose, internal/generator); the property holds structurally in the current Go dependency graph but no automated Go enforcer exists yet.",
+  "source_refs": [
+    "internal/ontology",
+    "internal/invariants",
+    "internal/proposal"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}

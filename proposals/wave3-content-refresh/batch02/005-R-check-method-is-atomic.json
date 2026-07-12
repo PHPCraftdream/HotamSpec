@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-check-method-is-atomic",
+  "claim": "Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "why": "Not yet ported in the Go port: the audit-atomicity command (which flagged check_* functions with compound conditions) is Declared, not ported (internal/methodology/tools_data.go). Historically implemented as spec/tools/audit_atomicity.py, which walked invariants.py and reported multi-rule families into docs/gen/AUDIT.md, making the discipline machine-auditable. The Python-era strict zero-COMPOUND gate (test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline) has no Go equivalent. R-atomicity-ratchet-no-growth remains the permanent, more general growth-direction mechanism; this atom's own enforcement is honest PROSE debt in the Go port until the audit tool is ported.",
+  "source_refs": [
+    "internal/methodology/tools_data.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}

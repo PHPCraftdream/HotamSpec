@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-free-no-seed-graph",
+  "claim": "The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts. In the Go port this holds by construction: internal/loader/loader.go (LoadGraph) reads domains/<name>/graph.json from disk; no graph content is compiled into the framework's Go source.",
+  "source_refs": [
+    "internal/loader/loader.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}

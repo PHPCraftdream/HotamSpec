@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-free-no-examples",
+  "claim": "The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user's real content and misleads adopters into thinking it is real content. In the Go port this holds by construction: there are no Python-style Requirement(...) builder calls anywhere in source; all business content lives in domains/<name>/graph.json loaded by internal/loader at runtime, never compiled into the framework's Go source.",
+  "source_refs": [
+    "internal/loader/loader.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}

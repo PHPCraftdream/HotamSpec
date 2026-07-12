@@ -9,18 +9,21 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ## `R-claude-md-consolidates-when-single-agent` (STRUCTURAL)
 
-**Claim.** While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.
+**Claim.** While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.
 
-**Why.** Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads (the deleted domains/hotam-spec-self/CLAUDE.md and agents/director/agents/framework-agent/ tree, task #101) is premature complexity. ENFORCED by test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo, which fails the moment a second CLAUDE.md file reappears anywhere in the repo.
+**Why.** Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads is premature complexity. `hotam gen-spec` (internal/generator/claudemd.go) emits a single CLAUDE.md from the active domain's graph; the AGENT-MAP block (RenderAgentMapBlock) renders '_(no sub-operators yet)_' because no agent has been scaffolded in the Go port yet (the agents/ infrastructure -- create-agent -- is Declared, not ported).
 
-**Last reviewed.** 2026-07-01
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2027-01-01
+**Review after.** 2026-09-12
+
+**Sources.** internal/generator/claudemd.go, cmd/hotam/gen_spec.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-01; review_after: →2027-01-01
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-07-01→2026-07-12
+- 2026-07-12 — claim: While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at r…→While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file…; why: Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…→Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…; last_reviewed_at: 2026-07-01→2026-07-12; review_after: 2027-01-01→2026-09-12; source_refs: []→[internal/generator/claudemd.go, cmd/hotam/gen_spec.go]
 
 ## `R-claude-md-live-state-generated` (ENFORCED)
 
@@ -71,50 +74,59 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ## `R-content-free-no-examples` (PROSE)
 
-**Claim.** The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/seed.py loaded only via --demo.
+**Claim.** The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content.
 
-**Why.** Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture and misleads adopters into thinking it is real content.
+**Why.** Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user's real content and misleads adopters into thinking it is real content. In the Go port this holds by construction: there are no Python-style Requirement(...) builder calls anywhere in source; all business content lives in domains/<name>/graph.json loaded by internal/loader at runtime, never compiled into the framework's Go source.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-09-12
+
+**Sources.** internal/loader/loader.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/see…→The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are…; why: Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture…→Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go]
 
 ## `R-content-free-no-seed-graph` (PROSE)
 
-**Claim.** The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_graph().
+**Claim.** The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json.
 
-**Why.** Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts.
+**Why.** Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts. In the Go port this holds by construction: internal/loader/loader.go (LoadGraph) reads domains/<name>/graph.json from disk; no graph content is compiled into the framework's Go source.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-09-12
+
+**Sources.** internal/loader/loader.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_g…→The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.j…; why: Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…→Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go]
 
 ## `R-content-layout-evolution` (ENFORCED)
 
-**Claim.** Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout introduced in P17.
+**Claim.** Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.
 
-**Why.** M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.py, with gen_spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. Evidence: domains/hotam-spec-self/graph.py, spec/tools/gen_spec.py load_content_graph, R-domain-owns-graph-py SETTLED. (Wave 1 seed-coherence pass: enforced_by's second entry was the bare requirement id 'R-domain-owns-graph-py' rather than a resolvable test/check reference -- corrected to name the actual test that guards the domain-owns-graph-py claim, caught by the new check_enforced_by_resolvable invariant.)
+**Why.** M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.json, with gen-spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. In the Go port: domains/<name>/graph.json is the graph source, internal/loader (LoadGraph) discovers it, and `hotam gen-spec` (internal/generator) regenerates docs/gen/*.md from it. ENFORCED by check_domain_manifest_exists_and_importable (internal/invariants/domain_structure.go).
 
 **Enforced by:** `check_domain_manifest_exists_and_importable`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-09-12
+
+**Sources.** internal/loader/loader.go, internal/invariants/domain_structure.go, cmd/hotam/gen_spec.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout i…→Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.; why: M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file …→M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go, internal/invariants/domain_structure.go, cmd/hotam/gen_spec.go]
 
 ## `R-deterministic-generation` (ENFORCED)
 

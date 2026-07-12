@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-context-bounded-delegation",
+  "claim": "The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "SETTLED (P8): the P8 REFLECTION band fires 'over-budget' then crystallize first then if still over, delegate. The signal path is structural: check_operator_within_budget (internal/invariants/lifecycle_checks.go) detects the breach; ReflectOverBudgetOperators (internal/diagnose/finding.go) names the path in its Finding.imperative -- 'crystallize first (R-crystallize-before-split); if still over, delegate a sub-domain (R-context-bounded-delegation)'; `hotam what-now` composes these via the diagnose package. DomainScope narrowing (per-operator sub-graph) remains a later phase but the SIGNAL -- over-budget then delegate -- exists today. Makes the methodology scale-free; generalizes 'agent never lost' to 'agent never overloaded'.",
+  "source_refs": [
+    "internal/diagnose/finding.go",
+    "internal/invariants/lifecycle_checks.go",
+    "cmd/hotam/what_now.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-09-12"
+}
