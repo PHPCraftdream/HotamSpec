@@ -150,6 +150,28 @@ func TestProjectRoot_Priority_R2BeatsR3(t *testing.T) {
 	}
 }
 
+func TestProjectRoot_Priority_NativeMarkerBeatsPyproject(t *testing.T) {
+	// Variant-A demotion: a Go-native marker (domains/) at a HIGHER level must
+	// win over a legacy pyproject.toml[tool.hotam-spec] marker at a CLOSER level.
+	// Before the demotion, R3 treated pyproject as a RELIABLE marker and would
+	// resolve to `mid` (the pyproject dir); now R3 (native-only) skips it and
+	// resolves to `root` (the domains/ dir).
+	root := t.TempDir()
+	makeDir(t, root, "domains")
+	mid := makeDir(t, root, "mid")
+	makeDir(t, mid, "somewhere") // divergent pyproject project_root target
+	writeFile(t, mid, "pyproject.toml", "[tool.hotam-spec]\nproject_root = \"somewhere\"\n")
+	leaf := makeDir(t, mid, "leaf")
+	chdirAndRestore(t, leaf)
+	got, ok := ProjectRoot()
+	if !ok {
+		t.Fatal("expected resolution with both native and legacy pyproject markers present")
+	}
+	if got != root {
+		t.Fatalf("native marker (domains/) must win over legacy pyproject: got %q, want root %q", got, root)
+	}
+}
+
 func TestProjectRoot_NoMarkersOutsideRepoResolvesFalse(t *testing.T) {
 	empty := makeDir(t, t.TempDir(), "no-markers")
 	chdirAndRestore(t, empty)

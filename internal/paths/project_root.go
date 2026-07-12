@@ -77,6 +77,10 @@ type pyprojectInfo struct {
 	projectRoot   string
 }
 
+// readPyproject parses a pyproject.toml file just enough to detect the legacy
+// [tool.hotam-spec] table and its project_root key. LEGACY (Python-era
+// pyproject.toml resolution): only reached via the pyproject fallback paths —
+// hasMarker recognition (kept for backward compat) and resolvePyproject (R5).
 func readPyproject(path string) (pyprojectInfo, bool) {
 	info := pyprojectInfo{}
 	data, err := os.ReadFile(path)
@@ -112,15 +116,15 @@ func readPyproject(path string) (pyprojectInfo, bool) {
 	return info, true
 }
 
-func hasMarker(candidate string) bool {
+// hasNativeMarker reports whether candidate looks like a Hotam-Spec project root
+// using the Go-native markers only: any single RELIABLE marker (domains/,
+// delegations/) or the SECONDARY-marker quorum (CLAUDE.md + .claude/, etc.).
+// This is the PRIMARY detection path used by R3; it deliberately excludes
+// pyproject.toml so a Go-native marker always resolves before the legacy
+// pyproject fallback (R5) when both are present in the tree.
+func hasNativeMarker(candidate string) bool {
 	for _, rel := range ReliableMarkerPaths {
 		if _, err := os.Stat(filepath.Join(candidate, rel)); err == nil {
-			return true
-		}
-	}
-	pyproject := filepath.Join(candidate, "pyproject.toml")
-	if info, err := os.Stat(pyproject); err == nil && !info.IsDir() {
-		if pp, ok := readPyproject(pyproject); ok && pp.hasHotamTable {
 			return true
 		}
 	}
@@ -133,6 +137,28 @@ func hasMarker(candidate string) bool {
 	return matched >= SecondaryMarkerMinCount
 }
 
+// hasMarker reports whether candidate looks like a Hotam-Spec project root by ANY
+// recognized marker, including the legacy pyproject.toml [tool.hotam-spec] table.
+// It is retained for backward compatibility and direct testing of pyproject
+// recognition; the resolution chain prefers hasNativeMarker at R3 and only falls
+// back to the legacy pyproject project_root resolver at R5.
+func hasMarker(candidate string) bool {
+	if hasNativeMarker(candidate) {
+		return true
+	}
+	// LEGACY (Python-era pyproject.toml resolution): a pyproject.toml carrying
+	// [tool.hotam-spec] is still recognized as a project marker, but only as a
+	// fallback for projects migrating from the Python version. New Go-native
+	// projects should rely on the domains/ marker instead.
+	pyproject := filepath.Join(candidate, "pyproject.toml")
+	if info, err := os.Stat(pyproject); err == nil && !info.IsDir() {
+		if pp, ok := readPyproject(pyproject); ok && pp.hasHotamTable {
+			return true
+		}
+	}
+	return false
+}
+
 func searchMarkersUpward(start string, maxDepth int) (string, bool) {
 	abs, err := filepath.Abs(start)
 	if err != nil {
@@ -140,7 +166,7 @@ func searchMarkersUpward(start string, maxDepth int) (string, bool) {
 	}
 	current := abs
 	for i := 0; i <= maxDepth; i++ {
-		if hasMarker(current) {
+		if hasNativeMarker(current) {
 			return current, true
 		}
 		parent := filepath.Dir(current)
@@ -171,6 +197,12 @@ func searchMarkerFileUpward(start string, maxDepth int) (string, bool) {
 	return "", false
 }
 
+// resolvePyproject resolves a project root via the pyproject.toml
+// [tool.hotam-spec].project_root key, walking up from start. LEGACY
+// (Python-era pyproject.toml resolution): this is the R5 fallback, reached only
+// when R3 finds no Go-native marker (domains/, delegations/, or the SECONDARY-
+// marker pair) and R4 finds no .hotam-spec-project file. Kept for projects
+// migrating from the Python version; new projects should use the domains/ marker.
 func resolvePyproject(start string, maxDepth int) (string, bool) {
 	abs, err := filepath.Abs(start)
 	if err != nil {
@@ -295,13 +327,13 @@ func buildDiagnostic() string {
 
 	cwd, _ := os.Getwd()
 	lines = append(lines, fmt.Sprintf(
-		"  R3 CWD=%s — RELIABLE markers (any one suffices): %s, pyproject.toml[tool.%s]; SECONDARY markers (need %d+ together): %s",
-		cwd, strings.Join(ReliableMarkerPaths, ", "), PyprojectTable, SecondaryMarkerMinCount, strings.Join(SecondaryMarkerPaths, ", ")))
+		"  R3 CWD=%s — RELIABLE Go-native markers (any one suffices): %s; SECONDARY markers (need %d+ together): %s (pyproject.toml is NOT reliable — see R5 legacy fallback)",
+		cwd, strings.Join(ReliableMarkerPaths, ", "), SecondaryMarkerMinCount, strings.Join(SecondaryMarkerPaths, ", ")))
 	lines = append(lines, fmt.Sprintf("  R4 marker file '%s' — searched %d levels up from CWD", MarkerFilename, MaxMarkerSearchDepth))
-	lines = append(lines, fmt.Sprintf("  R5 pyproject.toml [tool.%s].%s — searched %d levels up from CWD", PyprojectTable, PyprojectRootKey, MaxMarkerSearchDepth))
+	lines = append(lines, fmt.Sprintf("  R5 pyproject.toml [tool.%s].%s — LEGACY fallback, searched %d levels up from CWD", PyprojectTable, PyprojectRootKey, MaxMarkerSearchDepth))
 	lines = append(lines, "  R6 self-hosting fallback (repo root) — returned None or not applicable")
 	lines = append(lines,
-		"Set one of: env HOTAM_SPEC_PROJECT_ROOT=<dir>, HOTAM_SPEC_DOMAINS_ROOT=<domains-dir>, create a RELIABLE marker (domains/, delegations/, or pyproject.toml[tool.hotam-spec]) in CWD, or a .hotam-spec-project file.")
+		"Set one of: env HOTAM_SPEC_PROJECT_ROOT=<dir>, HOTAM_SPEC_DOMAINS_ROOT=<domains-dir>, create a RELIABLE Go-native marker (domains/, delegations/) in CWD, or a .hotam-spec-project file; pyproject.toml[tool.hotam-spec] is a LEGACY fallback (R5) for projects migrating from the Python version.")
 	return strings.Join(lines, "\n")
 }
 
