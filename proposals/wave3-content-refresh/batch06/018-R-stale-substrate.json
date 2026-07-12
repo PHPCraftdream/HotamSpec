@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-stale-substrate",
+  "claim": "Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit).",
+  "why": "SETTLED (P6): the structural detection path now exists. In the Go port the stale-substrate signal is produced by ReflectDeadAssumptionOnEnforcer (internal/diagnose/finding.go): for each SETTLED+ENFORCED Requirement whose Assumptions include a DEAD one, it emits a Finding (Condition=\"reflect_dead_assumption_on_enforcer\", Target=requirement id) whose Imperative names the dead assumption and the requirement resting on it -- surfacing the bad-habit case where an enforced rule's premise has quietly died. This Finding flows through AllFindings into the what-now attention signals (internal/diagnose/signal.go) via the same registry as every other reflection predicate (R-reflection-predicates-first-class). Today the hotam-spec-self domain carries zero DEAD assumptions, so no stale substrate actually fires; the structural detection path is in place for when one does. TestReflectDeadAssumptionOnEnforcer_Fires (internal/diagnose/finding_test.go) pins the firing path; TestReflectDeadAssumptionOnEnforcer_ProseNotEnforced pins that PROSE requirements do not trigger it.",
+  "source_refs": [
+    "internal/diagnose/finding.go",
+    "internal/diagnose/signal.go",
+    "internal/diagnose/finding_test.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

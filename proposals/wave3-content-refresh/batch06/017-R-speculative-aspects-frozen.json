@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-speculative-aspects-frozen",
+  "claim": "The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need.",
+  "why": "Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against the supporting machinery: classic speculative generality. Frozen by steward 2026-07-02 after audit. In the Go port the frozen surface is carried as Declared (not-ported) methodology.Tools entries -- create-agent, spawn-agent, invoke-agent, create-domain (internal/methodology/tools_data.go) -- plus the Entity aspect substrate that exists but is inert (internal/ontology/entity.go, internal/invariants/scope_process.go Process/Entity checks that no-op when g.EntityTypes is empty). The natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker reads 'REVISIT when a second opt-in behavioral aspect is proposed'); the freeze remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED, and do not confuse 'now addressable via ConflictTransition proposals' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02) promoted the Python original STRUCTURAL->ENFORCED via a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) that made an inward edit to any frozen file fail RED. FOUND ISSUE (not fixed): that hash-baseline guard is NOT ported to Go -- there is no frozen-aspects snapshot test, so an inward edit to a frozen file (e.g. adding entity-machinery behavior) would not fail a test. The freeze is currently carried by review discipline + the Declared tool status, not by a structural guard; the requirement is PROSE (not ENFORCED) in the Go port. Unfreeze trigger remains Phase 5 (a real business domain).",
+  "source_refs": [
+    "internal/methodology/tools_data.go",
+    "internal/ontology/entity.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

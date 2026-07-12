@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-reflection-predicates-first-class",
+  "claim": "The operator's self-diagnosis conditions shall be named, pure, graph-only predicate functions in internal/diagnose/finding.go composed by AllFindings in a fixed registry order, and consumed by the what-now harness via internal/diagnose/signal.go -- never inlined in tool code.",
+  "why": "Concept-Map gap closed: §Reflection is the home in internal/ for the P0 self-diagnosis conditions. In the Go port these live as eight named predicates in internal/diagnose/finding.go -- ReflectDraftOverhang, ReflectUnenforcedSettled, ReflectOverBudgetOperators, ReflectDeadAssumptionOnEnforcer, ReflectDerivedButUnbuilt, ReflectImplementsDecay, ReflectReplacesEdgeMigration, ReflectAllMembersRejected -- each returning []Finding (Condition/Target/Imperative records). The registry order is fixed by AllFindings(g), which appends each predicate's findings in that exact sequence (no per-call reordering); the what-now harness consumes them through internal/diagnose/signal.go (collectAttentionSignals ranges over AllFindings(g)) and renders, exactly as it composes invariants.AllViolations -- the substrate owns the diagnosis vocabulary, the tool only renders. This is the same extraction pattern as the §Invariants layer: reflect_* predicates return Finding records and the harness composes AllFindings() the way it composes AllViolations(). TestAllFindings_OrderFollowsRegistry (internal/diagnose/finding_test.go) pins the registry order.",
+  "source_refs": [
+    "internal/diagnose/finding.go",
+    "internal/diagnose/signal.go",
+    "internal/diagnose/finding_test.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

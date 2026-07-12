@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-requirement-claim-is-atomic",
+  "claim": "Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.",
+  "why": "Not yet ported in the Go port. The historical mechanical enforcer was tools/audit_atomicity.py (surfacing Requirements with compound claims as a deterministic audit signal, per docs/gen/AUDIT.md) plus tests/test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline as a strict zero-COMPOUND gate over live SETTLED/OPEN claims, with an atomicity_compound_baseline.json ratchet. audit-atomicity is Declared (not ported) in the Go methodology.Tools registry, and no Go check_* or test enforces claim atomicity -- the discipline is currently carried by review convention only. The substance (one concern per claim, compound claims split into separate atoms) remains the live editorial discipline; only its mechanical detection is unported. R-atomicity-ratchet-no-growth is the sibling requirement meant to carry the growth-direction half; both are PROSE (not ENFORCED) in the Go port. Waves 1-3 of atomization applied the discipline to the meta-domain manually; this content refresh itself follows that same hand-applied atomicity discipline.",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

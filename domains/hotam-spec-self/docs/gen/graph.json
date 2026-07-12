@@ -1203,7 +1203,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness, regenerate docs.",
+      "claim": "The test suite shall provide a fast end-to-end signal that the framework is healthy on the real domain graph -- load the graph, run every generator template, and regenerate docs without panicking or empty output.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -1217,15 +1217,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_smoke.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: spec/tests/test_smoke.py shall provide one fast end-to-end signal that the framework is healthy — load content, run all invariants, run the harness…→The test suite shall provide a fast end-to-end signal that the framework is healthy on the real domain graph -- load the graph, run every generator t…; why: SETTLED (BUILD-TRIGGER fired): spec/tests/test_smoke.py exists and provides the one-signal health check — load content + all invariants + harness +…→An agent after a change should not need to remember the full test count or layout -- one signal means 'the framework did not fall over on real data'.…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/generator/byteidentical_test.go, internal/diagnose/integration_test.go]"
         }
       ],
       "id": "R-smoke-test",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/generator/byteidentical_test.go",
+        "internal/diagnose/integration_test.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (BUILD-TRIGGER fired): spec/tests/test_smoke.py exists and provides the one-signal health check — load content + all invariants + harness + regen in a single test. An agent after a change should not need to remember the full test count or layout — one smoke = one signal."
+      "why": "An agent after a change should not need to remember the full test count or layout -- one signal means 'the framework did not fall over on real data'. In the Go port the historical spec/tests/test_smoke.py (one Python test: load content + all invariants + harness + regen) is replaced by a distributed set of Go tests that together cover the same ground: TestGenSpec_SmokeOnRealDomain (internal/generator/byteidentical_test.go) loads the real hotam-spec-self domain graph (domains/hotam-spec-self/graph.json) and runs every generator Build* template (REQUIREMENTS/TENSIONS/OPEN/UNENFORCED/GLOSSARY/HISTORY/DECISIONS/CONSTITUTION/ENTITIES/FRAMEWORK-INVARIANTS/REPO-MAP/live-state plus BuildGraphJSON), asserting non-empty output and no panic; the all-violations coverage is exercised by internal/invariants' own real-graph tests; the harness path is exercised by internal/diagnose integration tests (TestAllFindings_RealGraphNoPanic) and the cmd/hotam CLI tests. The single-test shape is split across packages because Go tests run per-package, but the collective signal is the same one-health-check intent. PROSE (not ENFORCED): no single check_* gates this; it is the test suite's role, not an invariant."
     },
     {
       "assumptions": [
@@ -1954,15 +1962,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_glossary_sync.py, check_section_anchors_known, test_playbooks_doc.py]→[check_section_anchors_known]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "owner: ai-agent→framework-author; why: SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every SS-anchor cited in framework…→SETTLED (P5): the references-not-content discipline is now structurally bound. In the Go port the structural half is enforced by check_section_anchor…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/invariants/self_reference.go, internal/methodology/section.go, internal/methodology/sections_data.go]"
         }
       ],
       "id": "R-speak-by-reference",
-      "last_reviewed_at": "2026-06-30",
-      "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/invariants/self_reference.go",
+        "internal/methodology/section.go",
+        "internal/methodology/sections_data.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every SS-anchor cited in framework docstrings resolves in the glossary -- an operator that invents a SS-token immediately fires a P1 STRUCTURE violation. test_glossary_sync.py provides the test-time mirror. docs/playbooks/ mandates that every proposal cites the R-/C-/SS anchor it acts on; test_playbooks_doc.py is the test-time mirror of that doc's presence and content. The SSTick advisory output itself cites anchor ids in every action (target field). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by's third entry was a bare doc path 'docs/playbooks/' rather than a resolvable test reference -- corrected to name the test file that guards that doc, caught by the new check_enforced_by_resolvable invariant.)"
+      "why": "SETTLED (P5): the references-not-content discipline is now structurally bound. In the Go port the structural half is enforced by check_section_anchors_known (internal/invariants/self_reference.go): it ranges over every registered invariant in the All registry and fires a STRUCTURE violation whenever an invariant's Canon is nil -- i.e. an invariant that fails to reference a registered methodology.Section. The Python original walked every source file with ast, extracted section-sign tokens from docstrings via regex, and checked each against the glossary; that mechanism is structurally unnecessary in Go because every Invariant.Canon is a TYPED *methodology.Section pointer obtained at registration time from methodology.Sections.MustRegister -- a typed pointer into the registry cannot dangle, so the only remaining failure mode (a nil Canon) is what this check catches directly. The §Glossary itself lives as DATA in methodology.Sections (internal/methodology/sections_data.go), so an invented §-token cannot compile. The advisory what-now/inspect output cites anchor ids in every action (the Finding/Signal Target fields). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by entries that named bare doc paths or since-renamed Python tests were corrected to the Go enforcer that actually covers this claim, under the check_enforced_by_resolvable discipline.)"
     },
     {
       "assumptions": [
@@ -2122,15 +2139,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_reflection.py::test_reflection_emits_dead_assumption_enforcer, test_conscience.py::test_real_meta_domain_passes_critical_core]→[TestReflectDeadAssumptionOnEnforcer_Fires]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: SETTLED (P6): the structural path now exists. The §Conscience critical-core sweep (test_conscience.py::test_real_meta_domain_passes_critical_core) f…→SETTLED (P6): the structural detection path now exists. In the Go port the stale-substrate signal is produced by ReflectDeadAssumptionOnEnforcer (int…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/diagnose/finding.go, internal/diagnose/signal.go, internal/diagnose/finding_test.go]"
         }
       ],
       "id": "R-stale-substrate",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/diagnose/finding.go",
+        "internal/diagnose/signal.go",
+        "internal/diagnose/finding_test.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (P6): the structural path now exists. The §Conscience critical-core sweep (test_conscience.py::test_real_meta_domain_passes_critical_core) flags any critical-core invariant that fires on the live meta-domain — including one resting on a DEAD assumption. Today the meta-domain has zero DEAD assumptions, so no stale substrate fires; the structural detection path is in place for when one does."
+      "why": "SETTLED (P6): the structural detection path now exists. In the Go port the stale-substrate signal is produced by ReflectDeadAssumptionOnEnforcer (internal/diagnose/finding.go): for each SETTLED+ENFORCED Requirement whose Assumptions include a DEAD one, it emits a Finding (Condition=\"reflect_dead_assumption_on_enforcer\", Target=requirement id) whose Imperative names the dead assumption and the requirement resting on it -- surfacing the bad-habit case where an enforced rule's premise has quietly died. This Finding flows through AllFindings into the what-now attention signals (internal/diagnose/signal.go) via the same registry as every other reflection predicate (R-reflection-predicates-first-class). Today the hotam-spec-self domain carries zero DEAD assumptions, so no stale substrate actually fires; the structural detection path is in place for when one does. TestReflectDeadAssumptionOnEnforcer_Fires (internal/diagnose/finding_test.go) pins the firing path; TestReflectDeadAssumptionOnEnforcer_ProseNotEnforced pins that PROSE requirements do not trigger it."
     },
     {
       "assumptions": [
@@ -2296,7 +2322,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data (RULES_AS_DATA_TABLE) with a coherence invariant distinguishing them from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic) -- derivation of check_* function bodies from the table is deferred until it can coexist with R-method-matches-docstring's per-function inspectable-source requirement.",
+      "claim": "Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data distinct from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic) -- with derivation of check_* function bodies from any such table explicitly deferred.",
       "enforced_by": [
         "check_rules_as_data_classification_coherent"
       ],
@@ -2307,15 +2333,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIF…→Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIF…; owner: framework-reviewer→framework-author; why: M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TA…→M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality in the Python original: RUL…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/invariants/self_reference.go, internal/invariants/self_reference_test.go]"
         }
       ],
       "id": "R-rules-as-data",
-      "last_reviewed_at": "2026-06-30",
-      "owner": "framework-reviewer",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/invariants/self_reference.go",
+        "internal/invariants/self_reference_test.go"
+      ],
       "status": "SETTLED",
-      "why": "M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classify every check_* by family; the check_* bodies themselves remain hand-written, NOT derived from the table. Empirically verified blocker to body-derivation: check_method_matches_docstring (R-method-matches-docstring) calls inspect.getsource(fn) on every check_* to enforce literal, inspectable Violation(...) messages -- functions produced by a table-driven factory are closures, and inspect.getsource raises OSError on them (no source file to point at). The alternative, exec()-based codegen from the table, would satisfy inspect.getsource mechanically but produce opaque, non-diffable bodies -- LESS convenient for an agent auditing behavior, which is the steward's own stated criterion. So classification-as-data landed; derivation-of-bodies is deliberately deferred, not abandoned, until a mechanism exists that keeps generated check_* functions individually inspectable. Wave 8 move 2 atomicity pass: audit_atomicity.py flagged the claim's semicolon COMPOUND -- inspection shows the clause after the semicolon is a scope/status disclaimer about what this ONE classification promise deliberately does NOT yet cover (body derivation), not a second independent obligation; the claim never promised body-derivation, it explicitly defers it. Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention so audit_atomicity's _CLAIM_SCOPE_CLAUSE exemption recognizes it -- wording/classifier-alignment fix, no semantic change, not a split."
+      "why": "M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality in the Python original: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classified every check_* by family; the check_* bodies themselves remained hand-written, NOT derived from the table. In the Go port the RULES_AS_DATA_TABLE data structure DOES NOT EXIST: the classification lives implicitly in the code structure (table-driven checks iterate g.EntityTypes or similar collections; bespoke checks walk specific graph topology), so there is no metadata table for an agent to read. check_rules_as_data_classification_coherent IS registered in the Go invariant registry (internal/invariants/self_reference.go) but is an HONEST NO-OP -- checkRulesAsDataClassificationCoherent returns nil unconditionally, because without a RULES_AS_DATA_TABLE there is nothing to drift-check against the registry; its Why field states this explicitly and notes that if a future Go milestone reintroduces explicit classification metadata the check should be revived. The body-derivation question is moot in Go (there is no table to derive from), and the inspect.getsource blocker that motivated the original defer does not apply (Go functions are always individually inspectable source). FOUND ISSUE (not fixed): this requirement is ENFORCED with check_rules_as_data_classification_coherent, but that enforcer is a structural no-op -- it cannot detect any violation because the classification table it would guard does not exist in the Go port. The enforcement/enforced_by are out of scope for this content batch; documented as debt rather than reworded into a lie."
     },
     {
       "assumptions": [
@@ -2539,15 +2573,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_composite_prompt_contains_crystal_and_task]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "owner: ai-agent→framework-author; why: The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER: spawn_agent built --…→The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER status: the historica…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/methodology/tools_data.go, internal/generator/claudemd.go]"
         }
       ],
       "id": "R-subagent-gets-its-claude-md",
-      "last_reviewed_at": "2026-06-30",
-      "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/methodology/tools_data.go",
+        "internal/generator/claudemd.go"
+      ],
       "status": "SETTLED",
-      "why": "The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER: spawn_agent built -- NOW FIRES (P22.C). Promoted DRAFT->SETTLED on P22.C: spawn_agent tool exists at spec/tools/spawn_agent.py, composing per-agent CLAUDE.md into the subagent prompt before dispatch. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND ('and' joining 'shall receive its OWN crystal' with 'and return CONCLUSIONS only, never raw context') -- the second half duplicates R-delegation-conclusions-only verbatim ('the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail'), which already SETTLED that half independently and generically (for any delegated sub-operator, not just ones with a CLAUDE.md). Trimmed this claim to the crystal-provisioning half only -- the concrete, spawn_agent-specific promise this atom's own enforcer (test_composite_prompt_contains_crystal_and_task) actually verifies. R-delegation-conclusions-only remains the sole owner of the return-conclusions-only half. No semantic narrowing: the return-conclusions-only guarantee is still live, enforced exactly as before, just no longer restated redundantly here."
+      "why": "The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER status: the historical spawn_agent tool (composing per-agent CLAUDE.md into the subagent prompt before dispatch) fired in the Python original on P22.C. Not yet ported in the Go port: spawn-agent is Declared (not ported) in methodology.Tools (internal/methodology/tools_data.go), and the Go generator (internal/generator) produces a single consolidated root CLAUDE.md with no per-agent sub-operator crystal files -- because with one OP-director and zero active sub-agents there is no second agent to hand a crystal to (R-claude-md-consolidates-when-single-agent). RE-ATOMIZED Wave 8 move 2 (2026-07-03): the prior compound claim ('shall receive its OWN crystal AND return CONCLUSIONS only') had its second half trimmed because it duplicated R-delegation-conclusions-only verbatim; this atom now owns only the crystal-provisioning half. The substance remains live: when a real sub-operator is delegated, it must boot from its own substrate-derived CLAUDE.md rather than raw context; the materializer for that crystal is unported substrate that arrives alongside R-sub-agent-crystal-triad's per-agent generation. PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [
@@ -2611,7 +2653,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Tools available to all agents shall live in `spec/tools/`.",
+      "claim": "Tools available to all operators shall be the single shared hotam CLI toolset -- Go subcommands wired in cmd/hotam/main.go and declared once in the methodology.Tools registry -- with no per-agent private tool namespace.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -2625,15 +2667,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_shared_tools_location.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Tools available to all agents shall live in `spec/tools/`.→Tools available to all operators shall be the single shared hotam CLI toolset -- Go subcommands wired in cmd/hotam/main.go and declared once in the m…; why: Scoping rule, structurally enforced by file layout. SETTLED — already true today.→Scoping rule, structurally enforced by code layout. The historical Python form ('tools available to all agents shall live in spec/tools/') does not m…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[cmd/hotam/main.go, internal/methodology/tools_data.go, internal/methodology/tool.go]"
         }
       ],
       "id": "R-shared-tools-in-spec-tools",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "cmd/hotam/main.go",
+        "internal/methodology/tools_data.go",
+        "internal/methodology/tool.go"
+      ],
       "status": "SETTLED",
-      "why": "Scoping rule, structurally enforced by file layout. SETTLED — already true today."
+      "why": "Scoping rule, structurally enforced by code layout. The historical Python form ('tools available to all agents shall live in spec/tools/') does not map literally to the Go port: there is no spec/ tree at all. In the Go port the shared toolset is the set of `hotam <command>` subcommands dispatched in cmd/hotam/main.go, each declared exactly once as a methodology.Tool entry in internal/methodology/tools_data.go (Command/Canon/Purpose/Status, Status=Ported for wired subcommands, Declared for unported surface). Because there is exactly one operator (OP-director) and zero active sub-agents, every tool is by construction available to all operators -- there is no per-agent tools/ directory and no private-tool namespace to leak. When a real sub-agent is spawned (R-sub-agent-crystal-triad), the same single registry remains the shared floor; per-agent tool customization is deferred until that spawn materializes. SETTLED -- already true today."
     },
     {
       "assumptions": [
@@ -2849,7 +2900,7 @@
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.",
+      "claim": "Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -2863,15 +2914,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.→Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.; owner: framework-reviewer→framework-author; why: SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/g…→Not yet ported in the Go port. The historical mechanical enforcer was tools/audit_atomicity.py (surfacing Requirements with compound claims as a dete…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12"
         }
       ],
       "id": "R-requirement-claim-is-atomic",
-      "last_reviewed_at": "2026-06-30",
-      "owner": "framework-reviewer",
-      "review_after": "2026-12-30",
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. ENFORCED Wave 8 move 2 (2026-07-03): audit_atomicity.py's requirement-claim audit was rescoped to LIVE promises only (status SETTLED or OPEN(...) -- REJECTED is frozen history, DRAFT is not yet a promise, see audit_atomicity.py's own RULE/WHY), which shrank the atomicity_compound_baseline.json ratchet baseline from 21 stale/misscoped ids down to 6 genuine live compounds, then to 0 after this wave's splits (R-observation-evidence-scope, R-subagent-gets-its-claude-md, R-land-tier-trace 3-way) and classifier-alignment rewords (R-tiered-gate-not-a-commit-gate, R-rules-as-data, both false-positive semicolon/scope-clause claims). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline is now a STRICT zero-COMPOUND gate for every live SETTLED/OPEN requirement claim -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism (tolerates future HONEST debt without red-lining CI); this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty."
+      "why": "Not yet ported in the Go port. The historical mechanical enforcer was tools/audit_atomicity.py (surfacing Requirements with compound claims as a deterministic audit signal, per docs/gen/AUDIT.md) plus tests/test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline as a strict zero-COMPOUND gate over live SETTLED/OPEN claims, with an atomicity_compound_baseline.json ratchet. audit-atomicity is Declared (not ported) in the Go methodology.Tools registry, and no Go check_* or test enforces claim atomicity -- the discipline is currently carried by review convention only. The substance (one concern per claim, compound claims split into separate atoms) remains the live editorial discipline; only its mechanical detection is unported. R-atomicity-ratchet-no-growth is the sibling requirement meant to carry the growth-direction half; both are PROSE (not ENFORCED) in the Go port. Waves 1-3 of atomization applied the discipline to the meta-domain manually; this content refresh itself follows that same hand-applied atomicity discipline."
     },
     {
       "assumptions": [
@@ -5148,7 +5204,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Each spec/docs/tools/<basename>.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between sentinels.",
+      "claim": "Each docs/gen/tools/<command>.md shall be a pure function of that tool's methodology.Tool registry entry (Command/Canon/Purpose/Status), generated wholesale by BuildToolDocs with no hand-written content.",
       "enforced_by": [
         "TestBuildToolDocsSemanticCompleteness"
       ],
@@ -5164,15 +5220,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_tool_docs_content]→[TestBuildToolDocsSemanticCompleteness]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Each spec/docs/tools/<basename>.md shall be built from the tool module docstring and its argparse --help output — no hand-written content between s…→Each docs/gen/tools/<command>.md shall be a pure function of that tool's methodology.Tool registry entry (Command/Canon/Purpose/Status), generated wh…; why: A tool doc that diverges from its --help output is worse than no doc — it misleads operators. Deriving both sections from the single source (module…→A tool doc that diverges from the tool's real declaration is worse than no doc -- it misleads operators. In the Go port each tool doc is generated by…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/generator/tooldocs.go, internal/generator/thinkingdocs_tooldocs_test.go, cmd/hotam/gen_spec.go]"
         }
       ],
       "id": "R-shared-tool-doc-from-docstring-and-help",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/generator/tooldocs.go",
+        "internal/generator/thinkingdocs_tooldocs_test.go",
+        "cmd/hotam/gen_spec.go"
+      ],
       "status": "SETTLED",
-      "why": "A tool doc that diverges from its --help output is worse than no doc — it misleads operators. Deriving both sections from the single source (module docstring + argparse) eliminates the divergence class entirely. The sentinel pattern mirrors how CONSTITUTION blocks are generated: machine-written between markers, never hand-edited."
+      "why": "A tool doc that diverges from the tool's real declaration is worse than no doc -- it misleads operators. In the Go port each tool doc is generated by generator.BuildToolDocs() (internal/generator/tooldocs.go): for every tool in methodology.Tools it renders a single document from the registry fields only -- a status-aware H1 (statusBadge: [PORTED]/[DECLARED -- not ported]), a Status section (statusLine), the Canon section token, and the Purpose line -- and writes it to domains/<domain>/docs/gen/tools/<command>.md via gen-spec (cmd/hotam/gen_spec.go). The Python-era mechanism (deriving two sections from the module docstring + argparse --help output between hand-edit sentinels) does not apply: Go has no per-tool docstring/argparse AST to harvest, and there are no inner sentinels because the whole file is regenerated wholesale on each gen-spec run (a single AUTOGENERATED banner at the top). The single-source discipline is preserved and strengthened -- the doc literally cannot diverge from the registry entry that defines the tool. TestBuildToolDocsSemanticCompleteness (internal/generator/thinkingdocs_tooldocs_test.go) verifies every methodology.Tools entry yields a non-empty doc containing its Canon, Purpose, and Command."
     },
     {
       "assumptions": [
@@ -5369,7 +5434,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels.",
+      "claim": "The root CLAUDE.md (and its AGENTS.md/GEMINI.md siblings) shall be rendered by gen-spec from a template whose body is a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -5383,15 +5448,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_root_claude_md_is_sentinel_only.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The root CLAUDE.md shall contain only a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between …→The root CLAUDE.md (and its AGENTS.md/GEMINI.md siblings) shall be rendered by gen-spec from a template whose body is a minimal framework-identity he…; why: Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen_spec from spec/docs/thinking/* (share…→Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen-spec from spec/docs/thinking/* (share…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_sentinel.go, cmd/hotam/gen_spec.go]"
         }
       ],
       "id": "R-root-claude-md-is-sentinel-only",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "internal/generator/claudemd_sentinel.go",
+        "cmd/hotam/gen_spec.go"
+      ],
       "status": "SETTLED",
-      "why": "Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen_spec from spec/docs/thinking/* (shared DRY source) and the domain CLAUDE.md (per-domain knowledge). The root is a thin shell pointing into both. RESOLVED -- REPLACES the old hand-written prose in root CLAUDE.md (P19a). (Wave 1 seed-coherence pass: enforced_by named a bare 'test_root_claude_md_is_sentinel_only' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)"
+      "why": "Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen-spec from spec/docs/thinking/* (shared DRY source) and the domain graph, and the root is a thin shell pointing into both. In the Go port the root CLAUDE.md is produced by generator.RenderClaudeMDFromTemplate (internal/generator/claudemd.go) when gen-spec is invoked with --claude-md pointing at the root path; the same bytes are also written to AGENTS.md and GEMINI.md (cmd/hotam/gen_spec.go). The body uses the sentinel-pair pattern from internal/generator/claudemd_sentinel.go (WrapBlock/ExtractBlock), so every generated region sits between e.g. <!-- LIVE-STATE:BEGIN --> ... <!-- LIVE-STATE:END --> markers and is rewritten wholesale on each regen, making hand-edits between sentinels structurally impossible to preserve. RESOLVED -- REPLACES the old hand-written prose in root CLAUDE.md (P19a). FOUND ISSUE (not fixed): the historical structural enforcer was tests/test_root_claude_md_is_sentinel_only.py, which is NOT ported to Go -- no Go test or check_* verifies the on-disk root CLAUDE.md contains no hand-written prose between sentinels. The property holds today because the file is regenerated wholesale from the template, but the guard against a future hand-edit is unported; the requirement is STRUCTURAL with no enforced_by in the Go port."
     },
     {
       "assumptions": [
@@ -5914,15 +5988,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py, test_tool_spawn_agent.py]→[]; settled_at: 2026-07-01→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can rea…→Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can rea…; last_reviewed_at: 2026-07-01→2026-07-12; review_after: 2027-01-01→2027-01-12; source_refs: []→[internal/generator/claudemd.go, internal/methodology/tools_data.go]"
         }
       ],
       "id": "R-sub-agent-crystal-triad",
-      "last_reviewed_at": "2026-07-01",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-01",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "internal/methodology/tools_data.go"
+      ],
       "status": "SETTLED",
-      "why": "Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can reason like any operator, (2) a connection to its senior/parent agent so it knows where to escalate and whose scope it is bounded within, and (3) its own scope-filtered domain business so it acts only within its delegated concern. create_agent.py and gen_spec.py already implement this triad (SCOPE-filtered CONSTITUTION generation, AGENT-MAP parent linkage, embedded thinking/tools) — this rule is recorded now, while zero sub-agents are actively spawned, so agent-spawning stays disciplined later. Sibling rule R-claude-md-consolidates-when-single-agent governs WHEN this per-file triad model activates: only once N>1 concurrently-active agents exist; until then the triad content lives merged inside the single root CLAUDE.md."
+      "why": "Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can reason like any operator, (2) a connection to its senior/parent agent so it knows where to escalate and whose scope it is bounded within, and (3) its own scope-filtered domain business so it acts only within its delegated concern. Not yet ported in the Go port: the per-agent crystal materializer (historically tools/create_agent.py scaffolding domains/<domain>/agents/<name>/ plus tools/gen_spec.py emitting the SCOPE-filtered CONSTITUTION, AGENT-MAP parent linkage, and embedded thinking/tools per agent) is Declared/not-ported -- create-agent is a Declared methodology.Tool, and the Go generator (internal/generator) produces a single consolidated root CLAUDE.md with no per-agent sub-operator files at all. This rule is recorded now, while zero sub-agents are actively spawned, so agent-spawning stays disciplined later -- the triad shape is the contract the future Go per-agent generator must satisfy when it is ported. Sibling rule R-claude-md-consolidates-when-single-agent governs WHEN this per-file triad model activates: only once N>1 concurrently-active agents exist; until then the triad content lives merged inside the single root CLAUDE.md (the EMBEDDED-THINKING/CONSTITUTION/OPERATOR-RECURSION blocks). PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [
@@ -6192,19 +6274,27 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_frozen_aspects_snapshot.py::test_frozen_aspect_files_unchanged_since_baseline, test_frozen_aspects_snapshot.py::test_baseline_covers_all_three_…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic specul…→Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against the supporting machinery: classic speculative general…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2027-01-12; source_refs: []→[internal/methodology/tools_data.go, internal/ontology/entity.go]"
         }
       ],
       "id": "R-speculative-aspects-frozen",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/methodology/tools_data.go",
+        "internal/ontology/entity.go"
+      ],
       "status": "SETTLED",
-      "why": "Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) now makes an inward edit to any frozen file (src/hotam_spec/entity.py; tools/create_agent.py, spawn_agent.py, invoke_agent.py; tools/create_domain.py) fail RED, with the failure message stating explicitly that unfreezing requires a recorded steward act (regenerating the baseline). Prose discipline alone could not detect a silent violation; the hash guard can."
+      "why": "Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against the supporting machinery: classic speculative generality. Frozen by steward 2026-07-02 after audit. In the Go port the frozen surface is carried as Declared (not-ported) methodology.Tools entries -- create-agent, spawn-agent, invoke-agent, create-domain (internal/methodology/tools_data.go) -- plus the Entity aspect substrate that exists but is inert (internal/ontology/entity.go, internal/invariants/scope_process.go Process/Entity checks that no-op when g.EntityTypes is empty). The natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker reads 'REVISIT when a second opt-in behavioral aspect is proposed'); the freeze remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED, and do not confuse 'now addressable via ConflictTransition proposals' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02) promoted the Python original STRUCTURAL->ENFORCED via a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) that made an inward edit to any frozen file fail RED. FOUND ISSUE (not fixed): that hash-baseline guard is NOT ported to Go -- there is no frozen-aspects snapshot test, so an inward edit to a frozen file (e.g. adding entity-machinery behavior) would not fail a test. The freeze is currently carried by review discipline + the Declared tool status, not by a structural guard; the requirement is PROSE (not ENFORCED) in the Go port. Unfreeze trigger remains Phase 5 (a real business domain)."
     },
     {
       "assumptions": [],
-      "claim": "The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined in tool code.",
+      "claim": "The operator's self-diagnosis conditions shall be named, pure, graph-only predicate functions in internal/diagnose/finding.go composed by AllFindings in a fixed registry order, and consumed by the what-now harness via internal/diagnose/signal.go -- never inlined in tool code.",
       "enforced_by": [
         "TestAllFindings_OrderFollowsRegistry"
       ],
@@ -6220,15 +6310,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_reflection.py::test_what_now_sources_reflection_predicates_from_module, test_reflection.py::test_diagnose_p0_and_advisory_partition_reflection_…→[TestAllFindings_OrderFollowsRegistry]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The operator's self-diagnosis conditions shall be named predicate functions in hotam_spec.reflection imported by the what_now harness, never inlined …→The operator's self-diagnosis conditions shall be named, pure, graph-only predicate functions in internal/diagnose/finding.go composed by AllFindings…; why: Concept-Map gap closed: §Reflection was the one core concept with no home in src/ — the five P0 self-diagnosis conditions (draft-overhang, unenfor…→Concept-Map gap closed: §Reflection is the home in internal/ for the P0 self-diagnosis conditions. In the Go port these live as eight named predicat…; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2027-01-12; source_refs: []→[internal/diagnose/finding.go, internal/diagnose/signal.go, internal/diagnose/finding_test.go]"
         }
       ],
       "id": "R-reflection-predicates-first-class",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/diagnose/finding.go",
+        "internal/diagnose/signal.go",
+        "internal/diagnose/finding_test.go"
+      ],
       "status": "SETTLED",
-      "why": "Concept-Map gap closed: §Reflection was the one core concept with no home in src/ — the five P0 self-diagnosis conditions (draft-overhang, unenforced-settled, over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt) lived inline in tools/what_now.py:diagnose(), important-yet-invisible substrate (generative law). Extraction mirrors the §Invariants pattern: reflect_* predicates return Finding records (condition/target/imperative) and the harness composes hotam_spec.reflection.all_findings() exactly as it composes invariants.all_violations() — the substrate owns the diagnosis vocabulary, the tool only renders. Behavior-preserving: what_now CLI output byte-identical before/after extraction. (D2 fix: enforced_by's second entry referenced a since-renamed test function -- corrected to name the current test.)"
+      "why": "Concept-Map gap closed: §Reflection is the home in internal/ for the P0 self-diagnosis conditions. In the Go port these live as eight named predicates in internal/diagnose/finding.go -- ReflectDraftOverhang, ReflectUnenforcedSettled, ReflectOverBudgetOperators, ReflectDeadAssumptionOnEnforcer, ReflectDerivedButUnbuilt, ReflectImplementsDecay, ReflectReplacesEdgeMigration, ReflectAllMembersRejected -- each returning []Finding (Condition/Target/Imperative records). The registry order is fixed by AllFindings(g), which appends each predicate's findings in that exact sequence (no per-call reordering); the what-now harness consumes them through internal/diagnose/signal.go (collectAttentionSignals ranges over AllFindings(g)) and renders, exactly as it composes invariants.AllViolations -- the substrate owns the diagnosis vocabulary, the tool only renders. This is the same extraction pattern as the §Invariants layer: reflect_* predicates return Finding records and the harness composes AllFindings() the way it composes AllViolations(). TestAllFindings_OrderFollowsRegistry (internal/diagnose/finding_test.go) pins the registry order."
     },
     {
       "assumptions": [],
@@ -7030,7 +7129,7 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any node.",
+      "claim": "An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared graph), never a copy of any node.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7044,21 +7143,29 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_scope_projection.py::test_project_scope_selects_by_prefix, test_scope_projection.py::test_scope_view_matches_gen_spec_prefix_rule_directly]→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared TensionGraph), never a copy of any no…→An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared graph), never a copy of any node.; why: M18/P-scope. Resolves R-partition-vs-border's open question by rejecting both extremes: a strict partition forbids any shared object (loses the abili…→M18/P-scope. Resolves R-partition-vs-border's open question by rejecting both extremes: a strict partition forbids any shared object (loses the abili…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2027-01-12; source_refs: []→[internal/invariants/scope_process.go, internal/ontology/operator.go]"
         }
       ],
       "id": "R-scope-is-projection",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/invariants/scope_process.go",
+        "internal/ontology/operator.go"
+      ],
       "status": "SETTLED",
-      "why": "M18/P-scope. Resolves R-partition-vs-border's open question by rejecting both extremes: a strict partition forbids any shared object (loses the ability to model deliberate cross-cutting delegation); an ad-hoc declared-border overlap invites hand-maintained edge lists that drift from the graph. hotam_spec.scope_projection.project_scope(g, prefixes) computes a ScopeView (sorted id-tuples for Requirements/Conflicts/Assumptions/Axes) purely from the graph, on demand, with the exact prefix-match discipline tools/gen_spec.py already uses for per-agent CONSTITUTION digests (id.startswith(p) for any p in prefixes) -- so the projection can never fork from the single writer (R-no-hand-edit-graph). Evidence: spec/src/hotam_spec/scope_projection.py:ScopeView/project_scope; Operator.scope field (hotam_spec/operator.py) carries the declaring prefix tuple."
+      "why": "M18/P-scope. Resolves R-partition-vs-border's open question by rejecting both extremes: a strict partition forbids any shared object (loses the ability to model deliberate cross-cutting delegation); an ad-hoc declared-border overlap invites hand-maintained edge lists that drift from the graph. In the Go port the projection is projectScope(g, prefixes) in internal/invariants/scope_process.go: it builds a scopeView (sets of requirement+conflict ids) purely from the graph by id-prefix match (strings.HasPrefix(r.ID, p) for any p in the operator's Scope prefixes), on demand, with no copied node data. This is the exact prefix-match discipline the generator already uses for per-domain CONSTITUTION digests, so the projection can never fork from the single writer (R-no-hand-edit-graph). The declaring prefix tuple is carried by Operator.Scope (internal/ontology/operator.go). The projection is consumed by check_scoped_node_has_single_presenter to compute overlaps, so the projection is load-bearing in the invariant layer today even though only one OP-director (Scope=()) currently exists."
     },
     {
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hidden or silently merged.",
+      "claim": "When two operators' scope projections share a node, the overlap shall be computed (never hidden or silently merged); the rendering of that overlap into a per-operator crystal is deferred until a real second operator exists.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7072,15 +7179,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_scope_projection.py::test_scope_overlap_finds_shared_conflict_and_assumption, test_scope_projection.py::test_scope_overlap_disjoint_scopes_is_e…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: When two operators' scope projections share a node or axis, the overlap shall be computed and printed into each affected operator's crystal, never hi…→When two operators' scope projections share a node, the overlap shall be computed (never hidden or silently merged); the rendering of that overlap in…; why: M18/P-scope. hotam_spec.scope_projection.scope_overlap(view_a, view_b) computes the sorted set-intersection of two ScopeViews; tools/gen_spec.py::_re…→M18/P-scope. In the Go port the overlap is computed by scopeOverlapNodeIDs(a, b scopeView) in internal/invariants/scope_process.go -- the sorted set-…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2027-01-12; source_refs: []→[internal/invariants/scope_process.go, internal/generator/glossary_terms_data.go]"
         }
       ],
       "id": "R-scope-overlap-generated",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/invariants/scope_process.go",
+        "internal/generator/glossary_terms_data.go"
+      ],
       "status": "SETTLED",
-      "why": "M18/P-scope. hotam_spec.scope_projection.scope_overlap(view_a, view_b) computes the sorted set-intersection of two ScopeViews; tools/gen_spec.py::_regenerate_agent_constitutions renders one OVERLAP block per agent (via _render_overlap_block) against every OTHER discovered agent's SCOPE, written between OVERLAP:BEGIN/END sentinels immediately after CONSTITUTION:END. With the CURRENT meta-domain (one OP-director, SCOPE=()), the OVERLAP block is legitimately empty on every agent -- R-empty-content-wellformed's calm-empty discipline, not suppression: the sentinel pair is always present so the state ('no scope overlap') is visible rather than omitted. Evidence: spec/src/hotam_spec/scope_projection.py:scope_overlap/overlap_node_ids; spec/tools/gen_spec.py:_render_overlap_block/_regenerate_agent_constitutions (OVERLAP sentinels)."
+      "why": "M18/P-scope. In the Go port the overlap is computed by scopeOverlapNodeIDs(a, b scopeView) in internal/invariants/scope_process.go -- the sorted set-intersection of two scopeViews over requirement+conflict ids -- and is consumed by check_scoped_node_has_single_presenter, which walks every unordered pair of operators with a non-empty Scope, projects each, and fires only if a contested node has no determinable presenter. So the COMPUTE half of the claim is live and load-bearing in the invariant layer. The RENDER half -- the historical tools/gen_spec.py::_regenerate_agent_constitutions emitting one OVERLAP:BEGIN/END block per agent against every OTHER discovered agent's SCOPE -- is NOT ported: the Go generator (internal/generator) produces a single consolidated root CLAUDE.md and has no per-agent crystal generation at all, because with the current meta-domain (one OP-director, SCOPE=()) there are no agents to render overlap for (R-claude-md-consolidates-when-single-agent). The glossary still defines §Scope as 'overlaps with another operator's projection are computed and rendered, never hidden' (internal/generator/glossary_terms_data.go); the compute is real, the per-agent render is deferred, not abandoned -- it materializes when R-sub-agent-crystal-triad's per-agent generation is ported alongside a real second operator."
     },
     {
       "assumptions": [
@@ -7124,7 +7239,7 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating.",
+      "claim": "Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7138,15 +7253,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_spawn_agent.py::test_spawn_log_carries_isolation_and_mutating_fields]→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/…→Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.; owner: ai-agent→framework-author; why: Wave 5 (measurable slices of discipline): the spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-runtime) but not the isolation posture under…→Not yet ported in the Go port. Wave 5 (measurable slices of discipline): the historical spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-ru…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2027-01-12"
         }
       ],
       "id": "R-spawn-log-carries-isolation",
-      "last_reviewed_at": "2026-07-02",
-      "owner": "ai-agent",
-      "review_after": "2027-01-02",
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Wave 5 (measurable slices of discipline): the spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-runtime) but not the isolation posture under which a sub-agent ran, so a parallel-mutating-agent hazard had no trace at all. spawn_agent.py's freeze under R-speculative-aspects-frozen was PARTIALLY lifted by explicit steward act (GO given for Wave 5) to add these two additive CLI flags (--isolation, --mutating) and log fields, backward-compatible with every pre-existing caller. This is the writer half; the honest reader half (R-parallel-mutating-agents-use-worktree) is a separate atom because it can only check log-internal consistency, not runtime concurrency."
+      "why": "Not yet ported in the Go port. Wave 5 (measurable slices of discipline): the historical spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-runtime) but not the isolation posture under which a sub-agent ran, so a parallel-mutating-agent hazard had no trace at all. The historical writer was tools/spawn_agent.py, whose freeze under R-speculative-aspects-frozen was partially lifted by explicit steward act (GO given for Wave 5) to add two additive CLI flags (--isolation, --mutating) and matching log fields, backward-compatible with every pre-existing caller. In the Go port spawn-agent is Declared (not ported) in methodology.Tools -- there is no spawn-log writer, no spawn-log.jsonl, and no isolation/mutating fields, because no sub-agent spawning machinery exists at all (R-claude-md-consolidates-when-single-agent: one operator, zero active sub-agents). The writer half (this atom) and the honest reader half (R-parallel-mutating-agents-use-worktree, which can only check log-internal consistency, not runtime concurrency) are both unported together, since both depend on the unported spawn machinery. PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [
@@ -7369,7 +7489,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.",
+      "claim": "The what-now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7383,15 +7503,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_tool_mark_revisit_evaluated.py::test_append_evaluation_writes_record, tests/test_tool_mark_revisit_evaluated.py::test_revisit_band_fires_…→[]; settled_at: 2026-07-03→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated mo…→The what-now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated mo…; why: A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but…→Not yet ported in the Go port. A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's …; last_reviewed_at: 2026-07-03→2026-07-12; review_after: 2027-01-03→2027-01-12; source_refs: []→[internal/diagnose/signal.go, internal/proposal/mutate.go]"
         }
       ],
       "id": "R-revisit-markers-evaluated",
-      "last_reviewed_at": "2026-07-03",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-03",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/diagnose/signal.go",
+        "internal/proposal/mutate.go"
+      ],
       "status": "SETTLED",
-      "why": "A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but nothing tracked whether anyone LOOKED at it again -- an unread trigger lets the decision silently ossify while its stated revisit condition may already have come true. tools/mark_revisit_evaluated.py appends a {stamp, conflict, settled_count} record to spec/.runtime/revisit-eval.jsonl when the steward evaluates a marker; the harness reads the last evaluation per conflict and re-surfaces the marker as 'evaluate revisit marker' when never evaluated or stale by more than GENERATIVE_AUDIT_STALE_DELTA SETTLED atoms. The band is CLI-only (never in diagnose(g)) for the same determinism reason as the pending-proposal and generative-audit bands: it reads the filesystem, which gen_spec must not render. Evaluating a marker is an OBSERVATION; re-opening the conflict is a separate ProposedConflict the steward drafts (R-ai-presents-not-decides)."
+      "why": "Not yet ported in the Go port. A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but nothing tracked whether anyone LOOKED at it again -- an unread trigger lets the decision silently ossify while its stated revisit condition may already have come true. The historical Python writer was tools/mark_revisit_evaluated.py (appending a {stamp, conflict, settled_count} record to spec/.runtime/revisit-eval.jsonl when the steward evaluates a marker); tools/what_now.py then read the last evaluation per conflict and re-surfaced the marker as 'evaluate revisit marker' when never evaluated or stale by more than GENERATIVE_AUDIT_STALE_DELTA SETTLED atoms. In the Go port mark-revisit-evaluated is Declared (not ported) in methodology.Tools, and the what-now harness (cmd/hotam/what_now.go over internal/diagnose/signal.go) renders only graph-derived signals -- there is no revisit-evaluation band reading the filesystem (stays OUT of the signal set for the same determinism reason as the pending-proposal / generative-audit bands: it reads the filesystem, which gen_spec must not render). The conflict.RevisitMarker field itself is carried and written by ProposedConflictTransition.mutate, so the marker survives in substrate; only the evaluation-tracking reader/writer is unported. Evaluating a marker is an OBSERVATION; re-opening the conflict is a separate ProposedConflictTransition the steward drafts (R-ai-presents-not-decides). PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [],
@@ -7488,7 +7616,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The proposal protocol shall include a ProposedStakeholder kind (kind='Stakeholder') that materializes a new Stakeholder node in the active domain's stakeholders tuple via tools/apply_proposal.py, refusing a duplicate id.",
+      "claim": "The proposal protocol shall include a ProposedStakeholder kind (Kind=\"Stakeholder\") that materializes a new Stakeholder node in the active domain's graph by appending to g.Stakeholders, refusing a duplicate id.",
       "enforced_by": [
         "TestApply_Stakeholder"
       ],
@@ -7504,19 +7632,28 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_tool_apply_proposal_stakeholder.py::test_validate_proposal_dispatches_stakeholder_kind, test_tool_apply_proposal_stakeholder.py::test_apply_sta…→[TestApply_Stakeholder]; settled_at: 2026-07-03→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The proposal protocol shall include a ProposedStakeholder kind (kind='Stakeholder') that materializes a new Stakeholder node in the active domain's s…→The proposal protocol shall include a ProposedStakeholder kind (Kind=\"Stakeholder\") that materializes a new Stakeholder node in the active domain's g…; why: Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_…→Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_…; last_reviewed_at: 2026-07-03→2026-07-12; review_after: 2027-01-03→2027-01-12; source_refs: []→[internal/proposal/types.go, internal/proposal/mutate.go, internal/ontology/stakeholder.go]"
         }
       ],
       "id": "R-proposed-stakeholder-kind-exists",
-      "last_reviewed_at": "2026-07-03",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-03",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/proposal/types.go",
+        "internal/proposal/mutate.go",
+        "internal/ontology/stakeholder.go"
+      ],
       "status": "SETTLED",
-      "why": "Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_member_owner requires a steward who is NOT the owner of any member Requirement, i.e. at least two distinct Stakeholders must exist before any tension can be held. Yet every Requirement, Axis and Assumption already had a Proposed* door while Stakeholder did not, trapping the newcomer between R-no-hand-edit-graph (the graph is writable only through apply_proposal) and the absence of a door. ProposedStakeholder(id, name, domain) is that missing door: a frozen dataclass in proposal.py with kind='Stakeholder', a _validate_stakeholder parser (id/name/domain all required), and an _apply_stakeholder_to_source writer that appends a Stakeholder(...) into the stakeholders = (...) tuple, ensuring the import, and refusing a duplicate id as a re-declaration. Models the exact ProposedAxis/ProposedAssumption pattern (append-to-tuple, exact-id-uniqueness); extends R-active-loop-protocol's floor exactly as EntityType, OperatorBudget, Axis and Assumption did."
+      "why": "Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_member_owner requires a steward who is NOT the owner of any member Requirement, i.e. at least two distinct Stakeholders must exist before any tension can be held. Yet every Requirement, Axis and Assumption already had a Proposed* door while Stakeholder did not, trapping the newcomer between R-no-hand-edit-graph (the graph is writable only through proposals) and the absence of a door. In the Go port ProposedStakeholder is that door: a struct in internal/proposal/types.go (KindStakeholder=\"Stakeholder\", fields ID/Name/Domain/Why) whose mutate method (internal/proposal/mutate.go: ProposedStakeholder.mutate) checks ontology.StakeholderIDs(g) for the exact id and, if absent, appends an ontology.Stakeholder{ID,Name,Domain} to g.Stakeholders. It models the exact ProposedAxis/ProposedAssumption pattern (append-to-slice, exact-id-uniqueness); extends R-active-loop-protocol's floor exactly as EntityType, OperatorBudget, Axis and Assumption did."
     },
     {
       "assumptions": [],
-      "claim": "The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-guard, Stop context_producer) shall live in a committed project settings.json generated by tools/setup_hooks.py with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json.",
+      "claim": "The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-guard, Stop context_producer) shall live in a committed project settings.json generated by a setup tool with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7530,15 +7667,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_setup_hooks.py::test_build_settings_has_universal_events, test_tool_setup_hooks.py::test_build_settings_commands_are_portable, test_tool_s…→[]; settled_at: 2026-07-03→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-…→The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-…; why: Claim refreshed 2026-07-05: the Stop boot_cite hook was removed (R-boot-cite-measured REJECTED per R-agent-conduct-is-rules-not-tests -- form-metric …→Not yet ported in the Go port. The historical generator was tools/setup_hooks.py, which produced the committed project settings.json (the portable se…; last_reviewed_at: 2026-07-03→2026-07-12; review_after: 2027-01-03→2027-01-12"
         }
       ],
       "id": "R-sensorium-committed",
-      "last_reviewed_at": "2026-07-03",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-03",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Claim refreshed 2026-07-05: the Stop boot_cite hook was removed (R-boot-cite-measured REJECTED per R-agent-conduct-is-rules-not-tests -- form-metric theatre), and the UserPromptSubmit attention_hook (wave 16) was missing from the enumeration. The enumeration now matches the actual generated settings.json exactly. Original WHY stands: hooks lived only in the personal git-ignored settings.local.json, so a fresh clone got no pulse and no graph-guard; the committed settings.json is the portable sensorium."
+      "why": "Not yet ported in the Go port. The historical generator was tools/setup_hooks.py, which produced the committed project settings.json (the portable sensorium) so that a fresh clone got the pulse and the graph-guard rather than starting blind. setup-hooks is Declared (not ported) in methodology.Tools, and the adapter tools it wired (attention-hook, claude-md-diff-watch, context-producer, emit-cipher) are all Declared/not-ported as well. The original WHY stands: hooks that live only in the personal git-ignored settings.local.json leave a fresh clone with no pulse and no graph-guard. A committed .claude/settings.json exists in the repo, but it is not generated by a ported setup tool and does not carry the full Python sensorium enumeration; the portable-sensorium generator and its hook adapters are unported substrate. PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [],
@@ -8228,15 +8370,25 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-06; review_after: →2027-01-06"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph,…→K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph,…; settled_at: 2026-07-06→2026-07-12; last_reviewed_at: 2026-07-06→2026-07-12; review_after: 2027-01-06→2027-01-12; source_refs: []→[internal/ontology/signoff.go, internal/ontology/conflict.go, internal/proposal/mutate.go, internal/invariants/typed_anchors.go]"
         }
       ],
       "id": "R-signoff-preserved-in-substrate",
-      "last_reviewed_at": "2026-07-06",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-06",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/ontology/signoff.go",
+        "internal/ontology/conflict.go",
+        "internal/proposal/mutate.go",
+        "internal/invariants/typed_anchors.go"
+      ],
       "status": "SETTLED",
-      "why": "K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph, so the signature evaporated into gitignored JSON -- R-trust-anchor-mechanism [E] was not auditable from the substrate. K2(b): HELD->DECIDED erased Variants (the non-chosen implies/costs -- anti-relitigation cargo -- were overwritten with an empty tuple); the chosen variant lived only as prose inside DECIDED(...). This atom lands the Signoff frozen payload (spec/src/hotam_spec/signoff.py): a payload dataclass (NOT a new node type, anti-RDF -- mirrors Variant's rationale) attached to Conflict.signoff and Assumption.signoff, carrying decided_by + date + verbatim + instrument + chosen_variant. The writer (apply_proposal) now builds the Signoff from proposal fields and attaches it; variants are preserved across HELD->DECIDED. instrument is an explicit seam for the future verifiable-signature wave (R-decided-by-verifiable-signature is OPEN -- this atom does NOT bind to git/crypto, only names the seam). check_signoff_chosen_variant_resolves enforces a non-empty chosen_variant is the id of one of the conflict's variants; check_decided_conflict_carries_signoff enforces consistency (signoff.decided_by == conflict.decided_by) when a signoff is present, SOFT (pre-existing decisions without signoff are legitimate, no migration forcing)."
+      "why": "K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph, so the signature evaporated into gitignored JSON -- R-trust-anchor-mechanism was not auditable from the substrate. K2(b): HELD->DECIDED erased Variants (the non-chosen implies/costs -- anti-relitigation cargo -- were overwritten); the chosen variant lived only as prose inside DECIDED(...). In the Go port the Signoff payload is ontology.Signoff (internal/ontology/signoff.go): a struct (NOT a new node type, anti-RDF -- mirrors Variant's rationale) carrying DecidedBy + Date + Verbatim + Instrument + ChosenVariant, attached as *Signoff on Conflict.Signoff and Assumption.Signoff (internal/ontology/conflict.go, internal/ontology/assumption.go). The proposal writer builds it: ProposedConflictTransition.mutate (internal/proposal/mutate.go) sets c.Signoff = &ontology.Signoff{...} when the transition is a decision with a non-empty DecidedBy (Instrument defaults to SignoffInstrumentPersonal), and ProposedAssumptionTransition.mutate does the equivalent for assumptions; variants are preserved across HELD->DECIDED. Instrument (SignoffInstrumentPersonal / SignoffInstrumentDEL, internal/ontology/signoff.go) is an explicit seam for the future verifiable-signature wave (R-decided-by-verifiable-signature is OPEN -- this atom does NOT bind to git/crypto, only names the seam). check_signoff_chosen_variant_resolves (internal/invariants/typed_anchors.go) enforces a non-empty chosen_variant is the id of one of the conflict's variants; check_decided_conflict_carries_signoff enforces consistency (signoff.decided_by == conflict.decided_by) when a signoff is present, SOFT (pre-existing decisions without signoff are legitimate, no migration forcing)."
     },
     {
       "assumptions": [],
@@ -8305,7 +8457,7 @@
         "A-python-stack",
         "A-most-knowledge-crystallizable"
       ],
-      "claim": "A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: tuple of HistoryEntry), where each HistoryEntry is written by apply_proposal.py from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.",
+      "claim": "A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.",
       "enforced_by": [
         "check_requirement_history_wellformed"
       ],
@@ -8316,15 +8468,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change hi…→A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change hi…; why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…; settled_at: 2026-07-10→2026-07-12; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2027-01-12; source_refs: []→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]"
         }
       ],
       "id": "R-requirement-freshness-fields",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2027-01-12",
+      "source_refs": [
+        "internal/ontology/requirement.go",
+        "internal/proposal/mutate.go",
+        "internal/invariants/lifecycle_checks.go"
+      ],
       "status": "SETTLED",
-      "why": "External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.py -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. history is DERIVED by the mechanical writer from the old->new field diff on each UPDATE, mirroring the append-only ticket History form (tools/_ticket_store.py) so the two change-trails do not diverge into incompatible styles. The check is deliberately SYNTACTIC ONLY (non-empty fields + monotonic stamps): measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). This atom (Etap O, #117) lands only the ontology + writer + syntactic enforcer; the created_at/settled_at backfill of ~270 existing nodes is a separate act (Etap P, #118)."
+      "why": "External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.json -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. In the Go port: the freshness fields live on ontology.Requirement (internal/ontology/requirement.go) and its History []HistoryEntry; the proposal writer (ProposedRequirement.mutate in internal/proposal/mutate.go) computes the old->new field diff via summarizeFieldDiff and, on UPDATE of an existing node only (never at CREATE), appends an ontology.HistoryEntry{At: today, Summary: diff} -- mirroring the append-only ticket History form so the two change-trails do not diverge. The syntactic enforcer is check_requirement_history_wellformed (internal/invariants/lifecycle_checks.go): three sub-rules over each Requirement's history -- non-empty `at`, non-empty `summary`, monotonically non-decreasing `at` (ISO-8601 sorts lexicographically == chronologically). The check is deliberately SYNTACTIC ONLY: measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED)."
     },
     {
       "assumptions": [

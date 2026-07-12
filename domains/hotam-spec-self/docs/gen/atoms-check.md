@@ -162,18 +162,19 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ## `R-requirement-claim-is-atomic` (PROSE)
 
-**Claim.** Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.
+**Claim.** Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.
 
-**Why.** SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/gen/AUDIT.md). Waves 1-3 of atomization applied the discipline to the meta-domain, decomposing compound requirements into single-concern atoms. ENFORCED Wave 8 move 2 (2026-07-03): audit_atomicity.py's requirement-claim audit was rescoped to LIVE promises only (status SETTLED or OPEN(...) -- REJECTED is frozen history, DRAFT is not yet a promise, see audit_atomicity.py's own RULE/WHY), which shrank the atomicity_compound_baseline.json ratchet baseline from 21 stale/misscoped ids down to 6 genuine live compounds, then to 0 after this wave's splits (R-observation-evidence-scope, R-subagent-gets-its-claude-md, R-land-tier-trace 3-way) and classifier-alignment rewords (R-tiered-gate-not-a-commit-gate, R-rules-as-data, both false-positive semicolon/scope-clause claims). With the baseline empty, test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline is now a STRICT zero-COMPOUND gate for every live SETTLED/OPEN requirement claim -- the exact mechanical enforcer this requirement always needed. R-atomicity-ratchet-no-growth (SETTLED, ENFORCED) remains the permanent, more general growth-direction mechanism (tolerates future HONEST debt without red-lining CI); this atom's own enforced_by now points directly at the strict test that is meaningful precisely because the baseline is empty.
+**Why.** Not yet ported in the Go port. The historical mechanical enforcer was tools/audit_atomicity.py (surfacing Requirements with compound claims as a deterministic audit signal, per docs/gen/AUDIT.md) plus tests/test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline as a strict zero-COMPOUND gate over live SETTLED/OPEN claims, with an atomicity_compound_baseline.json ratchet. audit-atomicity is Declared (not ported) in the Go methodology.Tools registry, and no Go check_* or test enforces claim atomicity -- the discipline is currently carried by review convention only. The substance (one concern per claim, compound claims split into separate atoms) remains the live editorial discipline; only its mechanical detection is unported. R-atomicity-ratchet-no-growth is the sibling requirement meant to carry the growth-direction half; both are PROSE (not ENFORCED) in the Go port. Waves 1-3 of atomization applied the discipline to the meta-domain manually; this content refresh itself follows that same hand-applied atomicity discipline.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2027-01-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: Each `Requirement.claim` shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.→Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.; owner: framework-reviewer→framework-author; why: SETTLED (BUILD-TRIGGER fired): tools/audit_atomicity.py exists and surfaces Requirements with compound claims as a deterministic audit signal (docs/g…→Not yet ported in the Go port. The historical mechanical enforcer was tools/audit_atomicity.py (surfacing Requirements with compound claims as a dete…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12
 
 ## `R-requirement-enforced` (ENFORCED)
 
@@ -194,16 +195,19 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ## `R-requirement-freshness-fields` (ENFORCED)
 
-**Claim.** A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: tuple of HistoryEntry), where each HistoryEntry is written by apply_proposal.py from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.
+**Claim.** A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.
 
-**Why.** External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.py -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. history is DERIVED by the mechanical writer from the old->new field diff on each UPDATE, mirroring the append-only ticket History form (tools/_ticket_store.py) so the two change-trails do not diverge into incompatible styles. The check is deliberately SYNTACTIC ONLY (non-empty fields + monotonic stamps): measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). This atom (Etap O, #117) lands only the ontology + writer + syntactic enforcer; the created_at/settled_at backfill of ~270 existing nodes is a separate act (Etap P, #118).
+**Why.** External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.json -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. In the Go port: the freshness fields live on ontology.Requirement (internal/ontology/requirement.go) and its History []HistoryEntry; the proposal writer (ProposedRequirement.mutate in internal/proposal/mutate.go) computes the old->new field diff via summarizeFieldDiff and, on UPDATE of an existing node only (never at CREATE), appends an ontology.HistoryEntry{At: today, Summary: diff} -- mirroring the append-only ticket History form so the two change-trails do not diverge. The syntactic enforcer is check_requirement_history_wellformed (internal/invariants/lifecycle_checks.go): three sub-rules over each Requirement's history -- non-empty `at`, non-empty `summary`, monotonically non-decreasing `at` (ISO-8601 sorts lexicographically == chronologically). The check is deliberately SYNTACTIC ONLY: measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED).
 
 **Enforced by:** `check_requirement_history_wellformed`
 
-**Last reviewed.** 2026-07-10
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2027-01-10
+**Review after.** 2027-01-12
+
+**Sources.** internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-10; review_after: →2027-01-10
+- 2026-07-12 — claim: A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change hi…→A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change hi…; why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…; settled_at: 2026-07-10→2026-07-12; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2027-01-12; source_refs: []→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]

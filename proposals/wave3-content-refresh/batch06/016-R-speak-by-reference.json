@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-speak-by-reference",
+  "claim": "An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.",
+  "why": "SETTLED (P5): the references-not-content discipline is now structurally bound. In the Go port the structural half is enforced by check_section_anchors_known (internal/invariants/self_reference.go): it ranges over every registered invariant in the All registry and fires a STRUCTURE violation whenever an invariant's Canon is nil -- i.e. an invariant that fails to reference a registered methodology.Section. The Python original walked every source file with ast, extracted section-sign tokens from docstrings via regex, and checked each against the glossary; that mechanism is structurally unnecessary in Go because every Invariant.Canon is a TYPED *methodology.Section pointer obtained at registration time from methodology.Sections.MustRegister -- a typed pointer into the registry cannot dangle, so the only remaining failure mode (a nil Canon) is what this check catches directly. The §Glossary itself lives as DATA in methodology.Sections (internal/methodology/sections_data.go), so an invented §-token cannot compile. The advisory what-now/inspect output cites anchor ids in every action (the Finding/Signal Target fields). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by entries that named bare doc paths or since-renamed Python tests were corrected to the Go enforcer that actually covers this claim, under the check_enforced_by_resolvable discipline.)",
+  "source_refs": [
+    "internal/invariants/self_reference.go",
+    "internal/methodology/section.go",
+    "internal/methodology/sections_data.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

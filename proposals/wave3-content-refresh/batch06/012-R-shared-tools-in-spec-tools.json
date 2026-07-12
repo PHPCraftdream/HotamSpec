@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-shared-tools-in-spec-tools",
+  "claim": "Tools available to all operators shall be the single shared hotam CLI toolset -- Go subcommands wired in cmd/hotam/main.go and declared once in the methodology.Tools registry -- with no per-agent private tool namespace.",
+  "why": "Scoping rule, structurally enforced by code layout. The historical Python form ('tools available to all agents shall live in spec/tools/') does not map literally to the Go port: there is no spec/ tree at all. In the Go port the shared toolset is the set of `hotam <command>` subcommands dispatched in cmd/hotam/main.go, each declared exactly once as a methodology.Tool entry in internal/methodology/tools_data.go (Command/Canon/Purpose/Status, Status=Ported for wired subcommands, Declared for unported surface). Because there is exactly one operator (OP-director) and zero active sub-agents, every tool is by construction available to all operators -- there is no per-agent tools/ directory and no private-tool namespace to leak. When a real sub-agent is spawned (R-sub-agent-crystal-triad), the same single registry remains the shared floor; per-agent tool customization is deferred until that spawn materializes. SETTLED -- already true today.",
+  "source_refs": [
+    "cmd/hotam/main.go",
+    "internal/methodology/tools_data.go",
+    "internal/methodology/tool.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

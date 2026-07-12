@@ -97,32 +97,38 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 ## `R-shared-tools-in-spec-tools` (PROSE)
 
-**Claim.** Tools available to all agents shall live in `spec/tools/`.
+**Claim.** Tools available to all operators shall be the single shared hotam CLI toolset -- Go subcommands wired in cmd/hotam/main.go and declared once in the methodology.Tools registry -- with no per-agent private tool namespace.
 
-**Why.** Scoping rule, structurally enforced by file layout. SETTLED — already true today.
+**Why.** Scoping rule, structurally enforced by code layout. The historical Python form ('tools available to all agents shall live in spec/tools/') does not map literally to the Go port: there is no spec/ tree at all. In the Go port the shared toolset is the set of `hotam <command>` subcommands dispatched in cmd/hotam/main.go, each declared exactly once as a methodology.Tool entry in internal/methodology/tools_data.go (Command/Canon/Purpose/Status, Status=Ported for wired subcommands, Declared for unported surface). Because there is exactly one operator (OP-director) and zero active sub-agents, every tool is by construction available to all operators -- there is no per-agent tools/ directory and no private-tool namespace to leak. When a real sub-agent is spawned (R-sub-agent-crystal-triad), the same single registry remains the shared floor; per-agent tool customization is deferred until that spawn materializes. SETTLED -- already true today.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2027-01-12
+
+**Sources.** cmd/hotam/main.go, internal/methodology/tools_data.go, internal/methodology/tool.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_shared_tools_location.py]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: Tools available to all agents shall live in `spec/tools/`.→Tools available to all operators shall be the single shared hotam CLI toolset -- Go subcommands wired in cmd/hotam/main.go and declared once in the m…; why: Scoping rule, structurally enforced by file layout. SETTLED — already true today.→Scoping rule, structurally enforced by code layout. The historical Python form ('tools available to all agents shall live in spec/tools/') does not m…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[cmd/hotam/main.go, internal/methodology/tools_data.go, internal/methodology/tool.go]
 
 ## `R-speak-by-reference` (ENFORCED)
 
 **Claim.** An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.
 
-**Why.** SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every SS-anchor cited in framework docstrings resolves in the glossary -- an operator that invents a SS-token immediately fires a P1 STRUCTURE violation. test_glossary_sync.py provides the test-time mirror. docs/playbooks/ mandates that every proposal cites the R-/C-/SS anchor it acts on; test_playbooks_doc.py is the test-time mirror of that doc's presence and content. The SSTick advisory output itself cites anchor ids in every action (target field). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by's third entry was a bare doc path 'docs/playbooks/' rather than a resolvable test reference -- corrected to name the test file that guards that doc, caught by the new check_enforced_by_resolvable invariant.)
+**Why.** SETTLED (P5): the references-not-content discipline is now structurally bound. In the Go port the structural half is enforced by check_section_anchors_known (internal/invariants/self_reference.go): it ranges over every registered invariant in the All registry and fires a STRUCTURE violation whenever an invariant's Canon is nil -- i.e. an invariant that fails to reference a registered methodology.Section. The Python original walked every source file with ast, extracted section-sign tokens from docstrings via regex, and checked each against the glossary; that mechanism is structurally unnecessary in Go because every Invariant.Canon is a TYPED *methodology.Section pointer obtained at registration time from methodology.Sections.MustRegister -- a typed pointer into the registry cannot dangle, so the only remaining failure mode (a nil Canon) is what this check catches directly. The §Glossary itself lives as DATA in methodology.Sections (internal/methodology/sections_data.go), so an invented §-token cannot compile. The advisory what-now/inspect output cites anchor ids in every action (the Finding/Signal Target fields). Together these make reference-not-content structurally visible and machine-checked. (Wave 1 seed-coherence pass: enforced_by entries that named bare doc paths or since-renamed Python tests were corrected to the Go enforcer that actually covers this claim, under the check_enforced_by_resolvable discipline.)
 
 **Enforced by:** `check_section_anchors_known`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2027-01-12
+
+**Sources.** internal/invariants/self_reference.go, internal/methodology/section.go, internal/methodology/sections_data.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [test_glossary_sync.py, check_section_anchors_known, test_playbooks_doc.py]→[check_section_anchors_known]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — owner: ai-agent→framework-author; why: SETTLED (P5): the references-not-content discipline is now structurally bound. check_section_anchors_known ensures every SS-anchor cited in framework…→SETTLED (P5): the references-not-content discipline is now structurally bound. In the Go port the structural half is enforced by check_section_anchor…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-01-12; source_refs: []→[internal/invariants/self_reference.go, internal/methodology/section.go, internal/methodology/sections_data.go]

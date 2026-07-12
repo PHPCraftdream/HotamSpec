@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-scope-overlap-generated",
+  "claim": "When two operators' scope projections share a node, the overlap shall be computed (never hidden or silently merged); the rendering of that overlap into a per-operator crystal is deferred until a real second operator exists.",
+  "why": "M18/P-scope. In the Go port the overlap is computed by scopeOverlapNodeIDs(a, b scopeView) in internal/invariants/scope_process.go -- the sorted set-intersection of two scopeViews over requirement+conflict ids -- and is consumed by check_scoped_node_has_single_presenter, which walks every unordered pair of operators with a non-empty Scope, projects each, and fires only if a contested node has no determinable presenter. So the COMPUTE half of the claim is live and load-bearing in the invariant layer. The RENDER half -- the historical tools/gen_spec.py::_regenerate_agent_constitutions emitting one OVERLAP:BEGIN/END block per agent against every OTHER discovered agent's SCOPE -- is NOT ported: the Go generator (internal/generator) produces a single consolidated root CLAUDE.md and has no per-agent crystal generation at all, because with the current meta-domain (one OP-director, SCOPE=()) there are no agents to render overlap for (R-claude-md-consolidates-when-single-agent). The glossary still defines §Scope as 'overlaps with another operator's projection are computed and rendered, never hidden' (internal/generator/glossary_terms_data.go); the compute is real, the per-agent render is deferred, not abandoned -- it materializes when R-sub-agent-crystal-triad's per-agent generation is ported alongside a real second operator.",
+  "source_refs": [
+    "internal/invariants/scope_process.go",
+    "internal/generator/glossary_terms_data.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

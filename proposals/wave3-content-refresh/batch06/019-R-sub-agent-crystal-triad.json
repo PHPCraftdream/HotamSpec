@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-sub-agent-crystal-triad",
+  "claim": "Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).",
+  "why": "Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can reason like any operator, (2) a connection to its senior/parent agent so it knows where to escalate and whose scope it is bounded within, and (3) its own scope-filtered domain business so it acts only within its delegated concern. Not yet ported in the Go port: the per-agent crystal materializer (historically tools/create_agent.py scaffolding domains/<domain>/agents/<name>/ plus tools/gen_spec.py emitting the SCOPE-filtered CONSTITUTION, AGENT-MAP parent linkage, and embedded thinking/tools per agent) is Declared/not-ported -- create-agent is a Declared methodology.Tool, and the Go generator (internal/generator) produces a single consolidated root CLAUDE.md with no per-agent sub-operator files at all. This rule is recorded now, while zero sub-agents are actively spawned, so agent-spawning stays disciplined later -- the triad shape is the contract the future Go per-agent generator must satisfy when it is ported. Sibling rule R-claude-md-consolidates-when-single-agent governs WHEN this per-file triad model activates: only once N>1 concurrently-active agents exist; until then the triad content lives merged inside the single root CLAUDE.md (the EMBEDDED-THINKING/CONSTITUTION/OPERATOR-RECURSION blocks). PROSE (not ENFORCED): no enforcer exists in the Go port.",
+  "source_refs": [
+    "internal/generator/claudemd.go",
+    "internal/methodology/tools_data.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

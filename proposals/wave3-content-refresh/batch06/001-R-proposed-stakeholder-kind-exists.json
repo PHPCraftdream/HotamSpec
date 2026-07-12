@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-proposed-stakeholder-kind-exists",
+  "claim": "The proposal protocol shall include a ProposedStakeholder kind (Kind=\"Stakeholder\") that materializes a new Stakeholder node in the active domain's graph by appending to g.Stakeholders, refusing a duplicate id.",
+  "why": "Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_member_owner requires a steward who is NOT the owner of any member Requirement, i.e. at least two distinct Stakeholders must exist before any tension can be held. Yet every Requirement, Axis and Assumption already had a Proposed* door while Stakeholder did not, trapping the newcomer between R-no-hand-edit-graph (the graph is writable only through proposals) and the absence of a door. In the Go port ProposedStakeholder is that door: a struct in internal/proposal/types.go (KindStakeholder=\"Stakeholder\", fields ID/Name/Domain/Why) whose mutate method (internal/proposal/mutate.go: ProposedStakeholder.mutate) checks ontology.StakeholderIDs(g) for the exact id and, if absent, appends an ontology.Stakeholder{ID,Name,Domain} to g.Stakeholders. It models the exact ProposedAxis/ProposedAssumption pattern (append-to-slice, exact-id-uniqueness); extends R-active-loop-protocol's floor exactly as EntityType, OperatorBudget, Axis and Assumption did.",
+  "source_refs": [
+    "internal/proposal/types.go",
+    "internal/proposal/mutate.go",
+    "internal/ontology/stakeholder.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

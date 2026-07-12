@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-smoke-test",
+  "claim": "The test suite shall provide a fast end-to-end signal that the framework is healthy on the real domain graph -- load the graph, run every generator template, and regenerate docs without panicking or empty output.",
+  "why": "An agent after a change should not need to remember the full test count or layout -- one signal means 'the framework did not fall over on real data'. In the Go port the historical spec/tests/test_smoke.py (one Python test: load content + all invariants + harness + regen) is replaced by a distributed set of Go tests that together cover the same ground: TestGenSpec_SmokeOnRealDomain (internal/generator/byteidentical_test.go) loads the real hotam-spec-self domain graph (domains/hotam-spec-self/graph.json) and runs every generator Build* template (REQUIREMENTS/TENSIONS/OPEN/UNENFORCED/GLOSSARY/HISTORY/DECISIONS/CONSTITUTION/ENTITIES/FRAMEWORK-INVARIANTS/REPO-MAP/live-state plus BuildGraphJSON), asserting non-empty output and no panic; the all-violations coverage is exercised by internal/invariants' own real-graph tests; the harness path is exercised by internal/diagnose integration tests (TestAllFindings_RealGraphNoPanic) and the cmd/hotam CLI tests. The single-test shape is split across packages because Go tests run per-package, but the collective signal is the same one-health-check intent. PROSE (not ENFORCED): no single check_* gates this; it is the test suite's role, not an invariant.",
+  "source_refs": [
+    "internal/generator/byteidentical_test.go",
+    "internal/diagnose/integration_test.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-01-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}
