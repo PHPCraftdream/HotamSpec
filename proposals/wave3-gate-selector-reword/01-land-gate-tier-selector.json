@@ -1,0 +1,17 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-gate-tier-selector",
+  "claim": "hotam gate (internal/gate.SelectTier1), when invoked for a target anchor, shall resolve the T1 targeted-enforcer subset from the target's enforced_by tuple (union of resolved check_*/Test* names) instead of requiring the full test suite for that lookup.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Reworded 2026-07-12 to describe what the Go port actually implements and tests: internal/gate.SelectTier1 (internal/gate/gate.go) correctly resolves a target's enforced_by into the union of concrete Go check_*/Test* enforcers -- TestSelectTier1_CheckNameResolves, TestSelectTier1_TestFuncNameResolves, TestSelectTier1_MultipleChecksUnion. The prior claim asserted this selection ran 'by default' inside the LAND pipeline (tools/apply_proposal.py consulting tools/gate.py) -- that automatic wiring was never carried into the Go port: hotam land (cmd/hotam/land.go) runs apply -> gen-spec -> all-violations and does not call gate.SelectTier1 at all; the selector is reachable only via the standalone `hotam gate <anchor>` command (cmd/hotam/gate_cmd.go). This is the honest, narrower claim the code actually guarantees. The lost intent -- wiring T1 selection as LAND's default verify tier, to avoid the full-suite time tax on every proposal -- is preserved as its own open item, not silently dropped: see R-t1-selector-as-land-default (DRAFT). Decision reached via agent consultation (fm), per R-ai-presents-not-decides / R-decided-needs-human-signoff, after an earlier content-refresh batch (this wave) flagged the mismatch as a found-issue.",
+  "assumptions": [],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestSelectTier1_CheckNameResolves",
+    "TestSelectTier1_TestFuncNameResolves",
+    "TestSelectTier1_MultipleChecksUnion"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12"
+}

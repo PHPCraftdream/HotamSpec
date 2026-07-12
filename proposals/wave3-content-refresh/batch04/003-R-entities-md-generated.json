@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-entities-md-generated",
+  "claim": "domains/<name>/docs/gen/ENTITIES.md shall be generated from the domain's graph by gen-spec, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances.",
+  "why": "Substrate-generates-operator extended to the entity layer. ENTITIES.md is the per-domain entity registry; the Go generator writes it deterministically (LF, utf-8) from the in-memory graph. Implementation: BuildEntities in internal/generator/entities.go renders the EntityType sections (Mermaid lifecycle diagram, field table, covering enforcers, instances) and is called by gen-spec (cmd/hotam/gen_spec.go) which writes the file to domains/<name>/docs/gen/ENTITIES.md. The invariant check_entities_md_lists_all_types is registered but is a NO-OP in the Go port (it is a filesystem-coherence check that does not fit the pure-graph Check signature; the structural guarantee is carried by the byte-identity test layer instead, internal/generator/byteidentical_test.go). Anti-drift is enforced by byte-identical regeneration tests.",
+  "source_refs": [
+    "internal/generator/entities.go",
+    "cmd/hotam/gen_spec.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

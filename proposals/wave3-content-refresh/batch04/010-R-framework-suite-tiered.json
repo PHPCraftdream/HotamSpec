@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-framework-suite-tiered",
+  "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- 'framework' (exercising internal/ mechanics) or 'domain' (asserting concrete self-domain content) -- so the framework tier is a separately selectable, self-contained subset.",
+  "why": "Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Not yet ported in the Go port: the Python-era mechanism tagged each test framework-vs-domain via a centralized, auditable DOMAIN_COUPLED registry in spec/tests/conftest.py (pytest_collection_modifyitems), making the framework tier selectable via `pytest -m framework` and the domain tier via `pytest -m domain`. The Go port uses `go test ./...` with no equivalent tier-partition mechanism -- there is no marker registry, no build-tag partition, and no collection-modification hook. Before the Python-era Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin 18 tests reddened because they assumed self-domain atoms/structure. PROSE (not ENFORCED): no enforcer exists in the Go port.",
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

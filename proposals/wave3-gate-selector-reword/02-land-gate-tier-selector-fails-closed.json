@@ -1,0 +1,21 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-gate-tier-selector-fails-closed",
+  "claim": "internal/gate.SelectTier1 shall fall back to Confident=false (fail-closed, signaling the caller to run the full suite) on any selection uncertainty: an unknown/unresolvable target anchor, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), or any enforced_by entry that cannot be resolved to a concrete Go check_*/Test* function -- never returning a partial or best-effort subset in an uncertain case.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Reworded 2026-07-12 to describe the real, tested contract of internal/gate.SelectTier1 (internal/gate/gate.go), scoped to what the selector itself decides: TestSelectTier1_FailClosed_TargetNotFound, TestSelectTier1_FailClosed_EmptyEnforcedBy, TestSelectTier1_FailClosed_ConflictTarget, TestSelectTier1_FailClosed_PythonTestPathUnresolved, TestSelectTier1_FailClosed_BareTestFuncUnresolved, TestSelectTier1_FailClosed_PartiallyUnresolved, TestSelectTier1_FailClosed_CheckWithNoTestCoverage. The prior claim additionally asserted fail-closed behavior for apply()-level cases -- a ProposedRejection target, or the creation of a brand-new Requirement/Conflict node -- that were decisions made by tools/apply_proposal.py::apply before consulting the selector. Those apply-level cases do not exist in the Go port at all (hotam land does not call the selector, so there is no apply()-level fail-closed decision to make); a ProposedRejection target that already exists in the graph would in fact resolve confidently via its own enforced_by, which is a real behavioral gap, not just a wording gap. That lost intent -- fail-closed treatment for rejection/creation cases once gate is wired into land -- is preserved, not silently dropped: see R-t1-selector-as-land-default (DRAFT). Decision reached via agent consultation (fm), per R-ai-presents-not-decides / R-decided-needs-human-signoff.",
+  "assumptions": [],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestSelectTier1_FailClosed_TargetNotFound",
+    "TestSelectTier1_FailClosed_EmptyEnforcedBy",
+    "TestSelectTier1_FailClosed_ConflictTarget",
+    "TestSelectTier1_FailClosed_PythonTestPathUnresolved",
+    "TestSelectTier1_FailClosed_BareTestFuncUnresolved",
+    "TestSelectTier1_FailClosed_PartiallyUnresolved",
+    "TestSelectTier1_FailClosed_CheckWithNoTestCoverage"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12"
+}

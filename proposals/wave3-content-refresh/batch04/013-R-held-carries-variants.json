@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-held-carries-variants",
+  "claim": "A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes.",
+  "why": "Answers the attachment-shape half of R-unresolvable-conflict-carries-variants's open question ('payload field vs derived Proposed* pair'): Variant is a struct living in Conflict.Variants (payload), never a graph node -- anti-RDF, mirrors why axis/context/shared_assumption are Conflict fields and not their own node types. In the Go port, Variant is defined in internal/ontology/conflict.go (fields: ID, Behavior, Implies, Costs) and embedded as []Variant in the Conflict struct. check_held_has_min_two_variants (internal/invariants/conflict_decided_held.go) enforces len(distinct variant ids) >= 2 whenever lifecycle starts with HELD; check_typed_anchors_variant (internal/invariants/typed_anchors.go) enforces the V- prefix on every Variant id (R-anchor-everything extended to the new payload type) so a variant can be cited by reference (R-speak-by-reference) exactly like any other typed anchor. Additional HELD guards: check_held_has_nonempty_decided_by, check_held_by_is_known_stakeholder, check_held_by_not_member_owner.",
+  "source_refs": [
+    "internal/ontology/conflict.go",
+    "internal/invariants/conflict_decided_held.go",
+    "internal/invariants/typed_anchors.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12",
+  "owner": "framework-reviewer",
+  "status": "SETTLED"
+}

@@ -130,33 +130,35 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ## `R-enforcement-perimeter-baselines-guarded` (PROSE)
 
-**Claim.** The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py.
+**Claim.** A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool.
 
-**Why.** Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.py edits (Enf#3, supervector A).
+**Why.** Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard mechanism that intercepts direct edits to baseline files. The historical Python mechanism (_graph_guard.py as a PreToolUse hook denying Edit/Write to spec/tests/*_baseline.json and the active-domain pin, with sanctioned updates via tools/update_baseline.py) is the reference for a future port. Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.json edits (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists in the Go port.
 
-**Last reviewed.** 2026-07-05
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2027-01-05
+**Review after.** 2026-11-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-05; review_after: →2027-01-05
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py]→[]; settled_at: 2026-07-05→2026-07-12
+- 2026-07-12 — claim: The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domai…→A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanction…; why: Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- th…→Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard me…; last_reviewed_at: 2026-07-05→2026-07-12; review_after: 2027-01-05→2026-11-12
 
 ## `R-enforcement-perimeter-visible` (PROSE)
 
-**Claim.** A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py.
+**Claim.** A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool.
 
-**Why.** Enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong. But silent weakening (e.g. return [] in a check_*) must be VISIBLE: the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A).
+**Why.** Not yet ported in the Go port: there is no sha256 hash-pin test covering the enforcement-perimeter Go source files (internal/invariants, internal/gate, internal/diagnose, etc.) and no tools/update_baseline.py equivalent in the Go CLI. The historical Python mechanism (test_enforcement_perimeter_pinned.py computing sha256 over invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py and failing RED until the baseline JSON was consciously updated) is the reference for a future port. The rationale is still valid: enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong, but silent weakening (e.g. return nil in a check) must be VISIBLE -- the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A). PROSE (not ENFORCED): no enforcer exists in the Go port.
 
-**Last reviewed.** 2026-07-05
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2027-01-05
+**Review after.** 2026-11-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-05; review_after: →2027-01-05
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged]→[]; settled_at: 2026-07-05→2026-07-12
+- 2026-07-12 — claim: A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.p…→A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via …; why: Enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong. But silent weakening (e.g. return [] in a check_…→Not yet ported in the Go port: there is no sha256 hash-pin test covering the enforcement-perimeter Go source files (internal/invariants, internal/gat…; last_reviewed_at: 2026-07-05→2026-07-12; review_after: 2027-01-05→2026-11-12
 
 ## `R-requirement-claim-is-atomic` (PROSE)
 

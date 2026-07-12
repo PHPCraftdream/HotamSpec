@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-initiator-supplies-domain-content",
+  "claim": "An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec (graph.json).",
+  "why": "Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (domains/<name>/graph.json) via the existing proposal pipeline (internal/proposal + cmd/hotam land), not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt.",
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12",
+  "owner": "domain-user",
+  "status": "SETTLED"
+}

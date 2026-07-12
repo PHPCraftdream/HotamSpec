@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-gate-tier-selector-fails-closed",
+  "claim": "The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY selection uncertainty or blast-radius-unbounded case -- an unknown/new target, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), any single enforced_by entry gate.py cannot resolve to a concrete pytest node-id, a ProposedRejection (a rejected atom's own enforced_by does not bound its removal blast radius), or the creation of a brand-new Requirement or Conflict node (a new node's enforced_by, if any, is steward-supplied and unverified) -- never returning a partial or best-effort subset in an uncertain or unbounded case.",
+  "why": "A tier selector that silently narrows verification under uncertainty would weaken R-verify-closure-per-action exactly where it matters most -- new nodes, rejections, and framework-code changes are precisely the changes least covered by an existing, trustworthy enforced_by tuple. Fail-closed-to-full-suite on ANY uncertainty or unbounded-blast-radius case (not merely gate.py's own resolution failures) keeps the honesty property end to end: T1 only ever runs when the FULL apply() decision -- not just gate.py's internal mapping -- can name the SAME enforcers a full run would have exercised for this specific, pre-existing target. Widened 2026-07-02 (honestywave) after review found apply() let Rejections and new-node creations reach gate.select_tier1 even though neither case's target enforced_by bounds the real blast radius (a rejected atom's blast radius is its dependents, not itself; a brand-new node has no verified enforced_by at all). NOTE (found-issue, not fixed in this batch): the fail-closed logic IS ported -- internal/gate.SelectTier1 (internal/gate/gate.go) returns Confident=false (fail-closed) for unknown targets, empty enforced_by, Conflict targets, and unresolvable entries, tested by TestSelectTier1_FailClosed_EmptyEnforcedBy and siblings. However the claim's 'LAND tiering decision' framing is NOT realized in the Go port: hotam land does not call gate at all; the fail-closed behavior is exercised only via the standalone hotam gate command. The claim/why retain their Python-era wording pending a steward decision.",
+  "source_refs": [
+    "internal/gate/gate.go",
+    "cmd/hotam/gate_cmd.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

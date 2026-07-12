@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-lifecycle-type-exists",
+  "claim": "A generic lifecycle module shall define State, Transition, and Lifecycle types.",
+  "why": "Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate against. In the Go port, State (Name, Kind, Why), Transition (Src, Dst, Event, Guard, GuardAssumption, Why), and Lifecycle (Slug, States, Transitions, Cyclic) are defined as structs in internal/ontology/lifecycle.go. Canonical lifecycles (RequirementLifecycle, ConflictLifecycle, GoalLifecycle, ProcessLifecycle, OperatorLifecycle) are defined in their respective ontology files and validated by TestCanonicalLifecyclesSanity (internal/ontology/graph_smoke_test.go).",
+  "source_refs": [
+    "internal/ontology/lifecycle.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-11-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

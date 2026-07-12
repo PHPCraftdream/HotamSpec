@@ -457,6 +457,7 @@
     "R-steward-distinct-from-owners",
     "R-sub-agent-crystal-triad",
     "R-subagent-gets-its-claude-md",
+    "R-t1-selector-as-land-default",
     "R-task-spawn-is-a-hand",
     "R-task-spawn-is-ephemeral",
     "R-task-spawn-log-runtime",
@@ -532,6 +533,21 @@
       ],
       "status": "SETTLED",
       "why": "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/diagnose) composes the named REFLECTION predicates in priority order and derives the prioritized next action from any graph state, so an agent is never forced to guess."
+    },
+    {
+      "assumptions": [],
+      "claim": "hotam land shall, by default, invoke internal/gate.SelectTier1 for its target anchor and run only the resolved T1 enforcer subset (falling back to the full suite on any selector uncertainty, per R-land-gate-tier-selector-fails-closed's contract) instead of relying solely on all-violations, so each proposal apply pays only the verification cost its own enforced_by tuple demands.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [],
+      "id": "R-t1-selector-as-land-default",
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2026-11-12",
+      "source_refs": [],
+      "status": "DRAFT",
+      "why": "Preserves an intent that was about to be silently lost. R-land-gate-tier-selector and R-land-gate-tier-selector-fails-closed originally claimed this wiring existed (Python-era wording: 'the per-proposal LAND verify step ... shall, by default, run the T1 targeted-enforcer subset'); that was never true in the Go port and both were reworded 2026-07-12 to describe only the standalone hotam gate selector's own contract, dropping the 'wired into land by default' assertion because it wasn't real. But the underlying design intent -- avoid the full-suite time tax on every proposal apply, since most proposals touch exactly one node whose enforced_by already names its enforcer(s) -- is still a live, undecided idea, not a rejected one. Held open here as its own DRAFT rather than quietly dropped when the two ENFORCED claims were narrowed (R-conflict-is-connector-node's generative law: important-yet-invisible tension gets a named node, not silent extinguishment). Scope note for whoever settles this: cmd/hotam/land.go's cmdLand would need to call gate.SelectTier1(targetAnchor, g) after apply and, on Confident=true, run `go test -run '^(name1|name2|...)$' ./...` against the resolved node_ids instead of the current always-full all-violations + implicit full go test at commit boundaries; on Confident=false it must still run the full suite (all-violations already does the structural half; the gap is in NOT also running a scoped `go test` subset). Two open questions for the steward: (1) does 'the full suite' here mean go test ./... or just all-violations (they check different things -- all-violations is structural invariants, go test also runs enforcer test bodies); (2) is a per-land `go test -run` subprocess spawn (Windows subprocess overhead, per the perf note already recorded in R-land-gate-tier-selector's why) actually faster than the current all-violations-only path for the common case, or does it need benchmarking first. Not yet implemented; land's current behavior (apply -> gen-spec -> all-violations, no gate call) is unaffected."
     },
     {
       "assumptions": [
@@ -1521,7 +1537,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'.",
+      "claim": "Goal shall be its own first-class struct type (not a Requirement facet) with typed anchor 'GOAL-'.",
       "enforced_by": [
         "check_typed_anchors_goal"
       ],
@@ -1537,15 +1553,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_goal.py, check_typed_anchors_goal]→[check_typed_anchors_goal]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Goal shall be its own frozen dataclass type (not a Requirement facet) with typed anchor 'GOAL-'.→Goal shall be its own first-class struct type (not a Requirement facet) with typed anchor 'GOAL-'.; why: Atom of R-goal-as-target-state (type identity concern). hotam_spec/process.py defines Goal as a frozen dataclass with GOAL_LIFECYCLE. M19 resolved.→Atom of R-goal-as-target-state (type identity concern). In the Go port, Goal is defined as a dedicated struct in internal/ontology/process.go (fields…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/ontology/process.go, internal/invariants/typed_anchors.go]"
         }
       ],
       "id": "R-goal-is-first-class-type",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "domain-user",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/ontology/process.go",
+        "internal/invariants/typed_anchors.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-goal-as-target-state (type identity concern). hotam_spec/process.py defines Goal as a frozen dataclass with GOAL_LIFECYCLE. M19 resolved."
+      "why": "Atom of R-goal-as-target-state (type identity concern). In the Go port, Goal is defined as a dedicated struct in internal/ontology/process.go (fields: ID, Owner, TargetState, Lifecycle, Why, DeclOrder), distinct from the Requirement struct -- it is not a facet or field of Requirement. The canonical lifecycle is GoalLifecycle (internal/ontology/process.go: ACTIVE -> MET / ABANDONED). The typed-anchor discipline is enforced by check_typed_anchors_goal (internal/invariants/typed_anchors.go), which verifies every Goal.ID starts with 'GOAL-'. M19 resolved."
     },
     {
       "assumptions": [
@@ -2158,7 +2182,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE.",
+      "claim": "Goal shall be its own first-class struct type (not a Requirement facet), with typed anchor 'GOAL-' and its own GoalLifecycle.",
       "enforced_by": [
         "check_typed_anchors_goal"
       ],
@@ -2174,15 +2198,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_goal.py, check_typed_anchors_goal]→[check_typed_anchors_goal]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Goal shall be its own first-class frozen-dataclass type (not a Requirement facet), with typed anchor 'GOAL-' and its own GOAL_LIFECYCLE.→Goal shall be its own first-class struct type (not a Requirement facet), with typed anchor 'GOAL-' and its own GoalLifecycle.; why: M19. DECIDED 2026-06-30 (already recorded in old M-table as DECIDED P9): Goal is a new type in hotam_spec.process. Rationale: the Gap = (Goal - curre…→M19. DECIDED 2026-06-30 (already recorded in old M-table as DECIDED P9): Goal is a new type, not a Requirement facet. Rationale: the Gap = (Goal - cu…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/ontology/process.go, internal/invariants/typed_anchors.go]"
         }
       ],
       "id": "R-goal-type-vs-facet",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "domain-user",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/ontology/process.go",
+        "internal/invariants/typed_anchors.go"
+      ],
       "status": "SETTLED",
-      "why": "M19. DECIDED 2026-06-30 (already recorded in old M-table as DECIDED P9): Goal is a new type in hotam_spec.process. Rationale: the Gap = (Goal - current state) is semantically distinct from a static Requirement claim; a Requirement facet would lose that target-state semantics and the burn-down-to-zero pattern. R-goal-is-first-class-type is already SETTLED and enforced by test_goal.py + check_typed_anchors_goal. Evidence: spec/src/hotam_spec/process.py:Goal frozen dataclass + GOAL_LIFECYCLE; R-goal-is-first-class-type SETTLED ENFORCED."
+      "why": "M19. DECIDED 2026-06-30 (already recorded in old M-table as DECIDED P9): Goal is a new type, not a Requirement facet. Rationale: the Gap = (Goal - current state) is semantically distinct from a static Requirement claim; a Requirement facet would lose that target-state semantics and the burn-down-to-zero pattern. In the Go port, Goal is a dedicated struct in internal/ontology/process.go (internal/ontology/process.go:Goal), with its own GoalLifecycle (ACTIVE -> MET / ABANDONED). R-goal-is-first-class-type is SETTLED and enforced by check_typed_anchors_goal (internal/invariants/typed_anchors.go), which verifies every Goal.ID starts with 'GOAL-'."
     },
     {
       "assumptions": [
@@ -3673,7 +3705,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types.",
+      "claim": "A generic lifecycle module shall define State, Transition, and Lifecycle types.",
       "enforced_by": [
         "TestCanonicalLifecyclesSanity"
       ],
@@ -3689,15 +3721,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_lifecycle.py]→[TestCanonicalLifecyclesSanity]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A generic hotam_spec.lifecycle module shall define State, Transition, and Lifecycle types.→A generic lifecycle module shall define State, Transition, and Lifecycle types.; why: Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate …→Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate …; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/ontology/lifecycle.go]"
         }
       ],
       "id": "R-lifecycle-type-exists",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/ontology/lifecycle.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate against."
+      "why": "Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate against. In the Go port, State (Name, Kind, Why), Transition (Src, Dst, Event, Guard, GuardAssumption, Why), and Lifecycle (Slug, States, Transitions, Cyclic) are defined as structs in internal/ontology/lifecycle.go. Canonical lifecycles (RequirementLifecycle, ConflictLifecycle, GoalLifecycle, ProcessLifecycle, OperatorLifecycle) are defined in their respective ontology files and validated by TestCanonicalLifecyclesSanity (internal/ontology/graph_smoke_test.go)."
     },
     {
       "assumptions": [
@@ -5023,7 +5062,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings plus argparse --help output.",
+      "claim": "The framework shall generate thinking/*.md and tools/*.md deterministically from the methodology section registry and tool registry (the Go successors to Python module docstrings and argparse --help output).",
       "enforced_by": [
         "TestBuildThinkingDocsCountMatchesSections"
       ],
@@ -5039,15 +5078,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_domain_isolation_p17.py::test_shared_thinking_docs_generated, test_domain_isolation_p17.py::test_shared_tool_docs_generated]→[TestBuildThinkingDocsCountMatchesSections]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The framework shall generate spec/docs/thinking/*.md and spec/docs/tools/*.md deterministically from framework module docstrings and tool docstrings …→The framework shall generate thinking/*.md and tools/*.md deterministically from the methodology section registry and tool registry (the Go successor…; why: Shared docs are the single authoritative reference for framework thinking and tool usage across all agents and domains. Generating them deterministic…→Shared docs are the single authoritative reference for framework thinking and tool usage across all agents and domains. Generating them deterministic…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/generator/thinkingdocs.go, internal/generator/tooldocs.go, cmd/hotam/gen_spec.go]"
         }
       ],
       "id": "R-framework-shared-docs-generated",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/generator/thinkingdocs.go",
+        "internal/generator/tooldocs.go",
+        "cmd/hotam/gen_spec.go"
+      ],
       "status": "SETTLED",
-      "why": "Shared docs are the single authoritative reference for framework thinking and tool usage across all agents and domains. Generating them deterministically from docstrings and --help ensures they cannot drift from the code (R-drift-structurally-impossible). The STRUCTURAL enforcement label means enforcement checks arrive in task #64 once the generator is built."
+      "why": "Shared docs are the single authoritative reference for framework thinking and tool usage across all agents and domains. Generating them deterministically from the registries ensures they cannot drift from the code (R-drift-structurally-impossible). In the Go port, BuildThinkingDocs (internal/generator/thinkingdocs.go) renders one Markdown doc per methodology.Sections entry, and BuildToolDocs (internal/generator/tooldocs.go) renders one per methodology.Tools entry; both are called by gen-spec (cmd/hotam/gen_spec.go) which writes them to domains/<name>/docs/gen/thinking/<slug>.md and domains/<name>/docs/gen/tools/<command>.md. The registries (internal/methodology) are the single source of truth, replacing the Python-era module docstrings and argparse --help output. The ENFORCED label is backed by TestBuildThinkingDocsCountMatchesSections (internal/generator/thinkingdocs_tooldocs_test.go), which verifies the thinking-docs count matches the section registry."
     },
     {
       "assumptions": [
@@ -5285,7 +5333,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances.",
+      "claim": "domains/<name>/docs/gen/ENTITIES.md shall be generated from the domain's graph by gen-spec, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances.",
       "enforced_by": [
         "check_entities_md_lists_all_types"
       ],
@@ -5296,21 +5344,29 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: domains/<name>/docs/gen/ENTITIES.md shall be generated from the active domain's graph by gen_spec.py, listing every EntityType with its lifecycle Mer…→domains/<name>/docs/gen/ENTITIES.md shall be generated from the domain's graph by gen-spec, listing every EntityType with its lifecycle Mermaid diagr…; why: Substrate-generates-operator extended to the entity layer. ENTITIES.md is the per-domain entity registry; emitter writes it deterministically (LF, ut…→Substrate-generates-operator extended to the entity layer. ENTITIES.md is the per-domain entity registry; the Go generator writes it deterministicall…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/generator/entities.go, cmd/hotam/gen_spec.go]"
         }
       ],
       "id": "R-entities-md-generated",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/generator/entities.go",
+        "cmd/hotam/gen_spec.go"
+      ],
       "status": "SETTLED",
-      "why": "Substrate-generates-operator extended to the entity layer. ENTITIES.md is the per-domain entity registry; emitter writes it deterministically (LF, utf-8) from build_graph(). check_entities_md_lists_all_types enforces no EntityType is silently omitted. Anti-drift via existing test_docs_gen byte-identical regen."
+      "why": "Substrate-generates-operator extended to the entity layer. ENTITIES.md is the per-domain entity registry; the Go generator writes it deterministically (LF, utf-8) from the in-memory graph. Implementation: BuildEntities in internal/generator/entities.go renders the EntityType sections (Mermaid lifecycle diagram, field table, covering enforcers, instances) and is called by gen-spec (cmd/hotam/gen_spec.go) which writes the file to domains/<name>/docs/gen/ENTITIES.md. The invariant check_entities_md_lists_all_types is registered but is a NO-OP in the Go port (it is a filesystem-coherence check that does not fit the pure-graph Check signature; the structural guarantee is carried by the byte-identity test layer instead, internal/generator/byteidentical_test.go). Anti-drift is enforced by byte-identical regeneration tests."
     },
     {
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the check_entity_* family covering it.",
+      "claim": "Each EntityType in the domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the check_entity_* family covering it.",
       "enforced_by": [
         "check_entity_type_constitution_projection"
       ],
@@ -5321,15 +5377,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Each EntityType in the active domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing …→Each EntityType in the domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the che…; why: Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description …→Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description …; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/generator/entities.go, internal/generator/frameworkinvariants.go]"
         }
       ],
       "id": "R-entity-derived-requirement",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/generator/entities.go",
+        "internal/generator/frameworkinvariants.go"
+      ],
       "status": "SETTLED",
-      "why": "Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description changes the claim. Eliminates the prose gap between 'R about entity behavior' and 'EntityType implementing it'. Unfrozen per DECIDED C-be22cdd1 / V-unfreeze-entity-projection (2026-07-02): check_entity_type_constitution_projection (new sibling of check_entities_md_lists_all_types) now structurally verifies the projection is not silently omitted from FRAMEWORK-INVARIANTS.md, closing the honesty gap between the STRUCTURAL claim and mechanical guarantee. Dormant-but-real: 0 entity_types in the active domain today makes the check vacuously pass, not falsely enforced -- the guard is live and will fire the moment a domain declares an EntityType without projecting it. Wording precision (Wave 7 move 3a, no semantic change): claim and why now name the actual projection target, FRAMEWORK-INVARIANTS.md, not CONSTITUTION.md -- check_entity_type_constitution_projection's own docstring has always verified FRAMEWORK-INVARIANTS.md (entity-derived requirements are framework-plumbing, relocated out of CONSTITUTION.md by gen_spec.py's build_framework_invariants/_render_constitution_block split); the claim text simply had not caught up to that landed reality."
+      "why": "Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description changes the claim. Eliminates the prose gap between 'R about entity behavior' and 'EntityType implementing it'. In the Go port, renderEntityDerivedConstitutionSection (internal/generator/entities.go) projects each EntityType as a '- **R-entity-<slug>**' line into FRAMEWORK-INVARIANTS.md via BuildFrameworkInvariants (internal/generator/frameworkinvariants.go), listing the entityCoveringChecks family as enforced_by. The invariant check_entity_type_constitution_projection is registered but is a NO-OP in the Go port (filesystem-coherence check that does not fit the pure-graph Check signature; the guarantee is carried by the byte-identity test layer instead). Dormant-but-real: 0 entity_types in the active domain today makes the projection section empty (rendered only when len(g.EntityTypes) > 0), not falsely enforced -- the guard is live and will project the moment a domain declares an EntityType. Wording precision (Wave 7 move 3a): entity-derived requirements are framework-plumbing, relocated out of CONSTITUTION.md into FRAMEWORK-INVARIANTS.md; the projection target is FRAMEWORK-INVARIANTS.md."
     },
     {
       "assumptions": [
@@ -5363,7 +5427,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.",
+      "claim": "Each EntityType.Lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.",
       "enforced_by": [
         "check_entity_type_lifecycle_wellformed"
       ],
@@ -5379,21 +5443,29 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_entity_type_lifecycle_wellformed, test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks]→[check_entity_type_lifecycle_wellformed]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Each EntityType.lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.→Each EntityType.Lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.; why: The §Lifecycle keystone was introduced precisely so that every stateful aspect (Process, Entity, Goal, Operator) reuses one mechanism. Parallel stat…→The §Lifecycle keystone was introduced precisely so that every stateful aspect (Process, Entity, Goal, Operator) reuses one mechanism. Parallel stat…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/invariants/entity_checks.go, internal/ontology/lifecycle.go]"
         }
       ],
       "id": "R-entity-reuses-lifecycle",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/invariants/entity_checks.go",
+        "internal/ontology/lifecycle.go"
+      ],
       "status": "SETTLED",
-      "why": "The §Lifecycle keystone was introduced precisely so that every stateful aspect (Process, Entity, Goal, Operator) reuses one mechanism. Parallel state machinery would fracture the invariant surface and double the maintenance burden for each new aspect. Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- the demo fixture's second EntityType (invoice, tests/fixtures/seed.py) validates through the exact same check_lifecycle_wellformed BFS machinery as the first (customer), proven directly by test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks, which asserts check_lifecycle_wellformed(invoice_type.lifecycle) == [] using the shared §Lifecycle keystone, no parallel state machinery."
+      "why": "The §Lifecycle keystone was introduced precisely so that every stateful aspect (Process, Entity, Goal, Operator) reuses one mechanism. Parallel state machinery would fracture the invariant surface and double the maintenance burden for each new aspect. In the Go port, the Lifecycle type is defined once in internal/ontology/lifecycle.go (State, Transition, Lifecycle structs); EntityType.Lifecycle embeds it directly (ontology.EntityType.Lifecycle is of type ontology.Lifecycle). The check check_entity_type_lifecycle_wellformed (internal/invariants/entity_checks.go) validates every EntityType.Lifecycle through the exact same lifecycleWellformedIssues BFS machinery that validates Process and Goal lifecycles -- no parallel state machinery. Wave 1 mechanical-honesty pass (2026-07-02) promoted this from STRUCTURAL to ENFORCED; in the Go port the shared-keystone reuse is directly visible in the check source."
     },
     {
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional type.",
+      "claim": "The check_entity_* invariant family shall cover every declared EntityType by iterating g.EntityTypes, requiring no new check_* code per additional type.",
       "enforced_by": [
         "check_entity_type_lifecycle_wellformed"
       ],
@@ -5409,15 +5481,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_demo_fixture.py::test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks]→[check_entity_type_lifecycle_wellformed]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The check_entity_* invariant family shall cover every declared EntityType by iterating g.entity_types, requiring no new check_* code per additional t…→The check_entity_* invariant family shall cover every declared EntityType by iterating g.EntityTypes, requiring no new check_* code per additional ty…; why: Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the che…→Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the che…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-11-12; source_refs: []→[internal/invariants/entity_checks.go]"
         }
       ],
       "id": "R-entity-checks-by-iteration",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/invariants/entity_checks.go"
+      ],
       "status": "SETTLED",
-      "why": "Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the check surface linearly and force framework edits on every domain addition — the inverse of the content-free design. Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- the demo fixture (tests/fixtures/seed.py) now declares a SECOND EntityType (invoice, alongside customer), and test_demo_fixture_has_two_entity_types_and_both_pass_all_entity_checks runs the full check_entity_* family against both types with zero per-type code changes needed, proving the iteration claim end-to-end rather than by inspection of the source alone."
+      "why": "Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the check surface linearly and force framework edits on every domain addition -- the inverse of the content-free design. In the Go port, checkEntityTypeLifecycleWellformed (internal/invariants/entity_checks.go) iterates g.EntityTypes directly, calling the shared lifecycleWellformedIssues function on each EntityType.Lifecycle; the same parametric-iteration pattern is used by every check_entity_* invariant (check_entity_instance_state_in_lifecycle, check_entity_instance_required_fields, etc.). Adding an EntityType to the graph requires zero new check_* code. Wave 1 mechanical-honesty pass (2026-07-02) promoted this from STRUCTURAL to ENFORCED after the Python-era demo fixture proved the iteration claim end-to-end; in the Go port the iteration is directly visible in the check source and exercised by the entity_checks_test.go fixtures."
     },
     {
       "assumptions": [
@@ -6123,7 +6202,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The what_now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.",
+      "claim": "The what-now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.",
       "enforced_by": [
         "TestLatentConnectorSuspectsAndClusters"
       ],
@@ -6139,15 +6218,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_latent_connector_noise_fix.py::test_what_now_p5_one_line_per_cluster, test_latent_connector_noise_fix.py::test_clusters_partition_suspects, tes…→[TestLatentConnectorSuspectsAndClusters]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The what_now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pai…→The what-now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pai…; why: Verified noise shape: 22 P5 lines were 21 pairs sharing A-most-knowledge-crystallizable (functional ref-count 7, just under GENERIC_ASSUMPTION_THRESH…→Verified noise shape (Python era): 22 P5 lines were 21 pairs sharing one assumption plus 1 genuinely distinct candidate drowned by them. Clustering b…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12; source_refs: []→[internal/ontology/graph_traversal.go, internal/diagnose/signal.go]"
         }
       ],
       "id": "R-latent-connectors-cluster-by-assumption",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/ontology/graph_traversal.go",
+        "internal/diagnose/signal.go"
+      ],
       "status": "SETTLED",
-      "why": "Verified noise shape: 22 P5 lines were 21 pairs sharing A-most-knowledge-crystallizable (functional ref-count 7, just under GENERIC_ASSUMPTION_THRESHOLD=8 because the 8th referencing requirement is REJECTED) plus 1 genuinely distinct candidate (the A-content-free-honest pair) drowned by them. Clustering by the pairs' specific-shared-assumption signature (graph.latent_connector_clusters) renders the review surface at the size of the decision space while keeping every pair visible (LatentCluster.pairs; TENSIONS.md table). A threshold shift was rejected: it only moves the noise cliff (see test_latent_connector_noise_fix.py history)."
+      "why": "Verified noise shape (Python era): 22 P5 lines were 21 pairs sharing one assumption plus 1 genuinely distinct candidate drowned by them. Clustering by the pairs' specific-shared-assumption signature renders the review surface at the size of the decision space while keeping every pair visible. In the Go port, ontology.LatentConnectorClusters (internal/ontology/graph_traversal.go) groups latent-connector pairs by their shared-assumption signature key, producing LatentCluster records (Assumptions, Requirements, Pairs). DiagnoseSignals (internal/diagnose/signal.go) renders each cluster as ONE PLatentConnector (priority 5) signal via the what-now harness, with the full pair list visible in the message. The same detector is reused by hotam inspect (InspectSharedAssumptionClusters in internal/diagnose/inspect.go). A threshold shift was rejected: it only moves the noise cliff. ENFORCED via TestLatentConnectorSuspectsAndClusters (internal/ontology/graph_smoke_test.go)."
     },
     {
       "assumptions": [],
@@ -6179,8 +6266,10 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The per-proposal LAND verify step (tools/apply_proposal.py) shall, by default, run the T1 targeted-enforcer pytest subset resolved by tools/gate.py from the proposal's target enforced_by tuple (plus a small always-run determinism+smoke baseline), instead of the full pytest suite.",
+      "claim": "hotam gate (internal/gate.SelectTier1), when invoked for a target anchor, shall resolve the T1 targeted-enforcer subset from the target's enforced_by tuple (union of resolved check_*/Test* names) instead of requiring the full test suite for that lookup.",
       "enforced_by": [
+        "TestSelectTier1_CheckNameResolves",
+        "TestSelectTier1_TestFuncNameResolves",
         "TestSelectTier1_MultipleChecksUnion"
       ],
       "enforcement": "ENFORCED",
@@ -6195,23 +6284,42 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_tool_gate.py, test_apply_proposal_gate_wiring.py::test_apply_uses_t1_targeted_selection_when_gate_confident]→[TestSelectTier1_MultipleChecksUnion]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: The full pytest suite paid a per-proposal LAND tax of roughly 100-300s dominated by Windows subprocess-spawn overhead (measured baseline: 614 tests /…→The full pytest suite paid a per-proposal LAND tax of roughly 100-300s dominated by Windows subprocess-spawn overhead (measured baseline: 614 tests /…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12; source_refs: []→[internal/gate/gate.go, cmd/hotam/gate_cmd.go]"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The per-proposal LAND verify step (tools/apply_proposal.py) shall, by default, run the T1 targeted-enforcer pytest subset resolved by tools/gate.py f…→hotam gate (internal/gate.SelectTier1), when invoked for a target anchor, shall resolve the T1 targeted-enforcer subset from the target's enforced_by…; why: The full pytest suite paid a per-proposal LAND tax of roughly 100-300s dominated by Windows subprocess-spawn overhead (measured baseline: 614 tests /…→Reworded 2026-07-12 to describe what the Go port actually implements and tests: internal/gate.SelectTier1 (internal/gate/gate.go) correctly resolves …; enforced_by: [TestSelectTier1_MultipleChecksUnion]→[TestSelectTier1_CheckNameResolves, TestSelectTier1_TestFuncNameResolves, TestSelectTier1_MultipleChecksUnion]"
         }
       ],
       "id": "R-land-gate-tier-selector",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/gate/gate.go",
+        "cmd/hotam/gate_cmd.go"
+      ],
       "status": "SETTLED",
-      "why": "The full pytest suite paid a per-proposal LAND tax of roughly 100-300s dominated by Windows subprocess-spawn overhead (measured baseline: 614 tests / 298.76s wall; 63% of that mechanically eliminated by an unrelated in-process --help fix, not this requirement). Most proposals touch exactly one Requirement or Conflict whose enforced_by tuple already names the exact enforcer(s) that guard it -- the graph IS the test-impact map. Running only that targeted subset removes the redundant re-verification of unrelated tests on every single LAND without weakening what R-verify-closure-per-action actually checks for a targeted change, because R-land-gate-tier-selector-fails-closed guarantees the selector never narrows below what a full run would have exercised for THIS target."
+      "why": "Reworded 2026-07-12 to describe what the Go port actually implements and tests: internal/gate.SelectTier1 (internal/gate/gate.go) correctly resolves a target's enforced_by into the union of concrete Go check_*/Test* enforcers -- TestSelectTier1_CheckNameResolves, TestSelectTier1_TestFuncNameResolves, TestSelectTier1_MultipleChecksUnion. The prior claim asserted this selection ran 'by default' inside the LAND pipeline (tools/apply_proposal.py consulting tools/gate.py) -- that automatic wiring was never carried into the Go port: hotam land (cmd/hotam/land.go) runs apply -> gen-spec -> all-violations and does not call gate.SelectTier1 at all; the selector is reachable only via the standalone `hotam gate <anchor>` command (cmd/hotam/gate_cmd.go). This is the honest, narrower claim the code actually guarantees. The lost intent -- wiring T1 selection as LAND's default verify tier, to avoid the full-suite time tax on every proposal -- is preserved as its own open item, not silently dropped: see R-t1-selector-as-land-default (DRAFT). Decision reached via agent consultation (fm), per R-ai-presents-not-decides / R-decided-needs-human-signoff, after an earlier content-refresh batch (this wave) flagged the mismatch as a found-issue."
     },
     {
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY selection uncertainty or blast-radius-unbounded case -- an unknown/new target, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), any single enforced_by entry gate.py cannot resolve to a concrete pytest node-id, a ProposedRejection (a rejected atom's own enforced_by does not bound its removal blast radius), or the creation of a brand-new Requirement or Conflict node (a new node's enforced_by, if any, is steward-supplied and unverified) -- never returning a partial or best-effort subset in an uncertain or unbounded case.",
+      "claim": "internal/gate.SelectTier1 shall fall back to Confident=false (fail-closed, signaling the caller to run the full suite) on any selection uncertainty: an unknown/unresolvable target anchor, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), or any enforced_by entry that cannot be resolved to a concrete Go check_*/Test* function -- never returning a partial or best-effort subset in an uncertain case.",
       "enforced_by": [
-        "TestSelectTier1_FailClosed_EmptyEnforcedBy"
+        "TestSelectTier1_FailClosed_TargetNotFound",
+        "TestSelectTier1_FailClosed_EmptyEnforcedBy",
+        "TestSelectTier1_FailClosed_ConflictTarget",
+        "TestSelectTier1_FailClosed_PythonTestPathUnresolved",
+        "TestSelectTier1_FailClosed_BareTestFuncUnresolved",
+        "TestSelectTier1_FailClosed_PartiallyUnresolved",
+        "TestSelectTier1_FailClosed_CheckWithNoTestCoverage"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -6225,15 +6333,28 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_tool_gate.py::test_fails_closed_on_unresolvable_entry, test_tool_gate.py::test_fails_closed_on_partially_unresolvable_entries, test_tool_gate.p…→[TestSelectTier1_FailClosed_EmptyEnforcedBy]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: A tier selector that silently narrows verification under uncertainty would weaken R-verify-closure-per-action exactly where it matters most -- new no…→A tier selector that silently narrows verification under uncertainty would weaken R-verify-closure-per-action exactly where it matters most -- new no…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12; source_refs: []→[internal/gate/gate.go, cmd/hotam/gate_cmd.go]"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY select…→internal/gate.SelectTier1 shall fall back to Confident=false (fail-closed, signaling the caller to run the full suite) on any selection uncertainty: …; why: A tier selector that silently narrows verification under uncertainty would weaken R-verify-closure-per-action exactly where it matters most -- new no…→Reworded 2026-07-12 to describe the real, tested contract of internal/gate.SelectTier1 (internal/gate/gate.go), scoped to what the selector itself de…; enforced_by: [TestSelectTier1_FailClosed_EmptyEnforcedBy]→[TestSelectTier1_FailClosed_TargetNotFound, TestSelectTier1_FailClosed_EmptyEnforcedBy, TestSelectTier1_FailClosed_ConflictTarget, TestSelectTier1_Fa…"
         }
       ],
       "id": "R-land-gate-tier-selector-fails-closed",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/gate/gate.go",
+        "cmd/hotam/gate_cmd.go"
+      ],
       "status": "SETTLED",
-      "why": "A tier selector that silently narrows verification under uncertainty would weaken R-verify-closure-per-action exactly where it matters most -- new nodes, rejections, and framework-code changes are precisely the changes least covered by an existing, trustworthy enforced_by tuple. Fail-closed-to-full-suite on ANY uncertainty or unbounded-blast-radius case (not merely gate.py's own resolution failures) keeps the honesty property end to end: T1 only ever runs when the FULL apply() decision -- not just gate.py's internal mapping -- can name the SAME enforcers a full run would have exercised for this specific, pre-existing target. Widened 2026-07-02 (honesty wave) after review found apply() let Rejections and new-node creations reach gate.select_tier1 even though neither case's target enforced_by bounds the real blast radius (a rejected atom's blast radius is its dependents, not itself; a brand-new node has no verified enforced_by at all)."
+      "why": "Reworded 2026-07-12 to describe the real, tested contract of internal/gate.SelectTier1 (internal/gate/gate.go), scoped to what the selector itself decides: TestSelectTier1_FailClosed_TargetNotFound, TestSelectTier1_FailClosed_EmptyEnforcedBy, TestSelectTier1_FailClosed_ConflictTarget, TestSelectTier1_FailClosed_PythonTestPathUnresolved, TestSelectTier1_FailClosed_BareTestFuncUnresolved, TestSelectTier1_FailClosed_PartiallyUnresolved, TestSelectTier1_FailClosed_CheckWithNoTestCoverage. The prior claim additionally asserted fail-closed behavior for apply()-level cases -- a ProposedRejection target, or the creation of a brand-new Requirement/Conflict node -- that were decisions made by tools/apply_proposal.py::apply before consulting the selector. Those apply-level cases do not exist in the Go port at all (hotam land does not call the selector, so there is no apply()-level fail-closed decision to make); a ProposedRejection target that already exists in the graph would in fact resolve confidently via its own enforced_by, which is a real behavioral gap, not just a wording gap. That lost intent -- fail-closed treatment for rejection/creation cases once gate is wired into land -- is preserved, not silently dropped: see R-t1-selector-as-land-default (DRAFT). Decision reached via agent consultation (fm), per R-ai-presents-not-decides / R-decided-needs-human-signoff."
     },
     {
       "assumptions": [
@@ -6303,7 +6424,7 @@
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec.",
+      "claim": "An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec (graph.json).",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -6312,15 +6433,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec.→An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec (graph.json).; why: Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-us…→Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-us…; settled_at: 2026-07-02→2026-07-12; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12"
         }
       ],
       "id": "R-initiator-supplies-domain-content",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "domain-user",
-      "review_after": "2027-01-02",
+      "review_after": "2026-11-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place."
+      "why": "Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (domains/<name>/graph.json) via the existing proposal pipeline (internal/proposal + cmd/hotam land), not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt."
     },
     {
       "assumptions": [],
@@ -6363,7 +6489,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids (or the literal 'full'), and pytest/closure outcome to spec/.runtime/land-log.jsonl, written AFTER the verify step so the record states what actually ran.",
+      "claim": "Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected test node-ids (or the literal 'full'), and verify/closure outcome to a runtime land-log, written AFTER the verify step so the record states what actually ran.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -6377,15 +6503,22 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_record_shape_t1, test_apply_proposal_land_log.py::test_land_log_record_shape_t2, test_apply_proposal_…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected pytest node-ids …→Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected test node-ids (o…; why: R-land-gate-tier-selector introduced the T1/T2 tiered LAND gate but left its own operation invisible -- there was no way to answer, after the fact, w…→Not yet ported in the Go port: there is no land-log.jsonl (or any runtime land-trace file) written by hotam land or any other Go CLI command. The his…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12; source_refs: []→[internal/methodology/tools_data.go]"
         }
       ],
       "id": "R-land-tier-trace",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/methodology/tools_data.go"
+      ],
       "status": "SETTLED",
-      "why": "R-land-gate-tier-selector introduced the T1/T2 tiered LAND gate but left its own operation invisible -- there was no way to answer, after the fact, which tier a given land actually used. Mirrors R-task-spawn-log-runtime's spawn-log.jsonl precedent (same .runtime/ directory, same append-only JSONL discipline, same gitignored-not-committed-substrate status): a runtime trace, not generated docs, because its truth value depends on wall-clock events, not on the graph. Making the log write happen strictly AFTER the verify step (not before) is the load-bearing property -- a record must describe what was actually verified, never a plan that could still fail. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND (2 semicolons, 3 segments) -- inspection confirmed 3 genuinely independent behavioral rules of the land-log mechanism, each with its own dedicated enforcer tests: (1) record shape+timing (kept here), (2) dry-run proposals never write a record (now R-land-tier-trace-skips-dry-run), (3) a broken/unwritable log location is best-effort/warn-only, never failing an otherwise-green apply (now R-land-tier-trace-best-effort). Split three-ways per R-requirement-claim-is-atomic; this atom now carries only the record-shape+timing promise, with enforced_by trimmed to the tests that verify exactly that."
+      "why": "Not yet ported in the Go port: there is no land-log.jsonl (or any runtime land-trace file) written by hotam land or any other Go CLI command. The historical Python mechanism (apply_proposal.py appending tier + selected pytest node-ids + outcome to spec/.runtime/land-log.jsonl strictly AFTER the verify step, so the record describes what was actually verified, never a plan that could still fail) is the reference for a future port. The rationale remains valid: making the tier decision visible answers, after the fact, which tier a given land used -- mirroring the spawn-log.jsonl precedent (same .runtime/ directory, same append-only JSONL discipline, same gitignored-not-committed-substrate status). The gate_status tool (internal/methodology/tools_data.go) is Declared 'Not ported. Historically: reads the runtime land-log and answers the commit-boundary question.' RE-ATOMIZED Wave 8 move 2 (2026-07-03): this atom now carries only the record-shape+timing promise. PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [
@@ -6642,7 +6775,7 @@
       "assumptions": [
         "A-framework-shared-infra-no-owner"
       ],
-      "claim": "The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.",
+      "claim": "The framework body (the Go `internal/` package tree) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -6651,15 +6784,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.→The framework body (the Go `internal/` package tree) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.; why: Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framewor…→Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framewor…; settled_at: 2026-07-02→2026-07-12; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12"
         }
       ],
       "id": "R-framework-owned-by-no-agent",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
+      "review_after": "2026-11-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework (ENFORCED via test_agent_import_direction.py). No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that hotam_spec/ has exactly one owner field (framework-author, the framework's own steward) and no agent directory declares or claims exclusive ownership of any hotam_spec module. Landed as the missing REPLACES target flagged in the Wave 2 review (a REJECTED atom pointed at this id before it existed). REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-framework-shared-infra-no-owner, which names this requirement's actual premise."
+      "why": "Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework. No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that the Go framework package (internal/) has exactly one owner field (framework-author, the framework's own steward) and no agent directory declares or claims exclusive ownership of any internal/ module. In the Go port the framework body is the `internal/` package tree (module github.com/PHPCraftdream/HotamSpecGo), replacing the Python-era hotam_spec.* package. Landed as the missing REPLACES target flagged in the Wave 2 review. REPOINTED 2026-07-02 (Wave 7 move 4): assumptions moved from A-content-free-honest to A-framework-shared-infra-no-owner, which names this requirement's actual premise."
     },
     {
       "assumptions": [
@@ -6706,15 +6844,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: Answers the attachment-shape half of R-unresolvable-conflict-carries-variants's open question ('payload field vs derived Proposed* pair'): Variant is…→Answers the attachment-shape half of R-unresolvable-conflict-carries-variants's open question ('payload field vs derived Proposed* pair'): Variant is…; settled_at: 2026-07-02→2026-07-12; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-11-12; source_refs: []→[internal/ontology/conflict.go, internal/invariants/conflict_decided_held.go, internal/invariants/typed_anchors.go]"
         }
       ],
       "id": "R-held-carries-variants",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-reviewer",
-      "review_after": "2027-01-02",
-      "source_refs": [],
+      "review_after": "2026-11-12",
+      "source_refs": [
+        "internal/ontology/conflict.go",
+        "internal/invariants/conflict_decided_held.go",
+        "internal/invariants/typed_anchors.go"
+      ],
       "status": "SETTLED",
-      "why": "Answers the attachment-shape half of R-unresolvable-conflict-carries-variants's open question ('payload field vs derived Proposed* pair'): Variant is a frozen dataclass living in Conflict.variants (payload), never a graph.py node -- anti-RDF, mirrors why axis/context/shared_assumption are Conflict fields and not their own node types. check_held_has_min_two_variants enforces len(set(variant ids)) >= 2 whenever lifecycle starts with HELD; check_typed_anchors_variant enforces the V- prefix on every Variant id (R-anchor-everything extended to the new payload type) so a variant can be cited by reference (R-speak-by-reference) exactly like any other typed anchor."
+      "why": "Answers the attachment-shape half of R-unresolvable-conflict-carries-variants's open question ('payload field vs derived Proposed* pair'): Variant is a struct living in Conflict.Variants (payload), never a graph node -- anti-RDF, mirrors why axis/context/shared_assumption are Conflict fields and not their own node types. In the Go port, Variant is defined in internal/ontology/conflict.go (fields: ID, Behavior, Implies, Costs) and embedded as []Variant in the Conflict struct. check_held_has_min_two_variants (internal/invariants/conflict_decided_held.go) enforces len(distinct variant ids) >= 2 whenever lifecycle starts with HELD; check_typed_anchors_variant (internal/invariants/typed_anchors.go) enforces the V- prefix on every Variant id (R-anchor-everything extended to the new payload type) so a variant can be cited by reference (R-speak-by-reference) exactly like any other typed anchor. Additional HELD guards: check_held_has_nonempty_decided_by, check_held_by_is_known_stakeholder, check_held_by_not_member_owner."
     },
     {
       "assumptions": [
@@ -7567,7 +7714,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset.",
+      "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- 'framework' (exercising internal/ mechanics) or 'domain' (asserting concrete self-domain content) -- so the framework tier is a separately selectable, self-contained subset.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7581,19 +7728,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_framework_domain_tiering.py::test_every_test_is_tiered, test_framework_domain_tiering.py::test_tiers_partition_the_suite]→[]; settled_at: 2026-07-05→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) o…→The test suite shall partition every collected test into exactly one of two responsibility tiers -- 'framework' (exercising internal/ mechanics) or '…; why: Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- fir…→Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- fir…; last_reviewed_at: 2026-07-05→2026-07-12; review_after: 2027-01-05→2026-11-12"
         }
       ],
       "id": "R-framework-suite-tiered",
-      "last_reviewed_at": "2026-07-05",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-05",
+      "review_after": "2026-11-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin."
+      "why": "Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Not yet ported in the Go port: the Python-era mechanism tagged each test framework-vs-domain via a centralized, auditable DOMAIN_COUPLED registry in spec/tests/conftest.py (pytest_collection_modifyitems), making the framework tier selectable via `pytest -m framework` and the domain tier via `pytest -m domain`. The Go port uses `go test ./...` with no equivalent tier-partition mechanism -- there is no marker registry, no build-tag partition, and no collection-modification hook. Before the Python-era Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin 18 tests reddened because they assumed self-domain atoms/structure. PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [],
-      "claim": "The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned.",
+      "claim": "The framework test subset shall pass green under ANY active domain, or none, independent of which business domain is pinned.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7602,15 +7754,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned.→The framework test subset shall pass green under ANY active domain, or none, independent of which business domain is pinned.; why: Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть �…→Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть �…; settled_at: 2026-07-05→2026-07-12; last_reviewed_at: 2026-07-05→2026-07-12; review_after: 2027-01-05→2026-11-12"
         }
       ],
       "id": "R-framework-suite-domain-independent",
-      "last_reviewed_at": "2026-07-05",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-05",
+      "review_after": "2026-11-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. PROSE-enforced (not a single-run pytest invariant): proving it requires re-running `-m framework` under a FOREIGN pin (a nested pytest inside one run would recurse); the proof is executed at wave/commit boundary -- Wave 17 demonstrated 982 passed / 18 deselected under HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev."
+      "why": "Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. Not yet ported in the Go port: the Python-era mechanism partitioned the pytest suite into 'framework' and 'domain' tiers via a DOMAIN_COUPLED registry in spec/tests/conftest.py, making the framework tier selectable via `pytest -m framework` and runnable under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN). The Go port uses `go test ./...` with no equivalent framework/domain tier partition -- there is no marker registry, no conftest collection-modification hook, and no mechanism to re-run the framework subset under a foreign domain pin. The proof-at-wave-boundary discipline is carried manually. PROSE (not ENFORCED): no enforcer exists; proving domain-independence requires a nested re-run under a foreign pin, not a single-run invariant."
     },
     {
       "assumptions": [],
@@ -7699,7 +7856,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domain pin), with sanctioned updates routed through tools/update_baseline.py.",
+      "claim": "A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7713,19 +7870,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_hooks_config.py::test_pretooluse_graph_guard_denies_graph_py]→[]; settled_at: 2026-07-05→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The PreToolUse guard (_graph_guard.py) shall deny direct Edit/Write to enforcement-perimeter baseline files (spec/tests/*_baseline.json, active-domai…→A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanction…; why: Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- th…→Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard me…; last_reviewed_at: 2026-07-05→2026-07-12; review_after: 2027-01-05→2026-11-12"
         }
       ],
       "id": "R-enforcement-perimeter-baselines-guarded",
-      "last_reviewed_at": "2026-07-05",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-05",
+      "review_after": "2026-11-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.py edits (Enf#3, supervector A)."
+      "why": "Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard mechanism that intercepts direct edits to baseline files. The historical Python mechanism (_graph_guard.py as a PreToolUse hook denying Edit/Write to spec/tests/*_baseline.json and the active-domain pin, with sanctioned updates via tools/update_baseline.py) is the reference for a future port. Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.json edits (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [],
-      "claim": "A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py itself), failing RED on any content change until the baseline is consciously updated via tools/update_baseline.py.",
+      "claim": "A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7739,15 +7901,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_enforcement_perimeter_pinned.py::test_enforcement_perimeter_files_unchanged]→[]; settled_at: 2026-07-05→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A sha256 hash-pin test shall cover the enforcement-perimeter code files (invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.p…→A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via …; why: Enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong. But silent weakening (e.g. return [] in a check_…→Not yet ported in the Go port: there is no sha256 hash-pin test covering the enforcement-perimeter Go source files (internal/invariants, internal/gat…; last_reviewed_at: 2026-07-05→2026-07-12; review_after: 2027-01-05→2026-11-12"
         }
       ],
       "id": "R-enforcement-perimeter-visible",
-      "last_reviewed_at": "2026-07-05",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-05",
+      "review_after": "2026-11-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong. But silent weakening (e.g. return [] in a check_*) must be VISIBLE: the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A)."
+      "why": "Not yet ported in the Go port: there is no sha256 hash-pin test covering the enforcement-perimeter Go source files (internal/invariants, internal/gate, internal/diagnose, etc.) and no tools/update_baseline.py equivalent in the Go CLI. The historical Python mechanism (test_enforcement_perimeter_pinned.py computing sha256 over invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py and failing RED until the baseline JSON was consciously updated) is the reference for a future port. The rationale is still valid: enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong, but silent weakening (e.g. return nil in a check) must be VISIBLE -- the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A). PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [],
