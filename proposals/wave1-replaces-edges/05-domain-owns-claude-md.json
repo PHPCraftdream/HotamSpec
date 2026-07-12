@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES R-claude-md-consolidates-when-single-agent. The unconditional claim 'each domains/\u003cname\u003e/CLAUDE.md is the domain-scoped operator-prompt' no longer holds: domains/hotam-spec-self/CLAUDE.md was deleted in the P22.C consolidation (task #101) and gen_spec.py now generates exactly one CLAUDE.md at repo root containing the domain content inline. Per-domain CLAUDE.md files return only when a second domain makes a shared root file overloaded. — (was: The CLAUDE.md is the director-operator's crystallized substrate (R-operator-crystal-is-claude-md). For a domain director this means the three-cipher pulse, top action, and debt figures must be domain-local, not framework-global. Generation by gen_spec.py prevents hand-written drift (R-drift-structurally-impossible). ENFORCED in P17 by test_domain_claude_md_has_all_5_blocks.)",
+  "replaced_by": [
+    "R-claude-md-consolidates-when-single-agent"
+  ],
+  "requirement_id": "R-domain-owns-claude-md"
+}

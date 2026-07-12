@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES by R-operator-crystal-embeds-tools-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY distillate + Tier-3 pointer instead. — (was: Same rationale as R-operator-crystal-embeds-thinking applied to tool docs: an operator deciding whether to invoke apply_proposal.py should not have to fetch a separate file to learn its contract. ENFORCED by test_embedded_tools_sentinels_present (sentinels exist) and test_embedded_tools_contains_full_tool_content (content is the full tool doc text, not a link); test_embedded_blocks_regen_byte_identical guards against drift between the embedded copy and the regenerated source.)",
+  "replaced_by": [
+    "R-operator-crystal-embeds-tools-distilled"
+  ],
+  "requirement_id": "R-operator-crystal-embeds-tools"
+}

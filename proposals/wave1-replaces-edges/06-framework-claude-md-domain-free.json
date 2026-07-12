@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES R-claude-md-consolidates-when-single-agent. The claim 'root CLAUDE.md shall contain only framework-level content' contradicts the current single-file design: root CLAUDE.md now deliberately embeds the active domain's CONSTITUTION, EMBEDDED-THINKING, and EMBEDDED-TOOLS content directly (task #101), not merely a DOMAIN-MAP index. Domain-purity-of-root was the correct discipline under the old two-file (root + per-domain) model; under the consolidated single-file model it is superseded by the discipline that domain content lives in clearly sentinel-delimited generated blocks within the one file, per R-claude-md-consolidates-when-single-agent. — (was: Mixing domain atoms into the framework CLAUDE.md recreates the single-file coupling that domain isolation is designed to break. The DOMAIN-MAP block is a generated index (R-domain-map-generated), not inline content; every domain-specific atom stays inside domains/\u003cname\u003e/. ENFORCED in P17 by test_framework_claude_md_no_domain_atoms.)",
+  "replaced_by": [
+    "R-claude-md-consolidates-when-single-agent"
+  ],
+  "requirement_id": "R-framework-claude-md-is-domain-free"
+}

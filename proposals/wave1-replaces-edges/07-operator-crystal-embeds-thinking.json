@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES by R-operator-crystal-embeds-thinking-distilled: full-text embedding contradicted R-crystal-reload-by-reference and breached the 150k host limit (CLAUDE.md reached ~200k chars); the crystal now carries a RULE+WHY distillate + Tier-3 pointer instead. — (was: A link the operator must separately fetch is a re-derivation tax on every turn; inlining the methodology content means it is present in the loaded substrate from the first token (R-operator-prompt-from-substrate). Task #98 (A1) built the EMBEDDED-THINKING block; ENFORCED by test_embedded_thinking_sentinels_present (sentinels exist) and test_embedded_thinking_contains_full_topic_content (content is the full topic text, not a link).)",
+  "replaced_by": [
+    "R-operator-crystal-embeds-thinking-distilled"
+  ],
+  "requirement_id": "R-operator-crystal-embeds-thinking"
+}

@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES by per-graph TensionGraph.axes. A module-level registry bakes a specific business vocabulary (latency-vs-completeness, privacy-vs-analytics, ...) into the content-free framework. Each domain owns its own vocabulary.",
+  "replaced_by": [
+    "R-axis-controlled-vocab"
+  ],
+  "requirement_id": "R-axes-as-module-constant"
+}

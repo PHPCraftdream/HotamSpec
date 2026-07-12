@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES the point-installer requirements (R-tool-setup-context-hook et al.): the envisioned single setup_claude.py that would generate settings was never built; the surgical, per-concern installers (setup_context_hook.py --patch-global and friends) won on the ground — configuration is applied one concern at a time, opt-in and user-run, not by one settings-generating entry point. — (was: Single source of truth: Python file generates the JSON; meta-test enforces equality. BUILD-TRIGGER: the prerequisite atomization (R-requirement-claim-is-atomic and R-check-method-is-atomic) has landed — without it, setup_claude.py easily slides back into compoundness.)",
+  "replaced_by": [
+    "R-tool-is-its-own-requirement"
+  ],
+  "requirement_id": "R-setup-claude-generates-settings"
+}

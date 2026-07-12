@@ -15,9 +15,9 @@ func TestDiagnoseSignals_RealGraphNoPanic(t *testing.T) {
 		t.Fatalf("LoadGraph: %v", err)
 	}
 	signals := DiagnoseSignals(g)
-	if signals == nil {
-		t.Error("DiagnoseSignals returned nil slice")
-	}
+	// A signal-free graph is valid: TopAction/what-now report "none — graph
+	// clean" when len(signals) == 0. The call itself is the no-panic smoke
+	// test; assert sort order only when signals are present.
 	for i := 1; i < len(signals); i++ {
 		if signals[i].Priority < signals[i-1].Priority {
 			t.Errorf("signal %d (P%d) out of order after signal %d (P%d)",

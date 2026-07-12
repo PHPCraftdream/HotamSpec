@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES by storage = the Python code itself. RDF adds a heavy parallel substrate over what frozen dataclasses + plain-function traversal already do; SHACL duplicates the check_* invariants; SPARQL is unnecessary at the in-memory graph sizes we serve.",
+  "replaced_by": [
+    "R-domain-owns-graph-py"
+  ],
+  "requirement_id": "R-rdf-store"
+}

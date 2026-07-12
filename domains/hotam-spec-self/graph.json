@@ -437,6 +437,10 @@
         {
           "kind": "refines",
           "target": "R-enforceability-kind-declared"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-boot-cite-measured"
         }
       ],
       "enforcement": "PROSE",
@@ -1236,7 +1240,12 @@
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-axes-as-module-constant"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_axis_in_registry"
@@ -1648,6 +1657,18 @@
         {
           "kind": "replaces",
           "target": "R-agent-has-own-crystal"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-domain-owns-claude-md"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-framework-claude-md-is-domain-free"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-root-claude-md-contains-domain-crystal"
         }
       ],
       "enforcement": "ENFORCED",
@@ -1855,7 +1876,12 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-unresolvable-conflict-carries-variants"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_conflict_lifecycle_in_lifecycle",
@@ -2149,7 +2175,12 @@
       "assumptions": [
         "A-content-free-honest"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-seed-in-src"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "test_content_free.py"
@@ -3036,6 +3067,10 @@
         {
           "kind": "replaces",
           "target": "R-domain-delegation-persists"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-domain-delegation-as-node"
         }
       ],
       "enforcement": "ENFORCED",
@@ -3651,7 +3686,16 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-per-node-json-store"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-rdf-store"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_domain_manifest_exists_and_importable",
@@ -5140,7 +5184,12 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-unresolvable-conflict-carries-variants"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_held_has_min_two_variants",
@@ -6111,7 +6160,12 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-operator-crystal-embeds-thinking"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content",
@@ -6173,7 +6227,16 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-operator-crystal-embeds-tools"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-repo-map-generated"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content",
@@ -8786,7 +8849,12 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-setup-claude-generates-settings"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "test_tool_derived_requirements.py"
@@ -9083,7 +9151,12 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-unmeasured-cipher-names-user-action"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "test_tool_context.py::test_absent_stamp_reads_unmeasured",
@@ -9143,7 +9216,12 @@
       "assumptions": [
         "A-stakeholders-care"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-unresolvable-conflict-carries-variants"
+        }
+      ],
       "enforcement": "STRUCTURAL",
       "enforced_by": [],
       "m_tag": "",
@@ -9223,7 +9301,12 @@
       "assumptions": [
         "A-stakeholders-care"
       ],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-unresolvable-conflict-carries-variants"
+        }
+      ],
       "enforcement": "STRUCTURAL",
       "enforced_by": [],
       "m_tag": "",
@@ -9320,7 +9403,12 @@
       "status": "SETTLED",
       "why": "Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node). ENFORCEMENT (Etap S, #121, 2026-07-10) -- PROSE->ENFORCED via a HONEST PARTIAL check, not theatre: tests/test_launch_dir_write_scope.py AST-scans every committed framework .py (spec/tools/ + spec/src/hotam_spec/) and fails RED if any file co-locates a home-rooted path reference (Path.home() / os.path.expanduser('~...') / a literal starting with '~/') with a filesystem-write sink (open(...,'w'/'a'/'x'/'+'), write_text/write_bytes/mkdir/touch/rmtree/unlink/replace/rename/symlink_to/chmod/makedirs/remove/copy*/move). This closes EXACTLY the committed-code write vector that actually fired: the real incident was --patch-global physically patching ~/.claude/cah-bin/.../cah-status.js -- a machine-visible shape. The scan does NOT and cannot catch a live agent shelling out through bash at runtime; that residual half remains discipline-of-prose (R-agent-conduct-is-rules-not-tests). Honest scope, documented in the enforcer's docstring: no data-flow (a home reference co-located with any writer in the same file trips conservatively); prose ~/.claude mentions that do not start with '~/' are deliberately not path references; the allowlist is empty today because every current Claude-config tool (setup_hooks.py / setup_context_hook.py / _claude_settings.py) writes into the CONSUMER repo root's <repo>/.claude/ resolved via project_root_or_raise(), never the home global, so none reference a home path at all. A non-vacuity negative control (test_scanner_catches_a_home_write_negative_control) proves the predicate flags synthetic ~/.claude writes and passes in-bounds shapes.",
       "assumptions": [],
-      "relations": [],
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-context-hook-piggybacks-cah-stamp"
+        }
+      ],
       "enforcement": "ENFORCED",
       "enforced_by": [
         "test_launch_dir_write_scope.py::test_no_committed_code_writes_into_the_host_home",

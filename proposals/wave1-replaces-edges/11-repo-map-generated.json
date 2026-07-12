@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES: REPO-MAP offloaded to docs/gen/REPO-MAP.md — duplicated EMBEDDED-TOOLS and bloated crystal — (was: The operator needs a map of the substrate to navigate without grep. Hand-written file lists in CLAUDE.md drift from reality (the 'Files (layers)' section already has). Generating the map from the filesystem + module docstrings makes drift structurally impossible (new file without map entry = red test) and removes a hand-written section from CLAUDE.md. Realizes R-repo-map-generated as the next layer of substrate-generates-operator.)",
+  "replaced_by": [
+    "R-operator-crystal-embeds-tools-distilled"
+  ],
+  "requirement_id": "R-repo-map-generated"
+}

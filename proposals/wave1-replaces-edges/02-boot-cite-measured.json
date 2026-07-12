@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES by R-agent-conduct-is-rules-not-tests: измеритель мерил форму (лексический чек первого предложения), не суть заземления; 10-13% \"соблюдения\" писались в журнал, который ничто не читало — form-metric theatre. Правило R-boot-cite-in-first-sentence остаётся честным PROSE. — (was: R-boot-cite-in-first-sentence (PROSE) has never had any mechanical trace of compliance. tools/boot_cite_status.py's writer half reads the Stop hook's transcript_path payload, extracts the last assistant text block's first sentence, and lexically tests it for an anchor token; the reader half (compute_boot_cite_status) answers what fraction of the last N logged replies complied. HONESTY BOUNDARY, explicit in the tool docstring: this measures the citation RITUAL (a token-shaped string appears), never the citation's TRUTH (that the anchor is relevant or that graph reality was actually confronted) -- R-boot-cite-in-first-sentence itself stays PROSE/STRUCTURAL; this atom only claims the measurable slice exists and is tested.)",
+  "replaced_by": [
+    "R-agent-conduct-is-rules-not-tests"
+  ],
+  "requirement_id": "R-boot-cite-measured"
+}

@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES by R-content-free-framework. The framework must ship blank; the seed graph leaked business content (R-87, A-single-customer, axes like latency-vs-completeness) into the framework package, breaking the framework / content split.",
+  "replaced_by": [
+    "R-content-free-framework"
+  ],
+  "requirement_id": "R-seed-in-src"
+}

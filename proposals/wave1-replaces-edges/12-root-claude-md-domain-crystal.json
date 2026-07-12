@@ -1,0 +1,8 @@
+{
+  "kind": "Rejection",
+  "reason": "REJECTED — REPLACES R-claude-md-consolidates-when-single-agent. This claim described embedding a SEPARATE domains/hotam-spec-self/CLAUDE.md inside root CLAUDE.md via a DOMAIN-CRYSTAL sentinel block. That separate file no longer exists (deleted in task #101's consolidation) — there is nothing left to embed, since the domain content is generated directly into the single root CLAUDE.md rather than composed from a nested crystal. The two-file DOMAIN-CRYSTAL composition pattern returns only when a second domain is created and root CLAUDE.md can no longer hold all domains inline. — (was: Closes the sensor-substrate gap: Claude Code auto-loads root CLAUDE.md on session start; embedding the domain's CLAUDE.md (the canonical entry point of the domain, and the base from which all sub-agents derive scoped versions) means the operator boots from substrate (R-operator-prompt-from-substrate) rather than from raw weights + session memory. The substrate writes the operator's prompt physically, not aspirationally.)",
+  "replaced_by": [
+    "R-claude-md-consolidates-when-single-agent"
+  ],
+  "requirement_id": "R-root-claude-md-contains-domain-crystal"
+}
