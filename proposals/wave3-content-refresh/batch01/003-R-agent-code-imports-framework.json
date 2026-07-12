@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-code-imports-framework",
+  "claim": "An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itself shall never import back from any agent's private tools/ directory.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend on the shared framework, never the reverse. Not yet ported in the Go port: no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported), so the directional scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is reversed. Historically enforced in the Python prototype by a static AST scan (test_agent_import_direction.py). REPOINTED 2026-07-02 (Wave 7 move 4): assumption A-agent-code-imports-framework-directionally names this requirement's actual premise.",
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

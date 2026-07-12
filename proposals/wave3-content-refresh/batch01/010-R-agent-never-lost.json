@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-never-lost",
+  "claim": "The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/diagnose) composes the named REFLECTION predicates in priority order and derives the prioritized next action from any graph state, so an agent is never forced to guess.",
+  "source_refs": [
+    "cmd/hotam/what_now.go",
+    "internal/diagnose"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

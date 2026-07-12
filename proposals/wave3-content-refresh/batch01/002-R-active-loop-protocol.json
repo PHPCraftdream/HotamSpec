@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-active-loop-protocol",
+  "claim": "A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, et al.) shall exist in `internal/proposal` as the typed protocol for steward-approved operator changes, decoded strictly (snake_case json tags, unknown fields rejected).",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "Atom of R-active-loop-playbooks (data-model concern). `internal/proposal/types.go` defines the Proposed* structs (12 kinds today: Requirement, ConflictTransition, Rejection, Conflict, OperatorBudget, Axis, Stakeholder, Assumption, AssumptionTransition, ConflictMemberUpdate, EntityType, ReviewMark). Each struct carries its own validate() (validate.go) and mutate() (mutate.go) that apply it to the graph; the original three-kind protocol grew as the graph gained first-class types.",
+  "source_refs": [
+    "internal/proposal/types.go",
+    "internal/proposal/mutate.go",
+    "internal/proposal/validate.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-is-recursive-director",
+  "claim": "Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit -- a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. Enforcing check check_agent_has_agents_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.",
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

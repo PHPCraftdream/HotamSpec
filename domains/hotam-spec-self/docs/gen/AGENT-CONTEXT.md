@@ -8,7 +8,7 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 90 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - **debt:** 116/232 SETTLED ENFORCED · 1 DRAFT · 0 OPEN · 90 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 299 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21405 chars (headroom 128595)
+- **graph:** 299 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 0 chars (headroom 150000)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 

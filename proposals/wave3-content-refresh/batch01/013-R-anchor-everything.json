@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-anchor-everything",
+  "claim": "Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "SETTLED: structurally enforced via independent checks in internal/invariants. check_typed_anchors_* (typed_anchors.go) fire when any R-/A-/C-/OP-/GOAL-/PR-/entity id lacks its typed prefix; check_section_anchors_known (self_reference.go) fires when any §-token in framework docstrings is absent from the glossary. Together these make the anchor discipline machine-checkable at every invariant run.",
+  "source_refs": [
+    "internal/invariants/typed_anchors.go",
+    "internal/invariants/self_reference.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

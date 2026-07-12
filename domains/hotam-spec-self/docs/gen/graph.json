@@ -3,7 +3,7 @@
     {
       "id": "A-python-stack",
       "owner": "framework-author",
-      "statement": "The framework runs on Python 3.12+ with uv + ruff + pytest + hypothesis.",
+      "statement": "The framework runs on Python 3.12+ with uv + ruff + pytest + hypothesis. — [HOLDS] Re-stated 2026-07-12 for the Go port: the framework now runs on Go (go.mod module github.com/PHPCraftdream/HotamSpecGo, the internal/* packages, the cmd/hotam CLI, verified by `go test ./...`), NOT the Python 3.12 + uv + ruff + pytest + hypothesis stack described in the original statement. The earlier Python stack described the pre-port prototype and is superseded. The essence still HOLDS -- the framework rests on a concrete, toolable implementation stack -- only the language changed (Python -> Go). The ~80 requirements resting on this assumption depend on the framework being concretely implemented, which remains true; killing it to DEAD would misrepresent that, so it is re-affirmed HOLDS with the language correction recorded here. (The stale machine_check 'python.version >= (3, 12)' is retained only because an AssumptionTransition cannot rewrite it; it is no longer the live stack check.)",
       "status": "HOLDS"
     },
     {
@@ -63,13 +63,13 @@
     {
       "id": "A-agent-code-imports-framework-directionally",
       "owner": "framework-author",
-      "statement": "The dependency arrow between agent code and the framework body runs one way only: an agent's code may import hotam_spec.* as shared infrastructure, but hotam_spec.* (and spec/tools/*.py) must never import back from any agent's private tools/ directory.",
+      "statement": "The dependency arrow between agent code and the framework body runs one way only: an agent's code may import hotam_spec.* as shared infrastructure, but hotam_spec.* (and spec/tools/*.py) must never import back from any agent's private tools/ directory. — [HOLDS] Re-stated 2026-07-12 for the Go port: the 'framework body' the original statement called hotam_spec.* is now the Go framework packages (internal/* and cmd/hotam), and the 'shared tools' it called spec/tools/*.py are not yet ported. The directional principle is unchanged -- an agent's code may import the framework body, and the framework body must never import back from any agent's private tools/ directory. The assumption HOLDS (no agent has been scaffolded in the Go port, so the arrow is vacuously one-way); only the package identifiers were Python-isms, now corrected to the Go packages.",
       "status": "HOLDS"
     },
     {
       "id": "A-framework-shared-infra-no-owner",
       "owner": "framework-author",
-      "statement": "The framework body (hotam_spec.*) is shared infrastructure any agent's code may import; it is owned by no single agent -- ownership is a governance convention, not a per-agent claim.",
+      "statement": "The framework body (hotam_spec.*) is shared infrastructure any agent's code may import; it is owned by no single agent -- ownership is a governance convention, not a per-agent claim. — [HOLDS] Re-stated 2026-07-12 for the Go port: the 'framework body' the original statement called hotam_spec.* is now the Go framework packages (internal/* and cmd/hotam). It is shared infrastructure any agent's code may import and is owned by no single agent -- ownership is a governance convention, not a per-agent claim. The assumption HOLDS unchanged in essence; only the package identifier was a Python-ism, now corrected to the Go packages.",
       "status": "HOLDS"
     },
     {
@@ -87,7 +87,7 @@
     {
       "id": "A-ontology-transfers",
       "owner": "framework-author",
-      "statement": "The Hotam-Spec ontology (Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process, plus the check_* invariant layer and the enforcement gradient PROSE->STRUCTURAL->ENFORCED) transfers to a real external, non-meta business domain (a first-time consumer populating an empty graph.py under domains/<name>/ for their own product/process) without needing to reshape the ontology itself.",
+      "statement": "The Hotam-Spec ontology (Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process, plus the check_* invariant layer and the enforcement gradient PROSE->STRUCTURAL->ENFORCED) transfers to a real external, non-meta business domain (a first-time consumer populating an empty graph.py under domains/<name>/ for their own product/process) without needing to reshape the ontology itself. — [UNCERTAIN] Re-stated 2026-07-12 for the Go port: the original statement's 'empty graph.py under domains/<name>/' is now 'empty graph.json under domains/<name>/' (the Go CLI's graph is plain JSON data at domains/<name>/graph.json, written only via hotam apply-proposal). The ontology-transfer premise is unchanged -- the Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process types, the check_* invariant layer, and the PROSE->STRUCTURAL->ENFORCED gradient transfer to a real external business domain without reshaping the ontology. Still UNCERTAIN: unproven by a first external Go consumer.",
       "status": "UNCERTAIN"
     },
     {
@@ -499,7 +499,7 @@
       "assumptions": [
         "A-stakeholders-care"
       ],
-      "claim": "The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.",
+      "claim": "The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`.",
       "enforced_by": [
         "TestTopAction_RealGraph"
       ],
@@ -515,15 +515,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_what_now.py]→[TestTopAction_RealGraph]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.…→The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now…; why: The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.→The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/dia…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[cmd/hotam/what_now.go, internal/diagnose]"
         }
       ],
       "id": "R-agent-never-lost",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "cmd/hotam/what_now.go",
+        "internal/diagnose"
+      ],
       "status": "SETTLED",
-      "why": "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'."
+      "why": "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/diagnose) composes the named REFLECTION predicates in priority order and derives the prioritized next action from any graph state, so an agent is never forced to guess."
     },
     {
       "assumptions": [
@@ -976,7 +984,7 @@
         "A-stakeholders-care",
         "A-text-grounded-in-models"
       ],
-      "claim": "Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes.",
+      "claim": "A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, et al.) shall exist in `internal/proposal` as the typed protocol for steward-approved operator changes, decoded strictly (snake_case json tags, unknown fields rejected).",
       "enforced_by": [
         "TestProposedStructs_JSONTagsRoundTrip"
       ],
@@ -992,19 +1000,28 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_proposal.py]→[TestProposedStructs_JSONTagsRoundTrip]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved…→A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, …; why: Atom of R-active-loop-playbooks (data-model concern). hotam_spec/proposal.py defines the three types.→Atom of R-active-loop-playbooks (data-model concern). `internal/proposal/types.go` defines the Proposed* structs (12 kinds today: Requirement, Confli…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/proposal/types.go, internal/proposal/mutate.go, internal/proposal/validate.go]"
         }
       ],
       "id": "R-active-loop-protocol",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "internal/proposal/types.go",
+        "internal/proposal/mutate.go",
+        "internal/proposal/validate.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-active-loop-playbooks (data-model concern). hotam_spec/proposal.py defines the three types."
+      "why": "Atom of R-active-loop-playbooks (data-model concern). `internal/proposal/types.go` defines the Proposed* structs (12 kinds today: Requirement, ConflictTransition, Rejection, Conflict, OperatorBudget, Axis, Stakeholder, Assumption, AssumptionTransition, ConflictMemberUpdate, EntityType, ReviewMark). Each struct carries its own validate() (validate.go) and mutate() (mutate.go) that apply it to the graph; the original three-kind protocol grew as the graph gained first-class types."
     },
     {
       "assumptions": [],
-      "claim": "A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/.",
+      "claim": "A CLI command (`hotam apply-proposal`, `cmd/hotam`) shall consume an approved Proposed* JSON proposal and mechanically apply the change to the domain's graph.json (`domains/<name>/graph.json`) via `internal/proposal.Apply`, never by a hand-edit.",
       "enforced_by": [
         "TestApply_Requirement_UpdateAppendsHistory"
       ],
@@ -1020,15 +1037,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_apply_proposal.py]→[TestApply_Requirement_UpdateAppendsHistory]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/.→A CLI command (`hotam apply-proposal`, `cmd/hotam`) shall consume an approved Proposed* JSON proposal and mechanically apply the change to the domain…; why: Atom of R-active-loop-playbooks (tool concern). tools/apply_proposal.py lands a steward-approved JSON proposal into spec/content/graph.py and runs th…→Atom of R-active-loop-playbooks (tool concern). `hotam apply-proposal` (and the `hotam land` pipeline that wraps apply + gen-spec + all-violations) l…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[cmd/hotam/apply_proposal.go, cmd/hotam/land.go, internal/proposal/apply.go]"
         }
       ],
       "id": "R-active-loop-apply-tool",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "ai-agent",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "cmd/hotam/apply_proposal.go",
+        "cmd/hotam/land.go",
+        "internal/proposal/apply.go"
+      ],
       "status": "SETTLED",
-      "why": "Atom of R-active-loop-playbooks (tool concern). tools/apply_proposal.py lands a steward-approved JSON proposal into spec/content/graph.py and runs the regen+verify pipeline."
+      "why": "Atom of R-active-loop-playbooks (tool concern). `hotam apply-proposal` (and the `hotam land` pipeline that wraps apply + gen-spec + all-violations) lands a steward-approved JSON proposal into domains/<name>/graph.json and runs the regen+verify pipeline (internal/proposal + internal/generator + internal/invariants). Replaces the pre-port tools/apply_proposal.py + spec/content/graph.py path; the Go graph is plain JSON data, not source code spliced by AST."
     },
     {
       "assumptions": [],
@@ -1798,15 +1824,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…→[check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_se…→SETTLED: structurally enforced via independent checks in internal/invariants. check_typed_anchors_* (typed_anchors.go) fire when any R-/A-/C-/OP-/GOA…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/invariants/typed_anchors.go, internal/invariants/self_reference.go]"
         }
       ],
       "id": "R-anchor-everything",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "internal/invariants/typed_anchors.go",
+        "internal/invariants/self_reference.go"
+      ],
       "status": "SETTLED",
-      "why": "SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_section_anchors_known fires when any §-token in framework docstrings is absent from the glossary — an unresolved anchor. test_glossary_sync.py cross-checks the same invariant at test-time. Together these three make the anchor discipline machine-checkable at every invariant run."
+      "why": "SETTLED: structurally enforced via independent checks in internal/invariants. check_typed_anchors_* (typed_anchors.go) fire when any R-/A-/C-/OP-/GOAL-/PR-/entity id lacks its typed prefix; check_section_anchors_known (self_reference.go) fires when any §-token in framework docstrings is absent from the glossary. Together these make the anchor discipline machine-checkable at every invariant run."
     },
     {
       "assumptions": [
@@ -2200,15 +2234,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: M28. DECIDED 2026-06-30: the prefix set is frozen by the check_typed_anchors_* family — one invariant per node type enforces the exact prefix. chec…→Each typed-anchor prefix is enforced by a per-node-type check in internal/invariants: check_typed_anchors_requirement (R-), check_typed_anchors_assum…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/invariants/typed_anchors.go, internal/invariants/all_violations.go]"
         }
       ],
       "id": "R-anchor-taxonomy",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "internal/invariants/typed_anchors.go",
+        "internal/invariants/all_violations.go"
+      ],
       "status": "SETTLED",
-      "why": "M28. DECIDED 2026-06-30: the prefix set is frozen by the check_typed_anchors_* family — one invariant per node type enforces the exact prefix. check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-) are all live in invariants.ALL_INVARIANTS. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph; a prefix would introduce redundancy. §-anchors are validated by check_section_anchors_known against the glossary. The full set: R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/hotam_spec/invariants.py check_typed_anchors_* functions; R-anchor-everything SETTLED ENFORCED."
+      "why": "Each typed-anchor prefix is enforced by a per-node-type check in internal/invariants: check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-), all registered in all_violations.go. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph (a prefix would be redundant). §-anchors are validated by check_section_anchors_known against the glossary emitted by internal/generator. The full frozen set: R-/C-/A-/OP-/GOAL-/PR-/§."
     },
     {
       "assumptions": [
@@ -2716,7 +2758,7 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "A domain-agent shall be represented as a directory at `spec/agents/<name>/`.",
+      "claim": "A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.",
       "enforced_by": [
         "check_agent_has_agents_subdir",
         "check_agent_has_docs_subdir"
@@ -2733,15 +2775,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_agent_has_agents_subdir, check_agent_has_docs_subdir, test_tool_create_agent.py]→[check_agent_has_agents_subdir, check_agent_has_docs_subdir]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A domain-agent shall be represented as a directory at `spec/agents/<name>/`.→A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.; why: The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to…→An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-is-a-directory",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence."
+      "why": "An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private tools. Enforcing checks check_agent_has_agents_subdir and check_agent_has_docs_subdir are registered in internal/invariants but are HONEST NO-OPS in the Go port: they check the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet."
     },
     {
       "assumptions": [
@@ -2781,15 +2828,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on…→[check_agent_has_tools_subdir]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAF…→Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-has-own-tools-dir",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "ai-agent",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/tools/ exists as concrete evidence."
+      "why": "Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet."
     },
     {
       "assumptions": [
@@ -2978,7 +3030,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool `spec/tools/audit_atomicity.py`, not by a one-off hand invocation.",
+      "claim": "An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool, not by a one-off hand invocation.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -2992,15 +3044,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_tool_audit_atomicity.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed b…→An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed b…; why: SETTLED (BUILD-TRIGGER fired): spec/tools/audit_atomicity.py exists and was used in atomization waves 1-3, emitting docs/gen/AUDIT.md deterministical…→R-prefer-tool-over-hand applied to atomicity audits: a deterministic tool re-derives the COMPOUND sets and the R↔enforcer bijection every run rathe…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-audit-atomicity-tool",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "SETTLED (BUILD-TRIGGER fired): spec/tools/audit_atomicity.py exists and was used in atomization waves 1-3, emitting docs/gen/AUDIT.md deterministically. The verdict checkpoint (docs/checkpoints/framework-agent-audit-verdict.md) is now superseded by the tool's output. R-prefer-tool-over-hand is now honored for atomicity audits. STRUCTURAL because the tool's output is advisory (P0 REFLECTION); no blocking invariant yet."
+      "why": "R-prefer-tool-over-hand applied to atomicity audits: a deterministic tool re-derives the COMPOUND sets and the R↔enforcer bijection every run rather than relying on a one-off human pass, so the audit's output never silently rots. STRUCTURAL because the tool's output is advisory (a P0 REFLECTION signal for decomposition), not a blocking invariant. Not yet ported in the Go port: the audit-atomicity command is Declared, not ported; historically implemented as spec/tools/audit_atomicity.py emitting docs/gen/AUDIT.md deterministically."
     },
     {
       "assumptions": [
@@ -4338,7 +4395,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.",
+      "claim": "For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -4352,15 +4409,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of…→For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's…; why: Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-fin…→Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-scoped-constitution",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_scoped_constitution' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)"
+      "why": "Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus; per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. Not yet ported in the Go port: `hotam gen-spec` (internal/generator) regenerates the single consolidated operator crystal today (R-claude-md-consolidates-when-single-agent); the per-agent scoped-constitution path is part of the agents/ infrastructure (Declared, not ported) and materializes only when a real sub-agent is scaffolded."
     },
     {
       "assumptions": [
@@ -4385,7 +4447,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.",
+      "claim": "Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -4399,21 +4461,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.→Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alon…; why: An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-declares-purpose",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine-readable (vs README which is prose); placing it next to SCOPE keeps the agent's contract in one file. Enforced structurally so the absence of PURPOSE = missing operator visibility = red test, not silent gap."
+      "why": "An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable PURPOSE placed next to SCOPE keeps the agent's contract in one place, distinct from the prose README. Not yet ported in the Go port: the agents/ scaffolding infrastructure (create-agent, scope/purpose declaration) is Declared, not ported, so no agent exists to declare a PURPOSE yet; the policy stands for the moment one is scaffolded."
     },
     {
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.",
+      "claim": "CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -4427,15 +4494,23 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count…→CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of…; why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_static.go]"
         }
       ],
       "id": "R-agent-map-generated",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "internal/generator/claudemd.go",
+        "internal/generator/claudemd_static.go"
+      ],
       "status": "SETTLED",
-      "why": "The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)"
+      "why": "The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/generator; RenderAgentMapBlock in claudemd.go) emits the AGENT-MAP block from the graph; today it renders '_(no sub-operators yet)_' because no agent has been scaffolded in the Go port yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported). The block materializes the moment a real sub-operator is scaffolded."
     },
     {
       "assumptions": [
@@ -4707,7 +4782,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.",
+      "claim": "Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.",
       "enforced_by": [
         "check_agent_has_agents_subdir"
       ],
@@ -4718,15 +4793,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the rec…→Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminatin…; why: Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn …→Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-is-recursive-director",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit — a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. ENFORCED via check_agent_has_agents_subdir (task #64)."
+      "why": "Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit -- a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. Enforcing check check_agent_has_agents_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet."
     },
     {
       "assumptions": [
@@ -4822,7 +4902,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content.",
+      "claim": "Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), without duplicating their content.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -4836,21 +4916,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_domain_isolation_p17.py::test_agent_shared_docs_block_present]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by …→Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), wi…; why: Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SH…→Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-references-shared-docs",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility."
+      "why": "Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand; the SCOPE filter means agents only reference tool docs for tools they actually use. Not yet ported in the Go port: per-agent crystals and their SHARED-DOCS block are part of the agents/ infrastructure (Declared, not ported); the shared thinking docs themselves are regenerated by `hotam gen-spec` under domains/<name>/docs/gen/thinking/. Historically the paths pointed at spec/docs/thinking/*.md and spec/docs/tools/*.md."
     },
     {
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content.",
+      "claim": "Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes, separate from any generated content.",
       "enforced_by": [
         "check_agent_has_docs_subdir"
       ],
@@ -4861,15 +4946,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent p…→Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes,…; why: Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operato…→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12"
         }
       ],
       "id": "R-agent-has-docs-dir",
-      "last_reviewed_at": "2026-06-30",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2026-12-30",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64)."
+      "why": "Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. Enforcing check check_agent_has_docs_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet."
     },
     {
       "assumptions": [
@@ -6190,7 +6280,7 @@
       "assumptions": [
         "A-agent-code-imports-framework-directionally"
       ],
-      "claim": "An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory.",
+      "claim": "An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itself shall never import back from any agent's private tools/ directory.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -6204,15 +6294,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_i…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any age…→An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itsel…; why: First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_…→First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-08-12"
         }
       ],
       "id": "R-agent-code-imports-framework",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-02",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-agent-code-imports-framework-directionally, which names this requirement's actual premise."
+      "why": "First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend on the shared framework, never the reverse. Not yet ported in the Go port: no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported), so the directional scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is reversed. Historically enforced in the Python prototype by a static AST scan (test_agent_import_direction.py). REPOINTED 2026-07-02 (Wave 7 move 4): assumption A-agent-code-imports-framework-directionally names this requirement's actual premise."
     },
     {
       "assumptions": [
@@ -6241,7 +6336,7 @@
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond the frozen baseline recorded in spec/tests/atomicity_compound_baseline.json.",
+      "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -6255,15 +6350,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline, test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_base…→[]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The set of requirement claims and check_* invariants flagged COMPOUND by tools/audit_atomicity.py's classification functions shall never grow beyond …→The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseli…; why: R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human …→R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human …; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-08-12"
         }
       ],
       "id": "R-atomicity-ratchet-no-growth",
-      "last_reviewed_at": "2026-07-02",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-reviewer",
-      "review_after": "2027-01-02",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human judgment no check_* can force wholesale, and burning down the 27 pre-existing compound atoms (21 requirements + 6 check_*) in one wave is out of scope. But the DIRECTION of the debt (is it growing or merely being carried) IS mechanically checkable via a ratchet: test_atomicity_ratchet.py re-derives the live COMPOUND set from audit_atomicity's own _audit_claim/_audit_invariant functions and fails RED the instant a COMPOUND id appears that is not already in the frozen baseline. This is the R-commit-boundary-checkable slice-of-a-broader-claim pattern applied to atomicity: the parents stay STRUCTURAL (the full claim -- eventually zero compound atoms -- is not machine-verifiable end to end), while this narrower atom (no NEW compound debt) has a real, always-green-until-violated enforcer landing in the same wave."
+      "why": "R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human judgment no check_* can force wholesale. But the DIRECTION of the debt (is it growing or merely being carried) IS mechanically checkable via a ratchet: a live COMPOUND set is re-derived from the audit's own classification and fails RED the instant a COMPOUND id appears that is not already in the frozen baseline (R-commit-boundary-checkable slice-of-a-broader-claim). Not yet ported in the Go port: the audit-atomicity tool and its frozen baseline are Declared, not ported; historically implemented as spec/tools/audit_atomicity.py + spec/tests/atomicity_compound_baseline.json guarded by test_atomicity_ratchet.py."
     },
     {
       "assumptions": [
@@ -6741,7 +6841,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD) in place via tools/apply_proposal.py, appending the reason to its statement and never deleting the node.",
+      "claim": "The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD/IMPLEMENTS) in place via `hotam apply-proposal`, appending the reason to its statement and never deleting the node.",
       "enforced_by": [
         "TestApply_AssumptionTransition_Dead"
       ],
@@ -6757,15 +6857,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_assumption_transition.py::test_validate_uncertain_needs_no_signoff, test_assumption_transition.py::test_validate_dead_and_holds_require_signoff…→[TestApply_AssumptionTransition_Dead]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (H…→The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (H…; why: Assumption drift is the declared root of the methodology (§Assumption — 'the root of context drift'), yet before this atom the graph had no kill-p…→Assumption drift is the declared root of the methodology (§Assumption -- 'the root of context drift'), yet without this atom the graph had no kill-p…; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-08-12; source_refs: []→[internal/proposal/mutate.go, internal/proposal/validate.go, cmd/hotam/apply_proposal.go]"
         }
       ],
       "id": "R-assumption-transition-kind-exists",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "internal/proposal/mutate.go",
+        "internal/proposal/validate.go",
+        "cmd/hotam/apply_proposal.go"
+      ],
       "status": "SETTLED",
-      "why": "Assumption drift is the declared root of the methodology (§Assumption — 'the root of context drift'), yet before this atom the graph had no kill-path: ProposedAssumption was add-only and the _graph_guard hand-edit lock blocked any status change, so a DEAD assumption's cluster-wide fallout (requirements_on_assumption / what_now P2 DRIFT_FALLOUT) could never actually fire — 0 status transitions in the whole project history. The writer (_apply_assumption_transition) UPDATES the existing Assumption(...) call's status= field to the bare constant and APPENDS '— [STATUS] reason' to its statement so the falsification trail survives (mirror of R-rejected-preserved-not-deleted). Signoff asymmetry, decided honestly against thinking/assumption.md: DEAD (kills a premise, cluster-wide fallout) and HOLDS (re-affirms, SILENCES the review signal) both REQUIRE a decided_by Stakeholder — the same altitude as closing a Conflict (R-decided-needs-human-signoff, R-ai-presents-not-decides); UNCERTAIN merely RAISES a question (adds a P4 review signal, removes none), which is exactly the operator's PRESENT step, so the agent may present it alone. The transition fails closed to the T2 full suite because an assumption carries no enforced_by to bound its fallout."
+      "why": "Assumption drift is the declared root of the methodology (§Assumption -- 'the root of context drift'), yet without this atom the graph had no kill-path: ProposedAssumption was add-only and the hand-edit lock blocked any status change, so a DEAD assumption's cluster-wide fallout could never fire. ProposedAssumptionTransition.mutate (internal/proposal/mutate.go) UPDATES the existing Assumption's status and APPENDS '— [STATUS] reason' to its statement so the falsification trail survives (mirror of R-rejected-preserved-not-deleted), driven through `hotam apply-proposal` (cmd/hotam). Signoff asymmetry (decided honestly against §Assumption, thinking/assumption.md): DEAD (kills a premise, cluster-wide fallout) and HOLDS (re-affirms, silences the review signal) both REQUIRE a decided_by Stakeholder -- the same altitude as closing a Conflict (R-decided-needs-human-signoff, R-ai-presents-not-decides); UNCERTAIN merely RAISES a question (adds a P4 review signal, removes none), which is exactly the operator's PRESENT step, so the agent may present it alone. The transition fails closed to the full suite because an assumption carries no enforced_by to bound its fallout."
     },
     {
       "assumptions": [],
@@ -6895,15 +7004,24 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_assumption_status_valid, test_assumption_transition.py::test_implements_is_valid_assumption_state, test_assumption_transition.py::test_impleme…→[check_assumption_status_valid]; settled_at: 2026-07-10→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "why: Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это с�…→Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это с�…; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-08-12; source_refs: []→[internal/ontology/assumption.go, internal/invariants/dangling.go, internal/proposal/validate.go]"
         }
       ],
       "id": "R-assumption-implements-state",
-      "last_reviewed_at": "2026-07-10",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-10",
-      "source_refs": [],
+      "review_after": "2026-08-12",
+      "source_refs": [
+        "internal/ontology/assumption.go",
+        "internal/invariants/dangling.go",
+        "internal/proposal/validate.go"
+      ],
       "status": "SETTLED",
-      "why": "Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. Context: A-bootstrap-self-applies sat UNCERTAIN with 58 dependents — the single largest silent question in the graph and the top pulse line. Rather than re-affirm it HOLDS (a factual lie: it is NOT yet true), the steward introduced a fourth род of status: the aspiration. HOLDS/UNCERTAIN/DEAD are epistemic (they answer 'is this true?'); IMPLEMENTS is volitional (it answers 'do we want this to become true, and are we working toward it?'). Three consequences follow directly from its non-epistemic nature and are guaranteed by the existing status-keyed filters that use exact equality: (a) the UNCERTAIN-aging predicate (graph.uncertain_assumptions) does NOT touch it — an aspiration is not an unresolved doubt, so it raises no P4 review-debt; (b) it is NEVER DEAD-fallout (graph.dead_assumptions, reflection.reflect_dead_assumption_on_enforcer) — an aspiration is not a broken premise; (c) legitimate transitions and their signoff (the full table lives in proposal.ProposedAssumptionTransition): IMPLEMENTS to HOLDS ('achieved, became fact'), IMPLEMENTS to DEAD ('abandoned the striving'), UNCERTAIN to IMPLEMENTS ('we understood this is not a fact but a goal') and HOLDS to IMPLEMENTS ('declared fact too early') — ALL four require a human decided_by. Agent entry WITHOUT signoff remains UNCERTAIN-only. The UNCERTAIN to IMPLEMENTS move both CHANGES the род of the claim and REMOVES the live P4 doubt signal, so by the Wave-12 asymmetry (a transition that reduces live signal needs a named human) it carries the signoff lock, unlike the signal-raising move to plain UNCERTAIN. IMPLEMENTS is added to hotam_spec.assumption.ASSUMPTION_STATES and enforced first-class by check_assumption_status_valid (a per-Assumption set-membership invariant registered in ALL_INVARIANTS and RULES_AS_DATA_TABLE as TABLE_DRIVEN); apply_proposal._validate_assumption_transition adds IMPLEMENTS to the decided_by-required set (DEAD, HOLDS, IMPLEMENTS)."
+      "why": "Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. HOLDS/UNCERTAIN/DEAD are epistemic (they answer 'is this true?'); IMPLEMENTS is volitional (it answers 'do we want this to become true, and are we working toward it?'). Three consequences follow from its non-epistemic nature and are guaranteed by the status-keyed predicates in internal/diagnose that use exact equality: (a) the UNCERTAIN-aging predicate does NOT touch it (an aspiration is not an unresolved doubt, so no P4 review-debt); (b) it is NEVER dead-assumption fallout (an aspiration is not a broken premise); (c) its transitions and signoff (full table in ProposedAssumptionTransition, internal/proposal): IMPLEMENTS->HOLDS, IMPLEMENTS->DEAD, UNCERTAIN->IMPLEMENTS and HOLDS->IMPLEMENTS all require a human decided_by; entry without signoff remains UNCERTAIN-only. IMPLEMENTS is a member of internal/ontology.AssumptionStates and is enforced first-class by check_assumption_status_valid (internal/invariants, registered in all_violations.go); ProposedAssumptionTransition.validate adds IMPLEMENTS to the decided_by-required set (DEAD, HOLDS, IMPLEMENTS)."
     },
     {
       "assumptions": [],
@@ -7037,7 +7155,7 @@
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs.",
+      "claim": "An agent-agnostic attention-source registry shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7051,21 +7169,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py]→[]; settled_at: 2026-07-04→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist whose collect() runs every registered source and retur…→An agent-agnostic attention-source registry shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with …; why: The steward's verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in what_now.diagnose(g), half as CLI-only bands OWNED by …→Steward verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in the what-now diagnosis, half as CLI-only bands -- with no si…; last_reviewed_at: 2026-07-04→2026-07-12; review_after: 2027-01-04→2026-08-12"
         }
       ],
       "id": "R-attention-registry",
-      "last_reviewed_at": "2026-07-04",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-04",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The steward's verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in what_now.diagnose(g), half as CLI-only bands OWNED by tools/what_now.py -- with no single, agent-agnostic, importable-as-a-library place an arbitrary agent could call to learn what needs attention. This lifts them into ONE stdlib-only core (src/hotam_spec/attention.py) with an explicit registry of named sources, each an AttentionSource(id, reads, collect). collect(g) returns typed AttentionSignal(source, priority, target, message) the substrate and any agent share. The graph-source diagnosis (diagnose_signals) is deterministic (byte-identical across runs) so it can feed the byte-stable substrate. Enforced by tests/test_attention_core.py (registry non-empty and graph-only; diagnose_signals deterministic; collect(g) == diagnose_signals(g) with no runtime sources)."
+      "why": "Steward verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in the what-now diagnosis, half as CLI-only bands -- with no single, agent-agnostic, importable-as-a-library place an arbitrary agent could call to learn what needs attention. This lifts them into ONE core with an explicit registry of named sources, each producing typed AttentionSignal records the substrate and any agent share; the graph-source diagnosis is deterministic (byte-identical across runs) so it can feed the byte-stable substrate. Not yet ported in the Go port: the attention registry is Declared, not ported; historically implemented as src/hotam_spec/attention.py (ATTENTION_SOURCES), guarded by tests/test_attention_core.py."
     },
     {
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
+      "claim": "The attention core shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7079,21 +7202,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py::test_core_names_no_platform_token]→[]; settled_at: 2026-07-04→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer…→The attention core shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.; why: The steward's verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know…→Steward verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothi…; last_reviewed_at: 2026-07-04→2026-07-12; review_after: 2027-01-04→2026-08-12"
         }
       ],
       "id": "R-attention-agent-agnostic-core",
-      "last_reviewed_at": "2026-07-04",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-04",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The steward's verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothing of any one agent platform -- the platform adapter (tools/attention_hook.py) is a thin tool wrapper, not part of the core. This is the same backend-neutrality stance as R-core-imports-stdlib-or-hotam-spec-only, extended with a claim-specific platform-token scan. Enforced by tests/test_attention_core.py::test_core_names_no_platform_token (a source scan of src/hotam_spec/attention.py rejects any claude/anthropic/hook/model token) and covered structurally by test_backend_neutral_scope's core-import scan."
+      "why": "Steward verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothing of any one agent platform -- the platform adapter is a thin wrapper, not part of the core. This is the same backend-neutrality stance as R-core-imports-stdlib-or-hotam-spec-only, extended with a claim-specific platform-token scan. Not yet ported in the Go port: the attention layer is Declared, not ported; historically the core lived in src/hotam_spec/attention.py, the adapter in tools/attention_hook.py, guarded by tests/test_attention_core.py::test_core_names_no_platform_token."
     },
     {
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no runtime-fs sources are injected.",
+      "claim": "The live attention list collect(g) shall be a superset of the deterministic graph subset diagnose(g), equal to it exactly when no runtime-fs sources are injected.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7107,21 +7235,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_core.py]→[]; settled_at: 2026-07-04→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The live attention list attention.collect(g) shall be a superset of the deterministic graph subset diagnose_signals(g), equal to it exactly when no r…→The live attention list collect(g) shall be a superset of the deterministic graph subset diagnose(g), equal to it exactly when no runtime-fs sources …; why: The honest split at the centre of the attention core: the SUBSTRATE (gen_spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so it…→The honest split at the centre of the attention design: the SUBSTRATE (gen-spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so …; last_reviewed_at: 2026-07-04→2026-07-12; review_after: 2027-01-04→2026-08-12"
         }
       ],
       "id": "R-attention-superset-of-diagnose",
-      "last_reviewed_at": "2026-07-04",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-04",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The honest split at the centre of the attention core: the SUBSTRATE (gen_spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so it consumes ONLY the deterministic graph diagnosis; the LIVE AGENT wants more -- pending proposals, open tickets, stale audit, unread revisit markers -- which read the filesystem and are non-deterministic. Rather than couple those into diagnose() (breaking determinism and polluting graph tests, the failure the Wave 11/15 guards prevent), the filesystem sources are INJECTED by the live consumer via collect(runtime_sources=...). ATTENTION_SOURCES holds graph-only sources (asserted at import time); what_now.runtime_fs_sources() supplies the fs half. Thus collect(agent) is a superset of diagnose(substrate). Enforced by tests/test_attention_core.py (collect==diagnose with no runtime; collect is a strict superset when injected; a graph source rejected as runtime; ATTENTION_SOURCES graph-only) and by the existing diagnose-exclusion guards test_open_tickets_band.py / test_tool_mark_revisit_evaluated.py."
+      "why": "The honest split at the centre of the attention design: the SUBSTRATE (gen-spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so it consumes ONLY the deterministic graph diagnosis; the LIVE AGENT wants more -- pending proposals, open tickets, stale audit, unread revisit markers -- which read the filesystem and are non-deterministic. Rather than couple those into the graph diagnosis (breaking determinism and polluting graph tests), the filesystem sources are INJECTED by the live consumer via collect(runtime_sources=...): the registry holds graph-only sources, the live consumer supplies the fs half, so collect(agent) is a superset of diagnose(substrate). Not yet ported in the Go port: the attention layer is Declared, not ported (the deterministic graph diagnosis it builds on does live in internal/diagnose, ported); historically implemented in src/hotam_spec/attention.py with what_now.runtime_fs_sources(), guarded by tests/test_attention_core.py."
     },
     {
       "assumptions": [
         "A-text-grounded-in-models"
       ],
-      "claim": "The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
+      "claim": "The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7135,15 +7268,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_attention_claude_adapter.py]→[]; settled_at: 2026-07-04→2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and…→The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention cor…; why: The steward's verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention …→Steward verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list i…; last_reviewed_at: 2026-07-04→2026-07-12; review_after: 2027-01-04→2026-08-12"
         }
       ],
       "id": "R-attention-claude-adapter",
-      "last_reviewed_at": "2026-07-04",
+      "last_reviewed_at": "2026-07-12",
       "owner": "framework-author",
-      "review_after": "2027-01-04",
+      "review_after": "2026-08-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The steward's verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn. tools/attention_hook.py is that adapter -- a thin UserPromptSubmit hook that calls attention.collect() with the runtime-fs sources injected and prints render_flat() to stdout (which Claude Code injects into context). setup_hooks.py (the committed, portable sensorium, R-sensorium-committed) wires it so a fresh clone gets the pulse with zero edits. Enforced by tests/test_attention_claude_adapter.py (build_settings() emits attention_hook.py on UserPromptSubmit; the adapter imports the core, not its own sensing)."
+      "why": "Steward verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet ported in the Go port: setup-hooks and the attention adapter are Declared, not ported; historically implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py."
     },
     {
       "assumptions": [],

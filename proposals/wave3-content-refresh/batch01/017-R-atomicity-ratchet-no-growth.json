@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-atomicity-ratchet-no-growth",
+  "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "why": "R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human judgment no check_* can force wholesale. But the DIRECTION of the debt (is it growing or merely being carried) IS mechanically checkable via a ratchet: a live COMPOUND set is re-derived from the audit's own classification and fails RED the instant a COMPOUND id appears that is not already in the frozen baseline (R-commit-boundary-checkable slice-of-a-broader-claim). Not yet ported in the Go port: the audit-atomicity tool and its frozen baseline are Declared, not ported; historically implemented as spec/tools/audit_atomicity.py + spec/tests/atomicity_compound_baseline.json guarded by test_atomicity_ratchet.py.",
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

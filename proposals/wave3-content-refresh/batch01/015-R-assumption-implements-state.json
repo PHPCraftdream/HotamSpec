@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-assumption-implements-state",
+  "claim": "An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. HOLDS/UNCERTAIN/DEAD are epistemic (they answer 'is this true?'); IMPLEMENTS is volitional (it answers 'do we want this to become true, and are we working toward it?'). Three consequences follow from its non-epistemic nature and are guaranteed by the status-keyed predicates in internal/diagnose that use exact equality: (a) the UNCERTAIN-aging predicate does NOT touch it (an aspiration is not an unresolved doubt, so no P4 review-debt); (b) it is NEVER dead-assumption fallout (an aspiration is not a broken premise); (c) its transitions and signoff (full table in ProposedAssumptionTransition, internal/proposal): IMPLEMENTS->HOLDS, IMPLEMENTS->DEAD, UNCERTAIN->IMPLEMENTS and HOLDS->IMPLEMENTS all require a human decided_by; entry without signoff remains UNCERTAIN-only. IMPLEMENTS is a member of internal/ontology.AssumptionStates and is enforced first-class by check_assumption_status_valid (internal/invariants, registered in all_violations.go); ProposedAssumptionTransition.validate adds IMPLEMENTS to the decided_by-required set (DEAD, HOLDS, IMPLEMENTS).",
+  "source_refs": [
+    "internal/ontology/assumption.go",
+    "internal/invariants/dangling.go",
+    "internal/proposal/validate.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

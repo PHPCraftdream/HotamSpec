@@ -1,0 +1,6 @@
+{
+  "kind": "AssumptionTransition",
+  "assumption_id": "A-ontology-transfers",
+  "new_status": "UNCERTAIN",
+  "reason": "Re-stated 2026-07-12 for the Go port: the original statement's 'empty graph.py under domains/<name>/' is now 'empty graph.json under domains/<name>/' (the Go CLI's graph is plain JSON data at domains/<name>/graph.json, written only via hotam apply-proposal). The ontology-transfer premise is unchanged -- the Requirement/Conflict/Assumption/Axis/EntityType/Operator/Goal/Process types, the check_* invariant layer, and the PROSE->STRUCTURAL->ENFORCED gradient transfer to a real external business domain without reshaping the ontology. Still UNCERTAIN: unproven by a first external Go consumer."
+}

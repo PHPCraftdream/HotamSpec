@@ -1,0 +1,8 @@
+{
+  "kind": "AssumptionTransition",
+  "assumption_id": "A-python-stack",
+  "new_status": "HOLDS",
+  "reason": "Re-stated 2026-07-12 for the Go port: the framework now runs on Go (go.mod module github.com/PHPCraftdream/HotamSpecGo, the internal/* packages, the cmd/hotam CLI, verified by `go test ./...`), NOT the Python 3.12 + uv + ruff + pytest + hypothesis stack described in the original statement. The earlier Python stack described the pre-port prototype and is superseded. The essence still HOLDS -- the framework rests on a concrete, toolable implementation stack -- only the language changed (Python -> Go). The ~80 requirements resting on this assumption depend on the framework being concretely implemented, which remains true; killing it to DEAD would misrepresent that, so it is re-affirmed HOLDS with the language correction recorded here. (The stale machine_check 'python.version >= (3, 12)' is retained only because an AssumptionTransition cannot rewrite it; it is no longer the live stack check.)",
+  "decided_by": "framework-author",
+  "instrument": "personal"
+}

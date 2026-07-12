@@ -11,34 +11,40 @@ The atomic requirements that govern operator discipline — anchoring, crystalli
 
 **Claim.** Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).
 
-**Why.** SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_section_anchors_known fires when any §-token in framework docstrings is absent from the glossary — an unresolved anchor. test_glossary_sync.py cross-checks the same invariant at test-time. Together these three make the anchor discipline machine-checkable at every invariant run.
+**Why.** SETTLED: structurally enforced via independent checks in internal/invariants. check_typed_anchors_* (typed_anchors.go) fire when any R-/A-/C-/OP-/GOAL-/PR-/entity id lacks its typed prefix; check_section_anchors_known (self_reference.go) fires when any §-token in framework docstrings is absent from the glossary. Together these make the anchor discipline machine-checkable at every invariant run.
 
 **Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_typed_anchors_entity`, `check_section_anchors_known`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
+
+**Sources.** internal/invariants/typed_anchors.go, internal/invariants/self_reference.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…→[check_typed_anchors_requirement, check_typed_anchors_assumption, check_typed_anchors_conflict, check_typed_anchors_operator, check_typed_anchors_pro…; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — why: SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_se…→SETTLED: structurally enforced via independent checks in internal/invariants. check_typed_anchors_* (typed_anchors.go) fire when any R-/A-/C-/OP-/GOA…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/invariants/typed_anchors.go, internal/invariants/self_reference.go]
 
 ## `R-anchor-taxonomy` (ENFORCED)
 
 **Claim.** The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.
 
-**Why.** M28. DECIDED 2026-06-30: the prefix set is frozen by the check_typed_anchors_* family — one invariant per node type enforces the exact prefix. check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-) are all live in invariants.ALL_INVARIANTS. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph; a prefix would introduce redundancy. §-anchors are validated by check_section_anchors_known against the glossary. The full set: R-/C-/A-/OP-/GOAL-/PR-/§. Evidence: spec/src/hotam_spec/invariants.py check_typed_anchors_* functions; R-anchor-everything SETTLED ENFORCED.
+**Why.** Each typed-anchor prefix is enforced by a per-node-type check in internal/invariants: check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-), all registered in all_violations.go. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph (a prefix would be redundant). §-anchors are validated by check_section_anchors_known against the glossary emitted by internal/generator. The full frozen set: R-/C-/A-/OP-/GOAL-/PR-/§.
 
 **Enforced by:** `check_typed_anchors_requirement`, `check_typed_anchors_assumption`, `check_typed_anchors_conflict`, `check_typed_anchors_operator`, `check_typed_anchors_process`, `check_typed_anchors_goal`, `check_typed_anchors_entity`, `check_section_anchors_known`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
+
+**Sources.** internal/invariants/typed_anchors.go, internal/invariants/all_violations.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — why: M28. DECIDED 2026-06-30: the prefix set is frozen by the check_typed_anchors_* family — one invariant per node type enforces the exact prefix. chec…→Each typed-anchor prefix is enforced by a per-node-type check in internal/invariants: check_typed_anchors_requirement (R-), check_typed_anchors_assum…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/invariants/typed_anchors.go, internal/invariants/all_violations.go]
 
 ## `R-crystallize-before-split` (STRUCTURAL)
 

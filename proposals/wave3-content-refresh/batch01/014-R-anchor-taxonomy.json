@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-anchor-taxonomy",
+  "claim": "The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Each typed-anchor prefix is enforced by a per-node-type check in internal/invariants: check_typed_anchors_requirement (R-), check_typed_anchors_assumption (A-), check_typed_anchors_conflict (C-), check_typed_anchors_operator (OP-), check_typed_anchors_process (PR-), check_typed_anchors_goal (GOAL-), all registered in all_violations.go. Axis.slug is bare because check_axis_in_registry validates by exact slug match within the graph (a prefix would be redundant). §-anchors are validated by check_section_anchors_known against the glossary emitted by internal/generator. The full frozen set: R-/C-/A-/OP-/GOAL-/PR-/§.",
+  "source_refs": [
+    "internal/invariants/typed_anchors.go",
+    "internal/invariants/all_violations.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}

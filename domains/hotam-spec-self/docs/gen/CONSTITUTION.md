@@ -57,7 +57,7 @@ Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-im
 
 **ANCHOR** (R-anchor-everything):
   Claim: Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).
-  Why: SETTLED (P5): structurally enforced via three independent checks. check_typed_anchors fires when any R-/A-/C-/OP- id lacks its typed prefix. check_section_anchors_known fires when any §-token in framework docstrings is absent from the glossary — an unresolved anchor. test_glossary_sync.py cross-checks the same invariant at test-time. Together these three make the anchor discipline machine-checkable at every invariant run.
+  Why: SETTLED: structurally enforced via independent checks in internal/invariants. check_typed_anchors_* (typed_anchors.go) fire when any R-/A-/C-/OP-/GOAL-/PR-/entity id lacks its typed prefix; check_section_anchors_known (self_reference.go) fires when any §-token in framework docstrings is absent from the glossary. Together these make the anchor discipline machine-checkable at every invariant run.
 
 **REFERENCE** (R-speak-by-reference):
   Claim: An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.
@@ -116,7 +116,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 | anchor | enforcement | claim |
 |---|---|---|
 | **Closed loop & operator role** | | |
-| `R-agent-never-lost` | ENFORCED | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py. |
+| `R-agent-never-lost` | ENFORCED | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`. |
 | `R-drift-structurally-impossible` | ENFORCED | The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte. |
 | `R-conflict-is-connector-node` | ENFORCED | A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements. |
 | `R-deterministic-generation` | ENFORCED | tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes. |

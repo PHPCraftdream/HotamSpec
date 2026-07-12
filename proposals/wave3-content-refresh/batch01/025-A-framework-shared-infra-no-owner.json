@@ -1,0 +1,8 @@
+{
+  "kind": "AssumptionTransition",
+  "assumption_id": "A-framework-shared-infra-no-owner",
+  "new_status": "HOLDS",
+  "reason": "Re-stated 2026-07-12 for the Go port: the 'framework body' the original statement called hotam_spec.* is now the Go framework packages (internal/* and cmd/hotam). It is shared infrastructure any agent's code may import and is owned by no single agent -- ownership is a governance convention, not a per-agent claim. The assumption HOLDS unchanged in essence; only the package identifier was a Python-ism, now corrected to the Go packages.",
+  "decided_by": "framework-author",
+  "instrument": "personal"
+}

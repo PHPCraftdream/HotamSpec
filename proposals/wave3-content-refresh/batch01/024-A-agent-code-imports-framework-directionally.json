@@ -1,0 +1,8 @@
+{
+  "kind": "AssumptionTransition",
+  "assumption_id": "A-agent-code-imports-framework-directionally",
+  "new_status": "HOLDS",
+  "reason": "Re-stated 2026-07-12 for the Go port: the 'framework body' the original statement called hotam_spec.* is now the Go framework packages (internal/* and cmd/hotam), and the 'shared tools' it called spec/tools/*.py are not yet ported. The directional principle is unchanged -- an agent's code may import the framework body, and the framework body must never import back from any agent's private tools/ directory. The assumption HOLDS (no agent has been scaffolded in the Go port, so the arrow is vacuously one-way); only the package identifiers were Python-isms, now corrected to the Go packages.",
+  "decided_by": "framework-author",
+  "instrument": "personal"
+}

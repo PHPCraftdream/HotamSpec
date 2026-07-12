@@ -9,18 +9,19 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-agent-code-imports-framework` (PROSE)
 
-**Claim.** An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any agent's private tools/ directory.
+**Claim.** An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itself shall never import back from any agent's private tools/ directory.
 
-**Why.** First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_neutral_scope.py's R-core-imports-stdlib-or-hotam-spec-only pattern) verifies the dependency arrow points one way only -- hotam_spec.* and spec/tools/*.py never import a module that lives under any agent's private tools/ dir. Today no agent has private tools yet (only the director stub exists with no tools/ dir), so the scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is ever reversed. Promoted DRAFT->SETTLED with a real enforcer landing in the same wave (test_agent_import_direction.py), not left as claimed-but-unguaranteed debt. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-agent-code-imports-framework-directionally, which names this requirement's actual premise.
+**Why.** First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend on the shared framework, never the reverse. Not yet ported in the Go port: no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported), so the directional scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is reversed. Historically enforced in the Python prototype by a static AST scan (test_agent_import_direction.py). REPOINTED 2026-07-02 (Wave 7 move 4): assumption A-agent-code-imports-framework-directionally names this requirement's actual premise.
 
-**Last reviewed.** 2026-07-02
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2027-01-02
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_i…→[]; settled_at: 2026-07-02→2026-07-12
+- 2026-07-12 — claim: An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any age…→An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itsel…; why: First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_…→First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-08-12
 
 ## `R-agent-conduct-is-rules-not-tests` (PROSE)
 
@@ -38,146 +39,159 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-agent-declares-purpose` (PROSE)
 
-**Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.
+**Claim.** Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).
 
-**Why.** An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine-readable (vs README which is prose); placing it next to SCOPE keeps the agent's contract in one file. Enforced structurally so the absence of PURPOSE = missing operator visibility = red test, not silent gap.
+**Why.** An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable PURPOSE placed next to SCOPE keeps the agent's contract in one place, distinct from the prose README. Not yet ported in the Go port: the agents/ scaffolding infrastructure (create-agent, scope/purpose declaration) is Declared, not ported, so no agent exists to declare a PURPOSE yet; the policy stands for the moment one is scaffolded.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.→Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alon…; why: An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-agent-has-docs-dir` (ENFORCED)
 
-**Claim.** Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content.
+**Claim.** Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes, separate from any generated content.
 
-**Why.** Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64).
+**Why.** Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. Enforcing check check_agent_has_docs_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
 
 **Enforced by:** `check_agent_has_docs_subdir`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — claim: Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent p…→Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes,…; why: Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operato…→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-agent-has-own-tools-dir` (ENFORCED)
 
 **Claim.** Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
 
-**Why.** Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/tools/ exists as concrete evidence.
+**Why.** Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
 
 **Enforced by:** `check_agent_has_tools_subdir`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on…→[check_agent_has_tools_subdir]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — why: Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAF…→Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-agent-is-a-directory` (ENFORCED)
 
-**Claim.** A domain-agent shall be represented as a directory at `spec/agents/<name>/`.
+**Claim.** A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.
 
-**Why.** The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to be instantiated. Promoted DRAFT→SETTLED on first instantiation: spec/agents/framework-agent/ exists as concrete evidence.
+**Why.** An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private tools. Enforcing checks check_agent_has_agents_subdir and check_agent_has_docs_subdir are registered in internal/invariants but are HONEST NO-OPS in the Go port: they check the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
 
 **Enforced by:** `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_agent_has_agents_subdir, check_agent_has_docs_subdir, test_tool_create_agent.py]→[check_agent_has_agents_subdir, check_agent_has_docs_subdir]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: A domain-agent shall be represented as a directory at `spec/agents/<name>/`.→A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.; why: The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to…→An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-agent-is-recursive-director` (ENFORCED)
 
-**Claim.** Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.
+**Claim.** Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.
 
-**Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit — a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. ENFORCED via check_agent_has_agents_subdir (task #64).
+**Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit -- a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. Enforcing check check_agent_has_agents_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
 
 **Enforced by:** `check_agent_has_agents_subdir`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — claim: Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the rec…→Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminatin…; why: Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn …→Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-agent-map-generated` (STRUCTURAL)
 
-**Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
+**Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
 
-**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)
+**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/generator; RenderAgentMapBlock in claudemd.go) emits the AGENT-MAP block from the graph; today it renders '_(no sub-operators yet)_' because no agent has been scaffolded in the Go port yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported). The block materializes the moment a real sub-operator is scaffolded.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
+
+**Sources.** internal/generator/claudemd.go, internal/generator/claudemd_static.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count…→CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of…; why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_static.go]
 
 ## `R-agent-never-lost` (ENFORCED)
 
-**Claim.** The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.py.
+**Claim.** The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`.
 
-**Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.
+**Why.** The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/diagnose) composes the named REFLECTION predicates in priority order and derives the prioritized next action from any graph state, so an agent is never forced to guess.
 
 **Enforced by:** `TestTopAction_RealGraph`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
+
+**Sources.** cmd/hotam/what_now.go, internal/diagnose
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [test_what_now.py]→[TestTopAction_RealGraph]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via tools/what_now.…→The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now…; why: The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'.→The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/dia…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[cmd/hotam/what_now.go, internal/diagnose]
 
 ## `R-agent-references-shared-docs` (PROSE)
 
-**Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by SCOPE), without duplicating their content.
+**Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), without duplicating their content.
 
-**Why.** Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand. The SCOPE filter means agents only reference tool docs for tools they actually use, keeping the block proportionate to the agent's responsibility.
+**Why.** Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand; the SCOPE filter means agents only reference tool docs for tools they actually use. Not yet ported in the Go port: per-agent crystals and their SHARED-DOCS block are part of the agents/ infrastructure (Declared, not ported); the shared thinking docs themselves are regenerated by `hotam gen-spec` under domains/<name>/docs/gen/thinking/. Historically the paths pointed at spec/docs/thinking/*.md and spec/docs/tools/*.md.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_domain_isolation_p17.py::test_agent_shared_docs_block_present]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by …→Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), wi…; why: Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SH…→Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-agent-scoped-constitution` (PROSE)
 
-**Claim.** For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
+**Claim.** For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
 
-**Why.** Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-finance-*, etc. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus. Per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_scoped_constitution' which is not a function or file -- corrected to the .py file that actually covers this claim, caught by the new check_enforced_by_resolvable invariant.)
+**Why.** Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus; per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. Not yet ported in the Go port: `hotam gen-spec` (internal/generator) regenerates the single consolidated operator crystal today (R-claude-md-consolidates-when-single-agent); the per-agent scoped-constitution path is part of the agents/ infrastructure (Declared, not ported) and materializes only when a real sub-agent is scaffolded.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-08-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of…→For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's…; why: Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-fin…→Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 
 ## `R-boot-cite-in-first-sentence` (PROSE)
 

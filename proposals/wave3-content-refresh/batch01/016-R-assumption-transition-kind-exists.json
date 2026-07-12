@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-assumption-transition-kind-exists",
+  "claim": "The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD/IMPLEMENTS) in place via `hotam apply-proposal`, appending the reason to its statement and never deleting the node.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Assumption drift is the declared root of the methodology (§Assumption -- 'the root of context drift'), yet without this atom the graph had no kill-path: ProposedAssumption was add-only and the hand-edit lock blocked any status change, so a DEAD assumption's cluster-wide fallout could never fire. ProposedAssumptionTransition.mutate (internal/proposal/mutate.go) UPDATES the existing Assumption's status and APPENDS '— [STATUS] reason' to its statement so the falsification trail survives (mirror of R-rejected-preserved-not-deleted), driven through `hotam apply-proposal` (cmd/hotam). Signoff asymmetry (decided honestly against §Assumption, thinking/assumption.md): DEAD (kills a premise, cluster-wide fallout) and HOLDS (re-affirms, silences the review signal) both REQUIRE a decided_by Stakeholder -- the same altitude as closing a Conflict (R-decided-needs-human-signoff, R-ai-presents-not-decides); UNCERTAIN merely RAISES a question (adds a P4 review signal, removes none), which is exactly the operator's PRESENT step, so the agent may present it alone. The transition fails closed to the full suite because an assumption carries no enforced_by to bound its fallout.",
+  "source_refs": [
+    "internal/proposal/mutate.go",
+    "internal/proposal/validate.go",
+    "cmd/hotam/apply_proposal.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-08-12"
+}
