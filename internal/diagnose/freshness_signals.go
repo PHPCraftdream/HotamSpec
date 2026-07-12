@@ -33,6 +33,7 @@ func FreshnessSignals(g *ontology.Graph, today string) []Signal {
 		out = append(out, Signal{
 			Source:   "diagnose",
 			Priority: PAdvisory,
+			Check:    "freshness_overdue",
 			Target:   "review-freshness",
 			Message: fmt.Sprintf(
 				"%d SETTLED requirement(s) are OVERDUE for review (review_after < %s) — run `hotam due --today %s` for the list, then land a ProposedReviewMark per requirement re-affirmed.",
@@ -44,6 +45,7 @@ func FreshnessSignals(g *ontology.Graph, today string) []Signal {
 		out = append(out, Signal{
 			Source:   "diagnose",
 			Priority: PAdvisory,
+			Check:    "freshness_never_reviewed",
 			Target:   "review-freshness",
 			Message: fmt.Sprintf(
 				"%d SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today %s` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).",
