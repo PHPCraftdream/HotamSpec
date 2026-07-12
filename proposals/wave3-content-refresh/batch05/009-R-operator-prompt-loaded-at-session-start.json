@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-prompt-loaded-at-session-start",
+  "claim": "A SessionStart hook shall run `hotam gen-spec` before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.",
+  "why": "Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that automatically runs gen-spec at session boot. Closes the boot edge of the sensor-substrate inversion (R-operator-prompt-from-substrate): without SessionStart regen, the host may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL / LIVE-STATE blocks reflect an older graph state. The historical Python mechanism was a SessionStart hook in .claude/settings.local.json running gen_spec.py; the Go equivalent would invoke `hotam gen-spec` from a host-side hook, but no such hook is wired in this port. PROSE (not ENFORCED): no enforcer exists in the Go port.",
+  "source_refs": [
+    "cmd/hotam/gen_spec.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

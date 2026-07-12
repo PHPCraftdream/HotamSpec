@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-prompt-from-substrate",
+  "claim": "The operator-prompt CLAUDE.md shall include a CONSTITUTION block (compact per-category summary of SETTLED requirements) generated deterministically from the active domain's graph.json, with the full id+claim roster in docs/gen/CONSTITUTION.md.",
+  "why": "Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. In the Go port, two layers carry this: (1) BuildConstitutionBlock (internal/generator/claudemd_constitutionindex.go) renders the CLAUDE.md CONSTITUTION sentinel block as a compact per-category SUMMARY (category label + count only, P2-1 compaction), generated from the active domain's SETTLED requirements; (2) BuildConstitution (internal/generator/constitution.go) renders the full docs/gen/CONSTITUTION.md catalog (all SETTLED requirements grouped by category with id + enforcement flag + claim). Both are pure functions of the in-memory graph, called by gen-spec (cmd/hotam/gen_spec.go). Enforced by TestBuildConstitution_ByteIdenticalToFixture (internal/generator/), which asserts the full catalog is byte-identical to its fixture -- proving deterministic generation from the graph.",
+  "source_refs": [
+    "internal/generator/claudemd_constitutionindex.go",
+    "internal/generator/constitution.go",
+    "cmd/hotam/gen_spec.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "ai-agent",
+  "status": "SETTLED"
+}

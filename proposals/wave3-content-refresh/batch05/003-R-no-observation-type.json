@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-no-observation-type",
+  "claim": "The Go ontology (internal/ontology) shall define no Observation or Evidence struct type anywhere -- Assumption remains the ontology's sole belief-carrying node type.",
+  "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-observation-evidence-scope (STRUCTURAL, M21 steward verdict) makes a broader claim -- operator epistemics live in the working dialogue, crystallized only on request -- that is not fully machine-checkable (no static scan can verify 'lives in the dialogue'). But its NEGATIVE half -- no separate Observation/Evidence type exists -- IS mechanically checkable. Split out as its own atom (R-commit-boundary-checkable's slice-of-a-broader-claim pattern) so the mechanical slice can honestly reach ENFORCED while the parent claim (R-observation-evidence-scope) stays STRUCTURAL, undiluted by a partial enforcer. In the Go port, no Observation or Evidence struct is defined anywhere in internal/ontology/ -- Assumption (internal/ontology/assumption.go) is the sole belief-carrying node type. The historical Python enforcement was an AST scan of spec/src/hotam_spec/*.py for a class named Observation or Evidence; the Go equivalent would scan internal/ontology/*.go for a struct of that name, but no such enforcer is registered. STRUCTURAL: the negative-existence guarantee is real (no such struct exists) but not machine-checked in the Go port.",
+  "source_refs": [
+    "internal/ontology/assumption.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-reviewer",
+  "status": "SETTLED"
+}

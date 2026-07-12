@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-type-vs-facet",
+  "claim": "Operator shall be its own first-class struct type in internal/ontology/operator.go (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.",
+  "why": "M20. DECIDED 2026-06-30: Operator is a new type. Rationale: a Stakeholder facet cannot carry a ContextBudget, enforce check_operator_within_budget, or be referenced by Goal.owner -- all of which are live ENFORCED requirements. The clean separation (Stakeholder = party in internal/ontology/stakeholder.go, Operator = acting facet with budget + capabilities in internal/ontology/operator.go) prevents conflation at the single-altitude-vs-multi-altitude axis. Evidence: Operator struct (internal/ontology/operator.go) with fields including ContextBudget (ontology.ContextBudget) and Parent (*string); R-operator-is-frozen-dataclass SETTLED ENFORCED; check_typed_anchors_operator (internal/invariants/typed_anchors.go) live, verifying the OP- prefix. FOUND ISSUE (not fixed): the historical claim named 'frozen-dataclass' -- Go has no frozen-dataclass primitive, so immutability is a discipline (no setters; mutations only via ProposedOperatorBudget), not structurally enforced. check_typed_anchors_operator verifies only the OP- prefix, not the type-separation or immutability; the enforcement/enforced_by are out of scope for this content batch.",
+  "source_refs": [
+    "internal/ontology/operator.go",
+    "internal/ontology/stakeholder.go",
+    "internal/invariants/typed_anchors.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-is-frozen-dataclass",
+  "claim": "An Operator shall be a dedicated struct type in internal/ontology/operator.go carrying the typed anchor 'OP-', with field mutations performed only through the proposal system.",
+  "why": "Atom of R-operator-acting-facet (type identity concern). In the Go port, Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeholder, Lifecycle, ContextBudget, Parent *string, Scope, Why, DeclOrder). Go has no frozen-dataclass language primitive (unlike Python's @dataclass(frozen=True)); immutability is a DISCIPLINE, not a structurally-enforced guarantee: there are no setter methods, and field-level mutations are performed only through the proposal system (ProposedOperatorBudget.mutate in internal/proposal/mutate.go re-writes g.Operators[idx].ContextBudget). The typed-anchor discipline ('OP-' prefix) is enforced by check_typed_anchors_operator (internal/invariants/typed_anchors.go). OP-director is the first instance. FOUND ISSUE (not fixed): the claim's 'field mutations only through proposals' discipline is NOT structurally verified -- check_typed_anchors_operator only verifies the OP- prefix, not the immutability discipline. The enforcement/enforced_by are out of scope for this content batch; the enforcement is ENFORCED with check_typed_anchors_operator, which honestly tests only the prefix half.",
+  "source_refs": [
+    "internal/ontology/operator.go",
+    "internal/invariants/typed_anchors.go",
+    "internal/proposal/mutate.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

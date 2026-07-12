@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-overlap-single-presenter",
+  "claim": "Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter.",
+  "why": "M18/P-scope. presenterForNode (internal/invariants/scope_process.go) returns the LEXICOGRAPHICALLY FIRST operator id among the operators contesting a node -- a stable, total, deterministic rule that does not depend on graph declaration order (which shifts under unrelated source reformatting) or on an arbitrary parent-hierarchy walk. check_scoped_node_has_single_presenter (internal/invariants/scope_process.go) walks every pair of operators with a non-empty Scope, computes their overlap via projectScope, and fires a Violation only if presenterForNode ever returned empty for a non-empty contesting set -- which cannot happen, making single-presentership PROVABLE rather than merely asserted. Registered in the invariant registry (internal/invariants/all_violations.go) and in the methodology as Canon §Scope.",
+  "source_refs": [
+    "internal/invariants/scope_process.go",
+    "internal/invariants/all_violations.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

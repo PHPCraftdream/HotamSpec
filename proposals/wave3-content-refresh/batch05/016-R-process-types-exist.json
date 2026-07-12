@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-process-types-exist",
+  "claim": "internal/ontology/process.go shall define Process, Step, Goal, TargetState structs, plus ProcessLifecycle and GoalLifecycle canonical lifecycle variables.",
+  "why": "Atom of R-process-aspect-first (type-existence concern). In the Go port, all six types are defined in internal/ontology/process.go: Process (struct: ID, Lifecycle, Steps, RolesRequired, DrivesEntities, Why, DeclOrder), Step (struct: Name, RequiresRole, Invokes, Why), Goal (struct: ID, Owner, TargetState, Lifecycle, Why, DeclOrder), TargetState (struct: Kind, Predicate, Target), plus the canonical ProcessLifecycle (READY -> RUNNING -> DONE/ABANDONED) and GoalLifecycle (ACTIVE -> MET/ABANDONED) variables. Enforced by TestCanonicalLifecyclesSanity (internal/ontology/graph_smoke_test.go), which verifies every canonical lifecycle -- including ProcessLifecycle and GoalLifecycle -- is structurally well-formed (non-empty states, valid transition endpoints, reachable terminal, single INITIAL). These types are the behavioral surface of the first opt-in aspect.",
+  "source_refs": [
+    "internal/ontology/process.go",
+    "internal/ontology/graph_smoke_test.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

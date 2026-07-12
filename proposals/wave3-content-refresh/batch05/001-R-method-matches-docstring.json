@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-method-matches-docstring",
+  "claim": "Each check_* function registered in the Go invariant registry shall carry a Claim/Rule/Why text that shares non-trivial lexical overlap with its Violation messages.",
+  "why": "The audit principle 'description is the claim, body is the verification' is the same in Go as in the Python original. However the mechanism changed: in Python, each check_* function had a separately AST-parsed docstring whose RULE line was compared against Violation message string literals via Jaccard token overlap. In Go, the Invariant struct (internal/invariants/invariant.go) carries Claim, Rule, Why, and Check as FIELDS OF ONE STRUCTURE registered together via MustRegister -- the description and the logic are colocated in the same var block, authored and reviewed in the same diff, so the docstring-vs-body drift mode the Python AST scan caught cannot arise the same way. The registered check_method_matches_docstring (internal/invariants/self_reference.go) is therefore an HONEST NO-OP (returns nil): the drift mode it guarded against is architecturally inapplicable when description and logic are structurally bound in one struct literal. Coherence is instead enforced at code-review time and structurally by registry_complete_test (asserts no Claim/Rule/Why is empty). FOUND ISSUE (not fixed): enforcement is ENFORCED with a no-op enforcer -- the named check_method_matches_docstring cannot verify lexical overlap because it returns nil unconditionally. The enforcement/enforced_by are out of scope for this content batch.",
+  "source_refs": [
+    "internal/invariants/self_reference.go",
+    "internal/invariants/invariant.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-12-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}
