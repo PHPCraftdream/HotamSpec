@@ -7,6 +7,7 @@ import (
 )
 
 func TestCheckEntityTypeLifecycleWellformed_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{EntityTypes: []ontology.EntityType{entityType("thing")}}
 	if vs := runCheck(t, "check_entity_type_lifecycle_wellformed", g); len(vs) != 0 {
 		t.Fatalf("expected no violations for a well-formed EntityType lifecycle, got %v", vs)
@@ -14,6 +15,7 @@ func TestCheckEntityTypeLifecycleWellformed_OK(t *testing.T) {
 }
 
 func TestCheckEntityTypeLifecycleWellformed_FiresOnMalformedLifecycle(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Lifecycle = ontology.Lifecycle{Slug: "bad"}
 	g := &ontology.Graph{EntityTypes: []ontology.EntityType{et}}
@@ -24,6 +26,7 @@ func TestCheckEntityTypeLifecycleWellformed_FiresOnMalformedLifecycle(t *testing
 }
 
 func TestCheckTransitionGuardAssumptionResolves_OK(t *testing.T) {
+	t.Parallel()
 	ga := "A-1"
 	et := entityType("thing")
 	et.Lifecycle.Transitions[0].GuardAssumption = &ga
@@ -38,6 +41,7 @@ func TestCheckTransitionGuardAssumptionResolves_OK(t *testing.T) {
 }
 
 func TestCheckTransitionGuardAssumptionResolves_FiresOnDangling(t *testing.T) {
+	t.Parallel()
 	ga := "A-ghost"
 	et := entityType("thing")
 	et.Lifecycle.Transitions[0].GuardAssumption = &ga
@@ -51,6 +55,7 @@ func TestCheckTransitionGuardAssumptionResolves_FiresOnDangling(t *testing.T) {
 }
 
 func TestCheckTransitionGuardAssumptionResolves_SkipsEmptyGuardAssumption(t *testing.T) {
+	t.Parallel()
 	ga := ""
 	et := entityType("thing")
 	et.Lifecycle.Transitions[0].GuardAssumption = &ga
@@ -61,6 +66,7 @@ func TestCheckTransitionGuardAssumptionResolves_SkipsEmptyGuardAssumption(t *tes
 }
 
 func TestCheckAssumptionMachineChecksSyntactic_OKNonEmptyFormula(t *testing.T) {
+	t.Parallel()
 	mc := "len(graph.requirements) < 100"
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
@@ -74,6 +80,7 @@ func TestCheckAssumptionMachineChecksSyntactic_OKNonEmptyFormula(t *testing.T) {
 }
 
 func TestCheckAssumptionMachineChecksSyntactic_OKNilMachineCheckSkipped(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Assumptions: []ontology.Assumption{
@@ -86,6 +93,7 @@ func TestCheckAssumptionMachineChecksSyntactic_OKNilMachineCheckSkipped(t *testi
 }
 
 func TestCheckAssumptionMachineChecksSyntactic_FiresOnEmptyMarker(t *testing.T) {
+	t.Parallel()
 	mc := "   "
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
@@ -100,6 +108,7 @@ func TestCheckAssumptionMachineChecksSyntactic_FiresOnEmptyMarker(t *testing.T) 
 }
 
 func TestCheckEntityInstanceStateInLifecycle_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		EntityTypes: []ontology.EntityType{entityType("thing")},
 		Entities:    []ontology.EntityInstance{entityInstance("ENT-thing-1", "thing", "ACTIVE")},
@@ -110,6 +119,7 @@ func TestCheckEntityInstanceStateInLifecycle_OK(t *testing.T) {
 }
 
 func TestCheckEntityInstanceStateInLifecycle_FiresOnBogusState(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		EntityTypes: []ontology.EntityType{entityType("thing")},
 		Entities:    []ontology.EntityInstance{entityInstance("ENT-thing-1", "thing", "BOGUS")},
@@ -121,6 +131,7 @@ func TestCheckEntityInstanceStateInLifecycle_FiresOnBogusState(t *testing.T) {
 }
 
 func TestCheckEntityInstanceStateInLifecycle_FiresOnUndeclaredType(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("ENT-thing-1", "ghost", "ACTIVE")},
 	}
@@ -131,6 +142,7 @@ func TestCheckEntityInstanceStateInLifecycle_FiresOnUndeclaredType(t *testing.T)
 }
 
 func TestCheckEntityInstanceRequiredFields_OK(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "name", Kind: "string", Required: true}}
 	inst := entityInstance("ENT-thing-1", "thing", "ACTIVE")
@@ -145,6 +157,7 @@ func TestCheckEntityInstanceRequiredFields_OK(t *testing.T) {
 }
 
 func TestCheckEntityInstanceRequiredFields_FiresOnMissingRequired(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "name", Kind: "string", Required: true}}
 	g := &ontology.Graph{
@@ -158,6 +171,7 @@ func TestCheckEntityInstanceRequiredFields_FiresOnMissingRequired(t *testing.T) 
 }
 
 func TestCheckEntityInstanceIdPrefix_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("ENT-thing-1", "thing", "ACTIVE")},
 	}
@@ -167,6 +181,7 @@ func TestCheckEntityInstanceIdPrefix_OK(t *testing.T) {
 }
 
 func TestCheckEntityInstanceIdPrefix_FiresOnWrongPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("WRONG-thing-1", "thing", "ACTIVE")},
 	}
@@ -177,6 +192,7 @@ func TestCheckEntityInstanceIdPrefix_FiresOnWrongPrefix(t *testing.T) {
 }
 
 func TestCheckEntityInstanceRefsResolve_OKStakeholderTarget(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "owner", Kind: "reference", RefTarget: "stakeholder"}}
 	inst := entityInstance("ENT-thing-1", "thing", "ACTIVE")
@@ -192,6 +208,7 @@ func TestCheckEntityInstanceRefsResolve_OKStakeholderTarget(t *testing.T) {
 }
 
 func TestCheckEntityInstanceRefsResolve_OKEntityTypeTarget(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "parent", Kind: "reference", RefTarget: "thing"}}
 	inst := entityInstance("ENT-thing-1", "thing", "ACTIVE")
@@ -209,6 +226,7 @@ func TestCheckEntityInstanceRefsResolve_OKEntityTypeTarget(t *testing.T) {
 }
 
 func TestCheckEntityInstanceRefsResolve_FiresOnDanglingStakeholderRef(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "owner", Kind: "reference", RefTarget: "stakeholder"}}
 	inst := entityInstance("ENT-thing-1", "thing", "ACTIVE")
@@ -224,6 +242,7 @@ func TestCheckEntityInstanceRefsResolve_FiresOnDanglingStakeholderRef(t *testing
 }
 
 func TestCheckEntityInstanceRefsResolve_FiresOnDanglingEntityRef(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "parent", Kind: "reference", RefTarget: "thing"}}
 	inst := entityInstance("ENT-thing-1", "thing", "ACTIVE")
@@ -239,6 +258,7 @@ func TestCheckEntityInstanceRefsResolve_FiresOnDanglingEntityRef(t *testing.T) {
 }
 
 func TestCheckEntityFieldKindKnown_OK(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{
 		{Name: "a", Kind: "string"},
@@ -251,6 +271,7 @@ func TestCheckEntityFieldKindKnown_OK(t *testing.T) {
 }
 
 func TestCheckEntityFieldKindKnown_FiresOnBogusKind(t *testing.T) {
+	t.Parallel()
 	et := entityType("thing")
 	et.Fields = []ontology.EntityField{{Name: "a", Kind: "bogus"}}
 	g := &ontology.Graph{EntityTypes: []ontology.EntityType{et}}
@@ -261,6 +282,7 @@ func TestCheckEntityFieldKindKnown_FiresOnBogusKind(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsEntity_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("ENT-thing-1", "thing", "ACTIVE")},
 	}
@@ -270,6 +292,7 @@ func TestCheckTypedAnchorsEntity_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsEntity_FiresOnMissingEntPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("WRONG-1", "thing", "ACTIVE")},
 	}
@@ -280,6 +303,7 @@ func TestCheckTypedAnchorsEntity_FiresOnMissingEntPrefix(t *testing.T) {
 }
 
 func TestCheckEntitiesMdListsAllTypes_NoOpInGoInvariantLayer(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{EntityTypes: []ontology.EntityType{entityType("thing")}}
 	if vs := runCheck(t, "check_entities_md_lists_all_types", g); len(vs) != 0 {
 		t.Fatalf("filesystem-coherence check is a no-op in the graph-only Go invariant contract, got %v", vs)
@@ -287,6 +311,7 @@ func TestCheckEntitiesMdListsAllTypes_NoOpInGoInvariantLayer(t *testing.T) {
 }
 
 func TestCheckEntityTypeConstitutionProjection_NoOpInGoInvariantLayer(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{EntityTypes: []ontology.EntityType{entityType("thing")}}
 	if vs := runCheck(t, "check_entity_type_constitution_projection", g); len(vs) != 0 {
 		t.Fatalf("filesystem-coherence check is a no-op in the graph-only Go invariant contract, got %v", vs)

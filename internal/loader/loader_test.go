@@ -13,6 +13,7 @@ import (
 const fixturePath = "testdata/hotam-spec-self.graph.json"
 
 func TestLoadGraph_FixtureCounts(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -44,6 +45,7 @@ func TestLoadGraph_FixtureCounts(t *testing.T) {
 }
 
 func TestRoundTrip_DeepEqual(t *testing.T) {
+	t.Parallel()
 	g1, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph #1: %v", err)
@@ -90,6 +92,7 @@ func TestRoundTrip_DeepEqual(t *testing.T) {
 }
 
 func TestRoundTrip_ByteIdentical(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -133,6 +136,7 @@ func TestRoundTrip_ByteIdentical(t *testing.T) {
 }
 
 func TestWriteGraph_NoTmpLeft(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -151,6 +155,7 @@ func TestWriteGraph_NoTmpLeft(t *testing.T) {
 }
 
 func TestVerifyLock_HappyPath(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -170,6 +175,7 @@ func TestVerifyLock_HappyPath(t *testing.T) {
 }
 
 func TestVerifyLock_Tampered(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -197,6 +203,7 @@ func TestVerifyLock_Tampered(t *testing.T) {
 }
 
 func TestVerifyLock_Absent(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	out := filepath.Join(dir, "graph.json")
 	if err := os.WriteFile(out, []byte("{}\n"), 0o644); err != nil {
@@ -212,6 +219,7 @@ func TestVerifyLock_Absent(t *testing.T) {
 }
 
 func TestWriteLock_ManualNote(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(fixturePath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -241,6 +249,7 @@ func TestWriteLock_ManualNote(t *testing.T) {
 }
 
 func TestLoadGraph_UnknownTopLevelKey(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	out := filepath.Join(dir, "graph.json")
 	bad := `{"axes": [], "bogus_collection": []}` + "\n"
@@ -257,6 +266,7 @@ func TestLoadGraph_UnknownTopLevelKey(t *testing.T) {
 }
 
 func TestLoadGraph_MissingKeyIsEmpty(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	out := filepath.Join(dir, "graph.json")
 	partial := `{"requirements": [{"id": "R-1", "claim": "x", "owner": "o", "status": "DRAFT", "why": "", "assumptions": [], "relations": [], "enforcement": "PROSE", "enforced_by": [], "m_tag": "", "enforceability": "ENFORCEABLE", "summary": "", "created_at": "", "settled_at": "", "last_reviewed_at": "", "review_after": "", "evidence": [], "source_refs": [], "history": []}]}` + "\n"
@@ -279,6 +289,7 @@ func TestLoadGraph_MissingKeyIsEmpty(t *testing.T) {
 }
 
 func TestLoadGraph_InvalidStatus(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	out := filepath.Join(dir, "graph.json")
 	bad := `{"requirements": [{"id": "R-1", "claim": "x", "owner": "o", "status": "NOPE", "why": "", "assumptions": [], "relations": [], "enforcement": "PROSE", "enforced_by": [], "m_tag": "", "enforceability": "ENFORCEABLE", "summary": "", "created_at": "", "settled_at": "", "last_reviewed_at": "", "review_after": "", "evidence": [], "source_refs": [], "history": []}]}` + "\n"
@@ -295,6 +306,7 @@ func TestLoadGraph_InvalidStatus(t *testing.T) {
 }
 
 func TestSortedCopy_PreservesInput(t *testing.T) {
+	t.Parallel()
 	in := []ontology.Requirement{
 		{ID: "R-2"},
 		{ID: "R-1"},

@@ -8,6 +8,7 @@ import (
 )
 
 func TestLifecycleWellformedIssues_OK(t *testing.T) {
+	t.Parallel()
 	lc := ontology.Lifecycle{
 		Slug: "ok-lc",
 		States: []ontology.State{
@@ -26,6 +27,7 @@ func TestLifecycleWellformedIssues_OK(t *testing.T) {
 }
 
 func TestLifecycleWellformedIssues_FiresOnEmptyStates(t *testing.T) {
+	t.Parallel()
 	lc := ontology.Lifecycle{Slug: "empty-lc"}
 	if issues := lifecycleWellformedIssues(lc); len(issues) == 0 {
 		t.Fatalf("expected an issue for a lifecycle with no states, got %v", issues)
@@ -33,6 +35,7 @@ func TestLifecycleWellformedIssues_FiresOnEmptyStates(t *testing.T) {
 }
 
 func TestLifecycleWellformedIssues_FiresOnMultipleInitials(t *testing.T) {
+	t.Parallel()
 	lc := ontology.Lifecycle{
 		Slug: "multi-init",
 		States: []ontology.State{
@@ -55,6 +58,7 @@ func TestLifecycleWellformedIssues_FiresOnMultipleInitials(t *testing.T) {
 }
 
 func TestLifecycleWellformedIssues_FiresOnDanglingTransition(t *testing.T) {
+	t.Parallel()
 	lc := ontology.Lifecycle{
 		Slug: "dangling",
 		States: []ontology.State{
@@ -76,6 +80,7 @@ func TestLifecycleWellformedIssues_FiresOnDanglingTransition(t *testing.T) {
 }
 
 func TestLifecycleWellformedIssues_FiresOnNoReachableTerminal(t *testing.T) {
+	t.Parallel()
 	lc := ontology.Lifecycle{
 		Slug: "no-terminal",
 		States: []ontology.State{
@@ -97,6 +102,7 @@ func TestLifecycleWellformedIssues_FiresOnNoReachableTerminal(t *testing.T) {
 }
 
 func TestLifecycleWellformedIssues_CyclicSkipsTerminalCheck(t *testing.T) {
+	t.Parallel()
 	lc := ontology.Lifecycle{
 		Slug: "cyclic-no-terminal",
 		States: []ontology.State{
@@ -115,6 +121,7 @@ func TestLifecycleWellformedIssues_CyclicSkipsTerminalCheck(t *testing.T) {
 }
 
 func TestCheckRequirementStatusInLifecycle_OK(t *testing.T) {
+	t.Parallel()
 	reqs := []ontology.Requirement{
 		reqStatus("R-1", "sa", ontology.StatusSETTLED),
 		reqStatus("R-2", "sb", ontology.StatusDRAFT),
@@ -128,6 +135,7 @@ func TestCheckRequirementStatusInLifecycle_OK(t *testing.T) {
 }
 
 func TestCheckRequirementStatusInLifecycle_FiresOnBogusStatus(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{reqStatus("R-1", "sa", "BOGUS")}}
 	vs := runCheck(t, "check_requirement_status_in_lifecycle", g)
 	if !hasViolationFor(vs, "R-1") {
@@ -136,6 +144,7 @@ func TestCheckRequirementStatusInLifecycle_FiresOnBogusStatus(t *testing.T) {
 }
 
 func TestCheckRequirementHistoryWellformed_OK(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.History = []ontology.HistoryEntry{
 		{At: "2024-01-01T00:00:00Z", Summary: "created"},
@@ -148,6 +157,7 @@ func TestCheckRequirementHistoryWellformed_OK(t *testing.T) {
 }
 
 func TestCheckRequirementHistoryWellformed_FiresOnEmptyAt(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.History = []ontology.HistoryEntry{{At: "", Summary: "no stamp"}}
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -158,6 +168,7 @@ func TestCheckRequirementHistoryWellformed_FiresOnEmptyAt(t *testing.T) {
 }
 
 func TestCheckRequirementHistoryWellformed_FiresOnEmptySummary(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.History = []ontology.HistoryEntry{{At: "2024-01-01T00:00:00Z", Summary: ""}}
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -168,6 +179,7 @@ func TestCheckRequirementHistoryWellformed_FiresOnEmptySummary(t *testing.T) {
 }
 
 func TestCheckRequirementHistoryWellformed_FiresOnBackwardsStamp(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.History = []ontology.HistoryEntry{
 		{At: "2024-02-01T00:00:00Z", Summary: "later"},
@@ -181,6 +193,7 @@ func TestCheckRequirementHistoryWellformed_FiresOnBackwardsStamp(t *testing.T) {
 }
 
 func TestCheckConflictLifecycleInLifecycle_OK(t *testing.T) {
+	t.Parallel()
 	for _, lc := range []string{ontology.ConflictDETECTED, ontology.ConflictACKNOWLEDGED, "DECIDED(chose A)", "REVISIT_WHEN(x>1)", "HELD(awaiting)"} {
 		c := baseConflict()
 		c.Lifecycle = lc
@@ -192,6 +205,7 @@ func TestCheckConflictLifecycleInLifecycle_OK(t *testing.T) {
 }
 
 func TestCheckConflictLifecycleInLifecycle_FiresOnBogus(t *testing.T) {
+	t.Parallel()
 	c := baseConflict()
 	c.Lifecycle = "BOGUS"
 	g := graphWithConflict(c, nil)
@@ -202,6 +216,7 @@ func TestCheckConflictLifecycleInLifecycle_FiresOnBogus(t *testing.T) {
 }
 
 func TestCheckOperatorLifecycleInLifecycle_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Operators: []ontology.Operator{
@@ -215,6 +230,7 @@ func TestCheckOperatorLifecycleInLifecycle_OK(t *testing.T) {
 }
 
 func TestCheckOperatorLifecycleInLifecycle_FiresOnBogus(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Operators:    []ontology.Operator{op("OP-1", "sa", "BOGUS")},
@@ -226,6 +242,7 @@ func TestCheckOperatorLifecycleInLifecycle_FiresOnBogus(t *testing.T) {
 }
 
 func TestCheckGoalLifecycleInLifecycle_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Goals:       []ontology.Goal{goal("GOAL-1", "sa", "ACTIVE"), goal("GOAL-2", "sa", "MET")},
@@ -236,6 +253,7 @@ func TestCheckGoalLifecycleInLifecycle_OK(t *testing.T) {
 }
 
 func TestCheckGoalLifecycleInLifecycle_FiresOnBogus(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Goals:        []ontology.Goal{goal("GOAL-1", "sa", "BOGUS")},
@@ -247,6 +265,7 @@ func TestCheckGoalLifecycleInLifecycle_FiresOnBogus(t *testing.T) {
 }
 
 func TestCheckStatusInLifecycle_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA, sB},
 		Requirements: []ontology.Requirement{req("R-1", "sa")},
@@ -260,6 +279,7 @@ func TestCheckStatusInLifecycle_OK(t *testing.T) {
 }
 
 func TestCheckStatusInLifecycle_DelegatesAndFires(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Requirements: []ontology.Requirement{reqStatus("R-1", "sa", "BOGUS")},
@@ -272,6 +292,7 @@ func TestCheckStatusInLifecycle_DelegatesAndFires(t *testing.T) {
 }
 
 func TestCheckCanonicalLifecyclesWellformed_FrameworkSelfTest(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{}
 	if vs := runCheck(t, "check_canonical_lifecycles_wellformed", g); len(vs) != 0 {
 		t.Fatalf("the framework's own canonical lifecycles MUST be well-formed (self-application), got %v", vs)
@@ -279,6 +300,7 @@ func TestCheckCanonicalLifecyclesWellformed_FrameworkSelfTest(t *testing.T) {
 }
 
 func TestCheckOperatorStewardNotSelf_OK(t *testing.T) {
+	t.Parallel()
 	c := baseConflict()
 	c.Members = []string{"R-1", "R-2"}
 	c.Steward = "OP-out"
@@ -298,6 +320,7 @@ func TestCheckOperatorStewardNotSelf_OK(t *testing.T) {
 }
 
 func TestCheckOperatorStewardNotSelf_FiresWhenStewardOwnsMember(t *testing.T) {
+	t.Parallel()
 	c := baseConflict()
 	c.Members = []string{"R-1", "R-2"}
 	c.Steward = "OP-1"
@@ -317,6 +340,7 @@ func TestCheckOperatorStewardNotSelf_FiresWhenStewardOwnsMember(t *testing.T) {
 }
 
 func TestCheckOperatorWithinBudget_OKUnderLimit(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Requirements: []ontology.Requirement{req("R-1", "sa")},
@@ -330,6 +354,7 @@ func TestCheckOperatorWithinBudget_OKUnderLimit(t *testing.T) {
 }
 
 func TestCheckOperatorWithinBudget_FiresOverNodeCount(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "sa"), req("R-3", "sa")},
@@ -344,6 +369,7 @@ func TestCheckOperatorWithinBudget_FiresOverNodeCount(t *testing.T) {
 }
 
 func TestCheckOperatorWithinBudget_SkipsUnboundedLimit(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Requirements: []ontology.Requirement{req("R-1", "sa")},
@@ -357,6 +383,7 @@ func TestCheckOperatorWithinBudget_SkipsUnboundedLimit(t *testing.T) {
 }
 
 func TestCheckOperatorWithinBudget_CrystalCharsLargeLimit(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Operators: []ontology.Operator{

@@ -7,6 +7,7 @@ import (
 )
 
 func TestDiagnoseSignals_EmptyGraph(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{}
 	signals := DiagnoseSignals(g)
 	if len(signals) != 0 {
@@ -15,6 +16,7 @@ func TestDiagnoseSignals_EmptyGraph(t *testing.T) {
 }
 
 func TestTopAction_EmptyGraph(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{}
 	got := TopAction(g)
 	want := "none — graph clean"
@@ -24,6 +26,7 @@ func TestTopAction_EmptyGraph(t *testing.T) {
 }
 
 func TestDiagnoseSignals_ReflectionBeatsStructure(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			settledReq("R-1"), settledReq("R-2"), settledReq("R-3"),
@@ -48,6 +51,7 @@ func TestDiagnoseSignals_ReflectionBeatsStructure(t *testing.T) {
 }
 
 func TestDiagnoseSignals_PriorityOrder(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-dead", Status: ontology.AssumptionDEAD, Statement: "dead claim"},
@@ -84,6 +88,7 @@ func TestDiagnoseSignals_PriorityOrder(t *testing.T) {
 }
 
 func TestDiagnoseSignals_StableSortByKey(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{
 			{
@@ -129,6 +134,7 @@ func TestDiagnoseSignals_StableSortByKey(t *testing.T) {
 }
 
 func TestDiagnoseSignals_AdvisoryRoutedLowest(t *testing.T) {
+	t.Parallel()
 	r := rejectedReq("R-old")
 	r.Why = "REJECTED — REPLACES R-new"
 	g := &ontology.Graph{
@@ -171,6 +177,7 @@ func TestDiagnoseSignals_AdvisoryRoutedLowest(t *testing.T) {
 }
 
 func TestDiagnoseSignals_P2DriftFalloutReqsAndConflicts(t *testing.T) {
+	t.Parallel()
 	sharedAssumption := "A-dead"
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
@@ -207,6 +214,7 @@ func TestDiagnoseSignals_P2DriftFalloutReqsAndConflicts(t *testing.T) {
 }
 
 func TestDiagnoseSignals_P4OpenQuestionExtracted(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-q", Owner: "owner-q", Status: "OPEN(which path?)"},
@@ -228,6 +236,7 @@ func TestDiagnoseSignals_P4OpenQuestionExtracted(t *testing.T) {
 }
 
 func TestDiagnoseSignals_P4OpenNoQuestionFallback(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-noq", Owner: "owner", Status: "OPEN()"},
@@ -246,6 +255,7 @@ func TestDiagnoseSignals_P4OpenNoQuestionFallback(t *testing.T) {
 }
 
 func TestDiagnoseSignals_P4HeldVariants(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-held",
@@ -275,6 +285,7 @@ func TestDiagnoseSignals_P4HeldVariants(t *testing.T) {
 }
 
 func TestDiagnoseSignals_P4UncertainAgingHighFanOut(t *testing.T) {
+	t.Parallel()
 	reqs := make([]ontology.Requirement, UncertainAgingMinDependents)
 	for i := range reqs {
 		reqs[i] = ontology.Requirement{
@@ -303,6 +314,7 @@ func TestDiagnoseSignals_P4UncertainAgingHighFanOut(t *testing.T) {
 }
 
 func TestDiagnoseSignals_P4UncertainAgingLowFanOut(t *testing.T) {
+	t.Parallel()
 	reqs := make([]ontology.Requirement, UncertainAgingMinDependents-1)
 	for i := range reqs {
 		reqs[i] = ontology.Requirement{
@@ -325,6 +337,7 @@ func TestDiagnoseSignals_P4UncertainAgingLowFanOut(t *testing.T) {
 }
 
 func TestTopAction_ReturnsTopSignalMessage(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-1",
@@ -346,6 +359,7 @@ func TestTopAction_ReturnsTopSignalMessage(t *testing.T) {
 }
 
 func TestDiagnoseSignals_AllSignalsUseDiagnoseSource(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-1",
@@ -366,6 +380,7 @@ func TestDiagnoseSignals_AllSignalsUseDiagnoseSource(t *testing.T) {
 }
 
 func TestPriorityConstants(t *testing.T) {
+	t.Parallel()
 	if PReflection != 0 {
 		t.Errorf("PReflection: got %d, want 0", PReflection)
 	}

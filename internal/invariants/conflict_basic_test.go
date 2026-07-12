@@ -8,12 +8,14 @@ import (
 )
 
 func TestCheckConflictHasAxis_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_conflict_has_axis", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckConflictHasAxis_FiresOnEmpty(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Axis = "   "
 	bad.ID = "C-manual"
@@ -24,12 +26,14 @@ func TestCheckConflictHasAxis_FiresOnEmpty(t *testing.T) {
 }
 
 func TestCheckConflictHasContext_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_conflict_has_context", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckConflictHasContext_FiresOnEmpty(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Context = ""
 	bad.ID = "C-manual"
@@ -40,12 +44,14 @@ func TestCheckConflictHasContext_FiresOnEmpty(t *testing.T) {
 }
 
 func TestCheckConflictHasSteward_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_conflict_has_steward", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckConflictHasSteward_FiresOnEmpty(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Steward = ""
 	vs := runCheck(t, "check_conflict_has_steward", graphWithConflict(bad, nil))
@@ -55,12 +61,14 @@ func TestCheckConflictHasSteward_FiresOnEmpty(t *testing.T) {
 }
 
 func TestCheckConflictHasAxisContextSteward_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_conflict_has_axis_context_steward", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckConflictHasAxisContextSteward_FiresOnMissingSteward(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Steward = ""
 	vs := runCheck(t, "check_conflict_has_axis_context_steward", graphWithConflict(bad, nil))
@@ -70,12 +78,14 @@ func TestCheckConflictHasAxisContextSteward_FiresOnMissingSteward(t *testing.T) 
 }
 
 func TestCheckConflictMinTwoMembers_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_conflict_min_two_members", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckConflictMinTwoMembers_FiresOnSingleMember(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Members = []string{"R-1"}
 	vs := runCheck(t, "check_conflict_min_two_members", graphWithConflict(bad, nil))
@@ -85,6 +95,7 @@ func TestCheckConflictMinTwoMembers_FiresOnSingleMember(t *testing.T) {
 }
 
 func TestCheckConstitutingNotInUnresolvedConflict_SilentForBusinessDomain(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Lifecycle = "DETECTED"
 	g := graphWithConflict(bad, nil)
@@ -94,6 +105,7 @@ func TestCheckConstitutingNotInUnresolvedConflict_SilentForBusinessDomain(t *tes
 }
 
 func TestCheckConstitutingNotInUnresolvedConflict_SilentWhenResolved(t *testing.T) {
+	t.Parallel()
 	decided := baseConflict()
 	decided.Lifecycle = "DECIDED(steward chose R-1)"
 	decided.DecidedBy = "outsider"
@@ -107,6 +119,7 @@ func TestCheckConstitutingNotInUnresolvedConflict_SilentWhenResolved(t *testing.
 }
 
 func TestCheckConstitutingNotInUnresolvedConflict_FiresOnSelfHostDetected(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Lifecycle = "DETECTED"
 	g := graphWithConflict(bad, []ontology.Requirement{
@@ -123,12 +136,14 @@ func TestCheckConstitutingNotInUnresolvedConflict_FiresOnSelfHostDetected(t *tes
 }
 
 func TestCheckAxisInRegistry_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_axis_in_registry", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckAxisInRegistry_FiresOnUnknownAxis(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Axis = "totally-made-up-axis"
 	bad.ID = ontology.ConflictIdentity("totally-made-up-axis", "some shared scenario")
@@ -139,6 +154,7 @@ func TestCheckAxisInRegistry_FiresOnUnknownAxis(t *testing.T) {
 }
 
 func TestCheckAxisInRegistry_FiresOnEmptyVocabulary(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sOut, sA, sB},
 		Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
@@ -151,12 +167,14 @@ func TestCheckAxisInRegistry_FiresOnEmptyVocabulary(t *testing.T) {
 }
 
 func TestCheckConflictIDMatchesIdentity_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_conflict_id_matches_identity", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckConflictIDMatchesIdentity_FiresOnMismatch(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.ID = "C-deadbeef"
 	vs := runCheck(t, "check_conflict_id_matches_identity", graphWithConflict(bad, nil))
@@ -166,12 +184,14 @@ func TestCheckConflictIDMatchesIdentity_FiresOnMismatch(t *testing.T) {
 }
 
 func TestCheckStewardNotAMemberOwner_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_steward_not_a_member_owner", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckStewardNotAMemberOwner_FiresWhenStewardOwnsMember(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Steward = "sa"
 	vs := runCheck(t, "check_steward_not_a_member_owner", graphWithConflict(bad, nil))
@@ -181,6 +201,7 @@ func TestCheckStewardNotAMemberOwner_FiresWhenStewardOwnsMember(t *testing.T) {
 }
 
 func TestCheckOpenHasQuestion_OK(t *testing.T) {
+	t.Parallel()
 	g := graphWithConflict(baseConflict(), []ontology.Requirement{
 		reqStatus("R-1", "sa", "OPEN(which scope?)"), req("R-2", "sb"),
 	})
@@ -190,6 +211,7 @@ func TestCheckOpenHasQuestion_OK(t *testing.T) {
 }
 
 func TestCheckOpenHasQuestion_FiresOnBareOpen(t *testing.T) {
+	t.Parallel()
 	g := graphWithConflict(baseConflict(), []ontology.Requirement{
 		reqStatus("R-1", "sa", "OPEN"), req("R-2", "sb"),
 	})
@@ -200,6 +222,7 @@ func TestCheckOpenHasQuestion_FiresOnBareOpen(t *testing.T) {
 }
 
 func TestCheckOpenHasQuestion_FiresOnEmptyParens(t *testing.T) {
+	t.Parallel()
 	g := graphWithConflict(baseConflict(), []ontology.Requirement{
 		reqStatus("R-1", "sa", "OPEN()"), req("R-2", "sb"),
 	})

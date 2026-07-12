@@ -7,6 +7,7 @@ import (
 )
 
 func TestCheckEnforcedNamesInvariant_OK(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "check_typed_anchors")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	if vs := runCheck(t, "check_enforced_names_invariant", g); len(vs) != 0 {
@@ -15,6 +16,7 @@ func TestCheckEnforcedNamesInvariant_OK(t *testing.T) {
 }
 
 func TestCheckEnforcedNamesInvariant_OKProseAndStructural(t *testing.T) {
+	t.Parallel()
 	r1 := req("R-1", "sa")
 	r1.Enforcement = ontology.EnforcementPROSE
 	r2 := req("R-2", "sb")
@@ -26,6 +28,7 @@ func TestCheckEnforcedNamesInvariant_OKProseAndStructural(t *testing.T) {
 }
 
 func TestCheckEnforcedNamesInvariant_FiresOnEnforcedWithEmptyEnforcedBy(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_enforced_names_invariant", g)
@@ -35,6 +38,7 @@ func TestCheckEnforcedNamesInvariant_FiresOnEnforcedWithEmptyEnforcedBy(t *testi
 }
 
 func TestCheckEnforcedNamesInvariant_FiresOnBogusEnforcementLevel(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.Enforcement = "BOGUS"
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -45,6 +49,7 @@ func TestCheckEnforcedNamesInvariant_FiresOnBogusEnforcementLevel(t *testing.T) 
 }
 
 func TestCheckEnforcedByResolvable_OKRegisteredCheck(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "check_typed_anchors")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	if vs := runCheck(t, "check_enforced_by_resolvable", g); len(vs) != 0 {
@@ -53,6 +58,7 @@ func TestCheckEnforcedByResolvable_OKRegisteredCheck(t *testing.T) {
 }
 
 func TestCheckEnforcedByResolvable_OKTestEntryIsNoop(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "test_foo")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	if vs := runCheck(t, "check_enforced_by_resolvable", g); len(vs) != 0 {
@@ -61,6 +67,7 @@ func TestCheckEnforcedByResolvable_OKTestEntryIsNoop(t *testing.T) {
 }
 
 func TestCheckEnforcedByResolvable_FiresOnUnregisteredCheck(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "check_does_not_exist")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_enforced_by_resolvable", g)
@@ -70,6 +77,7 @@ func TestCheckEnforcedByResolvable_FiresOnUnregisteredCheck(t *testing.T) {
 }
 
 func TestCheckEnforcedByResolvable_SkipsNonSettledOrNonEnforced(t *testing.T) {
+	t.Parallel()
 	r1 := reqStatus("R-1", "sa", ontology.StatusDRAFT)
 	r1.Enforcement = ontology.EnforcementENFORCED
 	r1.EnforcedBy = []string{"check_does_not_exist"}
@@ -83,6 +91,7 @@ func TestCheckEnforcedByResolvable_SkipsNonSettledOrNonEnforced(t *testing.T) {
 }
 
 func TestCheckEnforcedByTestHasTeeth_Noop(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "test_foo")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	if vs := runCheck(t, "check_enforced_by_test_has_teeth", g); len(vs) != 0 {
@@ -91,6 +100,7 @@ func TestCheckEnforcedByTestHasTeeth_Noop(t *testing.T) {
 }
 
 func TestCheckEnforceabilityKindKnown_OK(t *testing.T) {
+	t.Parallel()
 	r1 := req("R-1", "sa")
 	r1.Enforceability = ontology.EnforceabilityENFORCEABLE
 	r2 := req("R-2", "sb")
@@ -102,6 +112,7 @@ func TestCheckEnforceabilityKindKnown_OK(t *testing.T) {
 }
 
 func TestCheckEnforceabilityKindKnown_FiresOnBogusKind(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.Enforceability = "BOGUS"
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -112,6 +123,7 @@ func TestCheckEnforceabilityKindKnown_FiresOnBogusKind(t *testing.T) {
 }
 
 func TestCheckMTagValidFormat_OK(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.MTag = "M3"
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -121,6 +133,7 @@ func TestCheckMTagValidFormat_OK(t *testing.T) {
 }
 
 func TestCheckMTagValidFormat_OKEmptyMTag(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{req("R-1", "sa")}}
 	if vs := runCheck(t, "check_m_tag_valid_format", g); len(vs) != 0 {
 		t.Fatalf("empty m_tag must be skipped, got %v", vs)
@@ -128,6 +141,7 @@ func TestCheckMTagValidFormat_OKEmptyMTag(t *testing.T) {
 }
 
 func TestCheckMTagValidFormat_FiresOnBadFormats(t *testing.T) {
+	t.Parallel()
 	for _, bad := range []string{"M01", "m17", "M", "Mfoo", "M0", "3M"} {
 		r := req("R-1", "sa")
 		r.MTag = bad
@@ -139,6 +153,7 @@ func TestCheckMTagValidFormat_FiresOnBadFormats(t *testing.T) {
 }
 
 func TestCheckMTagUnique_OK(t *testing.T) {
+	t.Parallel()
 	r1 := req("R-1", "sa")
 	r1.MTag = "M3"
 	r2 := req("R-2", "sb")
@@ -150,6 +165,7 @@ func TestCheckMTagUnique_OK(t *testing.T) {
 }
 
 func TestCheckMTagUnique_FiresOnDuplicate(t *testing.T) {
+	t.Parallel()
 	r1 := req("R-1", "sa")
 	r1.MTag = "M3"
 	r2 := req("R-2", "sb")
@@ -162,6 +178,7 @@ func TestCheckMTagUnique_FiresOnDuplicate(t *testing.T) {
 }
 
 func TestCheckMTagOpenOnly_OK(t *testing.T) {
+	t.Parallel()
 	r := reqStatus("R-1", "sa", "OPEN(should we?)")
 	r.MTag = "M3"
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -171,6 +188,7 @@ func TestCheckMTagOpenOnly_OK(t *testing.T) {
 }
 
 func TestCheckMTagOpenOnly_FiresOnSettled(t *testing.T) {
+	t.Parallel()
 	r := req("R-1", "sa")
 	r.MTag = "M3"
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
@@ -181,6 +199,7 @@ func TestCheckMTagOpenOnly_FiresOnSettled(t *testing.T) {
 }
 
 func TestCheckMTagFormat_DelegatesAndFires(t *testing.T) {
+	t.Parallel()
 	r1 := req("R-1", "sa")
 	r1.MTag = "bad"
 	r2 := req("R-2", "sb")
@@ -193,6 +212,7 @@ func TestCheckMTagFormat_DelegatesAndFires(t *testing.T) {
 }
 
 func TestCheckMTagFormat_OK(t *testing.T) {
+	t.Parallel()
 	r := reqStatus("R-1", "sa", "OPEN(question)")
 	r.MTag = "M7"
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}

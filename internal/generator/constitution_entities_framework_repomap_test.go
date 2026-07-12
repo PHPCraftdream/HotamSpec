@@ -29,6 +29,7 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 }
 
 func TestBuildConstitution_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildConstitution(g)
 	want, err := os.ReadFile("testdata/CONSTITUTION.md")
@@ -39,6 +40,7 @@ func TestBuildConstitution_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildFrameworkInvariants_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildFrameworkInvariants(g, "hotam-spec-self")
 	want, err := os.ReadFile("testdata/FRAMEWORK-INVARIANTS.md")
@@ -49,6 +51,7 @@ func TestBuildFrameworkInvariants_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildRepoMap_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
 	want, err := os.ReadFile("testdata/REPO-MAP.md")
@@ -59,6 +62,7 @@ func TestBuildRepoMap_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildEntities_MatchesPythonOutput(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildEntities(g, "hotam-spec-self")
 	want, err := os.ReadFile("testdata/ENTITIES.md")
@@ -69,6 +73,7 @@ func TestBuildEntities_MatchesPythonOutput(t *testing.T) {
 }
 
 func TestBuildConstitutionFrameworkRepoMap_AgainstOriginalHotamSpecPath(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 
 	for _, c := range []struct {

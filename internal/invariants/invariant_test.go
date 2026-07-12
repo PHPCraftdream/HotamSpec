@@ -25,6 +25,7 @@ var batchANames = []string{
 }
 
 func TestBatchAInvariantsRegistered(t *testing.T) {
+	t.Parallel()
 	all := All.All()
 	if len(all) < len(batchANames) {
 		t.Fatalf("expected at least %d registered invariants, got %d", len(batchANames), len(all))
@@ -41,6 +42,7 @@ func TestBatchAInvariantsRegistered(t *testing.T) {
 }
 
 func TestRegisteredInvariantsHaveCanon(t *testing.T) {
+	t.Parallel()
 	for _, inv := range All.All() {
 		if inv.Canon == nil {
 			t.Errorf("invariant %q has nil Canon section", inv.Name)

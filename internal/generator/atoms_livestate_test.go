@@ -10,6 +10,7 @@ import (
 )
 
 func TestBuildAtomsOperator_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildAtomsOperator(g)
 	want, err := os.ReadFile("testdata/atoms-operator.md")
@@ -20,6 +21,7 @@ func TestBuildAtomsOperator_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildAtomsSubstrate_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildAtomsSubstrate(g)
 	want, err := os.ReadFile("testdata/atoms-substrate.md")
@@ -30,6 +32,7 @@ func TestBuildAtomsSubstrate_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildAtomsDiscipline_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildAtomsDiscipline(g)
 	want, err := os.ReadFile("testdata/atoms-discipline.md")
@@ -40,6 +43,7 @@ func TestBuildAtomsDiscipline_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildAtomsCheck_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildAtomsCheck(g)
 	want, err := os.ReadFile("testdata/atoms-check.md")
@@ -65,6 +69,7 @@ func extractLiveStateBlock(text string) string {
 }
 
 func TestBuildLiveState_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 
 	claudeMDPath := `D:\ai_dev\prat\HotamSpec\CLAUDE.md`
@@ -94,6 +99,7 @@ func TestBuildLiveState_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestByteIdentical_AtomsLiveState_AgainstOriginalHotamSpecPath(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 
 	for _, c := range []struct {

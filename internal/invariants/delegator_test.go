@@ -19,6 +19,7 @@ var expectedDelegatorNames = []string{
 }
 
 func TestDelegators_MarkedAndCount(t *testing.T) {
+	t.Parallel()
 	var marked []string
 	for _, inv := range All.All() {
 		if inv.IsDelegator {
@@ -40,6 +41,7 @@ func TestDelegators_MarkedAndCount(t *testing.T) {
 }
 
 func TestDelegators_StillResolvableByName(t *testing.T) {
+	t.Parallel()
 	for _, name := range expectedDelegatorNames {
 		inv, ok := All.Get(name)
 		if !ok {
@@ -56,6 +58,7 @@ func TestDelegators_StillResolvableByName(t *testing.T) {
 }
 
 func TestDelegators_AllViolationsExcludesDelegatorCheckNames(t *testing.T) {
+	t.Parallel()
 	badReq := ontology.Requirement{
 		ID:             "X-1",
 		Claim:          "claim X-1",

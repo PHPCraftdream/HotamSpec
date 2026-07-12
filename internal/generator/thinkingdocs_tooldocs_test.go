@@ -8,6 +8,7 @@ import (
 )
 
 func TestBuildThinkingDocsCountMatchesSections(t *testing.T) {
+	t.Parallel()
 	sections := methodology.Sections.All()
 	docs := BuildThinkingDocs()
 	if len(docs) != len(sections) {
@@ -16,6 +17,7 @@ func TestBuildThinkingDocsCountMatchesSections(t *testing.T) {
 }
 
 func TestBuildThinkingDocsSemanticCompleteness(t *testing.T) {
+	t.Parallel()
 	docs := BuildThinkingDocs()
 	for _, s := range methodology.Sections.All() {
 		key := topicSlug(s.Slug)
@@ -44,6 +46,7 @@ func TestBuildThinkingDocsSemanticCompleteness(t *testing.T) {
 }
 
 func TestBuildToolDocsCountMatchesTools(t *testing.T) {
+	t.Parallel()
 	tools := methodology.Tools.All()
 	docs := BuildToolDocs()
 	if len(docs) != len(tools) {
@@ -52,6 +55,7 @@ func TestBuildToolDocsCountMatchesTools(t *testing.T) {
 }
 
 func TestBuildToolDocsSemanticCompleteness(t *testing.T) {
+	t.Parallel()
 	docs := BuildToolDocs()
 	for _, tool := range methodology.Tools.All() {
 		doc, ok := docs[tool.Command]

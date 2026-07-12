@@ -7,12 +7,14 @@ import (
 )
 
 func TestCheckDecidedHasRationaleOrDerived_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_decided_has_rationale_or_derived", graphWithConflict(decidedConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckDecidedHasRationaleOrDerived_OKWithDerived(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.Lifecycle = "DECIDED()"
 	bad.Derived = []string{"R-3"}
@@ -25,6 +27,7 @@ func TestCheckDecidedHasRationaleOrDerived_OKWithDerived(t *testing.T) {
 }
 
 func TestCheckDecidedHasRationaleOrDerived_FiresOnBareDecided(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.Lifecycle = "DECIDED"
 	vs := runCheck(t, "check_decided_has_rationale_or_derived", graphWithConflict(bad, nil))
@@ -34,6 +37,7 @@ func TestCheckDecidedHasRationaleOrDerived_FiresOnBareDecided(t *testing.T) {
 }
 
 func TestCheckDecidedHasRationaleOrDerived_FiresOnEmptyParens(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.Lifecycle = "DECIDED()"
 	vs := runCheck(t, "check_decided_has_rationale_or_derived", graphWithConflict(bad, nil))
@@ -43,18 +47,21 @@ func TestCheckDecidedHasRationaleOrDerived_FiresOnEmptyParens(t *testing.T) {
 }
 
 func TestCheckDecidedHasRationaleOrDerived_SilentOnAcknowledged(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_decided_has_rationale_or_derived", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("ACKNOWLEDGED conflict must not be checked, got %v", vs)
 	}
 }
 
 func TestCheckDecidedHasNonemptyDecidedBy_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_decided_has_nonempty_decided_by", graphWithConflict(decidedConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckDecidedHasNonemptyDecidedBy_FiresOnEmpty(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.DecidedBy = ""
 	vs := runCheck(t, "check_decided_has_nonempty_decided_by", graphWithConflict(bad, nil))
@@ -64,12 +71,14 @@ func TestCheckDecidedHasNonemptyDecidedBy_FiresOnEmpty(t *testing.T) {
 }
 
 func TestCheckDecidedByIsKnownStakeholder_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_decided_by_is_known_stakeholder", graphWithConflict(decidedConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckDecidedByIsKnownStakeholder_FiresOnUnknown(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.DecidedBy = "ghost"
 	vs := runCheck(t, "check_decided_by_is_known_stakeholder", graphWithConflict(bad, nil))
@@ -79,12 +88,14 @@ func TestCheckDecidedByIsKnownStakeholder_FiresOnUnknown(t *testing.T) {
 }
 
 func TestCheckDecidedByNotMemberOwner_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_decided_by_not_member_owner", graphWithConflict(decidedConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckDecidedByNotMemberOwner_FiresWhenDeciderOwnsMember(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.DecidedBy = "sa"
 	vs := runCheck(t, "check_decided_by_not_member_owner", graphWithConflict(bad, nil))
@@ -94,12 +105,14 @@ func TestCheckDecidedByNotMemberOwner_FiresWhenDeciderOwnsMember(t *testing.T) {
 }
 
 func TestCheckHeldHasMinTwoVariants_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_held_has_min_two_variants", graphWithConflict(heldConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckHeldHasMinTwoVariants_FiresOnSingleVariant(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.Variants = []ontology.Variant{variant("V-only", "only option")}
 	vs := runCheck(t, "check_held_has_min_two_variants", graphWithConflict(bad, nil))
@@ -109,6 +122,7 @@ func TestCheckHeldHasMinTwoVariants_FiresOnSingleVariant(t *testing.T) {
 }
 
 func TestCheckHeldHasMinTwoVariants_FiresOnDuplicateVariantIDs(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.Variants = []ontology.Variant{
 		variant("V-dup", "first"),
@@ -121,18 +135,21 @@ func TestCheckHeldHasMinTwoVariants_FiresOnDuplicateVariantIDs(t *testing.T) {
 }
 
 func TestCheckHeldHasMinTwoVariants_SilentOnDecided(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_held_has_min_two_variants", graphWithConflict(decidedConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("DECIDED conflict must not be checked, got %v", vs)
 	}
 }
 
 func TestCheckHeldHasNonemptyDecidedBy_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_held_has_nonempty_decided_by", graphWithConflict(heldConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckHeldHasNonemptyDecidedBy_FiresOnEmpty(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.DecidedBy = ""
 	vs := runCheck(t, "check_held_has_nonempty_decided_by", graphWithConflict(bad, nil))
@@ -142,12 +159,14 @@ func TestCheckHeldHasNonemptyDecidedBy_FiresOnEmpty(t *testing.T) {
 }
 
 func TestCheckHeldByIsKnownStakeholder_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_held_by_is_known_stakeholder", graphWithConflict(heldConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckHeldByIsKnownStakeholder_FiresOnUnknown(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.DecidedBy = "ghost"
 	vs := runCheck(t, "check_held_by_is_known_stakeholder", graphWithConflict(bad, nil))
@@ -157,12 +176,14 @@ func TestCheckHeldByIsKnownStakeholder_FiresOnUnknown(t *testing.T) {
 }
 
 func TestCheckHeldByNotMemberOwner_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_held_by_not_member_owner", graphWithConflict(heldConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckHeldByNotMemberOwner_FiresWhenHolderOwnsMember(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.DecidedBy = "sa"
 	vs := runCheck(t, "check_held_by_not_member_owner", graphWithConflict(bad, nil))
@@ -172,12 +193,14 @@ func TestCheckHeldByNotMemberOwner_FiresWhenHolderOwnsMember(t *testing.T) {
 }
 
 func TestCheckHeldHasDecidedBy_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_held_has_decided_by", graphWithConflict(heldConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckHeldHasDecidedBy_FiresOnEmptyDecidedBy(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.DecidedBy = ""
 	vs := runCheck(t, "check_held_has_decided_by", graphWithConflict(bad, nil))
@@ -187,12 +210,14 @@ func TestCheckHeldHasDecidedBy_FiresOnEmptyDecidedBy(t *testing.T) {
 }
 
 func TestCheckDecidedHasDecidedBy_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_decided_has_decided_by", graphWithConflict(decidedConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckDecidedHasDecidedBy_FiresWhenDeciderOwnsMember(t *testing.T) {
+	t.Parallel()
 	bad := decidedConflict()
 	bad.DecidedBy = "sa"
 	vs := runCheck(t, "check_decided_has_decided_by", graphWithConflict(bad, nil))

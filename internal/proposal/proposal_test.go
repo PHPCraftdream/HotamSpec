@@ -8,6 +8,7 @@ import (
 )
 
 func TestApply_Requirement_Add(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedRequirement{
 		ID:     "R-new",
@@ -33,12 +34,14 @@ func TestApply_Requirement_Add(t *testing.T) {
 }
 
 func TestApply_Requirement_AddEmptyClaimFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedRequirement{ID: "R-new", Claim: "  ", Owner: "sa", Status: ontology.StatusDRAFT}
 	assertApplyFails(t, path, p, "'claim'")
 }
 
 func TestApply_Requirement_UpdateAppendsHistory(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedRequirement{
 		ID:     "R-1",
@@ -72,6 +75,7 @@ func TestApply_Requirement_UpdateAppendsHistory(t *testing.T) {
 }
 
 func TestApply_ConflictTransition_Decided(t *testing.T) {
+	t.Parallel()
 	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflictTransition{
@@ -102,6 +106,7 @@ func TestApply_ConflictTransition_Decided(t *testing.T) {
 }
 
 func TestApply_ConflictTransition_DecidedWithoutDecidedByFails(t *testing.T) {
+	t.Parallel()
 	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflictTransition{
@@ -112,6 +117,7 @@ func TestApply_ConflictTransition_DecidedWithoutDecidedByFails(t *testing.T) {
 }
 
 func TestApply_ConflictTransition_HeldRequiresVariants(t *testing.T) {
+	t.Parallel()
 	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflictTransition{
@@ -123,6 +129,7 @@ func TestApply_ConflictTransition_HeldRequiresVariants(t *testing.T) {
 }
 
 func TestApply_Rejection(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedRejection{
 		RequirementID: "R-1",
@@ -156,12 +163,14 @@ func TestApply_Rejection(t *testing.T) {
 }
 
 func TestApply_RejectionEmptyReasonFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedRejection{RequirementID: "R-1", Reason: ""}
 	assertApplyFails(t, path, p, "'reason'")
 }
 
 func TestApply_Conflict_Create(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflict{
 		Axis:     "cost-vs-flexibility",
@@ -187,6 +196,7 @@ func TestApply_Conflict_Create(t *testing.T) {
 }
 
 func TestApply_Conflict_StewardOwnsMemberFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflict{
 		Axis:    "cost-vs-flexibility",
@@ -230,6 +240,7 @@ func TestApply_OperatorBudget(t *testing.T) {
 }
 
 func TestApply_OperatorBudget_NegativeLimitFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, graphWithOperator())
 	p := ProposedOperatorBudget{
 		OperatorID: "OP-1",
@@ -240,6 +251,7 @@ func TestApply_OperatorBudget_NegativeLimitFails(t *testing.T) {
 }
 
 func TestApply_Axis(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAxis{
 		Slug:        "speed-vs-quality",
@@ -262,6 +274,7 @@ func TestApply_Axis(t *testing.T) {
 }
 
 func TestApply_Axis_DuplicateSlugFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAxis{
 		Slug:        "cost-vs-flexibility",
@@ -271,6 +284,7 @@ func TestApply_Axis_DuplicateSlugFails(t *testing.T) {
 }
 
 func TestApply_Stakeholder(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedStakeholder{
 		ID:     "newparty",
@@ -294,6 +308,7 @@ func TestApply_Stakeholder(t *testing.T) {
 }
 
 func TestApply_Stakeholder_DuplicateIDFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedStakeholder{
 		ID:     "outsider",
@@ -304,6 +319,7 @@ func TestApply_Stakeholder_DuplicateIDFails(t *testing.T) {
 }
 
 func TestApply_Assumption_Create(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAssumption{
 		ID:        "A-new",
@@ -331,6 +347,7 @@ func TestApply_Assumption_Create(t *testing.T) {
 }
 
 func TestApply_Assumption_DuplicateIDFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAssumption{
 		ID:        "A-base",
@@ -342,6 +359,7 @@ func TestApply_Assumption_DuplicateIDFails(t *testing.T) {
 }
 
 func TestApply_AssumptionTransition_Dead(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAssumptionTransition{
 		AssumptionID: "A-base",
@@ -374,6 +392,7 @@ func TestApply_AssumptionTransition_Dead(t *testing.T) {
 }
 
 func TestApply_AssumptionTransition_DeadWithoutDecidedByFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAssumptionTransition{
 		AssumptionID: "A-base",
@@ -384,6 +403,7 @@ func TestApply_AssumptionTransition_DeadWithoutDecidedByFails(t *testing.T) {
 }
 
 func TestApply_ConflictMemberUpdate_Add(t *testing.T) {
+	t.Parallel()
 	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflictMemberUpdate{
@@ -404,6 +424,7 @@ func TestApply_ConflictMemberUpdate_Add(t *testing.T) {
 }
 
 func TestApply_ConflictMemberUpdate_DropsBelowTwoFails(t *testing.T) {
+	t.Parallel()
 	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflictMemberUpdate{
@@ -414,6 +435,7 @@ func TestApply_ConflictMemberUpdate_DropsBelowTwoFails(t *testing.T) {
 }
 
 func TestApply_EntityType(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedEntityType{
 		Slug:        "feature-flag",
@@ -451,6 +473,7 @@ func TestApply_EntityType(t *testing.T) {
 }
 
 func TestApply_EntityType_NoInitialStateFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedEntityType{
 		Slug:        "bad-entity",
@@ -465,6 +488,7 @@ func TestApply_EntityType_NoInitialStateFails(t *testing.T) {
 }
 
 func TestApply_Requirement_AddInvariantGuardFails(t *testing.T) {
+	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedRequirement{
 		ID:     "not-r-prefixed",

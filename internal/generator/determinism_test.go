@@ -3,6 +3,7 @@ package generator
 import "testing"
 
 func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	pairs := []struct {
 		name string
@@ -33,6 +34,7 @@ func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
 }
 
 func TestGenerator_GraphJSONDoubleRegenerateIsIdentical(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	a, err := BuildGraphJSON(g)
 	if err != nil {

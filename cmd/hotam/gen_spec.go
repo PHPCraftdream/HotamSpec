@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpecGo/internal/generator"
@@ -125,13 +126,24 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 		mdDocs = append(mdDocs, docEntry{"ENTITIES.md", entitiesMD})
 	}
 
-	for _, d := range mdDocs {
-		p := filepath.Join(genDir, d.filename)
-		if err := writeFileMkdir(p, []byte(d.content)); err != nil {
-			return written, err
-		}
-		written = append(written, p)
+	// mdDocs's content was already fully rendered above (each entry a pure
+	// function of the graph); only the disk write is left, and every write
+	// targets a distinct path, so the group fans out over writeFilesParallel
+	// (same indexed-slice shape as invariants.AllViolations) instead of the
+	// former sequential loop. written must stay in mdDocs' declared order
+	// for the console listing (R-doc-names-reader-adjacent tooling greps
+	// this output), so it is rebuilt from mdDocs AFTER all writes finish —
+	// never appended to from inside a goroutine.
+	mdPaths := make([]string, len(mdDocs))
+	mdContents := make([][]byte, len(mdDocs))
+	for i, d := range mdDocs {
+		mdPaths[i] = filepath.Join(genDir, d.filename)
+		mdContents[i] = []byte(d.content)
 	}
+	if err := writeFilesParallel(mdPaths, mdContents); err != nil {
+		return written, err
+	}
+	written = append(written, mdPaths...)
 
 	graphJSON, err := generator.BuildGraphJSON(g)
 	if err != nil {
@@ -143,20 +155,46 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 	}
 	written = append(written, gp)
 
-	for key, content := range generator.BuildThinkingDocs() {
-		p := filepath.Join(genDir, "thinking", key+".md")
-		if err := writeFileMkdir(p, []byte(content)); err != nil {
-			return written, err
-		}
-		written = append(written, p)
+	// thinking/*.md and tools/*.md: BuildThinkingDocs/BuildToolDocs return
+	// maps (Go randomizes map iteration order per run), so the filenames are
+	// sorted before writing/appending — this makes `written`'s order for
+	// these two groups deterministic run-to-run, which the sequential
+	// version never actually guaranteed either. File contents (and thus
+	// byte-identity against git) are unaffected either way: only console
+	// listing order is at stake here, not what lands on disk.
+	thinkingDocs := generator.BuildThinkingDocs()
+	thinkingKeys := make([]string, 0, len(thinkingDocs))
+	for key := range thinkingDocs {
+		thinkingKeys = append(thinkingKeys, key)
 	}
-	for cmd, content := range generator.BuildToolDocs() {
-		p := filepath.Join(genDir, "tools", cmd+".md")
-		if err := writeFileMkdir(p, []byte(content)); err != nil {
-			return written, err
-		}
-		written = append(written, p)
+	sort.Strings(thinkingKeys)
+	thinkingPaths := make([]string, len(thinkingKeys))
+	thinkingContents := make([][]byte, len(thinkingKeys))
+	for i, key := range thinkingKeys {
+		thinkingPaths[i] = filepath.Join(genDir, "thinking", key+".md")
+		thinkingContents[i] = []byte(thinkingDocs[key])
 	}
+	if err := writeFilesParallel(thinkingPaths, thinkingContents); err != nil {
+		return written, err
+	}
+	written = append(written, thinkingPaths...)
+
+	toolDocs := generator.BuildToolDocs()
+	toolKeys := make([]string, 0, len(toolDocs))
+	for cmd := range toolDocs {
+		toolKeys = append(toolKeys, cmd)
+	}
+	sort.Strings(toolKeys)
+	toolPaths := make([]string, len(toolKeys))
+	toolContents := make([][]byte, len(toolKeys))
+	for i, cmd := range toolKeys {
+		toolPaths[i] = filepath.Join(genDir, "tools", cmd+".md")
+		toolContents[i] = []byte(toolDocs[cmd])
+	}
+	if err := writeFilesParallel(toolPaths, toolContents); err != nil {
+		return written, err
+	}
+	written = append(written, toolPaths...)
 
 	// Root CLAUDE.md (R-claude-md-template-driven): only rendered when
 	// --claude-md points at a path, mirroring the Python reference's
@@ -173,24 +211,24 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 		}
 		domainGraphs := map[string]*ontology.Graph{domainName: g}
 		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs)
-		if err := writeFileMkdir(claudeMDPath, []byte(claudeMD)); err != nil {
+		claudeMDBytes := []byte(claudeMD)
+
+		// CLAUDE.md, AGENTS.md and GEMINI.md all receive the identical
+		// rendered crystal (same render, same byte slice) at three distinct
+		// paths, so the three writes fan out together instead of
+		// sequentially; written keeps CLAUDE.md first, then AGENTS.md,
+		// GEMINI.md, matching the prior sequential order exactly.
+		claudeMDDir := filepath.Dir(claudeMDPath)
+		crystalPaths := []string{
+			claudeMDPath,
+			filepath.Join(claudeMDDir, "AGENTS.md"),
+			filepath.Join(claudeMDDir, "GEMINI.md"),
+		}
+		crystalContents := [][]byte{claudeMDBytes, claudeMDBytes, claudeMDBytes}
+		if err := writeFilesParallel(crystalPaths, crystalContents); err != nil {
 			return written, err
 		}
-		written = append(written, claudeMDPath)
-
-		// Mirror the identical rendered crystal into AGENTS.md and GEMINI.md
-		// alongside CLAUDE.md so Codex (AGENTS.md convention) and Gemini CLI
-		// pick up the exact same operating instructions as Claude Code — same
-		// render, same byte slice, written in the same pass, so the three
-		// files can never drift apart.
-		claudeMDDir := filepath.Dir(claudeMDPath)
-		for _, name := range []string{"AGENTS.md", "GEMINI.md"} {
-			p := filepath.Join(claudeMDDir, name)
-			if err := writeFileMkdir(p, []byte(claudeMD)); err != nil {
-				return written, err
-			}
-			written = append(written, p)
-		}
+		written = append(written, crystalPaths...)
 	}
 
 	return written, nil

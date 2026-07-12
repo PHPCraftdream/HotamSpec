@@ -10,6 +10,7 @@ import (
 )
 
 func TestSelectTier1_CheckNameResolves(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-test-check", EnforcedBy: []string{"check_axis_in_registry"}},
@@ -41,6 +42,7 @@ func TestSelectTier1_CheckNameResolves(t *testing.T) {
 }
 
 func TestSelectTier1_TestFuncNameResolves(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-test-func", EnforcedBy: []string{"TestCheckAxisInRegistry_OK"}},
@@ -59,6 +61,7 @@ func TestSelectTier1_TestFuncNameResolves(t *testing.T) {
 }
 
 func TestSelectTier1_MultipleChecksUnion(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-multi", EnforcedBy: []string{"check_axis_in_registry", "check_conflict_has_axis"}},
@@ -88,6 +91,7 @@ func TestSelectTier1_MultipleChecksUnion(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_TargetNotFound(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{}
 	result := SelectTier1("R-nonexistent", g)
 	if result.Confident {
@@ -102,6 +106,7 @@ func TestSelectTier1_FailClosed_TargetNotFound(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_EmptyEnforcedBy(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-empty-eb"},
@@ -117,6 +122,7 @@ func TestSelectTier1_FailClosed_EmptyEnforcedBy(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_PythonTestPathUnresolved(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-py-path", EnforcedBy: []string{"test_apply_proposal.py"}},
@@ -132,6 +138,7 @@ func TestSelectTier1_FailClosed_PythonTestPathUnresolved(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_BareTestFuncUnresolved(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-bare-test", EnforcedBy: []string{"test_smoke"}},
@@ -144,6 +151,7 @@ func TestSelectTier1_FailClosed_BareTestFuncUnresolved(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_PartiallyUnresolved(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-partial", EnforcedBy: []string{"check_axis_in_registry", "CRITICAL_CORE_INVARIANTS"}},
@@ -159,6 +167,7 @@ func TestSelectTier1_FailClosed_PartiallyUnresolved(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_CheckWithNoTestCoverage(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-no-coverage", EnforcedBy: []string{"check_nonexistent_fake_check"}},
@@ -171,6 +180,7 @@ func TestSelectTier1_FailClosed_CheckWithNoTestCoverage(t *testing.T) {
 }
 
 func TestSelectTier1_FailClosed_ConflictTarget(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{
 			{ID: "C-test-conflict"},
@@ -186,6 +196,7 @@ func TestSelectTier1_FailClosed_ConflictTarget(t *testing.T) {
 }
 
 func TestBuildCheckToTestsMap_NonEmptyAndSorted(t *testing.T) {
+	t.Parallel()
 	m, err := BuildCheckToTestsMap(defaultInvariantsDir())
 	if err != nil {
 		t.Fatalf("BuildCheckToTestsMap: %v", err)
@@ -212,6 +223,7 @@ func TestBuildCheckToTestsMap_NonEmptyAndSorted(t *testing.T) {
 }
 
 func TestBuildCheckToTestsMap_Deterministic(t *testing.T) {
+	t.Parallel()
 	first, err := BuildCheckToTestsMap(defaultInvariantsDir())
 	if err != nil {
 		t.Fatalf("first BuildCheckToTestsMap: %v", err)
@@ -235,6 +247,7 @@ func TestBuildCheckToTestsMap_Deterministic(t *testing.T) {
 }
 
 func TestSelectTier1_RealGraph_AxisControlledVocab(t *testing.T) {
+	t.Parallel()
 	g, err := loader.LoadGraph("../../domains/hotam-spec-self/graph.json")
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -258,6 +271,7 @@ func TestSelectTier1_RealGraph_AxisControlledVocab(t *testing.T) {
 }
 
 func TestSelectTier1_RealGraph_PythonEnforcedByFailsClosed(t *testing.T) {
+	t.Parallel()
 	g, err := loader.LoadGraph("../../domains/hotam-spec-self/graph.json")
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)

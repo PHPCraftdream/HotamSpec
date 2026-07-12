@@ -3,6 +3,7 @@ package registry
 import "testing"
 
 func TestMustRegisterDuplicatePanics(t *testing.T) {
+	t.Parallel()
 	r := New[string]()
 	r.MustRegister("a", "first")
 	defer func() {
@@ -14,6 +15,7 @@ func TestMustRegisterDuplicatePanics(t *testing.T) {
 }
 
 func TestRegistryGetAndAll(t *testing.T) {
+	t.Parallel()
 	r := New[int]()
 	r.MustRegister("x", 1)
 	r.MustRegister("y", 2)

@@ -8,12 +8,14 @@ import (
 )
 
 func TestAllViolations_EmptyGraphNoViolations(t *testing.T) {
+	t.Parallel()
 	if vs := AllViolations(&ontology.Graph{}); len(vs) != 0 {
 		t.Fatalf("expected no violations on empty graph, got %v", vs)
 	}
 }
 
 func TestAllViolations_WellFormedGraphNoViolations(t *testing.T) {
+	t.Parallel()
 	g := graphWithConflict(baseConflict(), nil)
 	if vs := AllViolations(g); len(vs) != 0 {
 		t.Fatalf("expected no violations on well-formed graph, got %v", vs)
@@ -21,6 +23,7 @@ func TestAllViolations_WellFormedGraphNoViolations(t *testing.T) {
 }
 
 func TestAllViolations_DeterministicOrder(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Members = []string{"R-1"}
 	bad.Steward = "sa"

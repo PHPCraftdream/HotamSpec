@@ -7,6 +7,7 @@ import (
 )
 
 func TestCheckScopedNodeHasSinglePresenter_TwoOverlappingOpsResolvePresenter(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA, sB},
 		Requirements: []ontology.Requirement{req("R-1", "sa")},
@@ -21,6 +22,7 @@ func TestCheckScopedNodeHasSinglePresenter_TwoOverlappingOpsResolvePresenter(t *
 }
 
 func TestCheckScopedNodeHasSinglePresenter_AlwaysGreenWhenFewerThanTwoScopedOps(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Operators: []ontology.Operator{
 			{ID: "OP-1", Stakeholder: "sa", Lifecycle: "ACTIVE", Scope: []string{"R-"}},
@@ -32,6 +34,7 @@ func TestCheckScopedNodeHasSinglePresenter_AlwaysGreenWhenFewerThanTwoScopedOps(
 }
 
 func TestCheckProcessLifecycleWellformed_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Processes: []ontology.Process{process("PR-1")}}
 	if vs := runCheck(t, "check_process_lifecycle_wellformed", g); len(vs) != 0 {
 		t.Fatalf("expected no violations for a well-formed Process lifecycle, got %v", vs)
@@ -39,6 +42,7 @@ func TestCheckProcessLifecycleWellformed_OK(t *testing.T) {
 }
 
 func TestCheckProcessLifecycleWellformed_FiresOnMalformedLifecycle(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.Lifecycle = ontology.Lifecycle{Slug: "bad"}
 	g := &ontology.Graph{Processes: []ontology.Process{p}}
@@ -49,6 +53,7 @@ func TestCheckProcessLifecycleWellformed_FiresOnMalformedLifecycle(t *testing.T)
 }
 
 func TestCheckProcessDrivesExistingEntities_OK(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.DrivesEntities = []string{"thing"}
 	g := &ontology.Graph{
@@ -61,6 +66,7 @@ func TestCheckProcessDrivesExistingEntities_OK(t *testing.T) {
 }
 
 func TestCheckProcessDrivesExistingEntities_FiresOnUndeclaredSlug(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.DrivesEntities = []string{"ghost"}
 	g := &ontology.Graph{Processes: []ontology.Process{p}}
@@ -71,6 +77,7 @@ func TestCheckProcessDrivesExistingEntities_FiresOnUndeclaredSlug(t *testing.T) 
 }
 
 func TestCheckStepInvokesKnownTransition_OK(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.Steps = []ontology.Step{step("do", "", "thing.activate")}
 	g := &ontology.Graph{
@@ -83,6 +90,7 @@ func TestCheckStepInvokesKnownTransition_OK(t *testing.T) {
 }
 
 func TestCheckStepInvokesKnownTransition_FiresOnMissingDot(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.Steps = []ontology.Step{step("do", "", "noformat")}
 	g := &ontology.Graph{Processes: []ontology.Process{p}}
@@ -93,6 +101,7 @@ func TestCheckStepInvokesKnownTransition_FiresOnMissingDot(t *testing.T) {
 }
 
 func TestCheckStepInvokesKnownTransition_FiresOnUnknownEntity(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.Steps = []ontology.Step{step("do", "", "ghost.activate")}
 	g := &ontology.Graph{Processes: []ontology.Process{p}}
@@ -103,6 +112,7 @@ func TestCheckStepInvokesKnownTransition_FiresOnUnknownEntity(t *testing.T) {
 }
 
 func TestCheckStepInvokesKnownTransition_FiresOnUnknownEvent(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.Steps = []ontology.Step{step("do", "", "thing.bogus")}
 	g := &ontology.Graph{
@@ -116,6 +126,7 @@ func TestCheckStepInvokesKnownTransition_FiresOnUnknownEvent(t *testing.T) {
 }
 
 func TestCheckProcessRolesDeclared_OK(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.RolesRequired = []string{"editor"}
 	p.Steps = []ontology.Step{step("do", "editor", "")}
@@ -126,6 +137,7 @@ func TestCheckProcessRolesDeclared_OK(t *testing.T) {
 }
 
 func TestCheckProcessRolesDeclared_FiresOnUndeclaredRole(t *testing.T) {
+	t.Parallel()
 	p := process("PR-1")
 	p.RolesRequired = []string{"editor"}
 	p.Steps = []ontology.Step{step("do", "ghost", "")}
@@ -137,6 +149,7 @@ func TestCheckProcessRolesDeclared_FiresOnUndeclaredRole(t *testing.T) {
 }
 
 func TestCheckGoalTargetKindKnown_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Goals: []ontology.Goal{
 			{ID: "GOAL-1", Owner: "OP-1", TargetState: ontology.TargetState{Kind: ontology.TargetKindGraphProperty}, Lifecycle: "ACTIVE"},
@@ -150,6 +163,7 @@ func TestCheckGoalTargetKindKnown_OK(t *testing.T) {
 }
 
 func TestCheckGoalTargetKindKnown_FiresOnBogusKind(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Goals: []ontology.Goal{
 			{ID: "GOAL-1", Owner: "OP-1", TargetState: ontology.TargetState{Kind: "BOGUS"}, Lifecycle: "ACTIVE"},
@@ -162,6 +176,7 @@ func TestCheckGoalTargetKindKnown_FiresOnBogusKind(t *testing.T) {
 }
 
 func TestCheckGoalOwnerIsOperator_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Operators:    []ontology.Operator{op("OP-1", "sa", "ACTIVE")},
@@ -173,6 +188,7 @@ func TestCheckGoalOwnerIsOperator_OK(t *testing.T) {
 }
 
 func TestCheckGoalOwnerIsOperator_FiresOnDanglingOwner(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Goals: []ontology.Goal{goal("GOAL-1", "OP-ghost", "ACTIVE")},
 	}

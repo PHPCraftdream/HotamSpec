@@ -8,12 +8,14 @@ import (
 )
 
 func TestRelationKinds_ExcludesConflictsWith(t *testing.T) {
+	t.Parallel()
 	if _, present := ontology.RelationKinds["conflicts_with"]; present {
 		t.Fatalf("conflicts_with must NOT be a RelationKind — a contradiction is a first-class Conflict NODE, never a bare edge between requirements")
 	}
 }
 
 func TestCheckEntityInstanceIdPrefix_FiresOnMissingTypeSegment(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("ENT-acme", "thing", "ACTIVE")},
 	}
@@ -24,6 +26,7 @@ func TestCheckEntityInstanceIdPrefix_FiresOnMissingTypeSegment(t *testing.T) {
 }
 
 func TestCheckEntityFieldKindKnown_AllValidKindsPass(t *testing.T) {
+	t.Parallel()
 	for kind := range ontology.EntityFieldKinds {
 		et := entityType("thing")
 		et.Fields = []ontology.EntityField{{Name: "f", Kind: kind}}
@@ -35,6 +38,7 @@ func TestCheckEntityFieldKindKnown_AllValidKindsPass(t *testing.T) {
 }
 
 func TestCheckEntityInstanceIdPrefix_MessageNamesExpectedPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Entities: []ontology.EntityInstance{entityInstance("X-1", "thing", "ACTIVE")},
 	}

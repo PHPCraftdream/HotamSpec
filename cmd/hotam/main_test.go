@@ -38,6 +38,7 @@ func copyFile(t *testing.T, src, dst string) {
 }
 
 func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
+	t.Parallel()
 	domainDir := copySelfDomain(t)
 
 	written, err := genSpec(domainDir, "")
@@ -109,6 +110,7 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 }
 
 func TestWhatNow_SmokeNoPanic(t *testing.T) {
+	t.Parallel()
 	domainDir := copySelfDomain(t)
 	out, err := whatNow(domainDir, 20)
 	if err != nil {
@@ -120,6 +122,7 @@ func TestWhatNow_SmokeNoPanic(t *testing.T) {
 }
 
 func TestAllViolations_SmokeNoPanic(t *testing.T) {
+	t.Parallel()
 	domainDir := copySelfDomain(t)
 	violations, err := allViolations(domainDir)
 	if err != nil {
@@ -131,6 +134,7 @@ func TestAllViolations_SmokeNoPanic(t *testing.T) {
 }
 
 func TestParseProposal_Requirement(t *testing.T) {
+	t.Parallel()
 	json := `{"kind":"Requirement","ID":"R-smoke","Claim":"smoke claim","Owner":"sa","Status":"DRAFT"}`
 	p, err := parseProposal([]byte(json))
 	if err != nil {
@@ -145,6 +149,7 @@ func TestParseProposal_Requirement(t *testing.T) {
 }
 
 func TestParseProposal_UnknownKind(t *testing.T) {
+	t.Parallel()
 	json := `{"kind":"Bogus"}`
 	_, err := parseProposal([]byte(json))
 	if err == nil {
@@ -153,6 +158,7 @@ func TestParseProposal_UnknownKind(t *testing.T) {
 }
 
 func TestReorderFlagsFirst_ProposalBeforeFlags(t *testing.T) {
+	t.Parallel()
 	args := []string{"proposal.json", "--domain", "/tmp/x", "--today", "2026-07-12"}
 	got := reorderFlagsFirst(args)
 	want := []string{"--domain", "/tmp/x", "--today", "2026-07-12", "proposal.json"}
@@ -167,6 +173,7 @@ func TestReorderFlagsFirst_ProposalBeforeFlags(t *testing.T) {
 }
 
 func TestReorderFlagsFirst_EqualsForm(t *testing.T) {
+	t.Parallel()
 	args := []string{"proposal.json", "--domain=/tmp/x"}
 	got := reorderFlagsFirst(args)
 	if len(got) != 2 || got[0] != "--domain=/tmp/x" || got[1] != "proposal.json" {
@@ -175,6 +182,7 @@ func TestReorderFlagsFirst_EqualsForm(t *testing.T) {
 }
 
 func TestApplyProposal_SmokeEndToEnd(t *testing.T) {
+	t.Parallel()
 	domainDir := copySelfDomain(t)
 	proposalJSON := `{"kind":"Requirement","ID":"R-smoke-test","Claim":"smoke claim","Owner":"framework-author","Status":"DRAFT","Why":"smoke"}`
 	p, err := parseProposal([]byte(proposalJSON))
@@ -208,6 +216,7 @@ func indexOf(haystack, needle string) int {
 }
 
 func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
+	t.Parallel()
 	domainDir := copySelfDomain(t)
 
 	content := "Hello, 世界!\nThis is a test string."

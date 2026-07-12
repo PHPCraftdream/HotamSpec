@@ -8,6 +8,7 @@ import (
 )
 
 func TestBuildOpen_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildOpen(g)
 	want, err := os.ReadFile("testdata/OPEN.md")
@@ -18,6 +19,7 @@ func TestBuildOpen_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildUnenforced_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildUnenforced(g)
 	want, err := os.ReadFile("testdata/UNENFORCED.md")
@@ -28,6 +30,7 @@ func TestBuildUnenforced_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildGlossary_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildGlossary(g)
 	want, err := os.ReadFile("testdata/GLOSSARY.md")
@@ -38,6 +41,7 @@ func TestBuildGlossary_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestByteIdentical_OpenUnenforcedGlossary_AgainstOriginalHotamSpecPath(t *testing.T) {
+	t.Parallel()
 	for _, c := range []struct {
 		name string
 		path string

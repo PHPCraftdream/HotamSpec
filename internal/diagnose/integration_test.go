@@ -9,6 +9,7 @@ import (
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 
 func TestDiagnoseSignals_RealGraphNoPanic(t *testing.T) {
+	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -27,6 +28,7 @@ func TestDiagnoseSignals_RealGraphNoPanic(t *testing.T) {
 }
 
 func TestTopAction_RealGraph(t *testing.T) {
+	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
@@ -39,6 +41,7 @@ func TestTopAction_RealGraph(t *testing.T) {
 }
 
 func TestAllFindings_RealGraphNoPanic(t *testing.T) {
+	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)

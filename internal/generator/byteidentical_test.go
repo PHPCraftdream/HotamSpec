@@ -78,6 +78,7 @@ func truncate(s string, n int) string {
 }
 
 func TestBuildRequirements_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildRequirements(g)
 	want, err := os.ReadFile("testdata/REQUIREMENTS.md")
@@ -88,6 +89,7 @@ func TestBuildRequirements_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildTensions_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildTensions(g)
 	want, err := os.ReadFile("testdata/TENSIONS.md")
@@ -98,6 +100,7 @@ func TestBuildTensions_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestByteIdentical_AgainstOriginalHotamSpecPath(t *testing.T) {
+	t.Parallel()
 	for _, c := range []struct {
 		name string
 		path string

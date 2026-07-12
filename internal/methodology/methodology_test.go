@@ -3,6 +3,7 @@ package methodology
 import "testing"
 
 func TestSectionsComplete(t *testing.T) {
+	t.Parallel()
 	sections := Sections.All()
 	const want = 29
 	if len(sections) != want {
@@ -30,6 +31,7 @@ func TestSectionsComplete(t *testing.T) {
 }
 
 func TestSectionsLookup(t *testing.T) {
+	t.Parallel()
 	c, ok := Sections.Get("§Conflict")
 	if !ok {
 		t.Fatal("expected §Conflict to be registered")
@@ -40,6 +42,7 @@ func TestSectionsLookup(t *testing.T) {
 }
 
 func TestNamedSectionVariables(t *testing.T) {
+	t.Parallel()
 	if Conflict.Slug != "§Conflict" {
 		t.Fatalf("Conflict.Slug = %q, want %q", Conflict.Slug, "§Conflict")
 	}
@@ -55,6 +58,7 @@ func TestNamedSectionVariables(t *testing.T) {
 }
 
 func TestToolsComplete(t *testing.T) {
+	t.Parallel()
 	tools := Tools.All()
 	const want = 34
 	if len(tools) != want {

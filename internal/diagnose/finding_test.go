@@ -39,6 +39,7 @@ func rejectedReq(id string) ontology.Requirement {
 }
 
 func TestReflectDraftOverhang_Fires(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			settledReq("R-1"), settledReq("R-2"), draftReq("R-3"), draftReq("R-4"),
@@ -57,6 +58,7 @@ func TestReflectDraftOverhang_Fires(t *testing.T) {
 }
 
 func TestReflectDraftOverhang_DoesNotFire(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			settledReq("R-1"), settledReq("R-2"), settledReq("R-3"),
@@ -69,6 +71,7 @@ func TestReflectDraftOverhang_DoesNotFire(t *testing.T) {
 }
 
 func TestReflectDraftOverhang_HalfBoundary(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			settledReq("R-1"), settledReq("R-2"), settledReq("R-3"), settledReq("R-4"), settledReq("R-5"),
@@ -82,6 +85,7 @@ func TestReflectDraftOverhang_HalfBoundary(t *testing.T) {
 }
 
 func TestReflectUnenforcedSettled_Fires(t *testing.T) {
+	t.Parallel()
 	reqs := make([]ontology.Requirement, 7)
 	for i := range reqs {
 		reqs[i] = settledReq("R-" + string(rune('a'+i)))
@@ -97,6 +101,7 @@ func TestReflectUnenforcedSettled_Fires(t *testing.T) {
 }
 
 func TestReflectUnenforcedSettled_DoesNotFire(t *testing.T) {
+	t.Parallel()
 	reqs := make([]ontology.Requirement, 5)
 	for i := range reqs {
 		reqs[i] = settledReq("R-" + string(rune('a'+i)))
@@ -108,6 +113,7 @@ func TestReflectUnenforcedSettled_DoesNotFire(t *testing.T) {
 }
 
 func TestReflectUnenforcedSettled_InherentlyProseDoesNotCount(t *testing.T) {
+	t.Parallel()
 	reqs := make([]ontology.Requirement, 7)
 	for i := range reqs {
 		reqs[i] = settledReq("R-" + string(rune('a'+i)))
@@ -120,6 +126,7 @@ func TestReflectUnenforcedSettled_InherentlyProseDoesNotCount(t *testing.T) {
 }
 
 func TestReflectOverBudgetOperators_NodeCountFires(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements:   make([]ontology.Requirement, 20),
 		Conflicts:      make([]ontology.Conflict, 20),
@@ -142,6 +149,7 @@ func TestReflectOverBudgetOperators_NodeCountFires(t *testing.T) {
 }
 
 func TestReflectOverBudgetOperators_UnderBudget(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{settledReq("R-1")},
 		Operators: []ontology.Operator{{
@@ -155,6 +163,7 @@ func TestReflectOverBudgetOperators_UnderBudget(t *testing.T) {
 }
 
 func TestReflectOverBudgetOperators_CrystalCharsSkipped(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements:   make([]ontology.Requirement, 100),
 		Conflicts:      make([]ontology.Conflict, 100),
@@ -170,6 +179,7 @@ func TestReflectOverBudgetOperators_CrystalCharsSkipped(t *testing.T) {
 }
 
 func TestReflectOverBudgetOperators_ZeroLimitUnbounded(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements:   make([]ontology.Requirement, 100),
 		Operators: []ontology.Operator{{
@@ -183,6 +193,7 @@ func TestReflectOverBudgetOperators_ZeroLimitUnbounded(t *testing.T) {
 }
 
 func TestReflectDeadAssumptionOnEnforcer_Fires(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-dead", Status: ontology.AssumptionDEAD},
@@ -209,6 +220,7 @@ func TestReflectDeadAssumptionOnEnforcer_Fires(t *testing.T) {
 }
 
 func TestReflectDeadAssumptionOnEnforcer_ProseNotEnforced(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-dead", Status: ontology.AssumptionDEAD},
@@ -228,6 +240,7 @@ func TestReflectDeadAssumptionOnEnforcer_ProseNotEnforced(t *testing.T) {
 }
 
 func TestReflectDeadAssumptionOnEnforcer_NoDeadAssumptions(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-holds", Status: ontology.AssumptionHOLDS},
@@ -247,6 +260,7 @@ func TestReflectDeadAssumptionOnEnforcer_NoDeadAssumptions(t *testing.T) {
 }
 
 func TestReflectDerivedButUnbuilt_FiresAbsent(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-1",
@@ -264,6 +278,7 @@ func TestReflectDerivedButUnbuilt_FiresAbsent(t *testing.T) {
 }
 
 func TestReflectDerivedButUnbuilt_FiresDraft(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-1",
@@ -279,6 +294,7 @@ func TestReflectDerivedButUnbuilt_FiresDraft(t *testing.T) {
 }
 
 func TestReflectDerivedButUnbuilt_DoesNotFireSettled(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-1",
@@ -293,6 +309,7 @@ func TestReflectDerivedButUnbuilt_DoesNotFireSettled(t *testing.T) {
 }
 
 func TestReflectDerivedButUnbuilt_NonDecidedSkipped(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Conflicts: []ontology.Conflict{{
 			ID:        "C-1",
@@ -306,6 +323,7 @@ func TestReflectDerivedButUnbuilt_NonDecidedSkipped(t *testing.T) {
 }
 
 func TestReflectImplementsDecay_Fires(t *testing.T) {
+	t.Parallel()
 	old := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
@@ -322,6 +340,7 @@ func TestReflectImplementsDecay_Fires(t *testing.T) {
 }
 
 func TestReflectImplementsDecay_DoesNotFireRecent(t *testing.T) {
+	t.Parallel()
 	recent := time.Now().AddDate(0, 0, -3).Format("2006-01-02")
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
@@ -334,6 +353,7 @@ func TestReflectImplementsDecay_DoesNotFireRecent(t *testing.T) {
 }
 
 func TestReflectImplementsDecay_NoDateSkipped(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-nodate", Status: ontology.AssumptionIMPLEMENTS},
@@ -345,6 +365,7 @@ func TestReflectImplementsDecay_NoDateSkipped(t *testing.T) {
 }
 
 func TestReflectImplementsDecay_NonImplementsSkipped(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-holds", Status: ontology.AssumptionHOLDS, CreatedAt: "2020-01-01"},
@@ -356,6 +377,7 @@ func TestReflectImplementsDecay_NonImplementsSkipped(t *testing.T) {
 }
 
 func TestReflectImplementsDecay_DecidedAtPrecedence(t *testing.T) {
+	t.Parallel()
 	veryOld := "2020-01-01"
 	recent := time.Now().AddDate(0, 0, -3).Format("2006-01-02")
 	g := &ontology.Graph{
@@ -369,6 +391,7 @@ func TestReflectImplementsDecay_DecidedAtPrecedence(t *testing.T) {
 }
 
 func TestReflectReplacesEdgeMigration_Fires(t *testing.T) {
+	t.Parallel()
 	r := rejectedReq("R-old")
 	r.Why = "REJECTED — REPLACES R-new"
 	g := &ontology.Graph{Requirements: []ontology.Requirement{r}}
@@ -385,6 +408,7 @@ func TestReflectReplacesEdgeMigration_Fires(t *testing.T) {
 }
 
 func TestReflectReplacesEdgeMigration_DoesNotFireWithEdge(t *testing.T) {
+	t.Parallel()
 	r1 := rejectedReq("R-old")
 	r1.Why = "REJECTED — REPLACES R-new"
 	r2 := ontology.Requirement{
@@ -401,6 +425,7 @@ func TestReflectReplacesEdgeMigration_DoesNotFireWithEdge(t *testing.T) {
 }
 
 func TestReflectReplacesEdgeMigration_DoesNotFireWithoutProse(t *testing.T) {
+	t.Parallel()
 	r := rejectedReq("R-plain")
 	r.Why = "discarded, no successor"
 	g := &ontology.Graph{Requirements: []ontology.Requirement{r}}
@@ -410,6 +435,7 @@ func TestReflectReplacesEdgeMigration_DoesNotFireWithoutProse(t *testing.T) {
 }
 
 func TestReflectReplacesEdgeMigration_DashVariants(t *testing.T) {
+	t.Parallel()
 	dashes := []string{
 		"REJECTED — REPLACES R-new",
 		"REJECTED – REPLACES R-new",
@@ -428,6 +454,7 @@ func TestReflectReplacesEdgeMigration_DashVariants(t *testing.T) {
 }
 
 func TestReflectAllMembersRejected_Fires(t *testing.T) {
+	t.Parallel()
 	c := ontology.Conflict{
 		ID:        "C-ghost",
 		Lifecycle: ontology.ConflictDETECTED,
@@ -453,6 +480,7 @@ func TestReflectAllMembersRejected_Fires(t *testing.T) {
 }
 
 func TestReflectAllMembersRejected_DoesNotFireDecided(t *testing.T) {
+	t.Parallel()
 	c := ontology.Conflict{
 		ID:        "C-decided",
 		Lifecycle: "DECIDED(rationale)",
@@ -468,6 +496,7 @@ func TestReflectAllMembersRejected_DoesNotFireDecided(t *testing.T) {
 }
 
 func TestReflectAllMembersRejected_DoesNotFireRevisit(t *testing.T) {
+	t.Parallel()
 	c := ontology.Conflict{
 		ID:        "C-revisit",
 		Lifecycle: "REVISIT_WHEN(condition)",
@@ -483,6 +512,7 @@ func TestReflectAllMembersRejected_DoesNotFireRevisit(t *testing.T) {
 }
 
 func TestReflectAllMembersRejected_DoesNotFireNonRejected(t *testing.T) {
+	t.Parallel()
 	c := ontology.Conflict{
 		ID:        "C-mixed",
 		Lifecycle: ontology.ConflictDETECTED,
@@ -498,6 +528,7 @@ func TestReflectAllMembersRejected_DoesNotFireNonRejected(t *testing.T) {
 }
 
 func TestAllFindings_OrderFollowsRegistry(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			settledReq("R-1"), settledReq("R-2"), settledReq("R-3"),
@@ -515,6 +546,7 @@ func TestAllFindings_OrderFollowsRegistry(t *testing.T) {
 }
 
 func TestPyRepr_SimpleString(t *testing.T) {
+	t.Parallel()
 	got := pyRepr("hello world")
 	want := "'hello world'"
 	if got != want {
@@ -523,6 +555,7 @@ func TestPyRepr_SimpleString(t *testing.T) {
 }
 
 func TestPyRepr_ContainsSingleQuote(t *testing.T) {
+	t.Parallel()
 	got := pyRepr("agent's code")
 	want := `"agent's code"`
 	if got != want {
@@ -531,6 +564,7 @@ func TestPyRepr_ContainsSingleQuote(t *testing.T) {
 }
 
 func TestPyRepr_ContainsBothQuotes(t *testing.T) {
+	t.Parallel()
 	got := pyRepr(`both ' and " here`)
 	want := `'both \' and " here'`
 	if got != want {
@@ -539,6 +573,7 @@ func TestPyRepr_ContainsBothQuotes(t *testing.T) {
 }
 
 func TestPyListRepr(t *testing.T) {
+	t.Parallel()
 	got := pyListRepr([]string{"R-a", "R-b"})
 	want := "['R-a', 'R-b']"
 	if got != want {
@@ -547,6 +582,7 @@ func TestPyListRepr(t *testing.T) {
 }
 
 func TestPyListRepr_Empty(t *testing.T) {
+	t.Parallel()
 	got := pyListRepr([]string{})
 	want := "[]"
 	if got != want {

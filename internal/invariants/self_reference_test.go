@@ -7,6 +7,7 @@ import (
 )
 
 func TestCheckSectionAnchorsKnown_AllCanonNonNil(t *testing.T) {
+	t.Parallel()
 	vs := runCheck(t, "check_section_anchors_known", &ontology.Graph{})
 	if len(vs) != 0 {
 		t.Fatalf("expected no violations (every registered invariant has non-nil Canon), got %v", vs)
@@ -14,6 +15,7 @@ func TestCheckSectionAnchorsKnown_AllCanonNonNil(t *testing.T) {
 }
 
 func TestCheckBijectionRToEnforcer_OKResolvableCheckName(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "check_typed_anchors")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_bijection_r_to_enforcer", g)
@@ -25,6 +27,7 @@ func TestCheckBijectionRToEnforcer_OKResolvableCheckName(t *testing.T) {
 }
 
 func TestCheckBijectionRToEnforcer_OKTestEntriesExempt(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "test_foo.py")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_bijection_r_to_enforcer", g)
@@ -36,6 +39,7 @@ func TestCheckBijectionRToEnforcer_OKTestEntriesExempt(t *testing.T) {
 }
 
 func TestCheckBijectionRToEnforcer_FiresOnUnresolvableCheckName(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "check_does_not_exist")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_bijection_r_to_enforcer", g)
@@ -45,6 +49,7 @@ func TestCheckBijectionRToEnforcer_FiresOnUnresolvableCheckName(t *testing.T) {
 }
 
 func TestCheckBijectionRToEnforcer_OrphanDetectionNoEnforcedNoOrphans(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}}
 	vs := runCheck(t, "check_bijection_r_to_enforcer", g)
 	if len(vs) != 0 {
@@ -53,6 +58,7 @@ func TestCheckBijectionRToEnforcer_OrphanDetectionNoEnforcedNoOrphans(t *testing
 }
 
 func TestCheckBijectionRToEnforcer_OrphanDetectionFiresWhenEnforcedExists(t *testing.T) {
+	t.Parallel()
 	r := reqEnforced("R-1", "sa", "test_foo.py")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_bijection_r_to_enforcer", g)
@@ -68,6 +74,7 @@ func TestCheckBijectionRToEnforcer_OrphanDetectionFiresWhenEnforcedExists(t *tes
 }
 
 func TestCheckMethodMatchesDocstring_Noop(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}}
 	if vs := runCheck(t, "check_method_matches_docstring", g); len(vs) != 0 {
 		t.Fatalf("check_method_matches_docstring is an honest no-op in the Go port; expected no violations, got %v", vs)
@@ -75,6 +82,7 @@ func TestCheckMethodMatchesDocstring_Noop(t *testing.T) {
 }
 
 func TestCheckRulesAsDataClassificationCoherent_Noop(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}}
 	if vs := runCheck(t, "check_rules_as_data_classification_coherent", g); len(vs) != 0 {
 		t.Fatalf("check_rules_as_data_classification_coherent is an honest no-op in the Go port; expected no violations, got %v", vs)

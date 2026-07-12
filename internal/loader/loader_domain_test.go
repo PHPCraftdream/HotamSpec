@@ -9,6 +9,7 @@ import (
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 
 func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
+	t.Parallel()
 	g, err := LoadGraph(domainGraphPath)
 	if err != nil {
 		t.Fatalf("LoadGraph(%s): %v", domainGraphPath, err)

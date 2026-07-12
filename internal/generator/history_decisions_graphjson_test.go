@@ -6,6 +6,7 @@ import (
 )
 
 func TestBuildHistory_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildHistory(g)
 	want, err := os.ReadFile("testdata/HISTORY.md")
@@ -16,6 +17,7 @@ func TestBuildHistory_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildDecisions_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got := BuildDecisions(g)
 	want, err := os.ReadFile("testdata/DECISIONS.md")
@@ -26,6 +28,7 @@ func TestBuildDecisions_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildGraphJSON_ByteIdenticalToPython(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 	got, err := BuildGraphJSON(g)
 	if err != nil {
@@ -39,6 +42,7 @@ func TestBuildGraphJSON_ByteIdenticalToPython(t *testing.T) {
 }
 
 func TestBuildHistoryDecisionsGraphJSON_AgainstOriginalHotamSpecPath(t *testing.T) {
+	t.Parallel()
 	g := loadDomainGraph(t)
 
 	historyWant, err := os.ReadFile(`D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\HISTORY.md`)

@@ -7,12 +7,14 @@ import (
 )
 
 func TestCheckTypedAnchorsVariant_OK(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_typed_anchors_variant", graphWithConflict(heldConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
 func TestCheckTypedAnchorsVariant_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	bad := heldConflict()
 	bad.Variants = []ontology.Variant{
 		{ID: "option-1", Behavior: "first"},
@@ -25,6 +27,7 @@ func TestCheckTypedAnchorsVariant_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckSignoffChosenVariantResolves_OK(t *testing.T) {
+	t.Parallel()
 	c := heldConflict()
 	cv := "V-fast"
 	c.Signoff = &ontology.Signoff{DecidedBy: "outsider", ChosenVariant: cv}
@@ -34,6 +37,7 @@ func TestCheckSignoffChosenVariantResolves_OK(t *testing.T) {
 }
 
 func TestCheckSignoffChosenVariantResolves_OKOnEmptyChosen(t *testing.T) {
+	t.Parallel()
 	c := heldConflict()
 	c.Signoff = &ontology.Signoff{DecidedBy: "outsider", ChosenVariant: ""}
 	if vs := runCheck(t, "check_signoff_chosen_variant_resolves", graphWithConflict(c, nil)); len(vs) != 0 {
@@ -42,6 +46,7 @@ func TestCheckSignoffChosenVariantResolves_OKOnEmptyChosen(t *testing.T) {
 }
 
 func TestCheckSignoffChosenVariantResolves_FiresOnUnknown(t *testing.T) {
+	t.Parallel()
 	c := heldConflict()
 	c.Signoff = &ontology.Signoff{DecidedBy: "outsider", ChosenVariant: "V-nonexistent"}
 	vs := runCheck(t, "check_signoff_chosen_variant_resolves", graphWithConflict(c, nil))
@@ -51,6 +56,7 @@ func TestCheckSignoffChosenVariantResolves_FiresOnUnknown(t *testing.T) {
 }
 
 func TestCheckSignoffChosenVariantResolves_SilentOnNilSignoff(t *testing.T) {
+	t.Parallel()
 	c := heldConflict()
 	c.Signoff = nil
 	if vs := runCheck(t, "check_signoff_chosen_variant_resolves", graphWithConflict(c, nil)); len(vs) != 0 {
@@ -59,6 +65,7 @@ func TestCheckSignoffChosenVariantResolves_SilentOnNilSignoff(t *testing.T) {
 }
 
 func TestCheckDecidedConflictCarriesSignoff_OK(t *testing.T) {
+	t.Parallel()
 	c := decidedConflict()
 	c.Signoff = &ontology.Signoff{DecidedBy: "outsider"}
 	if vs := runCheck(t, "check_decided_conflict_carries_signoff", graphWithConflict(c, nil)); len(vs) != 0 {
@@ -67,6 +74,7 @@ func TestCheckDecidedConflictCarriesSignoff_OK(t *testing.T) {
 }
 
 func TestCheckDecidedConflictCarriesSignoff_OKOnNoSignoff(t *testing.T) {
+	t.Parallel()
 	c := decidedConflict()
 	c.Signoff = nil
 	if vs := runCheck(t, "check_decided_conflict_carries_signoff", graphWithConflict(c, nil)); len(vs) != 0 {
@@ -75,6 +83,7 @@ func TestCheckDecidedConflictCarriesSignoff_OKOnNoSignoff(t *testing.T) {
 }
 
 func TestCheckDecidedConflictCarriesSignoff_FiresOnMismatch(t *testing.T) {
+	t.Parallel()
 	c := decidedConflict()
 	c.Signoff = &ontology.Signoff{DecidedBy: "sa"}
 	vs := runCheck(t, "check_decided_conflict_carries_signoff", graphWithConflict(c, nil))
@@ -84,6 +93,7 @@ func TestCheckDecidedConflictCarriesSignoff_FiresOnMismatch(t *testing.T) {
 }
 
 func TestCheckDecidedConflictCarriesSignoff_OKOnHeld(t *testing.T) {
+	t.Parallel()
 	c := heldConflict()
 	c.Signoff = &ontology.Signoff{DecidedBy: "outsider"}
 	if vs := runCheck(t, "check_decided_conflict_carries_signoff", graphWithConflict(c, nil)); len(vs) != 0 {
@@ -92,6 +102,7 @@ func TestCheckDecidedConflictCarriesSignoff_OKOnHeld(t *testing.T) {
 }
 
 func TestCheckDecidedConflictCarriesSignoff_SilentOnAcknowledged(t *testing.T) {
+	t.Parallel()
 	c := baseConflict()
 	c.Signoff = &ontology.Signoff{DecidedBy: "someone-else"}
 	if vs := runCheck(t, "check_decided_conflict_carries_signoff", graphWithConflict(c, nil)); len(vs) != 0 {
@@ -100,6 +111,7 @@ func TestCheckDecidedConflictCarriesSignoff_SilentOnAcknowledged(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsRequirement_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")}}
 	if vs := runCheck(t, "check_typed_anchors_requirement", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -107,6 +119,7 @@ func TestCheckTypedAnchorsRequirement_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsRequirement_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Requirements: []ontology.Requirement{{ID: "foo", Claim: "c", Owner: "sa"}}}
 	vs := runCheck(t, "check_typed_anchors_requirement", g)
 	if !hasViolationFor(vs, "foo") {
@@ -115,6 +128,7 @@ func TestCheckTypedAnchorsRequirement_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsAssumption_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Assumptions: []ontology.Assumption{{ID: "A-1", Statement: "s", Status: ontology.AssumptionHOLDS, Owner: "sa"}}}
 	if vs := runCheck(t, "check_typed_anchors_assumption", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -122,6 +136,7 @@ func TestCheckTypedAnchorsAssumption_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsAssumption_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Assumptions: []ontology.Assumption{{ID: "assum-x", Statement: "s", Status: ontology.AssumptionHOLDS, Owner: "sa"}}}
 	vs := runCheck(t, "check_typed_anchors_assumption", g)
 	if !hasViolationFor(vs, "assum-x") {
@@ -130,6 +145,7 @@ func TestCheckTypedAnchorsAssumption_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsConflict_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Conflicts: []ontology.Conflict{baseConflict()}}
 	if vs := runCheck(t, "check_typed_anchors_conflict", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -137,6 +153,7 @@ func TestCheckTypedAnchorsConflict_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsConflict_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.ID = "CONFLICT-hand-written"
 	g := &ontology.Graph{Conflicts: []ontology.Conflict{bad}}
@@ -147,6 +164,7 @@ func TestCheckTypedAnchorsConflict_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsOperator_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Operators: []ontology.Operator{{ID: "OP-1", Stakeholder: "sa"}}}
 	if vs := runCheck(t, "check_typed_anchors_operator", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -154,6 +172,7 @@ func TestCheckTypedAnchorsOperator_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsOperator_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Operators: []ontology.Operator{{ID: "operator-1", Stakeholder: "sa"}}}
 	vs := runCheck(t, "check_typed_anchors_operator", g)
 	if !hasViolationFor(vs, "operator-1") {
@@ -162,6 +181,7 @@ func TestCheckTypedAnchorsOperator_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsProcess_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Processes: []ontology.Process{{ID: "PR-1"}}}
 	if vs := runCheck(t, "check_typed_anchors_process", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -169,6 +189,7 @@ func TestCheckTypedAnchorsProcess_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsProcess_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Processes: []ontology.Process{{ID: "process-1"}}}
 	vs := runCheck(t, "check_typed_anchors_process", g)
 	if !hasViolationFor(vs, "process-1") {
@@ -177,6 +198,7 @@ func TestCheckTypedAnchorsProcess_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsGoal_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Goals: []ontology.Goal{{ID: "GOAL-1", Owner: "sa"}}}
 	if vs := runCheck(t, "check_typed_anchors_goal", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -184,6 +206,7 @@ func TestCheckTypedAnchorsGoal_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchorsGoal_FiresOnBadPrefix(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Goals: []ontology.Goal{{ID: "goal-1", Owner: "sa"}}}
 	vs := runCheck(t, "check_typed_anchors_goal", g)
 	if !hasViolationFor(vs, "goal-1") {
@@ -192,6 +215,7 @@ func TestCheckTypedAnchorsGoal_FiresOnBadPrefix(t *testing.T) {
 }
 
 func TestCheckTypedAnchors_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{req("R-1", "sa")},
 		Assumptions:  []ontology.Assumption{{ID: "A-1", Statement: "s", Status: ontology.AssumptionHOLDS, Owner: "sa"}},
@@ -206,6 +230,7 @@ func TestCheckTypedAnchors_OK(t *testing.T) {
 }
 
 func TestCheckTypedAnchors_FiresOnBadRequirement(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{{ID: "foo", Owner: "sa"}},
 	}
@@ -216,6 +241,7 @@ func TestCheckTypedAnchors_FiresOnBadRequirement(t *testing.T) {
 }
 
 func TestCheckTypedAnchors_FiresOnBadOperator(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Operators: []ontology.Operator{{ID: "operator-1", Stakeholder: "sa"}},
 	}
@@ -226,6 +252,7 @@ func TestCheckTypedAnchors_FiresOnBadOperator(t *testing.T) {
 }
 
 func TestCheckTypedAnchors_DoesNotCheckVariants(t *testing.T) {
+	t.Parallel()
 	c := heldConflict()
 	c.Variants = []ontology.Variant{
 		{ID: "no-v-prefix-1", Behavior: "first"},

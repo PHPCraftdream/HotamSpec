@@ -8,6 +8,7 @@ import (
 )
 
 func TestCheckNoDanglingAssumptionOwner_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Assumptions:  []ontology.Assumption{{ID: "A-1", Statement: "x", Status: ontology.AssumptionHOLDS, Owner: "sa"}},
@@ -18,6 +19,7 @@ func TestCheckNoDanglingAssumptionOwner_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingAssumptionOwner_FiresOnUnknownOwner(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
 		Assumptions:  []ontology.Assumption{{ID: "A-1", Statement: "x", Status: ontology.AssumptionHOLDS, Owner: "ghost"}},
@@ -29,6 +31,7 @@ func TestCheckNoDanglingAssumptionOwner_FiresOnUnknownOwner(t *testing.T) {
 }
 
 func TestCheckAssumptionStatusValid_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{
 			{ID: "A-1", Statement: "x", Status: ontology.AssumptionHOLDS, Owner: "sa"},
@@ -41,6 +44,7 @@ func TestCheckAssumptionStatusValid_OK(t *testing.T) {
 }
 
 func TestCheckAssumptionStatusValid_FiresOnBogusStatus(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions: []ontology.Assumption{{ID: "A-1", Statement: "x", Status: "BOGUS", Owner: "sa"}},
 	}
@@ -51,6 +55,7 @@ func TestCheckAssumptionStatusValid_FiresOnBogusStatus(t *testing.T) {
 }
 
 func TestCheckNoDanglingRequirementOwner_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders:  []ontology.Stakeholder{sA, sB},
 		Requirements:  []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
@@ -61,6 +66,7 @@ func TestCheckNoDanglingRequirementOwner_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingRequirementOwner_FiresOnUnknownOwner(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders:  []ontology.Stakeholder{sA, sB},
 		Requirements:  []ontology.Requirement{req("R-1", "sa"), req("R-2", "no_such_owner")},
@@ -72,6 +78,7 @@ func TestCheckNoDanglingRequirementOwner_FiresOnUnknownOwner(t *testing.T) {
 }
 
 func TestCheckNoDanglingRequirementAssumptions_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Assumptions:  []ontology.Assumption{{ID: "A-1", Statement: "x", Status: ontology.AssumptionHOLDS, Owner: "sa"}},
 		Requirements: []ontology.Requirement{
@@ -84,6 +91,7 @@ func TestCheckNoDanglingRequirementAssumptions_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingRequirementAssumptions_FiresOnMissing(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-1", Claim: "c", Owner: "sa", Status: ontology.StatusSETTLED, Assumptions: []string{"A-ghost"}},
@@ -96,6 +104,7 @@ func TestCheckNoDanglingRequirementAssumptions_FiresOnMissing(t *testing.T) {
 }
 
 func TestCheckNoDanglingRequirementRelations_OK(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-1", Claim: "c", Owner: "sa", Status: ontology.StatusSETTLED, Relations: []ontology.Relation{{Kind: "refines", Target: "R-2"}}},
@@ -108,6 +117,7 @@ func TestCheckNoDanglingRequirementRelations_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingRequirementRelations_FiresOnBadKindAndTarget(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
 			{ID: "R-1", Claim: "c", Owner: "sa", Status: ontology.StatusSETTLED, Relations: []ontology.Relation{{Kind: "unknown-kind", Target: "R-missing"}}},
@@ -120,6 +130,7 @@ func TestCheckNoDanglingRequirementRelations_FiresOnBadKindAndTarget(t *testing.
 }
 
 func TestCheckNoDanglingConflictRefs_OK(t *testing.T) {
+	t.Parallel()
 	shared := "A-1"
 	g := graphWithConflict(
 		ontology.Conflict{
@@ -137,6 +148,7 @@ func TestCheckNoDanglingConflictRefs_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingConflictRefs_FiresOnAllDanglingRefs(t *testing.T) {
+	t.Parallel()
 	shared := "A-ghost"
 	c := ontology.Conflict{
 		ID: "C-bad", Axis: "cost-vs-flexibility", Context: "ctx",
@@ -152,6 +164,7 @@ func TestCheckNoDanglingConflictRefs_FiresOnAllDanglingRefs(t *testing.T) {
 }
 
 func TestCheckNoDanglingOperatorRefs_OK(t *testing.T) {
+	t.Parallel()
 	parent := "OP-parent"
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
@@ -166,6 +179,7 @@ func TestCheckNoDanglingOperatorRefs_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingOperatorRefs_FiresOnBadStakeholderAndParent(t *testing.T) {
+	t.Parallel()
 	badParent := "OP-ghost"
 	g := &ontology.Graph{
 		Operators: []ontology.Operator{
@@ -179,6 +193,7 @@ func TestCheckNoDanglingOperatorRefs_FiresOnBadStakeholderAndParent(t *testing.T
 }
 
 func TestCheckNoDanglingIDs_OK(t *testing.T) {
+	t.Parallel()
 	g := graphWithConflict(baseConflict(), nil)
 	if vs := runCheck(t, "check_no_dangling_ids", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -186,6 +201,7 @@ func TestCheckNoDanglingIDs_OK(t *testing.T) {
 }
 
 func TestCheckNoDanglingIDs_FiresOnDanglingMember(t *testing.T) {
+	t.Parallel()
 	bad := baseConflict()
 	bad.Members = []string{"R-1", "R-ghost"}
 	g := graphWithConflict(bad, nil)
@@ -202,12 +218,14 @@ func TestCheckNoDanglingIDs_FiresOnDanglingMember(t *testing.T) {
 }
 
 func TestCheckDocReaderResolvesToStakeholder_NoopEmptyGraph(t *testing.T) {
+	t.Parallel()
 	if vs := runCheck(t, "check_doc_reader_resolves_to_stakeholder", &ontology.Graph{}); len(vs) != 0 {
 		t.Fatalf("expected no violations on empty graph, got %v", vs)
 	}
 }
 
 func TestCheckDocReaderResolvesToStakeholder_NoopAspectNotAdopted(t *testing.T) {
+	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA, sB}}
 	if vs := runCheck(t, "check_doc_reader_resolves_to_stakeholder", g); len(vs) != 0 {
 		t.Fatalf("expected no violations (Go graph carries no DOC_READERS binding), got %v", vs)

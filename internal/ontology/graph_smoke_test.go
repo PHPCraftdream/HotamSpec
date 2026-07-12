@@ -94,6 +94,7 @@ func buildSmokeGraph() *Graph {
 }
 
 func TestGraphIsEmpty(t *testing.T) {
+	t.Parallel()
 	if !(&Graph{}).IsEmpty() {
 		t.Fatal("empty graph should be empty")
 	}
@@ -104,6 +105,7 @@ func TestGraphIsEmpty(t *testing.T) {
 }
 
 func TestLookupHelpers(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	if _, ok := AxisSlugs(g)["latency-vs-completeness"]; !ok {
 		t.Fatal("axis slug missing")
@@ -124,6 +126,7 @@ func TestLookupHelpers(t *testing.T) {
 }
 
 func TestRequirementPredicates(t *testing.T) {
+	t.Parallel()
 	r := Requirement{Status: "OPEN(which segment?)", Enforcement: EnforcementPROSE, Enforceability: EnforceabilityENFORCEABLE}
 	if !r.IsOpen() {
 		t.Fatal("OPEN(...) should be open")
@@ -142,6 +145,7 @@ func TestRequirementPredicates(t *testing.T) {
 }
 
 func TestConflictIdentity(t *testing.T) {
+	t.Parallel()
 	id := ConflictIdentity("latency-vs-completeness", "checkout peak load")
 	if len(id) != 10 || id[:2] != "C-" {
 		t.Fatalf("unexpected conflict id %q", id)
@@ -155,6 +159,7 @@ func TestConflictIdentity(t *testing.T) {
 }
 
 func TestConflictPredicates(t *testing.T) {
+	t.Parallel()
 	if !(Conflict{Lifecycle: ConflictDETECTED}).IsUnresolved() {
 		t.Fatal("DETECTED should be unresolved")
 	}
@@ -170,6 +175,7 @@ func TestConflictPredicates(t *testing.T) {
 }
 
 func TestReplacesMap(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	rm := ReplacesMap(g)
 	got, ok := rm["R-4"]
@@ -182,6 +188,7 @@ func TestReplacesMap(t *testing.T) {
 }
 
 func TestDependencyChains(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	chains := DependencyChains(g)
 	want := [][]string{{"R-2", "R-1"}}
@@ -191,6 +198,7 @@ func TestDependencyChains(t *testing.T) {
 }
 
 func TestIndependentSubgraphs(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	comps := IndependentSubgraphs(g)
 	want := [][]string{{"R-1", "R-2"}, {"R-3"}, {"R-4"}, {"R-5"}}
@@ -200,6 +208,7 @@ func TestIndependentSubgraphs(t *testing.T) {
 }
 
 func TestDriftTraversal(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	onShared := RequirementsOnAssumption(g, "A-single-customer")
 	if len(onShared) != 3 {
@@ -216,6 +225,7 @@ func TestDriftTraversal(t *testing.T) {
 }
 
 func TestConflictClusteringAndPairs(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	byAxis := ConflictsByAxis(g)
 	if len(byAxis["latency-vs-completeness"]) != 1 {
@@ -228,6 +238,7 @@ func TestConflictClusteringAndPairs(t *testing.T) {
 }
 
 func TestAssumptionReferenceCounts(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	rc := AssumptionReferenceCounts(g)
 	if rc["A-single-customer"] != 3 {
@@ -242,6 +253,7 @@ func TestAssumptionReferenceCounts(t *testing.T) {
 }
 
 func TestLatentConnectorSuspectsAndClusters(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	suspects := LatentConnectorSuspects(g)
 	got := make([][2]string, 0, len(suspects))
@@ -270,6 +282,7 @@ func TestLatentConnectorSuspectsAndClusters(t *testing.T) {
 }
 
 func TestEntityStateConflictSuspects(t *testing.T) {
+	t.Parallel()
 	g := buildSmokeGraph()
 	suspects := EntityStateConflictSuspects(g)
 	if len(suspects) != 1 {
@@ -282,6 +295,7 @@ func TestEntityStateConflictSuspects(t *testing.T) {
 }
 
 func TestRequirementLifecycle(t *testing.T) {
+	t.Parallel()
 	lc := RequirementStatusLifecycle
 	st, ok := lc.Matches("OPEN(which?)")
 	if !ok || st.Name != "OPEN" {
@@ -305,6 +319,7 @@ func TestRequirementLifecycle(t *testing.T) {
 }
 
 func TestConflictLifecycle(t *testing.T) {
+	t.Parallel()
 	lc := ConflictLifecycle
 	if st, ok := lc.Matches("DECIDED(rationale)"); !ok || st.Name != "DECIDED" {
 		t.Fatalf("DECIDED(...) should match DECIDED, got %+v", st)
@@ -321,6 +336,7 @@ func TestConflictLifecycle(t *testing.T) {
 }
 
 func TestCanonicalLifecyclesSanity(t *testing.T) {
+	t.Parallel()
 	for _, lc := range []Lifecycle{RequirementStatusLifecycle, ConflictLifecycle, OperatorLifecycle, ProcessLifecycle, GoalLifecycle} {
 		if len(lc.States) == 0 {
 			t.Fatalf("%s has no states", lc.Slug)
@@ -341,6 +357,7 @@ func TestCanonicalLifecyclesSanity(t *testing.T) {
 }
 
 func TestEntityInstanceFieldValue(t *testing.T) {
+	t.Parallel()
 	e := EntityInstance{
 		ID:         "ENT-order-42",
 		EntityType: "order",
@@ -359,6 +376,7 @@ func TestEntityInstanceFieldValue(t *testing.T) {
 }
 
 func TestSortedKeys(t *testing.T) {
+	t.Parallel()
 	m := map[string]struct{}{"b": {}, "a": {}, "c": {}}
 	got := sortedKeys(m)
 	want := []string{"a", "b", "c"}
