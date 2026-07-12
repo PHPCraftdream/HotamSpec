@@ -32,41 +32,41 @@ func BuildGraphJSON(g *ontology.Graph) (string, error) {
 			})
 		}
 		reqMaps = append(reqMaps, map[string]any{
-			"assumptions":       copyStrings(r.Assumptions),
-			"claim":             r.Claim,
-			"enforced_by":       copyStrings(r.EnforcedBy),
-			"enforcement":       r.Enforcement,
-			"evidence":          copyStrings(r.Evidence),
-			"history":           history,
-			"id":                r.ID,
-			"last_reviewed_at":  r.LastReviewedAt,
-			"owner":             r.Owner,
-			"review_after":      r.ReviewAfter,
-			"source_refs":       copyStrings(r.SourceRefs),
-			"status":            r.Status,
-			"why":               r.Why,
+			"assumptions":      copyStrings(r.Assumptions),
+			"claim":            r.Claim,
+			"enforced_by":      copyStrings(r.EnforcedBy),
+			"enforcement":      r.Enforcement,
+			"evidence":         copyStrings(r.Evidence),
+			"history":          history,
+			"id":               r.ID,
+			"last_reviewed_at": r.LastReviewedAt,
+			"owner":            r.Owner,
+			"review_after":     r.ReviewAfter,
+			"source_refs":      copyStrings(r.SourceRefs),
+			"status":           r.Status,
+			"why":              r.Why,
 		})
 	}
 
 	conflictMaps := make([]map[string]any, 0, len(conflicts))
 	for _, c := range conflicts {
 		conflictMaps = append(conflictMaps, map[string]any{
-			"axis":     c.Axis,
-			"context":  c.Context,
-			"id":       c.ID,
+			"axis":      c.Axis,
+			"context":   c.Context,
+			"id":        c.ID,
 			"lifecycle": c.Lifecycle,
-			"members":  copyStrings(c.Members),
-			"steward":  c.Steward,
+			"members":   copyStrings(c.Members),
+			"steward":   c.Steward,
 		})
 	}
 
 	assumptionMaps := make([]map[string]any, 0, len(assumptions))
 	for _, a := range assumptions {
 		assumptionMaps = append(assumptionMaps, map[string]any{
-			"id":         a.ID,
-			"owner":      a.Owner,
-			"statement":  a.Statement,
-			"status":     a.Status,
+			"id":        a.ID,
+			"owner":     a.Owner,
+			"statement": a.Statement,
+			"status":    a.Status,
 		})
 	}
 
@@ -89,11 +89,11 @@ func BuildGraphJSON(g *ontology.Graph) (string, error) {
 	payload := map[string]any{
 		"generated_from": "domains/<active>/graph.json",
 		"note":           "READ-ONLY generated snapshot. Source of truth is the domain's graph.json; edit the graph only via `hotam apply-proposal` (R-no-hand-edit-graph, R-per-node-json-store REJECTED).",
-		"requirements": reqMaps,
-		"conflicts":    conflictMaps,
-		"assumptions":  assumptionMaps,
-		"stakeholders": stakeholderMaps,
-		"node_ids":     nodeIDs,
+		"requirements":   reqMaps,
+		"conflicts":      conflictMaps,
+		"assumptions":    assumptionMaps,
+		"stakeholders":   stakeholderMaps,
+		"node_ids":       nodeIDs,
 	}
 
 	var buf bytes.Buffer

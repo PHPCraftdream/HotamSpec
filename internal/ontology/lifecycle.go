@@ -34,20 +34,20 @@ func (s State) IsTerminal() bool {
 }
 
 type Transition struct {
-	Src              string  `json:"src"`
-	Dst              string  `json:"dst"`
-	Event            string  `json:"event"`
-	Guard            string  `json:"guard"`
-	GuardAssumption  *string `json:"guard_assumption"`
-	Why              string  `json:"why"`
+	Src             string  `json:"src"`
+	Dst             string  `json:"dst"`
+	Event           string  `json:"event"`
+	Guard           string  `json:"guard"`
+	GuardAssumption *string `json:"guard_assumption"`
+	Why             string  `json:"why"`
 }
 
 type Lifecycle struct {
-	Slug        string       `json:"slug"`
-	States      []State      `json:"states"`
-	Transitions []Transition `json:"transitions"`
-	Cyclic      bool         `json:"cyclic"`
-	PrefixStates []string    `json:"prefix_states"`
+	Slug         string       `json:"slug"`
+	States       []State      `json:"states"`
+	Transitions  []Transition `json:"transitions"`
+	Cyclic       bool         `json:"cyclic"`
+	PrefixStates []string     `json:"prefix_states"`
 }
 
 func (l Lifecycle) StateNames() map[string]struct{} {

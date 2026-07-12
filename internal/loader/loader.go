@@ -12,16 +12,16 @@ import (
 )
 
 type graphDTO struct {
-	Axes         []ontology.Axis            `json:"axes"`
-	Stakeholders []ontology.Stakeholder     `json:"stakeholders"`
-	Assumptions  []ontology.Assumption      `json:"assumptions"`
-	Requirements []ontology.Requirement     `json:"requirements"`
-	Conflicts    []ontology.Conflict        `json:"conflicts"`
-	Operators    []ontology.Operator        `json:"operators"`
-	Processes    []ontology.Process         `json:"processes"`
-	Goals        []ontology.Goal            `json:"goals"`
-	EntityTypes  []ontology.EntityType      `json:"entity_types"`
-	Entities     []ontology.EntityInstance  `json:"entities"`
+	Axes         []ontology.Axis           `json:"axes"`
+	Stakeholders []ontology.Stakeholder    `json:"stakeholders"`
+	Assumptions  []ontology.Assumption     `json:"assumptions"`
+	Requirements []ontology.Requirement    `json:"requirements"`
+	Conflicts    []ontology.Conflict       `json:"conflicts"`
+	Operators    []ontology.Operator       `json:"operators"`
+	Processes    []ontology.Process        `json:"processes"`
+	Goals        []ontology.Goal           `json:"goals"`
+	EntityTypes  []ontology.EntityType     `json:"entity_types"`
+	Entities     []ontology.EntityInstance `json:"entities"`
 }
 
 func LoadGraph(path string) (*ontology.Graph, error) {

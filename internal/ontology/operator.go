@@ -38,12 +38,12 @@ var OperatorLifecycle = Lifecycle{
 }
 
 type Operator struct {
-	ID            string         `json:"id"`
-	Stakeholder   string         `json:"stakeholder"`
-	Lifecycle     string         `json:"lifecycle"`
-	ContextBudget ContextBudget  `json:"context_budget"`
-	Parent        *string        `json:"parent"`
-	Scope         []string       `json:"scope"`
-	Why           string         `json:"why"`
-	DeclOrder     int            `json:"decl_order"`
+	ID            string        `json:"id"`
+	Stakeholder   string        `json:"stakeholder"`
+	Lifecycle     string        `json:"lifecycle"`
+	ContextBudget ContextBudget `json:"context_budget"`
+	Parent        *string       `json:"parent"`
+	Scope         []string      `json:"scope"`
+	Why           string        `json:"why"`
+	DeclOrder     int           `json:"decl_order"`
 }

@@ -128,9 +128,9 @@ func TestReflectUnenforcedSettled_InherentlyProseDoesNotCount(t *testing.T) {
 func TestReflectOverBudgetOperators_NodeCountFires(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
-		Requirements:   make([]ontology.Requirement, 20),
-		Conflicts:      make([]ontology.Conflict, 20),
-		Assumptions:    make([]ontology.Assumption, 20),
+		Requirements: make([]ontology.Requirement, 20),
+		Conflicts:    make([]ontology.Conflict, 20),
+		Assumptions:  make([]ontology.Assumption, 20),
 		Operators: []ontology.Operator{{
 			ID:            "OP-test",
 			ContextBudget: ontology.ContextBudget{Limit: 30, Measure: ontology.BudgetMeasureNODE_COUNT},
@@ -165,9 +165,9 @@ func TestReflectOverBudgetOperators_UnderBudget(t *testing.T) {
 func TestReflectOverBudgetOperators_CrystalCharsSkipped(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
-		Requirements:   make([]ontology.Requirement, 100),
-		Conflicts:      make([]ontology.Conflict, 100),
-		Assumptions:    make([]ontology.Assumption, 100),
+		Requirements: make([]ontology.Requirement, 100),
+		Conflicts:    make([]ontology.Conflict, 100),
+		Assumptions:  make([]ontology.Assumption, 100),
 		Operators: []ontology.Operator{{
 			ID:            "OP-crystal",
 			ContextBudget: ontology.ContextBudget{Limit: 10, Measure: ontology.BudgetMeasureCRYSTAL_CHARS},
@@ -181,7 +181,7 @@ func TestReflectOverBudgetOperators_CrystalCharsSkipped(t *testing.T) {
 func TestReflectOverBudgetOperators_ZeroLimitUnbounded(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
-		Requirements:   make([]ontology.Requirement, 100),
+		Requirements: make([]ontology.Requirement, 100),
 		Operators: []ontology.Operator{{
 			ID:            "OP-unbounded",
 			ContextBudget: ontology.ContextBudget{Limit: 0, Measure: ontology.BudgetMeasureNODE_COUNT},

@@ -31,7 +31,7 @@ var _ = All.MustRegister("check_conflict_has_axis", Invariant{
 	Claim: "every Conflict carries a non-empty axis.",
 	Rule: "Conflict.axis MUST be a non-empty string. An axis-less conflict is not a connector node — it does not name " +
 		"the tension dimension it mediates.",
-	Why:  "the axis is what makes conflicts cluster into architectural choices; an axis-less conflict is invisible in any cluster view.",
+	Why:   "the axis is what makes conflicts cluster into architectural choices; an axis-less conflict is invisible in any cluster view.",
 	Check: checkConflictHasAxis,
 })
 
@@ -55,7 +55,7 @@ var _ = All.MustRegister("check_conflict_has_context", Invariant{
 	Claim: "every Conflict carries a non-empty context.",
 	Rule: "Conflict.context MUST be a non-empty string describing the scenario where the two requirements collide. " +
 		"A context-less conflict has no scenario and cannot be communicated to a steward.",
-	Why:  "without a context the conflict cannot be communicated to a steward or a domain user in a way that enables resolution.",
+	Why:   "without a context the conflict cannot be communicated to a steward or a domain user in a way that enables resolution.",
 	Check: checkConflictHasContext,
 })
 
@@ -241,7 +241,7 @@ var _ = All.MustRegister("check_conflict_id_matches_identity", Invariant{
 	Claim: "id == conflict_identity(axis, context).",
 	Rule: "a Conflict's id MUST be the deterministic hash of (axis, context). A hand-written id is rejected so the " +
 		"node's identity tracks its TENSION, not its members, and survives member renaming/splitting.",
-	Why:  "identity-from-tension is what makes the same conflict survive churn and keeps clustering stable; a free id would let the node drift from its meaning.",
+	Why:   "identity-from-tension is what makes the same conflict survive churn and keeps clustering stable; a free id would let the node drift from its meaning.",
 	Check: checkConflictIDMatchesIdentity,
 })
 

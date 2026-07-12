@@ -18,9 +18,9 @@ func validGraph() *ontology.Graph {
 		Stakeholders: []ontology.Stakeholder{{ID: "sh-1"}},
 		Assumptions:  []ontology.Assumption{{ID: "A-1", Status: "HOLDS"}},
 		Requirements: []ontology.Requirement{{
-			ID:            "R-1",
-			Status:        "DRAFT",
-			Enforcement:   "PROSE",
+			ID:             "R-1",
+			Status:         "DRAFT",
+			Enforcement:    "PROSE",
 			Enforceability: "ENFORCEABLE",
 		}},
 		Conflicts: []ontology.Conflict{{ID: "C-1", Axis: "ax-1", Lifecycle: "DETECTED"}},
@@ -49,8 +49,8 @@ func TestValidateGraph_ValidPasses(t *testing.T) {
 func TestValidateGraph_InvalidBranches(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		name      string
-		mutate    func(*ontology.Graph)
+		name       string
+		mutate     func(*ontology.Graph)
 		wantSubstr string
 	}{
 		{"axis empty slug", func(g *ontology.Graph) { g.Axes[0].Slug = "" }, "axes[0]: empty slug"},

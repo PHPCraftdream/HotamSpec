@@ -1,17 +1,17 @@
 package ontology
 
 type Graph struct {
-	Axes         []Axis          `json:"axes"`
-	Stakeholders []Stakeholder   `json:"stakeholders"`
-	Assumptions  []Assumption    `json:"assumptions"`
-	Requirements []Requirement   `json:"requirements"`
-	Conflicts    []Conflict      `json:"conflicts"`
-	Operators    []Operator      `json:"operators"`
-	Processes    []Process       `json:"processes"`
-	Goals        []Goal          `json:"goals"`
-	EntityTypes  []EntityType    `json:"entity_types"`
+	Axes         []Axis           `json:"axes"`
+	Stakeholders []Stakeholder    `json:"stakeholders"`
+	Assumptions  []Assumption     `json:"assumptions"`
+	Requirements []Requirement    `json:"requirements"`
+	Conflicts    []Conflict       `json:"conflicts"`
+	Operators    []Operator       `json:"operators"`
+	Processes    []Process        `json:"processes"`
+	Goals        []Goal           `json:"goals"`
+	EntityTypes  []EntityType     `json:"entity_types"`
 	Entities     []EntityInstance `json:"entities"`
-	SelfHosting  bool            `json:"self_hosting"`
+	SelfHosting  bool             `json:"self_hosting"`
 }
 
 func (g *Graph) IsEmpty() bool {

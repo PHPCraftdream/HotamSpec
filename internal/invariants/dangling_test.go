@@ -57,8 +57,8 @@ func TestCheckAssumptionStatusValid_FiresOnBogusStatus(t *testing.T) {
 func TestCheckNoDanglingRequirementOwner_OK(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
-		Stakeholders:  []ontology.Stakeholder{sA, sB},
-		Requirements:  []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
+		Stakeholders: []ontology.Stakeholder{sA, sB},
+		Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
 	}
 	if vs := runCheck(t, "check_no_dangling_requirement_owner", g); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
@@ -68,8 +68,8 @@ func TestCheckNoDanglingRequirementOwner_OK(t *testing.T) {
 func TestCheckNoDanglingRequirementOwner_FiresOnUnknownOwner(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
-		Stakeholders:  []ontology.Stakeholder{sA, sB},
-		Requirements:  []ontology.Requirement{req("R-1", "sa"), req("R-2", "no_such_owner")},
+		Stakeholders: []ontology.Stakeholder{sA, sB},
+		Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "no_such_owner")},
 	}
 	vs := runCheck(t, "check_no_dangling_requirement_owner", g)
 	if !hasViolationFor(vs, "R-2") {
@@ -80,7 +80,7 @@ func TestCheckNoDanglingRequirementOwner_FiresOnUnknownOwner(t *testing.T) {
 func TestCheckNoDanglingRequirementAssumptions_OK(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
-		Assumptions:  []ontology.Assumption{{ID: "A-1", Statement: "x", Status: ontology.AssumptionHOLDS, Owner: "sa"}},
+		Assumptions: []ontology.Assumption{{ID: "A-1", Statement: "x", Status: ontology.AssumptionHOLDS, Owner: "sa"}},
 		Requirements: []ontology.Requirement{
 			{ID: "R-1", Claim: "c", Owner: "sa", Status: ontology.StatusSETTLED, Assumptions: []string{"A-1"}},
 		},
@@ -134,7 +134,7 @@ func TestCheckNoDanglingConflictRefs_OK(t *testing.T) {
 	shared := "A-1"
 	g := graphWithConflict(
 		ontology.Conflict{
-			ID: ontology.ConflictIdentity("cost-vs-flexibility", "ctx"),
+			ID:   ontology.ConflictIdentity("cost-vs-flexibility", "ctx"),
 			Axis: "cost-vs-flexibility", Context: "ctx", Members: []string{"R-1", "R-2"},
 			Steward: "outsider", Lifecycle: "ACKNOWLEDGED",
 			SharedAssumption: &shared, Derived: []string{}, DecidedBy: "outsider",

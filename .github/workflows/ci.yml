@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: gofmt check
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "::error::The following files are not gofmt-formatted:"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test -race
+        run: go test -race ./...
+
+      - name: gen-spec idempotency
+        run: |
+          go run ./cmd/hotam gen-spec --domain domains/hotam-spec-self --claude-md CLAUDE.md
+          git diff --exit-code -- \
+            CLAUDE.md \
+            AGENTS.md \
+            GEMINI.md \
+            domains/hotam-spec-self/docs/gen/

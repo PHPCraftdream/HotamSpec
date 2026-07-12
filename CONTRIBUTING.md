@@ -67,6 +67,7 @@ Every SETTLED requirement carries `last_reviewed_at` / `review_after` so `hotam 
 - **Docs auto-generated** -- run `hotam gen-spec` and commit the output; drift between the graph and generated docs is a defect.
 - **No silent conflict closure** -- the AI presents, the human steward decides.
 - **Green gate before commit** -- `go test ./...` and `go vet ./...` must pass before you commit; `go test -race ./...` is required for anything touching concurrency.
+- **Quick local checks** -- a `Makefile` mirrors the CI gate: `make build`, `make vet`, `make test-race`, `make fmt-check`, and `make check` (runs the whole set). `make gen` regenerates the main domain docs. Run `make check` before pushing to catch CI failures locally.
 
 ## Code of conduct
 

@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	EnvProjectRoot   = "HOTAM_SPEC_PROJECT_ROOT"
-	EnvDomainsRoot   = "HOTAM_SPEC_DOMAINS_ROOT"
-	MarkerFilename   = ".hotam-spec-project"
-	PyprojectTable   = "hotam-spec"
-	PyprojectRootKey = "project_root"
-	MaxMarkerSearchDepth = 5
+	EnvProjectRoot          = "HOTAM_SPEC_PROJECT_ROOT"
+	EnvDomainsRoot          = "HOTAM_SPEC_DOMAINS_ROOT"
+	MarkerFilename          = ".hotam-spec-project"
+	PyprojectTable          = "hotam-spec"
+	PyprojectRootKey        = "project_root"
+	MaxMarkerSearchDepth    = 5
 	SecondaryMarkerMinCount = 2
 )
 

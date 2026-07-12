@@ -241,7 +241,7 @@ var _ = All.MustRegister("check_held_by_is_known_stakeholder", Invariant{
 	Claim: "a HELD conflict's decided_by resolves to a known Stakeholder.",
 	Rule: "when Conflict.lifecycle starts with \"HELD\" and decided_by is non-empty, decided_by " +
 		"MUST be in stakeholder_ids(g).",
-	Why:  "mirrors check_decided_by_is_known_stakeholder applied to HELD.",
+	Why:   "mirrors check_decided_by_is_known_stakeholder applied to HELD.",
 	Check: checkHeldByIsKnownStakeholder,
 })
 

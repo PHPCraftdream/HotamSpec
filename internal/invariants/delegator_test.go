@@ -68,8 +68,8 @@ func TestDelegators_AllViolationsExcludesDelegatorCheckNames(t *testing.T) {
 		Enforceability: ontology.EnforceabilityENFORCEABLE,
 	}
 	g := &ontology.Graph{
-		Stakeholders:  []ontology.Stakeholder{sA},
-		Requirements:  []ontology.Requirement{badReq},
+		Stakeholders: []ontology.Stakeholder{sA},
+		Requirements: []ontology.Requirement{badReq},
 	}
 	vs := AllViolations(g)
 	var typedAnchorsDelegator, typedAnchorsRequirement int

@@ -82,7 +82,7 @@ var _ = All.MustRegister("check_no_dangling_requirement_owner", Invariant{
 	Claim: "every Requirement.owner resolves to a known Stakeholder.",
 	Rule: "Requirement.owner MUST be in stakeholder_ids(g). A requirement without a resolvable owner is structurally " +
 		"unanchored.",
-	Why:  "a dangling owner makes the requirement unanchored and breaks the steward boundary invariant downstream.",
+	Why:   "a dangling owner makes the requirement unanchored and breaks the steward boundary invariant downstream.",
 	Check: checkNoDanglingRequirementOwner,
 })
 

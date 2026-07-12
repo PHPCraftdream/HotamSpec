@@ -242,7 +242,7 @@ var _ = All.MustRegister("check_goal_lifecycle_in_lifecycle", Invariant{
 	Name:  "check_goal_lifecycle_in_lifecycle",
 	Canon: methodology.Lifecycle,
 	Claim: "every Goal.lifecycle matches GOAL_LIFECYCLE.",
-	Rule: "Goal.lifecycle MUST be matched by GOAL_LIFECYCLE. When matches() returns no hit, fire a Violation.",
+	Rule:  "Goal.lifecycle MUST be matched by GOAL_LIFECYCLE. When matches() returns no hit, fire a Violation.",
 	Why: "goal lifecycle is a hand-rolled string state machine; enforcing canonical values makes the machine structurally " +
 		"visible and checkable. References: R-lifecycle-abstraction, R-statemachine-wellformedness.",
 	Check: checkGoalLifecycleInLifecycle,

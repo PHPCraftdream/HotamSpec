@@ -223,10 +223,10 @@ func TestApply_Conflict_Create(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflict{
-		Axis:     "cost-vs-flexibility",
-		Context:  "a brand new tension surface",
-		Members:  []string{"R-1", "R-3"},
-		Steward:  "outsider",
+		Axis:    "cost-vs-flexibility",
+		Context: "a brand new tension surface",
+		Members: []string{"R-1", "R-3"},
+		Steward: "outsider",
 	}
 	if err := Apply(path, today, p); err != nil {
 		t.Fatalf("Apply: %v", err)

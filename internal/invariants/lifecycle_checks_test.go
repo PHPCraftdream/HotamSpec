@@ -245,7 +245,7 @@ func TestCheckGoalLifecycleInLifecycle_OK(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sA},
-		Goals:       []ontology.Goal{goal("GOAL-1", "sa", "ACTIVE"), goal("GOAL-2", "sa", "MET")},
+		Goals:        []ontology.Goal{goal("GOAL-1", "sa", "ACTIVE"), goal("GOAL-2", "sa", "MET")},
 	}
 	if vs := runCheck(t, "check_goal_lifecycle_in_lifecycle", g); len(vs) != 0 {
 		t.Fatalf("expected no violations for canonical goal lifecycles, got %v", vs)

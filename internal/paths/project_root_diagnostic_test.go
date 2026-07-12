@@ -93,10 +93,10 @@ func TestIsInside(t *testing.T) {
 		parent string
 		want   bool
 	}{
-		{"identity", parent, parent, true},                 // rel == "." → true
-		{"direct child", child, parent, true},              // relative sub-path → true
-		{"sibling not inside", sibling, child, false},      // rel starts with ".." → false
-		{"parent not inside child", parent, child, false},  // rel == ".." → false
+		{"identity", parent, parent, true},                // rel == "." → true
+		{"direct child", child, parent, true},             // relative sub-path → true
+		{"sibling not inside", sibling, child, false},     // rel starts with ".." → false
+		{"parent not inside child", parent, child, false}, // rel == ".." → false
 	}
 	for _, c := range cases {
 		c := c
@@ -116,12 +116,12 @@ func TestParseTomlValue(t *testing.T) {
 	cases := []struct {
 		in, want string
 	}{
-		{`"plain"`, "plain"},                // simple quoted → unwrapped
-		{`"a\"b"`, `a"b`},                   // escaped quote unescaped
-		{`"c:\\d"`, `c:\d`},                 // escaped backslash unescaped
-		{`bare`, "bare"},                    // unquoted → trimmed as-is
-		{`  "spaced"  `, "spaced"},          // surrounding whitespace trimmed
-		{`"`, `"`},                          // single quote → not a pair → as-is
+		{`"plain"`, "plain"},       // simple quoted → unwrapped
+		{`"a\"b"`, `a"b`},          // escaped quote unescaped
+		{`"c:\\d"`, `c:\d`},        // escaped backslash unescaped
+		{`bare`, "bare"},           // unquoted → trimmed as-is
+		{`  "spaced"  `, "spaced"}, // surrounding whitespace trimmed
+		{`"`, `"`},                 // single quote → not a pair → as-is
 	}
 	for _, c := range cases {
 		c := c

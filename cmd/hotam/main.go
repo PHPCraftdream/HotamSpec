@@ -7,7 +7,9 @@ import (
 )
 
 // version is set at build time via:
-//   go build -ldflags "-X main.version=v0.1.0" ...
+//
+//	go build -ldflags "-X main.version=v0.1.0" ...
+//
 // Left as "dev" for local/unreleased builds (go run, plain go build, go install
 // without -ldflags).
 var version = "dev"

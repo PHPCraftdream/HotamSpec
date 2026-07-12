@@ -227,13 +227,13 @@ func TestRenderOperatorRecursionBlock_DefaultDomain(t *testing.T) {
 func TestRuneTruncate(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		in     string
-		keep   int
+		in           string
+		keep         int
 		keepEllipsis string // "..."-suffixed expected when truncation occurs
-		truncated bool
+		truncated    bool
 	}{
-		{"short", 100, "", false},            // well under threshold → unchanged
-		{"abcdefghij", 5, "abcde...", true},  // ASCII truncation
+		{"short", 100, "", false},           // well under threshold → unchanged
+		{"abcdefghij", 5, "abcde...", true}, // ASCII truncation
 		{"aaaaaaaaaaaa", 5, "aaaaa...", true},
 	}
 	for _, c := range cases {
@@ -279,11 +279,11 @@ func TestHasRejectedReplacesMarker(t *testing.T) {
 	t.Parallel()
 	// every dash variant the regex accepts must match
 	for _, why := range []string{
-		"foo REJECTED — REPLACES bar",   // em-dash
-		"REJECTED – REPLACES",           // en-dash
-		"REJECTED--REPLACES",            // double hyphen
-		"REJECTED-REPLACES",             // single hyphen
-		"REJECTED  —  REPLACES",         // whitespace around dash
+		"foo REJECTED — REPLACES bar", // em-dash
+		"REJECTED – REPLACES",         // en-dash
+		"REJECTED--REPLACES",          // double hyphen
+		"REJECTED-REPLACES",           // single hyphen
+		"REJECTED  —  REPLACES",       // whitespace around dash
 	} {
 		if !hasRejectedReplacesMarker(why) {
 			t.Errorf("expected marker to match %q", why)

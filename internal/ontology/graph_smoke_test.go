@@ -72,12 +72,12 @@ func buildSmokeGraph() *Graph {
 	processes := []Process{
 		{
 			ID: "PR-ship", Lifecycle: ProcessLifecycle, DrivesEntities: []string{"order"},
-			Steps: []Step{{Name: "ship", RequiresRole: "ops", Invokes: "order.fulfill"}},
+			Steps:         []Step{{Name: "ship", RequiresRole: "ops", Invokes: "order.fulfill"}},
 			RolesRequired: []string{"ops"},
 		},
 		{
 			ID: "PR-cancel", Lifecycle: ProcessLifecycle, DrivesEntities: []string{"order"},
-			Steps: []Step{{Name: "abort", RequiresRole: "ops", Invokes: "order.cancel"}},
+			Steps:         []Step{{Name: "abort", RequiresRole: "ops", Invokes: "order.cancel"}},
 			RolesRequired: []string{"ops"},
 		},
 	}

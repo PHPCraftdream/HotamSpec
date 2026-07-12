@@ -22,7 +22,7 @@ var EnforcementLevels = map[string]struct{}{
 }
 
 const (
-	EnforceabilityENFORCEABLE     = "ENFORCEABLE"
+	EnforceabilityENFORCEABLE      = "ENFORCEABLE"
 	EnforceabilityINHERENTLY_PROSE = "INHERENTLY_PROSE"
 )
 
