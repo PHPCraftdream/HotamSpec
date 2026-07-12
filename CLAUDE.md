@@ -9,7 +9,7 @@ Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/doc
 
 ### Role (the resident seed)
 
-Operator of `hotam-dev` (9 SETTLED). Guardian: **spec** (`domains/hotam-dev/graph.json`) ↔ **tests** (`check_*`/`Test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
+Operator of `hotam-spec-self` (232 SETTLED). Guardian: **spec** (`domains/hotam-spec-self/graph.json`) ↔ **tests** (`check_*`/`Test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.
 
 Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).
 
@@ -33,7 +33,8 @@ a direct anchor-cited answer — steps 2-6 are for graph/code changes
 3. **CONFRONT** — check input vs reality: which SETTLED claims contradicted?
    which Assumptions rested on / killed? already rejected — scan
    RECENTLY-REJECTED below, cite replacement, don't re-derive (anti-relitigation).
-   Tool: not yet ported; scan REQUIREMENTS.md/HISTORY.md by hand.
+   Tool: `hotam confront <candidate-text>` ranks the candidate's lexical overlap
+   against SETTLED claims (duplicate guard) and REJECTED history (anti-relitigation).
 4. **TRANSLATE** — outcome → typed nodes: ProposedRequirement /
    ProposedConflictTransition / ProposedRejection / ProposedConflict /
    ProposedOperatorBudget / ProposedEntityType JSON
@@ -56,54 +57,7 @@ Writing nothing = valid outcome ("contradicts R-x; rejected as R-y — cite R-z"
 
 ### Methodology — how to think
 
-- [§Agent](spec/docs/thinking/agent.md) — RULE: Every agent is itself a potential director that can spawn sub-agents;
-the agents/ subdir is the recursion slot (R-agent-is-recursive-director).
-- [§Assumption](spec/docs/thinking/assumption.md) — RULE (IMPLEMENTS, R-assumption-implements-state): IMPLEMENTS is a fourth,
-VOLITIONAL род of status, categorically distinct from the three epistemic
-statuses (HOLDS/UNCERTAIN/DEAD, which answer 'is this true?').
-- [§Attention](spec/docs/thinking/attention.md) — RULE (R-attention-registry): every signal an agent is obliged to notice —
-"here is what needs your attention right now" — is produced by a NAMED source
-in a single registry (ATTENTION_SOURCES), and `collect(g, ...)` runs the
-registry and returns a flat list of typed AttentionSignal records.
-- [§Axis](spec/docs/thinking/axis.md) — Canon: §Axis — controlled vocabulary of tension dimensions.
-- [§Closure](spec/docs/thinking/closure.md) — Canon: §Closure — shared enforcer-name -> Go test-name resolution logic.
-- [§Conflict](spec/docs/thinking/conflict.md) — Canon: §Conflict — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8).
-- [§Conscience](spec/docs/thinking/conscience.md) — RULE: the graph is structurally well-formed iff this returns [].
-- [§Contextbudget](spec/docs/thinking/contextbudget.md) — RULE: for each operator whose budget measure (NODE_COUNT nodes or CRYSTAL_CHARS resident crystal chars) exceeds its budget limit, fire — crystallize first; if still over, spawn a sub-operator:
-  - If `measure == NODE_COUNT`, compute:
-      size = len(g.requirements) + len(g.conflicts) + len(g.assumptions)
-    (full-graph count; DomainScope narrowing is deferred to a later P-phase).
-- [§Domain](spec/docs/thinking/domain.md) — RULE (R-active-domain-pin-not-alphabetical): exactly ONE function,
-``resolve_active_domain(domains_root)``, implements the resolution order
-shared by every tool that must agree on which domain is active:
-- [§Entity](spec/docs/thinking/entity.md) — Canon: §Entity — domain-declared business concept with its own lifecycle.
-- [§Glossary](spec/docs/thinking/glossary.md) — RULE: every §-token used in hotam_spec framework docstrings MUST appear here as a
-Term entry.
-- [§Goal](spec/docs/thinking/goal.md) — RULE: used by check_typed_anchors to verify GOAL- prefix discipline and by
-check_goal_owner_is_operator to resolve Goal.owner references.
-- [§Graph](spec/docs/thinking/graph.md) — RULE: the BEGIN/END sentinel-pair pattern (e.g.
-- [§Invariants](spec/docs/thinking/invariants.md) — Canon: §Invariants — structural form of the tension graph (the check_* layer).
-- [§Lifecycle](spec/docs/thinking/lifecycle.md) — RULE: a well-formed Lifecycle satisfies all four conditions below.
-- [§Operator](spec/docs/thinking/operator.md) — RULE: used by check_no_dangling_ids to verify Operator.parent references
-and by check_operator_steward_not_self to identify operator acting facets.
-- [§Process](spec/docs/thinking/process.md) — RULE: used by check_typed_anchors to verify PR- prefix discipline and by
-tests to confirm a named process is present.
-- [§Proposal](spec/docs/thinking/proposal.md) — Canon: §Proposal — structured operator-→-steward change proposals.
-- [§Reflection](spec/docs/thinking/reflection.md) — RULE: every P0 REFLECTION condition the harness can raise MUST be a named,
-pure, graph-only predicate in this module — draft-overhang, unenforced-settled,
-over-budget-operators, dead-assumption-on-enforcer, derived-but-unbuilt,
-implements-decay, replaces-edge-migration, all-members-rejected — composed by
-`hotam what-now` via the diagnose package in REFLECTION_PREDICATES order, never
-re-inlined in tool code (R-reflection-predicates-first-class).
-- [§Requirement](spec/docs/thinking/requirement.md) — RULE: every section-anchor token (pattern: section-sign followed by an
-identifier, e.g.
-- [§Scope](spec/docs/thinking/scope.md) — RULE (R-overlap-single-presenter): a node contested by two or more
-operators must resolve to exactly one presenter, or the check fires —
-node '<id>' is contested by operators <ids> but no presenter could be
-determined; declare a presenter.
-- [§Signoff](spec/docs/thinking/signoff.md) — RULE: for each Conflict with a non-None signoff whose chosen_variant is
-non-empty, chosen_variant MUST be the id of one of the conflict's variants.
-- [§Stakeholder](spec/docs/thinking/stakeholder.md) — Canon: §Stakeholder — who owns requirements and stewards conflicts.
+One RULE per §-section; full Canon/Narrative/Why at `spec/docs/thinking/<slug>.md` (slug = lowercased §-name): §Requirement · §Conflict · §Assumption · §Axis · §Stakeholder · §Invariants · §Graph · §Lifecycle · §Operator · §ContextBudget · §Loop · §Glossary · §Scope · §Ticket · §Proposal · §Closure · §Tick · §Conscience · §Constitution · §Reflection · §Process · §Goal · §Context · §Atoms · §Agent · §Domain · §Entity · §Signoff · §Attention.
 <!-- EMBEDDED-THINKING:END -->
 <!-- EMBEDDED-TOOLS:BEGIN -->
 <!-- (generated by `go run ./cmd/hotam gen-spec` — do not hand-edit) -->
@@ -112,41 +66,15 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 
 - **all-violations** — Usage: hotam all-violations [--domain <path>]. Prints all invariant violations for a domain graph (internal/invariants); exits 1 if any are found. Ported (`hotam all-violations`).
 - **apply-proposal** — Usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD. Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json. Ported (`hotam apply-proposal`).
-- **attention** — Not ported. Historically: the agent-agnostic CLI over the attention core.
-- **attention-hook** — Not ported. Historically: the Claude adapter that injects the attention list into context.
-- **audit-atomicity** — Not ported. Historically: surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.
-- **audit-tensions** — Not ported. Historically: the generative-audit tool, a deterministic, LLM-free shortlist of latent-connector suspects.
-- **claude-md-diff-watch** — Not ported. Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.
-- **closure** — Not ported. Historically: per-action verify — did the proposal remove its diagnosis?
-- **confront** — Not ported. Historically: the CONFRONT step's tool, ranking a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.
-- **context** — Not ported. Historically: the operator's working-context measurement (reader + CLI dispatcher).
-- **context-producer** — Not ported. Historically: the producer half of the context cipher, writing a runtime context snapshot.
-- **create-agent** — Not ported. Historically: scaffolds domains/<domain>/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope, tools/, agents/, and README.md.
-- **create-axis** — Not ported. Historically: scaffolds a new Axis into the active domain's controlled-vocabulary.
-- **create-domain** — Not ported. Historically: scaffolds domains/<name>/ as a self-contained business domain with a manifest, graph.json, tools/, agents/director/, docs/gen/, and CLAUDE.md.
-- **create-entity-type** — Not ported. Historically: scaffolds an EntityType declaration into the active domain's graph via apply-proposal.
+- **confront** — Usage: hotam confront <text> [--domain <path>] [--file <path>] [--json]. CONFRONT step of the mediation loop (internal/diagnose): checks a candidate claim for lexical overlap with SETTLED requirements (duplicate guard) and REJECTED history (anti-relitigation) before anything is written. <text> is a quoted positional; --file <path> reads a long draft. Reuses the inspect overlap engine. Never gates; exit code always 0. Ported (`hotam confront`).
 - **due** — Usage: hotam due [--domain <path>] [--today YYYY-MM-DD] [--json]. Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements (internal/freshness); never gates, exit code always 0. Ported (`hotam due`).
-- **emit-cipher** — Not ported. Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
 - **gate** — Usage: hotam gate <target-anchor> [--domain <path>]. T1 tiered LAND gate (internal/gate): selects a targeted enforcer subset for a target node instead of the full test suite. Ported (`hotam gate`).
-- **gate-status** — Not ported. Historically: reads the runtime land-log and answers the commit-boundary question.
 - **gen-spec** — Usage: hotam gen-spec [--domain <path>]. Regenerates docs/gen/*.md + graph.json for a domain graph from the executable model (internal/generator + internal/ontology), making drift structurally impossible. Ported (`hotam gen-spec`).
 - **inspect** — Usage: hotam inspect [--domain <path>] [--json] [--limit N] [--min-score N]. Advisory listing of semantic conflict candidates with evidence (internal/diagnose): shared-assumption clusters, entity-state suspects, lexical claim overlap, axis co-reference. --min-score (default 5) suppresses low-signal candidates; 0 shows all. Never gates; exit code always 0. Ported (`hotam inspect`).
-- **invoke-agent** — Not ported. Historically: invokes a sub-agent by loading its CLAUDE.md as the operator-prompt and printing it to stdout.
 - **land** — Usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--claude-md <path>]. Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants). Ported (`hotam land`).
-- **mark-revisit-evaluated** — Not ported. Historically: records that a DECIDED conflict's revisit_marker was evaluated.
 - **req** — Usage: hotam req <show|list|search|context|related> [args] [--domain <path>] [--json]. Compact agentic read interface over the domain graph (internal/query): answers 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc. Ported (`hotam req`).
-- **review** — Not ported. Historically: single CLI entry point over the low-traffic review tools.
-- **setup-context-hook** — Not ported. Historically: installs/removes the project-local hook that feeds the context producer.
-- **setup-hooks** — Not ported. Historically: generates the committable, portable project sensorium.
-- **spawn-agent** — Not ported. Historically: composes a sub-agent's task prompt by prepending the agent's CLAUDE.md crystal, so the subagent boots from substrate (not from raw text).
-- **spawn-log-isolation-status** — Not ported. Historically: reads the runtime spawn-log and flags mutating agents recorded without worktree isolation.
-- **ticket-comment** — Not ported. Historically: appends a stamped comment to a ticket (and a History 'commented' entry).
-- **ticket-create** — Not ported. Historically: creates a new on-disk ticket (auto-id, initial status, first History entry).
-- **ticket-edit** — Not ported. Historically: edits a ticket's title/body, snapshotting the prior text into History.
-- **ticket-list** — Not ported. Historically: lists tickets, optionally filtered by status or assignee (read-only).
-- **ticket-move** — Not ported. Historically: moves a ticket to a new status (relocates the file + records the transition in History).
-- **ticket-show** — Not ported. Historically: prints one ticket's header, body, comments and full History (read-only).
 - **what-now** — Usage: hotam what-now [--domain <path>] [--limit N]. Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible. Ported (`hotam what-now`).
+- 27 additional tools declared in the methodology registry but not yet ported to Go — full list + per-tool purpose: `docs/gen/tools/` (one .md per tool) or `internal/methodology/tools_data.go`.
 <!-- EMBEDDED-TOOLS:END -->
 <!-- OPERATOR-RECURSION:BEGIN -->
 <!-- (generated by `go run ./cmd/hotam gen-spec` — do not hand-edit) -->
@@ -156,16 +84,16 @@ non-empty, chosen_variant MUST be the id of one of the conflict's variants.
 Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, same Mediation loop, thinking + constitution filtered by SCOPE prefixes (R-sub-agent-crystal-triad: scoped thinking + parent reference + scoped constitution).
 
 - One domain, zero active sub-agents → exactly ONE CLAUDE.md (this file). Sub-agent crystals materialize only at real spawn time (R-claude-md-consolidates-when-single-agent).
-- Spawn path: scaffold `domains/hotam-dev/agents/<name>/` with its own CLAUDE.md, scope, tools, agents (not yet ported as a CLI command — create the directory and files by hand) → `hotam gen-spec` (fills scoped blocks) → hand off the sub-operator's crystal + task (spawn-log tooling not yet ported; record the hand-off manually, R-task-spawn-log-runtime).
+- Spawn path: scaffold `domains/hotam-spec-self/agents/<name>/` with its own CLAUDE.md, scope, tools, agents (not yet ported as a CLI command — create the directory and files by hand) → `hotam gen-spec` (fills scoped blocks) → hand off the sub-operator's crystal + task (spawn-log tooling not yet ported; record the hand-off manually, R-task-spawn-log-runtime).
 - Delegate only when still over budget AFTER crystallizing (R-crystallize-before-split, R-context-bounded-delegation). Sub-operator returns CONCLUSIONS only — shared objects as explicit border, never raw context (R-delegation-conclusions-only).
 <!-- OPERATOR-RECURSION:END -->
 
 <!-- LIVE-STATE:BEGIN -->
 ### Live state (autogenerated by `hotam gen-spec` — do not hand-edit)
 
-- **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
-- **debt:** 0/9 SETTLED ENFORCED · 0 DRAFT · 0 OPEN · 6 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 13 nodes (req+conflict+assumption); OP-director budget 0 nodes (NODE_COUNT measure) (headroom -13)
+- **top action:** [P0] REFLECTION on `enforcement-gradient` — 90 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
+- **debt:** 116/232 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 90 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
+- **graph:** 300 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 14756 chars (headroom 135244)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -195,12 +123,12 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 ### Constitution index (business + discipline SETTLED requirements — summary)
 
-> Full id+flag index: `domains/hotam-dev/docs/gen/AGENT-CONTEXT.md`. Full claim + WHY + assumptions: `domains/hotam-dev/docs/gen/REQUIREMENTS.md` (roster) ·
-> one requirement: `hotam req show <id> --domain domains/hotam-dev`. enforcement detail: `docs/gen/UNENFORCED.md`.
+> Full id+flag index: `domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md`. Full claim + WHY + assumptions: `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` (roster) ·
+> one requirement: `hotam req show <id> --domain domains/hotam-spec-self`. enforcement detail: `docs/gen/UNENFORCED.md`.
 > Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.
-> Framework internals (0 atoms): `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md`.
+> Framework internals (112 atoms): `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md`.
 
-Other (9)
+Operator (7) · Substrate / Anchoring (3) · Discipline (14) · Check / Invariant (20) · Framework Self (2) · Lifecycle / Process / Goal (2) · Boot / Glossary / History / Docs (2) · Other (70)
 <!-- CONSTITUTION:END -->
 <!-- AGENT-MAP:BEGIN -->
 <!-- (generated by `go run ./cmd/hotam gen-spec` — do not hand-edit) -->
@@ -253,7 +181,9 @@ _(no sub-operators yet)_
 
 Before proposing an architectural change, check this isn't already REJECTED with a REPLACES successor — cite the replacement instead of re-deriving. Full list: `docs/gen/HISTORY.md`.
 
-_(no anti-relitigation entries — nothing recently rejected.)_
+**REJECTED (REPLACES known)** (41) — R-active-loop-playbooks · R-agent-has-own-crystal · R-agent-imports-framework
+
+_(showing 3 of 41, alphabetical by id — full history + WHY: docs/gen/HISTORY.md, `hotam req show <id>`)_
 <!-- RECENTLY-REJECTED:END -->
 
 <!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->
