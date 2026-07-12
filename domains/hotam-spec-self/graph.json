@@ -273,11 +273,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 20
     },
     {
@@ -302,11 +308,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 21
     },
     {
@@ -359,11 +371,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 19
     },
     {
@@ -391,11 +409,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 219
     },
     {
@@ -422,11 +446,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 266
     },
     {
@@ -448,11 +478,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 152
     },
     {
@@ -474,11 +510,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 169
     },
     {
@@ -527,11 +569,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 89
     },
     {
@@ -579,11 +627,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 87
     },
     {
@@ -605,11 +659,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 164
     },
     {
@@ -631,11 +691,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 153
     },
     {
@@ -657,11 +723,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 0
     },
     {
@@ -683,11 +755,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 168
     },
     {
@@ -709,11 +787,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 150
     },
     {
@@ -733,11 +817,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 5
     },
     {
@@ -767,11 +857,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 51
     },
     {
@@ -800,11 +896,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 66
     },
     {
@@ -834,11 +936,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 245
     },
     {
@@ -867,11 +975,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 240
     },
     {
@@ -903,11 +1017,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 221
     },
     {
@@ -934,11 +1054,17 @@
       "summary": "",
       "created_at": "2026-07-04",
       "settled_at": "2026-07-04",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-04",
+      "review_after": "2027-01-04",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 252
     },
     {
@@ -965,11 +1091,17 @@
       "summary": "",
       "created_at": "2026-07-04",
       "settled_at": "2026-07-04",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-04",
+      "review_after": "2027-01-04",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 254
     },
     {
@@ -991,11 +1123,17 @@
       "summary": "",
       "created_at": "2026-07-04",
       "settled_at": "2026-07-04",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-04",
+      "review_after": "2027-01-04",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 251
     },
     {
@@ -1022,11 +1160,17 @@
       "summary": "",
       "created_at": "2026-07-04",
       "settled_at": "2026-07-04",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-04",
+      "review_after": "2027-01-04",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-04; review_after: →2027-01-04",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 253
     },
     {
@@ -1048,11 +1192,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 99
     },
     {
@@ -1096,11 +1246,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 10
     },
     {
@@ -1127,11 +1283,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 16
     },
     {
@@ -1156,11 +1318,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 74
     },
     {
@@ -1182,11 +1350,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 148
     },
     {
@@ -1264,11 +1438,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 111
     },
     {
@@ -1348,11 +1528,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 110
     },
     {
@@ -1380,11 +1566,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 59
     },
     {
@@ -1406,11 +1598,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 85
     },
     {
@@ -1461,11 +1659,17 @@
       "summary": "",
       "created_at": "2026-07-01",
       "settled_at": "2026-07-01",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-01",
+      "review_after": "2027-01-01",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 188
     },
     {
@@ -1487,11 +1691,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 68
     },
     {
@@ -1514,11 +1724,17 @@
       "summary": "",
       "created_at": "2026-07-01",
       "settled_at": "2026-07-01",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-01",
+      "review_after": "2027-01-01",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 192
     },
     {
@@ -1585,11 +1801,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 213
     },
     {
@@ -1611,11 +1833,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 202
     },
     {
@@ -1638,11 +1866,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 223
     },
     {
@@ -1667,11 +1901,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 2
     },
     {
@@ -1693,11 +1933,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 79
     },
     {
@@ -1715,14 +1961,19 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
       "history": [
         {
           "at": "2026-07-10",
           "summary": "why: Steward verdict 2026-07-05, verbatim: '…→Names the legitimate resolution surface…; enforceability: ENFORCEABLE→INHERENTLY_PROSE",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
           "decided_by": ""
         }
       ],
@@ -1749,11 +2000,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 78
     },
     {
@@ -1771,11 +2028,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 265
     },
     {
@@ -1798,11 +2061,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 83
     },
     {
@@ -1826,11 +2095,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 198
     },
     {
@@ -1852,11 +2127,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 199
     },
     {
@@ -1909,11 +2190,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 104
     },
     {
@@ -1940,11 +2227,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 105
     },
     {
@@ -1971,11 +2264,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 106
     },
     {
@@ -1999,11 +2298,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 17
     },
     {
@@ -2026,11 +2331,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 41
     },
     {
@@ -2056,11 +2367,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 34
     },
     {
@@ -2111,11 +2428,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 218
     },
     {
@@ -2137,11 +2460,17 @@
       "summary": "",
       "created_at": "2026-07-10",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 272
     },
     {
@@ -2173,11 +2502,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 146
     },
     {
@@ -2202,11 +2537,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 147
     },
     {
@@ -2263,11 +2604,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 196
     },
     {
@@ -2298,11 +2645,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 197
     },
     {
@@ -2329,11 +2682,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 195
     },
     {
@@ -2353,11 +2712,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 262
     },
     {
@@ -2385,11 +2750,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 141
     },
     {
@@ -2417,11 +2788,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 142
     },
     {
@@ -2449,11 +2826,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 143
     },
     {
@@ -2473,11 +2856,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 53
     },
     {
@@ -2497,11 +2886,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 49
     },
     {
@@ -2519,11 +2914,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 263
     },
     {
@@ -2545,11 +2946,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 80
     },
     {
@@ -2573,11 +2980,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 22
     },
     {
@@ -2597,11 +3010,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 36
     },
     {
@@ -2629,11 +3048,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 267
     },
     {
@@ -2660,11 +3085,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 139
     },
     {
@@ -2691,11 +3122,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 140
     },
     {
@@ -2746,11 +3183,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 138
     },
     {
@@ -2772,11 +3215,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 4
     },
     {
@@ -2799,11 +3248,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 163
     },
     {
@@ -2838,11 +3293,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 209
     },
     {
@@ -2864,11 +3325,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 77
     },
     {
@@ -2890,11 +3357,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 156
     },
     {
@@ -2964,11 +3437,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 170
     },
     {
@@ -2994,11 +3473,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 155
     },
     {
@@ -3021,11 +3506,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 154
     },
     {
@@ -3047,11 +3538,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 162
     },
     {
@@ -3074,11 +3571,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 235
     },
     {
@@ -3126,11 +3629,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 158
     },
     {
@@ -3153,11 +3662,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 157
     },
     {
@@ -3179,11 +3694,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 159
     },
     {
@@ -3209,11 +3730,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 232
     },
     {
@@ -3238,11 +3765,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 1
     },
     {
@@ -3269,11 +3802,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 108
     },
     {
@@ -3300,11 +3839,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 109
     },
     {
@@ -3358,11 +3903,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 107
     },
     {
@@ -3384,11 +3935,17 @@
       "summary": "",
       "created_at": "2026-07-01",
       "settled_at": "2026-07-01",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-01",
+      "review_after": "2027-01-01",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 186
     },
     {
@@ -3423,11 +3980,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 211
     },
     {
@@ -3455,11 +4018,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 145
     },
     {
@@ -3487,11 +4056,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 65
     },
     {
@@ -3545,11 +4120,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 144
     },
     {
@@ -3574,11 +4155,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 260
     },
     {
@@ -3603,11 +4190,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 261
     },
     {
@@ -3629,11 +4222,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 174
     },
     {
@@ -3655,11 +4254,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 178
     },
     {
@@ -3681,11 +4286,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 175
     },
     {
@@ -3708,11 +4319,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 134
     },
     {
@@ -3736,11 +4353,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 132
     },
     {
@@ -3763,11 +4386,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 133
     },
     {
@@ -3790,11 +4419,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 131
     },
     {
@@ -3817,11 +4452,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 130
     },
     {
@@ -3843,11 +4484,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 176
     },
     {
@@ -3870,11 +4517,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 177
     },
     {
@@ -3896,11 +4549,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 179
     },
     {
@@ -3923,11 +4582,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 129
     },
     {
@@ -3950,11 +4615,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 135
     },
     {
@@ -4005,11 +4676,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 222
     },
     {
@@ -4032,11 +4709,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 165
     },
     {
@@ -4054,11 +4737,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 256
     },
     {
@@ -4079,11 +4768,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 255
     },
     {
@@ -4111,11 +4806,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 115
     },
     {
@@ -4143,11 +4844,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 112
     },
     {
@@ -4175,11 +4882,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 113
     },
     {
@@ -4207,11 +4920,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 114
     },
     {
@@ -4291,11 +5010,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 38
     },
     {
@@ -4323,11 +5048,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 40
     },
     {
@@ -4354,11 +5085,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 39
     },
     {
@@ -4381,11 +5118,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 61
     },
     {
@@ -4411,11 +5154,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 224
     },
     {
@@ -4470,11 +5219,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 117
     },
     {
@@ -4502,11 +5257,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 116
     },
     {
@@ -4526,11 +5287,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 210
     },
     {
@@ -4558,11 +5325,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 206
     },
     {
@@ -4596,11 +5369,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 207
     },
     {
@@ -4630,11 +5409,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 212
     },
     {
@@ -4661,11 +5446,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 234
     },
     {
@@ -4692,11 +5483,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 233
     },
     {
@@ -4718,11 +5515,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 204
     },
     {
@@ -4776,11 +5579,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 118
     },
     {
@@ -4807,11 +5616,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 120
     },
     {
@@ -4833,11 +5648,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 122
     },
     {
@@ -4859,11 +5680,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 121
     },
     {
@@ -4890,11 +5717,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 119
     },
     {
@@ -4918,11 +5751,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 81
     },
     {
@@ -4953,11 +5792,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 241
     },
     {
@@ -5005,11 +5850,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 172
     },
     {
@@ -5031,11 +5882,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 171
     },
     {
@@ -5063,11 +5920,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 217
     },
     {
@@ -5087,11 +5950,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 63
     },
     {
@@ -5113,11 +5982,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 8
     },
     {
@@ -5139,11 +6014,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 250
     },
     {
@@ -5242,11 +6123,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 193
     },
     {
@@ -5297,11 +6184,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 194
     },
     {
@@ -5356,11 +6249,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 32
     },
     {
@@ -5388,11 +6287,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 30
     },
     {
@@ -5419,11 +6324,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 33
     },
     {
@@ -5446,11 +6357,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 35
     },
     {
@@ -5473,11 +6390,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 82
     },
     {
@@ -5499,11 +6422,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 182
     },
     {
@@ -5531,11 +6460,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 31
     },
     {
@@ -5558,11 +6493,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 62
     },
     {
@@ -5590,11 +6531,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 229
     },
     {
@@ -5614,11 +6561,17 @@
       "summary": "",
       "created_at": "2026-07-01",
       "settled_at": "2026-07-01",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-01",
+      "review_after": "2027-01-01",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 187
     },
     {
@@ -5692,11 +6645,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 184
     },
     {
@@ -5719,11 +6678,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 75
     },
     {
@@ -5750,11 +6715,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 205
     },
     {
@@ -5776,11 +6747,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 95
     },
     {
@@ -5833,11 +6810,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 136
     },
     {
@@ -5865,11 +6848,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 127
     },
     {
@@ -5897,11 +6886,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 125
     },
     {
@@ -5929,11 +6924,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 124
     },
     {
@@ -5961,11 +6962,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 126
     },
     {
@@ -5994,11 +7001,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 128
     },
     {
@@ -6026,11 +7039,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 123
     },
     {
@@ -6052,11 +7071,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 185
     },
     {
@@ -6077,14 +7102,19 @@
       "summary": "",
       "created_at": "2026-07-09",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
       "history": [
         {
           "at": "2026-07-10",
           "summary": "why: Today spec/ and its own domains (domain…→Today spec/ and its own domains (domain…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[test_project_root_not_hardcoded.py::te…; settled_at: 2026-07-09→2026-07-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
           "decided_by": ""
         }
       ],
@@ -6109,11 +7139,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 203
     },
     {
@@ -6135,11 +7171,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 243
     },
     {
@@ -6183,11 +7225,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 181
     },
     {
@@ -6213,11 +7261,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 201
     },
     {
@@ -6239,11 +7293,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 9
     },
     {
@@ -6296,11 +7356,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 84
     },
     {
@@ -6323,11 +7389,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 56
     },
     {
@@ -6350,11 +7422,17 @@
       "summary": "",
       "created_at": "2026-07-10",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 271
     },
     {
@@ -6378,11 +7456,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 239
     },
     {
@@ -6430,11 +7514,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 173
     },
     {
@@ -6456,11 +7546,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 64
     },
     {
@@ -6480,11 +7576,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 264
     },
     {
@@ -6512,11 +7614,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 227
     },
     {
@@ -6544,11 +7652,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 228
     },
     {
@@ -6593,11 +7707,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 244
     },
     {
@@ -6643,11 +7763,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 167
     },
     {
@@ -6669,11 +7795,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 166
     },
     {
@@ -6695,11 +7827,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 76
     },
     {
@@ -6723,11 +7861,17 @@
       "summary": "",
       "created_at": "2026-07-06",
       "settled_at": "2026-07-06",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-06",
+      "review_after": "2027-01-06",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-06; review_after: →2027-01-06",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 268
     },
     {
@@ -6749,11 +7893,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 25
     },
     {
@@ -6775,11 +7925,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 230
     },
     {
@@ -6803,11 +7959,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 52
     },
     {
@@ -6828,11 +7990,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 200
     },
     {
@@ -6854,11 +8022,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 11
     },
     {
@@ -6881,11 +8055,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 58
     },
     {
@@ -6912,11 +8092,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 46
     },
     {
@@ -6946,11 +8132,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 48
     },
     {
@@ -6977,11 +8169,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 45
     },
     {
@@ -7008,11 +8206,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 47
     },
     {
@@ -7059,11 +8263,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 137
     },
     {
@@ -7085,11 +8295,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 6
     },
     {
@@ -7118,11 +8334,17 @@
       "summary": "",
       "created_at": "2026-07-01",
       "settled_at": "2026-07-01",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-01",
+      "review_after": "2027-01-01",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-01; review_after: →2027-01-01",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 191
     },
     {
@@ -7144,11 +8366,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 73
     },
     {
@@ -7173,11 +8401,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 220
     },
     {
@@ -7224,11 +8458,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 93
     },
     {
@@ -7248,11 +8488,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 28
     },
     {
@@ -7277,11 +8523,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 237
     },
     {
@@ -7306,11 +8558,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 236
     },
     {
@@ -7338,11 +8596,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 238
     },
     {
@@ -7364,11 +8628,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 183
     },
     {
@@ -7393,11 +8663,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 248
     },
     {
@@ -7420,11 +8696,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 247
     },
     {
@@ -7444,11 +8726,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 249
     },
     {
@@ -7476,11 +8764,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 208
     },
     {
@@ -7502,11 +8796,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 149
     },
     {
@@ -7529,11 +8829,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 94
     },
     {
@@ -7586,11 +8892,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 215
     },
     {
@@ -7614,11 +8926,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 14
     },
     {
@@ -7638,11 +8956,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 12
     },
     {
@@ -7671,11 +8995,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 242
     },
     {
@@ -7698,11 +9028,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 67
     },
     {
@@ -7725,11 +9061,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 57
     },
     {
@@ -7752,11 +9094,17 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-05",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-05",
+      "review_after": "2027-01-05",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-05; review_after: →2027-01-05",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 258
     },
     {
@@ -7803,11 +9151,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 226
     },
     {
@@ -7847,11 +9201,17 @@
       "summary": "",
       "created_at": "2026-07-03",
       "settled_at": "2026-07-03",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-03",
+      "review_after": "2027-01-03",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-03; review_after: →2027-01-03",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 246
     },
     {
@@ -7871,11 +9231,17 @@
       "summary": "",
       "created_at": "2026-07-02",
       "settled_at": "2026-07-02",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-02",
+      "review_after": "2027-01-02",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-02; review_after: →2027-01-02",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 225
     },
     {
@@ -7897,11 +9263,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 50
     },
     {
@@ -7923,14 +9295,19 @@
       "summary": "",
       "created_at": "2026-07-10",
       "settled_at": "2026-07-11",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-11",
+      "review_after": "2027-01-11",
       "evidence": [],
       "source_refs": [],
       "history": [
         {
           "at": "2026-07-11",
           "summary": "claim: A release wheel is produced only by spe…→A release wheel is produced only by spe…; why: The uv_build backend packages only cont…→The uv_build backend packages only cont…; settled_at: 2026-07-10→2026-07-11",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-11; review_after: →2027-01-11",
           "decided_by": ""
         }
       ],
@@ -7954,14 +9331,19 @@
       "summary": "",
       "created_at": "2026-07-05",
       "settled_at": "2026-07-10",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-07-10",
+      "review_after": "2027-01-10",
       "evidence": [],
       "source_refs": [],
       "history": [
         {
           "at": "2026-07-10",
           "summary": "why: Steward verdict 2026-07-05, verbatim: '…→Steward verdict 2026-07-05, verbatim: '…; enforcement: PROSE→ENFORCED; enforced_by: []→[test_launch_dir_write_scope.py::test_n…; settled_at: 2026-07-05→2026-07-10",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-07-10; review_after: →2027-01-10",
           "decided_by": ""
         }
       ],
@@ -7991,11 +9373,17 @@
       "summary": "",
       "created_at": "2026-06-30",
       "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
+      "last_reviewed_at": "2026-06-30",
+      "review_after": "2026-12-30",
       "evidence": [],
       "source_refs": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "summary": "last_reviewed_at: →2026-06-30; review_after: →2026-12-30",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 54
     }
   ],

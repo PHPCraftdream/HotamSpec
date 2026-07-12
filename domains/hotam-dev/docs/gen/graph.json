@@ -37,7 +37,7 @@
       "steward": "dev-steward"
     }
   ],
-  "generated_from": "domains/<active>/graph.py:build_graph()",
+  "generated_from": "domains/<active>/graph.json",
   "node_ids": [
     "A-runtime-logs-append-only",
     "A-single-steward-session",
@@ -55,7 +55,7 @@
     "dev-steward",
     "pipeline-operator"
   ],
-  "note": "READ-ONLY generated snapshot. Source of truth is graph.py; edit the graph only via tools/apply_proposal.py (R-no-hand-edit-graph, R-per-node-json-store REJECTED).",
+  "note": "READ-ONLY generated snapshot. Source of truth is the domain's graph.json; edit the graph only via `hotam apply-proposal` (R-no-hand-edit-graph, R-per-node-json-store REJECTED).",
   "requirements": [
     {
       "assumptions": [
@@ -67,11 +67,17 @@
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-t1-gate-is-default",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "Per-move full-suite verification is too slow for the conveyor's normal cadence (observed multi-minute T2 runs); T1 keeps the loop responsive while T2 remains the mandatory boundary gate (see R-wave-lands-atomically)."
@@ -85,11 +91,17 @@
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-wave-lands-atomically",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. Enforcement is honestly STRUCTURAL: what_now/apply_proposal make the T2 boundary visible and addressable (gate_status.py, land-log.jsonl tier trace) but no single check_* fires automatically if a steward skips a wave-boundary T2 run by hand outside the tool."
@@ -102,11 +114,17 @@
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-spawn-logged",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "Without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact; the append-only log is the mechanical proof a spawn happened, with what kind/parent/child. REQUALIFIED ENFORCED->STRUCTURAL (Wave 10 move 2, honesty of the spawn seam): the enforcer test_spawn_log_written proves only the MECHANISM (spawn_agent.py appends a row when invoked against a tmp runtime dir), NOT coverage of real host spawns. audit 2026-07-03: spec/.runtime/spawn-log.jsonl did not exist at all despite ~30+ real host-agent spawns across the two pipelines; the test proves the mechanism, not the coverage. Coverage is now refined into R-host-spawn-leaves-trace (--log-only path); this atom stands as the STRUCTURAL discipline that the trace SHOULD exist for every spawn."
@@ -121,11 +139,17 @@
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-land-leaves-trace",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "The land-log is the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- the basis for gate_status.py's commit-boundary answer (R-commit-boundary-checkable, hotam-spec-self); without it there is no auditable trail of what actually got verified before landing."
@@ -138,11 +162,17 @@
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-commit-follows-review",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "dev-steward",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "Review is the last human-in-the-loop check before a change becomes permanent history; this is a judgment call about diff quality and intent that no mechanical check can substitute for, so enforcement stays honestly PROSE."
@@ -155,11 +185,17 @@
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-push-only-on-request",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "dev-steward",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "A push is externally visible and hard to undo cleanly (shared history); reserving it strictly to explicit steward request keeps the irreversible action under human authority, mirroring the project's global CLAUDE.md discipline. Not mechanically checkable from inside this repo (no push actually happens in tests), so PROSE."
@@ -172,11 +208,17 @@
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-wave-strictly-sequential",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "Concurrent edits to the same files/scope would race and corrupt state (the graph, the docs, the .runtime logs); git history in this repo is evidence of sequential waves but is not itself a cheap mechanical gate, so enforcement stays honestly STRUCTURAL/PROSE rather than a fabricated git-log parser."
@@ -189,11 +231,17 @@
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-host-spawn-leaves-trace",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "Refines R-spawn-logged with the coverage the mechanism test cannot prove. audit 2026-07-03: the spawn-log was empty despite ~30+ real host spawns, because host-level Task/Agent spawns never routed through spawn_agent.py's crystal-composition path -- the only writer. spawn_agent.py --log-only (Wave 10 move 2a) closes that gap: it appends a spawn-log row (agent, task first line, stamp, isolation, mutating) WITHOUT composing a crystal, so a host spawn that names a logical agent with no on-disk CLAUDE.md can still leave a trace. STRUCTURAL, not ENFORCED: whether the operator ACTUALLY calls --log-only per spawn is operator discipline, not mechanically provable from the graph -- honest scope. The mechanism itself is covered by test_log_only_writes_row_without_composing_prompt. LANDED Wave 10 review: the referencing why-texts (R-task-spawn-log-runtime, R-spawn-logged, spawn_agent.py/.md, test_tool_spawn_agent.py) all cited this anchor, but the node itself was missing from the graph (the honesty-proposal's second atom never applied) -- landing it here resolves the dangling R-speak-by-reference anchor."
@@ -206,11 +254,17 @@
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        }
+      ],
       "id": "R-worktree-parallel-permitted",
-      "last_reviewed_at": "",
+      "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "",
+      "review_after": "2027-01-12",
       "source_refs": [],
       "status": "SETTLED",
       "why": "This atom reflects, inside the hotam-dev domain, the self-practice crystallized by the framework atom R-parallel-mutating-agents-use-worktree (hotam-spec-self): after the 2026-06-30/07-01 incident where two parallel agents in one shared tree lost work to a history-rewrite, the pipeline adopted per-agent worktree isolation (isolation:'worktree') as the sanctioned way to run mutating agents concurrently. It is honestly modeled here as a hotam-dev requirement (not a cross-domain reference) because a Conflict's members must be co-domain: it lets the sequential-vs-isolated-parallel tension between overlapping-scope waves (R-wave-strictly-sequential) and isolated parallelism be modeled as a first-class Conflict node in the domain that actually runs the pipeline. Enforcement is PROSE: whether an agent ACTUALLY runs in a worktree is operator discipline, not mechanically provable from this graph."

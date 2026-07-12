@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Финальное ревью цепочки Этапов A-F — 2026-07-10 (агент fh)
 
 Независимое сквозное ревью всех 6 коммитов синтез-плана (`docs/reviews/2026-07-10-synthesis-plan.md`):

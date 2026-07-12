@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Линза 3: Оператор-UX — трение и шум
 
 fxx-agent, read-only, 2026-07-05. Кристалл 75674 chars, 128 записей boot-cite-log, 171 записей land-log.

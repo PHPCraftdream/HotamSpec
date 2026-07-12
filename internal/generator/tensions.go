@@ -22,7 +22,7 @@ func BuildTensions(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("TENSIONS", g), ""}
 	lines = append(lines, "# TENSIONS.md — The tension map (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, "Generated from the active domain's `graph.py` (the tension graph). A **Conflict** is a first-class connector NODE — `R-a -> C <- R-b` — carrying the tension axis, the colliding context, and the shared assumption that belong to neither requirement. Conflicts CLUSTER by axis: a cluster of size > 1 is one unresolved architectural choice, not N local disputes.")
+	lines = append(lines, "Generated from the active domain's `graph.json` (the tension graph). A **Conflict** is a first-class connector NODE — `R-a -> C <- R-b` — carrying the tension axis, the colliding context, and the shared assumption that belong to neither requirement. Conflicts CLUSTER by axis: a cluster of size > 1 is one unresolved architectural choice, not N local disputes.")
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")

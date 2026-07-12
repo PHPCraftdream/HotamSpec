@@ -9,14 +9,13 @@ import (
 
 // BuildRepoMap builds REPO-MAP.md (repository file index). domainName and
 // genDocs identify which domain this doc describes and which docs/gen/ files
-// were actually written for it in this run — mirroring Python's
-// _scan_repo_map(), which scans domains/<name>/*.py for "Domain content" and
-// gen_dir.glob("*.md") for "Generated docs" rather than hardcoding either
-// section (R-doc-names-reader's sibling bug: REPO-MAP.md must name the real
-// domain, not always hotam-spec-self).
+// were actually written for it in this run — scanning domains/<name>/*.json
+// for "Domain content" and the actual generated files for "Generated docs"
+// rather than hardcoding either section (R-doc-names-reader's sibling bug:
+// REPO-MAP.md must name the real domain, not always hotam-spec-self).
 //
 // decisionsWritten/entitiesWritten additionally control the two conditional
-// "_(not written: ...)_ " placeholder lines Python emits when DECISIONS.md /
+// "_(not written: ...)_ " placeholder lines emitted when DECISIONS.md /
 // ENTITIES.md were withheld because their source registry is empty.
 func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, decisionsWritten, entitiesWritten bool) string {
 	lines := []string{Banner, ReaderHeaderLine("REPO_MAP", g), ""}
@@ -27,8 +26,8 @@ func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, d
 
 	lines = append(lines, "**Domain content** (`domains/"+domainName+"/`)")
 	lines = append(lines, "")
-	lines = append(lines, "- `domains/"+domainName+"/graph.py` — "+domainGraphPyRole(domainName))
-	lines = append(lines, "- `domains/"+domainName+"/manifest.py` — manifest of domain '"+domainName+"'.")
+	lines = append(lines, "- `domains/"+domainName+"/graph.json` — "+domainGraphPyRole(domainName))
+	lines = append(lines, "- `domains/"+domainName+"/manifest.json` — manifest of domain '"+domainName+"'.")
 	lines = append(lines, "")
 
 	lines = append(lines, "**Generated docs** (`domains/"+domainName+"/docs/gen/`)")

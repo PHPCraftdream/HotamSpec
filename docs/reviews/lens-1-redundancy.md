@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Линза 1 — Избыточность и дублирование
 
 Метрики базы: `spec/tools/` — 40 файлов, 15 523 строк; `spec/src/hotam_spec/` — ~11 100 строк (из них `invariants.py` — 4 482, 88 `check_*`); `spec/tests/` — 116 файлов, 22 926 строк; `spec/src/hotam_spec/cli/` — 31 файл, 625 строк; docs: `spec/docs/thinking/` 265K + `spec/docs/tools/` 156K + `domains/*/docs/gen/` 433K.

@@ -17,7 +17,7 @@ func BuildRequirements(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("REQUIREMENTS", g), ""}
 	lines = append(lines, "# REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, "Generated from the executable model: the methodology narrative comes from `spec/src/hotam_spec` docstrings (RULE + `Canon:§` + WHY); the roster below comes from `domains/<name>/graph.py:build_graph()`. Source of truth is the code; this text is generated, so it cannot drift from the model.")
+	lines = append(lines, "Generated from the executable model: the methodology narrative comes from the framework's own methodology registry (RULE + `Canon:§` + WHY); the roster below comes from `domains/<name>/graph.json`. Source of truth is the code + graph; this text is generated, so it cannot drift from the model.")
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")

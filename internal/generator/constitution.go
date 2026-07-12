@@ -76,7 +76,7 @@ func BuildConstitution(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("CONSTITUTION", g), ""}
 	lines = append(lines, "# CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, "You — the AI agent reading this cold — are the prospective Operator of this\nrepository. Read this file end-to-end before any action. It is generated from\nthe methodology's SETTLED laws (the active domain's `graph.py`). It is your\n*reconstitution from the substrate*: you do not need a session checkpoint\nto know what to do.")
+	lines = append(lines, "You — the AI agent reading this cold — are the prospective Operator of this\nrepository. Read this file end-to-end before any action. It is generated from\nthe methodology's SETTLED laws (the active domain's `graph.json`). It is your\n*reconstitution from the substrate*: you do not need a session checkpoint\nto know what to do.")
 	lines = append(lines, "")
 
 	lines = append(lines, "## 1. The role")
@@ -107,7 +107,7 @@ func BuildConstitution(g *ontology.Graph) string {
 	if loopText != "" {
 		lines = append(lines, loopText)
 	} else {
-		lines = append(lines, "State (graph + generated docs + test status)\n  -> Diagnosis (tools/what_now.py)\n  -> Next-action (typed, prioritized)\n  -> Action (edit the graph)\n  -> regenerate (tools/gen_spec.py)\n  -> State.")
+		lines = append(lines, "State (graph + generated docs + test status)\n  -> Diagnosis (`hotam what-now`)\n  -> Next-action (typed, prioritized)\n  -> Action (edit the graph)\n  -> regenerate (`hotam gen-spec`)\n  -> State.")
 	}
 	lines = append(lines, "")
 	lines = append(lines, "Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-impossible.")
@@ -172,9 +172,9 @@ func BuildConstitution(g *ontology.Graph) string {
 		lines = append(lines, rCCS.Why)
 		lines = append(lines, "")
 	}
-	lines = append(lines, "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by `tests/test_conscience.py`. Do NOT skip them; do NOT soften them.")
+	lines = append(lines, "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by `go test ./internal/invariants/...`. Do NOT skip them; do NOT soften them.")
 	lines = append(lines, "")
-	lines = append(lines, "The six `CRITICAL_CORE_INVARIANTS` (verbatim function names from `hotam_spec.invariants`):")
+	lines = append(lines, "The six `CRITICAL_CORE_INVARIANTS` (verbatim check names from `internal/invariants`):")
 	lines = append(lines, "")
 	for _, name := range criticalCoreNames {
 		lines = append(lines, "  - `"+name+"`")
@@ -185,25 +185,25 @@ func BuildConstitution(g *ontology.Graph) string {
 	lines = append(lines, "")
 	lines = append(lines, "Run, in order:")
 	lines = append(lines, "")
-	lines = append(lines, "  1. `cd D:/dev/HotamSpec/spec && python -m pytest -q`   → suite green?")
-	lines = append(lines, "  2. `python tools/gen_spec.py` (twice)                  → deterministic?")
-	lines = append(lines, "  3. `python tools/what_now.py | head -20`               → what is the top action?")
-	lines = append(lines, "  4. `python tools/what_now.py --report`                  → does the tick agree?")
+	lines = append(lines, "  1. `go test ./...`                                     → suite green?")
+	lines = append(lines, "  2. `hotam gen-spec` (twice)                            → deterministic?")
+	lines = append(lines, "  3. `hotam what-now --limit 20`                         → what is the top action?")
+	lines = append(lines, "  4. `hotam all-violations`                              → any structural violations?")
 	lines = append(lines, "  5. Read `docs/gen/UNENFORCED.md`                      → what's claimed but not guaranteed?")
 	lines = append(lines, "  6. Read `docs/gen/HISTORY.md`                         → what's been decided / rejected?")
 	lines = append(lines, "  7. Read `docs/gen/DECISIONS.md`                       → which M-decisions are open?")
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get steward\napproval, apply via `tools/apply_proposal.py --triggering-kind CONFLICT_STALLED`.\nThe closure check (R-verify-closure-per-action) will confirm advancement.")
+	lines = append(lines, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get steward\napproval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.\nThe closure check (R-verify-closure-per-action) will confirm advancement.")
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P4 OPEN_ITEM: same procedure with\n`--triggering-kind OPEN_ITEM`.")
+	lines = append(lines, "If the top action is P4 OPEN_ITEM: same procedure.")
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P1 STRUCTURE: stop. A structural violation means the\ngraph is malformed — investigate the root cause; do not edit by hand.\n`tools/apply_proposal.py` refuses non-stewarded structural changes.")
+	lines = append(lines, "If the top action is P1 STRUCTURE: stop. A structural violation means the\ngraph is malformed — investigate the root cause; do not edit by hand.\n`hotam apply-proposal` refuses non-stewarded structural changes.")
 	lines = append(lines, "")
 
 	lines = append(lines, "## 7. The methodology's laws (full constitutional set)")
 	lines = append(lines, "")
 	if g.IsEmpty() {
-		lines = append(lines, "_No content domain loaded yet — no `domains/<name>/graph.py` found or empty. The framework laws above still hold; the roster below will populate once a domain is loaded._")
+		lines = append(lines, "_No content domain loaded yet — no `domains/<name>/graph.json` found or empty. The framework laws above still hold; the roster below will populate once a domain is loaded._")
 		lines = append(lines, "")
 	} else {
 		lines = append(lines, "| anchor | enforcement | claim |")
@@ -230,8 +230,8 @@ func BuildConstitution(g *ontology.Graph) string {
 	lines = append(lines, "")
 	lines = append(lines, "  - propose Requirements / Conflict transitions / Rejections via the proposal")
 	lines = append(lines, "    protocol;")
-	lines = append(lines, "  - run `what_now.py` (including `--report`), `gen_spec.py`;")
-	lines = append(lines, "  - call `apply_proposal.py` with a steward-approved JSON;")
+	lines = append(lines, "  - run `hotam what-now`, `hotam gen-spec`;")
+	lines = append(lines, "  - call `hotam apply-proposal` with a steward-approved JSON;")
 	lines = append(lines, "  - crystallize working knowledge into requirement-code;")
 	lines = append(lines, "  - cite anchors in every communication.")
 	lines = append(lines, "")

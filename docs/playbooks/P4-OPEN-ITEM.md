@@ -7,8 +7,9 @@ What the harness says: "OPEN requirement 'R-…' (owner '…') awaits a decision
 R-ai-presents-not-decides binds. For each P4 action the operator:
 
 1. Reads the OPEN requirement's `claim` + `why` + assumptions (anchors all
-   live in the domain's `graph.py`; the prose in `docs/gen/REQUIREMENTS.md`
-   is the human-friendly mirror).
+   live in the domain's `graph.json`; `hotam req show <id> --json` gives the
+   full card directly, or see the human-friendly mirror in
+   `docs/gen/REQUIREMENTS.md`).
 2. Surfaces hidden assumptions: name the assumption(s) the question rests on,
    and whether they are HOLDS/UNCERTAIN/DEAD.
 3. Proposes 2-3 distinct resolution variants — short, EARS-shaped, citing the
@@ -17,13 +18,14 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
    conflicts would spawn or close, what burn-down delta to expect.
 5. Hands the steward a `ProposedRequirement` JSON for the variant the steward
    selects. Steward review is OUT-OF-BAND (here in chat, or a PR).
-6. On steward approval: call `tools/apply_proposal.py <approved.json>` to
-   mechanically land the change. Verify the pipeline runs green.
+6. On steward approval: call `hotam land <approved.json> --domain <path> --today YYYY-MM-DD`
+   (or `hotam apply-proposal` + `hotam gen-spec` separately) to mechanically
+   land the change. Verify the pipeline runs green (`hotam all-violations`).
 
 ## What the operator MUST NOT do
 
 - Decide the OPEN question itself (R-ai-presents-not-decides).
-- Edit the domain's `graph.py` by hand (use `apply_proposal.py`).
+- Edit the domain's `graph.json` by hand (use `hotam apply-proposal`/`hotam land`).
 - Skip naming the assumption(s) — silent assumption-binding is exactly the
   invisibility Hotam-Spec surfaces (the three invisibilities in CLAUDE.md).
 
@@ -53,11 +55,13 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
 
 ## After approval — verify closure (the feedback edge)
 
-Run apply_proposal with --triggering-kind OPEN_ITEM to assert the proposal
-actually removed the triggering diagnosis:
+Land the change and re-run diagnostics to assert the proposal actually
+removed the triggering diagnosis:
 
-    uv run python spec/tools/apply_proposal.py --triggering-kind OPEN_ITEM <proposal.json>
+    hotam land <proposal.json> --domain <path> --today YYYY-MM-DD
+    hotam what-now --domain <path>
 
-If the closure check reports "advanced: False", the write technically landed
-but the action did NOT advance — investigate before considering this work
-closed. The tick (P5) refuses to count a non-advancing apply as progress.
+If the OPEN action for this requirement still appears in `what-now` output,
+the write technically landed but the action did NOT advance — investigate
+before considering this work closed. A non-advancing apply does not count
+as progress.

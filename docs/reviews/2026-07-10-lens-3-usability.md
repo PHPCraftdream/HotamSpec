@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Lens 3 — Usability / cold-start аудит (2026-07-10)
 
 Роль: разработчик, впервые открывший репозиторий. Не знаю жаргона R-/C-/A-/OP-,

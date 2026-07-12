@@ -36,8 +36,8 @@ func BuildGlossary(g *ontology.Graph) string {
 			"consistently. Terminology drift is invisibility (R-glossary-sync-test).")
 	lines = append(lines, "")
 	lines = append(lines,
-		"Source: `spec/src/hotam_spec/glossary.py:TERMS`. Domain-side business terms\n"+
-			"(R-ids, axis slugs, stakeholders) live in `domains/<name>/graph.py` and are\n"+
+		"Source: `internal/generator/glossary_terms_data.go`. Domain-side business terms\n"+
+			"(R-ids, axis slugs, stakeholders) live in `domains/<name>/graph.json` and are\n"+
 			"listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.")
 	lines = append(lines, "")
 	lines = append(lines, "---")

@@ -124,6 +124,7 @@ func ReflectDeadAssumptionOnEnforcer(g *ontology.Graph) []Finding {
 }
 
 func ReflectDerivedButUnbuilt(g *ontology.Graph) []Finding {
+	idx := ontology.BuildIndex(g)
 	draftIDs := map[string]struct{}{}
 	for _, r := range g.Requirements {
 		if r.Status == ontology.StatusDRAFT {
@@ -136,7 +137,7 @@ func ReflectDerivedButUnbuilt(g *ontology.Graph) []Finding {
 			continue
 		}
 		for _, derivedID := range c.Derived {
-			derivedReq, found := ontology.RequirementByID(g, derivedID)
+			derivedReq, found := idx.RequirementByID[derivedID]
 			fire := !found
 			if found {
 				if _, isDraft := draftIDs[derivedReq.ID]; isDraft {
@@ -224,6 +225,7 @@ func ReflectReplacesEdgeMigration(g *ontology.Graph) []Finding {
 }
 
 func ReflectAllMembersRejected(g *ontology.Graph) []Finding {
+	idx := ontology.BuildIndex(g)
 	var out []Finding
 	for _, c := range g.Conflicts {
 		if strings.HasPrefix(c.Lifecycle, ontology.ConflictDECIDEDPrefix) {
@@ -237,7 +239,7 @@ func ReflectAllMembersRejected(g *ontology.Graph) []Finding {
 		}
 		allRejected := true
 		for _, mid := range c.Members {
-			r, ok := ontology.RequirementByID(g, mid)
+			r, ok := idx.RequirementByID[mid]
 			if !ok || r.Status != ontology.StatusREJECTED {
 				allRejected = false
 				break

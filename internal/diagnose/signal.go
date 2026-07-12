@@ -188,6 +188,8 @@ func DiagnoseSignals(g *ontology.Graph) []Signal {
 		})
 	}
 
+	out = append(out, FreshnessSignals(g, todayISO())...)
+
 	sort.SliceStable(out, func(i, j int) bool {
 		if out[i].Priority != out[j].Priority {
 			return out[i].Priority < out[j].Priority

@@ -162,12 +162,18 @@ func buildConstitutionIndexModel(g *ontology.Graph) []constitutionCategory {
 }
 
 // BuildConstitutionBlock renders the CONSTITUTION index block content
-// (without sentinels) for the CLAUDE.md CONSTITUTION sentinel: one line per
-// SETTLED business/discipline requirement (id + enforcement flag), grouped
-// by buildConstitutionIndexModel, with framework-plumbing atoms relocated
-// to a pointer at docs/gen/FRAMEWORK-INVARIANTS.md. Distinct from
+// (without sentinels) for the CLAUDE.md CONSTITUTION sentinel: a compact
+// per-category summary (requirement count only, no id listing), with
+// framework-plumbing atoms relocated to a pointer at
+// docs/gen/FRAMEWORK-INVARIANTS.md and the full id+flag index relocated to
+// docs/gen/AGENT-CONTEXT.md / REQUIREMENTS.md (P2-1 compaction — the
+// hundreds-of-ids full listing lives only in the generated docs, not
+// duplicated into every regeneration of the root crystal). Distinct from
 // BuildConstitution (constitution.go), which renders the full
-// docs/gen/CONSTITUTION.md catalog.
+// docs/gen/CONSTITUTION.md catalog, and from the full per-category listing
+// that AGENT-CONTEXT.md still carries in full (BuildAgentContext,
+// agentcontext.go) — this root-crystal block is intentionally the
+// summarized one.
 func BuildConstitutionBlock(g *ontology.Graph, domainName string) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
@@ -191,25 +197,26 @@ func BuildConstitutionBlock(g *ontology.Graph, domainName string) string {
 		return generatedHeaderComment + "\n\n_No SETTLED requirements yet._"
 	}
 
+	agentContextPath := fmt.Sprintf("domains/%s/docs/gen/AGENT-CONTEXT.md", domainName)
 	rosterPath := fmt.Sprintf("domains/%s/docs/gen/REQUIREMENTS.md", domainName)
 	invariantsPath := fmt.Sprintf("domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md", domainName)
 
 	lines := []string{
 		generatedHeaderComment,
 		"",
-		"### Constitution index (business + discipline SETTLED requirements)",
+		"### Constitution index (business + discipline SETTLED requirements — summary)",
 		"",
-		fmt.Sprintf("> Full claim + WHY + assumptions: `%s` (roster) ·", rosterPath),
-		"> enforcement detail: `docs/gen/UNENFORCED.md`.",
+		fmt.Sprintf("> Full id+flag index: `%s`. Full claim + WHY + assumptions: `%s` (roster) ·", agentContextPath, rosterPath),
+		fmt.Sprintf("> one requirement: `hotam req show <id> --domain domains/%s`. enforcement detail: `docs/gen/UNENFORCED.md`.", domainName),
 		"> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.",
 		fmt.Sprintf("> Framework internals (%d atoms): `%s`.", nPlumbing, invariantsPath),
 		"",
 	}
+	var catParts []string
 	for _, category := range categories {
-		items := clusterIndexItems(category.Requirements)
-		lines = append(lines, fmt.Sprintf("**%s** — %s", category.Label, strings.Join(items, " · ")))
-		lines = append(lines, "")
+		catParts = append(catParts, fmt.Sprintf("%s (%d)", category.Label, len(category.Requirements)))
 	}
+	lines = append(lines, strings.Join(catParts, " · "))
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
 }

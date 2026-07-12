@@ -42,7 +42,7 @@ func BuildHistory(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("HISTORY", g), ""}
 	lines = append(lines, "# HISTORY.md — Methodology decision history (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, "Generated from the anti-relitigation markers in the model: REJECTED\nrequirements (what was tried and discarded — REPLACES marker) and DECIDED /\nREVISIT_WHEN conflict lifecycles (what was resolved, why, and the condition\nunder which to re-open). Source of truth is the active domain's `graph.py`;\nthis text is generated so it cannot drift.")
+	lines = append(lines, "Generated from the anti-relitigation markers in the model: REJECTED\nrequirements (what was tried and discarded — REPLACES marker) and DECIDED /\nREVISIT_WHEN conflict lifecycles (what was resolved, why, and the condition\nunder which to re-open). Source of truth is the active domain's `graph.json`;\nthis text is generated so it cannot drift.")
 	lines = append(lines, "")
 	lines = append(lines, "A fresh agent reads this to recover the methodology's history without\nre-litigating settled questions — the historian role of the AI made into\nsubstrate (R-history-from-rejected-markers).")
 	lines = append(lines, "")

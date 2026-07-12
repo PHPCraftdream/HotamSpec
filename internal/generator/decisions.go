@@ -43,7 +43,7 @@ func BuildDecisions(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("DECISIONS", g), ""}
 	lines = append(lines, "# DECISIONS.md — Open methodology decisions (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, "Generated mirror of the M-registry. The SINGLE source of truth is the\ngraph's OPEN requirements with non-empty `m_tag` in the active domain's\n`graph.py`. This file retires the hand-maintained M-table\nthat lived in CLAUDE.md — per `R-drift-structurally-impossible` and the\ndev-coin Param.status + HOLES.md precedent: one source of truth,\ngenerated mirror.")
+	lines = append(lines, "Generated mirror of the M-registry. The SINGLE source of truth is the\ngraph's OPEN requirements with non-empty `m_tag` in the active domain's\n`graph.json`. This file retires the hand-maintained M-table\nthat lived in CLAUDE.md — per `R-drift-structurally-impossible` and the\ndev-coin Param.status + HOLES.md precedent: one source of truth,\ngenerated mirror.")
 	lines = append(lines, "")
 	lines = append(lines, "A requirement carries an M-tag iff it mirrors an open methodology\ndecision the steward must ratify. Requirements without an M-tag are\ndomain-level open holes that have not been elevated to\nmethodology-altitude decisions.")
 	lines = append(lines, "")

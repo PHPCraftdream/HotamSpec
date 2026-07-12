@@ -1,133 +1,60 @@
 # Proposal JSON reference
 
-Every change to a Hotam-Spec graph goes through `hotam-apply-proposal
-<file.json>` (never a hand-edit — see `R-no-hand-edit-graph`). A proposal file
-is a single JSON object with a `"kind"` field selecting one of the shapes
-below. This is the field-level reference; for the guided end-to-end walk see
+Every change to a Hotam-Spec graph goes through
+`hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD` (never a
+hand-edit — see `R-no-hand-edit-graph`). A proposal file is a single JSON
+object with a `"kind"` field selecting one of the shapes below, and every
+other field name is **snake_case** and matches its Go struct's `json` tag
+exactly — the decoder is strict (`json.Decoder.DisallowUnknownFields`), so an
+unrecognized or mistyped key (including any leftover camelCase from an older
+convention) is a hard parse error, never a silently-dropped field. This is
+the field-level reference; for the guided end-to-end walk see
 [QUICKSTART-CONSUMER.md](QUICKSTART-CONSUMER.md).
 
-Source of truth: `spec/src/hotam_spec/proposal.py` (dataclasses) and
-`spec/tools/apply_proposal.py` (`_validate_*` functions). If this document and
-the code disagree, the code wins — please file an issue.
+Source of truth: `internal/proposal/types.go` (the `Proposed*` structs and
+their `json` tags) and `cmd/hotam/apply_proposal.go` (`parseProposal` /
+`unmarshalProposal`, the kind-dispatch + strict-decode logic) and
+`internal/proposal/*.go` (the `validate()`/`mutate()` methods that apply each
+kind to the graph). If this document and the code disagree, the code wins —
+please file an issue. Every JSON example below is checked against the actual
+decoder by `cmd/hotam/proposal_reference_test.go`, which extracts every
+` ```json ` fenced block from this file and round-trips it through
+`parseProposal`.
 
 Usage:
 
 ```bash
-hotam-apply-proposal proposal.json
-hotam-apply-proposal --dry-run proposal.json
-hotam-apply-proposal --batch proposals_array.json   # array of proposal objects
+hotam apply-proposal proposal.json --domain domains/my-shop --today 2026-07-12
 ```
 
-## The consumer graph.py AST contract
+## How a proposal is persisted (graph.json, not source code)
 
-`apply_proposal.py` never re-parses your whole graph into an AST and rewrites
-it wholesale — it locates a small number of exact source shapes with `ast`
-and splices new source text in via targeted line/column edits, so the rest of
-your file's formatting is left untouched. That speed and formatting-fidelity
-trade-off means the writer requires your `graph.py` to hold a handful of
-shapes EXACTLY — reformatting them (even functionally-equivalently, e.g. with
-`ruff format` / `black` collapsing a multi-line tuple onto one line) can make
-the writer unable to find where to append, in which case `apply_proposal.py`
-fails fast with a `RuntimeError` naming exactly what it looked for and what it
-found instead, rather than silently doing nothing.
+Unlike the historical Python prototype (which spliced Python source inside a
+hand-authored `graph.py` via `ast` line/column edits), the Go CLI's graph is
+plain data: `domains/<name>/docs/gen/graph.json`. `hotam apply-proposal`
+(`cmd/hotam/apply_proposal.go` → `internal/proposal.Apply`,
+`internal/proposal/apply.go`) does the following, in order:
 
-**Required shape** (this is exactly what `tools/create_domain.py` scaffolds
-for every new domain — see `domains/<name>/graph.py` after `hotam-create-domain`
-for a live example):
+1. Decode the proposal JSON into the matching `Proposed*` Go struct (strict,
+   snake_case, unknown fields rejected — see above).
+2. Run that struct's own `validate()` (required fields, enum membership,
+   cross-field rules such as "`decided_by` required when `new_lifecycle`
+   starts with `DECIDED`").
+3. Load `graph.json` into memory (`internal/loader.LoadGraph`).
+4. Run the struct's `mutate(graph, today)` — this is the ONLY code path that
+   ever changes graph state; there is no hand-edit path
+   (`R-no-hand-edit-graph`).
+5. Recompute `internal/invariants.AllViolations` before and after the
+   mutation; if the mutation introduces any NEW violation that did not exist
+   before, the whole apply fails closed and NOTHING is written.
+6. Only if the violation set did not grow, write the mutated graph back to
+   `graph.json` (`internal/loader.WriteGraph`).
 
-```python
-def build_graph() -> TensionGraph:
-    stakeholders = (
-        Stakeholder(id="...", name="...", domain="..."),
-    )
-    axes = (
-        Axis(slug="...", description="..."),
-    )
-    requirements = (
-        Requirement(id="R-...", claim="...", owner="...", status="...", why="..."),
-    )
-    conflicts = (
-        Conflict(axis="...", context="...", members=(...), steward="..."),
-    )
-    assumptions = (
-        Assumption(id="A-...", statement="...", status=HOLDS, owner="...", created_at="..."),
-    )
-    return TensionGraph(
-        axes=axes,
-        stakeholders=stakeholders,
-        requirements=requirements,
-        conflicts=conflicts,
-        assumptions=assumptions,
-    )
-```
-
-Load-bearing rules the locator depends on (breaking any one of these is what
-triggers the `RuntimeError` below):
-
-1. **A `def build_graph():` function must exist.** This is the ONLY place the
-   writer looks for the tuples below — a graph assembled some other way (a
-   module-level constant, a class method, a factory with a different name) is
-   invisible to `apply_proposal.py`.
-2. **Each roster is a top-level, bare-name assignment inside `build_graph()`**
-   — `requirements = (...)`, `conflicts = (...)`, `axes = (...)`,
-   `stakeholders = (...)`, `assumptions = (...)`. "Top-level" means a direct
-   statement in the function body, not nested inside an `if`/`for`/`with`; "bare
-   name" means the assignment target is a single identifier (`requirements`),
-   not an attribute (`self.requirements`), not a tuple-unpack
-   (`requirements, x = ...`), and not inlined directly as a `TensionGraph(...)`
-   kwarg (`TensionGraph(requirements=(...))` with no separate variable). The
-   NAME matters too — renaming `requirements` to `reqs` breaks every
-   `Requirement`-kind proposal.
-3. **The right-hand side must be a literal parenthesized tuple** — `(...)`,
-   not `list(...)`, not a generator expression, not a function call that
-   returns a tuple. An empty roster is still `()`  (or `(\n)`, both parse the
-   same), never omitted. Note: a non-tuple RHS (e.g. `requirements = list(...)`)
-   may not cause an immediate error at write time -- the locator accepts any
-   assignment RHS without checking its type. The breakage typically surfaces
-   later, during the regen/verify step, as corrupted source output.
-4. **`return TensionGraph(...)` must appear as a direct call expression** in
-   `build_graph()`'s `return` statement — not built up across several
-   statements (`g = TensionGraph(...); return g` is NOT recognized; this
-   matters specifically for `EntityType` proposals, which locate the
-   `TensionGraph(...)` call itself to insert or extend `entity_types=`).
-5. **Requirement's `enforcement=` values (`PROSE`/`STRUCTURAL`/`ENFORCED`) are
-   written as bare name references, not string literals** (mirroring how
-   `hotam-spec-self`'s own graph.py renders them) — so your `graph.py` MUST
-   `from hotam_spec.requirement import ENFORCED, PROSE, STRUCTURAL` even
-   before you have hand-authored a single `Requirement` yourself, because a
-   `ProposedRequirement` with no explicit `enforcement` defaults to `"PROSE"`
-   and the FIRST mechanically-added requirement will already need the name in
-   scope (a `NameError` at graph-load time otherwise — caught by
-   `spec/tests/test_apply_proposal_batch_stress.py`, which stress-tests a
-   30+-item mixed batch against a freshly `create_domain.py`-scaffolded
-   graph). `tools/create_domain.py`'s scaffold template pre-declares this
-   import for exactly this reason; keep it if you hand-edit the template.
-
-**What happens when the contract breaks**: every locator that depends on
-these shapes fails CLOSED — it raises `RuntimeError` (surfaced as
-`apply_proposal.py` exit code 1, nothing written) rather than guessing or
-silently no-op'ing. The message names which tuple/function it was looking
-for, whether `build_graph()` exists at all, and — when `build_graph()` exists
-but the target roster doesn't — which OTHER top-level tuple names it DID find
-(so a rename is easy to spot). Example, after a hypothetical reformat that
-renamed `requirements` to `reqs`:
-
-```
-ERROR: Cannot find `requirements = (...)` tuple in build_graph(). `build_graph()`
-DOES contain these top-level tuple assignment(s): ['axes', 'assumptions', 'conflicts',
-'reqs', 'stakeholders'] — was `requirements` renamed to one of these, or inlined as a
-TensionGraph(...) kwarg instead of a separate variable? See docs/PROPOSAL-REFERENCE.md,
-'The consumer graph.py AST contract', for the exact shape required (a bare top-level
-`requirements = (...)` assignment, one Requirement/Conflict/Axis/Stakeholder/Assumption
-call per element, never reformatted into an inline TensionGraph(...) kwarg or renamed).
-```
-
-**Practical guidance**: run your formatter/linter on everything EXCEPT the
-five roster tuples inside `build_graph()` and the `return TensionGraph(...)`
-call, or configure it to leave `graph.py` alone entirely and only run it on
-your own domain code elsewhere. `tools/gen_spec.py`'s own regeneration never
-touches `graph.py` (it is hand/proposal-authored, never generated), so there
-is no round-trip formatting concern beyond your own tool choices.
+There is no separate `--dry-run` or `--batch` flag today (unlike the Python
+prototype) — each `hotam apply-proposal` call applies exactly one proposal
+file containing exactly one JSON object; run the command once per proposal,
+and re-run `hotam gen-spec --domain <path>` afterward to regenerate the
+`docs/gen/*.md` views from the updated graph.
 
 ## Enum reference
 
@@ -200,9 +127,10 @@ distinct stakeholders before you can hold a tension.
 ## Axis
 
 Adds a new controlled-vocabulary tension dimension (e.g. "speed vs rigor").
-Conflicts cluster around axes; prefer `hotam-create-axis` over hand-writing
-this JSON, since the CLI runs a similarity check against existing axes first
-(`R-axis-gatekeeper-policy`).
+Conflicts cluster around axes. There is no dedicated `hotam create-axis`
+scaffolding command in this Go CLI yet (unlike the historical Python
+prototype) — an Axis proposal is written and applied the same way as every
+other kind below, via `hotam apply-proposal`.
 
 **Required:** `slug` (kebab-case, must not already exist), `description`
 **Optional:** `why` (default `""`)
@@ -254,8 +182,8 @@ originated — doc paths, URLs, review ids, commit hashes — default `[]`)
 
 ### UPDATE semantics: a real patch, not a full replace
 
-When `id` already names an existing Requirement, `apply_proposal.py` UPDATES
-it in place rather than adding a second node. `claim`/`owner`/`status` are
+When `id` already names an existing Requirement, `ProposedRequirement.mutate`
+(`internal/proposal/mutate.go`) UPDATES it in place rather than adding a second node. `claim`/`owner`/`status` are
 **required on every UPDATE too** (there's no partial identity — you always
 restate what the node currently is/should be for those three), but every
 OTHER field is **patched**: if you omit an optional field (or send it at its
@@ -300,7 +228,7 @@ preserve). A `created_at` change is **not** narrated in the derived `history`
 trail below — see that subsection for why.
 
 **Per-node change history (`history`) — derived, never supplied.** Every time
-`apply_proposal.py` UPDATES an already-existing Requirement (not at first
+`hotam apply-proposal` UPDATES an already-existing Requirement (not at first
 creation), it diffs the changed fields (after the patch-coalescing above — a
 field the UPDATE left untouched never appears as a phantom "change") and
 appends one `HistoryEntry` (`at` · `summary` · optional `decided_by`) to the
@@ -333,7 +261,7 @@ that owns none of the members)
 **Optional:** `shared_assumption` (an Assumption id, default `""`), `note`
 (presentation-only, never written to the graph, default `""`),
 `initial_lifecycle` (default `"DETECTED"`; only a DECIDED constituting-atoms
-edge case may start elsewhere — see the docstring in `proposal.py`),
+edge case may start elsewhere — see `internal/proposal/mutate.go`),
 `decided_by` (required only if `initial_lifecycle` starts with `DECIDED`)
 
 ```json
@@ -460,17 +388,22 @@ move an operator off a stale or mismeasured budget.
 ## EntityType
 
 Adds a domain-declared business concept with its own lifecycle (states +
-transitions) and optional typed fields. The most structurally involved kind —
-prefer `hotam-create-entity-type` for interactive scaffolding when possible.
+transitions) and optional typed fields. The most structurally involved kind.
+Unlike every other kind above, `states`/`transitions`/`fields` are lists of
+JSON **objects** (not compact array-triples — that was the Python
+prototype's wire format; the Go decoder has no custom `UnmarshalJSON` to
+accept it, so an array-of-arrays value here is a parse error).
 
-**Required:** `slug` (kebab-case), `description`, `states` (non-empty
-list of `[name, kind]` or `[name, kind, why]` triples; `kind` is one of the
-framework's `STATE_KINDS` and exactly one state must have `kind == "initial"`),
-`transitions` (list of `[src, dst, event]` triples, optionally with
-guard/why — see `proposal.py` for the full serialized shape)
+**Required:** `slug` (kebab-case), `description`, `states` (non-empty list of
+`{"name", "kind", "why"}` objects; `kind` is one of `initial` | `normal` |
+`terminal` | `quiescent`, and exactly one state must have `"kind": "initial"`),
+`transitions` (list of `{"src", "dst", "event"}` objects — `src`/`dst` must
+each name a declared state)
 **Optional:** `why` (default `""`), `cyclic` (bool, default `false`), `fields`
-(list of `[name, kind, required, ref_target]` quadruples, default `[]`;
-`kind` is one of the framework's `ENTITY_FIELD_KINDS`)
+(list of `{"name", "kind", "required", "ref_target"}` objects, default `[]`;
+`kind` is one of `string` | `number` | `enum` | `reference` | `state`;
+`ref_target` names the target EntityType/Stakeholder when `kind` is
+`reference`)
 
 ```json
 {
@@ -479,15 +412,15 @@ guard/why — see `proposal.py` for the full serialized shape)
   "description": "A shippable unit of work moving from draft to live.",
   "why": "the domain needs to track releases through their own lifecycle",
   "states": [
-    ["draft", "initial", "work not yet ready to ship"],
-    ["shipped", "terminal", "released to customers"]
+    {"name": "draft", "kind": "initial", "why": "work not yet ready to ship"},
+    {"name": "shipped", "kind": "terminal", "why": "released to customers"}
   ],
   "transitions": [
-    ["draft", "shipped", "ship"]
+    {"src": "draft", "dst": "shipped", "event": "ship"}
   ],
   "cyclic": false,
   "fields": [
-    ["owner", "ref", true, "Stakeholder"]
+    {"name": "owner", "kind": "reference", "required": true, "ref_target": "Stakeholder"}
   ]
 }
 ```

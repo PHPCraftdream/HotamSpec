@@ -1,6 +1,10 @@
 package generator
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+)
 
 type moduleEntry struct {
 	Mod   string
@@ -21,9 +25,48 @@ var ModuleOrder = []moduleEntry{
 	{Mod: "invariants", Label: "§Invariants — structural form"},
 }
 
+// moduleSectionSlug maps a legacy module key (ModuleOrder's Mod) to the
+// methodology.Sections slug that now carries its content. "__init__" is
+// deliberately absent: its prose (the framework overview + closed loop) has
+// no Section counterpart and lives in methodology.Overview instead — see
+// internal/methodology/overview_data.go.
+var moduleSectionSlug = map[string]string{
+	"stakeholder": "§Stakeholder",
+	"axis":        "§Axis",
+	"assumption":  "§Assumption",
+	"requirement": "§Requirement",
+	"conflict":    "§Conflict",
+	"graph":       "§Graph",
+	"lifecycle":   "§Lifecycle",
+	"operator":    "§Operator",
+	"process":     "§Process",
+	"invariants":  "§Invariants",
+}
+
+// ModuleDocstring renders the module-doc text for a legacy module key.
+// internal/methodology is the single source of truth for this content:
+// "__init__" reads methodology.Overview (unique framework-overview prose);
+// every other key reads the matching methodology.Sections entry and renders
+// it as "Canon: <slug> — <Canon>\n\n<Narrative>\n\nWHY <Why>", the same
+// Canon/Narrative/Why shape internal/generator.BuildThinkingDocs uses to
+// render sections elsewhere. This keeps module docs and Sections rendered
+// from one shared registry so they cannot drift apart.
 func ModuleDocstring(mod string) string {
-	if s, ok := moduleDocText[mod]; ok {
-		return strings.TrimRight(s, " \t\r\n")
+	if mod == "__init__" {
+		return strings.TrimRight(methodology.Overview, " \t\r\n")
 	}
-	return ""
+	slug, ok := moduleSectionSlug[mod]
+	if !ok {
+		return ""
+	}
+	sec, ok := methodology.Sections.Get(slug)
+	if !ok {
+		return ""
+	}
+	why := sec.Why
+	if !strings.HasPrefix(why, "WHY ") {
+		why = "WHY " + why
+	}
+	doc := "Canon: " + sec.Slug + " — " + sec.Canon + "\n\n" + sec.Narrative + "\n\n" + why
+	return strings.TrimRight(doc, " \t\r\n")
 }

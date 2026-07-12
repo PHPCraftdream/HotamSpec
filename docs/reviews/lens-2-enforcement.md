@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Линза 2: Enforcement-механика — дыры между обещанием и проверкой
 
 fxx-agent, read-only, 2026-07-05.

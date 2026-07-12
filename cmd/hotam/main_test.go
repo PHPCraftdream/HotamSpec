@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 	"unicode/utf8"
 
@@ -12,7 +15,6 @@ import (
 
 const selfDomainGraph = "../../domains/hotam-spec-self/graph.json"
 const selfDomainManifest = "../../domains/hotam-spec-self/manifest.json"
-const generatorTestdata = "../../internal/generator/testdata"
 
 func copySelfDomain(t *testing.T) string {
 	t.Helper()
@@ -37,6 +39,14 @@ func copyFile(t *testing.T, src, dst string) {
 	}
 }
 
+// TestGenSpec_SmokeWritesByteIdenticalFiles verifies genSpec writes every
+// expected file with non-empty content. It used to byte-compare against
+// internal/generator/testdata/*.md golden files, but those were real-domain
+// goldens replaced by a compact synthetic fixture in P2-2 (see
+// internal/generator/byteidentical_test.go and fixture_test.go, which own
+// the byte-identity guarantee against internal/generator/testdata/fixture/
+// now). This test's job is narrower: prove genSpec's file-writing contract
+// (which files, non-empty) holds against a real, large domain graph.
 func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)
@@ -50,36 +60,19 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	}
 
 	genDir := filepath.Join(domainDir, "docs", "gen")
-	cases := []struct {
-		filename string
-		testdata string
-	}{
-		{"REQUIREMENTS.md", "REQUIREMENTS.md"},
-		{"TENSIONS.md", "TENSIONS.md"},
-		{"OPEN.md", "OPEN.md"},
-		{"UNENFORCED.md", "UNENFORCED.md"},
-		{"GLOSSARY.md", "GLOSSARY.md"},
-		{"HISTORY.md", "HISTORY.md"},
-		{"CONSTITUTION.md", "CONSTITUTION.md"},
-		{"FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md"},
-		{"REPO-MAP.md", "REPO-MAP.md"},
-		{"atoms-operator.md", "atoms-operator.md"},
-		{"atoms-substrate.md", "atoms-substrate.md"},
-		{"atoms-discipline.md", "atoms-discipline.md"},
-		{"atoms-check.md", "atoms-check.md"},
-		{"graph.json", "docs-gen-graph.json"},
+	filenames := []string{
+		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
+		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
+		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
+		"atoms-discipline.md", "atoms-check.md", "graph.json",
 	}
-	for _, c := range cases {
-		got, err := os.ReadFile(filepath.Join(genDir, c.filename))
+	for _, filename := range filenames {
+		got, err := os.ReadFile(filepath.Join(genDir, filename))
 		if err != nil {
-			t.Fatalf("read generated %s: %v", c.filename, err)
+			t.Fatalf("read generated %s: %v", filename, err)
 		}
-		want, err := os.ReadFile(filepath.Join(generatorTestdata, c.testdata))
-		if err != nil {
-			t.Fatalf("read testdata %s: %v", c.testdata, err)
-		}
-		if string(got) != string(want) {
-			t.Errorf("byte mismatch for %s: got %d bytes, want %d bytes", c.filename, len(got), len(want))
+		if len(got) == 0 {
+			t.Errorf("%s: written but empty", filename)
 		}
 	}
 
@@ -240,5 +233,58 @@ func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
 	want := fmt.Sprintf("resident crystal %d chars", expected)
 	if !contains(string(data), want) {
 		t.Errorf("live-state.md does not contain %q\nactual content:\n%s", want, string(data))
+	}
+}
+
+// TestVersion_DefaultAndLdflagsOverride builds the real binary twice — once
+// plain (default version = "dev") and once with -ldflags "-X main.version=..."
+// — and asserts both `version` and `--version` print the expected string.
+// This is the only test in this package that builds a real binary purely to
+// check the version string; see external_e2e_test.go for the full external
+// e2e which also builds a real binary for a different purpose.
+func TestVersion_DefaultAndLdflagsOverride(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds a real binary; skipped in -short")
+	}
+	repoRoot := repoRootForTest(t)
+	binDir := t.TempDir()
+	binName := "hotam"
+	if runtime.GOOS == "windows" {
+		binName = "hotam.exe"
+	}
+	binPath := filepath.Join(binDir, binName)
+
+	build := exec.Command("go", "build", "-o", binPath, "./cmd/hotam")
+	build.Dir = repoRoot
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("go build (default version): %v\n%s", err, out)
+	}
+	out, err := exec.Command(binPath, "version").CombinedOutput()
+	if err != nil {
+		t.Fatalf("hotam version: %v\n%s", err, out)
+	}
+	if strings.TrimSpace(string(out)) != "hotam dev" {
+		t.Errorf("hotam version = %q, want %q", strings.TrimSpace(string(out)), "hotam dev")
+	}
+	out, err = exec.Command(binPath, "--version").CombinedOutput()
+	if err != nil {
+		t.Fatalf("hotam --version: %v\n%s", err, out)
+	}
+	if strings.TrimSpace(string(out)) != "hotam dev" {
+		t.Errorf("hotam --version = %q, want %q", strings.TrimSpace(string(out)), "hotam dev")
+	}
+
+	binPathLdflags := filepath.Join(binDir, "hotam-ldflags"+filepath.Ext(binPath))
+	buildLd := exec.Command("go", "build", "-ldflags", "-X main.version=v0.9.9", "-o", binPathLdflags, "./cmd/hotam")
+	buildLd.Dir = repoRoot
+	if out, err := buildLd.CombinedOutput(); err != nil {
+		t.Fatalf("go build (ldflags version): %v\n%s", err, out)
+	}
+	out, err = exec.Command(binPathLdflags, "version").CombinedOutput()
+	if err != nil {
+		t.Fatalf("hotam-ldflags version: %v\n%s", err, out)
+	}
+	if strings.TrimSpace(string(out)) != "hotam v0.9.9" {
+		t.Errorf("hotam version (ldflags) = %q, want %q", strings.TrimSpace(string(out)), "hotam v0.9.9")
 	}
 }

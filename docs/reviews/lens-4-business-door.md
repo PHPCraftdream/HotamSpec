@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Линза 4: Бизнес-дверь — почему бизнес ещё не вошёл
 
 fxx-agent, read-only, 2026-07-05. 100 коммитов за 6 дней (2026-06-30…07-05), 171 applied proposal, 2 мета-домена, 0 бизнес-доменов.

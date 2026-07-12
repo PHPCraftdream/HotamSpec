@@ -10,7 +10,35 @@ import (
 	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
 )
 
+// fixtureGraphPath is the small, synthetic, hand-curated graph used for the
+// package's byte-identity contract (P2-2). It is deliberately tiny (~20
+// nodes) but exercises every template branch: SETTLED/DRAFT/REJECTED/OPEN
+// requirement statuses, HELD and DECIDED conflicts (plus a bare DETECTED
+// one), all four Assumption statuses (HOLDS/UNCERTAIN/DEAD/IMPLEMENTS), an
+// entity type with mermaid+fields+instances, a Process, a Goal, an Operator,
+// freshness fields (last_reviewed_at/review_after/evidence/source_refs), and
+// relations of every kind (refines/depends_on/replaces). It is fully
+// well-formed (0 invariant violations — see TestFixtureGraphHasNoViolations
+// in fixture_test.go) so it is also safe to feed through internal/invariants
+// without special-casing.
+const fixtureGraphPath = "testdata/fixture-graph.json"
+
+// domainGraphPath is the full, real hotam-spec-self domain graph. It is used
+// ONLY by the determinism test (determinism_test.go), the smoke test below,
+// and internal/invariants' own all-violations coverage — NOT by the
+// byte-identity template tests, which run against the small fixture instead
+// (P2-2: a full-domain byte-identity contract required regenerating ~734KB
+// of golden fixtures on every content-bearing change to the real domain).
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
+
+func loadFixtureGraph(t *testing.T) *ontology.Graph {
+	t.Helper()
+	g, err := loader.LoadGraph(fixtureGraphPath)
+	if err != nil {
+		t.Fatalf("LoadGraph(%s): %v", fixtureGraphPath, err)
+	}
+	return g
+}
 
 func loadDomainGraph(t *testing.T) *ontology.Graph {
 	t.Helper()
@@ -21,11 +49,9 @@ func loadDomainGraph(t *testing.T) *ontology.Graph {
 	return g
 }
 
-func diffReport(t *testing.T, name, got, want string) {
-	t.Helper()
-	if got == want {
-		return
-	}
+// diffReportInto renders the line-level diff summary (byte counts + first
+// differing line +/- context) into b, used by diffReport.
+func diffReportInto(b *strings.Builder, name, got, want string) {
 	gotLines := strings.Split(got, "\n")
 	wantLines := strings.Split(want, "\n")
 	max := len(gotLines)
@@ -44,8 +70,6 @@ func diffReport(t *testing.T, name, got, want string) {
 		start = 0
 	}
 	end := first + 5
-	var b strings.Builder
-	b.WriteString("\n=== byte-identity FAILED for " + name + " ===\n")
 	b.WriteString("got bytes=" + strconv.Itoa(len(got)) + " want bytes=" + strconv.Itoa(len(want)) + "\n")
 	b.WriteString("first differing line index: " + strconv.Itoa(first) + "\n")
 	for i := start; i < end; i++ {
@@ -67,6 +91,16 @@ func diffReport(t *testing.T, name, got, want string) {
 		}
 		b.WriteString(marker + " line[" + strconv.Itoa(i) + "]\n    got:  " + truncate(gotLine, 160) + "\n    want: " + truncate(wantLine, 160) + "\n")
 	}
+}
+
+func diffReport(t *testing.T, name, got, want string) {
+	t.Helper()
+	if got == want {
+		return
+	}
+	var b strings.Builder
+	b.WriteString("\n=== byte-identity FAILED for " + name + " ===\n")
+	diffReportInto(&b, name, got, want)
 	t.Error(b.String())
 }
 
@@ -77,45 +111,68 @@ func truncate(s string, n int) string {
 	return s[:n] + "…"
 }
 
-func TestBuildRequirements_ByteIdenticalToPython(t *testing.T) {
+func TestBuildRequirements_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
-	g := loadDomainGraph(t)
+	g := loadFixtureGraph(t)
 	got := BuildRequirements(g)
-	want, err := os.ReadFile("testdata/REQUIREMENTS.md")
+	want, err := os.ReadFile("testdata/fixture/REQUIREMENTS.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
 	}
 	diffReport(t, "REQUIREMENTS.md", got, string(want))
 }
 
-func TestBuildTensions_ByteIdenticalToPython(t *testing.T) {
+func TestBuildTensions_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
-	g := loadDomainGraph(t)
+	g := loadFixtureGraph(t)
 	got := BuildTensions(g)
-	want, err := os.ReadFile("testdata/TENSIONS.md")
+	want, err := os.ReadFile("testdata/fixture/TENSIONS.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
 	}
 	diffReport(t, "TENSIONS.md", got, string(want))
 }
 
-func TestByteIdentical_AgainstOriginalHotamSpecPath(t *testing.T) {
+// TestGenSpec_SmokeOnRealDomain asserts every template produces non-empty
+// output when run against the real hotam-spec-self domain graph and does not
+// panic. It is the "does not fall over on real data" complement to the
+// byte-identity contract, which now lives on the small fixture graph.
+func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 	t.Parallel()
-	for _, c := range []struct {
+	g := loadDomainGraph(t)
+
+	type build struct {
 		name string
-		path string
 		fn   func(*ontology.Graph) string
-	}{
-		{"REQUIREMENTS.md", `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\REQUIREMENTS.md`, BuildRequirements},
-		{"TENSIONS.md", `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\TENSIONS.md`, BuildTensions},
-	} {
-		want, err := os.ReadFile(c.path)
-		if err != nil {
-			t.Logf("skip %s: %v", c.name, err)
-			continue
+	}
+	builds := []build{
+		{"REQUIREMENTS.md", BuildRequirements},
+		{"TENSIONS.md", BuildTensions},
+		{"OPEN.md", BuildOpen},
+		{"UNENFORCED.md", BuildUnenforced},
+		{"GLOSSARY.md", BuildGlossary},
+		{"HISTORY.md", BuildHistory},
+		{"DECISIONS.md", BuildDecisions},
+		{"CONSTITUTION.md", BuildConstitution},
+		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
+		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
+		{"REPO-MAP.md", func(g *ontology.Graph) string {
+			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
+		}},
+		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646) }},
+	}
+	for _, b := range builds {
+		got := b.fn(g)
+		if strings.TrimSpace(got) == "" {
+			t.Errorf("%s: empty output against real domain graph", b.name)
 		}
-		g := loadDomainGraph(t)
-		got := c.fn(g)
-		diffReport(t, c.name+" (original path)", got, string(want))
+	}
+
+	graphJSON, err := BuildGraphJSON(g)
+	if err != nil {
+		t.Fatalf("BuildGraphJSON: %v", err)
+	}
+	if strings.TrimSpace(graphJSON) == "" {
+		t.Error("docs-gen-graph.json: empty output against real domain graph")
 	}
 }

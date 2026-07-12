@@ -1,39 +1,38 @@
-# Contributing to Hotam-Spec
+# Contributing to HotamSpecGo
 
 Thank you for your interest in contributing!
 
 ## How to contribute
 
 1. **Fork the repository** and create your branch from `master`.
-2. **Install dependencies**: `cd spec && python -m venv .venv && .venv/Scripts/activate && pip install -e .`
-   (or, if you use [uv](https://docs.astral.sh/uv/): `cd spec && uv sync`)
+2. **Build the CLI**: `go build -o bin/hotam ./cmd/hotam` (or `go run ./cmd/hotam <command>` without building).
 3. **Make your changes** -- follow the patterns below.
-4. **Run the full test suite**: `python -m pytest -q` -- all tests must pass.
-5. **Regenerate docs**: `python tools/gen_spec.py` -- commit the regenerated files.
+4. **Run the full test suite**: `go test ./...` and `go vet ./...` -- all must pass. `go test -race ./...` is recommended for concurrency-sensitive changes.
+5. **Regenerate docs**: `go run ./cmd/hotam gen-spec --domain <path>` -- commit the regenerated files.
 6. **Open a Pull Request** with a clear description.
 
 ## Development workflow
 
 ### The closed loop
 
-All changes to the domain graph (`domains/*/graph.py`) go through `tools/apply_proposal.py`:
+All changes to a domain graph (`domains/*/graph.json`) go through `hotam apply-proposal`. **`graph.json` is never hand-edited** -- it is a generated/managed artifact, and direct edits will be lost or rejected by invariant checks.
 
-1. Construct a JSON proposal (ProposedRequirement / ProposedConflictTransition / ProposedRejection / ProposedEntityType).
-2. Apply: `python tools/apply_proposal.py proposal.json` (or `uv run python tools/apply_proposal.py proposal.json` if you use uv)
-3. The tool validates, writes, regenerates docs, and runs tests automatically.
-
-Direct hand-editing of `graph.py` is discouraged.
+1. Run `hotam what-now --domain <path>` to find the top-priority action.
+2. Construct a JSON proposal (`ProposedRequirement` / `ProposedConflictTransition` / `ProposedRejection` / `ProposedEntityType` / ...) -- field reference: `docs/PROPOSAL-REFERENCE.md`.
+3. Apply: `hotam apply-proposal proposal.json --domain <path> --today YYYY-MM-DD`.
+4. Regenerate docs: `hotam gen-spec --domain <path>`.
+5. Verify: `hotam all-violations --domain <path>` -- exit code 1 means at least one structural invariant broke; fix before committing.
 
 ### Code style
 
-- **Python**: formatted with `ruff format`, linted with `ruff check`
-- **Line endings**: LF (enforced by `.gitattributes`)
-- **Encoding**: UTF-8 everywhere
-- **No version bumps** without maintainer approval
+- **Go**: formatted with `gofmt` (or `go fmt ./...`); keep `go vet ./...` clean.
+- **Line endings**: LF (enforced by `.gitattributes`).
+- **Encoding**: UTF-8 everywhere.
+- **No version bumps** without maintainer approval.
 
 ### Adding a requirement
 
-Use `apply_proposal.py` with a `ProposedRequirement` JSON:
+Use `hotam apply-proposal` with a `ProposedRequirement` JSON:
 
 ```json
 {
@@ -49,31 +48,25 @@ Use `apply_proposal.py` with a `ProposedRequirement` JSON:
 }
 ```
 
-### Adding a tool
-
-Create `spec/tools/your_tool.py` with a first-line docstring:
-```
-Canon: <topic> -- one-line claim describing what this tool guarantees.
-```
-
-The tool auto-projects as `R-tool-your-tool` in the constitution on the next `gen_spec.py` run.
-
-### Adding an entity type
+Apply it with:
 
 ```bash
-python tools/create_entity_type.py your-entity \
-  --description "What this entity represents" \
-  --states "ACTIVE:initial,CLOSED:quiescent" \
-  --transitions "close:ACTIVE->CLOSED" \
-  --fields "name:string:required"
+hotam apply-proposal your-proposal.json --domain domains/hotam-spec-self --today 2026-07-12
 ```
+
+See `docs/PROPOSAL-REFERENCE.md` for the full set of proposal shapes (conflicts, rejections, entity types, etc.).
+
+### Review freshness policy
+
+Every SETTLED requirement carries `last_reviewed_at` / `review_after` so `hotam due` can tell OVERDUE from NEVER-REVIEWED instead of reporting on empty fields. Default policy: a requirement is due for re-review 6 months after it was last confirmed. When you settle a requirement (via `ProposedRequirement` or a `ProposedConflictTransition` that settles it), set `last_reviewed_at` to the settlement date and `review_after` to that date + 6 months; re-affirming an existing SETTLED requirement without changing its content is a `ProposedReviewMark` proposal (`kind: "ReviewMark"`, fields `requirement_id` / `reviewed_at` / `review_after` / `evidence`), applied the same way as any other proposal. TODO: auto-defaulting `review_after` to `settled_at` + 6 months inside `ProposedRequirement`'s mutate step (so authors don't have to compute it by hand) is deferred -- it changes behavior for every future `Requirement` proposal, not just the backfill, so it needs its own steward-approved change rather than riding along with a one-time backfill.
 
 ## Pull request guidelines
 
 - **One concern per PR** -- atomic changes are easier to review.
-- **Tests required** -- new functionality must have tests; existing tests must stay green.
-- **Docs auto-generated** -- run `gen_spec.py` and commit the output; the anti-drift test catches staleness.
-- **No silent conflict closure** -- the AI presents, the human steward decides (R-ai-presents-not-decides).
+- **Tests required** -- new functionality must have tests (`go test ./...`); existing tests must stay green.
+- **Docs auto-generated** -- run `hotam gen-spec` and commit the output; drift between the graph and generated docs is a defect.
+- **No silent conflict closure** -- the AI presents, the human steward decides.
+- **Green gate before commit** -- `go test ./...` and `go vet ./...` must pass before you commit; `go test -race ./...` is required for anything touching concurrency.
 
 ## Code of conduct
 

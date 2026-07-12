@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Финальное ревью волны Этапов M-V — 2026-07-10/11 (агент fh, задача #125)
 
 Независимое сквозное ревью десяти коммитов волны:

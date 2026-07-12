@@ -25,7 +25,11 @@ func BuildToolDocs() map[string]string {
 			lines := []string{
 				Banner,
 				"",
-				"# " + tool.Command,
+				"# " + tool.Command + " " + statusBadge(tool.Status),
+				"",
+				"## Status",
+				"",
+				statusLine(tool.Status),
 				"",
 				"## Canon",
 				"",
@@ -45,4 +49,35 @@ func BuildToolDocs() map[string]string {
 		out[k] = contents[i]
 	}
 	return out
+}
+
+// statusBadge renders the short inline marker appended to a tool doc's H1,
+// so a reader scanning docs/gen/tools/*.md (or the file listing) sees
+// working-vs-aspirational at a glance without opening the file — the same
+// distinction methodology.Status exists to make (see internal/methodology/
+// tool.go's doc comment: "registry stores only rules and commands that
+// actually work, not intentions").
+func statusBadge(s methodology.Status) string {
+	switch s {
+	case methodology.Ported:
+		return "[PORTED]"
+	case methodology.Declared:
+		return "[DECLARED — not ported]"
+	default:
+		return "[" + string(s) + "]"
+	}
+}
+
+// statusLine renders the one-line "## Status" section body: a longer,
+// unambiguous prose form of statusBadge's short marker, for the reader who
+// opens the doc after the badge caught their eye.
+func statusLine(s methodology.Status) string {
+	switch s {
+	case methodology.Ported:
+		return "Ported — this is a real `hotam` CLI subcommand; running it does something."
+	case methodology.Declared:
+		return "Declared — methodology surface only; no Go command exists for it yet. The name below is historical (pre-port Python methodology); invoking it as `hotam <name>` will fail with \"unknown command\"."
+	default:
+		return string(s)
+	}
 }

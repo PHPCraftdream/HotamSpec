@@ -1,3 +1,10 @@
+<!-- LEGACY (Python-era) command references below (tools/apply_proposal.py,
+     graph.py, pytest); not an instruction to run as-is under the Go CLI —
+     see README.md and docs/QUICKSTART-CONSUMER.md for current commands
+     (`hotam apply-proposal`, `hotam gen-spec`, `go test`). The closed-loop
+     CONCEPT this file describes is still current; only the literal tool
+     invocations in the diagram below are stale. -->
+
 # Playbooks — band-specific operator procedures
 
 Each file in this directory is a playbook for one `what_now` priority band. A
@@ -19,11 +26,11 @@ mechanically writes the change.
 ## How playbooks connect to the closed loop
 
 ```
-what_now → band → playbook → ProposedConflictTransition / ProposedRequirement JSON
+what-now → band → playbook → ProposedConflictTransition / ProposedRequirement JSON
                                            ↓ steward approves out-of-band
-                              tools/apply_proposal.py → graph.py → gen_spec → pytest
+                              hotam apply-proposal → graph.json → hotam gen-spec → go test
 ```
 
-The operator NEVER edits the domain's `graph.py` by hand. Every change flows
+The operator NEVER edits the domain's `graph.json` by hand. Every change flows
 through a steward-approved JSON proposal written by the operator and applied
 mechanically (R-ai-presents-not-decides, §Proposal).

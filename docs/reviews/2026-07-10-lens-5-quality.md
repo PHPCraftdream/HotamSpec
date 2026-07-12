@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Аудит 2026-07-10 — линза 5: качество кода и технический долг
 
 Независимый аудит D:\dev\HotamSpec. Линза: реальный техдолг (не архитектура, не позиционирование).

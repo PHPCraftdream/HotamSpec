@@ -1,9 +1,18 @@
+<!-- LEGACY (Python-era) command/path references below (`spec/src/hotam_spec`,
+     `pytest`, `spec/tools/what_now.py`); not an instruction to run as-is —
+     see README.md and docs/QUICKSTART-CONSUMER.md for current commands
+     (`hotam what-now`, `hotam gen-spec`, `go test`). The CONCEPTS this file
+     explains (tension graph, Conflict-as-connector-node, the closed loop)
+     are still the current model; only the literal tool/path names are
+     stale. -->
+
 # Methodology — the tension graph and its closed loop
 
 This is the human-written companion to the executable model in
-`spec/src/hotam_spec`. It explains the philosophy and the operating procedure; the
-normative detail is generated into [`../gen/`](../gen/) and the working contract
-is [`../../CLAUDE.md`](../../CLAUDE.md).
+`internal/ontology` + `internal/invariants` (originally `spec/src/hotam_spec`
+in the Python prototype). It explains the philosophy and the operating
+procedure; the normative detail is generated into [`../gen/`](../gen/) and
+the working contract is [`../../CLAUDE.md`](../../CLAUDE.md).
 
 ## 1. The inversion
 
@@ -108,16 +117,16 @@ deterministic question — *what now?* — answerable from any state:
 
 ```mermaid
 graph LR
-    S["State<br/>graph + generated docs + tests"] --> D["Diagnosis<br/>what_now.py"]
+    S["State<br/>graph + generated docs + tests"] --> D["Diagnosis<br/>hotam what-now"]
     D --> N["Next-action<br/>typed + prioritized"]
     N --> A["Action<br/>apply proposal"]
-    A --> R["Regenerate<br/>gen_spec.py"]
+    A --> R["Regenerate<br/>hotam gen-spec"]
     R --> S
 ```
 
-`spec/tools/what_now.py` loads the whole graph and emits a priority-ordered list
-of typed actions, each with a kind, a target object id, a human imperative and a
-priority band:
+`hotam what-now` (`internal/diagnose` + `cmd/hotam/what_now.go`) loads the
+whole graph and emits a priority-ordered list of typed actions, each with a
+kind, a target object id, a human imperative and a priority band:
 
 1. **STRUCTURE** — failing structural invariants. Highest priority: a malformed
    graph makes every softer diagnosis unreliable.

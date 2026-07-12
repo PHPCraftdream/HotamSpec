@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Шестилинзовое ревью Hotam-Spec — 2026-07-05
 
 Шесть независимых fxx-агентов (онтология / enforcement / оператор-UX / бизнес-дверь / инженерия / vision),

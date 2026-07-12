@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Линза 3 — Юзабельность Hotam-Spec для нового потребителя «с улицы»
 
 ## 1. Первый контакт (README)

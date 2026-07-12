@@ -9,13 +9,13 @@
 ## Test plan
 
 <!-- How was this tested? -->
-- [ ] `python -m pytest -q` passes (all tests green) -- or `uv run pytest -q` if you use uv
-- [ ] `python tools/gen_spec.py` produces no diff
-- [ ] `python tools/audit_atomicity.py` shows no new compound claims
+- [ ] `go test ./...` passes (all tests green)
+- [ ] `go vet ./...` is clean
+- [ ] `go run ./cmd/hotam gen-spec --domain <path> --claude-md CLAUDE.md` produces no diff (docs regenerate identically)
 
 ## Checklist
 
-- [ ] Changes to `domains/*/graph.py` went through `apply_proposal.py` (not hand-edited)
+- [ ] Changes to `domains/*/graph.json` went through `hotam apply-proposal` or `hotam land` (not hand-edited — R-no-hand-edit-graph)
 - [ ] New requirements are atomic (one claim per R, no semicolons)
-- [ ] New tools have `Canon: <topic> -- claim` first-line docstring
+- [ ] New Go invariants/tools carry a `Canon`/`Claim`/`Why` in their registry entry
 - [ ] No version bumps without maintainer approval

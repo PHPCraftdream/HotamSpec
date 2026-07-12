@@ -1,0 +1,360 @@
+{
+  "axes": [
+    { "slug": "speed-vs-safety", "description": "Ship fast vs. verify thoroughly.", "decl_order": 0 },
+    { "slug": "centralize-vs-delegate", "description": "One operator vs. many sub-operators.", "decl_order": 1 }
+  ],
+  "stakeholders": [
+    { "id": "S-ai-agent", "name": "AI agent", "domain": "fixture-domain", "decl_order": 0 },
+    { "id": "S-domain-user", "name": "Domain user", "domain": "fixture-domain", "decl_order": 1 },
+    { "id": "S-steward", "name": "Steward", "domain": "fixture-domain", "decl_order": 2 }
+  ],
+  "assumptions": [
+    {
+      "id": "A-holds-example",
+      "statement": "The fixture graph loader accepts this shape without error.",
+      "status": "HOLDS",
+      "owner": "S-ai-agent",
+      "machine_check": "check_fixture_loads",
+      "signoff": null,
+      "created_at": "2026-01-01",
+      "decided_at": "",
+      "decl_order": 0
+    },
+    {
+      "id": "A-uncertain-example",
+      "statement": "Synthetic fixtures stay smaller than real-domain golden files indefinitely.",
+      "status": "UNCERTAIN",
+      "owner": "S-ai-agent",
+      "machine_check": null,
+      "signoff": null,
+      "created_at": "2026-01-02",
+      "decided_at": "",
+      "decl_order": 1
+    },
+    {
+      "id": "A-dead-example",
+      "statement": "The fixture would need per-domain hand-tuning forever.",
+      "status": "DEAD",
+      "owner": "S-ai-agent",
+      "machine_check": null,
+      "signoff": null,
+      "created_at": "2026-01-03",
+      "decided_at": "2026-01-10",
+      "decl_order": 2
+    },
+    {
+      "id": "A-implements-example",
+      "statement": "hotam gen-spec implements the render-from-fixture contract.",
+      "status": "IMPLEMENTS",
+      "owner": "S-ai-agent",
+      "machine_check": "check_fixture_render",
+      "signoff": null,
+      "created_at": "2026-01-04",
+      "decided_at": "",
+      "decl_order": 3
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R-fixture-settled-enforced",
+      "claim": "A SETTLED requirement with ENFORCED enforcement renders in the enforced table.",
+      "owner": "S-ai-agent",
+      "status": "SETTLED",
+      "why": "Coverage needs at least one ENFORCED/SETTLED row in UNENFORCED.md's enforced section.",
+      "assumptions": ["A-holds-example"],
+      "relations": [{ "kind": "refines", "target": "R-fixture-settled-prose" }],
+      "enforcement": "ENFORCED",
+      "enforced_by": ["check_conflict_has_axis"],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "settled+enforced",
+      "created_at": "2026-01-01",
+      "settled_at": "2026-01-05",
+      "last_reviewed_at": "2026-06-01",
+      "review_after": "2027-01-01",
+      "evidence": ["commit:abc1234", "test:TestFixtureEnforced"],
+      "source_refs": ["docs/fixture-notes.md#enforced"],
+      "history": [
+        { "at": "2026-01-01", "summary": "drafted", "decided_by": "" },
+        { "at": "2026-01-05", "summary": "settled by steward", "decided_by": "S-steward" }
+      ],
+      "decl_order": 0
+    },
+    {
+      "id": "R-fixture-settled-prose",
+      "claim": "A SETTLED requirement with PROSE/ENFORCEABLE enforcement counts as closeable debt.",
+      "owner": "S-ai-agent",
+      "status": "SETTLED",
+      "why": "Coverage needs a closeable-debt row (ENFORCEABLE, still PROSE) in UNENFORCED.md.",
+      "assumptions": ["A-holds-example", "A-uncertain-example"],
+      "relations": [{ "kind": "depends_on", "target": "R-fixture-settled-enforced" }],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "settled+prose+closeable",
+      "created_at": "2026-01-02",
+      "settled_at": "2026-01-06",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [
+        { "at": "2026-01-02", "summary": "drafted", "decided_by": "" }
+      ],
+      "decl_order": 1
+    },
+    {
+      "id": "R-fixture-settled-inherent-prose",
+      "claim": "A SETTLED requirement with STRUCTURAL/INHERENTLY_PROSE enforcement is permanent discipline, not debt.",
+      "owner": "S-domain-user",
+      "status": "SETTLED",
+      "why": "Coverage needs the inherent-discipline table (INHERENTLY_PROSE, never counted as debt).",
+      "assumptions": [],
+      "relations": [],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": ["check_conflict_has_context"],
+      "m_tag": "",
+      "enforceability": "INHERENTLY_PROSE",
+      "summary": "settled+structural+inherent",
+      "created_at": "2026-01-03",
+      "settled_at": "2026-01-07",
+      "last_reviewed_at": "2025-01-01",
+      "review_after": "2025-07-01",
+      "evidence": ["doc:fixture"],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 2
+    },
+    {
+      "id": "R-fixture-draft",
+      "claim": "A DRAFT requirement renders in the DRAFT section, not promoted yet.",
+      "owner": "S-ai-agent",
+      "status": "DRAFT",
+      "why": "Coverage needs a DRAFT branch across REQUIREMENTS.md and UNENFORCED.md.",
+      "assumptions": ["A-uncertain-example"],
+      "relations": [],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "draft",
+      "created_at": "2026-02-01",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [
+        { "at": "2026-02-01", "summary": "drafted", "decided_by": "" }
+      ],
+      "decl_order": 3
+    },
+    {
+      "id": "R-fixture-open-question",
+      "claim": "An OPEN(question) requirement renders in OPEN.md and DECISIONS.md when M-tagged.",
+      "owner": "S-domain-user",
+      "status": "OPEN(should the fixture graph grow past 25 nodes?)",
+      "why": "Coverage needs the OPEN status branch, including M-tag decisions rendering.",
+      "assumptions": ["A-holds-example"],
+      "relations": [],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "M1",
+      "enforceability": "ENFORCEABLE",
+      "summary": "open-question",
+      "created_at": "2026-02-05",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [
+        { "at": "2026-02-05", "summary": "opened as a question", "decided_by": "" }
+      ],
+      "decl_order": 4
+    },
+    {
+      "id": "R-fixture-rejected",
+      "claim": "A REJECTED requirement renders in HISTORY.md under discarded claims.",
+      "owner": "S-ai-agent",
+      "status": "REJECTED",
+      "why": "Coverage needs the REJECTED branch — replaced by R-fixture-settled-prose (anti-relitigation).",
+      "assumptions": ["A-dead-example"],
+      "relations": [{ "kind": "replaces", "target": "R-fixture-settled-prose" }],
+      "enforcement": "PROSE",
+      "enforced_by": [],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "rejected",
+      "created_at": "2025-12-01",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [
+        { "at": "2025-12-01", "summary": "drafted", "decided_by": "" },
+        { "at": "2025-12-15", "summary": "rejected in favor of R-fixture-settled-prose", "decided_by": "S-steward" }
+      ],
+      "decl_order": 5
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "C-de666076",
+      "axis": "speed-vs-safety",
+      "context": "fixture decided conflict context",
+      "members": ["R-fixture-settled-enforced", "R-fixture-settled-prose"],
+      "steward": "S-steward",
+      "lifecycle": "DECIDED(fixture chose safety for the render path)",
+      "shared_assumption": "A-holds-example",
+      "derived": ["R-fixture-settled-inherent-prose"],
+      "revisit_marker": "",
+      "decided_by": "S-steward",
+      "variants": [
+        { "id": "V-fast", "behavior": "skip verification", "implies": "faster iteration", "costs": "risk of drift" },
+        { "id": "V-safe", "behavior": "verify before render", "implies": "slower iteration", "costs": "more CI time" }
+      ],
+      "signoff": {
+        "decided_by": "S-steward",
+        "date": "2026-01-08",
+        "verbatim": "we choose safety",
+        "instrument": "personal",
+        "chosen_variant": "V-safe"
+      },
+      "created_at": "2026-01-04",
+      "decided_at": "2026-01-08",
+      "decl_order": 0
+    },
+    {
+      "id": "C-57040530",
+      "axis": "centralize-vs-delegate",
+      "context": "fixture held conflict context, unresolved variant choice",
+      "members": ["R-fixture-draft", "R-fixture-open-question"],
+      "steward": "S-steward",
+      "lifecycle": "HELD",
+      "shared_assumption": null,
+      "derived": [],
+      "revisit_marker": "",
+      "decided_by": "S-steward",
+      "variants": [
+        { "id": "V-central", "behavior": "one operator owns fixture growth", "implies": "simpler ownership", "costs": "single point of failure" },
+        { "id": "V-delegate", "behavior": "sub-operators own fixture slices", "implies": "parallelism", "costs": "coordination overhead" }
+      ],
+      "signoff": null,
+      "created_at": "2026-02-06",
+      "decided_at": "",
+      "decl_order": 1
+    },
+    {
+      "id": "C-b1bb5c91",
+      "axis": "speed-vs-safety",
+      "context": "fixture freshly detected conflict, not yet acknowledged",
+      "members": ["R-fixture-rejected", "R-fixture-settled-inherent-prose"],
+      "steward": "S-steward",
+      "lifecycle": "DETECTED",
+      "shared_assumption": null,
+      "derived": [],
+      "revisit_marker": "",
+      "decided_by": "",
+      "variants": [],
+      "signoff": null,
+      "created_at": "2026-02-07",
+      "decided_at": "",
+      "decl_order": 2
+    }
+  ],
+  "operators": [
+    {
+      "id": "OP-fixture-director",
+      "stakeholder": "S-ai-agent",
+      "lifecycle": "ACTIVE",
+      "context_budget": { "limit": 1000, "measure": "NODE_COUNT" },
+      "parent": null,
+      "scope": ["fixture-domain"],
+      "why": "Coverage needs at least one operator row with a bounded budget.",
+      "decl_order": 0
+    }
+  ],
+  "processes": [
+    {
+      "id": "PR-fixture-review",
+      "lifecycle": {
+        "slug": "process-lifecycle",
+        "states": [
+          { "name": "READY", "kind": "initial", "why": "" },
+          { "name": "RUNNING", "kind": "normal", "why": "" },
+          { "name": "DONE", "kind": "quiescent", "why": "" }
+        ],
+        "transitions": [
+          { "src": "READY", "dst": "RUNNING", "event": "start", "guard": "", "guard_assumption": null, "why": "" },
+          { "src": "RUNNING", "dst": "DONE", "event": "complete", "guard": "", "guard_assumption": null, "why": "" }
+        ],
+        "cyclic": false,
+        "prefix_states": []
+      },
+      "steps": [
+        { "name": "draft-proposal", "requires_role": "S-ai-agent", "invokes": "fixture-entity.activate", "why": "drives the fixture entity forward" },
+        { "name": "steward-review", "requires_role": "S-domain-user", "invokes": "", "why": "" }
+      ],
+      "roles_required": ["S-ai-agent", "S-domain-user"],
+      "drives_entities": ["fixture-entity"],
+      "why": "Coverage needs one process row rendering steps/roles/drives.",
+      "decl_order": 0
+    }
+  ],
+  "goals": [
+    {
+      "id": "GOAL-fixture-shrink-testdata",
+      "owner": "OP-fixture-director",
+      "target_state": { "kind": "GRAPH_PROPERTY", "predicate": "testdata size < 150KB", "target": "internal/generator/testdata" },
+      "lifecycle": "ACTIVE",
+      "why": "Coverage needs one goal row.",
+      "decl_order": 0
+    }
+  ],
+  "entity_types": [
+    {
+      "slug": "fixture-entity",
+      "description": "A synthetic entity type exercising the §Entity render branches.",
+      "lifecycle": {
+        "slug": "fixture-entity-lifecycle",
+        "states": [
+          { "name": "PENDING", "kind": "initial", "why": "" },
+          { "name": "ACTIVE", "kind": "normal", "why": "" },
+          { "name": "RETIRED", "kind": "terminal", "why": "" }
+        ],
+        "transitions": [
+          { "src": "PENDING", "dst": "ACTIVE", "event": "activate", "guard": "", "guard_assumption": null, "why": "" },
+          { "src": "ACTIVE", "dst": "RETIRED", "event": "retire", "guard": "", "guard_assumption": null, "why": "" }
+        ],
+        "cyclic": false,
+        "prefix_states": []
+      },
+      "fields": [
+        { "name": "label", "kind": "string", "required": true, "ref_target": "" },
+        { "name": "weight", "kind": "number", "required": false, "ref_target": "" },
+        { "name": "owner_ref", "kind": "reference", "required": false, "ref_target": "stakeholder" }
+      ],
+      "why": "Coverage needs an entity type with mermaid + fields + instances rendering.",
+      "decl_order": 0
+    }
+  ],
+  "entities": [
+    {
+      "id": "ENT-fixture-entity-1",
+      "entity_type": "fixture-entity",
+      "state": "PENDING",
+      "field_values": [["label", "first fixture instance"], ["weight", "1"]],
+      "decl_order": 0
+    },
+    {
+      "id": "ENT-fixture-entity-2",
+      "entity_type": "fixture-entity",
+      "state": "ACTIVE",
+      "field_values": [["label", "second fixture instance"], ["owner_ref", "S-ai-agent"]],
+      "decl_order": 1
+    }
+  ]
+}

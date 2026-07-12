@@ -29,7 +29,7 @@ func BuildOpen(g *ontology.Graph) string {
 	lines = append(lines,
 		"Generated mirror of what is still open: OPEN(question) requirements and "+
 			"conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is "+
-			"the visibility-of-the-open layer; run `tools/what_now.py` for the "+
+			"the visibility-of-the-open layer; run `hotam what-now` for the "+
 			"prioritized next actions that close these.")
 	lines = append(lines, "")
 

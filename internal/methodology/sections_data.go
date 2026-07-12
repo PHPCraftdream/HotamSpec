@@ -91,7 +91,7 @@ var Graph = Sections.MustRegister("§Graph", Section{
 		"Requirements and Conflicts; edges are tuple-of-id fields on those objects; traversal is the plain functions " +
 		"below. No database, no RDF — the graph instance the invariants, the generator and the harness all read is the one " +
 		"assembled by the loader. CONTENT-FREE FRAMEWORK: this module ships ZERO business data; real domains populate " +
-		"domains/<name>/graph.py exposing build_graph() -> TensionGraph.",
+		"domains/<name>/graph.json, loaded by internal/loader into an internal/ontology.Graph.",
 	Why: "WHY traversal lives here as functions (not methods on a graph class doing logic): keeps the ontology " +
 		"dataclasses pure data and the queries in one auditable place, mirroring dev-coin where chain logic is module " +
 		"functions over frozen dataclasses.",
@@ -160,9 +160,9 @@ var Glossary = Sections.MustRegister("§Glossary", Section{
 	Kind:  PLUMBING,
 	Canon: "The methodology's controlled vocabulary (framework-side).",
 	Narrative: "This module IS the authoritative membership list of admitted methodology terms. RULE: every §-token " +
-		"used in hotam_spec framework docstrings MUST appear here as a Term entry, and every Term entry MUST be referenced " +
-		"in at least one hotam_spec docstring. Domain-side business terms (R-ids, axis slugs, stakeholders) live in the " +
-		"domain's graph.py — not here.",
+		"used in Hotam-Spec framework module docs MUST appear here as a Term entry, and every Term entry MUST be referenced " +
+		"in at least one framework module doc. Domain-side business terms (R-ids, axis slugs, stakeholders) live in the " +
+		"domain's graph.json — not here.",
 	Why: "WHY a generated controlled vocabulary: terminology drift is its own kind of invisibility — 'axis'/'dimension', " +
 		"'steward'/'owner', 'conflict'/'tension' fragment the methodology language without it. The vocabulary and its mirror " +
 		"(docs/gen/GLOSSARY.md) are generated from the same source so they cannot drift from each other.",
@@ -178,8 +178,8 @@ var Scope = Sections.MustRegister("§Scope", Section{
 		"hidden by a hard partition.",
 	Why: "WHY prefix-projection over the graph, not a copied sub-graph: a copy forks — the moment two operators each hold " +
 		"their OWN Requirement objects, editing one cannot be guaranteed to reach the other, and the single writer " +
-		"(apply_proposal.py) is defeated. A Scope computed as id-sets over the one graph can never drift from it: re-run the " +
-		"projection, get the current view, always.",
+		"(internal/proposal, applied via `hotam apply-proposal`) is defeated. A Scope computed as id-sets over the one graph " +
+		"can never drift from it: re-run the projection, get the current view, always.",
 })
 
 var Ticket = Sections.MustRegister("§Ticket", Section{
@@ -200,8 +200,8 @@ var Proposal = Sections.MustRegister("§Proposal", Section{
 	Canon: "Structured operator→steward change proposals.",
 	Narrative: "The closed loop's ACT half: the AI operator emits a structured proposal (ProposedRequirement / " +
 		"ProposedConflictTransition / ProposedRejection / ProposedConflict), the steward approves it out-of-band (review + " +
-		"greenlight), and apply_proposal mechanically writes the change to the active domain's graph.py + runs the " +
-		"regen+verify pipeline. No free-text AI editing of source.",
+		"greenlight), and `hotam apply-proposal` (internal/proposal) mechanically writes the change to the active domain's " +
+		"graph.json + runs the regen+verify pipeline. No free-text AI editing of source.",
 	Why: "This honors R-ai-presents-not-decides (the AI never closes a conflict silently) AND R-active-loop-playbooks " +
 		"(each what_now band has a playbook + a mechanical apply path). The AI TRANSLATES outcomes into typed proposals but " +
 		"never decides; the steward decides and the mechanical writer lands it deterministically.",
@@ -211,8 +211,8 @@ var Closure = Sections.MustRegister("§Closure", Section{
 	Slug:  "§Closure",
 	Kind:  DISCIPLINE,
 	Canon: "Per-action verify: did the proposal remove its diagnosis?",
-	Narrative: "After apply_proposal writes + regens + the gate greens, closure asserts the triggering diagnosis was " +
-		"actually removed. The enforcer-name -> pytest node-id resolution is shared (extracted from gate.py) so both the T1 " +
+	Narrative: "After apply-proposal writes + regens + the gate greens, closure asserts the triggering diagnosis was " +
+		"actually removed. The enforcer-name -> go-test node-id resolution is shared (internal/gate) so both the T1 " +
 		"tiered gate and the structural invariant check_enforced_by_resolvable use ONE resolution algorithm.",
 	Why: "WHY per-action closure (R-verify-closure-per-action): landing a proposal that greens the suite but does NOT " +
 		"remove the triggering diagnosis is a false victory — the gate passes yet nothing advanced. Closure makes 'the " +
@@ -237,8 +237,8 @@ var Conscience = Sections.MustRegister("§Conscience", Section{
 	Kind:  DISCIPLINE,
 	Canon: "The Hypothesis property-test sweep over the critical-core invariants — does my OWN edit introduce a contradiction?",
 	Narrative: "The methodology's critical core is the narrow set of invariants whose violation would silently break " +
-		"the hard boundary or anti-drift. The §Conscience Hypothesis sweep (test_conscience.py) runs property-tests over " +
-		"this critical core; all_violations runs the full set (both rings — critical core and secondary).",
+		"the hard boundary or anti-drift. The §Conscience property-test sweep (go test ./internal/invariants/...) runs over " +
+		"this critical core; `hotam all-violations` runs the full set (both rings — critical core and secondary).",
 	Why: "WHY a conscience (narrow scope, M7): property-testing the WHOLE invariant surface is expensive and noisy; " +
 		"scoping the conscience to the critical core keeps the property sweep fast and focused on the paths by which a " +
 		"contradiction could be INTRODUCED without being seen. Secondary invariants pass the same suite but are not the " +
@@ -250,8 +250,8 @@ var Constitution = Sections.MustRegister("§Constitution", Section{
 	Kind:  PLUMBING,
 	Canon: "The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws.",
 	Narrative: "The Constitution is the generated index of SETTLED requirements grouped by topic, rendered into " +
-		"CLAUDE.md as the operator's boot-time reconstitution. It is regenerated from the executable model (docstrings + " +
-		"graph) by gen_spec.py, so the operator re-boots from substrate, not from stale prose.",
+		"CLAUDE.md as the operator's boot-time reconstitution. It is regenerated from the executable model (module docs + " +
+		"graph) by `hotam gen-spec` (internal/generator), so the operator re-boots from substrate, not from stale prose.",
 	Why: "WHY a generated constitution (R-operator-prompt-from-substrate): the operator's prompt must be a projection " +
 		"of the substrate's SETTLED laws, never hand-maintained prose that drifts from the graph. Regenerating it from the " +
 		"executable model makes drift structurally impossible — the constitution IS the substrate, rendered.",
@@ -328,7 +328,7 @@ var Atoms = Sections.MustRegister("§Atoms", Section{
 var Agent = Sections.MustRegister("§Agent", Section{
 	Slug:  "§Agent",
 	Kind:  PLUMBING,
-	Canon: "A scoped sub-operator directory (domains/<domain>/agents/<name>/) with scope.py, CLAUDE.md, tools/, agents/, and docs/ subdirectories.",
+	Canon: "A scoped sub-operator directory (domains/<domain>/agents/<name>/) with a scope declaration, CLAUDE.md, tools/, agents/, and docs/ subdirectories.",
 	Narrative: "An Agent is a scoped sub-operator: THIS SAME seed, narrowed — same Role text + narrower scope line, same " +
 		"mediation loop, with thinking + constitution filtered by SCOPE prefixes. Every agent directory must contain an " +
 		"'agents/' subdirectory because every agent is itself a potential director that can spawn sub-agents (the agents/ " +
@@ -342,7 +342,7 @@ var Agent = Sections.MustRegister("§Agent", Section{
 var Domain = Sections.MustRegister("§Domain", Section{
 	Slug:  "§Domain",
 	Kind:  PROCESS,
-	Canon: "A self-contained business domain directory (domains/<name>/) with manifest.py, graph.py, tools/, agents/director/, docs/gen/, and CLAUDE.md.",
+	Canon: "A self-contained business domain directory (domains/<name>/) with a manifest, graph.json, tools/, agents/director/, docs/gen/, and CLAUDE.md.",
 	Narrative: "Exactly ONE function, resolve_active_domain(domains_root), implements the active-domain resolution " +
 		"order shared by every tool: (1) HOTAM_SPEC_ACTIVE_DOMAIN env var, (2) domains/.active-domain pin file (committed, " +
 		"version-controlled), (3) first domains/<name>/ alphabetically (deterministic fallback so a fresh repo is never " +
@@ -394,7 +394,7 @@ var Attention = Sections.MustRegister("§Attention", Section{
 		"For a live agent, collect(...) is a SUPERSET of diagnose_signals(g); for the substrate, only the deterministic " +
 		"diagnose subset is consumed.",
 	Why: "WHY a core (not just tool functions): the 'what needs attention' signals were scattered — half in diagnose(g), " +
-		"half as CLI-only bands owned by what_now.py. There was no single, agent-agnostic, importable-as-a-library source. " +
+		"half as CLI-only bands owned by `hotam what-now`. There was no single, agent-agnostic, importable-as-a-library source. " +
 		"A core registry means no agent, on any platform, has to remember where the signals live: it runs the core and " +
 		"reads the list; the platform adapter is merely one consumer, not the owner.",
 })

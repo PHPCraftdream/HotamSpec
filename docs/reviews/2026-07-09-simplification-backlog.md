@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Бэклог упрощения — задачи из пятилинзового ревью 2026-07-09
 
 Источник: `2026-07-09-simplification-review.md` + `lens-1-redundancy.md` … `lens-5-agent-cognitive-load.md`.

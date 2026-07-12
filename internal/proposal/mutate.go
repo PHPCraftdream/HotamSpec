@@ -389,6 +389,33 @@ func (p ProposedConflictMemberUpdate) mutate(g *ontology.Graph, today string) er
 	return nil
 }
 
+func (p ProposedReviewMark) mutate(g *ontology.Graph, today string) error {
+	idx := findRequirementIndex(g, p.RequirementID)
+	if idx < 0 {
+		return errNotFound("requirement_id", p.RequirementID)
+	}
+	r := g.Requirements[idx]
+	old := snapshotFrom(r)
+
+	r.LastReviewedAt = defaultStr(p.ReviewedAt, today)
+	if strings.TrimSpace(p.ReviewAfter) != "" {
+		r.ReviewAfter = p.ReviewAfter
+	}
+	if len(p.Evidence) > 0 {
+		r.Evidence = coalesceSlice(p.Evidence, r.Evidence)
+	}
+
+	summary := summarizeFieldDiff(old, snapshotFrom(r))
+	if summary != "" {
+		r.History = append(r.History, ontology.HistoryEntry{
+			At:      today,
+			Summary: summary,
+		})
+	}
+	g.Requirements[idx] = r
+	return nil
+}
+
 func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 	slug := strings.TrimSpace(p.Slug)
 	if _, ok := ontology.EntityTypeSlugs(g)[slug]; ok {

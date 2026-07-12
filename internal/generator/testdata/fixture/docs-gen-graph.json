@@ -1,0 +1,254 @@
+{
+  "assumptions": [
+    {
+      "id": "A-holds-example",
+      "owner": "S-ai-agent",
+      "statement": "The fixture graph loader accepts this shape without error.",
+      "status": "HOLDS"
+    },
+    {
+      "id": "A-uncertain-example",
+      "owner": "S-ai-agent",
+      "statement": "Synthetic fixtures stay smaller than real-domain golden files indefinitely.",
+      "status": "UNCERTAIN"
+    },
+    {
+      "id": "A-dead-example",
+      "owner": "S-ai-agent",
+      "statement": "The fixture would need per-domain hand-tuning forever.",
+      "status": "DEAD"
+    },
+    {
+      "id": "A-implements-example",
+      "owner": "S-ai-agent",
+      "statement": "hotam gen-spec implements the render-from-fixture contract.",
+      "status": "IMPLEMENTS"
+    }
+  ],
+  "conflicts": [
+    {
+      "axis": "speed-vs-safety",
+      "context": "fixture decided conflict context",
+      "id": "C-de666076",
+      "lifecycle": "DECIDED(fixture chose safety for the render path)",
+      "members": [
+        "R-fixture-settled-enforced",
+        "R-fixture-settled-prose"
+      ],
+      "steward": "S-steward"
+    },
+    {
+      "axis": "centralize-vs-delegate",
+      "context": "fixture held conflict context, unresolved variant choice",
+      "id": "C-57040530",
+      "lifecycle": "HELD",
+      "members": [
+        "R-fixture-draft",
+        "R-fixture-open-question"
+      ],
+      "steward": "S-steward"
+    },
+    {
+      "axis": "speed-vs-safety",
+      "context": "fixture freshly detected conflict, not yet acknowledged",
+      "id": "C-b1bb5c91",
+      "lifecycle": "DETECTED",
+      "members": [
+        "R-fixture-rejected",
+        "R-fixture-settled-inherent-prose"
+      ],
+      "steward": "S-steward"
+    }
+  ],
+  "generated_from": "domains/<active>/graph.json",
+  "node_ids": [
+    "A-dead-example",
+    "A-holds-example",
+    "A-implements-example",
+    "A-uncertain-example",
+    "C-57040530",
+    "C-b1bb5c91",
+    "C-de666076",
+    "R-fixture-draft",
+    "R-fixture-open-question",
+    "R-fixture-rejected",
+    "R-fixture-settled-enforced",
+    "R-fixture-settled-inherent-prose",
+    "R-fixture-settled-prose",
+    "S-ai-agent",
+    "S-domain-user",
+    "S-steward"
+  ],
+  "note": "READ-ONLY generated snapshot. Source of truth is the domain's graph.json; edit the graph only via `hotam apply-proposal` (R-no-hand-edit-graph, R-per-node-json-store REJECTED).",
+  "requirements": [
+    {
+      "assumptions": [
+        "A-holds-example"
+      ],
+      "claim": "A SETTLED requirement with ENFORCED enforcement renders in the enforced table.",
+      "enforced_by": [
+        "check_conflict_has_axis"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [
+        "commit:abc1234",
+        "test:TestFixtureEnforced"
+      ],
+      "history": [
+        {
+          "at": "2026-01-01",
+          "decided_by": "",
+          "summary": "drafted"
+        },
+        {
+          "at": "2026-01-05",
+          "decided_by": "S-steward",
+          "summary": "settled by steward"
+        }
+      ],
+      "id": "R-fixture-settled-enforced",
+      "last_reviewed_at": "2026-06-01",
+      "owner": "S-ai-agent",
+      "review_after": "2027-01-01",
+      "source_refs": [
+        "docs/fixture-notes.md#enforced"
+      ],
+      "status": "SETTLED",
+      "why": "Coverage needs at least one ENFORCED/SETTLED row in UNENFORCED.md's enforced section."
+    },
+    {
+      "assumptions": [
+        "A-holds-example",
+        "A-uncertain-example"
+      ],
+      "claim": "A SETTLED requirement with PROSE/ENFORCEABLE enforcement counts as closeable debt.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-01-02",
+          "decided_by": "",
+          "summary": "drafted"
+        }
+      ],
+      "id": "R-fixture-settled-prose",
+      "last_reviewed_at": "",
+      "owner": "S-ai-agent",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "why": "Coverage needs a closeable-debt row (ENFORCEABLE, still PROSE) in UNENFORCED.md."
+    },
+    {
+      "assumptions": [],
+      "claim": "A SETTLED requirement with STRUCTURAL/INHERENTLY_PROSE enforcement is permanent discipline, not debt.",
+      "enforced_by": [
+        "check_conflict_has_context"
+      ],
+      "enforcement": "STRUCTURAL",
+      "evidence": [
+        "doc:fixture"
+      ],
+      "history": [],
+      "id": "R-fixture-settled-inherent-prose",
+      "last_reviewed_at": "2025-01-01",
+      "owner": "S-domain-user",
+      "review_after": "2025-07-01",
+      "source_refs": [],
+      "status": "SETTLED",
+      "why": "Coverage needs the inherent-discipline table (INHERENTLY_PROSE, never counted as debt)."
+    },
+    {
+      "assumptions": [
+        "A-uncertain-example"
+      ],
+      "claim": "A DRAFT requirement renders in the DRAFT section, not promoted yet.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-02-01",
+          "decided_by": "",
+          "summary": "drafted"
+        }
+      ],
+      "id": "R-fixture-draft",
+      "last_reviewed_at": "",
+      "owner": "S-ai-agent",
+      "review_after": "",
+      "source_refs": [],
+      "status": "DRAFT",
+      "why": "Coverage needs a DRAFT branch across REQUIREMENTS.md and UNENFORCED.md."
+    },
+    {
+      "assumptions": [
+        "A-holds-example"
+      ],
+      "claim": "An OPEN(question) requirement renders in OPEN.md and DECISIONS.md when M-tagged.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-02-05",
+          "decided_by": "",
+          "summary": "opened as a question"
+        }
+      ],
+      "id": "R-fixture-open-question",
+      "last_reviewed_at": "",
+      "owner": "S-domain-user",
+      "review_after": "",
+      "source_refs": [],
+      "status": "OPEN(should the fixture graph grow past 25 nodes?)",
+      "why": "Coverage needs the OPEN status branch, including M-tag decisions rendering."
+    },
+    {
+      "assumptions": [
+        "A-dead-example"
+      ],
+      "claim": "A REJECTED requirement renders in HISTORY.md under discarded claims.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2025-12-01",
+          "decided_by": "",
+          "summary": "drafted"
+        },
+        {
+          "at": "2025-12-15",
+          "decided_by": "S-steward",
+          "summary": "rejected in favor of R-fixture-settled-prose"
+        }
+      ],
+      "id": "R-fixture-rejected",
+      "last_reviewed_at": "",
+      "owner": "S-ai-agent",
+      "review_after": "",
+      "source_refs": [],
+      "status": "REJECTED",
+      "why": "Coverage needs the REJECTED branch — replaced by R-fixture-settled-prose (anti-relitigation)."
+    }
+  ],
+  "stakeholders": [
+    {
+      "domain": "fixture-domain",
+      "id": "S-ai-agent",
+      "name": "AI agent"
+    },
+    {
+      "domain": "fixture-domain",
+      "id": "S-domain-user",
+      "name": "Domain user"
+    },
+    {
+      "domain": "fixture-domain",
+      "id": "S-steward",
+      "name": "Steward"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "sha256": "737a7853f708736e1599a058b3fe5700931568ca7a2815f278f9945906357189",
-  "updated_at": "2026-07-12T02:29:47Z",
-  "note": "canonical id-sorted graph with decl_order"
+  "sha256": "513d709592d73d5c63c0d5891db10a7158925c4af6909e6fd1c54b12b2f4cb53",
+  "updated_at": "2026-07-12T09:35:56Z",
+  "note": "ReviewMark R-work-within-launch-dir applied"
 }

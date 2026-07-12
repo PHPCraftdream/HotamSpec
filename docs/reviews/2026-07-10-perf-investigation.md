@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Perf-инвестигация: gen_spec / pytest / LAND-циклы — 2026-07-10
 
 Исследование производительности (read-only, без правок кода). Машина: Windows 10, Python 3.12.3,

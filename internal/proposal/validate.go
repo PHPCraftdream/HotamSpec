@@ -56,7 +56,7 @@ func (p ProposedConflictTransition) validate() error {
 		}
 		if len(distinct) < 2 {
 			return validationError(
-				"new_lifecycle starts with HELD but fewer than 2 distinct "+
+				"new_lifecycle starts with HELD but fewer than 2 distinct " +
 					"Variant ids were supplied (requires >= 2).")
 		}
 	}
@@ -268,6 +268,18 @@ func (p ProposedEntityType) validate() error {
 		if _, ok := ontology.EntityFieldKinds[f.Kind]; !ok {
 			return validationError("field kind %q is not valid.", f.Kind)
 		}
+	}
+	return nil
+}
+
+func (p ProposedReviewMark) validate() error {
+	if strings.TrimSpace(p.RequirementID) == "" {
+		return validationError("'requirement_id' is required for a ReviewMark proposal.")
+	}
+	if strings.TrimSpace(p.ReviewAfter) == "" && len(trimNonEmpty(p.Evidence)) == 0 && strings.TrimSpace(p.ReviewedAt) == "" {
+		return validationError(
+			"a ReviewMark proposal must set at least one of 'reviewed_at', 'review_after', " +
+				"'evidence' — an empty mark is a no-op.")
 	}
 	return nil
 }

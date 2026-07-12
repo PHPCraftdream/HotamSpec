@@ -1,3 +1,5 @@
+<!-- LEGACY (Python-era) audit/review — describes a point-in-time snapshot of the Python prototype (pytest/spec/tools references below are historical, not current instructions); see README.md for the current Go CLI. -->
+
 # Линза 5 — Когнитивная нагрузка на агента-оператора
 
 Честная оценка по пяти пунктам линзы, на основе чтения `CLAUDE.md` (27 559 символов), `spec/tools/what_now.py`, `spec/tools/attention_hook.py`, живого запуска `spec/tools/attention.py` и git-истории.
