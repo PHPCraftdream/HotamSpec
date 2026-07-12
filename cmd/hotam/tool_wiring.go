@@ -39,6 +39,7 @@ func init() {
 	wireToolRun("req", cmdReq)
 	wireToolRun("due", cmdDue)
 	wireToolRun("inspect", cmdInspect)
+	wireToolRun("confront", cmdConfront)
 	wireToolRun("land", cmdLand)
 }
 

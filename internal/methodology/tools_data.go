@@ -59,6 +59,13 @@ func init() {
 		Status:  Ported,
 		Run:     nil,
 	})
+	Tools.MustRegister("confront", Tool{
+		Command: "confront",
+		Canon:   "§Loop",
+		Purpose: "Usage: hotam confront <text> [--domain <path>] [--file <path>] [--json]. CONFRONT step of the mediation loop (internal/diagnose): checks a candidate claim for lexical overlap with SETTLED requirements (duplicate guard) and REJECTED history (anti-relitigation) before anything is written. <text> is a quoted positional; --file <path> reads a long draft. Reuses the inspect overlap engine. Never gates; exit code always 0.",
+		Status:  Ported,
+		Run:     nil,
+	})
 	Tools.MustRegister("land", Tool{
 		Command: "land",
 		Canon:   "§Closure",
@@ -110,13 +117,6 @@ func init() {
 		Command: "closure",
 		Canon:   "§Closure",
 		Purpose: "Not ported. Historically: per-action verify — did the proposal remove its diagnosis?",
-		Status:  Declared,
-		Run:     nil,
-	})
-	Tools.MustRegister("confront", Tool{
-		Command: "confront",
-		Canon:   "§Loop",
-		Purpose: "Not ported. Historically: the CONFRONT step's tool, ranking a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.",
 		Status:  Declared,
 		Run:     nil,
 	})

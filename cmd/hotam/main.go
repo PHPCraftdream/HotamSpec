@@ -44,6 +44,8 @@ func main() {
 		err = cmdDue(args)
 	case "inspect":
 		err = cmdInspect(args)
+	case "confront":
+		err = cmdConfront(args)
 	case "-h", "--help", "help":
 		printUsage(os.Stdout)
 		return
@@ -103,6 +105,12 @@ Commands:
         (shared-assumption clusters, entity-state suspects, lexical claim
         overlap, axis co-reference). --min-score (default 5) suppresses
         low-signal candidates; 0 shows all. Never gates; exit code always 0.
+  confront <text> [--domain <path>] [--file <path>] [--json]
+        CONFRONT step of the mediation loop: checks a candidate claim for
+        lexical overlap with SETTLED requirements (duplicate guard) and
+        REJECTED history (anti-relitigation) before anything is written.
+        <text> is a quoted positional; --file <path> reads a long draft.
+        Reuses the inspect overlap engine. Never gates; exit code always 0.
   version, --version
         Print the hotam binary version.
 

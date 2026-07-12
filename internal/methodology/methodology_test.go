@@ -77,10 +77,9 @@ func TestNamedSectionVariables(t *testing.T) {
 func TestToolsComplete(t *testing.T) {
 	t.Parallel()
 	tools := Tools.All()
-	// 9 Ported (gen_spec, what_now, apply_proposal, gate, all_violations,
-	// req, due, inspect, land — every real `hotam` CLI subcommand as of
-	// P1-6 / TaskList #19) + 28 Declared (Python-era methodology surface
-	// not yet ported).
+	// 10 Ported (gen_spec, what_now, apply_proposal, gate, all_violations,
+	// req, due, inspect, confront, land — every real `hotam` CLI subcommand)
+	// + 27 Declared (Python-era methodology surface not yet ported).
 	const want = 37
 	if len(tools) != want {
 		t.Fatalf("expected %d tools, got %d", want, len(tools))
@@ -115,7 +114,7 @@ func TestToolsPortedCount(t *testing.T) {
 			ported++
 		}
 	}
-	const wantPorted = 9
+	const wantPorted = 10
 	if ported != wantPorted {
 		t.Fatalf("expected %d Ported tools, got %d", wantPorted, ported)
 	}
