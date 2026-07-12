@@ -1,0 +1,6 @@
+{
+  "kind": "Rejection",
+  "requirement_id": "R-measure-context-size",
+  "reason": "REJECTED — premise requires installing/wiring a hook in the user's global ~/.claude configuration to emit context %, which R-work-within-launch-dir (SETTLED/ENFORCED) explicitly forbids (\"never modifying anything outside it — including ... the global ~/.claude configuration\"). This is the same steward-cited reason (2026-07-05: \"cah вообще нельзя трогать — он ведь обновится всё сотрет\") that already REJECTED the sibling R-context-hook-piggybacks-cah-stamp. An honest successor already exists and is SETTLED/ENFORCED: R-unmeasured-cipher-names-host-boundary, which measures context only when the local stdin payload honestly carries ctx_pct and otherwise reports UNMEASURED — exactly the scope this DRAFT wanted, without crossing the host boundary. Steward decision 2026-07-12, independently confirmed by two agents (crush and fm) reading the same graph evidence.",
+  "replaced_by": ["R-unmeasured-cipher-names-host-boundary", "R-work-within-launch-dir"]
+}

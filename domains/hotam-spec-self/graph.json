@@ -5858,8 +5858,8 @@
       "id": "R-measure-context-size",
       "claim": "The operator's working-context fullness shall be MEASURED from a runtime stamp, not estimated, so the three-cipher pulse cites a real number.",
       "owner": "ai-agent",
-      "status": "DRAFT",
-      "why": "tools/context.py reads spec/.runtime/context.json; the producing hook lives in the user's global ~/.claude settings (cah-stamp emits context %) — installing it is a STEWARD decision outside the framework body, so this stays DRAFT until the hook is approved and wired.",
+      "status": "REJECTED",
+      "why": "REJECTED — premise requires installing/wiring a hook in the user's global ~/.claude configuration to emit context %, which R-work-within-launch-dir (SETTLED/ENFORCED) explicitly forbids (\"never modifying anything outside it — including ... the global ~/.claude configuration\"). This is the same steward-cited reason (2026-07-05: \"cah вообще нельзя трогать — он ведь обновится всё сотрет\") that already REJECTED the sibling R-context-hook-piggybacks-cah-stamp. An honest successor already exists and is SETTLED/ENFORCED: R-unmeasured-cipher-names-host-boundary, which measures context only when the local stdin payload honestly carries ctx_pct and otherwise reports UNMEASURED — exactly the scope this DRAFT wanted, without crossing the host boundary. Steward decision 2026-07-12, independently confirmed by two agents (crush and fm) reading the same graph evidence. — (was: tools/context.py reads spec/.runtime/context.json; the producing hook lives in the user's global ~/.claude settings (cah-stamp emits context %) — installing it is a STEWARD decision outside the framework body, so this stays DRAFT until the hook is approved and wired.)",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -9155,6 +9155,10 @@
         {
           "kind": "replaces",
           "target": "R-unmeasured-cipher-names-user-action"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-measure-context-size"
         }
       ],
       "enforcement": "ENFORCED",
@@ -9407,6 +9411,10 @@
         {
           "kind": "replaces",
           "target": "R-context-hook-piggybacks-cah-stamp"
+        },
+        {
+          "kind": "replaces",
+          "target": "R-measure-context-size"
         }
       ],
       "enforcement": "ENFORCED",
