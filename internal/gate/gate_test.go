@@ -1,0 +1,281 @@
+package gate
+
+import (
+	"sort"
+	"strings"
+	"testing"
+
+	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
+	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+)
+
+func TestSelectTier1_CheckNameResolves(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-test-check", EnforcedBy: []string{"check_axis_in_registry"}},
+		},
+	}
+	result := SelectTier1("R-test-check", g)
+	if !result.Confident {
+		t.Fatalf("expected confident=true, got false: %s", result.Reason)
+	}
+	m, err := BuildCheckToTestsMap(defaultInvariantsDir())
+	if err != nil {
+		t.Fatalf("BuildCheckToTestsMap: %v", err)
+	}
+	hits, ok := m["check_axis_in_registry"]
+	if !ok || len(hits) == 0 {
+		t.Fatalf("expected check_axis_in_registry in map, got %v", m)
+	}
+	want := append([]string{}, hits...)
+	want = append(want, alwaysRun...)
+	sort.Strings(want)
+	if !equalSlices(result.NodeIDs, want) {
+		t.Fatalf("NodeIDs mismatch:\n got %v\nwant %v", result.NodeIDs, want)
+	}
+	for _, h := range hits {
+		if !strings.HasPrefix(h, "Test") {
+			t.Fatalf("expected all resolved names to start with Test, got %q", h)
+		}
+	}
+}
+
+func TestSelectTier1_TestFuncNameResolves(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-test-func", EnforcedBy: []string{"TestCheckAxisInRegistry_OK"}},
+		},
+	}
+	result := SelectTier1("R-test-func", g)
+	if !result.Confident {
+		t.Fatalf("expected confident=true, got false: %s", result.Reason)
+	}
+	want := append([]string{}, alwaysRun...)
+	want = append(want, "TestCheckAxisInRegistry_OK")
+	sort.Strings(want)
+	if !equalSlices(result.NodeIDs, want) {
+		t.Fatalf("NodeIDs mismatch:\n got %v\nwant %v", result.NodeIDs, want)
+	}
+}
+
+func TestSelectTier1_MultipleChecksUnion(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-multi", EnforcedBy: []string{"check_axis_in_registry", "check_conflict_has_axis"}},
+		},
+	}
+	result := SelectTier1("R-multi", g)
+	if !result.Confident {
+		t.Fatalf("expected confident=true, got false: %s", result.Reason)
+	}
+	m, err := BuildCheckToTestsMap(defaultInvariantsDir())
+	if err != nil {
+		t.Fatalf("BuildCheckToTestsMap: %v", err)
+	}
+	wantSet := map[string]struct{}{}
+	for _, n := range alwaysRun {
+		wantSet[n] = struct{}{}
+	}
+	for _, check := range []string{"check_axis_in_registry", "check_conflict_has_axis"} {
+		for _, h := range m[check] {
+			wantSet[h] = struct{}{}
+		}
+	}
+	want := keysSorted(wantSet)
+	if !equalSlices(result.NodeIDs, want) {
+		t.Fatalf("NodeIDs mismatch:\n got %v\nwant %v", result.NodeIDs, want)
+	}
+}
+
+func TestSelectTier1_FailClosed_TargetNotFound(t *testing.T) {
+	g := &ontology.Graph{}
+	result := SelectTier1("R-nonexistent", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for missing target")
+	}
+	if len(result.NodeIDs) != 0 {
+		t.Fatalf("expected empty NodeIDs, got %v", result.NodeIDs)
+	}
+	if !strings.Contains(result.Reason, "not found") {
+		t.Fatalf("reason should mention not found, got %q", result.Reason)
+	}
+}
+
+func TestSelectTier1_FailClosed_EmptyEnforcedBy(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-empty-eb"},
+		},
+	}
+	result := SelectTier1("R-empty-eb", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for empty enforced_by")
+	}
+	if !strings.Contains(result.Reason, "empty enforced_by") {
+		t.Fatalf("reason should mention empty enforced_by, got %q", result.Reason)
+	}
+}
+
+func TestSelectTier1_FailClosed_PythonTestPathUnresolved(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-py-path", EnforcedBy: []string{"test_apply_proposal.py"}},
+		},
+	}
+	result := SelectTier1("R-py-path", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for Python test path entry")
+	}
+	if !strings.Contains(result.Reason, "could not be resolved") {
+		t.Fatalf("reason should mention unresolved, got %q", result.Reason)
+	}
+}
+
+func TestSelectTier1_FailClosed_BareTestFuncUnresolved(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-bare-test", EnforcedBy: []string{"test_smoke"}},
+		},
+	}
+	result := SelectTier1("R-bare-test", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for bare test_ name")
+	}
+}
+
+func TestSelectTier1_FailClosed_PartiallyUnresolved(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-partial", EnforcedBy: []string{"check_axis_in_registry", "CRITICAL_CORE_INVARIANTS"}},
+		},
+	}
+	result := SelectTier1("R-partial", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for partially unresolved enforced_by")
+	}
+	if !strings.Contains(result.Reason, "CRITICAL_CORE_INVARIANTS") {
+		t.Fatalf("reason should name the unresolved entry, got %q", result.Reason)
+	}
+}
+
+func TestSelectTier1_FailClosed_CheckWithNoTestCoverage(t *testing.T) {
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-no-coverage", EnforcedBy: []string{"check_nonexistent_fake_check"}},
+		},
+	}
+	result := SelectTier1("R-no-coverage", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for check_ with no test coverage")
+	}
+}
+
+func TestSelectTier1_FailClosed_ConflictTarget(t *testing.T) {
+	g := &ontology.Graph{
+		Conflicts: []ontology.Conflict{
+			{ID: "C-test-conflict"},
+		},
+	}
+	result := SelectTier1("C-test-conflict", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for Conflict target")
+	}
+	if !strings.Contains(result.Reason, "Conflict") {
+		t.Fatalf("reason should mention Conflict, got %q", result.Reason)
+	}
+}
+
+func TestBuildCheckToTestsMap_NonEmptyAndSorted(t *testing.T) {
+	m, err := BuildCheckToTestsMap(defaultInvariantsDir())
+	if err != nil {
+		t.Fatalf("BuildCheckToTestsMap: %v", err)
+	}
+	if len(m) == 0 {
+		t.Fatalf("expected non-empty check-to-tests map")
+	}
+	for check, funcs := range m {
+		if !strings.HasPrefix(check, "check_") {
+			t.Errorf("key %q should start with check_", check)
+		}
+		if len(funcs) == 0 {
+			t.Errorf("check %q has empty test list", check)
+		}
+		if !sort.StringsAreSorted(funcs) {
+			t.Errorf("test list for %q should be sorted, got %v", check, funcs)
+		}
+		for _, fn := range funcs {
+			if !strings.HasPrefix(fn, "Test") {
+				t.Errorf("test name %q for check %q should start with Test", fn, check)
+			}
+		}
+	}
+}
+
+func TestBuildCheckToTestsMap_Deterministic(t *testing.T) {
+	first, err := BuildCheckToTestsMap(defaultInvariantsDir())
+	if err != nil {
+		t.Fatalf("first BuildCheckToTestsMap: %v", err)
+	}
+	second, err := BuildCheckToTestsMap(defaultInvariantsDir())
+	if err != nil {
+		t.Fatalf("second BuildCheckToTestsMap: %v", err)
+	}
+	if len(first) != len(second) {
+		t.Fatalf("map size differs across calls: %d vs %d", len(first), len(second))
+	}
+	for k, v1 := range first {
+		v2, ok := second[k]
+		if !ok {
+			t.Fatalf("key %q missing on second call", k)
+		}
+		if !equalSlices(v1, v2) {
+			t.Fatalf("values for %q differ: %v vs %v", k, v1, v2)
+		}
+	}
+}
+
+func TestSelectTier1_RealGraph_AxisControlledVocab(t *testing.T) {
+	g, err := loader.LoadGraph("../../domains/hotam-spec-self/graph.json")
+	if err != nil {
+		t.Fatalf("LoadGraph: %v", err)
+	}
+	result := SelectTier1("R-axis-controlled-vocab", g)
+	if !result.Confident {
+		t.Fatalf("expected confident=true for R-axis-controlled-vocab on real graph: %s", result.Reason)
+	}
+	m, _ := BuildCheckToTestsMap(defaultInvariantsDir())
+	wantSet := map[string]struct{}{}
+	for _, n := range alwaysRun {
+		wantSet[n] = struct{}{}
+	}
+	for _, h := range m["check_axis_in_registry"] {
+		wantSet[h] = struct{}{}
+	}
+	want := keysSorted(wantSet)
+	if !equalSlices(result.NodeIDs, want) {
+		t.Fatalf("NodeIDs mismatch on real graph:\n got %v\nwant %v", result.NodeIDs, want)
+	}
+}
+
+func TestSelectTier1_RealGraph_PythonEnforcedByFailsClosed(t *testing.T) {
+	g, err := loader.LoadGraph("../../domains/hotam-spec-self/graph.json")
+	if err != nil {
+		t.Fatalf("LoadGraph: %v", err)
+	}
+	result := SelectTier1("R-active-loop-apply-tool", g)
+	if result.Confident {
+		t.Fatalf("expected confident=false for a requirement whose enforced_by is Python test paths, got true: %v", result.NodeIDs)
+	}
+}
+
+func equalSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
