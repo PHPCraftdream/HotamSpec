@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-delegation-conclusions-only",
+  "claim": "When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail.",
+  "why": "SETTLED (P8): the proposal protocol carries CONCLUSIONS (rationale + derived requirements) not raw context detail — the Proposed* types' narrow, typed API surface IS the contract (internal/proposal/types.go). The parent keeps the conclusion-as-proposal (internal/proposal Apply), not the file-dump of working context. Returning raw detail would re-import the sub-domain's whole context into the parent's budget, defeating the delegation. Implementation: internal/proposal (types.go ProposedRequirement/ProposedConflict/etc. + apply.go Apply/ApplyBatch).",
+  "source_refs": [
+    "internal/proposal/types.go",
+    "internal/proposal/apply.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

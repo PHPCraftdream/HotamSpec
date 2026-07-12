@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-declares-director",
+  "claim": "Every domain's manifest shall declare a DIRECTOR agent that resolves to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`.",
+  "why": "A domain without a reachable director is an orphaned subtree: no operator can be loaded (R-agent-never-lost violated). The structural check prevents dangling DIRECTOR references the same way check_dangling_ids prevents dangling assumption ids. ENFORCED via check_domain_director_exists, which is an HONEST NO-OP in the Go port: the original Python invariant loaded each domain's manifest.py, read its DIRECTOR attribute, and checked that domains/<name>/agents/<DIRECTOR>/scope.py exists on disk. The Go invariant contract (Check func(*ontology.Graph) []Violation) operates on an already-loaded in-memory graph and has no access to the domain's directory path or manifest on disk. Additionally, the Go manifest.json on disk (internal/loader) carries only self_hosting — the DIRECTOR field is not represented in the on-disk manifest; it lives in the graph's Operators/Goals and in the code-level knownDomainManifests map (internal/generator/claudemd.go). A future port of the create_domain scaffolding layer (Declared, internal/methodology/tools_data.go) would carry filesystem-coherence checks of this kind.",
+  "source_refs": [
+    "internal/invariants/domain_structure.go",
+    "internal/loader/loader.go",
+    "internal/methodology/tools_data.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-gen-notice",
+  "claim": "When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail.",
+  "why": "Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block the regen step of the closed loop for new adopters. Not yet ported in the Go port: gen-spec (cmd/hotam/gen_spec.go) calls loadDomainGraph -> loader.LoadGraph, which returns a hard error when graph.json is absent (os.ReadFile fails), and gen-spec propagates that error rather than emitting a 'no content yet' notice. There is no empty/missing-graph notice path in the Go generator (internal/generator). The historical Python mechanism (tools/gen_spec.py emitting a notice into docs/gen/*.md on missing spec/content/graph.py) is the reference for a future port: the Go version would need gen-spec to detect the missing graph.json and render a placeholder notice instead of failing. An EMPTY-but-present graph (0 nodes that loads successfully) DOES regenerate cleanly (the generators render over zero requirements without error), so only the missing-file path is the gap.",
+  "source_refs": [
+    "cmd/hotam/gen_spec.go",
+    "internal/loader/loader.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

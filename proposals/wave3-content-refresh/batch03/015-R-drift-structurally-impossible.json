@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-drift-structurally-impossible",
+  "claim": "The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte.",
+  "why": "Anti-drift meta-test — direct lift of dev-coin's pattern. The human layer (docs/gen) cannot be hand-edited without regeneration catching the drift. ENFORCED by TestGenerator_GraphJSONDoubleRegenerateIsIdentical (internal/generator/determinism_test.go), which rebuilds graph.json twice from the same in-memory graph and asserts byte-identity; its sibling TestGenerator_DoubleRegenerateIsIdentical covers every generated doc (Requirements, Tensions, Open, Unenforced, Glossary, History, Decisions, Constitution, Entities, RepoMap, FrameworkInvariants, LiveState, Atoms*). The generators are pure functions of the graph (sorted iteration via internal/loader/sort.go, no time/random sources), so regeneration over an unchanged graph always reproduces the committed bytes.",
+  "source_refs": [
+    "internal/generator/determinism_test.go",
+    "internal/loader/sort.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

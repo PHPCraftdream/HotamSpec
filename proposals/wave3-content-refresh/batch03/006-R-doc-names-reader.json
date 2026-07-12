@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-doc-names-reader",
+  "claim": "Every generated doc shall name its reader as an existing Stakeholder id in its header.",
+  "why": "Stage E: a generated doc with no named reader is an important-yet-invisible artifact -- nobody is accountable for reading it, so drift between the doc and its audience's actual needs goes unnoticed (the generative law applied to doc plumbing, not just graph nodes). In the Go port, generator.DocReaderRoles (internal/generator/common.go) maps each doc kind to a portable ROLE hint (operator / domain-steward / framework-maintainer) and generator.ReaderHeaderLine resolves that hint against the DomainDocReaders binding (a code-level role->Stholder.id map: operator->ai-agent, domain-steward->domain-user, framework-maintainer->framework-author), stamping a `reader: <id>` line into every generated doc header (called from each Build* doc renderer: constitution.go, requirements.go, tensions.go, atoms.go, etc.). Resolution NEVER scans stakeholder ids for a role-shaped substring (R-doc-readers-declared-not-guessed): ResolveReader checks the explicit binding table, not a substring guess. The per-domain DOC_READERS binding declared in a manifest (the Python-era mechanism) is NOT yet ported: the Go port uses a single hardcoded DomainDocReaders map in common.go rather than a per-domain manifest field, so all domains share the same role->stakeholder binding today. check_doc_reader_resolves_to_stakeholder (internal/invariants/dangling.go) is an HONEST NO-OP in the Go port: it would verify the binding resolves against the graph's Stakeholders, but that check needs the manifest binding (filesystem) which the graph-only invariant contract cannot access — the structural guarantee lives in the generator's ReaderHeaderLine instead.",
+  "source_refs": [
+    "internal/generator/common.go",
+    "internal/invariants/dangling.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

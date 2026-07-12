@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-docs-generated-from-requirements",
+  "claim": "Per-topic narrative files (atoms-operator.md, atoms-substrate.md, atoms-discipline.md, atoms-check.md) shall be generated from SETTLED requirements grouped by topic, written into the active domain's docs/gen/ by the Go generator.",
+  "why": "Director asked: build a system that generates topic-grouped descriptions in the docs folder. BUILD: this phase. The Go generator (internal/generator/atoms.go) groups SETTLED requirements by topic predicate via selectSettled and renders each group through renderAtoms, producing four atoms-*.md files written into domains/<name>/docs/gen/ by cmd/hotam/gen_spec.go (the Go port writes them per-domain under docs/gen/ rather than at the repo-root docs/methodology/atoms/ as the Python reference did — the content is the same, the layout differs). (Wave 1 seed-coherence pass: enforced_by's second entry previously named a tool source path 'tools/gen_spec.py::build_methodology_atoms' rather than a test — corrected; the requirement stands at PROSE in the Go port since no dedicated Test* guards the atoms builders, though TestGenerator_DoubleRegenerateIsIdentical exercises them for determinism.)",
+  "source_refs": [
+    "internal/generator/atoms.go",
+    "cmd/hotam/gen_spec.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

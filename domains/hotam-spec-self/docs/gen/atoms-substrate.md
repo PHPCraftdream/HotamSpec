@@ -130,37 +130,43 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ## `R-deterministic-generation` (ENFORCED)
 
-**Claim.** tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.
+**Claim.** The Go generator (internal/generator, surfaced as `hotam gen-spec`) shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.
 
-**Why.** Determinism is what makes the anti-drift meta-test possible. Without it, regeneration would never equal the committed file.
+**Why.** Determinism is what makes the anti-drift meta-test possible. Without it, regeneration would never equal the committed file. ENFORCED by TestGenerator_DoubleRegenerateIsIdentical and TestGenerator_GraphJSONDoubleRegenerateIsIdentical (internal/generator/determinism_test.go), which rebuild every generated doc (Requirements, Tensions, Open, Unenforced, Glossary, History, Decisions, Constitution, Entities, RepoMap, FrameworkInvariants, LiveState, Atoms*) plus graph.json twice and assert byte-equality. The Go generators use sorted iteration (internal/loader/sort.go sortedCopy) and no time/random sources, so the output is a pure function of the graph.
 
 **Enforced by:** `TestGenerator_DoubleRegenerateIsIdentical`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-10-12
+
+**Sources.** internal/generator/determinism_test.go, internal/loader/sort.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [test_docs_gen.py::test_generator_is_deterministic]→[TestGenerator_DoubleRegenerateIsIdentical]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: tools/gen_spec.py shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical byt…→The Go generator (internal/generator, surfaced as `hotam gen-spec`) shall produce byte-stable LF utf-8 output with no timestamps or randomness — tw…; why: Determinism is what makes the anti-drift meta-test possible. Without it, regeneration would never equal the committed file.→Determinism is what makes the anti-drift meta-test possible. Without it, regeneration would never equal the committed file. ENFORCED by TestGenerator…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-10-12; source_refs: []→[internal/generator/determinism_test.go, internal/loader/sort.go]
 
 ## `R-drift-structurally-impossible` (ENFORCED)
 
-**Claim.** The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte.
+**Claim.** The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte.
 
-**Why.** Anti-drift meta-test (tests/test_docs_gen.py) — direct lift of dev-coin's pattern. The human layer cannot be hand-edited.
+**Why.** Anti-drift meta-test — direct lift of dev-coin's pattern. The human layer (docs/gen) cannot be hand-edited without regeneration catching the drift. ENFORCED by TestGenerator_GraphJSONDoubleRegenerateIsIdentical (internal/generator/determinism_test.go), which rebuilds graph.json twice from the same in-memory graph and asserts byte-identity; its sibling TestGenerator_DoubleRegenerateIsIdentical covers every generated doc (Requirements, Tensions, Open, Unenforced, Glossary, History, Decisions, Constitution, Entities, RepoMap, FrameworkInvariants, LiveState, Atoms*). The generators are pure functions of the graph (sorted iteration via internal/loader/sort.go, no time/random sources), so regeneration over an unchanged graph always reproduces the committed bytes.
 
 **Enforced by:** `TestGenerator_GraphJSONDoubleRegenerateIsIdentical`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-10-12
+
+**Sources.** internal/generator/determinism_test.go, internal/loader/sort.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [test_docs_gen.py::test_requirements_md_up_to_date, test_docs_gen.py::test_tensions_md_up_to_date, test_docs_gen.py::test_open_md_up_to_date, test_do…→[TestGenerator_GraphJSONDoubleRegenerateIsIdentical]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: The generated docs/gen/*.md shall equal the regeneration of the current spec/content + framework docstrings, byte-for-byte.→The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte.; why: Anti-drift meta-test (tests/test_docs_gen.py) — direct lift of dev-coin's pattern. The human layer cannot be hand-edited.→Anti-drift meta-test — direct lift of dev-coin's pattern. The human layer (docs/gen) cannot be hand-edited without regeneration catching the drift.…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-10-12; source_refs: []→[internal/generator/determinism_test.go, internal/loader/sort.go]
 
 ## `R-rejected-preserved-not-deleted` (ENFORCED)
 

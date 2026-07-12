@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-has-manifest",
+  "claim": "Every `domains/<name>/` directory contains a `manifest.json` defining the domain's identity fields (id, description, goals, director), so the generator can discover a domain's metadata without loading its full graph.",
+  "why": "The manifest is the machine-readable identity of the domain: it lets gen_spec and the root DOMAIN-MAP block discover a domain's metadata without loading its full graph. GOALS and DIRECTOR are required so any operator can reconstitute context from the manifest alone (R-agent-never-lost). ENFORCED via check_domain_manifest_valid (a thin delegator over five atomic sub-checks), all of which are HONEST NO-OPS in the Go port: check_domain_manifest_exists_and_importable, check_domain_manifest_id_matches_dirname, check_domain_manifest_description_nonempty, check_domain_manifest_goals_nonempty, check_domain_manifest_director_nonempty (internal/invariants/domain_structure.go). They are no-ops because the Go invariant contract (Check func(*ontology.Graph) []Violation) operates on an already-loaded in-memory graph and cannot reach the domain's manifest on disk. Additionally, the Go manifest.json on disk (internal/loader) carries ONLY self_hosting — the ID/DESCRIPTION/GOALS/DIRECTOR fields are NOT represented in the on-disk manifest; the DOMAIN-MAP block's presentation fields are sourced from a code-level knownDomainManifests map keyed by directory name (internal/generator/claudemd.go), with em-dash fallback for unknown domains. A future port of create_domain (Declared) would persist these fields and provide the filesystem-coherence enforcement layer.",
+  "source_refs": [
+    "internal/invariants/domain_structure.go",
+    "internal/loader/loader.go",
+    "internal/generator/claudemd.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

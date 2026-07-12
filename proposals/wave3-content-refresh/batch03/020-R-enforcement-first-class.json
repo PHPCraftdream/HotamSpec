@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforcement-first-class",
+  "claim": "The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* invariant or Test* function that guarantees the claim.",
+  "why": "M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant set (EnforcementPROSE/STRUCTURAL/ENFORCED) is declared in internal/ontology/requirement.go (the EnforcementLevels map); check_enforced_names_invariant (internal/invariants/enforcement.go) validates that enforcement is a known level and that every ENFORCED requirement names a non-empty enforced_by tuple. A derived report would be inconsistent with check_bijection_r_to_enforcer (internal/invariants/self_reference.go) which requires the field to be authoritative (the bijection that every ENFORCED requirement's enforced_by names a real enforcer that names it back). Evidence: internal/ontology/requirement.go EnforcementPROSE/STRUCTURAL/ENFORCED constants + EnforcementLevels map + the Requirement.Enforcement/EnforcedBy/Enforceability fields; check_enforced_names_invariant + check_bijection_r_to_enforcer in internal/invariants; R-enforcement-levels-declared SETTLED.",
+  "source_refs": [
+    "internal/ontology/requirement.go",
+    "internal/invariants/enforcement.go",
+    "internal/invariants/self_reference.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

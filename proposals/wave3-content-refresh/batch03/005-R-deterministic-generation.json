@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-deterministic-generation",
+  "claim": "The Go generator (internal/generator, surfaced as `hotam gen-spec`) shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.",
+  "why": "Determinism is what makes the anti-drift meta-test possible. Without it, regeneration would never equal the committed file. ENFORCED by TestGenerator_DoubleRegenerateIsIdentical and TestGenerator_GraphJSONDoubleRegenerateIsIdentical (internal/generator/determinism_test.go), which rebuild every generated doc (Requirements, Tensions, Open, Unenforced, Glossary, History, Decisions, Constitution, Entities, RepoMap, FrameworkInvariants, LiveState, Atoms*) plus graph.json twice and assert byte-equality. The Go generators use sorted iteration (internal/loader/sort.go sortedCopy) and no time/random sources, so the output is a pure function of the graph.",
+  "source_refs": [
+    "internal/generator/determinism_test.go",
+    "internal/loader/sort.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

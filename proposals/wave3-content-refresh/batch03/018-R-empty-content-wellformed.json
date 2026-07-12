@@ -1,0 +1,14 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-wellformed",
+  "claim": "A freshly-cloned framework with an empty graph shall pass all structural invariants — an empty graph is well-formed.",
+  "why": "Atom of R-empty-content-is-legitimate (well-formedness concern). D2 split decided by domain-user 2026-06-30. WHY: if an empty graph is malformed, the framework punishes adopters for having nothing to model yet. In the Go port this holds structurally: loader.validateGraph (internal/loader/loader.go) iterates over each slice and checks per-element fields — an empty graph (zero axes, stakeholders, assumptions, requirements, conflicts, operators, goals, entity types, entities) has nothing to violate, so it loads successfully; likewise invariants.AllViolations (internal/invariants/all_violations.go) over an empty graph returns zero violations because every check iterates an empty slice. An empty graph is well-formed by construction. The Python-era test_empty_graph_is_wellformed (test_invariants.py) has no direct Go-port namesake test, but the property is exercised by the loader/generator test fixtures that build minimal graphs and assert zero violations.",
+  "source_refs": [
+    "internal/loader/loader.go",
+    "internal/invariants/all_violations.go"
+  ],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2026-10-12",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

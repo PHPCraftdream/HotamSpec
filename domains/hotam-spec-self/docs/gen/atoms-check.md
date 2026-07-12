@@ -48,15 +48,18 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Claim.** Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review.
 
-**Why.** Steward verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verification mechanism of its own. Verifying that a signature is unforgeable (git commit authorship, a cryptographic identity) is the job of an EXTERNAL authorization/identity system; a content-free discipline framework only holds the SEAM for one, it does not become the verifier. That seam already exists and is named: Signoff.instrument (spec/src/hotam_spec/signoff.py) records HOW a signoff was captured -- today 'personal' (a human approved it, trust the writer) or 'DEL-<n>' (a filed delegation authorizes the decider) -- and its docstring reserves 'git'/'crypto' explicitly for a future verifiable-signature wave. Because the record already carries this field, a future external system that supplies verifiable provenance changes only the VALUE of instrument, never the SHAPE of the Signoff record: a data edit, not a schema migration. Prior OPEN context is preserved as one revisit trigger among others, not the sole reason: the value of a verifiable signature is not yet FORCED under a single-human-wears-all-hats regime (A-single-human-wears-all-hats) -- when a second live human steward appears, the question of whether one steward's free-string signature can be trusted sharpens again and this decision should be revisited then (ties to the role model, #44). The original OPEN was recorded 2026-07-05 after DEL-1 (the standing campaign delegation) closed, which restored the requirement of an explicit steward signature per conflict resolution and first raised the 'signature is a blank form' concern (six-lens review Enf#2 / Vision#1).
+**Why.** Steward verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verification mechanism of its own. Verifying that a signature is unforgeable (git commit authorship, a cryptographic identity) is the job of an EXTERNAL authorization/identity system; a content-free discipline framework only holds the SEAM for one, it does not become the verifier. That seam already exists and is named in the Go port: ontology.Signoff (internal/ontology/signoff.go) carries an Instrument string field recording HOW a signoff was captured -- today 'personal' (SignoffInstrumentPersonal: a human approved it, trust the writer) or 'DEL-<n>' (SignoffInstrumentDEL: a filed delegation authorizes the decider), enforced against the SignoffInstruments allow-set. The reserved 'git'/'crypto' verifiable-signature values are NOT yet declared as Go constants in internal/ontology/signoff.go (the Python-era docstring reservation has not been crystallized into the Go ontology), but the Instrument field itself is the landing seam: a future external system that supplies verifiable provenance changes only the VALUE of Instrument, never the SHAPE of the Signoff record. Prior OPEN context is preserved as one revisit trigger among others, not the sole reason: the value of a verifiable signature is not yet FORCED under a single-human-wears-all-hats regime (A-single-human-wears-all-hats) -- when a second live human steward appears, the question of whether one steward's free-string signature can be trusted sharpens again and this decision should be revisited then (ties to the role model, #44). The original OPEN was recorded 2026-07-05 after DEL-1 (the standing campaign delegation) closed, which restored the requirement of an explicit steward signature per conflict resolution and first raised the 'signature is a blank form' concern (six-lens review Enf#2 / Vision#1).
 
-**Last reviewed.** 2026-07-10
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2027-01-10
+**Review after.** 2026-10-12
+
+**Sources.** internal/ontology/signoff.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-07-10; review_after: →2027-01-10
+- 2026-07-12 — why: Steward verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verifi…→Steward verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verifi…; settled_at: 2026-07-10→2026-07-12; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2026-10-12; source_refs: []→[internal/ontology/signoff.go]
 
 ## `R-decided-conflict-justifies-itself` (ENFORCED)
 
@@ -92,19 +95,22 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 ## `R-enforcement-first-class` (ENFORCED)
 
-**Claim.** The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* that guarantees the claim.
+**Claim.** The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* invariant or Test* function that guarantees the claim.
 
-**Why.** M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUCTURAL/ENFORCED) is declared in hotam_spec/requirement.py; check_enforced_names_invariant validates every ENFORCED requirement names a real enforcer. A derived report would be inconsistent with check_bijection_r_to_enforcer which requires the field to be authoritative. Evidence: spec/src/hotam_spec/requirement.py:ENFORCEMENT_LEVELS + PROSE/STRUCTURAL/ENFORCED constants; check_enforced_names_invariant in invariants.py; R-enforcement-levels-declared SETTLED.
+**Why.** M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant set (EnforcementPROSE/STRUCTURAL/ENFORCED) is declared in internal/ontology/requirement.go (the EnforcementLevels map); check_enforced_names_invariant (internal/invariants/enforcement.go) validates that enforcement is a known level and that every ENFORCED requirement names a non-empty enforced_by tuple. A derived report would be inconsistent with check_bijection_r_to_enforcer (internal/invariants/self_reference.go) which requires the field to be authoritative (the bijection that every ENFORCED requirement's enforced_by names a real enforcer that names it back). Evidence: internal/ontology/requirement.go EnforcementPROSE/STRUCTURAL/ENFORCED constants + EnforcementLevels map + the Requirement.Enforcement/EnforcedBy/Enforceability fields; check_enforced_names_invariant + check_bijection_r_to_enforcer in internal/invariants; R-enforcement-levels-declared SETTLED.
 
 **Enforced by:** `check_enforced_names_invariant`, `check_bijection_r_to_enforcer`
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2026-10-12
+
+**Sources.** internal/ontology/requirement.go, internal/invariants/enforcement.go, internal/invariants/self_reference.go
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
+- 2026-07-12 — claim: The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* or test_* …→The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* invariant …; why: M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant (PROSE/STRUC…→M26. DECIDED 2026-06-30: Requirement.enforcement is a first-class field (not a derived report) since P6. The ENFORCEMENT_LEVELS constant set (Enforce…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-10-12; source_refs: []→[internal/ontology/requirement.go, internal/invariants/enforcement.go, internal/invariants/self_reference.go]
 
 ## `R-enforcement-levels-declared` (ENFORCED)
 
