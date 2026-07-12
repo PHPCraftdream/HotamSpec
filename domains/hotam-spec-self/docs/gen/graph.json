@@ -428,6 +428,7 @@
     "R-requirement-claim-is-atomic",
     "R-requirement-enforced",
     "R-requirement-freshness-fields",
+    "R-review-mark-requires-substantive-review",
     "R-revisit-markers-evaluated",
     "R-root-claude-md-contains-domain-crystal",
     "R-root-claude-md-is-sentinel-only",
@@ -533,6 +534,21 @@
       ],
       "status": "SETTLED",
       "why": "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/diagnose) composes the named REFLECTION predicates in priority order and derives the prioritized next action from any graph state, so an agent is never forced to guess."
+    },
+    {
+      "assumptions": [],
+      "claim": "A SETTLED requirement's last_reviewed_at shall be updated only after its claim/why/evidence/source_refs have actually been read and checked against current code/graph reality; a blanket date backfill with no substantive check is not a review and must not set last_reviewed_at.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [],
+      "history": [],
+      "id": "R-review-mark-requires-substantive-review",
+      "last_reviewed_at": "2026-07-12",
+      "owner": "framework-author",
+      "review_after": "2027-01-12",
+      "source_refs": [],
+      "status": "SETTLED",
+      "why": "This session's own history is the cautionary precedent. cmd/seed-due (removed, P2-2) backfilled last_reviewed_at/review_after on every SETTLED requirement from settled_at/created_at with no actual re-read of the text -- necessary to bootstrap the freshness engine (R-requirement-freshness-fields) with real dates instead of a universal NEVER-REVIEWED, but a review in name only: at the moment of backfill, 155+ of those requirements still described the pre-port Python implementation (the P0-4 content-refresh wave that followed found and fixed exactly that staleness). A freshness field that can be set without reading the content it claims to attest defeats its own purpose -- hotam due would report those 155+ requirements as fresh while they were substantively wrong. This rule closes that gap going forward: a genuine review means confronting the current claim/why/evidence/source_refs against the real code or graph state (the same discipline the mediation loop's CONFRONT step already names) before touching last_reviewed_at, not merely rolling a date forward. Structurally unenforceable by design -- no mechanical check can verify a human or agent actually read and understood text, the same honesty boundary that sank R-boot-cite-measured (REJECTED, form-metric theatre) -- so this stays PROSE discipline, upheld by steward review of what a ProposedReviewMark or ProposedRequirement UPDATE's evidence/why actually says, not by an automated check."
     },
     {
       "assumptions": [],

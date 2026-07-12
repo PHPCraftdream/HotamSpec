@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 116 / SETTLED 232; closeable debt 90; inherent discipline 26; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 116 / SETTLED 233; closeable debt 91; inherent discipline 26; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -22,6 +22,7 @@ judgment calls no check_* could ever verify.
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
+| `R-review-mark-requires-substantive-review` | PROSE | `framework-author` | A SETTLED requirement's last_reviewed_at shall be updated only after its claim/why/evidence/source_refs have actually been read and checked against current code/graph reality; a blanket date backfill with no substantive check is not a review and must not set last_reviewed_at. |
 | `R-axis-gatekeeper-policy` | PROSE | `ai-agent` | Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification. |
 | `R-active-loop-playbook-doc` | PROSE | `ai-agent` | At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band. |
 | `R-smoke-test` | PROSE | `framework-author` | The test suite shall provide a fast end-to-end signal that the framework is healthy on the real domain graph -- load the graph, run every generator template, and regenerate docs without panicking or empty output. |
