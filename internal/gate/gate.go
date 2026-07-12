@@ -246,6 +246,24 @@ func buildScan() (*testScan, error) {
 	return &testScan{checkToTests: invScan.checkToTests, testFuncs: funcSet}, nil
 }
 
+// TestFuncNames returns the set of every top-level Test* function name found
+// under internal/**/*_test.go — the Test*-name half (mechanism #1) of the
+// enforced_by resolver that selectFromRequirement / resolveOne use. It is the
+// shared resolution primitive that check_enforced_by_resolvable reuses, so the
+// two consumers (gate's targeted test selection and the invariant's
+// resolvability audit) can never drift on what counts as a real Go test
+// enforcer. The check_* half is NOT included here: each consumer answers it
+// differently (gate via the literal map from internal/invariants, the
+// invariant via its own All registry), so only the genuinely shared Test*
+// name set is exposed.
+func TestFuncNames() (map[string]struct{}, error) {
+	funcSet := make(map[string]struct{})
+	if err := walkTestFuncs(defaultInternalRoot(), funcSet); err != nil {
+		return nil, err
+	}
+	return funcSet, nil
+}
+
 // walkTestFuncs walks root recursively and collects every top-level Test*
 // function name from *_test.go files into funcSet. It deliberately does NOT
 // collect check_ string literals — those are handled per-directory by

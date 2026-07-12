@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/PHPCraftdream/HotamSpecGo/internal/gate"
 	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
 )
@@ -51,6 +52,16 @@ var _ = All.MustRegister("check_enforced_names_invariant", Invariant{
 
 func checkEnforcedByResolvable(g *ontology.Graph) []Violation {
 	var out []Violation
+	// The Test*-name half of resolution needs the filesystem (a scan of
+	// internal/**/*_test.go). It is resolved ONCE here and reused for every
+	// requirement, so a single all-violations run walks the test tree exactly
+	// once — never per requirement. This is the SAME resolution logic
+	// internal/gate uses for targeted test selection (walkTestFuncs /
+	// defaultInternalRoot), reused via gate.TestFuncNames so the two consumers
+	// cannot drift on what counts as a real Go test enforcer. The check_* half
+	// is answered graph-locally by the All registry below, without the
+	// filesystem.
+	testFuncs, scanErr := gate.TestFuncNames()
 	for _, r := range g.Requirements {
 		if r.Status != ontology.StatusSETTLED || r.Enforcement != ontology.EnforcementENFORCED {
 			continue
@@ -69,7 +80,34 @@ func checkEnforcedByResolvable(g *ontology.Graph) []Violation {
 							"(typo or stale/renamed enforcer) -- fix the name",
 						entry),
 				})
+				continue
 			}
+			// Non-check_* entries MUST resolve to a real top-level Go Test*
+			// function. This is what catches a regression back to Python-style
+			// pytest node-ids (test_x.py, test_x.py::test_y) or bare lowercase
+			// test_* names -- dead references in the Go port. Wave 2 rebound
+			// these to real Test*/check_* names; this guard keeps that rebound
+			// from quietly undoing.
+			if scanErr != nil {
+				out = append(out, Violation{
+					Check: "check_enforced_by_resolvable",
+					ID:    r.ID,
+					Message: fmt.Sprintf(
+						"enforced_by entry %q could not be verified: test-function resolver unavailable (%v)",
+						entry, scanErr),
+				})
+				continue
+			}
+			if _, ok := testFuncs[stripped]; ok {
+				continue
+			}
+			out = append(out, Violation{
+				Check: "check_enforced_by_resolvable",
+				ID:    r.ID,
+				Message: fmt.Sprintf(
+					"enforced_by entry %q on requirement %q does not resolve to a known check_* or Test* function",
+					entry, r.ID),
+			})
 		}
 	}
 	return out
@@ -78,18 +116,18 @@ func checkEnforcedByResolvable(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_enforced_by_resolvable", Invariant{
 	Name:  "check_enforced_by_resolvable",
 	Canon: methodology.Requirement,
-	Claim: "every ENFORCED requirement's enforced_by check_* entry resolves to a registered invariant.",
-	Rule: "for each SETTLED+ENFORCED Requirement, every enforced_by entry that names a check_* function MUST resolve to a " +
-		"real registered invariant; a typo, a stale/renamed check_* name, or any other unmatched check_* string fires a " +
-		"Violation naming the entry that does not resolve.",
-	Why: "the Python original also resolved pytest node-ids (file.py, file.py::func, bare test_*) via an AST scan of the " +
-		"tests/ directory (enforcer_resolution.py). That filesystem-AST resolution is architecturally obsolete in this Go " +
-		"port: a Go test enforcer is verified by running it (go test -run TestX fails loudly if the target does not exist), " +
-		"so there is no need for a static check_* -> test-file map. Only the check_* name -> registered-invariant half is " +
-		"kept, because that is the purely graph-local question the registry can answer without the filesystem; test_* and " +
-		"file-path entries resolve by construction (runtime verification), so they no-op here. Separating resolvability " +
-		"from check_enforced_names_invariant matters: that check only verifies enforced_by is NON-EMPTY -- a real typo " +
-		"(a renamed check_*) passes it silently, and this invariant makes that debt visible directly.",
+	Claim: "every ENFORCED requirement's enforced_by entry resolves -- a check_* to a registered invariant, a Test* to a real Go test function.",
+	Rule: "for each SETTLED+ENFORCED Requirement, every enforced_by entry MUST resolve to a real enforcer: a check_* name MUST be a registered " +
+		"invariant (the All registry), and any other entry MUST be a real top-level Test* function name found under internal/**/*_test.go " +
+		"(the SAME scan internal/gate uses for targeted test selection). A typo, a stale/renamed check_*, a leftover Python-style pytest node-id " +
+		"(test_x.py, test_x.py::test_y), a bare lowercase test_* name, or any other unresolvable string fires a Violation naming the entry.",
+	Why: "this is the regression guard for the wave-2 rebound that replaced 157 broken Python pytest-style enforced_by references (test_x.py::test_y) " +
+		"with real Go Test*/check_* names. Before this, the invariant resolved ONLY the check_* half via the registry and silently no-op'd every " +
+		"other entry (test_*, file paths) on the assumption that runtime verification covered them -- an assumption that let the very regression it " +
+		"was meant to catch survive undetected in domains wave 2 did not touch. Reusing gate.TestFuncNames (walkTestFuncs over internal/) keeps a " +
+		"single source of truth for 'what is a real Go test enforcer' across targeted selection and this audit, so the two can never disagree. " +
+		"check_enforced_names_invariant only verifies enforced_by is NON-EMPTY; a real typo or a stale .py ref passes it silently, and this invariant " +
+		"makes that debt visible directly.",
 	Check: checkEnforcedByResolvable,
 })
 

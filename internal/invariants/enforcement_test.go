@@ -3,6 +3,7 @@ package invariants
 import (
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
 	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
 )
 
@@ -57,12 +58,76 @@ func TestCheckEnforcedByResolvable_OKRegisteredCheck(t *testing.T) {
 	}
 }
 
-func TestCheckEnforcedByResolvable_OKTestEntryIsNoop(t *testing.T) {
+// TestCheckEnforcedByResolvable_FiresOnStaleLowercaseTestName documents the
+// semantic change from the Python-era no-op: a bare lowercase test_* name is
+// NOT a valid Go test function (Go requires Test*), so it now fires instead of
+// being silently trusted. This is exactly the wave-2 regression shape.
+func TestCheckEnforcedByResolvable_FiresOnStaleLowercaseTestName(t *testing.T) {
 	t.Parallel()
 	r := reqEnforced("R-1", "sa", "test_foo")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+	vs := runCheck(t, "check_enforced_by_resolvable", g)
+	if !hasViolationFor(vs, "R-1") {
+		t.Fatalf("a bare lowercase test_* name is a dead reference in the Go port; expected a violation, got %v", vs)
+	}
+}
+
+// TestCheckEnforcedByResolvable_OKRealTestEntry is the positive Test* half: a
+// real top-level Go Test* function name (resolved via the same internal/gate
+// scan used for targeted selection) must pass.
+func TestCheckEnforcedByResolvable_OKRealTestEntry(t *testing.T) {
+	t.Parallel()
+	r := reqEnforced("R-1", "sa", "TestApply_Rejection")
+	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	if vs := runCheck(t, "check_enforced_by_resolvable", g); len(vs) != 0 {
-		t.Fatalf("test_* entries resolve by construction (runtime); expected no violations, got %v", vs)
+		t.Fatalf("a real Test* function name must resolve; expected no violations, got %v", vs)
+	}
+}
+
+// TestCheckEnforcedByResolvable_FiresOnPythonPytestNodeId is the headline
+// wave-2 regression guard: a leftover Python pytest node-id (test_x.py or
+// test_x.py::test_y) does not resolve to any Go check_*/Test* and must fire.
+func TestCheckEnforcedByResolvable_FiresOnPythonPytestNodeId(t *testing.T) {
+	t.Parallel()
+	for _, bad := range []string{
+		"test_fake.py::test_nonexistent",
+		"test_tool_gate.py",
+	} {
+		r := reqEnforced("R-1", "sa", bad)
+		g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+		vs := runCheck(t, "check_enforced_by_resolvable", g)
+		if !hasViolationFor(vs, "R-1") {
+			t.Fatalf("expected violation for Python-style enforced_by %q, got %v", bad, vs)
+		}
+	}
+}
+
+// TestCheckEnforcedByResolvable_FiresOnBogusTestStar covers a Test*-shaped name
+// that is nonetheless not a real function -- the typo / renamed-enforcer case
+// for the Test* half.
+func TestCheckEnforcedByResolvable_FiresOnBogusTestStar(t *testing.T) {
+	t.Parallel()
+	r := reqEnforced("R-1", "sa", "TestDoesNotExist")
+	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+	vs := runCheck(t, "check_enforced_by_resolvable", g)
+	if !hasViolationFor(vs, "R-1") {
+		t.Fatalf("expected violation for a non-existent Test* name, got %v", vs)
+	}
+}
+
+// TestCheckEnforcedByResolvable_RealGraphIsClean is the real-domain regression
+// test: after wave 2 rebound every enforced_by entry in hotam-spec-self to a
+// real check_*/Test* name, this invariant must report zero violations there.
+// If it fires, either wave 2 regressed or a new ENFORCED requirement landed
+// with a stale/typo'd enforcer.
+func TestCheckEnforcedByResolvable_RealGraphIsClean(t *testing.T) {
+	t.Parallel()
+	g, err := loader.LoadGraph(domainGraphPath)
+	if err != nil {
+		t.Fatalf("LoadGraph(%s): %v", domainGraphPath, err)
+	}
+	if vs := runCheck(t, "check_enforced_by_resolvable", g); len(vs) != 0 {
+		t.Fatalf("expected 0 violations on the real hotam-spec-self graph, got %d: %v", len(vs), vs)
 	}
 }
 

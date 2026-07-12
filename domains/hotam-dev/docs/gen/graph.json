@@ -62,16 +62,19 @@
         "A-runtime-logs-append-only"
       ],
       "claim": "tools/apply_proposal.py shall run the T1 targeted-enforcer gate by default on every individual proposal apply, deferring the full T2 suite to wave/commit boundaries.",
-      "enforced_by": [
-        "test_tool_gate.py"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_gate.py]→[]; settled_at: →2026-07-12"
         }
       ],
       "id": "R-t1-gate-is-default",
@@ -134,16 +137,19 @@
         "A-runtime-logs-append-only"
       ],
       "claim": "Every applied proposal shall append a trace entry to spec/.runtime/land-log.jsonl.",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_land_log_record_shape_t1"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_record_shape_t1]→[]; settled_at: →2026-07-12"
         }
       ],
       "id": "R-land-leaves-trace",

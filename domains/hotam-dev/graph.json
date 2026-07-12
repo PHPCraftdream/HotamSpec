@@ -135,15 +135,13 @@
           "target": "R-t1-gate-is-default"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_apply_proposal_land_log.py::test_land_log_record_shape_t1"
-      ],
+      "enforcement": "PROSE",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "",
-      "settled_at": "",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-12",
       "review_after": "2027-01-12",
       "evidence": [],
@@ -152,6 +150,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_record_shape_t1]→[]; settled_at: →2026-07-12",
           "decided_by": ""
         }
       ],
@@ -232,15 +235,13 @@
         "A-runtime-logs-append-only"
       ],
       "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "test_tool_gate.py"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "",
-      "settled_at": "",
+      "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-12",
       "review_after": "2027-01-12",
       "evidence": [],
@@ -249,6 +250,11 @@
         {
           "at": "2026-07-12",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-12",
+          "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_gate.py]→[]; settled_at: →2026-07-12",
           "decided_by": ""
         }
       ],
