@@ -11,14 +11,14 @@ Generated from the executable model: the methodology narrative comes from the fr
 
 | id | status | owner | assumptions | claim |
 |---|---|---|---|---|
-| `R-t1-gate-is-default` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | tools/apply_proposal.py shall run the T1 targeted-enforcer gate by default on every individual proposal apply, deferring the full T2 suite to wave/commit boundaries. |
-| `R-wave-lands-atomically` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only, A-single-steward-session | A wave shall land as a whole with a green T2 (full pytest suite) run at its boundary before the next wave starts. |
-| `R-spawn-logged` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every sub-agent spawn shall be appended to spec/.runtime/spawn-log.jsonl. |
-| `R-land-leaves-trace` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every applied proposal shall append a trace entry to spec/.runtime/land-log.jsonl. |
+| `R-t1-gate-is-default` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | The T1 targeted-enforcer gate shall run by default on every individual proposal apply, deferring the full T2 suite (go test ./...) to wave/commit boundaries. |
+| `R-wave-lands-atomically` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only, A-single-steward-session | A wave shall land as a whole with a green T2 (go test ./...) run at its boundary before the next wave starts. |
+| `R-spawn-logged` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every sub-agent spawn shall be appended to the runtime spawn-log (.runtime/spawn-log.jsonl). |
+| `R-land-leaves-trace` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl). |
 | `R-commit-follows-review` | SETTLED | `dev-steward` | A-single-steward-session | A commit shall land only after review of the diff by a human or an agent code-review step. |
 | `R-push-only-on-request` | SETTLED | `dev-steward` | A-single-steward-session | Push to remote shall occur only on the dev-steward's explicit request, never autonomously. |
 | `R-wave-strictly-sequential` | SETTLED | `pipeline-operator` | A-single-steward-session | Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently. |
-| `R-host-spawn-leaves-trace` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook. |
+| `R-host-spawn-leaves-trace` | SETTLED | `pipeline-operator` | A-runtime-logs-append-only | Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an equivalent host hook. |
 | `R-worktree-parallel-permitted` | SETTLED | `pipeline-operator` | A-single-steward-session | Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide. |
 
 ## Stakeholders

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-t1-gate-is-default",
+  "claim": "The T1 targeted-enforcer gate shall run by default on every individual proposal apply, deferring the full T2 suite (go test ./...) to wave/commit boundaries.",
+  "why": "Reworded 2026-07-12 to describe what the Go port actually implements. The historical mechanism was tools/apply_proposal.py consulting tools/gate.py to run T1 by default on every apply. In the Go port, internal/gate.SelectTier1 (internal/gate/gate.go) resolves a target anchor's enforced_by into the union of concrete Go check_*/Test* enforcers, exposed as the STANDALONE advisory command `hotam gate <target>` (cmd/hotam/gate_cmd.go) -- it is NOT wired into `hotam land` or `hotam apply-proposal`, both of which run the full all-violations pass instead. The intent that T1 should become the land default is held open as DRAFT R-t1-selector-as-land-default (hotam-spec-self). The original WHY stands: per-move full-suite verification (go test ./...) is too slow for the conveyor's normal cadence; T1 keeps the loop responsive while go test ./... remains the mandatory boundary gate (R-wave-lands-atomically). STRUCTURAL (not ENFORCED): the wiring that would make this TRUE-by-default is an open DRAFT, not a realized behavior.",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-03-12",
+  "owner": "pipeline-operator",
+  "status": "SETTLED"
+}

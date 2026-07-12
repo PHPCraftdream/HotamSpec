@@ -116,7 +116,7 @@ Generated from the executable model: the methodology narrative comes from the fr
 | `R-seed-in-src` | REJECTED | `framework-author` | — | The framework shall ship with a seed graph baked into spec/src/hotam_spec/graph.py so the demo runs without setup. |
 | `R-rdf-store` | REJECTED | `framework-author` | — | The tension graph shall be persisted in an RDF triplestore with SHACL shapes and SPARQL traversal. |
 | `R-axes-as-module-constant` | REJECTED | `framework-author` | — | The controlled vocabulary of axes shall live as a module-level REGISTRY in hotam_spec.axis. |
-| `R-content-free-no-business-data` | SETTLED | `framework-author` | A-python-stack | The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders). |
+| `R-content-free-no-business-data` | SETTLED | `framework-author` | A-python-stack | The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders). |
 | `R-content-free-no-examples` | SETTLED | `framework-author` | A-python-stack | The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content. |
 | `R-content-free-no-seed-graph` | SETTLED | `framework-author` | A-python-stack | The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json. |
 | `R-empty-content-wellformed` | SETTLED | `framework-author` | A-python-stack | A freshly-cloned framework with an empty graph shall pass all structural invariants — an empty graph is well-formed. |

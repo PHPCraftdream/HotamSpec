@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-leaves-trace",
+  "claim": "Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl).",
+  "why": "Not yet ported in the Go port. The historical mechanism wrote spec/.runtime/land-log.jsonl -- the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- which gate_status.py read to answer the commit-boundary question (R-commit-boundary-checkable, hotam-spec-self); without it there was no auditable trail of what actually got verified before landing. `hotam land` (cmd/hotam/land.go) runs apply-proposal -> gen-spec -> all-violations but writes no runtime land-log, and gate_status is Declared (not ported) in methodology.Tools; no .runtime directory exists in the repo. The original WHY stands: without an auditable land-log trace there is no durable record of what actually got verified before landing. PROSE (not ENFORCED): no enforcer exists in the Go port.",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-03-12",
+  "owner": "pipeline-operator",
+  "status": "SETTLED"
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-spawn-logged",
+  "claim": "Every sub-agent spawn shall be appended to the runtime spawn-log (.runtime/spawn-log.jsonl).",
+  "why": "Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py, proven by test_spawn_log_written, which proved only the MECHANISM (spawn_agent.py appends a row when invoked against a tmp runtime dir), NOT coverage of real host spawns. spawn_agent and spawn_log_isolation_status are both Declared (not ported) in methodology.Tools; no .runtime/spawn-log.jsonl writer exists in the Go CLI today (the .runtime directory does not exist in the repo). The category distinction still holds: an explicit spawn_agent invocation composing a domain sub-operator's crystal -- currently ZERO such sub-operators in this domain, per the Agent Map '(no sub-operators yet)' -- is category-distinct from a host-level Agent-tool spawn, covered by R-host-spawn-leaves-trace. The original WHY stands: without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact. STRUCTURAL (not ENFORCED): no enforcer exists in the Go port; this atom stands as the discipline that the trace SHOULD exist for every spawn.",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-03-12",
+  "owner": "pipeline-operator",
+  "status": "SETTLED"
+}

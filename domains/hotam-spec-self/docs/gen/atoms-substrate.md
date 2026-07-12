@@ -59,18 +59,19 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ## `R-content-free-no-business-data` (PROSE)
 
-**Claim.** The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders).
+**Claim.** The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders).
 
-**Why.** Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. WHY: business data in the framework source would couple it to a specific domain, violating content-free neutrality.
+**Why.** Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. Reworded 2026-07-12 for the Go port: the framework source moved from spec/src/hotam_spec/ (Python) to internal/* + cmd/hotam/*, and all business data (requirements, axes, stakeholders) lives exclusively in per-domain graphs (domains/*/graph.json). WHY stands: business data in the framework packages would couple them to a specific domain, violating content-free neutrality. PROSE (not ENFORCED): the original enforcer (test_content_free.py::test_no_domain_instances_in_tensio_src) was Python and is not ported.
 
-**Last reviewed.** 2026-06-30
+**Last reviewed.** 2026-07-12
 
-**Review after.** 2026-12-30
+**Review after.** 2027-02-12
 
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — claim: The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders).→The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders).; why: Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. WHY: business data in the framework source w…→Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. Reworded 2026-07-12 for the Go port: the fra…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-02-12
 
 ## `R-content-free-no-examples` (PROSE)
 

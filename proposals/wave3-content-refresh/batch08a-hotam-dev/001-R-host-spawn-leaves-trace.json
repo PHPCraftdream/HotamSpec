@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-host-spawn-leaves-trace",
+  "claim": "Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an equivalent host hook.",
+  "why": "Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py --log-only (Wave 10 move 2a), which appended a spawn-log row (agent, task first line, stamp, isolation, mutating) to spec/.runtime/spawn-log.jsonl WITHOUT composing a crystal, so a host spawn naming a logical agent with no on-disk CLAUDE.md could still leave a trace, proven by test_log_only_writes_row_without_composing_prompt. spawn_agent and spawn_log_isolation_status are both Declared (not ported) in methodology.Tools, and no .runtime/spawn-log.jsonl writer exists in the Go CLI today (the .runtime directory does not exist in the repo). The category distinction from R-task-spawn-log-runtime (hotam-spec-self) still holds: a host-level Agent-tool spawn is a platform primitive external to the framework's own code, distinct from an explicit spawn_agent invocation composing a domain sub-operator's crystal. The original WHY stands: every host spawn must leave a durable runtime trace so the isolation discipline is auditable. STRUCTURAL (not ENFORCED): no enforcer exists in the Go port; whether the operator actually records each host spawn is operator discipline, not mechanically provable from the graph.",
+  "source_refs": [],
+  "last_reviewed_at": "2026-07-12",
+  "review_after": "2027-03-12",
+  "owner": "pipeline-operator",
+  "status": "SETTLED"
+}

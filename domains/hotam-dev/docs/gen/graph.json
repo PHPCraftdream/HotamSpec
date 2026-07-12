@@ -61,7 +61,7 @@
       "assumptions": [
         "A-runtime-logs-append-only"
       ],
-      "claim": "tools/apply_proposal.py shall run the T1 targeted-enforcer gate by default on every individual proposal apply, deferring the full T2 suite to wave/commit boundaries.",
+      "claim": "The T1 targeted-enforcer gate shall run by default on every individual proposal apply, deferring the full T2 suite (go test ./...) to wave/commit boundaries.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -75,22 +75,27 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_tool_gate.py]→[]; settled_at: →2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: tools/apply_proposal.py shall run the T1 targeted-enforcer gate by default on every individual proposal apply, deferring the full T2 suite to wave/co…→The T1 targeted-enforcer gate shall run by default on every individual proposal apply, deferring the full T2 suite (go test ./...) to wave/commit bou…; why: Per-move full-suite verification is too slow for the conveyor's normal cadence (observed multi-minute T2 runs); T1 keeps the loop responsive while T2…→Reworded 2026-07-12 to describe what the Go port actually implements. The historical mechanism was tools/apply_proposal.py consulting tools/gate.py t…; review_after: 2027-01-12→2027-03-12"
         }
       ],
       "id": "R-t1-gate-is-default",
       "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "2027-01-12",
+      "review_after": "2027-03-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Per-move full-suite verification is too slow for the conveyor's normal cadence (observed multi-minute T2 runs); T1 keeps the loop responsive while T2 remains the mandatory boundary gate (see R-wave-lands-atomically)."
+      "why": "Reworded 2026-07-12 to describe what the Go port actually implements. The historical mechanism was tools/apply_proposal.py consulting tools/gate.py to run T1 by default on every apply. In the Go port, internal/gate.SelectTier1 (internal/gate/gate.go) resolves a target anchor's enforced_by into the union of concrete Go check_*/Test* enforcers, exposed as the STANDALONE advisory command `hotam gate <target>` (cmd/hotam/gate_cmd.go) -- it is NOT wired into `hotam land` or `hotam apply-proposal`, both of which run the full all-violations pass instead. The intent that T1 should become the land default is held open as DRAFT R-t1-selector-as-land-default (hotam-spec-self). The original WHY stands: per-move full-suite verification (go test ./...) is too slow for the conveyor's normal cadence; T1 keeps the loop responsive while go test ./... remains the mandatory boundary gate (R-wave-lands-atomically). STRUCTURAL (not ENFORCED): the wiring that would make this TRUE-by-default is an open DRAFT, not a realized behavior."
     },
     {
       "assumptions": [
         "A-runtime-logs-append-only",
         "A-single-steward-session"
       ],
-      "claim": "A wave shall land as a whole with a green T2 (full pytest suite) run at its boundary before the next wave starts.",
+      "claim": "A wave shall land as a whole with a green T2 (go test ./...) run at its boundary before the next wave starts.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -99,21 +104,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: A wave shall land as a whole with a green T2 (full pytest suite) run at its boundary before the next wave starts.→A wave shall land as a whole with a green T2 (go test ./...) run at its boundary before the next wave starts.; why: T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cros…→Reworded 2026-07-12 for the Go test runner. T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandator…; settled_at: →2026-07-12; review_after: 2027-01-12→2027-03-12"
         }
       ],
       "id": "R-wave-lands-atomically",
       "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "2027-01-12",
+      "review_after": "2027-03-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. Enforcement is honestly STRUCTURAL: what_now/apply_proposal make the T2 boundary visible and addressable (gate_status.py, land-log.jsonl tier trace) but no single check_* fires automatically if a steward skips a wave-boundary T2 run by hand outside the tool."
+      "why": "Reworded 2026-07-12 for the Go test runner. T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. `hotam land --batch` (cmd/hotam/land.go -> proposal.ApplyBatch) lands a whole directory of proposals atomically (all-or-nothing) with one apply -> gen-spec -> all-violations pass, and spec/CLAUDE.md's Mediation loop step 6 LAND names `go test ./...` as MANDATORY at wave/commit boundaries. Enforcement is honestly STRUCTURAL: what-now/land make the T2 boundary visible and addressable but no single check_* fires automatically if a steward skips a wave-boundary `go test ./...` by hand outside the tool (the historical gate_status.py / land-log.jsonl tier trace that would have made this auditable is Not yet ported -- see R-land-leaves-trace)."
     },
     {
       "assumptions": [
         "A-runtime-logs-append-only"
       ],
-      "claim": "Every sub-agent spawn shall be appended to spec/.runtime/spawn-log.jsonl.",
+      "claim": "Every sub-agent spawn shall be appended to the runtime spawn-log (.runtime/spawn-log.jsonl).",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -122,21 +132,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every sub-agent spawn shall be appended to spec/.runtime/spawn-log.jsonl.→Every sub-agent spawn shall be appended to the runtime spawn-log (.runtime/spawn-log.jsonl).; why: Without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact; the ap…→Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py, proven by test_spawn_log_written, which proved only the MECHANISM (…; settled_at: →2026-07-12; review_after: 2027-01-12→2027-03-12"
         }
       ],
       "id": "R-spawn-logged",
       "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "2027-01-12",
+      "review_after": "2027-03-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact; the append-only log is the mechanical proof a spawn happened, with what kind/parent/child. REQUALIFIED ENFORCED->STRUCTURAL (Wave 10 move 2, honesty of the spawn seam): the enforcer test_spawn_log_written proves only the MECHANISM (spawn_agent.py appends a row when invoked against a tmp runtime dir), NOT coverage of real host spawns. audit 2026-07-03: spec/.runtime/spawn-log.jsonl did not exist at all despite ~30+ real host-agent spawns across the two pipelines; the test proves the mechanism, not the coverage. Coverage is now refined into R-host-spawn-leaves-trace (--log-only path); this atom stands as the STRUCTURAL discipline that the trace SHOULD exist for every spawn."
+      "why": "Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py, proven by test_spawn_log_written, which proved only the MECHANISM (spawn_agent.py appends a row when invoked against a tmp runtime dir), NOT coverage of real host spawns. spawn_agent and spawn_log_isolation_status are both Declared (not ported) in methodology.Tools; no .runtime/spawn-log.jsonl writer exists in the Go CLI today (the .runtime directory does not exist in the repo). The category distinction still holds: an explicit spawn_agent invocation composing a domain sub-operator's crystal -- currently ZERO such sub-operators in this domain, per the Agent Map '(no sub-operators yet)' -- is category-distinct from a host-level Agent-tool spawn, covered by R-host-spawn-leaves-trace. The original WHY stands: without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact. STRUCTURAL (not ENFORCED): no enforcer exists in the Go port; this atom stands as the discipline that the trace SHOULD exist for every spawn."
     },
     {
       "assumptions": [
         "A-runtime-logs-append-only"
       ],
-      "claim": "Every applied proposal shall append a trace entry to spec/.runtime/land-log.jsonl.",
+      "claim": "Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl).",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -150,15 +165,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_record_shape_t1]→[]; settled_at: →2026-07-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every applied proposal shall append a trace entry to spec/.runtime/land-log.jsonl.→Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl).; why: The land-log is the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- the basis for gate_status.py's…→Not yet ported in the Go port. The historical mechanism wrote spec/.runtime/land-log.jsonl -- the mechanical record of what tier (T1/T2) verified eac…; review_after: 2027-01-12→2027-03-12"
         }
       ],
       "id": "R-land-leaves-trace",
       "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "2027-01-12",
+      "review_after": "2027-03-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "The land-log is the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- the basis for gate_status.py's commit-boundary answer (R-commit-boundary-checkable, hotam-spec-self); without it there is no auditable trail of what actually got verified before landing."
+      "why": "Not yet ported in the Go port. The historical mechanism wrote spec/.runtime/land-log.jsonl -- the mechanical record of what tier (T1/T2) verified each applied proposal and whether pytest passed -- which gate_status.py read to answer the commit-boundary question (R-commit-boundary-checkable, hotam-spec-self); without it there was no auditable trail of what actually got verified before landing. `hotam land` (cmd/hotam/land.go) runs apply-proposal -> gen-spec -> all-violations but writes no runtime land-log, and gate_status is Declared (not ported) in methodology.Tools; no .runtime directory exists in the repo. The original WHY stands: without an auditable land-log trace there is no durable record of what actually got verified before landing. PROSE (not ENFORCED): no enforcer exists in the Go port."
     },
     {
       "assumptions": [
@@ -233,7 +253,7 @@
       "assumptions": [
         "A-runtime-logs-append-only"
       ],
-      "claim": "Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook.",
+      "claim": "Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an equivalent host hook.",
       "enforced_by": [],
       "enforcement": "STRUCTURAL",
       "evidence": [],
@@ -242,15 +262,20 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "last_reviewed_at: →2026-07-12; review_after: →2027-01-12"
+        },
+        {
+          "at": "2026-07-12",
+          "decided_by": "",
+          "summary": "claim: Every host-level agent spawn shall leave a row in spec/.runtime/spawn-log.jsonl, via spawn_agent.py --log-only or an equivalent hook.→Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an eq…; why: Refines R-spawn-logged with the coverage the mechanism test cannot prove. audit 2026-07-03: the spawn-log was empty despite ~30+ real host spawns, be…→Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py --log-only (Wave 10 move 2a), which appended a spawn-log row (agent,…; settled_at: →2026-07-12; review_after: 2027-01-12→2027-03-12"
         }
       ],
       "id": "R-host-spawn-leaves-trace",
       "last_reviewed_at": "2026-07-12",
       "owner": "pipeline-operator",
-      "review_after": "2027-01-12",
+      "review_after": "2027-03-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Refines R-spawn-logged with the coverage the mechanism test cannot prove. audit 2026-07-03: the spawn-log was empty despite ~30+ real host spawns, because host-level Task/Agent spawns never routed through spawn_agent.py's crystal-composition path -- the only writer. spawn_agent.py --log-only (Wave 10 move 2a) closes that gap: it appends a spawn-log row (agent, task first line, stamp, isolation, mutating) WITHOUT composing a crystal, so a host spawn that names a logical agent with no on-disk CLAUDE.md can still leave a trace. STRUCTURAL, not ENFORCED: whether the operator ACTUALLY calls --log-only per spawn is operator discipline, not mechanically provable from the graph -- honest scope. The mechanism itself is covered by test_log_only_writes_row_without_composing_prompt. LANDED Wave 10 review: the referencing why-texts (R-task-spawn-log-runtime, R-spawn-logged, spawn_agent.py/.md, test_tool_spawn_agent.py) all cited this anchor, but the node itself was missing from the graph (the honesty-proposal's second atom never applied) -- landing it here resolves the dangling R-speak-by-reference anchor."
+      "why": "Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py --log-only (Wave 10 move 2a), which appended a spawn-log row (agent, task first line, stamp, isolation, mutating) to spec/.runtime/spawn-log.jsonl WITHOUT composing a crystal, so a host spawn naming a logical agent with no on-disk CLAUDE.md could still leave a trace, proven by test_log_only_writes_row_without_composing_prompt. spawn_agent and spawn_log_isolation_status are both Declared (not ported) in methodology.Tools, and no .runtime/spawn-log.jsonl writer exists in the Go CLI today (the .runtime directory does not exist in the repo). The category distinction from R-task-spawn-log-runtime (hotam-spec-self) still holds: a host-level Agent-tool spawn is a platform primitive external to the framework's own code, distinct from an explicit spawn_agent invocation composing a domain sub-operator's crystal. The original WHY stands: every host spawn must leave a durable runtime trace so the isolation discipline is auditable. STRUCTURAL (not ENFORCED): no enforcer exists in the Go port; whether the operator actually records each host spawn is operator discipline, not mechanically provable from the graph."
     },
     {
       "assumptions": [
