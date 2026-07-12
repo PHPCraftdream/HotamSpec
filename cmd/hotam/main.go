@@ -75,17 +75,21 @@ Commands:
         Generate all docs/gen/*.md + graph.json for a domain graph.
   what-now [--domain <path>] [--limit N]
         Print top-N diagnosed signals (default 20).
-  apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD
+  apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]
         Apply a proposal to a domain graph. Low-level: does not regenerate
-        docs — run gen-spec after, or use land instead.
-  land <proposal.json> --domain <path> --today YYYY-MM-DD [--claude-md <path>]
+        docs — run gen-spec after, or use land instead. With --batch <dir>,
+        every *.json in <dir> is applied atomically in filename order
+        (all-or-nothing): if any proposal fails the graph is untouched.
+  land <proposal.json> --domain <path> --today YYYY-MM-DD [--claude-md <path>] [--batch <dir>]
         Apply a proposal, then regenerate docs/gen for the domain, then
         re-check all invariants. Steps 1-2 are the primary pipeline; step 3
         (all-violations) is a safety-net re-verification, not the main gate
         — apply-proposal already refuses to write a graph that would
         introduce new invariant violations (internal/proposal/apply.go), so
         a non-zero exit here signals drift from gen-spec itself or a
-        concurrent change, not a bad proposal.
+        concurrent change, not a bad proposal. With --batch <dir>, every
+        *.json in <dir> is applied atomically in filename order and docs are
+        regenerated exactly once (not once per proposal).
   gate <target-anchor> [--domain <path>]
         Select Tier-1 tests for a target node.
   all-violations [--domain <path>]

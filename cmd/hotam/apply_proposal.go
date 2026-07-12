@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/PHPCraftdream/HotamSpecGo/internal/proposal"
 )
@@ -13,23 +16,39 @@ func cmdApplyProposal(args []string) error {
 	fs := newFlagSet("apply-proposal")
 	domain := fs.String("domain", "", "domain directory containing graph.json (required)")
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
+	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
 	fs.Parse(args)
 
-	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD")
-	}
 	if *domain == "" {
 		return fmt.Errorf("--domain is required")
 	}
 	if *today == "" {
 		return fmt.Errorf("--today is required (YYYY-MM-DD)")
 	}
-	proposalFile := fs.Arg(0)
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {
 		return err
 	}
+
+	if *batchDir != "" {
+		proposals, err := loadBatchDir(*batchDir)
+		if err != nil {
+			return err
+		}
+		gp := graphPathForDomain(domainDir)
+		if err := proposal.ApplyBatch(gp, *today, proposals); err != nil {
+			return err
+		}
+		fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
+		fmt.Println("docs not regenerated; run hotam gen-spec or use hotam land")
+		return nil
+	}
+
+	if fs.NArg() < 1 {
+		return fmt.Errorf("usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]")
+	}
+	proposalFile := fs.Arg(0)
 	p, gp, err := applyProposalFile(proposalFile, domainDir, *today)
 	if err != nil {
 		return err
@@ -61,6 +80,47 @@ func applyProposalFile(proposalFile, domainDir, today string) (proposal.Proposal
 		return nil, "", err
 	}
 	return p, gp, nil
+}
+
+// loadBatchDir reads every *.json file in dir, sorted by filename, and
+// parses each as a standalone proposal via the same strict parseProposal
+// path used for single-proposal mode. All files are parsed BEFORE any graph
+// I/O happens, so a structurally invalid JSON file fails the batch before
+// the graph is even loaded — leaving disk untouched. The caller (ApplyBatch)
+// then applies the parsed proposals atomically to one in-memory graph.
+// Filename sort gives the steward explicit control over application order
+// (proposal 2 may reference a node proposal 1 just created): name files
+// 01-*.json, 02-*.json, … to make the sequence self-documenting.
+func loadBatchDir(dir string) ([]proposal.Proposal, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("read batch dir %s: %w", dir, err)
+	}
+	var names []string
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		names = append(names, e.Name())
+	}
+	sort.Strings(names)
+	if len(names) == 0 {
+		return nil, fmt.Errorf("batch dir %s contains no *.json proposal files", dir)
+	}
+	proposals := make([]proposal.Proposal, 0, len(names))
+	for _, name := range names {
+		path := filepath.Join(dir, name)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("read proposal %s: %w", path, err)
+		}
+		p, err := parseProposal(data)
+		if err != nil {
+			return nil, fmt.Errorf("proposal %s: %w", name, err)
+		}
+		proposals = append(proposals, p)
+	}
+	return proposals, nil
 }
 
 func parseProposal(data []byte) (proposal.Proposal, error) {
