@@ -43,6 +43,7 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 }
 
 func TestLoadGraph_DomainHotamSpecSelf_GenerateLock(t *testing.T) {
+	t.Parallel()
 	lockPath := LockPath(domainGraphPath)
 	if _, err := os.Stat(lockPath); os.IsNotExist(err) {
 		t.Logf("generating %s …", lockPath)

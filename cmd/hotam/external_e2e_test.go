@@ -54,26 +54,13 @@ func TestExternal_InitApplyLandReqWhatNowAllViolations(t *testing.T) {
 
 	repoRoot := repoRootForTest(t)
 
-	// (a) Build the real binary into a temp dir OUTSIDE the repo tree.
-	binDir, err := os.MkdirTemp("", "hotam-ext-bin-")
-	if err != nil {
-		t.Fatalf("MkdirTemp binDir: %v", err)
-	}
-	t.Cleanup(func() { os.RemoveAll(binDir) })
+	// (a) Real binary, built into a temp dir OUTSIDE the repo tree — shared
+	// across this package's tests (see testbinary_test.go) since a plain
+	// default-version build has no reason to happen more than once per run.
+	binPath := buildSharedHotamBinary(t)
+	binDir := filepath.Dir(binPath)
 	if isInsideForTest(binDir, repoRoot) {
 		t.Fatalf("test invariant broken: binDir %s resolved inside repo root %s", binDir, repoRoot)
-	}
-
-	binName := "hotam"
-	if runtime.GOOS == "windows" {
-		binName = "hotam.exe"
-	}
-	binPath := filepath.Join(binDir, binName)
-
-	buildCmd := exec.Command("go", "build", "-o", binPath, "./cmd/hotam")
-	buildCmd.Dir = repoRoot
-	if out, err := buildCmd.CombinedOutput(); err != nil {
-		t.Fatalf("go build hotam binary failed: %v\n%s", err, out)
 	}
 	if _, err := os.Stat(binPath); err != nil {
 		t.Fatalf("built binary missing at %s: %v", binPath, err)

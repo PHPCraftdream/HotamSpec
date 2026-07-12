@@ -14,6 +14,7 @@ func writeFile(t *testing.T, dir, name, content string) {
 }
 
 func TestHasMarkerReliable(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	if err := os.Mkdir(filepath.Join(dir, "domains"), 0755); err != nil {
 		t.Fatal(err)
@@ -24,6 +25,7 @@ func TestHasMarkerReliable(t *testing.T) {
 }
 
 func TestHasMarkerSecondaryAloneFails(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	writeFile(t, dir, "CLAUDE.md", "# project")
 	if hasMarker(dir) {
@@ -32,6 +34,7 @@ func TestHasMarkerSecondaryAloneFails(t *testing.T) {
 }
 
 func TestHasMarkerSecondaryPair(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	writeFile(t, dir, "CLAUDE.md", "# project")
 	if err := os.Mkdir(filepath.Join(dir, ".claude"), 0755); err != nil {
@@ -43,6 +46,7 @@ func TestHasMarkerSecondaryPair(t *testing.T) {
 }
 
 func TestHasMarkerPyprojectTable(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	writeFile(t, dir, "pyproject.toml", "[tool.hotam-spec]\nproject_root = \".\"\n")
 	if !hasMarker(dir) {
@@ -51,6 +55,7 @@ func TestHasMarkerPyprojectTable(t *testing.T) {
 }
 
 func TestHasMarkerForeignPyprojectFails(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	writeFile(t, dir, "pyproject.toml", "[project]\nname = \"other\"\n")
 	if hasMarker(dir) {
@@ -59,6 +64,7 @@ func TestHasMarkerForeignPyprojectFails(t *testing.T) {
 }
 
 func TestResolvePyprojectProjectRoot(t *testing.T) {
+	t.Parallel()
 	root := t.TempDir()
 	target := filepath.Join(root, "subproject")
 	if err := os.Mkdir(target, 0755); err != nil {
@@ -75,6 +81,7 @@ func TestResolvePyprojectProjectRoot(t *testing.T) {
 }
 
 func TestProjectRootSelfHostingFallback(t *testing.T) {
+	t.Parallel()
 	root, ok := ProjectRoot()
 	if !ok {
 		t.Skip("no project root resolvable in this environment")

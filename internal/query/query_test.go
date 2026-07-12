@@ -67,6 +67,7 @@ func fixtureGraph() *ontology.Graph {
 }
 
 func TestShowRequirement(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	c, err := ShowRequirement(g, "R-alpha")
 	if err != nil {
@@ -84,6 +85,7 @@ func TestShowRequirement(t *testing.T) {
 }
 
 func TestShowRequirement_NotFound(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	_, err := ShowRequirement(g, "R-does-not-exist")
 	if err == nil {
@@ -95,6 +97,7 @@ func TestShowRequirement_NotFound(t *testing.T) {
 }
 
 func TestShowConflict(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	c, err := ShowConflict(g, "C-ab")
 	if err != nil {
@@ -106,6 +109,7 @@ func TestShowConflict(t *testing.T) {
 }
 
 func TestShowAssumption(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	c, err := ShowAssumption(g, "A-shared")
 	if err != nil {
@@ -117,6 +121,7 @@ func TestShowAssumption(t *testing.T) {
 }
 
 func TestShow_DispatchesByPrefix(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	cases := []struct {
 		id       string
@@ -149,6 +154,7 @@ func TestShow_DispatchesByPrefix(t *testing.T) {
 }
 
 func TestShow_NotFound(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	_, err := Show(g, "R-nope")
 	if err == nil {
@@ -157,6 +163,7 @@ func TestShow_NotFound(t *testing.T) {
 }
 
 func TestList_NoFilter(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	items := List(g, ListFilter{})
 	if len(items) != 3 {
@@ -168,6 +175,7 @@ func TestList_NoFilter(t *testing.T) {
 }
 
 func TestList_FilterByStatus(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	items := List(g, ListFilter{Status: ontology.StatusSETTLED})
 	if len(items) != 2 {
@@ -176,6 +184,7 @@ func TestList_FilterByStatus(t *testing.T) {
 }
 
 func TestList_FilterByOwner(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	items := List(g, ListFilter{Owner: "other-owner"})
 	if len(items) != 1 || items[0].ID != "R-beta" {
@@ -184,6 +193,7 @@ func TestList_FilterByOwner(t *testing.T) {
 }
 
 func TestList_FilterByEnforcement(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	items := List(g, ListFilter{Enforcement: ontology.EnforcementPROSE})
 	if len(items) != 1 || items[0].ID != "R-beta" {
@@ -192,6 +202,7 @@ func TestList_FilterByEnforcement(t *testing.T) {
 }
 
 func TestList_SummaryTruncation(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	items := List(g, ListFilter{})
 	var alpha ListItem
@@ -206,6 +217,7 @@ func TestList_SummaryTruncation(t *testing.T) {
 }
 
 func TestSearch_RanksIDAboveClaimAboveWhy(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	// "beta" appears in R-beta's id (rank 0) and nowhere else notably.
 	results := Search(g, "beta")
@@ -218,6 +230,7 @@ func TestSearch_RanksIDAboveClaimAboveWhy(t *testing.T) {
 }
 
 func TestSearch_MatchesWhy(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	results := Search(g, "gamma reasoning")
 	if len(results) != 1 || results[0].ID != "R-gamma" {
@@ -226,6 +239,7 @@ func TestSearch_MatchesWhy(t *testing.T) {
 }
 
 func TestSearch_CaseInsensitive(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	results := Search(g, "ALPHA")
 	found := false
@@ -240,6 +254,7 @@ func TestSearch_CaseInsensitive(t *testing.T) {
 }
 
 func TestSearch_Empty(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	if got := Search(g, ""); got != nil {
 		t.Errorf("expected nil for empty search text, got %v", got)
@@ -250,6 +265,7 @@ func TestSearch_Empty(t *testing.T) {
 }
 
 func TestContext_IncludesRelationsAssumptionsConflicts(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	cc, err := Context(g, "R-alpha")
 	if err != nil {
@@ -289,6 +305,7 @@ func TestContext_IncludesRelationsAssumptionsConflicts(t *testing.T) {
 }
 
 func TestContext_IncomingRelation(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	cc, err := Context(g, "R-beta")
 	if err != nil {
@@ -306,6 +323,7 @@ func TestContext_IncomingRelation(t *testing.T) {
 }
 
 func TestContext_NotFound(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	_, err := Context(g, "R-missing")
 	if err == nil {
@@ -314,6 +332,7 @@ func TestContext_NotFound(t *testing.T) {
 }
 
 func TestRelated_Requirement(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	refs, err := Related(g, "R-alpha")
 	if err != nil {
@@ -339,6 +358,7 @@ func TestRelated_Requirement(t *testing.T) {
 }
 
 func TestRelated_Conflict(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	refs, err := Related(g, "C-ab")
 	if err != nil {
@@ -362,6 +382,7 @@ func TestRelated_Conflict(t *testing.T) {
 }
 
 func TestRelated_Assumption(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	refs, err := Related(g, "A-shared")
 	if err != nil {
@@ -385,6 +406,7 @@ func TestRelated_Assumption(t *testing.T) {
 }
 
 func TestRelated_NotFound(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	_, err := Related(g, "R-nowhere")
 	if err == nil {
@@ -393,6 +415,7 @@ func TestRelated_NotFound(t *testing.T) {
 }
 
 func TestFormatShow_AllKinds(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	for _, id := range []string{"R-alpha", "C-ab", "A-shared"} {
 		v, err := Show(g, id)
@@ -410,6 +433,7 @@ func TestFormatShow_AllKinds(t *testing.T) {
 }
 
 func TestFormatContext_NoPanic(t *testing.T) {
+	t.Parallel()
 	g := fixtureGraph()
 	cc, err := Context(g, "R-alpha")
 	if err != nil {

@@ -25,6 +25,7 @@ var jsonFenceRe = regexp.MustCompile("(?s)```json\r?\n(.*?)\r?\n```")
 // test fails instead of the drift going unnoticed until a consumer's copy
 // of an example proposal fails to apply.
 func TestProposalReferenceExamples_AllParse(t *testing.T) {
+	t.Parallel()
 	repoRoot, err := filepath.Abs(filepath.Join("..", ".."))
 	if err != nil {
 		t.Fatalf("resolve repo root: %v", err)

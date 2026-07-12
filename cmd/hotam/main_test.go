@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -236,29 +235,24 @@ func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
 	}
 }
 
-// TestVersion_DefaultAndLdflagsOverride builds the real binary twice — once
-// plain (default version = "dev") and once with -ldflags "-X main.version=..."
-// — and asserts both `version` and `--version` print the expected string.
-// This is the only test in this package that builds a real binary purely to
-// check the version string; see external_e2e_test.go for the full external
-// e2e which also builds a real binary for a different purpose.
+// TestVersion_DefaultAndLdflagsOverride checks both a plain (default
+// version = "dev") build and one with -ldflags "-X main.version=..." print
+// the expected `version`/`--version` string. The plain build is shared
+// (buildSharedHotamBinary); only the ldflags build is specific to this test.
+// See external_e2e_test.go for the full external e2e which also uses the
+// shared binary.
 func TestVersion_DefaultAndLdflagsOverride(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds a real binary; skipped in -short")
 	}
+	t.Parallel()
 	repoRoot := repoRootForTest(t)
 	binDir := t.TempDir()
-	binName := "hotam"
-	if runtime.GOOS == "windows" {
-		binName = "hotam.exe"
-	}
-	binPath := filepath.Join(binDir, binName)
 
-	build := exec.Command("go", "build", "-o", binPath, "./cmd/hotam")
-	build.Dir = repoRoot
-	if out, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("go build (default version): %v\n%s", err, out)
-	}
+	// Default (no ldflags) build is shared across this package's tests
+	// (see testbinary_test.go) — only the ldflags-injected build below is
+	// specific to this test and needs its own `go build`.
+	binPath := buildSharedHotamBinary(t)
 	out, err := exec.Command(binPath, "version").CombinedOutput()
 	if err != nil {
 		t.Fatalf("hotam version: %v\n%s", err, out)

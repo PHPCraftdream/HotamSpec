@@ -5,6 +5,7 @@ import (
 )
 
 func TestSplitSubcommand_PlainShow(t *testing.T) {
+	t.Parallel()
 	sub, rest, ok := splitSubcommand([]string{"show", "R-x"})
 	if !ok || sub != "show" || len(rest) != 1 || rest[0] != "R-x" {
 		t.Fatalf("got sub=%q rest=%v ok=%v", sub, rest, ok)
@@ -12,6 +13,7 @@ func TestSplitSubcommand_PlainShow(t *testing.T) {
 }
 
 func TestSplitSubcommand_BooleanFlagBeforeSubcommand(t *testing.T) {
+	t.Parallel()
 	// Mirrors what reorderFlagsFirst produces for "req show R-x --json":
 	// the trailing boolean --json is hoisted in front of "show R-x".
 	sub, rest, ok := splitSubcommand([]string{"--json", "show", "R-x"})
@@ -32,6 +34,7 @@ func TestSplitSubcommand_BooleanFlagBeforeSubcommand(t *testing.T) {
 }
 
 func TestSplitSubcommand_ValuedFlagBeforeSubcommand(t *testing.T) {
+	t.Parallel()
 	// Mirrors "req context R-x --json --domain /tmp/d" after reordering.
 	sub, rest, ok := splitSubcommand([]string{"--json", "--domain", "/tmp/d", "context", "R-x"})
 	if !ok || sub != "context" {
@@ -43,6 +46,7 @@ func TestSplitSubcommand_ValuedFlagBeforeSubcommand(t *testing.T) {
 }
 
 func TestSplitSubcommand_NoSubcommand(t *testing.T) {
+	t.Parallel()
 	_, _, ok := splitSubcommand([]string{"--json", "--domain", "/tmp/d"})
 	if ok {
 		t.Fatal("expected ok=false when no non-flag token is present")
@@ -50,6 +54,7 @@ func TestSplitSubcommand_NoSubcommand(t *testing.T) {
 }
 
 func TestCmdReq_UnknownSubcommand(t *testing.T) {
+	t.Parallel()
 	err := cmdReq([]string{"bogus"})
 	if err == nil {
 		t.Fatal("expected error for unknown subcommand")
@@ -57,6 +62,7 @@ func TestCmdReq_UnknownSubcommand(t *testing.T) {
 }
 
 func TestCmdReq_NoArgs(t *testing.T) {
+	t.Parallel()
 	err := cmdReq(nil)
 	if err == nil {
 		t.Fatal("expected error for empty args")
@@ -64,6 +70,7 @@ func TestCmdReq_NoArgs(t *testing.T) {
 }
 
 func TestCmdReq_Help(t *testing.T) {
+	t.Parallel()
 	if err := cmdReq([]string{"-h"}); err != nil {
 		t.Fatalf("cmdReq -h: %v", err)
 	}
