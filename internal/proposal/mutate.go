@@ -235,8 +235,9 @@ func (p ProposedConflict) mutate(g *ontology.Graph, today string) error {
 		return errNotDeclared("axis", p.Axis)
 	}
 	members := trimNonEmpty(p.Members)
+	idx := ontology.BuildIndex(g)
 	for _, m := range members {
-		r, ok := ontology.RequirementByID(g, m)
+		r, ok := idx.RequirementByID[m]
 		if !ok {
 			return errNotFound("member requirement", m)
 		}

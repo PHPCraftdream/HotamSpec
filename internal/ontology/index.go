@@ -5,11 +5,21 @@ import "sort"
 // GraphIndex is a read-only snapshot of ByID / reverse-reference lookups
 // over a Graph, built once via BuildIndex(g). It exists to replace the
 // linear scans (`for _, r := range g.Requirements { if r.ID == id ... }`)
-// that were scattered across internal/invariants, internal/diagnose,
-// internal/proposal and internal/query — harmless at small graph sizes but
-// O(n) per lookup, and O(n^2) when a lookup runs inside another range over
-// the graph (e.g. resolving every Conflict.Derived id, or every
-// Conflict.Members id, against Requirements).
+// in internal/diagnose, internal/proposal and internal/query — harmless at
+// small graph sizes but O(n) per lookup, and O(n^2) when a lookup runs inside
+// another range over the graph (e.g. resolving every Conflict.Derived id, or
+// every Conflict.Members id, against Requirements).
+//
+// COVERAGE (honest as of this commit): BuildIndex is used in internal/diagnose
+// (ReflectDerivedButUnbuilt, ReflectAllMembersRejected — both loop over
+// Conflicts and resolve member/derived ids against Requirements), internal/query
+// (Context — one-hop neighborhood), and internal/proposal (ProposedConflict.mutate
+// — validates every member id in a loop). Single-lookup call sites where an
+// index build would not pay for itself still use the linear RequirementByID
+// helper (internal/query ShowRequirement, relatedToRequirement).
+// internal/invariants is deliberately NOT migrated here: it is the
+// performance-critical hot path that runs on every apply and is handled as a
+// separate, riskier task — it still does its own linear scans throughout.
 //
 // LIFECYCLE / MUTATION CONTRACT (read this before caching a GraphIndex):
 // a GraphIndex is a POINT-IN-TIME snapshot. It is built by copying id ->
@@ -20,14 +30,15 @@ import "sort"
 // NOT observe the change — by design, this package does NOT attempt
 // mutation-tracking or auto-invalidation. Two supported usage patterns:
 //
-//  1. Read-only queries (internal/query, internal/diagnose, internal/gate):
-//     build the index once right after loader.LoadGraph and use it for the
-//     lifetime of that in-memory Graph — nothing under those packages
-//     mutates the Graph.
-//  2. Mutate-then-recheck (internal/proposal/apply.go: AllViolations
-//     before, mutate, AllViolations after): call BuildIndex again AFTER
-//     the mutation if the post-mutate pass wants index-backed lookups.
-//     Never reuse a pre-mutate index across a mutation boundary.
+//  1. Read-only queries (internal/query, internal/diagnose): build the index
+//     once right after loader.LoadGraph and use it for the lifetime of that
+//     in-memory Graph — nothing under those packages mutates the Graph.
+//  2. Pre-mutation validation (internal/proposal/mutate.go:
+//     ProposedConflict.mutate builds the index before appending the new
+//     Conflict and uses it only for read-only member-existence checks that
+//     precede the mutation). If a mutate path ever needs lookups AFTER it has
+//     written to the Graph, it MUST call BuildIndex again — never reuse a
+//     pre-mutation index across a mutation boundary.
 //
 // Iteration over the reverse-index maps (RequirementsByAssumption,
 // RelationsToRequirement) is NEVER used to produce output order directly —
