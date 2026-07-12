@@ -1,3 +1,10 @@
+<!-- LEGACY (Python-era) — content below records unfreeze events from the pre-port
+     Python implementation. Tools and paths (spec/tests/frozen_aspects_baseline.json,
+     tools/spawn_agent.py, tools/create_domain.py, apply_proposal.py,
+     tools/update_baseline.py, graph.py) are historical references to the retired
+     Python codebase. The baseline-guard PRINCIPLE (R-speculative-aspects-frozen)
+     remains SETTLED; the specific tool names and Python paths below are artifacts. -->
+
 # Frozen-aspects unfreeze history
 
 Hand-authored (not generated). This file preserves the accumulated

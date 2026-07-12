@@ -11,52 +11,57 @@ detector is the right weight.
 
 The minimal core from which the "agent is never lost" property is demonstrable:
 
-- **Layer 1 — form.** Frozen-dataclass ontology (`requirement`, `conflict`,
-  `assumption`, `axis`, `stakeholder`), ruff-clean.
-- **Layer 2 — structural graph invariants.** `hotam_spec.invariants.check_*`
-  returning `[Violation]`: referential integrity, conflict has axis/context/
+- **Layer 1 — form.** Go ontology types (`internal/ontology/`): `Requirement`,
+  `Conflict`, `Assumption`, `Axis`, `Stakeholder`, `Entity`, `Operator`,
+  `Lifecycle`, `Process`, `Goal`, `Signoff`.
+- **Layer 2 — structural graph invariants.** `internal/invariants.check_*`
+  returning `[]Violation`: referential integrity, conflict has axis/context/
   steward, ≥2 members, axis ∈ registry, id == `hash(axis, context)`, steward ≠
   member owner, OPEN states its question, DECIDED justifies itself. Each invariant
   has a deliberately-broken fixture proving it fires (anti-phantom).
 - **Layer 3 — visibility of the open.** `OPEN(question)` requirements +
-  unresolved conflicts → generated `docs/gen/OPEN.md`.
-- **Layer 9 — human layer + anti-drift.** `tools/gen_spec.py` → `REQUIREMENTS.md`,
-  `TENSIONS.md` (tension map: nodes, clusters by axis, Mermaid), `OPEN.md`; the
-  meta-test makes regeneration == committed, byte-for-byte.
-- **The harness.** `tools/what_now.py` — the Diagnosis step of the closed loop,
+  unresolved conflicts → generated `docs/gen/OPEN.md` and the CLAUDE.md LIVE-STATE
+  block.
+- **Layer 9 — human layer + anti-drift.** `hotam gen-spec` → `REQUIREMENTS.md`,
+  `TENSIONS.md` (tension map: nodes, clusters by axis, Mermaid), `OPEN.md`;
+  the meta-test makes regeneration == committed, byte-for-byte.
+- **The harness.** `hotam what-now` — the Diagnosis step of the closed loop,
   emitting a typed, prioritized next-action list from any graph state.
 - **The operating contract.** `CLAUDE.md` — the loop, the three-layer rules, the
   AI roles + hard boundary, the OPEN methodology decisions.
+- **The gate.** `hotam land` — single CLI entry point over `apply-proposal` →
+  `gen-spec` → `all-violations`; `hotam gate <anchor>` for targeted T1 test
+  selection.
 
 ## Phase 1 — DEFERRED formal layers (critical core only)
 
-Switched on per critical-core domain, not globally. Dependencies (`z3-solver`,
-`cosmic-ray`, and `hypothesis` for stateful use) are already pinned in
-`spec/pyproject.toml` so turning a layer on does not move the dependency surface.
+Switched on per critical-core domain, not globally. The original Python-era plan
+named specific libraries (Z3, Hypothesis, cosmic-ray); the Go-port equivalents
+are not yet selected. The conceptual layers remain:
 
-- **Layer 4 — property-detector of latent conflicts (Hypothesis).** Generate
+- **Layer 4 — property-detector of latent conflicts.** Generate
   requirement tuples and hunt for *missing connector nodes*: pairs that should be
   mediated by a Conflict but aren't. Promotes the current heuristic stub
-  (`graph.latent_connector_suspects`, the shared-assumption signal) into
+  (`hotam inspect`, the shared-assumption and lexical-overlap signals) into
   generated, adversarial search over the claim predicates. Output remains "for AI
   review" — never an auto-materialized conflict (the hard boundary).
-- **Layer 5 — formal conflict detector (Z3).** The inversion of dev-coin's "prove
-  the economics hold for all values." Here Z3 is a *conflict detector*: for a pair
-  of machine-readable claims (e.g. `latency_ms < 200` vs
+- **Layer 5 — formal conflict detector (SMT).** The inversion of dev-coin's "prove
+  the economics hold for all values." An SMT solver is a *conflict detector*: for a
+  pair of machine-readable claims (e.g. `latency_ms < 200` vs
   `latency_ms >= aml_check_ms` with `aml_check_ms >= 800`), produce a **model
   where both are jointly violated** — a concrete witness scenario the steward
   cannot dismiss. Applied only to the critical-core claims that carry machine
   predicates (`Requirement.claim` / `Assumption.machine_check`).
-- **Layer 6 — behavioral/temporal conflicts (Quint/Apalache).** For *process*
+- **Layer 6 — behavioral/temporal conflicts.** For *process*
   requirements (workflows, state machines): two requirements that are
   individually satisfiable but jointly produce a deadlock or an unreachable
   required state. Symbolic, no enumeration.
-- **Layer 7 — stateful PBT of graph evolution (Hypothesis stateful).** Model the
+- **Layer 7 — stateful PBT of graph evolution.** Model the
   graph as a state machine and assert the evolution invariants across histories,
   the key one being: **flipping an assumption to DEAD revives every dependent
   Requirement and Conflict** (one trigger, one cluster). The independent oracle is
   a hand-rolled dependency map vs `graph.dependents`-style traversal.
-- **Layer 8 — mutation testing of the detectors (cosmic-ray).** Guards against
+- **Layer 8 — mutation testing of the detectors.** Guards against
   *phantom detectors* — detectors that stay green on broken data. Generic mutation
   operators are not enough; Hotam-Spec needs **semantic mutation operators** that
   perturb the meaning of a requirement/assumption and assert the detector

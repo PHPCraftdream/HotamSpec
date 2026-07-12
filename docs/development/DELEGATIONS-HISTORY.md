@@ -1,3 +1,9 @@
+<!-- LEGACY (Python-era) — content below describes the pre-port Python implementation;
+     tools and paths (spec/tools/*.py, spec/src/hotam_spec/cli/*.py, spec/pyproject.toml,
+     graph.py) are historical references to the retired Python codebase. The delegation
+     RETIREMENT DECISION itself remains in effect; only the file paths and tool names
+     below are artifacts of the pre-Go era. -->
+
 # Steward campaign-delegation history (jsonl-era, retired)
 
 Hand-authored (not generated). This file preserves the full, unabridged
