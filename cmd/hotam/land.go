@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/proposal"
+	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
 // cmdLand implements `hotam land`: the single-command pipeline that keeps

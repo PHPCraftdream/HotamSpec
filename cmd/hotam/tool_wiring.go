@@ -1,6 +1,6 @@
 package main
 
-import "github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+import "github.com/PHPCraftdream/HotamSpec/internal/methodology"
 
 // This file is the ONLY place cmd/hotam reaches into internal/methodology's
 // Tool registry to attach a real Run function. internal/methodology must stay

@@ -1,6 +1,6 @@
 package proposal
 
-import "github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+import "github.com/PHPCraftdream/HotamSpec/internal/ontology"
 
 const (
 	KindRequirement          = "Requirement"

@@ -3,7 +3,7 @@ package diagnose
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 )
 
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"

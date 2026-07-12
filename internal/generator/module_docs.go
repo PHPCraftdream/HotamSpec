@@ -3,7 +3,7 @@ package generator
 import (
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
 type moduleEntry struct {

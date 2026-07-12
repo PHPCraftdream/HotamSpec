@@ -4,7 +4,7 @@ This is the path for a team that wants to **use** Hotam-Spec to hold a
 shared, disciplined understanding of its own system — requirements, owners,
 open tensions — via the `hotam` Go CLI, in your own repo, not by cloning the
 framework repo and working inside it. If you *are* working inside a clone of
-the HotamSpecGo repo itself (self-hosting mode against `domains/hotam-spec-self`),
+the HotamSpec repo itself (self-hosting mode against `domains/hotam-spec-self`),
 see the [root README](../README.md) instead.
 
 Everything below is CLI-only. No AI agent is required to follow this guide.
@@ -15,8 +15,8 @@ There is no published package or `go install` target yet (tracked as
 ongoing work) — build the binary from a clone of this repo:
 
 ```bash
-git clone <this-repo-url> HotamSpecGo
-cd HotamSpecGo
+git clone <this-repo-url> HotamSpec
+cd HotamSpec
 go build -o bin/hotam ./cmd/hotam
 ```
 

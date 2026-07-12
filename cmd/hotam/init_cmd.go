@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // cmdInit implements `hotam init <dir> [--name <domain-name>]` — the

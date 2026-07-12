@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // validGraph returns a fresh minimal graph that passes validateGraph. Each

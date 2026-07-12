@@ -3,7 +3,7 @@ package query
 import (
 	"fmt"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // RequirementCard is the full agent-facing card for one Requirement: every

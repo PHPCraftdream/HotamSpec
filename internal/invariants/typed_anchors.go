@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func checkTypedAnchorsVariant(g *ontology.Graph) []Violation {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 var slugPattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)

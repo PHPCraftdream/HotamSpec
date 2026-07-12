@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 )
 
 // synthCandidate builds a Candidate with the given id and score for the pure

@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/invariants"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 const (

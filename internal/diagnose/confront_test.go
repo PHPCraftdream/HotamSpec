@@ -3,7 +3,7 @@ package diagnose
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // rejectedClaimWithSuccessor builds a REJECTED requirement id whose successor

@@ -3,7 +3,7 @@ package query
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // fixtureGraph is a small synthetic graph — NOT the 380KB hotam-spec-self

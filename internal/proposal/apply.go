@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/invariants"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func errNotFound(label, id string) error {

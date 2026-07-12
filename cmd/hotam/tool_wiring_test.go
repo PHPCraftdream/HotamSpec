@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
 // TestToolWiring_EveryPortedToolHasRun is the synchronization test called

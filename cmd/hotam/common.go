@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 func newFlagSet(name string) *flag.FlagSet {

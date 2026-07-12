@@ -3,8 +3,8 @@ package proposal
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 func TestApply_Requirement_Add(t *testing.T) {

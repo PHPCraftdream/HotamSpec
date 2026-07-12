@@ -7,9 +7,9 @@ import (
 	"sort"
 	"unicode/utf8"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/generator"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/generator"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 func cmdGenSpec(args []string) error {

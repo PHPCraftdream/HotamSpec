@@ -9,7 +9,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/proposal"
+	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
 const selfDomainGraph = "../../domains/hotam-spec-self/graph.json"

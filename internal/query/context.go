@@ -3,7 +3,7 @@ package query
 import (
 	"sort"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // NeighborRef is one edge out of (or into) an anchor: the neighbor's id

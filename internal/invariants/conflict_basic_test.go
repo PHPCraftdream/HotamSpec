@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func TestCheckConflictHasAxis_OK(t *testing.T) {

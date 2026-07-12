@@ -1,18 +1,16 @@
-# HotamSpecGo
+# HotamSpec
 
 Go-порт методологии Hotam-Spec — подхода к работе с конфликтующими бизнес-требованиями, моделируемыми как граф напряжений (tension graph). Противоречивые требования — не баг, а свойство модели: они держатся открытыми как узлы `Conflict`, а не тихо отбрасываются.
-
-> **TODO(module-path):** module path в `go.mod` — `github.com/PHPCraftdream/HotamSpecGo` — унаследован от отдельного репозитория `HotamSpecGo`, слитого сюда; фактический git remote этого репозитория — `https://github.com/PHPCraftdream/HotamSpec.git` (без `Go` в имени) — расхождение не переименовано самовольно, требует явного решения стюарда.
 
 ## Install
 
 ```bash
-go install github.com/PHPCraftdream/HotamSpecGo/cmd/hotam@latest
+go install github.com/PHPCraftdream/HotamSpec/cmd/hotam@latest
 ```
 
-Кладёт бинарник `hotam` в `$GOBIN` (или `$(go env GOPATH)/bin`). Требует Go 1.25+ (см. `go.mod`). Из-за расхождения module path/remote выше, `@latest` сработает только когда module path реально резолвится на публичный Go-модуль-прокси под этим путём — до решения TODO проверяйте актуальность командой `go install <path>@<конкретный тег>` вместо `@latest`.
+Кладёт бинарник `hotam` в `$GOBIN` (или `$(go env GOPATH)/bin`). Требует Go 1.25+ (см. `go.mod`). Module path в `go.mod` совпадает с git remote; до публикации первого релиз-тега `@latest` не резолвится — используйте `go install <path>@<конкретный тег или коммит>`, либо собирайте из исходников (см. ниже).
 
-Сборка из исходников (для разработки или пока публикация module path не подтверждена) — см. раздел «Сборка» ниже.
+Сборка из исходников (для разработки или пока не опубликован первый релиз-тег) — см. раздел «Сборка» ниже.
 
 ### Версия
 

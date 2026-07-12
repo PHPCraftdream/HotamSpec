@@ -3,7 +3,7 @@ package proposal
 import (
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func defaultStr(v, def string) string {

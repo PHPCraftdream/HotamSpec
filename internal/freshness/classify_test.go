@@ -3,7 +3,7 @@ package freshness
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 const testToday = "2026-07-12"

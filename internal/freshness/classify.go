@@ -3,7 +3,7 @@ package freshness
 import (
 	"sort"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // Status is the freshness classification of a single SETTLED requirement.

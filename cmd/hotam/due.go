@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/freshness"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // neverReviewedTopN is how many NEVER-REVIEWED requirement ids `hotam due`

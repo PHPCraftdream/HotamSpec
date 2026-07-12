@@ -1,3 +1,3 @@
-module github.com/PHPCraftdream/HotamSpecGo
+module github.com/PHPCraftdream/HotamSpec
 
 go 1.25.0

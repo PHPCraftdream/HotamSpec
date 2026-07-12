@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // summaryPreviewLen is how many runes of Claim are kept as the fallback

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 )
 
 func cmdWhatNow(args []string) error {

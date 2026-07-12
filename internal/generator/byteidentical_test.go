@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // fixtureGraphPath is the small, synthetic, hand-curated graph used for the

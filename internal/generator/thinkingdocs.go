@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
 var topicSlugNonAlnum = regexp.MustCompile("[^a-z0-9]+")

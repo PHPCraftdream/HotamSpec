@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 type GateResult struct {

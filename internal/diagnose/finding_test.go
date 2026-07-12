@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func settledReq(id string) ontology.Requirement {

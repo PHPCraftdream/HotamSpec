@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func copyStrings(src []string) []string {

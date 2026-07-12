@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 )
 
 // cmdConfront implements `hotam confront <text> [--domain <path>] [--file

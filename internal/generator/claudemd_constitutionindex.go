@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // Canon: §Requirement — R-constitution-is-index: the CLAUDE.md CONSTITUTION

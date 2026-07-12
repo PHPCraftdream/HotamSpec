@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 func lifecycleWellformedIssues(lc ontology.Lifecycle) []string {

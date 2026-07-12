@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // Confront is the CONFRONT step of the mediation loop, made callable: it takes

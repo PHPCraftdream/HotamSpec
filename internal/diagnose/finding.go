@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 const ImplementsDecayDays = 14

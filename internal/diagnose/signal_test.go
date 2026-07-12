@@ -3,7 +3,7 @@ package diagnose
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func TestDiagnoseSignals_EmptyGraph(t *testing.T) {

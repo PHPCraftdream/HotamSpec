@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/gate"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 var mTagRE = regexp.MustCompile(`^M[1-9][0-9]*$`)

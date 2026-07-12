@@ -3,8 +3,8 @@ package invariants
 import (
 	"fmt"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func checkNoDanglingAssumptionOwner(g *ontology.Graph) []Violation {

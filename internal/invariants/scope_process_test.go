@@ -3,7 +3,7 @@ package invariants
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func TestCheckScopedNodeHasSinglePresenter_TwoOverlappingOpsResolvePresenter(t *testing.T) {

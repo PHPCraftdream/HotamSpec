@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/gate"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 )
 
 func cmdGate(args []string) error {

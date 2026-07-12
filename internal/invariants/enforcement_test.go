@@ -3,8 +3,8 @@ package invariants
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func TestCheckEnforcedNamesInvariant_OK(t *testing.T) {

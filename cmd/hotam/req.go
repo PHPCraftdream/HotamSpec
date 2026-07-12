@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/query"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/query"
 )
 
 // cmdReq is the compact agentic read interface over a domain graph:

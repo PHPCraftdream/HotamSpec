@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/proposal"
+	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
 // TestParseProposal_AllKinds_SnakeCaseRoundTrip is a table-driven test: one

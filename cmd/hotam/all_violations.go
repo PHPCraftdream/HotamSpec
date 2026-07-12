@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/invariants"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 )
 
 func cmdAllViolations(args []string) error {

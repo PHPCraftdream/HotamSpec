@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/freshness"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // Canon: §Graph — AGENT-CONTEXT.md is the compact per-domain agent-boot

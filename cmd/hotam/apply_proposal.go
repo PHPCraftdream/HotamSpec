@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/proposal"
+	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
 func cmdApplyProposal(args []string) error {

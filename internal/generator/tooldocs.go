@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
 // BuildToolDocs renders one Markdown doc per tool. Each tool's content is a

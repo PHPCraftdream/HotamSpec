@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
 func TestBuildThinkingDocsCountMatchesSections(t *testing.T) {

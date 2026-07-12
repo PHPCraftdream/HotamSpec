@@ -3,7 +3,7 @@ package invariants
 import (
 	"sync"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 var frameworkScopedInvariantNames = map[string]struct{}{

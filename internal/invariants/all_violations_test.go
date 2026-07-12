@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func TestAllViolations_EmptyGraphNoViolations(t *testing.T) {

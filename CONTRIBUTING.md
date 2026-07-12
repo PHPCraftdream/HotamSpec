@@ -1,4 +1,4 @@
-# Contributing to HotamSpecGo
+# Contributing to HotamSpec
 
 Thank you for your interest in contributing!
 

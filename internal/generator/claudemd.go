@@ -9,10 +9,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/methodology"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // Canon: §Graph — root CLAUDE.md generation (R-claude-md-template-driven).

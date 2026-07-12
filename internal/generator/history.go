@@ -3,7 +3,7 @@ package generator
 import (
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func extractDecidedRationale(lifecycle string) string {

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 )
 
 // mkSignal builds a diagnose.Signal with the fields that drive grouping and

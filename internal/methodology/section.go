@@ -1,6 +1,6 @@
 package methodology
 
-import "github.com/PHPCraftdream/HotamSpecGo/internal/registry"
+import "github.com/PHPCraftdream/HotamSpec/internal/registry"
 
 type SectionKind string
 

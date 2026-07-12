@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 )
 
 // cmdInspect implements `hotam inspect [--domain <path>] [--json] [--limit N]

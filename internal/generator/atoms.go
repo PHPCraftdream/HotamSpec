@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func selectSettled(g *ontology.Graph, predicate func(ontology.Requirement) bool) []ontology.Requirement {

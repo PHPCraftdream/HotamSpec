@@ -1,6 +1,6 @@
 package methodology
 
-import "github.com/PHPCraftdream/HotamSpecGo/internal/registry"
+import "github.com/PHPCraftdream/HotamSpec/internal/registry"
 
 // Status classifies whether a Tool entry names a working `hotam` CLI
 // subcommand or is merely a carried-over description from the pre-port

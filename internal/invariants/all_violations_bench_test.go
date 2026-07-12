@@ -5,9 +5,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/diagnose"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/invariants"
-	"github.com/PHPCraftdream/HotamSpecGo/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 )
 
 // realDomainGraphPath resolves domains/hotam-spec-self/graph.json relative

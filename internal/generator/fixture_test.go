@@ -3,7 +3,7 @@ package generator
 import (
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/invariants"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 )
 
 // TestFixtureGraphHasNoViolations guards testdata/fixture-graph.json's

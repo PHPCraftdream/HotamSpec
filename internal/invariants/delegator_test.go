@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 var expectedDelegatorNames = []string{

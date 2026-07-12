@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpecGo/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 func BuildRequirements(g *ontology.Graph) string {
