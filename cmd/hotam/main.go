@@ -67,6 +67,8 @@ func main() {
 		err = cmdAllViolations(args)
 	case "req":
 		err = cmdReq(args)
+	case "brief":
+		err = cmdBrief(args)
 	case "due":
 		err = cmdDue(args)
 	case "status":
@@ -141,6 +143,10 @@ Commands:
         Print all invariant violations; exit 1 if any.
   req <show|list|search|context|related> [args] [--domain <path>] [--json]
         Compact agentic read interface over the domain graph (hotam req -h for details).
+  brief <anchor-id> [--domain <path>] [--today YYYY-MM-DD] [--json]
+        Single-call orientation brief for any anchor (Requirement, Conflict,
+        or Assumption): full card + one-hop neighborhood + freshness (for
+        Requirements), replacing req show + req context + req related + due.
   due [--domain <path>] [--today YYYY-MM-DD] [--json]
         Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
   status [--domain <path>] [--today YYYY-MM-DD] [--json]

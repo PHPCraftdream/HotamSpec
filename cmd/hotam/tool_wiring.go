@@ -37,6 +37,7 @@ func init() {
 	wireToolRun("gate", cmdGate)
 	wireToolRun("all_violations", cmdAllViolations)
 	wireToolRun("req", cmdReq)
+	wireToolRun("brief", cmdBrief)
 	wireToolRun("due", cmdDue)
 	wireToolRun("status", cmdStatus)
 	wireToolRun("inspect", cmdInspect)

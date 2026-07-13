@@ -47,6 +47,7 @@ Projected from the tool registry, one entry per tool whose first doc line matche
 - **R-tool-attention-hook** — *the Claude adapter: inject the attention list into context.* [STRUCTURAL·tool · §Attention] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
 - **R-tool-audit-tensions** — *the generative-audit tool: a deterministic, LLM-free shortlist of* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_audit_tensions`]
+- **R-tool-brief** — *single-call orientation aggregator for any anchor: the full card + one-hop neighborhood + freshness (for Requirements), replacing the separate req show + req context + req related + due round-trips.* [STRUCTURAL·tool · §Requirement] [enforcer: (none)]
 - **R-tool-claude-md-diff-watch** — *auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-closure** — *per-action verify: did the proposal remove its diagnosis?* [STRUCTURAL·tool · §Closure] [enforcer: (none)]
 - **R-tool-confront** — *the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.* [STRUCTURAL·tool · §Loop] [enforcer: `test_tool_confront`]

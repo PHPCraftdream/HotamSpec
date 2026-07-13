@@ -57,6 +57,15 @@ func init() {
 		Enforcer: "",
 		Run:      nil,
 	})
+	Tools.MustRegister("brief", Tool{
+		Command:  "brief",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam brief <anchor-id> [--domain <path>] [--today YYYY-MM-DD] [--json]. Single-call aggregation of everything an agent needs to fully orient on one anchor (internal/query.Brief): the full card + one-hop neighborhood + freshness classification for Requirements, replacing the 3-4 separate round-trips (req show + req context + req related + due). Works for Requirement, Conflict, and Assumption anchors alike.",
+		Status:   Implemented,
+		Claim:    "single-call orientation aggregator for any anchor: the full card + one-hop neighborhood + freshness (for Requirements), replacing the separate req show + req context + req related + due round-trips.",
+		Enforcer: "",
+		Run:      nil,
+	})
 	Tools.MustRegister("due", Tool{
 		Command:  "due",
 		Canon:    "§Requirement",

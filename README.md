@@ -117,6 +117,11 @@ hotam req <show|list|search|context|related> [args] [--domain <path>] [--json]
         Compact agentic read interface over the domain graph
         (hotam req -h for details).
 
+hotam brief <anchor-id> [--domain <path>] [--today YYYY-MM-DD] [--json]
+        Single-call orientation brief for any anchor (Requirement, Conflict,
+        or Assumption): full card + one-hop neighborhood + freshness (for
+        Requirements), replacing req show + req context + req related + due.
+
 hotam due [--domain <path>] [--today YYYY-MM-DD] [--json]
         Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
         Never gates; exit code always 0.

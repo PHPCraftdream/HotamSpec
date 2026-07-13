@@ -2,16 +2,17 @@
 
 # Tool docs index
 
-43 tools registered — **16 Implemented** (real `hotam` CLI subcommands) · **27 Planned** (methodology surface only; no Go command exists yet).
+44 tools registered — **17 Implemented** (real `hotam` CLI subcommands) · **27 Planned** (methodology surface only; no Go command exists yet).
 
 This index splits the tool registry so a browser of `docs/gen/tools/` can tell at a glance which entries are real commands versus aspirational methodology surface. The root crystal's Tool reference block (`EMBEDDED-TOOLS`) collapses the Planned tools into a one-line summary; each per-tool `.md` file below carries full Status/Canon/Purpose detail.
 
 ## Implemented (real commands)
 
-These 16 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.
+These 17 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.
 
 - [`hotam all-violations`](all_violations.md) — Prints all invariant violations for a domain graph (internal/invariants); exits 1 if any are found.
 - [`hotam apply-proposal`](apply_proposal.md) — Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.
+- [`hotam brief`](brief.md) — Single-call aggregation of everything an agent needs to fully orient on one anchor (internal/query.Brief): the full card + one-hop neighborhood + freshness classification for Requirements, replacing the 3-4 separate round-trips (req show + req context + req related + due). Works for Requirement, Conflict, and Assumption anchors alike.
 - [`hotam confront`](confront.md) — CONFRONT step of the mediation loop (internal/diagnose): checks a candidate claim for lexical overlap with SETTLED requirements (duplicate guard) and REJECTED history (anti-relitigation) before anything is written. <text> is a quoted positional; --file <path> reads a long draft. Reuses the inspect overlap engine. Never gates; exit code always 0.
 - [`hotam due`](due.md) — Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements (internal/freshness); never gates, exit code always 0.
 - [`hotam gate`](gate.md) — T1 tiered LAND gate (internal/gate): selects a targeted enforcer subset for a target node instead of the full test suite.

@@ -8,7 +8,7 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - **top action:** [P7] ADVISORY on `feature-blocked-roadmap` — 33 SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.
 - **debt:** 165/237 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 37 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 305 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 20319 chars (headroom 129681)
+- **graph:** 305 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 20779 chars (headroom 129221)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 

@@ -96,6 +96,7 @@ One RULE per §-section; full Canon/Narrative/Why at `domains/hotam-spec-self/do
 
 - **all-violations** — Usage: hotam all-violations [--domain <path>]. Prints all invariant violations for a domain graph (internal/invariants); exits 1 if any are found. Implemented (`hotam all-violations`).
 - **apply-proposal** — Usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]. Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json. Implemented (`hotam apply-proposal`).
+- **brief** — Usage: hotam brief <anchor-id> [--domain <path>] [--today YYYY-MM-DD] [--json]. Single-call aggregation of everything an agent needs to fully orient on one anchor (internal/query.Brief): the full card + one-hop neighborhood + freshness classification for Requirements, replacing the 3-4 separate round-trips (req show + req context + req related + due). Works for Requirement, Conflict, and Assumption anchors alike. Implemented (`hotam brief`).
 - **confront** — Usage: hotam confront <text> [--domain <path>] [--file <path>] [--json]. CONFRONT step of the mediation loop (internal/diagnose): checks a candidate claim for lexical overlap with SETTLED requirements (duplicate guard) and REJECTED history (anti-relitigation) before anything is written. <text> is a quoted positional; --file <path> reads a long draft. Reuses the inspect overlap engine. Never gates; exit code always 0. Implemented (`hotam confront`).
 - **due** — Usage: hotam due [--domain <path>] [--today YYYY-MM-DD] [--json]. Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements (internal/freshness); never gates, exit code always 0. Implemented (`hotam due`).
 - **gate** — Usage: hotam gate <target-anchor> [--domain <path>]. T1 tiered LAND gate (internal/gate): selects a targeted enforcer subset for a target node instead of the full test suite. Implemented (`hotam gate`).
@@ -129,7 +130,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P7] ADVISORY on `feature-blocked-roadmap` — 33 SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.
 - **debt:** 165/237 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 37 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 305 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 20319 chars (headroom 129681)
+- **graph:** 305 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 20779 chars (headroom 129221)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

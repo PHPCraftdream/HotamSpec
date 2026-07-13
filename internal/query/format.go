@@ -191,6 +191,64 @@ func FormatContext(c ContextCard) string {
 	return b.String()
 }
 
+// FormatBrief renders a BriefCard as a compact multi-section text block,
+// reusing the existing per-card formatters (FormatRequirementCard etc.) and
+// the section layout established by FormatContext. A freshness line appears
+// only for a Requirement anchor.
+func FormatBrief(b BriefCard) string {
+	var sb strings.Builder
+	switch b.Kind {
+	case KindRequirement:
+		if b.Requirement != nil {
+			sb.WriteString(FormatRequirementCard(*b.Requirement))
+		}
+	case KindConflict:
+		if b.Conflict != nil {
+			sb.WriteString(FormatConflictCard(*b.Conflict))
+		}
+	case KindAssumption:
+		if b.Assumption != nil {
+			sb.WriteString(FormatAssumptionCard(*b.Assumption))
+		}
+	}
+
+	if b.Freshness != nil {
+		sb.WriteString("\n\nfreshness: ")
+		sb.WriteString(string(b.Freshness.Status))
+		if b.Freshness.OverdueDays > 0 {
+			fmt.Fprintf(&sb, " (%dd overdue)", b.Freshness.OverdueDays)
+		}
+	}
+
+	sb.WriteString("\n\nneighbors:\n")
+	sb.WriteString(indent(FormatRelated(b.Neighbors)))
+
+	if len(b.Assumptions) > 0 {
+		sb.WriteString("\n\nassumptions (full text):\n")
+		for i, a := range b.Assumptions {
+			if i > 0 {
+				sb.WriteString("\n")
+			}
+			fmt.Fprintf(&sb, "  %s [%s] %s", a.ID, a.Status, a.Statement)
+		}
+	}
+	if len(b.Conflicts) > 0 {
+		sb.WriteString("\n\nconflicts (member of):\n")
+		for i, cf := range b.Conflicts {
+			if i > 0 {
+				sb.WriteString("\n")
+			}
+			fmt.Fprintf(&sb, "  %s [%s] axis=%s members=%s", cf.ID, cf.Lifecycle, cf.Axis, joinOrDash(cf.Members))
+		}
+	}
+	if len(b.SharedAssumptionWith) > 0 {
+		sb.WriteString("\n\nshares assumption with:\n")
+		sb.WriteString(indent(FormatRelated(b.SharedAssumptionWith)))
+	}
+
+	return strings.TrimRight(sb.String(), "\n")
+}
+
 func indent(s string) string {
 	lines := strings.Split(s, "\n")
 	for i, l := range lines {
