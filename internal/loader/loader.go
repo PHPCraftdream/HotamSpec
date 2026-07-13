@@ -188,6 +188,44 @@ func resolveSelfHosting(graphPath string) bool {
 	return m.SelfHosting
 }
 
+// GenProfileFull and GenProfileConsumer are the two accepted values for the
+// gen-spec profile (R-gen-spec-profile). gen-spec's full output (~90 docs/gen
+// files per domain) is correct for a self-hosting domain developing Hotam-Spec
+// itself; an external business consumer needs only the subset that is not
+// pure framework-self-documentation noise.
+const (
+	GenProfileFull     = "full"
+	GenProfileConsumer = "consumer"
+)
+
+// ResolveGenProfile reads the optional "gen_profile" field from the
+// manifest.json sitting next to graph.json, mirroring resolveSelfHosting's
+// exact pattern (read manifest, tolerate a missing file, tolerate malformed
+// JSON, default when absent). Returns GenProfileFull ("full") for every
+// absent/missing-field/malformed/unrecognized case — preserving 100%
+// backward compatibility with every manifest.json in this repo and in the
+// wild that predates the profile feature (they carry no gen_profile field, so
+// they keep resolving to the full output set, byte-identical to before).
+func ResolveGenProfile(graphPath string) string {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return GenProfileFull
+	}
+	var m struct {
+		GenProfile string `json:"gen_profile"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return GenProfileFull
+	}
+	switch m.GenProfile {
+	case GenProfileConsumer, GenProfileFull:
+		return m.GenProfile
+	default:
+		return GenProfileFull
+	}
+}
+
 func validateGraph(g *ontology.Graph) error {
 	var errs []string
 	add := func(format string, args ...any) {

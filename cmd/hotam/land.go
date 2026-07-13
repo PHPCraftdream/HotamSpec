@@ -122,7 +122,7 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
 	}
 	fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
 
-	written, err := genSpec(domainDir, claudeMDPath, today)
+	written, err := genSpec(domainDir, claudeMDPath, today, "")
 	if err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 		return rolledBackError("doc regeneration failed", err, rerr)
@@ -186,7 +186,7 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	}
 	fmt.Printf("applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
 
-	written, err := genSpec(domainDir, claudeMDPath, today)
+	written, err := genSpec(domainDir, claudeMDPath, today, "")
 	if err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 		return rolledBackError("doc regeneration failed", err, rerr)
@@ -277,7 +277,7 @@ func rollbackLand(domainDir string, snap *graphSnapshot, claudeMDPath, today str
 		return err
 	}
 
-	if _, err := genSpec(domainDir, claudeMDPath, today); err != nil {
+	if _, err := genSpec(domainDir, claudeMDPath, today, ""); err != nil {
 		return fmt.Errorf("rollback doc regen: %w", err)
 	}
 	return nil

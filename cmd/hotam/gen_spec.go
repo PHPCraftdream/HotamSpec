@@ -6,10 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
@@ -19,7 +21,19 @@ func cmdGenSpec(args []string) error {
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
+	profile := fs.String("profile", "", "output profile: consumer|full (default: resolve from the domain's manifest.json, falling back to full)")
 	fs.Parse(args)
+
+	// Validate --profile: only "consumer", "full", or empty (resolve from
+	// manifest) are accepted. A garbage value is a usage error, not silently
+	// ignored — a typo like "consmer" must not silently degrade to "full"
+	// and surprise the user with ~90 files instead of ~30.
+	switch *profile {
+	case "", loader.GenProfileConsumer, loader.GenProfileFull:
+		// ok
+	default:
+		return fmt.Errorf("--profile must be %q, %q, or empty (resolve from manifest), got %q", loader.GenProfileConsumer, loader.GenProfileFull, *profile)
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {
@@ -29,7 +43,7 @@ func cmdGenSpec(args []string) error {
 	if today == "" {
 		today = time.Now().Format("2006-01-02")
 	}
-	written, err := genSpec(domainDir, *claudeMD, today)
+	written, err := genSpec(domainDir, *claudeMD, today, *profile)
 	if err != nil {
 		return err
 	}
@@ -39,7 +53,21 @@ func cmdGenSpec(args []string) error {
 	return nil
 }
 
-func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
+func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
+	// Profile resolution (R-gen-spec-profile): an explicit non-empty profile
+	// (only cmdGenSpec's --profile flag passes one) overrides the domain's
+	// manifest for THIS invocation without rewriting it. An empty profile
+	// (every other caller — land, init-project, tests) resolves from the
+	// domain's manifest.json gen_profile field, defaulting to "full" when
+	// absent — so consumer-profile domains stay consumer on every subsequent
+	// hotam land, and every pre-existing domain (no gen_profile field) keeps
+	// the full output set byte-identical.
+	resolvedProfile := profile
+	if resolvedProfile == "" {
+		resolvedProfile = loader.ResolveGenProfile(graphPathForDomain(domainDir))
+	}
+	consumer := resolvedProfile == loader.GenProfileConsumer
+
 	// R-empty-content-gen-notice: a MISSING graph.json (os.IsNotExist — a
 	// freshly cloned framework with no domain populated yet) is treated as an
 	// empty graph, not a hard error. Every generator already handles
@@ -121,6 +149,27 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	}
 	repoMapMD := generator.BuildRepoMap(g, domainName, fullRepoMapDocs, decisionsWritten, entitiesWritten)
 
+	// Atoms docs: under the consumer profile, each of the four atoms-*.md
+	// files is rendered first (unchanged Build* behavior), then WRITTEN only
+	// if it carries real content — i.e. NOT the empty-notice case. An external
+	// business domain's own requirements (e.g. R-invoice-approval-flow) will
+	// essentially never match the framework-internal prefixes the four
+	// selectSettled filters use (R-operator-*, R-claude-md-*, R-anchor-*,
+	// R-check-*, …), so all four render the SAME calm empty notice for virtually
+	// every external consumer domain — genuinely empty, pure noise. This is a
+	// WRITE-time filter in genSpec; BuildAtomsOperator/etc.'s rendering is
+	// unchanged. The emptyNotice marker is read from renderAtoms's exact
+	// literal (internal/generator/atoms.go) so a future drift in that string
+	// stays in sync.
+	const emptyAtomsNotice = "_No atomic requirements in this topic yet._"
+	atomsOperator := generator.BuildAtomsOperator(g)
+	atomsSubstrate := generator.BuildAtomsSubstrate(g)
+	atomsDiscipline := generator.BuildAtomsDiscipline(g)
+	atomsCheck := generator.BuildAtomsCheck(g)
+	shouldWriteAtoms := func(content string) bool {
+		return !consumer || !strings.Contains(content, emptyAtomsNotice)
+	}
+
 	mdDocs := []docEntry{
 		{"REQUIREMENTS.md", repoMapDocs[0].Content},
 		{"TENSIONS.md", repoMapDocs[1].Content},
@@ -131,13 +180,23 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 		{"CONSTITUTION.md", repoMapDocs[6].Content},
 		{"FRAMEWORK-INVARIANTS.md", repoMapDocs[7].Content},
 		{"REPO-MAP.md", repoMapMD},
-		{"atoms-operator.md", generator.BuildAtomsOperator(g)},
-		{"atoms-substrate.md", generator.BuildAtomsSubstrate(g)},
-		{"atoms-discipline.md", generator.BuildAtomsDiscipline(g)},
-		{"atoms-check.md", generator.BuildAtomsCheck(g)},
-		{"live-state.md", generator.BuildLiveState(g, charCount, today)},
-		{"AGENT-CONTEXT.md", generator.BuildAgentContext(g, domainName, charCount, today)},
 	}
+	if shouldWriteAtoms(atomsOperator) {
+		mdDocs = append(mdDocs, docEntry{"atoms-operator.md", atomsOperator})
+	}
+	if shouldWriteAtoms(atomsSubstrate) {
+		mdDocs = append(mdDocs, docEntry{"atoms-substrate.md", atomsSubstrate})
+	}
+	if shouldWriteAtoms(atomsDiscipline) {
+		mdDocs = append(mdDocs, docEntry{"atoms-discipline.md", atomsDiscipline})
+	}
+	if shouldWriteAtoms(atomsCheck) {
+		mdDocs = append(mdDocs, docEntry{"atoms-check.md", atomsCheck})
+	}
+	mdDocs = append(mdDocs,
+		docEntry{"live-state.md", generator.BuildLiveState(g, charCount, today)},
+		docEntry{"AGENT-CONTEXT.md", generator.BuildAgentContext(g, domainName, charCount, today)},
+	)
 	if decisionsWritten {
 		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", decisionsMD})
 	}
@@ -181,26 +240,41 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	// version never actually guaranteed either. File contents (and thus
 	// byte-identity against git) are unaffected either way: only console
 	// listing order is at stake here, not what lands on disk.
-	thinkingDocs := generator.BuildThinkingDocs()
-	thinkingKeys := make([]string, 0, len(thinkingDocs))
-	for key := range thinkingDocs {
-		thinkingKeys = append(thinkingKeys, key)
+	//
+	// Consumer profile: thinking/*.md (the full Canon/Narrative/Why prose for
+	// every §-section of the METHODOLOGY ITSELF) is framework
+	// self-documentation, not domain content — skipped entirely for an
+	// external business consumer who just uses the tool.
+	if !consumer {
+		thinkingDocs := generator.BuildThinkingDocs()
+		thinkingKeys := make([]string, 0, len(thinkingDocs))
+		for key := range thinkingDocs {
+			thinkingKeys = append(thinkingKeys, key)
+		}
+		sort.Strings(thinkingKeys)
+		thinkingPaths := make([]string, len(thinkingKeys))
+		thinkingContents := make([][]byte, len(thinkingKeys))
+		for i, key := range thinkingKeys {
+			thinkingPaths[i] = filepath.Join(genDir, "thinking", key+".md")
+			thinkingContents[i] = []byte(thinkingDocs[key])
+		}
+		if err := writeFilesParallel(thinkingPaths, thinkingContents); err != nil {
+			return written, err
+		}
+		written = append(written, thinkingPaths...)
 	}
-	sort.Strings(thinkingKeys)
-	thinkingPaths := make([]string, len(thinkingKeys))
-	thinkingContents := make([][]byte, len(thinkingKeys))
-	for i, key := range thinkingKeys {
-		thinkingPaths[i] = filepath.Join(genDir, "thinking", key+".md")
-		thinkingContents[i] = []byte(thinkingDocs[key])
-	}
-	if err := writeFilesParallel(thinkingPaths, thinkingContents); err != nil {
-		return written, err
-	}
-	written = append(written, thinkingPaths...)
 
+	// Consumer profile: write tools/*.md pages ONLY for Implemented tools
+	// (skip the 27 Planned tools whose page is entirely historical/aspirational
+	// prose for a command that doesn't exist yet). tools/INDEX.md is written
+	// unconditionally below regardless of profile (cheap, useful, and already
+	// the recommended pointer per the crystal-trim philosophy).
 	toolDocs := generator.BuildToolDocs()
 	toolKeys := make([]string, 0, len(toolDocs))
 	for cmd := range toolDocs {
+		if consumer && !toolIsImplemented(cmd) {
+			continue
+		}
 		toolKeys = append(toolKeys, cmd)
 	}
 	sort.Strings(toolKeys)
@@ -258,6 +332,21 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	}
 
 	return written, nil
+}
+
+// toolIsImplemented reports whether the tool with the given Command field
+// (the key BuildToolDocs uses, e.g. "gen_spec") is registered as
+// methodology.Implemented. Used by the consumer-profile tool-docs filter to
+// skip Planned tools (whose page is purely aspirational prose for a command
+// that does not exist yet). An unrecognized command defaults to true (keep
+// writing) — BuildToolDocs only emits entries for registered tools, so an
+// unrecognized key here is unreachable in practice; the default is safe.
+func toolIsImplemented(cmd string) bool {
+	t, ok := methodology.Tools.Get(cmd)
+	if !ok {
+		return true
+	}
+	return t.Status == methodology.Implemented
 }
 
 // repoRootForDomain resolves the repository root used to render the

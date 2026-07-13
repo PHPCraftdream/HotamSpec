@@ -118,8 +118,13 @@ Commands:
         {"active_domain": "<name>"} in the project-root marker so a bare
         hotam <command> (no --domain) targets the chosen domain. Refuses if
         <root>/domains/<name>/graph.json does not exist.
-  gen-spec [--domain <path>]
-        Generate all docs/gen/*.md + graph.json for a domain graph.
+  gen-spec [--domain <path>] [--profile consumer|full]
+        Generate all docs/gen/*.md + graph.json for a domain graph. --profile
+        selects the output set: "full" (default, resolved from manifest.json
+        when absent) writes every file including thinking/*.md and Planned
+        tool docs; "consumer" skips framework-self-documentation noise
+        (thinking/*.md, Planned tool docs, empty atoms docs) for external
+        business projects.
   what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
         Print top-N diagnosed signals (default 20). With --json, emit the
         underlying signal slice as machine-readable JSON.

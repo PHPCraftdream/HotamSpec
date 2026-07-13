@@ -111,6 +111,64 @@ func TestExternal_InitProject(t *testing.T) {
 		t.Errorf("CLAUDE.md does not reference domains/main/:\n%s", claudeBody)
 	}
 
+	// (3b) init-project defaults EXTERNAL projects to the consumer gen-spec
+	// profile: the scaffolded domain's manifest.json must carry
+	// gen_profile: consumer, and the docs/gen/ file count must be
+	// meaningfully smaller than this repo's own hotam-spec-self domain
+	// (which resolves to "full" — no gen_profile field).
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	manifestData, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("manifest.json not read: %v", err)
+	}
+	if !strings.Contains(string(manifestData), `"gen_profile": "consumer"`) {
+		t.Errorf("init-project manifest.json must carry gen_profile: consumer, got:\n%s", string(manifestData))
+	}
+
+	// Count files under the scaffolded domain's docs/gen/.
+	consumerFiles := 0
+	err = filepath.Walk(filepath.Join(domainDir, "docs", "gen"), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			consumerFiles++
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk scaffolded docs/gen: %v", err)
+	}
+	// This repo's own hotam-spec-self has ~90 docs/gen files under "full".
+	// The consumer profile must cut that meaningfully (thinking/*.md skipped,
+	// Planned tool docs skipped, empty atoms docs skipped).
+	if consumerFiles > 40 {
+		t.Errorf("consumer-profile docs/gen file count = %d, expected meaningfully smaller than ~90 (full); consumer cut not applied", consumerFiles)
+	}
+
+	// (3c) Explicit --profile full restores the full file set for the same
+	// domain (proving the manifest default is overridable, not permanent).
+	fullOut, fullErr := runAt(workDir, "gen-spec", "--domain", domainDir, "--profile", "full", "--today", "2026-07-13")
+	if fullErr != nil {
+		t.Fatalf("gen-spec --profile full failed: %v\nOUTPUT:\n%s", fullErr, fullOut)
+	}
+	fullFiles := 0
+	err = filepath.Walk(filepath.Join(domainDir, "docs", "gen"), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			fullFiles++
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk full docs/gen: %v", err)
+	}
+	if fullFiles <= consumerFiles {
+		t.Errorf("full-profile docs/gen file count = %d must exceed consumer count = %d", fullFiles, consumerFiles)
+	}
+
 	// (4) Scaffolded domain is invariant-clean immediately.
 	avOut, err := runAt(workDir, "all-violations", "--domain", domainDir)
 	if err != nil {

@@ -50,7 +50,7 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 
-	written, err := genSpec(domainDir, "", "2026-07-12")
+	written, err := genSpec(domainDir, "", "2026-07-12", "")
 	if err != nil {
 		t.Fatalf("genSpec: %v", err)
 	}
@@ -268,7 +268,7 @@ func TestGenSpec_CrystalCharCountIsRenderedFixpoint(t *testing.T) {
 		t.Fatalf("write bogus claude md: %v", err)
 	}
 
-	if _, err := genSpec(domainDir, claudeMDPath, "2026-07-12"); err != nil {
+	if _, err := genSpec(domainDir, claudeMDPath, "2026-07-12", ""); err != nil {
 		t.Fatalf("genSpec with claude-md: %v", err)
 	}
 
@@ -324,7 +324,7 @@ func TestGenSpec_CrystalFixpointConvergesAcrossRuns(t *testing.T) {
 	const today = "2026-07-12"
 
 	// Pass 1: no pre-existing CLAUDE.md exists yet.
-	if _, err := genSpec(domainDir, claudeMDPath, today); err != nil {
+	if _, err := genSpec(domainDir, claudeMDPath, today, ""); err != nil {
 		t.Fatalf("genSpec (pass 1): %v", err)
 	}
 	crystal1, err := os.ReadFile(claudeMDPath)
@@ -342,7 +342,7 @@ func TestGenSpec_CrystalFixpointConvergesAcrossRuns(t *testing.T) {
 
 	// Pass 2: over the SAME tree — now CLAUDE.md exists from pass 1, which is
 	// exactly the state that triggered the stale-read bug.
-	if _, err := genSpec(domainDir, claudeMDPath, today); err != nil {
+	if _, err := genSpec(domainDir, claudeMDPath, today, ""); err != nil {
 		t.Fatalf("genSpec (pass 2): %v", err)
 	}
 	crystal2, err := os.ReadFile(claudeMDPath)
@@ -397,10 +397,10 @@ func TestGenSpec_SameTodayIsByteIdenticalIncludingCrystal(t *testing.T) {
 	claudeMDB := filepath.Join(t.TempDir(), "CLAUDE.md")
 
 	const today = "2026-07-12"
-	if _, err := genSpec(domainDirA, claudeMDA, today); err != nil {
+	if _, err := genSpec(domainDirA, claudeMDA, today, ""); err != nil {
 		t.Fatalf("genSpec (first run): %v", err)
 	}
-	if _, err := genSpec(domainDirB, claudeMDB, today); err != nil {
+	if _, err := genSpec(domainDirB, claudeMDB, today, ""); err != nil {
 		t.Fatalf("genSpec (second run): %v", err)
 	}
 
