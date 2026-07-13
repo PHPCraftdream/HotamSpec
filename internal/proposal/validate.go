@@ -30,6 +30,15 @@ func (p ProposedRequirement) validate() error {
 	if err := validateEnforcedByClearSentinel(p.EnforcedBy); err != nil {
 		return err
 	}
+	if (strings.TrimSpace(p.LastReviewedAt) != "" || strings.TrimSpace(p.ReviewAfter) != "") &&
+		len(trimNonEmpty(p.Evidence)) == 0 {
+		return validationError(
+			"'evidence' is required when 'last_reviewed_at' or 'review_after' is set on a " +
+				"Requirement proposal — freshness fields are evidence-gated regardless of entry " +
+				"point (ProposedRequirement or ProposedReviewMark); without it a stamp is " +
+				"indistinguishable from an administrative date backfill riding along a routine " +
+				"content edit (R-review-mark-carries-evidence).")
+	}
 	return nil
 }
 

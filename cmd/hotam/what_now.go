@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 )
@@ -11,13 +12,18 @@ func cmdWhatNow(args []string) error {
 	fs := newFlagSet("what-now")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	limit := fs.Int("limit", 20, "maximum number of signals to print")
+	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date)")
 	fs.Parse(args)
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {
 		return err
 	}
-	out, err := whatNow(domainDir, *limit)
+	today := *todayFlag
+	if today == "" {
+		today = time.Now().Format("2006-01-02")
+	}
+	out, err := whatNow(domainDir, *limit, today)
 	if err != nil {
 		return err
 	}
@@ -25,12 +31,12 @@ func cmdWhatNow(args []string) error {
 	return nil
 }
 
-func whatNow(domainDir string, limit int) (string, error) {
+func whatNow(domainDir string, limit int, today string) (string, error) {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return "", err
 	}
-	return formatSignals(diagnose.DiagnoseSignals(g), limit), nil
+	return formatSignals(diagnose.DiagnoseSignals(g, today), limit), nil
 }
 
 // maxCollapsedIDs is the number of distinct target ids shown verbatim in a

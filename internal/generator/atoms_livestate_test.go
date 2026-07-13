@@ -25,10 +25,78 @@ func TestBuildAtomsOperator_EmptyOnFixture(t *testing.T) {
 	}
 }
 
+// TestBuildLiveState_TodayIsInjectable proves BuildLiveState's today
+// parameter is truly injectable rather than silently recomputed via
+// time.Now(): rendering the SAME graph with two different explicit today
+// values must produce output that differs, and — critically — the only
+// difference must be date-shaped text (the injected today value itself, or
+// a count derived purely from it), never a spurious change in unrelated
+// content.
+//
+// The top-action line only carries a date when the freshness advisory
+// (diagnose.FreshnessSignals, gated on today via DiagnoseSignals) is
+// actually the highest-priority signal — REFLECTION/STRUCTURE/etc. always
+// outrank PAdvisory, so a graph with any higher-priority finding (like the
+// package's shared fixture-graph.json, which has an aging IMPLEMENTS
+// assumption) would mask the date entirely and make this test vacuous. This
+// test therefore builds a minimal graph with exactly one SETTLED, reviewed
+// requirement (nothing else diagnosable) so the freshness advisory is
+// guaranteed to be the sole/top signal and today's OVERDUE count is
+// directly observable.
+func TestBuildLiveState_TodayIsInjectable(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Stakeholders: []ontology.Stakeholder{{ID: "S-owner"}},
+		Requirements: []ontology.Requirement{
+			{
+				ID:             "R-freshness-only",
+				Status:         ontology.StatusSETTLED,
+				Enforcement:    ontology.EnforcementPROSE,
+				Enforceability: ontology.EnforceabilityINHERENTLY_PROSE,
+				Owner:          "S-owner",
+				Claim:          "claim",
+				Why:            "why",
+				ReviewAfter:    "2026-06-01",
+			},
+		},
+	}
+
+	gotA := BuildLiveState(g, 5000, "2026-01-01") // before review_after: not yet overdue
+	gotB := BuildLiveState(g, 5000, "2026-12-31") // after review_after: overdue
+
+	if gotA == gotB {
+		t.Fatalf("BuildLiveState with two different today values produced byte-identical output — today is not actually threaded through:\n%s", gotA)
+	}
+	if strings.Contains(gotA, "OVERDUE") {
+		t.Errorf("BuildLiveState(today=2026-01-01, before review_after) should not yet report the requirement OVERDUE:\n%s", gotA)
+	}
+	if !strings.Contains(gotB, "OVERDUE") {
+		t.Errorf("BuildLiveState(today=2026-12-31, after review_after) should report the requirement OVERDUE:\n%s", gotB)
+	}
+	if !strings.Contains(gotB, "2026-12-31") {
+		t.Errorf("BuildLiveState(today=2026-12-31) output does not embed the injected today value:\n%s", gotB)
+	}
+}
+
+// TestBuildLiveState_SameTodayIsByteIdentical proves the idempotency
+// property CI's regen-idempotency check needs: rendering twice with the
+// SAME explicit today value produces byte-identical output, independent of
+// wall-clock time. This is the property that was structurally impossible
+// while BuildLiveState computed today via time.Now() internally.
+func TestBuildLiveState_SameTodayIsByteIdentical(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	a := BuildLiveState(g, 5000, "2026-07-12")
+	b := BuildLiveState(g, 5000, "2026-07-12")
+	if a != b {
+		t.Fatalf("BuildLiveState with the same today value produced different output across two calls — not idempotent")
+	}
+}
+
 func TestBuildLiveState_RendersOnFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildLiveState(g, 5000)
+	got := BuildLiveState(g, 5000, "2026-07-12")
 	if strings.TrimSpace(got) == "" {
 		t.Fatal("BuildLiveState: empty output on fixture graph")
 	}
@@ -55,7 +123,7 @@ func TestBuildLiveState_RendersOnFixture(t *testing.T) {
 func TestBuildLiveState_ThreeCipherPulsePresent(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildLiveState(g, 5000)
+	got := BuildLiveState(g, 5000, "2026-07-12")
 	for _, want := range []string{"- **top action:**", "- **debt:**", "- context: UNMEASURED"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("LIVE-STATE three-cipher pulse missing fragment %q (top action / debt / context):\n%s", want, got)
@@ -72,7 +140,7 @@ func TestBuildLiveState_ThreeCipherPulsePresent(t *testing.T) {
 func TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildLiveState(g, 5000)
+	got := BuildLiveState(g, 5000, "2026-07-12")
 
 	// extract the context line
 	var ctxLine string

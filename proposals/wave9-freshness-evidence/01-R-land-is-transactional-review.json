@@ -1,0 +1,12 @@
+{
+  "kind": "ReviewMark",
+  "requirement_id": "R-land-is-transactional",
+  "reviewed_at": "2026-07-13",
+  "review_after": "2027-01-13",
+  "evidence": [
+    "Re-ran `go test -run TestCmdLand ./cmd/hotam/...` on 2026-07-13 (the day after this requirement was created and ENFORCED in this same session, task #97): all 9 TestCmdLand* cases pass, including the three cited enforcers TestCmdLand_GenSpecFailure_RollsBackGraphJSON, TestRollbackLand_RestoresFilesAndRegeneratesDocs, and TestCmdLand_SuccessPathDoesNotRollBack in cmd/hotam/land_test.go — `ok github.com/PHPCraftdream/HotamSpec/cmd/hotam 3.044s`.",
+    "TestCmdLand_GenSpecFailure_RollsBackGraphJSON forces a genSpec failure after a successful apply (via --claude-md pointed at a directory) and asserts graph.json is byte-identical to the pre-land baseline and graph.lock is removed again — this is the mechanical proof of the rollback half of the claim; independently reproducible by any future reader via the same `go test -run` invocation.",
+    "TestCmdLand_SuccessPathDoesNotRollBack is the paired regression guard proving the happy path does NOT spuriously roll back (graph.lock remains, new node present in both graph.json and docs) — together with the rollback test this closes the loop: rollback fires exactly when needed, never otherwise.",
+    "The enforced_by resolver fix landed this same session (task #97, internal/gate.TestFuncNames now walks cmd/**/*_test.go as well as internal/**/*_test.go) is what makes these cmd/hotam-resident tests visible to `hotam gate` / check_enforced_by_resolvable at all — confirmed by `go run ./cmd/hotam req show R-land-is-transactional --domain domains/hotam-spec-self --json` showing enforcement: ENFORCED with all three test names populated in enforced_by, not PROSE."
+  ]
+}

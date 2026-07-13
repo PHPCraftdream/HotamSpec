@@ -14,7 +14,7 @@ func TestDiagnoseSignals_RealGraphNoPanic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	// A signal-free graph is valid: TopAction/what-now report "none — graph
 	// clean" when len(signals) == 0. The call itself is the no-panic smoke
 	// test; assert sort order only when signals are present.
@@ -33,7 +33,7 @@ func TestTopAction_RealGraph(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadGraph: %v", err)
 	}
-	ta := TopAction(g)
+	ta := TopAction(g, "2026-07-12")
 	if ta == "" {
 		t.Error("TopAction returned empty string")
 	}

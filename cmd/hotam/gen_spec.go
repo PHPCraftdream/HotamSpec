@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
@@ -16,13 +17,18 @@ func cmdGenSpec(args []string) error {
 	fs := newFlagSet("gen-spec")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count")
+	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
 	fs.Parse(args)
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {
 		return err
 	}
-	written, err := genSpec(domainDir, *claudeMD)
+	today := *todayFlag
+	if today == "" {
+		today = time.Now().Format("2006-01-02")
+	}
+	written, err := genSpec(domainDir, *claudeMD, today)
 	if err != nil {
 		return err
 	}
@@ -32,7 +38,7 @@ func cmdGenSpec(args []string) error {
 	return nil
 }
 
-func genSpec(domainDir, claudeMDPath string) ([]string, error) {
+func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return nil, err
@@ -116,8 +122,8 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 		{"atoms-substrate.md", generator.BuildAtomsSubstrate(g)},
 		{"atoms-discipline.md", generator.BuildAtomsDiscipline(g)},
 		{"atoms-check.md", generator.BuildAtomsCheck(g)},
-		{"live-state.md", generator.BuildLiveState(g, charCount)},
-		{"AGENT-CONTEXT.md", generator.BuildAgentContext(g, domainName, charCount)},
+		{"live-state.md", generator.BuildLiveState(g, charCount, today)},
+		{"AGENT-CONTEXT.md", generator.BuildAgentContext(g, domainName, charCount, today)},
 	}
 	if decisionsWritten {
 		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", decisionsMD})
@@ -210,7 +216,7 @@ func genSpec(domainDir, claudeMDPath string) ([]string, error) {
 			return written, fmt.Errorf("resolve project root for --claude-md: %w", err)
 		}
 		domainGraphs := map[string]*ontology.Graph{domainName: g}
-		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs)
+		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs, today)
 		claudeMDBytes := []byte(claudeMD)
 
 		// CLAUDE.md, AGENTS.md and GEMINI.md all receive the identical

@@ -80,6 +80,20 @@ func init() {
 		Status:  Implemented,
 		Run:     nil,
 	})
+	Tools.MustRegister("init", Tool{
+		Command: "init",
+		Canon:   "§Domain",
+		Purpose: "Usage: hotam init <dir> [--name <domain-name>]. Scaffolds a new domain: minimal graph.json (seed Stakeholder + seed SETTLED Requirement, all-violations=0 immediately), manifest.json, docs/gen/, and a README.md pointing at the next commands to run. <dir> may be anywhere on disk.",
+		Status:  Implemented,
+		Run:     nil,
+	})
+	Tools.MustRegister("version", Tool{
+		Command: "version",
+		Canon:   "§Operator",
+		Purpose: "Usage: hotam version, hotam --version. Prints the hotam binary's version, commit, and build date (build-time defaults \"dev\"/\"unknown\"/\"unknown\", overridable via -ldflags -X main.version/commit/buildDate).",
+		Status:  Implemented,
+		Run:     nil,
+	})
 
 	// --- Planned: methodology surface not yet implemented as a
 	// Go command. Command below is the historical tool name, not a

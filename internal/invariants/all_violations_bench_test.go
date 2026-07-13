@@ -57,6 +57,6 @@ func BenchmarkDiagnoseSignals_RealDomain(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = diagnose.DiagnoseSignals(g)
+		_ = diagnose.DiagnoseSignals(g, "2026-07-12")
 	}
 }

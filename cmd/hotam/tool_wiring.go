@@ -42,6 +42,8 @@ func init() {
 	wireToolRun("inspect", cmdInspect)
 	wireToolRun("confront", cmdConfront)
 	wireToolRun("land", cmdLand)
+	wireToolRun("init", cmdInit)
+	wireToolRun("version", cmdVersion)
 }
 
 // wireToolRun patches the Run field of the already-registered Tool named

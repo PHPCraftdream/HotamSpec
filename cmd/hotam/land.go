@@ -113,9 +113,9 @@ func cmdLand(args []string) error {
 	// describe. If this fails AFTER apply already wrote the new graph.json,
 	// roll the domain back to the snapshot so graph and docs stay mutually
 	// consistent instead of diverging.
-	written, err := genSpec(domainDir, *claudeMD)
+	written, err := genSpec(domainDir, *claudeMD, *today)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, *claudeMD)
+		rerr := rollbackLand(domainDir, snapshot, *claudeMD, *today)
 		return rolledBackError("doc regeneration failed", err, rerr)
 	}
 	fmt.Printf("regenerated %d doc(s)\n", len(written))
@@ -127,7 +127,7 @@ func cmdLand(args []string) error {
 	// pre-land graph + docs rather than leaving a now-invalid graph on disk.
 	violations, err := allViolations(domainDir)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, *claudeMD)
+		rerr := rollbackLand(domainDir, snapshot, *claudeMD, *today)
 		return rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
@@ -135,7 +135,7 @@ func cmdLand(args []string) error {
 			fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
-		rerr := rollbackLand(domainDir, snapshot, *claudeMD)
+		rerr := rollbackLand(domainDir, snapshot, *claudeMD, *today)
 		return rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 
@@ -198,7 +198,7 @@ func snapshotGraphFiles(domainDir string) (*graphSnapshot, error) {
 // means the graph files WERE restored (restoreGraphFile runs before the
 // re-genSpec) but the doc re-render failed, so the caller must surface that
 // loudly alongside the original failure rather than swallow either.
-func rollbackLand(domainDir string, snap *graphSnapshot, claudeMDPath string) error {
+func rollbackLand(domainDir string, snap *graphSnapshot, claudeMDPath, today string) error {
 	gp := graphPathForDomain(domainDir)
 	lp := loader.LockPath(gp)
 
@@ -209,7 +209,7 @@ func rollbackLand(domainDir string, snap *graphSnapshot, claudeMDPath string) er
 		return err
 	}
 
-	if _, err := genSpec(domainDir, claudeMDPath); err != nil {
+	if _, err := genSpec(domainDir, claudeMDPath, today); err != nil {
 		return fmt.Errorf("rollback doc regen: %w", err)
 	}
 	return nil

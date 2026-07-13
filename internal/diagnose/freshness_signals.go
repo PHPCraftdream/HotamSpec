@@ -2,7 +2,6 @@ package diagnose
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -54,9 +53,4 @@ func FreshnessSignals(g *ontology.Graph, today string) []Signal {
 		})
 	}
 	return out
-}
-
-// todayISO returns the current date in the graph's YYYY-MM-DD form.
-func todayISO() string {
-	return time.Now().Format("2006-01-02")
 }

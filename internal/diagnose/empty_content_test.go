@@ -36,7 +36,7 @@ func TestEmptyContentCalmBanner(t *testing.T) {
 
 	// Half 2: TopAction must render the calm banner, not an error.
 	const calm = "none — graph clean"
-	if ta := TopAction(g); ta != calm {
+	if ta := TopAction(g, "2026-07-12"); ta != calm {
 		t.Errorf("R-empty-content-calm-banner: TopAction(empty) = %q, want calm %q", ta, calm)
 	}
 }
@@ -50,7 +50,7 @@ func safeDiagnoseSignals(t *testing.T, g *ontology.Graph) (signals []Signal) {
 			t.Fatalf("R-empty-content-calm-banner: DiagnoseSignals panicked over the graph: %v", r)
 		}
 	}()
-	return DiagnoseSignals(g)
+	return DiagnoseSignals(g, "2026-07-12")
 }
 
 // TestEmptyContentCalmBanner_NotNoisyOnContent is the non-vacuity control: a
@@ -70,7 +70,7 @@ func TestEmptyContentCalmBanner_NotNoisyOnContent(t *testing.T) {
 		}},
 		Requirements: []ontology.Requirement{settledReq("R-1"), settledReq("R-2")},
 	}
-	ta := TopAction(g)
+	ta := TopAction(g, "2026-07-12")
 	if ta == "" {
 		t.Fatalf("R-empty-content-calm-banner non-vacuity: TopAction over content must be non-empty")
 	}

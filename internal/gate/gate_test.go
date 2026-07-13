@@ -290,6 +290,80 @@ func TestSelectTier1_PythonEnforcedByFailsClosed(t *testing.T) {
 	}
 }
 
+// TestFuncNames_IncludesCmdHotamTestNames proves mechanism #1 (the Test*-name
+// half of enforced_by resolution) was widened to also scan cmd/**/*_test.go,
+// not just internal/**/*_test.go: TestCmdLand_GenSpecFailure_RollsBackGraphJSON
+// lives in cmd/hotam/land_test.go and must resolve here.
+func TestFuncNames_IncludesCmdHotamTestNames(t *testing.T) {
+	t.Parallel()
+	names, err := TestFuncNames()
+	if err != nil {
+		t.Fatalf("TestFuncNames: %v", err)
+	}
+	for _, want := range []string{
+		"TestCmdLand_GenSpecFailure_RollsBackGraphJSON",
+		"TestRollbackLand_RestoresFilesAndRegeneratesDocs",
+		"TestCmdLand_SuccessPathDoesNotRollBack",
+	} {
+		if _, ok := names[want]; !ok {
+			t.Errorf("expected TestFuncNames to include %q (cmd/hotam/land_test.go) after widening mechanism #1 to cmd/, got missing", want)
+		}
+	}
+}
+
+// TestSelectTier1_RealGraph_CmdHotamEnforcedByResolves is an end-to-end proof
+// that a requirement whose enforced_by names a real cmd/hotam test function
+// now resolves confidently through SelectTier1 on the real domain graph, not
+// just through the lower-level TestFuncNames primitive.
+func TestSelectTier1_RealGraph_CmdHotamEnforcedByResolves(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-cmd-test-probe", EnforcedBy: []string{"TestCmdLand_GenSpecFailure_RollsBackGraphJSON"}},
+		},
+	}
+	result := SelectTier1("R-cmd-test-probe", g)
+	if !result.Confident {
+		t.Fatalf("expected confident=true for a cmd/hotam Test* enforced_by entry, got false: %s", result.Reason)
+	}
+	found := false
+	for _, id := range result.NodeIDs {
+		if id == "TestCmdLand_GenSpecFailure_RollsBackGraphJSON" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected NodeIDs to include the resolved cmd/hotam test name, got %v", result.NodeIDs)
+	}
+}
+
+// TestBuildCheckToTestsMap_UnaffectedByCmdRootWidening is the regression
+// guard for mechanism #2: widening mechanism #1 (Test*-name resolution) to
+// scan cmd/**/*_test.go must NOT also widen mechanism #2 (the check_*
+// literal -> tests map), which stays scoped to internal/invariants only. If
+// this ever regressed, a check_*-shaped fixture string living outside
+// internal/invariants (e.g. cmd/hotam/apply_proposal_json_test.go, which
+// contains the literal "check_" as string-fixture data, or gate_test.go's own
+// "check_nonexistent_fake_check" / "check_full" fixtures) would falsely
+// resolve as if it were a real enforcer.
+func TestBuildCheckToTestsMap_UnaffectedByCmdRootWidening(t *testing.T) {
+	t.Parallel()
+	m, err := BuildCheckToTestsMap(defaultInvariantsDir())
+	if err != nil {
+		t.Fatalf("BuildCheckToTestsMap: %v", err)
+	}
+	for _, fake := range []string{"check_full", "check_nonexistent_fake_check"} {
+		if hits, ok := m[fake]; ok {
+			t.Errorf("mechanism #2 must not resolve fixture name %q (found hits %v) — it should stay scoped to internal/invariants only", fake, hits)
+		}
+	}
+	// Confirm the map still comes back non-empty and only from real
+	// internal/invariants-registered checks (spot check a known real one).
+	if _, ok := m["check_axis_in_registry"]; !ok {
+		t.Fatalf("expected check_axis_in_registry to still resolve via the unwidened mechanism #2 scan")
+	}
+}
+
 func equalSlices(a, b []string) bool {
 	if len(a) != len(b) {
 		return false

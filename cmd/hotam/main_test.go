@@ -50,7 +50,7 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 
-	written, err := genSpec(domainDir, "")
+	written, err := genSpec(domainDir, "", "2026-07-12")
 	if err != nil {
 		t.Fatalf("genSpec: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 func TestWhatNow_SmokeNoPanic(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)
-	out, err := whatNow(domainDir, 20)
+	out, err := whatNow(domainDir, 20, "2026-07-12")
 	if err != nil {
 		t.Fatalf("whatNow: %v", err)
 	}
@@ -217,7 +217,7 @@ func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
 		t.Fatalf("write claude md: %v", err)
 	}
 
-	_, err := genSpec(domainDir, claudeMDPath)
+	_, err := genSpec(domainDir, claudeMDPath, "2026-07-12")
 	if err != nil {
 		t.Fatalf("genSpec with claude-md: %v", err)
 	}
@@ -232,6 +232,69 @@ func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
 	want := fmt.Sprintf("resident crystal %d chars", expected)
 	if !contains(string(data), want) {
 		t.Errorf("live-state.md does not contain %q\nactual content:\n%s", want, string(data))
+	}
+}
+
+// TestGenSpec_SameTodayIsByteIdenticalIncludingCrystal is the CLI-level
+// idempotency proof CI's regen-idempotency step (.github/workflows/ci.yml)
+// relies on: running genSpec (the same code path `hotam gen-spec --claude-md
+// <path> --today <date>` drives) TWICE with the SAME --today value, against
+// the same domain fixture, must produce byte-identical docs/gen/*.md AND a
+// byte-identical root CLAUDE.md — independent of wall-clock time. Before the
+// today-threading fix, internal/generator/agentcontext.go and
+// internal/diagnose/freshness_signals.go each called time.Now() internally,
+// so this property was structurally impossible to guarantee: a CI run today
+// and a CI run tomorrow (or a dev machine regenerating on a different day
+// than the committed crystal) would show a spurious byte diff purely from
+// the embedded date, independent of any real graph drift.
+func TestGenSpec_SameTodayIsByteIdenticalIncludingCrystal(t *testing.T) {
+	t.Parallel()
+	domainDirA := copySelfDomain(t)
+	domainDirB := copySelfDomain(t)
+
+	claudeMDA := filepath.Join(t.TempDir(), "CLAUDE.md")
+	claudeMDB := filepath.Join(t.TempDir(), "CLAUDE.md")
+
+	const today = "2026-07-12"
+	if _, err := genSpec(domainDirA, claudeMDA, today); err != nil {
+		t.Fatalf("genSpec (first run): %v", err)
+	}
+	if _, err := genSpec(domainDirB, claudeMDB, today); err != nil {
+		t.Fatalf("genSpec (second run): %v", err)
+	}
+
+	// The rendered root CLAUDE.md must be byte-identical between the two
+	// independent runs (same today, same source graph, different wall-clock
+	// moment the test happened to execute at).
+	crystalA, err := os.ReadFile(claudeMDA)
+	if err != nil {
+		t.Fatalf("read first CLAUDE.md: %v", err)
+	}
+	crystalB, err := os.ReadFile(claudeMDB)
+	if err != nil {
+		t.Fatalf("read second CLAUDE.md: %v", err)
+	}
+	if string(crystalA) != string(crystalB) {
+		t.Error("CLAUDE.md differs between two genSpec runs with the same --today value — root crystal regeneration is not idempotent")
+	}
+
+	// Same check for docs/gen/AGENT-CONTEXT.md and docs/gen/live-state.md,
+	// the two files that embed today-derived text most directly.
+	for _, rel := range []string{
+		filepath.Join("docs", "gen", "AGENT-CONTEXT.md"),
+		filepath.Join("docs", "gen", "live-state.md"),
+	} {
+		dataA, err := os.ReadFile(filepath.Join(domainDirA, rel))
+		if err != nil {
+			t.Fatalf("read first %s: %v", rel, err)
+		}
+		dataB, err := os.ReadFile(filepath.Join(domainDirB, rel))
+		if err != nil {
+			t.Fatalf("read second %s: %v", rel, err)
+		}
+		if string(dataA) != string(dataB) {
+			t.Errorf("%s differs between two genSpec runs with the same --today value — not idempotent", rel)
+		}
 	}
 }
 

@@ -147,6 +147,27 @@ const MinCorpusSizeForFrequencyFilter = 8
 // (lexical_claim_overlap candidates dropped 1231→234, spot-checked to
 // confirm the survivors keep genuinely narrow shared vocabulary — see
 // inspect_test.go's TestCorpusCommonTokens_* for the regression pin).
+//
+// Anti-false-negative validation (task #99, 2026-07-13): checked all 8 real
+// steward-confirmed Conflict node member pairs in hotam-spec-self's own graph
+// against InspectLexicalClaimOverlap's output. 7 of 8 never fired via lexical
+// overlap even with this filter fully disabled (they were surfaced by the
+// steward through other channels — see R-tension-audit-shortlist-tool's own
+// "0 of 8 conflicts machine-surfaced" history note). Exactly ONE pair,
+// C-c3911f28 (R-content-free-framework + R-empty-content-is-legitimate), is a
+// genuine false negative caused by this filter: its 3 shared tokens
+// ("content" 5.5%, "graph" 19.9%, "spec" 7.6% document frequency) all clear
+// the 5% ceiling, so post-filter overlap drops to 0. A threshold sweep showed
+// rescuing it is not worth the cost — raising the ceiling to 0.06 (to let
+// "content" back in) alone grows total candidates from 232 to 316 (+36%);
+// fully rescuing it needs 0.20, which explodes candidates to 1186, undoing
+// nearly all of the 1231→234 noise fix. Accepted as a documented tradeoff:
+// a Conflict node is already graph ground truth (no heuristic needs to
+// "discover" it), and inspect's stated purpose is surfacing NEW undiscovered
+// tension candidates, not reproducing every already-known Conflict. Pinned
+// by TestInspectLexicalClaimOverlap_KnownConflictGroundTruth in
+// inspect_test.go, which fails loud if a NEW Conflict pair silently joins the
+// miss set beyond this manually-verified allow-list.
 const CorpusCommonTokenFraction = 0.05
 
 // corpusCommonTokens computes, from the SETTLED requirements of g, the set of
@@ -260,6 +281,17 @@ func markerHits(lowerClaim string) map[string]string {
 // Kept low deliberately — this is an ADVISORY signal meant to be
 // over-inclusive (false positives are cheap: a steward glances and
 // dismisses; false negatives silently hide real tension).
+//
+// Worked example of this tradeoff (task #99, 2026-07-13): `hotam confront
+// "The system shall enforce every requirement structurally"` hits
+// R-requirement-freshness-fields on shared tokens "system" (2.1% document
+// frequency) and "structurally" (0.8%) — both genuinely rare, well under
+// CorpusCommonTokenFraction's 5% ceiling, so this is NOT corpus-filter noise
+// leaking through. It is a real (if weak, score=2, the minimum) two-token
+// overlap correctly surfaced at this deliberately low bar. Confirmed
+// defensible rather than tuned away: confront never gates (exit code always
+// 0), so the cost of a steward glancing at one weak hit and dismissing it is
+// cheap, exactly the tradeoff this comment already commits to.
 const MinLexicalOverlapTokens = 2
 
 // MinLexicalOverlapTokensWithMarker is the (lower) minimum shared-token

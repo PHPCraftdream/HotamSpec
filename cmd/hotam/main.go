@@ -25,6 +25,17 @@ func versionString() string {
 	return fmt.Sprintf("hotam %s (commit: %s, built: %s)", version, commit, buildDate)
 }
 
+// cmdVersion is the Run-shaped (func(args []string) error) wrapper around
+// versionString, so `version` can be registered as an Implemented tool in
+// internal/methodology/tools_data.go and wired via tool_wiring.go like every
+// other real subcommand (TestToolWiring_EveryImplementedToolHasRun). main's
+// switch below calls it directly for both the "version" and "--version"
+// spellings instead of duplicating the Println.
+func cmdVersion(args []string) error {
+	fmt.Println(versionString())
+	return nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage(os.Stderr)
@@ -35,8 +46,7 @@ func main() {
 	var err error
 	switch cmd {
 	case "version", "--version":
-		fmt.Println(versionString())
-		return
+		err = cmdVersion(args)
 	case "init":
 		err = cmdInit(args)
 	case "gen-spec":

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -403,4 +404,130 @@ func TestInspect_PresentsOnly_NeverMutatesGraph(t *testing.T) {
 		t.Errorf("R-tension-audit-presents-only: AllCandidates mutated the graph —\nbefore=%s\nafter=%s",
 			before, after)
 	}
+}
+
+// knownLexicalOverlapMissByDesign lists every real hotam-spec-self Conflict
+// member pair task #99 verified InspectLexicalClaimOverlap does NOT (and, for
+// 7 of the 8, never did) flag as a candidate, together with the reason. This
+// is the ground-truth allow-list for
+// TestInspectLexicalClaimOverlap_KnownConflictGroundTruth below: any pair NOT
+// in this map must fire, or the test fails — that is the actual regression
+// guard against a future corpus-frequency (or other) change silently
+// widening the miss set beyond what has been manually verified here.
+//
+// Two different reasons show up:
+//
+//  1. Seven pairs miss independently of corpusCommonTokens — even with the
+//     frequency filter fully disabled (common=nil, stop-words-only, the
+//     pre-fix behavior), none of them clears
+//     MinLexicalOverlapTokens/MinLexicalOverlapTokensWithMarker given their
+//     actual shared-token count, owner, and marker state. They were
+//     discovered by the steward through channels other than lexical overlap
+//     (semantic judgment, shared-assumption/entity-state/axis signals, or
+//     plain human review) — exactly what R-tension-audit-shortlist-tool's own
+//     why documents as "0 of 8 conflicts machine-surfaced over its whole
+//     history." Verified by hand against the corpus as of 2026-07-13:
+//
+//     C-06e2d84e R-content-free-framework+R-crystallize-knowledge-to-code:    0 shared tokens even stop-words-only
+//     C-186c4347 R-agent-never-lost+R-ai-presents-not-decides:                1 shared ("agent"), SAME owner, no split marker -> below threshold=2
+//     C-7f86e41d R-budget-measure+R-operator-prompt-from-substrate:           1 shared ("operator") -> below threshold=2
+//     C-8600b1b8 R-content-free-framework+R-agent-never-lost:                 1 shared ("hotam") -> below threshold=2
+//     C-be22cdd1 R-entity-derived-requirement+R-speculative-aspects-frozen:   2 shared, but SAME owner and only ONE side carries the only/any marker (not a split) -> does not fire
+//     C-d210d6d0 R-context-bounded-delegation+R-crystallize-knowledge-to-code: 1 shared ("operator") -> below threshold=2
+//     C-d4f3eadf R-context-bounded-delegation+R-dependency-graph-parallelism:  1 shared ("sub") -> below threshold=2
+//
+//  2. One pair, C-c3911f28 (R-content-free-framework +
+//     R-empty-content-is-legitimate), IS a genuine corpus-frequency false
+//     negative: with the filter disabled it shares 3 tokens
+//     ("content"/"graph"/"spec") across different owners and clears the
+//     firing bar; with CorpusCommonTokenFraction=0.05 active all three sit
+//     at 5.5%/19.9%/7.6% document frequency (comfortably over the 5%
+//     ceiling) and get excluded, dropping shared tokens to 0. A threshold
+//     sweep (task #99) showed rescuing it is not worth the cost: 0.05->0.06
+//     alone (just letting "content" back in) grows total
+//     lexical_claim_overlap candidates from 232 to 316 (+36%); fully
+//     rescuing all three tokens needs frac=0.20, which explodes candidates
+//     to 1186 — undoing essentially all of the 1231->234 noise fix
+//     R-tension-audit-shortlist-tool's NOISE FIX note describes. Accepted as
+//     a documented tradeoff rather than tuned: this Conflict is ALREADY a
+//     graph ground-truth node (no heuristic needs to "discover" it), and
+//     inspect's purpose per its own top-of-file doc comment is surfacing NEW
+//     undiscovered tension candidates, not reproducing every known Conflict.
+var knownLexicalOverlapMissByDesign = map[[2]string]struct{}{
+	{"R-agent-never-lost", "R-content-free-framework"}:                  {},
+	{"R-agent-never-lost", "R-ai-presents-not-decides"}:                 {},
+	{"R-budget-measure", "R-operator-prompt-from-substrate"}:            {},
+	{"R-content-free-framework", "R-crystallize-knowledge-to-code"}:     {},
+	{"R-context-bounded-delegation", "R-crystallize-knowledge-to-code"}: {},
+	{"R-context-bounded-delegation", "R-dependency-graph-parallelism"}:  {},
+	{"R-entity-derived-requirement", "R-speculative-aspects-frozen"}:    {},
+	{"R-content-free-framework", "R-empty-content-is-legitimate"}:       {}, // proven corpus-frequency false negative, accepted (see above)
+}
+
+// TestInspectLexicalClaimOverlap_KnownConflictGroundTruth is the honest
+// anti-false-negative pin task #99 asked for: it uses the graph's OWN
+// steward-confirmed Conflict nodes (domains/hotam-spec-self/graph.json's
+// `conflicts` array) as ground truth — not a synthetic fixture — and checks
+// every pairwise Conflict-member combination against
+// InspectLexicalClaimOverlap's real output on the real graph.
+//
+// A pair in knownLexicalOverlapMissByDesign (documented above) is allowed to
+// miss — asserting otherwise would be a false expectation the task
+// instructions explicitly warned against. Any OTHER real Conflict pair
+// (including any newly-added Conflict) must fire as a lexical_claim_overlap
+// candidate, or this test fails: that is the regression guard against a
+// future corpus-frequency (or other) change silently widening the miss set
+// beyond what has been manually verified.
+func TestInspectLexicalClaimOverlap_KnownConflictGroundTruth(t *testing.T) {
+	t.Parallel()
+	g, err := loader.LoadGraph(domainGraphPath)
+	if err != nil {
+		t.Fatalf("LoadGraph: %v", err)
+	}
+
+	fired := map[[2]string]Candidate{}
+	for _, c := range InspectLexicalClaimOverlap(g) {
+		if len(c.Members) != 2 {
+			continue
+		}
+		key := memberKey(c.Members[0], c.Members[1])
+		fired[key] = c
+	}
+
+	checked := 0
+	for _, conflict := range g.Conflicts {
+		members := conflict.Members
+		for i := 0; i < len(members); i++ {
+			for j := i + 1; j < len(members); j++ {
+				key := memberKey(members[i], members[j])
+				checked++
+				_, didFire := fired[key]
+
+				if _, knownMiss := knownLexicalOverlapMissByDesign[key]; knownMiss {
+					if didFire {
+						t.Logf("%s member pair %v now fires (previously a documented miss) — heuristic improvement; safe to remove from knownLexicalOverlapMissByDesign", conflict.ID, key)
+					}
+					continue
+				}
+
+				if !didFire {
+					t.Errorf("%s member pair %v (a real steward-confirmed Conflict) is NOT a lexical_claim_overlap candidate and is not in knownLexicalOverlapMissByDesign — this is either a new corpus-frequency false negative (investigate CorpusCommonTokenFraction impact) or a legitimately lexical-overlap-free conflict that needs documenting in knownLexicalOverlapMissByDesign with the reasoning", conflict.ID, key)
+				}
+			}
+		}
+	}
+	if checked == 0 {
+		t.Fatal("no Conflict member pairs checked — domains/hotam-spec-self/graph.json's conflicts array appears empty; ground-truth check would be vacuous")
+	}
+	t.Logf("checked %d real Conflict member pairs against lexical_claim_overlap candidates", checked)
+}
+
+// memberKey returns a and b as a canonically sorted 2-tuple, so lookups
+// against knownLexicalOverlapMissByDesign don't depend on Conflict.Members
+// or Candidate.Members ordering.
+func memberKey(a, b string) [2]string {
+	if a > b {
+		a, b = b, a
+	}
+	return [2]string{a, b}
 }

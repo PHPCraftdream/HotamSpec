@@ -26,7 +26,7 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir() // no domains/ dir → exercises the "absent" branch of DOMAIN-MAP
 
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
 
 	// both template placeholders must have been substituted
 	if strings.Contains(out, mindPlaceholder) {
@@ -75,7 +75,7 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 func TestBuildAgentContext_Fixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	out := BuildAgentContext(g, "", 4200)
+	out := BuildAgentContext(g, "", 4200, "2026-07-12")
 	for _, want := range []string{
 		"AGENT-CONTEXT.md",
 		"## Top actions",
@@ -97,15 +97,77 @@ func TestBuildAgentContext_Fixture(t *testing.T) {
 func TestBuildAgentContext_CleanGraphWhatNow(t *testing.T) {
 	t.Parallel()
 	// a graph with no signals → the "_(none — graph clean)_" what-now branch
-	out := BuildAgentContext(&ontology.Graph{}, "hotam-spec-self", 0)
+	out := BuildAgentContext(&ontology.Graph{}, "hotam-spec-self", 0, "2026-07-12")
 	if !strings.Contains(out, "_(none — graph clean)_") {
 		t.Errorf("clean graph should render the none-actions sentinel, got:\n%s", out)
 	}
 }
 
+// TestBuildAgentContext_TodayIsInjectable proves BuildAgentContext's today
+// parameter is truly injectable rather than silently recomputed via
+// time.Now(): the "## Status counters" line unconditionally embeds today
+// (renderAgentContextCounters's "(as of %s)" suffix), so two renders of the
+// same graph with two different explicit today values must produce output
+// that differs by exactly that date — nothing else, since the fixture
+// graph's diagnosable content (SETTLED/DRAFT/REJECTED counts, top actions)
+// does not itself depend on today.
+func TestBuildAgentContext_TodayIsInjectable(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	gotA := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-01-01")
+	gotB := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-12-31")
+
+	if gotA == gotB {
+		t.Fatalf("BuildAgentContext with two different today values produced byte-identical output — today is not actually threaded through")
+	}
+	if !strings.Contains(gotA, "as of 2026-01-01") {
+		t.Errorf("BuildAgentContext(today=2026-01-01) status counters do not embed the injected date:\n%s", gotA)
+	}
+	if !strings.Contains(gotB, "as of 2026-12-31") {
+		t.Errorf("BuildAgentContext(today=2026-12-31) status counters do not embed the injected date:\n%s", gotB)
+	}
+	// The only difference between the two renders must be the injected
+	// today value itself — normalizing it away must make them identical.
+	normalizedA := strings.ReplaceAll(gotA, "2026-01-01", "<TODAY>")
+	normalizedB := strings.ReplaceAll(gotB, "2026-12-31", "<TODAY>")
+	if normalizedA != normalizedB {
+		t.Errorf("BuildAgentContext outputs differ by more than the injected today value")
+	}
+}
+
+// TestBuildAgentContext_SameTodayIsByteIdentical proves the idempotency
+// property CI's regen-idempotency check needs: rendering twice with the
+// SAME explicit today value produces byte-identical output.
+func TestBuildAgentContext_SameTodayIsByteIdentical(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	a := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-07-12")
+	b := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-07-12")
+	if a != b {
+		t.Fatalf("BuildAgentContext with the same today value produced different output across two calls — not idempotent")
+	}
+}
+
+// TestRenderClaudeMDFromTemplate_SameTodayIsByteIdentical is the root-crystal
+// counterpart of the byte-identity property CI's regen-idempotency check
+// relies on: `hotam gen-spec --claude-md CLAUDE.md --today <date>` run twice
+// with the SAME --today value must produce byte-identical CLAUDE.md content,
+// independent of wall-clock time. This was structurally impossible while the
+// renderer's transitive callees computed today via time.Now() internally.
+func TestRenderClaudeMDFromTemplate_SameTodayIsByteIdentical(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	a := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	b := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	if a != b {
+		t.Fatalf("RenderClaudeMDFromTemplate with the same today value produced different output across two calls — not idempotent")
+	}
+}
+
 func TestRenderDomainMapBlock_NoDomainsDir(t *testing.T) {
 	t.Parallel()
-	out := RenderDomainMapBlock(t.TempDir(), nil)
+	out := RenderDomainMapBlock(t.TempDir(), nil, "2026-07-12")
 	if !strings.Contains(out, "domains/ directory absent") {
 		t.Errorf("missing domains/ dir should render the absent notice, got: %s", out)
 	}
@@ -117,7 +179,7 @@ func TestRenderDomainMapBlock_EmptyDomainsDir(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(root, "domains"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	out := RenderDomainMapBlock(root, nil)
+	out := RenderDomainMapBlock(root, nil, "2026-07-12")
 	if !strings.Contains(out, "_(no domains yet)_") {
 		t.Errorf("empty domains/ dir should render the no-domains notice, got: %s", out)
 	}
@@ -137,7 +199,7 @@ func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 		t.Fatal(err)
 	}
 	fixture := loadFixtureGraph(t)
-	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture})
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture}, "2026-07-12")
 
 	if !strings.Contains(out, "### hotam-dev") {
 		t.Errorf("known domain hotam-dev should appear, got: %s", out)
@@ -163,7 +225,7 @@ func TestRenderDomainMapBlock_UnknownDomainFallbacks(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(root, "domains", "brand-new"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"brand-new": &ontology.Graph{}})
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"brand-new": &ontology.Graph{}}, "2026-07-12")
 	// unknown manifest → em-dash placeholders for purpose/goals/director
 	if !strings.Contains(out, "- **purpose** — —") {
 		t.Errorf("unknown domain should fall back to em-dash purpose, got: %s", out)
@@ -484,7 +546,7 @@ func TestRenderDomainMapBlock_KnownDomainCarriesAllSixFields(t *testing.T) {
 		t.Fatal(err)
 	}
 	fixture := loadFixtureGraph(t)
-	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture})
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture}, "2026-07-12")
 	for _, want := range []string{
 		"### hotam-dev",                     // id
 		"- **purpose** — ",                  // description
@@ -513,7 +575,7 @@ func TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse(t *testing.T) {
 		t.Fatal(err)
 	}
 	fixture := loadFixtureGraph(t)
-	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture})
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture}, "2026-07-12")
 
 	var oaLine string
 	for _, line := range strings.Split(out, "\n") {
@@ -544,7 +606,7 @@ func TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
 
 	inner, ok := ExtractBlock(out, "AGENT-MAP")
 	if !ok {
@@ -568,7 +630,7 @@ func TestRenderClaudeMDFromTemplate_NoProseBetweenSentinels(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
 
 	blockNames := []string{
 		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
@@ -641,7 +703,7 @@ func TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest(t *test
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
 	const domain = "hotam-spec-self"
-	out := RenderClaudeMDFromTemplate(g, domain, repoRoot, 4200, nil)
+	out := RenderClaudeMDFromTemplate(g, domain, repoRoot, 4200, nil, "2026-07-12")
 
 	// both placeholders must be substituted away
 	if strings.Contains(out, mindPlaceholder) {
@@ -683,7 +745,7 @@ func TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal(t *test
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
 
 	// the single render consolidates the FULL operator prompt: all eleven MIND +
 	// BUSINESS blocks present in one string (no per-agent split)

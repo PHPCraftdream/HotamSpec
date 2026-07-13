@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 160 / SETTLED 236; closeable debt 43; inherent discipline 33; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 161 / SETTLED 236; closeable debt 42; inherent discipline 33; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -22,7 +22,6 @@ judgment calls no check_* could ever verify.
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
-| `R-land-is-transactional` | PROSE | `framework-author` | hotam land shall leave a domain's graph.json and generated docs mutually consistent even when a later stage (doc regeneration or the post-regen violations check) fails after the proposal apply stage already wrote a new graph.json — a failure rolls back to the pre-land state rather than leaving the graph and docs divergent. |
 | `R-axis-gatekeeper-policy` | PROSE | `ai-agent` | Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification. |
 | `R-working-vs-substrate-budget` | PROSE | `framework-author` | The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded. |
 | `R-subagent-gets-its-claude-md` | PROSE | `framework-author` | A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain. |
@@ -109,6 +108,7 @@ judgment calls no check_* could ever verify.
 | id | enforced_by | claim |
 |---|---|---|
 | `R-agent-never-lost` | TestTopAction_RealGraph | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`. |
+| `R-land-is-transactional` | TestCmdLand_GenSpecFailure_RollsBackGraphJSON, TestRollbackLand_RestoresFilesAndRegeneratesDocs, TestCmdLand_SuccessPathDoesNotRollBack | hotam land shall leave a domain's graph.json and generated docs mutually consistent even when a later stage (doc regeneration or the post-regen violations check) fails after the proposal apply stage already wrote a new graph.json — a failure rolls back to the pre-land state rather than leaving the graph and docs divergent. |
 | `R-review-mark-carries-evidence` | TestApply_ReviewMark_WithoutEvidenceFails, TestApply_ReviewMark_WhitespaceEvidenceFails | A ProposedReviewMark proposal shall fail validation unless it carries at least one non-whitespace evidence entry. |
 | `R-status-single-command-summary` | TestStatusToolRegisteredImplemented | The hotam CLI shall provide a `status` command (`hotam status [--domain <path>] [--today YYYY-MM-DD] [--json]`) that composes what-now's top action + debt counts (internal/diagnose), due's freshness counts (internal/freshness), and all-violations' violation count (internal/invariants) into a single compact summary, so an agent does not need to run those three commands separately to reconstruct the same picture. It reuses the same underlying functions those commands call rather than reimplementing their logic, never gates (exit code always 0), and its --json output uses flat, explicitly named fields (top_action, settled_count, enforced_count, closeable_debt_count, overdue_count, never_reviewed_count, violation_count, node_count) parseable in one shot. |
 | `R-drift-structurally-impossible` | TestGenerator_GraphJSONDoubleRegenerateIsIdentical | The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte. |

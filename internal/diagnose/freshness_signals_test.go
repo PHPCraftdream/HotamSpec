@@ -70,7 +70,7 @@ func TestFreshnessSignals_OverdueAndNeverReviewedBothFire(t *testing.T) {
 func TestFreshnessSignals_IntegratedIntoDiagnoseSignals(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{Requirements: []ontology.Requirement{settledReq("R-1")}}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	found := false
 	for _, s := range signals {
 		if strings.Contains(s.Message, "NEVER") && strings.Contains(s.Message, "hotam due") {

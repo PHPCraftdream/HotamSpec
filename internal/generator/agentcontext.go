@@ -3,7 +3,6 @@ package generator
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
@@ -22,6 +21,12 @@ import (
 // buildConstitutionIndexModel/clusterIndexItems clustering from
 // claudemd_constitutionindex.go) rather than inventing new counting logic —
 // see TaskList P2-1.
+//
+// today (YYYY-MM-DD) is threaded through explicitly rather than computed
+// internally via time.Now(), so two renders with the same today produce
+// byte-identical output regardless of wall-clock date (R-... idempotency;
+// see gen-spec's --today flag and TestBuildAgentContext_TodayIsInjectable /
+// TestBuildAgentContext_SameTodayIsByteIdentical).
 
 // agentContextWhatNowLimit is the number of top what-now actions surfaced in
 // AGENT-CONTEXT.md (N=10 per the P2-1 task spec).
@@ -32,7 +37,7 @@ const agentContextWhatNowLimit = 10
 // reused LIVE-STATE budget line exactly as it does for the root crystal
 // (see BuildLiveState); domainName qualifies the `hotam req show <id>`
 // pointer and the full-MD reference paths.
-func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int) string {
+func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
@@ -46,13 +51,13 @@ func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 		"",
 	}
 
-	lines = append(lines, BuildLiveState(g, claudeMDCharCount))
+	lines = append(lines, BuildLiveState(g, claudeMDCharCount, today))
 	lines = append(lines, "")
 
-	lines = append(lines, renderAgentContextWhatNow(g)...)
+	lines = append(lines, renderAgentContextWhatNow(g, today)...)
 	lines = append(lines, "")
 
-	lines = append(lines, renderAgentContextCounters(g)...)
+	lines = append(lines, renderAgentContextCounters(g, today)...)
 	lines = append(lines, "")
 
 	lines = append(lines, renderAgentContextConstitutionIndex(g)...)
@@ -77,9 +82,9 @@ func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 // agentContextWhatNowLimit signals from diagnose.DiagnoseSignals, the same
 // ranked list `hotam what-now` prints, reused verbatim rather than
 // re-deriving priority ordering here.
-func renderAgentContextWhatNow(g *ontology.Graph) []string {
+func renderAgentContextWhatNow(g *ontology.Graph, today string) []string {
 	out := []string{fmt.Sprintf("## Top actions (what-now, top %d)", agentContextWhatNowLimit), ""}
-	signals := diagnose.DiagnoseSignals(g)
+	signals := diagnose.DiagnoseSignals(g, today)
 	if len(signals) == 0 {
 		out = append(out, "_(none — graph clean)_")
 		return out
@@ -101,7 +106,7 @@ func renderAgentContextWhatNow(g *ontology.Graph) []string {
 // SETTLED / DRAFT / REJECTED status totals plus OVERDUE (via
 // internal/freshness — the same classifier `hotam due` uses, not a
 // hand-rolled recount).
-func renderAgentContextCounters(g *ontology.Graph) []string {
+func renderAgentContextCounters(g *ontology.Graph, today string) []string {
 	var settled, draft, rejected int
 	for _, r := range g.Requirements {
 		switch r.Status {
@@ -114,7 +119,6 @@ func renderAgentContextCounters(g *ontology.Graph) []string {
 		}
 	}
 
-	today := time.Now().Format("2006-01-02")
 	classified := freshness.ClassifyGraph(g, today)
 	overdue := 0
 	for _, c := range classified {

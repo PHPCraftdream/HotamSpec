@@ -129,6 +129,126 @@ func TestApply_Requirement_ExplicitSettledAtAlwaysWins(t *testing.T) {
 	}
 }
 
+// TestApply_Requirement_UpdateLastReviewedAtWithoutEvidenceFails is the
+// regression guard for the closed loophole: a plain ProposedRequirement
+// UPDATE that sets last_reviewed_at (or review_after) with no evidence must
+// be rejected, exactly like a ProposedReviewMark with no evidence is
+// (TestApply_ReviewMark_WithoutEvidenceFails). Before this fix,
+// ProposedRequirement.mutate coalesced last_reviewed_at/review_after with no
+// gate at all, so a routine content-editing UPDATE could silently ride a
+// freshness stamp through unattested -- R-requirement-freshness-fields'
+// own last_reviewed_at was stamped this way. validate() now requires
+// non-empty evidence whenever either field is being set, regardless of
+// whether the proposal resolves to CREATE or UPDATE in mutate().
+func TestApply_Requirement_UpdateLastReviewedAtWithoutEvidenceFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:             "R-1",
+		Claim:          "claim R-1",
+		Owner:          "sa",
+		Status:         ontology.StatusSETTLED,
+		LastReviewedAt: today,
+		// Evidence intentionally omitted.
+	}
+	assertApplyFails(t, path, p, "evidence")
+}
+
+// TestApply_Requirement_UpdateReviewAfterWithoutEvidenceFails covers the
+// review_after half of the same gate -- either freshness field alone must
+// trigger the evidence requirement, not just last_reviewed_at.
+func TestApply_Requirement_UpdateReviewAfterWithoutEvidenceFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:          "R-1",
+		Claim:       "claim R-1",
+		Owner:       "sa",
+		Status:      ontology.StatusSETTLED,
+		ReviewAfter: "2027-01-12",
+		// Evidence intentionally omitted.
+	}
+	assertApplyFails(t, path, p, "evidence")
+}
+
+// TestApply_Requirement_UpdateLastReviewedAtWithEvidenceSucceeds proves the
+// gate is satisfiable, not just a blanket ban: supplying evidence alongside
+// last_reviewed_at on a ProposedRequirement UPDATE still works.
+func TestApply_Requirement_UpdateLastReviewedAtWithEvidenceSucceeds(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:             "R-1",
+		Claim:          "claim R-1",
+		Owner:          "sa",
+		Status:         ontology.StatusSETTLED,
+		LastReviewedAt: today,
+		Evidence:       []string{"docs/audit-2026-07.md"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	r, ok := findReq(reload(t, path), "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.LastReviewedAt != today {
+		t.Errorf("LastReviewedAt = %q, want %q", r.LastReviewedAt, today)
+	}
+}
+
+// TestApply_Requirement_ContentOnlyUpdateStillWorksWithoutEvidence is the
+// preserved-legitimate-path regression guard: the vast majority of UPDATE
+// proposals never touch last_reviewed_at/review_after at all (coalesceStr's
+// empty-preserves-existing default). Such a plain content-only edit must
+// keep working with zero evidence -- the new gate must not fire when neither
+// freshness field is being set. This mirrors
+// TestApply_Requirement_UpdateAppendsHistory but asserts explicitly on the
+// no-evidence-required path so a future change to the gate's condition is
+// caught here too.
+func TestApply_Requirement_ContentOnlyUpdateStillWorksWithoutEvidence(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:     "R-1",
+		Claim:  "revised claim, no freshness fields touched",
+		Owner:  "sa",
+		Status: ontology.StatusSETTLED,
+		// LastReviewedAt, ReviewAfter, Evidence all intentionally omitted.
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	r, ok := findReq(reload(t, path), "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.Claim != "revised claim, no freshness fields touched" {
+		t.Errorf("Claim = %q, want revised", r.Claim)
+	}
+	if r.LastReviewedAt != "" {
+		t.Errorf("LastReviewedAt = %q, want preserved empty (fixture starts empty, untouched by this proposal)", r.LastReviewedAt)
+	}
+}
+
+// TestApply_Requirement_CreateWithLastReviewedAtWithoutEvidenceFails covers
+// the CREATE path: a brand-new requirement declared already-reviewed must
+// also justify last_reviewed_at with evidence -- the gate in validate()
+// fires before mutate() branches into CREATE vs UPDATE, so it is
+// entry-point-agnostic by construction.
+func TestApply_Requirement_CreateWithLastReviewedAtWithoutEvidenceFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:             "R-new-reviewed",
+		Claim:          "a brand new claim, already reviewed at creation",
+		Owner:          "sa",
+		Status:         ontology.StatusDRAFT,
+		LastReviewedAt: today,
+	}
+	assertApplyFails(t, path, p, "evidence")
+}
+
 // TestApply_Requirement_ClearEnforcedBy covers the wave-2 rebind enabler: a
 // ProposedRequirement UPDATE whose enforced_by is exactly ["<clear>"] empties
 // a previously-populated enforced_by. Without the sentinel this is impossible

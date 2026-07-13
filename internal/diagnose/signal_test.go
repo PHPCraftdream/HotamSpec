@@ -9,7 +9,7 @@ import (
 func TestDiagnoseSignals_EmptyGraph(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	if len(signals) != 0 {
 		t.Errorf("empty graph should have 0 signals, got %d", len(signals))
 	}
@@ -18,10 +18,65 @@ func TestDiagnoseSignals_EmptyGraph(t *testing.T) {
 func TestTopAction_EmptyGraph(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{}
-	got := TopAction(g)
+	got := TopAction(g, "2026-07-12")
 	want := "none — graph clean"
 	if got != want {
 		t.Errorf("TopAction(empty): got %q, want %q", got, want)
+	}
+}
+
+// TestDiagnoseSignals_TodayIsInjectable proves DiagnoseSignals' today
+// parameter is truly threaded through (via FreshnessSignals) rather than
+// silently recomputed via time.Now() internally: calling it twice with the
+// SAME graph but two different explicit today values must produce a
+// different freshness signal — a requirement whose review_after falls
+// between the two today values is NOT OVERDUE as of the earlier date but IS
+// OVERDUE as of the later one.
+func TestDiagnoseSignals_TodayIsInjectable(t *testing.T) {
+	t.Parallel()
+	r := settledReq("R-freshness-only")
+	r.ReviewAfter = "2026-06-01"
+	g := &ontology.Graph{Requirements: []ontology.Requirement{r}}
+
+	before := DiagnoseSignals(g, "2026-01-01")
+	after := DiagnoseSignals(g, "2026-12-31")
+
+	hasOverdue := func(signals []Signal) bool {
+		for _, s := range signals {
+			if s.Check == "freshness_overdue" {
+				return true
+			}
+		}
+		return false
+	}
+	if hasOverdue(before) {
+		t.Errorf("DiagnoseSignals(today=2026-01-01, before review_after) should not report OVERDUE yet: %+v", before)
+	}
+	if !hasOverdue(after) {
+		t.Errorf("DiagnoseSignals(today=2026-12-31, after review_after) should report OVERDUE: %+v", after)
+	}
+}
+
+// TestDiagnoseSignals_SameTodayIsByteIdentical proves the idempotency
+// property CI's regen-idempotency check needs downstream (via BuildLiveState
+// / BuildAgentContext, both of which call DiagnoseSignals): calling it twice
+// with the SAME today value produces an identical signal list, independent
+// of wall-clock time.
+func TestDiagnoseSignals_SameTodayIsByteIdentical(t *testing.T) {
+	t.Parallel()
+	r := settledReq("R-freshness-only")
+	r.ReviewAfter = "2026-06-01"
+	g := &ontology.Graph{Requirements: []ontology.Requirement{r}}
+
+	a := DiagnoseSignals(g, "2026-07-12")
+	b := DiagnoseSignals(g, "2026-07-12")
+	if len(a) != len(b) {
+		t.Fatalf("DiagnoseSignals with the same today value produced different signal counts across two calls: %d vs %d", len(a), len(b))
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			t.Fatalf("DiagnoseSignals with the same today value produced different signal[%d] across two calls: %+v vs %+v", i, a[i], b[i])
+		}
 	}
 }
 
@@ -41,7 +96,7 @@ func TestDiagnoseSignals_ReflectionBeatsStructure(t *testing.T) {
 			Members:   []string{"R-1", "R-2"},
 		}},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	if len(signals) == 0 {
 		t.Fatal("expected signals, got none")
 	}
@@ -78,7 +133,7 @@ func TestDiagnoseSignals_PriorityOrder(t *testing.T) {
 			Members:   []string{"R-drift", "R-open"},
 		}},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	for i := 1; i < len(signals); i++ {
 		if signals[i].Priority < signals[i-1].Priority {
 			t.Errorf("signal %d (P%d) out of order after signal %d (P%d)",
@@ -112,7 +167,7 @@ func TestDiagnoseSignals_StableSortByKey(t *testing.T) {
 			settledReq("R-1"), settledReq("R-2"),
 		},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	if len(signals) < 2 {
 		t.Fatal("expected at least 2 signals")
 	}
@@ -148,7 +203,7 @@ func TestDiagnoseSignals_AdvisoryRoutedLowest(t *testing.T) {
 			Members:   []string{"R-old"},
 		}},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	var advisory, stalled int
 	for _, s := range signals {
 		if s.Priority == PAdvisory {
@@ -201,7 +256,7 @@ func TestDiagnoseSignals_P2DriftFalloutReqsAndConflicts(t *testing.T) {
 			Members:          []string{"R-rests"},
 		}},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	var driftCount int
 	for _, s := range signals {
 		if s.Priority == PDriftFallout {
@@ -220,7 +275,7 @@ func TestDiagnoseSignals_P4OpenQuestionExtracted(t *testing.T) {
 			{ID: "R-q", Owner: "owner-q", Status: "OPEN(which path?)"},
 		},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	var openSignals []Signal
 	for _, s := range signals {
 		if s.Priority == POpenItem && s.Target == "R-q" {
@@ -242,7 +297,7 @@ func TestDiagnoseSignals_P4OpenNoQuestionFallback(t *testing.T) {
 			{ID: "R-noq", Owner: "owner", Status: "OPEN()"},
 		},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	for _, s := range signals {
 		if s.Priority == POpenItem && s.Target == "R-noq" {
 			if s.Message != "OPEN requirement 'R-noq' (owner 'owner') awaits a decision: (no question stated)" {
@@ -272,7 +327,7 @@ func TestDiagnoseSignals_P4HeldVariants(t *testing.T) {
 		}},
 		Requirements: []ontology.Requirement{settledReq("R-1"), settledReq("R-2")},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	var variantCount int
 	for _, s := range signals {
 		if s.Priority == POpenItem {
@@ -301,7 +356,7 @@ func TestDiagnoseSignals_P4UncertainAgingHighFanOut(t *testing.T) {
 		},
 		Requirements: reqs,
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	found := false
 	for _, s := range signals {
 		if s.Priority == POpenItem && s.Target == "A-unc" {
@@ -328,7 +383,7 @@ func TestDiagnoseSignals_P4UncertainAgingLowFanOut(t *testing.T) {
 		Assumptions:  []ontology.Assumption{{ID: "A-unc", Status: ontology.AssumptionUNCERTAIN}},
 		Requirements: reqs,
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	for _, s := range signals {
 		if s.Priority == POpenItem && s.Target == "A-unc" {
 			t.Error("low fan-out UNCERTAIN should not produce a P4 OPEN_ITEM signal")
@@ -349,7 +404,7 @@ func TestTopAction_ReturnsTopSignalMessage(t *testing.T) {
 		}},
 		Requirements: []ontology.Requirement{settledReq("R-1"), settledReq("R-2")},
 	}
-	ta := TopAction(g)
+	ta := TopAction(g, "2026-07-12")
 	if ta == "" {
 		t.Error("TopAction should return non-empty message for non-clean graph")
 	}
@@ -371,7 +426,7 @@ func TestDiagnoseSignals_AllSignalsUseDiagnoseSource(t *testing.T) {
 		}},
 		Requirements: []ontology.Requirement{settledReq("R-1"), settledReq("R-2")},
 	}
-	signals := DiagnoseSignals(g)
+	signals := DiagnoseSignals(g, "2026-07-12")
 	for _, s := range signals {
 		if s.Source != "diagnose" {
 			t.Errorf("source: got %q, want diagnose", s.Source)

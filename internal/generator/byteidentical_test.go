@@ -159,7 +159,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
 		}},
-		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646) }},
+		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646, "2026-07-12") }},
 	}
 	for _, b := range builds {
 		got := b.fn(g)
@@ -212,10 +212,10 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"ATOMS_DISCIPLINE.md", BuildAtomsDiscipline},
 		{"ATOMS_CHECK.md", BuildAtomsCheck},
 		{"CLAUDE.md", func(g *ontology.Graph) string {
-			return RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 27646, nil)
+			return RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 27646, nil, "2026-07-12")
 		}},
-		{"AGENT-CONTEXT.md", func(g *ontology.Graph) string { return BuildAgentContext(g, "hotam-spec-self", 27646) }},
-		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646) }},
+		{"AGENT-CONTEXT.md", func(g *ontology.Graph) string { return BuildAgentContext(g, "hotam-spec-self", 27646, "2026-07-12") }},
+		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646, "2026-07-12") }},
 	}
 	for _, b := range builds {
 		var out string

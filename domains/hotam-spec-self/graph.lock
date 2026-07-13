@@ -1,5 +1,5 @@
 {
-  "sha256": "fca9805709c0861a838518ed55859238832e0dca84d9c0af9f3c7d450164f96c",
-  "updated_at": "2026-07-13T07:29:49Z",
-  "note": "Requirement R-land-is-transactional applied"
+  "sha256": "47dd59c7427e4e6b06bdd5184320b7c41af10a9d79c0992b362e2800cea4ddb9",
+  "updated_at": "2026-07-13T09:38:54Z",
+  "note": "Requirement R-requirement-freshness-fields applied"
 }

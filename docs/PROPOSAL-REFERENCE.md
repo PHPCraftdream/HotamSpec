@@ -377,6 +377,43 @@ lifecycle. The resulting member count must stay >= 2
 {"kind": "ConflictMemberUpdate", "conflict_id": "C-8600b1b8", "add_members": ["R-canary-release"], "remove_members": [], "decided_by": "carol"}
 ```
 
+## ReviewMark
+
+Stamps an EXISTING Requirement's freshness metadata (`last_reviewed_at`,
+`review_after`, `evidence`) without touching its content fields
+(`claim`/`why`/`status`/`enforcement`/... are all left untouched — see
+`ProposedReviewMark` in `internal/proposal/types.go`). It exists as its own
+narrow kind rather than going through a `Requirement` UPDATE so a review act
+(the steward re-affirmed a claim is still true) stays distinguishable from a
+content edit.
+
+**Required:** `requirement_id`, `evidence` (list of strings; at least one
+non-whitespace entry — R-review-mark-carries-evidence). Evidence must be a
+SUBSTANTIVE, independently re-verifiable attestation (e.g. a test name plus
+the command that reproduces it, a doc path, a review id) — a bare "reviewed
+today" string with no verifiable referent is the administrative-backfill
+anti-pattern this field exists to prevent.
+**Optional:** `reviewed_at` (ISO date, defaults to today), `review_after`
+(ISO date after which re-confirmation is due; left untouched if omitted)
+
+```json
+{
+  "kind": "ReviewMark",
+  "requirement_id": "R-ship-fast",
+  "reviewed_at": "2026-07-13",
+  "review_after": "2027-01-13",
+  "evidence": ["re-ran `go test -run TestShipFast ./...` on 2026-07-13, still green"]
+}
+```
+
+Note on the existing corpus: this mandatory-evidence rule is forward-looking
+only (it gates the next ReviewMark applied; it does not retroactively touch
+SETTLED requirements that already carry empty `evidence`). Whether the
+corpus's existing empty-evidence requirements should be left to accumulate
+real evidence naturally as each one comes up for its own `review_after` date
+(the patient reading), or whether some other forward-looking policy is
+warranted, is a steward call, not decided here.
+
 ## OperatorBudget
 
 Replaces an existing Operator's context budget (limit + measure). Used to

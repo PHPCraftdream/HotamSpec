@@ -39,7 +39,27 @@ jobs:
 
       - name: gen-spec idempotency
         run: |
-          go run ./cmd/hotam gen-spec --domain domains/hotam-spec-self --claude-md CLAUDE.md
+          # Regenerating the root crystals + docs/gen/ must be byte-identical
+          # to what is committed. Several generated files (e.g.
+          # docs/gen/AGENT-CONTEXT.md's status-counters line) embed today's
+          # date as of generation time, so a bare "regenerate with the
+          # runner's real today" would show a spurious date-only diff on any
+          # day other than the one the committed docs were generated on —
+          # noise that would drown out real drift, or (worse) fail every
+          # single day regardless of actual graph changes. Pin --today to
+          # the same date already embedded in the committed
+          # docs/gen/AGENT-CONTEXT.md so this check compares "regenerate
+          # with the SAME today as the committed tree", the only comparison
+          # that is meaningful for a byte-identity check (see
+          # R-drift-structurally-impossible and the --today flag on
+          # `hotam gen-spec`).
+          pinned_today=$(grep -oE '\(as of [0-9]{4}-[0-9]{2}-[0-9]{2}\)' domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+          if [ -z "$pinned_today" ]; then
+            echo "::error::could not extract the committed today-date from docs/gen/AGENT-CONTEXT.md"
+            exit 1
+          fi
+          echo "pinning --today=$pinned_today (extracted from the committed docs/gen/AGENT-CONTEXT.md)"
+          go run ./cmd/hotam gen-spec --domain domains/hotam-spec-self --claude-md CLAUDE.md --today "$pinned_today"
           git diff --exit-code -- \
             CLAUDE.md \
             AGENTS.md \

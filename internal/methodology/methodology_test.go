@@ -77,10 +77,11 @@ func TestNamedSectionVariables(t *testing.T) {
 func TestToolsComplete(t *testing.T) {
 	t.Parallel()
 	tools := Tools.All()
-	// 11 Implemented (gen_spec, what_now, apply_proposal, gate, all_violations,
-	// req, due, status, inspect, confront, land — every real `hotam` CLI subcommand)
-	// + 27 Planned (methodology surface not yet implemented as Go commands).
-	const want = 38
+	// 13 Implemented (gen_spec, what_now, apply_proposal, gate, all_violations,
+	// req, due, status, inspect, confront, land, init, version — every real
+	// `hotam` CLI subcommand) + 27 Planned (methodology surface not yet
+	// implemented as Go commands).
+	const want = 40
 	if len(tools) != want {
 		t.Fatalf("expected %d tools, got %d", want, len(tools))
 	}
@@ -114,7 +115,7 @@ func TestToolsImplementedCount(t *testing.T) {
 			implemented++
 		}
 	}
-	const wantImplemented = 11
+	const wantImplemented = 13
 	if implemented != wantImplemented {
 		t.Fatalf("expected %d Implemented tools, got %d", wantImplemented, implemented)
 	}

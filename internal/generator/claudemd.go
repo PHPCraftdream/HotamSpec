@@ -249,8 +249,8 @@ func runeTruncate(s string, keep int) string {
 // one-line rendering of its top-priority action, via the same
 // DiagnoseSignals used for the root LIVE-STATE cipher. Returns (0, "") on a
 // clean graph.
-func domainPulse(dg *ontology.Graph) (int, string) {
-	signals := diagnose.DiagnoseSignals(dg)
+func domainPulse(dg *ontology.Graph, today string) (int, string) {
+	signals := diagnose.DiagnoseSignals(dg, today)
 	if len(signals) == 0 {
 		return 0, ""
 	}
@@ -271,7 +271,7 @@ func domainPulse(dg *ontology.Graph) (int, string) {
 // optionally pre-supplies already-loaded graphs keyed by domain directory
 // name (dedup with the caller's own load), falling back to loading
 // domains/<name>/graph.json from disk when absent.
-func RenderDomainMapBlock(repoRoot string, domainGraphs map[string]*ontology.Graph) string {
+func RenderDomainMapBlock(repoRoot string, domainGraphs map[string]*ontology.Graph, today string) string {
 	lines := []string{
 		generatedHeaderComment,
 		"",
@@ -341,7 +341,7 @@ func RenderDomainMapBlock(repoRoot string, domainGraphs map[string]*ontology.Gra
 					atomsCount++
 				}
 			}
-			openActions, topActionLine = domainPulse(dg)
+			openActions, topActionLine = domainPulse(dg, today)
 		}
 
 		lines = append(lines, "### "+domainID)
@@ -487,10 +487,10 @@ func runeTruncateEllipsis(s string, keep int) string {
 // RenderBusinessContent renders the BUSINESS bucket: the domain-specific
 // "what this claims" layer. Order: LIVE-STATE, DOMAIN-MAP, CONSTITUTION,
 // AGENT-MAP, CONCEPT-MAP, RECENTLY-REJECTED.
-func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph) string {
+func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph, today string) string {
 	parts := []string{
-		WrapBlock("LIVE-STATE", BuildLiveState(g, claudeMDCharCount)),
-		WrapBlock("DOMAIN-MAP", RenderDomainMapBlock(repoRoot, domainGraphs)),
+		WrapBlock("LIVE-STATE", BuildLiveState(g, claudeMDCharCount, today)),
+		WrapBlock("DOMAIN-MAP", RenderDomainMapBlock(repoRoot, domainGraphs, today)),
 		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
 		WrapBlock("AGENT-MAP", RenderAgentMapBlock()),
 		WrapBlock("CONCEPT-MAP", RenderConceptMapBlock()),
@@ -509,13 +509,18 @@ func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claud
 // resident crystal's own character count — supplied by the caller to avoid
 // the fixpoint hazard of CLAUDE.md measuring its own about-to-be-written
 // size; see BuildLiveState / livestate.go).
-func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph) string {
+//
+// today (YYYY-MM-DD) is threaded through explicitly rather than computed
+// internally via time.Now(), so `hotam gen-spec --today <date>` (or any
+// caller) can render a byte-reproducible crystal independent of wall-clock
+// date — the property CI's regen-idempotency check needs.
+func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph, today string) string {
 	effectiveDomain := domainName
 	if effectiveDomain == "" {
 		effectiveDomain = "hotam-spec-self"
 	}
 	mind := RenderMindContent(g, domainName)
-	business := RenderBusinessContent(g, domainName, repoRoot, claudeMDCharCount, domainGraphs)
+	business := RenderBusinessContent(g, domainName, repoRoot, claudeMDCharCount, domainGraphs, today)
 
 	srcLines := strings.Split(claudeMDTemplate, "\n")
 	outLines := make([]string, 0, len(srcLines))

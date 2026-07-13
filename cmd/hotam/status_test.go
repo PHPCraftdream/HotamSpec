@@ -58,7 +58,7 @@ func TestBuildStatusReport_MatchesWhatNowDueAllViolations(t *testing.T) {
 	report := buildStatusReport(g, today)
 
 	// Independently recompute via the same paths what-now/due/all-violations use.
-	signals := diagnose.DiagnoseSignals(g)
+	signals := diagnose.DiagnoseSignals(g, today)
 	wantTopAction := "none — graph clean"
 	if len(signals) > 0 {
 		wantTopAction = formatSingleSignal(signals[0])
@@ -143,7 +143,7 @@ func TestBuildStatusReport_MatchesOnRealDomain(t *testing.T) {
 
 	report := buildStatusReport(g, today)
 
-	signals := diagnose.DiagnoseSignals(g)
+	signals := diagnose.DiagnoseSignals(g, today)
 	wantTopAction := "none — graph clean"
 	if len(signals) > 0 {
 		wantTopAction = formatSingleSignal(signals[0])

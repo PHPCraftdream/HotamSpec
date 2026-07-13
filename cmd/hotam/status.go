@@ -83,7 +83,7 @@ type StatusReport struct {
 // consistency proof that guards against this ever drifting from those
 // commands' own logic.
 func buildStatusReport(g *ontology.Graph, today string) StatusReport {
-	signals := diagnose.DiagnoseSignals(g)
+	signals := diagnose.DiagnoseSignals(g, today)
 	topAction := "none — graph clean"
 	if len(signals) > 0 {
 		topAction = formatSingleSignal(signals[0])

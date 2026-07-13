@@ -45,7 +45,15 @@ func extractOpenQuestion(status string) string {
 	return s
 }
 
-func DiagnoseSignals(g *ontology.Graph) []Signal {
+// DiagnoseSignals derives the full prioritized signal list for a graph as of
+// today (YYYY-MM-DD). today is threaded through explicitly (rather than
+// computed internally via time.Now()) so callers — and ultimately the
+// generated docs/gen/*.md + root CLAUDE.md/AGENTS.md/GEMINI.md crystals that
+// embed FreshnessSignals' OVERDUE/NEVER-REVIEWED messages — are reproducible
+// and byte-identical when regenerated twice with the same today (R-...
+// idempotency; see gen-spec's --today flag). Every caller not itself
+// exposing a --today flag defaults to time.Now().Format("2006-01-02").
+func DiagnoseSignals(g *ontology.Graph, today string) []Signal {
 	var out []Signal
 
 	for _, f := range AllFindings(g) {
@@ -207,7 +215,7 @@ func DiagnoseSignals(g *ontology.Graph) []Signal {
 		})
 	}
 
-	out = append(out, FreshnessSignals(g, todayISO())...)
+	out = append(out, FreshnessSignals(g, today)...)
 
 	sort.SliceStable(out, func(i, j int) bool {
 		if out[i].Priority != out[j].Priority {
@@ -222,8 +230,8 @@ func DiagnoseSignals(g *ontology.Graph) []Signal {
 	return out
 }
 
-func TopAction(g *ontology.Graph) string {
-	signals := DiagnoseSignals(g)
+func TopAction(g *ontology.Graph, today string) string {
+	signals := DiagnoseSignals(g, today)
 	if len(signals) == 0 {
 		return "none — graph clean"
 	}

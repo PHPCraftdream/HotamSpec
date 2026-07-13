@@ -210,17 +210,19 @@ func defaultInvariantsDir() string {
 }
 
 // defaultInternalRoot returns the internal/ directory (the parent of
-// internal/gate). It is the root for the Test*-name half of resolution:
-// mechanism #1 (an enforced_by entry that is a literal Test* function name)
-// matches a Go test function ANYWHERE under internal/**/*_test.go, because a
-// real test enforcer in internal/proposal or internal/generator is just as
-// load-bearing as one in internal/invariants. Mechanism #2 (the check_*
-// literal -> tests map) stays scoped to internal/invariants via
-// defaultInvariantsDir, because check_* string literals appear as real
-// enforcer references only there; elsewhere (gate_test.go, ontology/query
-// fixtures) they appear as TEST FIXTURE DATA, and widening the check_ scan to
-// those would make fake names like "check_full" /
-// "check_nonexistent_fake_check" falsely resolve. See resolveOne.
+// internal/gate). It is one of two roots for the Test*-name half of
+// resolution: mechanism #1 (an enforced_by entry that is a literal Test*
+// function name) matches a Go test function ANYWHERE under
+// internal/**/*_test.go OR cmd/**/*_test.go (see defaultCmdRoot and
+// testFuncRoots), because a real test enforcer in internal/proposal,
+// internal/generator, or cmd/hotam is just as load-bearing regardless of
+// which directory it happens to live in. Mechanism #2 (the check_* literal ->
+// tests map) stays scoped to internal/invariants via defaultInvariantsDir,
+// because check_* string literals appear as real enforcer references only
+// there; elsewhere (gate_test.go, ontology/query fixtures, cmd/hotam tests)
+// they appear as TEST FIXTURE DATA, and widening the check_ scan to those
+// would make fake names like "check_full" / "check_nonexistent_fake_check"
+// falsely resolve. See resolveOne.
 func defaultInternalRoot() string {
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
@@ -229,37 +231,68 @@ func defaultInternalRoot() string {
 	return filepath.Join(filepath.Dir(file), "..")
 }
 
+// defaultCmdRoot returns the cmd/ directory (a sibling of internal/, both
+// children of the repo root). It is the second root for the Test*-name half
+// of resolution (mechanism #1) — see defaultInternalRoot's doc comment for
+// why widening mechanism #1 to include cmd/ is safe: mechanism #1 matches
+// real `func Test<Name>(...)` declarations via Go AST parsing, never string
+// literals, so cmd/hotam's *_test.go files (which contain no check_*-shaped
+// string fixture data — verified during the widening that added this
+// function) carry no fixture-pollution risk analogous to mechanism #2's.
+// Mechanism #2 is NOT widened to cmd/ for that same reason stated the other
+// way around: its risk model (string-literal matching) DOES apply there in
+// principle, so it stays scoped to internal/invariants only.
+func defaultCmdRoot() string {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(file), "..", "..", "cmd")
+}
+
+// testFuncRoots returns every root directory mechanism #1 (Test*-name
+// resolution) walks: internal/ and cmd/. Both buildScan and TestFuncNames
+// call this so the two consumers can never drift on which roots count.
+func testFuncRoots() []string {
+	return []string{defaultInternalRoot(), defaultCmdRoot()}
+}
+
 // buildScan constructs the resolver's combined view: the check_ literal map
 // comes from internal/invariants only (scanTestDir), and the Test* function
-// name set comes from ALL internal/**/*_test.go (walkTestFuncs). This split
-// is what makes mechanism #1 repo-wide while keeping mechanism #2 free of
-// fixture pollution — see defaultInternalRoot.
+// name set comes from ALL internal/**/*_test.go and cmd/**/*_test.go
+// (walkTestFuncs over testFuncRoots). This split is what makes mechanism #1
+// repo-wide while keeping mechanism #2 free of fixture pollution — see
+// defaultInternalRoot and defaultCmdRoot.
 func buildScan() (*testScan, error) {
 	invScan, err := scanTestDir(defaultInvariantsDir())
 	if err != nil {
 		return nil, err
 	}
 	funcSet := make(map[string]struct{})
-	if err := walkTestFuncs(defaultInternalRoot(), funcSet); err != nil {
-		return nil, err
+	for _, root := range testFuncRoots() {
+		if err := walkTestFuncs(root, funcSet); err != nil {
+			return nil, err
+		}
 	}
 	return &testScan{checkToTests: invScan.checkToTests, testFuncs: funcSet}, nil
 }
 
 // TestFuncNames returns the set of every top-level Test* function name found
-// under internal/**/*_test.go — the Test*-name half (mechanism #1) of the
-// enforced_by resolver that selectFromRequirement / resolveOne use. It is the
-// shared resolution primitive that check_enforced_by_resolvable reuses, so the
-// two consumers (gate's targeted test selection and the invariant's
-// resolvability audit) can never drift on what counts as a real Go test
-// enforcer. The check_* half is NOT included here: each consumer answers it
-// differently (gate via the literal map from internal/invariants, the
-// invariant via its own All registry), so only the genuinely shared Test*
-// name set is exposed.
+// under internal/**/*_test.go and cmd/**/*_test.go — the Test*-name half
+// (mechanism #1) of the enforced_by resolver that selectFromRequirement /
+// resolveOne use. It is the shared resolution primitive that
+// check_enforced_by_resolvable reuses, so the two consumers (gate's targeted
+// test selection and the invariant's resolvability audit) can never drift on
+// what counts as a real Go test enforcer. The check_* half is NOT included
+// here: each consumer answers it differently (gate via the literal map from
+// internal/invariants, the invariant via its own All registry), so only the
+// genuinely shared Test* name set is exposed.
 func TestFuncNames() (map[string]struct{}, error) {
 	funcSet := make(map[string]struct{})
-	if err := walkTestFuncs(defaultInternalRoot(), funcSet); err != nil {
-		return nil, err
+	for _, root := range testFuncRoots() {
+		if err := walkTestFuncs(root, funcSet); err != nil {
+			return nil, err
+		}
 	}
 	return funcSet, nil
 }

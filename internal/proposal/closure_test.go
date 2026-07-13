@@ -25,7 +25,7 @@ func TestApply_ThenDiagnose_ClosesTriggeringAction(t *testing.T) {
 	path := writeTempGraph(t, baseGraph())
 
 	// BEFORE: the stalled-conflict action is present in the diagnosis.
-	before := diagnose.DiagnoseSignals(reload(t, path))
+	before := diagnose.DiagnoseSignals(reload(t, path), today)
 	if !hasAcknowledgedStalledSignal(before, cid) {
 		t.Fatalf("pre-apply fixture broken: no conflict_acknowledged_stalled signal for %s among %d signals — the triggering condition this test resolves is absent",
 			cid, len(before))
@@ -42,7 +42,7 @@ func TestApply_ThenDiagnose_ClosesTriggeringAction(t *testing.T) {
 	}
 
 	// AFTER: re-run diagnosis; the triggering action is GONE.
-	after := diagnose.DiagnoseSignals(reload(t, path))
+	after := diagnose.DiagnoseSignals(reload(t, path), today)
 	if hasAcknowledgedStalledSignal(after, cid) {
 		t.Errorf("post-apply: conflict_acknowledged_stalled for %s still present after a DECIDED transition — apply->re-diagnose did not close the triggering action",
 			cid)

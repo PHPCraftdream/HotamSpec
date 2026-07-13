@@ -1,0 +1,11 @@
+{
+  "kind": "ReviewMark",
+  "requirement_id": "R-review-mark-carries-evidence",
+  "reviewed_at": "2026-07-13",
+  "review_after": "2027-01-13",
+  "evidence": [
+    "Re-ran `go test -run 'TestApply_ReviewMark_WithoutEvidenceFails|TestApply_ReviewMark_WhitespaceEvidenceFails' ./internal/proposal/...` on 2026-07-13: both pass — `ok github.com/PHPCraftdream/HotamSpec/internal/proposal 1.385s` — confirming the two named enforcers in internal/proposal/review_mark_test.go actually reject an evidence-less and a whitespace-only-evidence ProposedReviewMark respectively, exactly as the requirement's enforced_by claims. File and test names verified by reading internal/proposal/review_mark_test.go directly before citing them, not guessed.",
+    "Live self-demonstration: this very review-mark proposal (this file) could not be constructed as a valid ProposedReviewMark without a populated, non-whitespace evidence array — internal/proposal/validate.go's ProposedReviewMark.validate() (lines 299-311) unconditionally requires len(trimNonEmpty(p.Evidence)) > 0, so the act of landing this mark is itself a live, reproducible exercise of the rule it attests to, not merely a claim about past behavior.",
+    "The requirement's own why field states it is a structural well-formedness gate (existence of an attestation, not a truthfulness check) — the two cited tests match that scope exactly: TestApply_ReviewMark_WithoutEvidenceFails covers the missing-evidence case, TestApply_ReviewMark_WhitespaceEvidenceFails covers the present-but-blank case (via trimNonEmpty), leaving no gap between the claim and what is mechanically checked."
+  ]
+}

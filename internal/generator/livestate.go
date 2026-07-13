@@ -24,8 +24,8 @@ var bandLabel = map[int]string{
 
 const ctxLineStatic = "context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary"
 
-func BuildLiveState(g *ontology.Graph, claudeMDCharCount int) string {
-	signals := diagnose.DiagnoseSignals(g)
+func BuildLiveState(g *ontology.Graph, claudeMDCharCount int, today string) string {
+	signals := diagnose.DiagnoseSignals(g, today)
 	var topLine string
 	if len(signals) > 0 {
 		sig := signals[0]
