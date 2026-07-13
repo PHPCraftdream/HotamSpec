@@ -160,7 +160,11 @@ Commands:
   version, --version
         Print the hotam binary version.
 
-  --domain defaults to domains/hotam-spec-self resolved via the project root.
+  --domain resolution: an explicit --domain <path> always wins; otherwise
+  HOTAM_DOMAIN env names a domain by name; otherwise the active_domain
+  recorded in .hotam-spec-project (set via "hotam use <name>", or by
+  init-project at scaffold time) is used; only then does it fall back to
+  domains/hotam-spec-self (this repository's own default).
 `)
 }
 

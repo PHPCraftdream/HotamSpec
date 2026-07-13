@@ -65,7 +65,7 @@ go run ./cmd/hotam <command> [flags] [args]
 
 ## CLI commands
 
-The `hotam` binary (see `cmd/hotam/main.go`) implements thirteen commands:
+The `hotam` binary (see `cmd/hotam/main.go`) implements fifteen commands:
 
 ```
 hotam init <dir> [--name <domain-name>]
@@ -74,6 +74,20 @@ hotam init <dir> [--name <domain-name>]
         docs/gen/, and a README.md pointing at the next commands to run.
         <dir> may be anywhere on disk — it does not need to live under this
         repository or contain a domains/ ancestor.
+
+hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD]
+        Bootstrap an external business project's full Hotam-Spec layout in
+        one call: scaffold a base domain under <dir>/domains/<name> (default
+        <name>=main), write the project-root marker (.hotam-spec-project),
+        and render the root crystal (CLAUDE.md/AGENTS.md/GEMINI.md) + all
+        docs/gen/* via gen-spec. Refuses to overwrite an existing project
+        marker or CLAUDE.md. <dir> may be anywhere on disk.
+
+hotam use <domain-name>
+        Set the active-domain preference for the current project: records
+        {"active_domain": "<name>"} in the project-root marker so a bare
+        `hotam <command>` (no --domain) targets the chosen domain. Refuses
+        if <root>/domains/<name>/graph.json does not exist.
 
 hotam gen-spec [--domain <path>] [--today YYYY-MM-DD] [--claude-md <path>]
         Generate all docs/gen/*.md + graph.json for a domain graph.
@@ -130,7 +144,14 @@ hotam version | hotam --version
         Print the hotam binary version (see Version above).
 ```
 
-`--domain` defaults to `domains/hotam-spec-self`, resolved via the project root.
+`--domain` resolution (see `cmd/hotam/common.go`'s `resolveDomain`): an
+explicit `--domain <path>` always wins; otherwise a `HOTAM_DOMAIN` env var
+names a domain by name; otherwise a per-project preference recorded in
+`.hotam-spec-project` (set via `hotam use <name>`, or set automatically by
+`init-project` at scaffold time) is used; only when none of these is set
+does `--domain` fall back to `domains/hotam-spec-self` (this repository's
+own default). Tiers 2 and 3 emit one stderr notice so a bare command never
+silently targets an unexpected domain.
 
 ## Tests
 
