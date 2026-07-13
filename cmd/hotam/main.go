@@ -148,6 +148,29 @@ Commands:
 `)
 }
 
+// boolFlagNames is the flat, package-wide set of flag names that take NO value
+// (registered via fs.Bool somewhere in cmd/hotam), so reorderFlagsFirst never
+// swallows the following token as a flag value. Go's stdlib flag package cannot
+// be consulted here: reorderFlagsFirst is a pre-processing step over raw
+// os.Args that runs BEFORE subcommand dispatch, with no per-subcommand FlagSet
+// in scope yet. "--version" is deliberately excluded: main()'s switch handles
+// it at os.Args[1] (the command slot) before reorderFlagsFirst even runs on
+// os.Args[2:], so it can never appear here as a flag-with-a-value.
+//
+// KEEP THIS LIST IN SYNC with every fs.Bool(...) call in cmd/hotam/*.go: adding
+// a new boolean flag to a subcommand's FlagSet without adding its name here
+// reintroduces the exact bug this map fixes (the new bool flag would eat the
+// next positional token as its "value"). Today the only boolean flag is --json.
+var boolFlagNames = map[string]bool{
+	"json": true,
+}
+
+// reorderFlagsFirst moves every token starting with "-" (and its value, if it
+// takes one) ahead of the positional args, because Go's stdlib flag package
+// stops parsing flags at the first non-flag token. A flag consumes the
+// following token as its value only when it is NOT a known boolean
+// (boolFlagNames) and is written bare (no "="); boolean flags never consume
+// the next token, so `--json <positional>` keeps the positional in place.
 func reorderFlagsFirst(args []string) []string {
 	var flags, positional []string
 	i := 0
@@ -155,6 +178,10 @@ func reorderFlagsFirst(args []string) []string {
 		a := args[i]
 		if strings.HasPrefix(a, "-") && a != "-" {
 			flags = append(flags, a)
+			if isBoolFlag(a) {
+				i++
+				continue
+			}
 			if !strings.Contains(a, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				flags = append(flags, args[i+1])
 				i += 2
@@ -167,4 +194,15 @@ func reorderFlagsFirst(args []string) []string {
 		}
 	}
 	return append(flags, positional...)
+}
+
+// isBoolFlag reports whether a raw argv token (e.g. "--json", "-json", or
+// "--json=true") names a known value-less boolean flag. It strips the leading
+// dashes and any "=value" suffix before consulting boolFlagNames.
+func isBoolFlag(token string) bool {
+	name := strings.TrimLeft(token, "-")
+	if eq := strings.IndexByte(name, '='); eq >= 0 {
+		name = name[:eq]
+	}
+	return boolFlagNames[name]
 }

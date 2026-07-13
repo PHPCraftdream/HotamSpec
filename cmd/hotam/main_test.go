@@ -173,6 +173,53 @@ func TestReorderFlagsFirst_EqualsForm(t *testing.T) {
 	}
 }
 
+// TestReorderFlagsFirst_BooleanFlagDoesNotConsumePositional is the unit proof
+// for the boolean-flag fix: a bare --json (the package's only value-less flag)
+// placed BEFORE a positional must NOT swallow that positional as its "value".
+// Pre-fix, reorderFlagsFirst saw "--json" followed by a non-dash token and
+// moved the claim text into the flags group, so the positional never reached
+// the subcommand. Here the claim text must survive as a positional (land after
+// all flags), not get pulled into the flags group.
+func TestReorderFlagsFirst_BooleanFlagDoesNotConsumePositional(t *testing.T) {
+	t.Parallel()
+	args := []string{"--json", "some claim text", "--domain", "X"}
+	got := reorderFlagsFirst(args)
+	want := []string{"--json", "--domain", "X", "some claim text"}
+	if len(got) != len(want) {
+		t.Fatalf("len got %d, want %d: %v", len(got), len(want), got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("index %d: got %q, want %q", i, got[i], want[i])
+		}
+	}
+	// The claim text must be the trailing positional, never inside the flags.
+	if got[len(got)-1] != "some claim text" {
+		t.Errorf("claim text did not survive as the trailing positional: %v", got)
+	}
+	for _, g := range got[:len(got)-1] {
+		if g == "some claim text" {
+			t.Errorf("claim text wrongly pulled into the flags group: %v", got)
+		}
+	}
+}
+
+// TestIsBoolFlag covers the dash/equals-stripping: bare, single-dash, and
+// =value forms all resolve to the boolean set; value-taking names do not.
+func TestIsBoolFlag(t *testing.T) {
+	t.Parallel()
+	for _, tok := range []string{"--json", "-json", "--json=true", "--json=false"} {
+		if !isBoolFlag(tok) {
+			t.Errorf("isBoolFlag(%q) = false, want true", tok)
+		}
+	}
+	for _, tok := range []string{"--domain", "--domain=/x", "-", "--unknown"} {
+		if isBoolFlag(tok) {
+			t.Errorf("isBoolFlag(%q) = true, want false", tok)
+		}
+	}
+}
+
 func TestApplyProposal_SmokeEndToEnd(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)

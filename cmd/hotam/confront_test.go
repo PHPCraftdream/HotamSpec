@@ -174,6 +174,85 @@ func TestCmdConfront_E2E_JSONShape(t *testing.T) {
 	}
 }
 
+// TestCmdConfront_E2E_BooleanFlagBeforePositional is the end-to-end regression
+// proof for the reorderFlagsFirst boolean-flag bug. The bug: a value-less flag
+// (--json) placed BEFORE the positional claim made reorderFlagsFirst swallow
+// the claim text as the flag's "value", so confront never received a positional
+// and misparsed. Because reorderFlagsFirst lives in main() (before subcommand
+// dispatch), it is only exercised by a real subprocess — an in-process call to
+// cmdConfront would bypass it entirely — so this test exec's the built binary.
+//
+// It runs BOTH orderings of the same args against the same domain and asserts
+// they produce identical output: the flag-before-positional order (the one the
+// review reported broken) and the positional-first order (always worked). The
+// only thing that may differ is argument order; reorderFlagsFirst must
+// normalize that away.
+func TestCmdConfront_E2E_BooleanFlagBeforePositional(t *testing.T) {
+	if testing.Short() {
+		t.Skip("confront e2e: builds a real binary + spawns a child process; skipped in -short")
+	}
+	t.Parallel()
+
+	binPath := buildSharedHotamBinary(t)
+	domainDir := copySelfDomain(t)
+
+	claim, id := pickRealSettledClaim(t, filepath.Join(domainDir, "graph.json"))
+
+	// (a) Order that always worked: positional first, boolean flag last.
+	workingCmd := exec.Command(binPath, "confront", claim, "--domain", domainDir, "--json")
+	workingOut, err := workingCmd.Output()
+	if err != nil {
+		t.Fatalf("positional-first order failed: %v\n%s", err, workingOut)
+	}
+
+	// (b) Order the review reported broken: boolean flag BEFORE the positional.
+	brokenCmd := exec.Command(binPath, "confront", "--json", claim, "--domain", domainDir)
+	brokenOut, err := brokenCmd.Output()
+	if err != nil {
+		t.Fatalf("flag-before-positional order failed (boolean flag ate the positional?): %v\n%s", err, brokenOut)
+	}
+
+	// Both must parse as valid ConfrontResult JSON.
+	var workingRes, brokenRes diagnose.ConfrontResult
+	if err := json.Unmarshal(workingOut, &workingRes); err != nil {
+		t.Fatalf("positional-first order not JSON: %v\n%s", err, workingOut)
+	}
+	if err := json.Unmarshal(brokenOut, &brokenRes); err != nil {
+		t.Fatalf("flag-before-positional order not JSON (positional swallowed?): %v\n%s", err, brokenOut)
+	}
+
+	// The positional claim must reach confront in BOTH orders — if the bug were
+	// present, the flag-before-positional order's Candidate would be empty or
+	// wrong, and it would not surface the duplicate id.
+	if workingRes.Candidate != claim {
+		t.Errorf("positional-first Candidate=%q, want claim %q", workingRes.Candidate, claim)
+	}
+	if brokenRes.Candidate != claim {
+		t.Errorf("flag-before-positional Candidate=%q, want claim %q — the positional was swallowed by --json (the bug)", brokenRes.Candidate, claim)
+	}
+	if !confrontResultNamesID(workingRes, id) {
+		t.Errorf("positional-first order did not surface duplicate %q", id)
+	}
+	if !confrontResultNamesID(brokenRes, id) {
+		t.Errorf("flag-before-positional order did not surface duplicate %q (positional not parsed)", id)
+	}
+
+	// The two orderings must produce byte-identical output: the only difference
+	// was argument order, which reorderFlagsFirst must normalize away.
+	if string(workingOut) != string(brokenOut) {
+		t.Errorf("flag order changed confront output:\n--- positional-first ---\n%s\n--- flag-before-positional ---\n%s", workingOut, brokenOut)
+	}
+}
+
+func confrontResultNamesID(r diagnose.ConfrontResult, id string) bool {
+	for _, h := range r.Settled {
+		if h.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
 // TestCmdConfront_E2E_FileMode verifies the --file <path> input path: writing
 // the candidate text to a file and pointing --file at it must produce the same
 // duplicate verdict as passing the text positionally.
