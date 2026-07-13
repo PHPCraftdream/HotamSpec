@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 162 / SETTLED 236; closeable debt 40; inherent discipline 34; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 163 / SETTLED 236; closeable debt 39; inherent discipline 34; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -26,7 +26,6 @@ judgment calls no check_* could ever verify.
 | `R-subagent-gets-its-claude-md` | PROSE | `framework-author` | A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain. |
 | `R-task-spawn-log-runtime` | PROSE | `ai-agent` | The spawn_agent tool shall append a spawn-log entry to .runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation. |
 | `R-audit-atomicity-tool` | PROSE | `framework-author` | An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool, not by a one-off hand invocation. |
-| `R-empty-content-gen-notice` | STRUCTURAL | `framework-author` | When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
 | `R-crystal-tree-hierarchy` | PROSE | `ai-agent` | The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget. |
 | `R-agent-scoped-constitution` | PROSE | `framework-author` | For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
 | `R-agent-declares-purpose` | PROSE | `framework-author` | Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE). |
@@ -168,6 +167,7 @@ judgment calls no check_* could ever verify.
 | `R-content-free-no-seed-graph` | TestContentFree_NoSeedGraph | The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json. |
 | `R-empty-content-wellformed` | TestEmptyContentWellFormed | A freshly-cloned framework with an empty graph shall pass all structural invariants â€” an empty graph is well-formed. |
 | `R-empty-content-calm-banner` | TestEmptyContentCalmBanner | When the active domain has no content yet (empty graph), `hotam what-now` shall render a calm 'no content yet'-style signal, not an error. |
+| `R-empty-content-gen-notice` | TestGenSpec_MissingGraphRendersCalmNotice | When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
 | `R-boot-reload-three-facts` | TestBuildLiveState_RendersOnFixture | The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio. |
 | `R-glossary-generated` | TestBuildGlossary_ByteIdenticalToFixture | A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md. |
 | `R-glossary-sync-fails-dead` | TestAuditGlossarySync_FlagsDeadTerms | The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework. |

@@ -1,12 +1,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
@@ -37,7 +40,15 @@ func cmdGenSpec(args []string) error {
 }
 
 func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
-	g, err := loadDomainGraph(domainDir)
+	// R-empty-content-gen-notice: a MISSING graph.json (os.IsNotExist — a
+	// freshly cloned framework with no domain populated yet) is treated as an
+	// empty graph, not a hard error. Every generator already handles
+	// g.IsEmpty() by rendering the calm EmptyNotice into docs/gen/*.md, so the
+	// missing-file case produces output identical to the empty-but-present
+	// case (the two are indistinguishable to an adopter with nothing modeled
+	// yet). Any OTHER read error (decode failure, permissions) still surfaces
+	// as a real error via loadGraphOrEmpty.
+	g, err := loadGraphOrEmpty(domainDir)
 	if err != nil {
 		return nil, err
 	}
@@ -275,4 +286,24 @@ func repoRootForDomain(domainDir string) (string, error) {
 		return filepath.Dir(filepath.Dir(domainDir)), nil
 	}
 	return paths.ProjectRootOrRaise()
+}
+
+// loadGraphOrEmpty loads the domain's graph.json, mirroring loadDomainGraph,
+// but treats a MISSING graph.json (os.IsNotExist) as an empty graph instead of
+// a hard error (R-empty-content-gen-notice). An empty graph flows through every
+// generator already: the Build* helpers detect g.IsEmpty() and render the calm
+// EmptyNotice into docs/gen/*.md, so the missing-file case yields output
+// identical to the empty-but-present case. Any error that is NOT os.IsNotExist
+// (a decode failure, a permissions error) is a genuine problem and is still
+// returned to the caller.
+func loadGraphOrEmpty(domainDir string) (*ontology.Graph, error) {
+	gp := graphPathForDomain(domainDir)
+	g, err := loader.LoadGraph(gp)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return &ontology.Graph{DomainDir: domainDir}, nil
+		}
+		return nil, err
+	}
+	return g, nil
 }

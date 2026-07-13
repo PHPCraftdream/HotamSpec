@@ -4101,9 +4101,13 @@
         "A-python-stack"
       ],
       "claim": "When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail.",
-      "enforced_by": [],
-      "enforcement": "STRUCTURAL",
-      "evidence": [],
+      "enforced_by": [
+        "TestGenSpec_MissingGraphRendersCalmNotice"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [
+        "cmd/hotam/gen_spec_test.go::TestGenSpec_MissingGraphRendersCalmNotice — genSpec against a temp dir containing NO graph.json returns no error and renders the calm 'No domain content loaded' notice into docs/gen/REQUIREMENTS.md, mirroring the empty-but-present case. TestGenSpec_MissingGraph_MalformedStillErrors is the non-vacuity control: a malformed graph.json (decode error, not os.IsNotExist) still propagates as a real error, proving the calm path is specific to the missing-file case."
+      ],
       "history": [
         {
           "at": "2026-07-12",
@@ -4129,6 +4133,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block t…→Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block t…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "why: Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block t…→Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block t…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestGenSpec_MissingGraphRendersCalmNotice]; evidence: []→[cmd/hotam/gen_spec_test.go::TestGenSpec_MissingGraphRendersCalmNotice — genSpec against a temp dir containing NO graph.json returns no error and r…; source_refs: [cmd/hotam/gen_spec.go, internal/loader/loader.go]→[cmd/hotam/gen_spec.go, internal/loader/loader.go, internal/generator/common.go]"
         }
       ],
       "id": "R-empty-content-gen-notice",
@@ -4137,10 +4146,11 @@
       "review_after": "2026-10-12",
       "source_refs": [
         "cmd/hotam/gen_spec.go",
-        "internal/loader/loader.go"
+        "internal/loader/loader.go",
+        "internal/generator/common.go"
       ],
       "status": "SETTLED",
-      "why": "Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block the regen step of the closed loop for new adopters. Not yet implemented: gen-spec (cmd/hotam/gen_spec.go) calls loadDomainGraph -> loader.LoadGraph, which returns a hard error when graph.json is absent (os.ReadFile fails), and gen-spec propagates that error rather than emitting a 'no content yet' notice. There is no empty/missing-graph notice path in the generator (internal/generator). The reference design is a notice path that detects the missing graph.json and renders a placeholder into docs/gen/*.md instead of failing (historically tools/gen_spec.py). An EMPTY-but-present graph (0 nodes that loads successfully) DOES regenerate cleanly (the generators render over zero requirements without error), so only the missing-file path is the gap. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
+      "why": "Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block the regen step of the closed loop for new adopters. ENFORCED 2026-07-13: genSpec (cmd/hotam/gen_spec.go) now loads the domain graph via loadGraphOrEmpty, which detects os.IsNotExist on the missing graph.json specifically and substitutes an empty graph (&ontology.Graph{DomainDir: domainDir}) instead of propagating the raw read error. An empty graph flows through every generator unchanged: the Build* helpers in internal/generator already detect g.IsEmpty() and render the calm EmptyNotice (internal/generator/common.go) into docs/gen/*.md, so the missing-file case produces output identical to the empty-but-present case (the two situations are indistinguishable to an adopter with nothing modeled yet). The discrimination is mechanical and the only one that should trigger the calm path: errors.Is(err, os.ErrNotExist) — a genuine error (a malformed graph.json decode failure, or a permissions error) still surfaces as a real error, enforced by the TestGenSpec_MissingGraph_MalformedStillErrors non-vacuity control. The identical missing-file gap also exists in the what-now code path (R-empty-content-calm-banner's own why documents this); that is NOT this requirement's anchor and remains an honest open gap there — loadGraphOrEmpty is deliberately scoped to gen-spec, not shared via loadDomainGraph, to avoid expanding scope across every loader caller."
     },
     {
       "assumptions": [

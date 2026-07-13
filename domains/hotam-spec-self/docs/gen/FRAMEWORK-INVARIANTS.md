@@ -64,7 +64,7 @@ R-content-layout-evolution [E]
 R-deterministic-generation [E]
 R-drift-structurally-impossible [E]
 R-empty-content-calm-banner [E]
-R-empty-content-gen-notice [S]
+R-empty-content-gen-notice [E]
 R-empty-content-wellformed [E]
 
 **Lifecycle / Process / Goal**
