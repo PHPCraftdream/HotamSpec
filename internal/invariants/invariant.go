@@ -7,9 +7,9 @@ import (
 )
 
 type Violation struct {
-	Check   string
-	ID      string
-	Message string
+	Check   string `json:"check"`
+	ID      string `json:"id"`
+	Message string `json:"message"`
 }
 
 type Invariant struct {

@@ -129,51 +129,40 @@ func RenderEmbeddedThinkingBlock(domainName string) string {
 }
 
 // RenderEmbeddedToolsBlock renders the EMBEDDED-TOOLS block content
-// (without sentinels). Unlike RenderEmbeddedThinkingBlock, this is NOT
-// static text: it is a projection of methodology.Tools (internal/methodology/
-// tools_data.go), sorted by Command. Implemented tools get one full line each
-// (name + Purpose + Implemented marker) — those are the commands an operator
-// actually runs day-to-day. Planned (not-yet-implemented) tools are collapsed
-// into a single summary line pointing at docs/gen/tools/ and the registry:
-// their per-tool Purpose is historical prose with no runnable command behind
-// it, so listing all of them inline was pure context-debt (P1-1/Wave 4 cut
-// the block from ~6.7KB to ~2.5KB this way).
+// (without sentinels). It is a compact pointer-only reference: it reports the
+// Implemented and Planned tool counts (computed from methodology.Tools) and
+// directs the operator to `hotam -h` (the full command list with usage,
+// generated from the same registry), `hotam status --json` (structured pulse),
+// `hotam req` / `hotam brief` (agentic access), and docs/gen/tools/INDEX.md /
+// internal/methodology/tools_data.go (the complete registry) for detail.
 //
-// It used to be the hand-maintained embeddedToolsText constant in
-// claudemd_static.go; that constant silently drifted out of sync every time a
-// planned tool got a real Go command (P1-6 / TaskList #19 found
-// it still calling `req`/`due`/`inspect`/`land` "not yet implemented" after all four
-// had working cmd/hotam commands). Deriving the block from the registry
-// instead makes that class of drift structurally impossible, the same way
-// gen-spec's whole existence does for docs/gen/*.md (R-... generative law: an
-// important-yet-invisible fact goes into a typed node, not prose someone
-// forgets to update).
+// This REPLACES the earlier one-line-per-Implemented-tool distillation (waves
+// 4-5): now that agentic on-demand tool discovery (`hotam -h`, `hotam req`,
+// `hotam brief` — tasks #124/#126) makes the embedded per-tool list redundant,
+// the crystal's context-debt trends toward pointers-to-free-on-demand-detail
+// rather than embedded distillation (review 5 / wave-5 @fx agent-UX
+// consultation, plan item T-m / task #128). The counts are retained so an
+// agent glancing at the crystal still knows roughly how much tool surface
+// exists.
 func RenderEmbeddedToolsBlock() string {
 	tools := methodology.Tools.All()
-	sorted := make([]methodology.Tool, len(tools))
-	copy(sorted, tools)
-	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Command < sorted[j].Command })
+	implementedCount := 0
+	plannedCount := 0
+	for _, t := range tools {
+		if t.Status == methodology.Implemented {
+			implementedCount++
+		} else {
+			plannedCount++
+		}
+	}
 
 	lines := []string{
 		generatedHeaderComment,
 		"",
-		"### Tool reference (Go CLI: `hotam <command>` / `go run ./cmd/hotam <command>`)",
-		"",
-	}
-	plannedCount := 0
-	for _, t := range sorted {
-		displayName := strings.ReplaceAll(t.Command, "_", "-")
-		if t.Status == methodology.Implemented {
-			lines = append(lines, "- **"+displayName+"** — "+t.Purpose+" Implemented (`hotam "+displayName+"`).")
-			continue
-		}
-		plannedCount++
-	}
-	if plannedCount > 0 {
-		lines = append(lines, fmt.Sprintf(
-			"- %d additional tools registered in the methodology but not yet implemented as Go commands — full list + per-tool purpose: `docs/gen/tools/` (one .md per tool) or `internal/methodology/tools_data.go`.",
-			plannedCount,
-		))
+		fmt.Sprintf(
+			"### Tool reference — %d Implemented, %d Planned. Full list with usage: `hotam -h`. Structured pulse: `hotam status --json`. Agentic access: `hotam req` / `hotam brief`. Complete registry: docs/gen/tools/INDEX.md, internal/methodology/tools_data.go.",
+			implementedCount, plannedCount,
+		),
 	}
 	return strings.Join(lines, "\n")
 }

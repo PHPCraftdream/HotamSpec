@@ -13,6 +13,7 @@ func cmdWhatNow(args []string) error {
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	limit := fs.Int("limit", 20, "maximum number of signals to print")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date)")
+	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 
 	domainDir, err := resolveDomain(*domain)
@@ -23,11 +24,15 @@ func cmdWhatNow(args []string) error {
 	if today == "" {
 		today = time.Now().Format("2006-01-02")
 	}
-	out, err := whatNow(domainDir, *limit, today)
+	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return err
 	}
-	fmt.Println(out)
+	signals := diagnose.DiagnoseSignals(g, today)
+	if *asJSON {
+		return printJSON(limitSignals(signals, *limit))
+	}
+	fmt.Println(formatSignals(signals, *limit))
 	return nil
 }
 
@@ -37,6 +42,22 @@ func whatNow(domainDir string, limit int, today string) (string, error) {
 		return "", err
 	}
 	return formatSignals(diagnose.DiagnoseSignals(g, today), limit), nil
+}
+
+// limitSignals applies the same truncation logic as formatSignals but returns
+// the raw signal slice for JSON marshaling. It ensures a non-nil slice so
+// `--json` always emits `[]` on a clean graph instead of `null`.
+func limitSignals(signals []diagnose.Signal, limit int) []diagnose.Signal {
+	if limit < 0 {
+		limit = len(signals)
+	}
+	end := limit
+	if end > len(signals) {
+		end = len(signals)
+	}
+	out := make([]diagnose.Signal, end)
+	copy(out, signals[:end])
+	return out
 }
 
 // maxCollapsedIDs is the number of distinct target ids shown verbatim in a

@@ -30,11 +30,11 @@ const UncertainAgingMinDependents = 5
 // identical-kind signals affecting different nodes into one line, so every
 // producer MUST set it.
 type Signal struct {
-	Source   string
-	Priority int
-	Check    string
-	Target   string
-	Message  string
+	Source   string `json:"source"`
+	Priority int    `json:"priority"`
+	Check    string `json:"check"`
+	Target   string `json:"target"`
+	Message  string `json:"message"`
 }
 
 func extractOpenQuestion(status string) string {

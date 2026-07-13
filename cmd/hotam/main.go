@@ -120,8 +120,9 @@ Commands:
         <root>/domains/<name>/graph.json does not exist.
   gen-spec [--domain <path>]
         Generate all docs/gen/*.md + graph.json for a domain graph.
-  what-now [--domain <path>] [--limit N]
-        Print top-N diagnosed signals (default 20).
+  what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
+        Print top-N diagnosed signals (default 20). With --json, emit the
+        underlying signal slice as machine-readable JSON.
   apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]
         Apply a proposal to a domain graph. Low-level: does not regenerate
         docs — run gen-spec after, or use land instead. With --batch <dir>,
@@ -137,10 +138,13 @@ Commands:
         concurrent change, not a bad proposal. With --batch <dir>, every
         *.json in <dir> is applied atomically in filename order and docs are
         regenerated exactly once (not once per proposal).
-  gate <target-anchor> [--domain <path>]
-        Select Tier-1 tests for a target node.
-  all-violations [--domain <path>]
-        Print all invariant violations; exit 1 if any.
+  gate <target-anchor> [--domain <path>] [--json]
+        Select Tier-1 tests for a target node. With --json, emit the
+        GateResult (confident, node_ids, reason) as machine-readable JSON.
+  all-violations [--domain <path>] [--json]
+        Print all invariant violations; exit 1 if any. With --json, emit the
+        violation slice as machine-readable JSON. Exit code is identical
+        with or without --json (1 if any violations, 0 if clean).
   req <show|list|search|context|related> [args] [--domain <path>] [--json]
         Compact agentic read interface over the domain graph (hotam req -h for details).
   brief <anchor-id> [--domain <path>] [--today YYYY-MM-DD] [--json]

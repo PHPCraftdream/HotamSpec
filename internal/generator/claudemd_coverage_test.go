@@ -1020,13 +1020,16 @@ func TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal(t *test
 
 // === Batch A3 enforcement-debt closure (wave6 category-a) ===
 
-// TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed enforces
-// R-operator-crystal-embeds-tools-distilled: the EMBEDDED-TOOLS block renders
-// one full line per Implemented tool (command + purpose + Implemented status)
-// while collapsing all Planned tools into a single count summary line — never
-// one line per Planned tool. A regression that gave Planned tools individual
-// lines or dropped an Implemented tool's line fails this test.
-func TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed(t *testing.T) {
+// TestRenderEmbeddedToolsBlock_PointerOneLiner enforces
+// R-operator-crystal-embeds-tools-distilled: the EMBEDDED-TOOLS block is a
+// compact pointer-only reference — it reports the Implemented and Planned tool
+// counts (computed from the methodology.Tools registry) and directs the
+// operator to `hotam -h` / `hotam status --json` / `hotam req` / `hotam brief`
+// / docs/gen/tools/INDEX.md for on-demand detail. It must NOT render one line
+// per tool — that earlier distillation shape was superseded (wave-5 review,
+// task #128) now that agentic on-demand discovery makes the embedded list
+// redundant.
+func TestRenderEmbeddedToolsBlock_PointerOneLiner(t *testing.T) {
 	t.Parallel()
 	out := RenderEmbeddedToolsBlock()
 
@@ -1042,90 +1045,79 @@ func TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed(t *testing.
 		t.Fatal("precondition: registry has no Implemented tools — test is meaningless")
 	}
 
-	// one full line per Implemented tool: "- **<display>** — <purpose> Implemented (`hotam <display>`)."
+	// The block must report the Implemented count computed from the registry.
+	wantImpl := fmt.Sprintf("%d Implemented", len(implemented))
+	if !strings.Contains(out, wantImpl) {
+		t.Errorf("block should report %q (registry Implemented count), missing:\n%s", wantImpl, out)
+	}
+
+	// The block must report the Planned count computed from the registry.
+	wantPlanned := fmt.Sprintf("%d Planned", len(planned))
+	if !strings.Contains(out, wantPlanned) {
+		t.Errorf("block should report %q (registry Planned count), missing:\n%s", wantPlanned, out)
+	}
+
+	// The block must point at hotam -h for the full command list.
+	if !strings.Contains(out, "`hotam -h`") {
+		t.Errorf("block should mention `hotam -h` for the full command list:\n%s", out)
+	}
+
+	// The block must point at hotam status --json for structured access.
+	if !strings.Contains(out, "hotam status --json") {
+		t.Errorf("block should mention `hotam status --json` for structured access:\n%s", out)
+	}
+
+	// The block must NOT render one line per Implemented tool (old shape).
 	for _, tl := range implemented {
 		display := strings.ReplaceAll(tl.Command, "_", "-")
-		if !strings.Contains(out, "- **"+display+"** — ") {
-			t.Errorf("Implemented tool %q missing its own line (display %q):\n%s", tl.Command, display, out)
-		}
-		if !strings.Contains(out, "Implemented (`hotam "+display+"`).") {
-			t.Errorf("Implemented tool %q missing the 'Implemented (`hotam %s`).' status suffix", tl.Command, display)
-		}
-		if !strings.Contains(out, tl.Purpose) {
-			t.Errorf("Implemented tool %q purpose text missing from its line", tl.Command)
-		}
-	}
-
-	// the count of Implemented status lines must equal the Implemented registry count
-	implementedLines := 0
-	for _, line := range strings.Split(out, "\n") {
-		if strings.Contains(line, "Implemented (`hotam ") {
-			implementedLines++
-		}
-	}
-	if implementedLines != len(implemented) {
-		t.Errorf("expected %d Implemented status lines, got %d", len(implemented), implementedLines)
-	}
-
-	// Planned tools must be collapsed into exactly ONE summary line, NOT one line each
-	if len(planned) > 0 {
-		summaryCount := strings.Count(out, "additional tools registered in the methodology but not yet implemented")
-		if summaryCount != 1 {
-			t.Errorf("expected exactly 1 Planned summary line, got %d", summaryCount)
-		}
-		want := fmt.Sprintf("- %d additional tools", len(planned))
-		if !strings.Contains(out, want) {
-			t.Errorf("Planned summary line should report %d tools, missing %q:\n%s", len(planned), want, out)
-		}
-		for _, tl := range planned {
-			if strings.Contains(out, "- **"+strings.ReplaceAll(tl.Command, "_", "-")+"** — ") {
-				t.Errorf("Planned tool %q must be collapsed into the summary, not given its own line", tl.Command)
-			}
+		if strings.Contains(out, "- **"+display+"** — ") {
+			t.Errorf("block should NOT have a per-tool bullet for %q (old one-line-per-tool shape):\n%s", tl.Command, out)
 		}
 	}
 }
 
 // TestRenderEmbeddedToolsBlock_IsPureRegistryProjection enforces
-// R-tools-registry-generated: the EMBEDDED-TOOLS block is a pure projection of
-// the methodology.Tools registry — every Implemented entry appears, and every
-// `hotam <command>` invocation in the output names a real Implemented registry
-// tool (drift guard in both directions: nothing missing, nothing invented).
+// R-tools-registry-generated: the EMBEDDED-TOOLS block is a projection of
+// the methodology.Tools registry — the Implemented/Planned counts it reports
+// match the registry, and every `hotam <command>` invocation in the output
+// names a real Implemented registry tool (drift guard in both directions:
+// counts never silently diverge, nothing invented).
 func TestRenderEmbeddedToolsBlock_IsPureRegistryProjection(t *testing.T) {
 	t.Parallel()
 	out := RenderEmbeddedToolsBlock()
 
 	implementedDisplays := make(map[string]bool)
+	implCount := 0
 	plannedCount := 0
 	for _, tl := range methodology.Tools.All() {
 		display := strings.ReplaceAll(tl.Command, "_", "-")
 		if tl.Status == methodology.Implemented {
 			implementedDisplays[display] = true
+			implCount++
 		} else {
 			plannedCount++
 		}
 	}
 
-	// forward direction: every Implemented tool's display name appears
-	for display := range implementedDisplays {
-		if !strings.Contains(out, "**"+display+"**") {
-			t.Errorf("Implemented tool %q does not appear in output — registry entry missing from projection", display)
-		}
+	// The Implemented count in the output must equal the registry's count.
+	if !strings.Contains(out, fmt.Sprintf("%d Implemented", implCount)) {
+		t.Errorf("block should report %d Implemented (registry count), missing in:\n%s", implCount, out)
 	}
 
-	// reverse direction: every `hotam <cmd>` invocation names an Implemented registry tool
-	cmdRE := regexp.MustCompile("`hotam ([a-z0-9-]+)`")
+	// The Planned count in the output must equal the registry's count.
+	if !strings.Contains(out, fmt.Sprintf("%d Planned", plannedCount)) {
+		t.Errorf("block should report %d Planned (registry count), missing in:\n%s", plannedCount, out)
+	}
+
+	// Reverse direction: every `hotam <cmd>` invocation (where <cmd> does not
+	// start with '-' — that is a flag like -h, not a tool name) names an
+	// Implemented registry tool. The regex captures only single-word commands
+	// immediately inside backticks.
+	cmdRE := regexp.MustCompile("`hotam ([a-z][a-z0-9-]*)`")
 	for _, m := range cmdRE.FindAllStringSubmatch(out, -1) {
 		cmd := m[1]
 		if !implementedDisplays[cmd] {
 			t.Errorf("output invokes `hotam %s` but no Implemented registry tool has that display name — drift (invented tool)", cmd)
-		}
-	}
-
-	// the planned summary count must equal the registry's Planned count
-	if plannedCount > 0 {
-		want := fmt.Sprintf("- %d additional tools", plannedCount)
-		if !strings.Contains(out, want) {
-			t.Errorf("Planned summary should report %d (registry Planned count), missing %q", plannedCount, want)
 		}
 	}
 }

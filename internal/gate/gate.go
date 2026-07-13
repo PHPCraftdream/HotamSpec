@@ -16,9 +16,9 @@ import (
 )
 
 type GateResult struct {
-	Confident bool
-	NodeIDs   []string
-	Reason    string
+	Confident bool     `json:"confident"`
+	NodeIDs   []string `json:"node_ids"`
+	Reason    string   `json:"reason"`
 }
 
 var alwaysRun = []string{

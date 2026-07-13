@@ -10,6 +10,7 @@ import (
 func cmdAllViolations(args []string) error {
 	fs := newFlagSet("all-violations")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
+	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 
 	domainDir, err := resolveDomain(*domain)
@@ -20,14 +21,30 @@ func cmdAllViolations(args []string) error {
 	if err != nil {
 		return err
 	}
-	for _, v := range violations {
-		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
+	if *asJSON {
+		if violations == nil {
+			violations = []invariants.Violation{}
+		}
+		if err := printJSON(violations); err != nil {
+			return err
+		}
+	} else {
+		for _, v := range violations {
+			fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
+		}
 	}
+	// Exit code is identical with or without --json: 1 if any violations,
+	// 0 if clean. --json changes the OUTPUT FORMAT, never the exit-code
+	// contract.
 	if len(violations) > 0 {
-		fmt.Fprintf(os.Stderr, "%d violation(s) found\n", len(violations))
+		if !*asJSON {
+			fmt.Fprintf(os.Stderr, "%d violation(s) found\n", len(violations))
+		}
 		os.Exit(1)
 	}
-	fmt.Println("0 violations — graph clean")
+	if !*asJSON {
+		fmt.Println("0 violations — graph clean")
+	}
 	return nil
 }
 
