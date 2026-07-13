@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-scoped-constitution",
+  "claim": "For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus; per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. Not yet implemented: `hotam gen-spec` (internal/generator) regenerates the single consolidated operator crystal today (R-claude-md-consolidates-when-single-agent); the per-agent scoped-constitution path is part of the agents/ infrastructure (Planned) and materializes only when a real sub-agent is scaffolded.",
+  "last_reviewed_at": "2026-07-13"
+}

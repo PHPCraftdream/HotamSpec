@@ -93,19 +93,58 @@ func requirementToCard(r ontology.Requirement) RequirementCard {
 		Status:         r.Status,
 		Enforcement:    r.Enforcement,
 		Enforceability: r.Enforceability,
-		EnforcedBy:     r.EnforcedBy,
-		Assumptions:    r.Assumptions,
-		Relations:      r.Relations,
+		EnforcedBy:     nonNilStrings(r.EnforcedBy),
+		Assumptions:    nonNilStrings(r.Assumptions),
+		Relations:      nonNilRelations(r.Relations),
 		Summary:        r.Summary,
 		MTag:           r.MTag,
 		CreatedAt:      r.CreatedAt,
 		SettledAt:      r.SettledAt,
 		LastReviewedAt: r.LastReviewedAt,
 		ReviewAfter:    r.ReviewAfter,
-		Evidence:       r.Evidence,
-		SourceRefs:     r.SourceRefs,
-		History:        r.History,
+		Evidence:       nonNilStrings(r.Evidence),
+		SourceRefs:     nonNilStrings(r.SourceRefs),
+		History:        nonNilHistory(r.History),
 	}
+}
+
+// nonNilStrings/nonNilRelations/nonNilHistory/nonNilVariants normalize a nil
+// slice to a non-nil empty one. Requirement/Conflict array fields are
+// deserialized straight from a domain's graph.json (internal/loader), which
+// may legitimately contain `null` or an omitted key for an array field (that
+// persisted-state format is not this normalization's concern). But the SAME
+// Go nil then flows unchanged into RequirementCard/ConflictCard, the shape
+// `hotam req show`/`hotam req context --json` marshal to the CLI's
+// machine-readable output — where a `null` array is a footgun for an agent
+// consumer (e.g. `for x of null` throws in JS) that a `[]` is not. This is
+// the one place that boundary is crossed, so it is the right place to close
+// the gap rather than touching the loader or the persisted format.
+func nonNilStrings(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
+}
+
+func nonNilRelations(r []ontology.Relation) []ontology.Relation {
+	if r == nil {
+		return []ontology.Relation{}
+	}
+	return r
+}
+
+func nonNilHistory(h []ontology.HistoryEntry) []ontology.HistoryEntry {
+	if h == nil {
+		return []ontology.HistoryEntry{}
+	}
+	return h
+}
+
+func nonNilVariants(v []ontology.Variant) []ontology.Variant {
+	if v == nil {
+		return []ontology.Variant{}
+	}
+	return v
 }
 
 func ShowConflict(g *ontology.Graph, id string) (ConflictCard, error) {
@@ -123,14 +162,14 @@ func conflictToCard(c ontology.Conflict) ConflictCard {
 		Kind:             KindConflict,
 		Axis:             c.Axis,
 		Context:          c.Context,
-		Members:          c.Members,
+		Members:          nonNilStrings(c.Members),
 		Steward:          c.Steward,
 		Lifecycle:        c.Lifecycle,
 		SharedAssumption: c.SharedAssumption,
-		Derived:          c.Derived,
+		Derived:          nonNilStrings(c.Derived),
 		RevisitMarker:    c.RevisitMarker,
 		DecidedBy:        c.DecidedBy,
-		Variants:         c.Variants,
+		Variants:         nonNilVariants(c.Variants),
 		Signoff:          c.Signoff,
 		CreatedAt:        c.CreatedAt,
 		DecidedAt:        c.DecidedAt,

@@ -1,0 +1,25 @@
+{
+  "id": "R-entity-is-declarative",
+  "kind": "Requirement",
+  "claim": "The framework shall supply no built-in EntityType values â€” all entity types are declared by domains in build_graph().",
+  "why": "The content-free contract (R-content-free-no-business-data) extends to the entity layer: entity types are domain knowledge, not framework knowledge. Supplying built-in types would violate the blank-kit invariant and couple the framework to a particular domain model. ENFORCED 2026-07-13: TestEntityTypesAreDeclarative in internal/ontology/entity_declarative_test.go mechanically verifies this claim: a zero-value Graph has an empty EntityTypes slice, and a static source scan of internal/ and cmd/hotam/ finds no package-level var binding an EntityType value (entity types are domain-only declarations).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestEntityTypesAreDeclarative"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-06-30",
+  "review_after": "2026-12-30",
+  "evidence": [],
+  "source_refs": []
+}

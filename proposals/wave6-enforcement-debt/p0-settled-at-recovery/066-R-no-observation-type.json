@@ -1,0 +1,32 @@
+{
+  "kind": "Requirement",
+  "id": "R-no-observation-type",
+  "claim": "The ontology (internal/ontology) shall define no Observation or Evidence struct type anywhere -- Assumption remains the ontology's sole belief-carrying node type.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-observation-evidence-scope (STRUCTURAL, M21 steward verdict) makes a broader claim -- operator epistemics live in the working dialogue, crystallized only on request -- that is not fully machine-checkable (no static scan can verify 'lives in the dialogue'). But its NEGATIVE half -- no separate Observation/Evidence type exists -- IS mechanically checkable. Split out as its own atom (R-commit-boundary-checkable's slice-of-a-broader-claim pattern) so the mechanical slice can honestly reach ENFORCED while the parent claim (R-observation-evidence-scope) stays STRUCTURAL, undiluted by a partial enforcer. No Observation or Evidence struct is defined anywhere in internal/ontology/ -- Assumption (internal/ontology/assumption.go) is the sole belief-carrying node type. STRUCTURAL: the negative-existence guarantee is real (no such struct exists) but not machine-checked. (Historically the Python enforcement was an AST scan of spec/src/hotam_spec/*.py for a class named Observation or Evidence; an equivalent enforcer would scan internal/ontology/*.go for a struct of that name, but none is registered.) ENFORCED 2026-07-13: TestNoObservationType in internal/selfcheck/ontology_shape_test.go mechanically verifies this claim by static source scan: no type declaration named Observation or Evidence exists in non-test internal/ontology/*.go (Assumption remains the sole belief-carrying node type). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestNoObservationType"
+  ],
+  "assumptions": [
+    "A-most-knowledge-crystallizable"
+  ],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-observation-evidence-scope"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-02",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-12-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/ontology/assumption.go"
+  ]
+}

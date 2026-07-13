@@ -1,6 +1,7 @@
 package invariants
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -196,4 +197,105 @@ func TestCheckGoalOwnerIsOperator_FiresOnDanglingOwner(t *testing.T) {
 	if !hasViolationFor(vs, "GOAL-1") {
 		t.Fatalf("expected violation for dangling owner, got %v", vs)
 	}
+}
+
+// TestProjectScopeIsIDProjectionNotCopy enforces R-scope-is-projection: an
+// operator's sub-domain is a computed PROJECTION (an id-set view derived by
+// prefix match over the shared graph), never a copy of any node. projectScope
+// must (a) select only the nodes whose ID matches the prefix tuple, and (b)
+// carry ONLY id sets -- it embeds no node field data, so a projection stays an
+// ID reference set whose membership is independent of the source nodes' non-ID
+// fields. Mutating a requirement's Claim after projecting must not change which
+// IDs the projection selected, and the projected ID must still resolve into the
+// live (mutated) node rather than a frozen copy -- proving it is a view.
+func TestProjectScopeIsIDProjectionNotCopy(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-aa", Claim: "original A"},
+			{ID: "R-bb", Claim: "original B"},
+		},
+		Conflicts: []ontology.Conflict{{ID: "C-aa", Axis: "x", Context: "y"}},
+	}
+	view := projectScope(g, []string{"R-a"})
+
+	// (a) prefix match: R-aa selected, R-bb excluded; no conflict matches "R-a".
+	if _, ok := view.requirementIDs["R-aa"]; !ok {
+		t.Errorf("projectScope must select prefix-matching R-aa; got requirementIDs=%v", view.requirementIDs)
+	}
+	if _, ok := view.requirementIDs["R-bb"]; ok {
+		t.Errorf("projectScope must NOT select non-matching R-bb (it is a projection, not a copy of all nodes); got requirementIDs=%v", view.requirementIDs)
+	}
+	if len(view.conflictIDs) != 0 {
+		t.Errorf("no conflict ID matches prefix \"R-a\"; expected empty conflictIDs, got %v", view.conflictIDs)
+	}
+
+	// (b) the projection carries ids only -- mutating a source node's non-ID
+	// field after projecting leaves the projected id-set unchanged, and the id
+	// still resolves into the live (mutated) node, proving no data was copied.
+	g.Requirements[0].Claim = "mutated"
+	if _, ok := view.requirementIDs["R-aa"]; !ok {
+		t.Errorf("mutating a source node's Claim must not evict its projected id (projection references ids, not a copied snapshot)")
+	}
+	var resolved *ontology.Requirement
+	for i := range g.Requirements {
+		if g.Requirements[i].ID == "R-aa" {
+			resolved = &g.Requirements[i]
+		}
+	}
+	if resolved == nil {
+		t.Fatalf("projected id R-aa no longer resolves in the graph")
+	}
+	if resolved.Claim != "mutated" {
+		t.Errorf("projected id resolves into a frozen copy (Claim=%q); a projection must reference the live node (Claim=%q)",
+			resolved.Claim, "mutated")
+	}
+}
+
+// TestScopeOverlapNodeIDs_DeterministicIntersection enforces
+// R-scope-overlap-generated: when two operators' scope projections share a node,
+// the overlap is computed (never hidden). scopeOverlapNodeIDs(a, b) must return
+// the sorted intersection of the two views across BOTH requirement and conflict
+// id sets. The overlapping case below shares R-2/R-3 (requirements) and C-2
+// (conflict); the disjoint sub-check confirms an empty result is returned (not
+// hidden or silently merged) when nothing is shared.
+func TestScopeOverlapNodeIDs_DeterministicIntersection(t *testing.T) {
+	t.Parallel()
+	a := scopeView{
+		requirementIDs: map[string]struct{}{"R-1": {}, "R-2": {}, "R-3": {}},
+		conflictIDs:    map[string]struct{}{"C-1": {}, "C-2": {}},
+	}
+	b := scopeView{
+		requirementIDs: map[string]struct{}{"R-2": {}, "R-3": {}, "R-4": {}},
+		conflictIDs:    map[string]struct{}{"C-2": {}, "C-3": {}},
+	}
+	got := scopeOverlapNodeIDs(a, b)
+	// Sorted union of the intersection: {R-2, R-3} (requirements) ∪ {C-2}
+	// (conflicts), sorted lexicographically as one combined id set.
+	want := []string{"C-2", "R-2", "R-3"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("scopeOverlapNodeIDs overlapping = %v, want %v (sorted intersection across req+conflict ids)", got, want)
+	}
+	if !sortStringSliceIsSorted(got) {
+		t.Errorf("scopeOverlapNodeIDs must return a sorted slice (deterministic), got %v", got)
+	}
+
+	// Disjoint views: overlap is empty -- nothing is hidden or silently merged.
+	disjoint := scopeOverlapNodeIDs(
+		scopeView{requirementIDs: map[string]struct{}{"R-1": {}}, conflictIDs: map[string]struct{}{"C-1": {}}},
+		scopeView{requirementIDs: map[string]struct{}{"R-2": {}}, conflictIDs: map[string]struct{}{"C-2": {}}},
+	)
+	if len(disjoint) != 0 {
+		t.Errorf("scopeOverlapNodeIDs of disjoint views must be empty, got %v", disjoint)
+	}
+}
+
+// sortStringSliceIsSorted reports whether s is in ascending lexicographic order.
+func sortStringSliceIsSorted(s []string) bool {
+	for i := 1; i < len(s); i++ {
+		if s[i-1] > s[i] {
+			return false
+		}
+	}
+	return true
 }

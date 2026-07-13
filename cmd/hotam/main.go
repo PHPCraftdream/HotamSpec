@@ -55,6 +55,8 @@ func main() {
 		err = cmdReq(args)
 	case "due":
 		err = cmdDue(args)
+	case "status":
+		err = cmdStatus(args)
 	case "inspect":
 		err = cmdInspect(args)
 	case "confront":
@@ -113,6 +115,11 @@ Commands:
         Compact agentic read interface over the domain graph (hotam req -h for details).
   due [--domain <path>] [--today YYYY-MM-DD] [--json]
         Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
+  status [--domain <path>] [--today YYYY-MM-DD] [--json]
+        Single-shot compact summary combining what-now's top action + debt,
+        due's freshness counts, and all-violations' violation count, so an
+        agent doesn't need to run all three separately. Never gates; exit
+        code always 0.
   inspect [--domain <path>] [--json] [--limit N] [--min-score N]
         Advisory listing of semantic conflict candidates with evidence
         (shared-assumption clusters, entity-state suspects, lexical claim

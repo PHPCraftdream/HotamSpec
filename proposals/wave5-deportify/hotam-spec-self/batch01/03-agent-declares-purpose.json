@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-declares-purpose",
+  "claim": "Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable PURPOSE placed next to SCOPE keeps the agent's contract in one place, distinct from the prose README. Not yet implemented: the agents/ scaffolding infrastructure (create-agent, scope/purpose declaration) is Planned, so no agent exists to declare a PURPOSE yet; the policy stands for the moment one is scaffolded.",
+  "last_reviewed_at": "2026-07-13"
+}

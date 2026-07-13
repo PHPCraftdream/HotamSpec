@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-free-no-business-data",
+  "claim": "The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hotam/*) ship no business data: all requirements, axes, and stakeholders live exclusively in per-domain graphs (domains/*/graph.json). Business data in the framework packages would couple them to a specific domain, violating content-free neutrality. PROSE (not ENFORCED): the no-business-data enforcer is not yet implemented (historically test_content_free.py::test_no_domain_instances_in_tensio_src).",
+  "last_reviewed_at": "2026-07-13"
+}

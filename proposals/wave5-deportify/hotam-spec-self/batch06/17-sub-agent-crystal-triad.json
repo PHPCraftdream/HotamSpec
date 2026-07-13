@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-sub-agent-crystal-triad",
+  "claim": "Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can reason like any operator, (2) a connection to its senior/parent agent so it knows where to escalate and whose scope it is bounded within, and (3) its own scope-filtered domain business so it acts only within its delegated concern. Not yet implemented: the per-agent crystal materializer is Planned (not implemented) -- create-agent is a Planned methodology.Tool, and the generator (internal/generator) produces a single consolidated root CLAUDE.md with no per-agent sub-operator files at all. (Historical note: the original scaffolder was tools/create_agent.py, which built domains/<domain>/agents/<name>/ plus tools/gen_spec.py emitting the SCOPE-filtered CONSTITUTION, AGENT-MAP parent linkage, and embedded thinking/tools per agent.) This rule is recorded now, while zero sub-agents are actively spawned, so agent-spawning stays disciplined later -- the triad shape is the contract the future per-agent generator must satisfy when it is implemented. Sibling rule R-claude-md-consolidates-when-single-agent governs WHEN this per-file triad model activates: only once N>1 concurrently-active agents exist; until then the triad content lives merged inside the single root CLAUDE.md (the EMBEDDED-THINKING/CONSTITUTION/OPERATOR-RECURSION blocks). PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

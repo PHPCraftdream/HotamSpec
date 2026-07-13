@@ -1,0 +1,25 @@
+{
+  "kind": "Requirement",
+  "id": "R-recently-rejected-surfaced",
+  "claim": "Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every REJECTED requirement whose why contains 'REJECTED — REPLACES' to surface anti-relitigation evidence before re-derivation.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Anti-relitigation discipline made structural: when the operator considers proposing an architectural change, the substrate puts previously-rejected proposals in front of it. Eliminates re-deriving rejected claims without citation of the replacement. ENFORCED 2026-07-13: TestRenderRecentlyRejectedBlock_SurfacesEveryMarkerCarrier in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph.",
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestRenderRecentlyRejectedBlock_SurfacesEveryMarkerCarrier"
+  ],
+  "enforceability": "ENFORCEABLE",
+  "m_tag": "",
+  "summary": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-06-30",
+  "review_after": "2026-12-30",
+  "evidence": [],
+  "source_refs": []
+}

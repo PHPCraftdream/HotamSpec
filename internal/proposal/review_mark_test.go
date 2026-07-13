@@ -112,6 +112,7 @@ func TestApply_ReviewMark_DefaultsReviewedAtToToday(t *testing.T) {
 	p := ProposedReviewMark{
 		RequirementID: "R-2",
 		ReviewAfter:   "2027-06-01",
+		Evidence:      []string{"docs/spot-check-2026-07.md"},
 	}
 	if err := Apply(path, today, p); err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -129,7 +130,7 @@ func TestApply_ReviewMark_DefaultsReviewedAtToToday(t *testing.T) {
 func TestApply_ReviewMark_UnknownRequirementFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
-	p := ProposedReviewMark{RequirementID: "R-does-not-exist", ReviewedAt: today}
+	p := ProposedReviewMark{RequirementID: "R-does-not-exist", ReviewedAt: today, Evidence: []string{"docs/audit.md"}}
 	assertApplyFails(t, path, p, "not found")
 }
 
@@ -137,7 +138,34 @@ func TestApply_ReviewMark_EmptyProposalFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedReviewMark{RequirementID: "R-1"}
-	assertApplyFails(t, path, p, "no-op")
+	assertApplyFails(t, path, p, "evidence")
+}
+
+func TestApply_ReviewMark_WithoutEvidenceFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	// reviewed_at and review_after are both set, but evidence is absent — under
+	// the prior "at least one of" rule this would pass; R-review-mark-carries-
+	// evidence makes evidence unconditional.
+	p := ProposedReviewMark{
+		RequirementID: "R-1",
+		ReviewedAt:    today,
+		ReviewAfter:   "2027-01-12",
+	}
+	assertApplyFails(t, path, p, "evidence")
+}
+
+func TestApply_ReviewMark_WhitespaceEvidenceFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	// A whitespace-only entry is not an attestation; trimNonEmpty must drop it
+	// and validation must then reject the mark for lack of real evidence.
+	p := ProposedReviewMark{
+		RequirementID: "R-1",
+		ReviewedAt:    today,
+		Evidence:      []string{"   "},
+	}
+	assertApplyFails(t, path, p, "evidence")
 }
 
 func TestApply_ReviewMark_MissingRequirementIDFails(t *testing.T) {

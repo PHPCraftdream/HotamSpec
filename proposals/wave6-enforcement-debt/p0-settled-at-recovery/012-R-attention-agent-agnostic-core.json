@@ -1,0 +1,28 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-agent-agnostic-core",
+  "claim": "The attention core shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Steward verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothing of any one agent platform -- the platform adapter is a thin wrapper, not part of the core. This is the same backend-neutrality stance as R-core-imports-stdlib-or-hotam-spec-only, extended with a claim-specific platform-token scan. Not yet implemented: the attention layer is Planned (previously the core lived in src/hotam_spec/attention.py, the adapter in tools/attention_hook.py, guarded by tests/test_attention_core.py::test_core_names_no_platform_token). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [],
+  "assumptions": [
+    "A-text-grounded-in-models"
+  ],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-backend-scope"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-04",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-08-12",
+  "evidence": [],
+  "source_refs": []
+}

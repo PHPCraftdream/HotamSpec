@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-proposed-conflict-kind-exists",
+  "claim": "The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via `hotam apply-proposal`.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Closes recorded spec-tool drift: a DECIDED rationale already promised 'ProposedConflict' while only transitions existed, leaving surfaced tensions without a mechanical creation path (the loop could move conflicts but never materialize one). ProposedConflict (internal/proposal/types.go) is a real proposal kind: ProposedConflict.mutate (internal/proposal/mutate.go) computes the id via ontology.ConflictIdentity(axis, context), never caller-supplied (R-stable-conflict-identity); validate() (internal/proposal/validate.go) requires the axis to already exist in the graph's axes (R-axis-controlled-vocab; admitting a new axis is a separate act), requires >= 2 distinct member requirement ids (R-conflict-min-two-members), and refuses a steward who owns any member (R-steward-distinct-from-owners); lifecycle always starts DETECTED (or a caller-supplied initial_lifecycle, which must carry a decided_by if DECIDED). Applied via `hotam apply-proposal` (cmd/hotam/apply_proposal.go) or `hotam land`. Enforced by TestApply_Conflict_Create (internal/proposal/proposal_test.go). Extends R-active-loop-protocol's floor exactly as EntityType and OperatorBudget did.",
+  "last_reviewed_at": "2026-07-13"
+}

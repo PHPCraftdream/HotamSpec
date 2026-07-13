@@ -1,0 +1,30 @@
+{
+  "kind": "Requirement",
+  "id": "R-content-layout-evolution",
+  "claim": "Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.json, with gen-spec discovering all of them. domains/<name>/graph.json is the graph source, internal/loader (LoadGraph) discovers it, and `hotam gen-spec` (internal/generator) regenerates docs/gen/*.md from it (superseding the earlier single-file content graph). ENFORCED by check_domain_manifest_exists_and_importable (internal/invariants/domain_structure.go). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "check_domain_manifest_exists_and_importable"
+  ],
+  "assumptions": [
+    "A-bootstrap-self-applies",
+    "A-graph-fits-memory"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-09-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/loader/loader.go",
+    "internal/invariants/domain_structure.go",
+    "cmd/hotam/gen_spec.go"
+  ]
+}

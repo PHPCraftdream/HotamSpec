@@ -1,6 +1,8 @@
 package diagnose
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -45,6 +47,45 @@ func TestConfront_UniqueCandidateIsClear(t *testing.T) {
 	}
 	if len(res.Settled) != 0 || len(res.Rejected) != 0 {
 		t.Errorf("expected empty hit lists, got settled=%v rejected=%v", res.Settled, res.Rejected)
+	}
+}
+
+// TestConfront_ClearResult_JSONArraysNotNull is the byte-level regression pin
+// for the P2 "empty arrays instead of null in JSON output" fix: on a clear
+// result (the common `hotam confront --json` outcome — no overlap found),
+// the marshaled ConfrontResult must literally contain `"settled":[]` and
+// `"rejected":[]`, never `"settled":null` / `"rejected":null`. A Go-level
+// len()==0 check does not prove what encoding/json actually emits for a nil
+// vs. empty slice, so this asserts the raw marshaled bytes.
+func TestConfront_ClearResult_JSONArraysNotNull(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			settledClaim("R-zorblatt", "team-a", "the frobnicator shall quux the blargh nightly"),
+		},
+	}
+	res := Confront(g, "a totally unrelated novel idea about quantum banana scheduling")
+	if !res.Clear {
+		t.Fatalf("Clear = false, want true (fixture must exercise the empty-array path)")
+	}
+
+	data, err := json.Marshal(res)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	raw := string(data)
+
+	if !strings.Contains(raw, `"settled":[]`) {
+		t.Errorf("expected literal `\"settled\":[]` in marshaled JSON, got:\n%s", raw)
+	}
+	if strings.Contains(raw, `"settled":null`) {
+		t.Errorf("marshaled JSON must never contain `\"settled\":null`, got:\n%s", raw)
+	}
+	if !strings.Contains(raw, `"rejected":[]`) {
+		t.Errorf("expected literal `\"rejected\":[]` in marshaled JSON, got:\n%s", raw)
+	}
+	if strings.Contains(raw, `"rejected":null`) {
+		t.Errorf("marshaled JSON must never contain `\"rejected\":null`, got:\n%s", raw)
 	}
 }
 
@@ -156,6 +197,85 @@ func TestConfront_OppositeMarkerLowersThreshold(t *testing.T) {
 	}
 	if res.Settled[0].Score < 1+3 {
 		t.Errorf("score = %d, want >= 4 (1 shared token + 3 marker bonus)", res.Settled[0].Score)
+	}
+}
+
+// TestConfront_CorpusCommonWordsAloneDoNotFire is the direct proof of goal
+// (2) from the P1 noise-reduction task: on a corpus large enough for
+// corpusCommonTokens to engage (>= MinCorpusSizeForFrequencyFilter SETTLED
+// requirements, with "requirement" pushed past the 5% document-frequency
+// ceiling by repeating it across the filler corpus, mirroring the review's
+// own cited false-positive word), a CANDIDATE that shares ONLY corpus-common
+// words with a SETTLED requirement must NOT fire — this is the "confront
+// flags common words like 'every', 'requirement', 'enforce' as suspicious"
+// complaint from the external review, reproduced and closed. The companion
+// test TestConfront_RareSharedTokensStillFire proves the other direction
+// (candidates sharing genuinely narrow vocabulary still fire), so this pair
+// is non-vacuous in both directions per the task's goal (2).
+func TestConfront_CorpusCommonWordsAloneDoNotFire(t *testing.T) {
+	t.Parallel()
+	n := frequencyCorpusSize()
+	filler := buildFrequencyCorpus(n)
+	// Every filler claim ALSO repeats "every" and "requirement" so both
+	// clear the 5% ceiling, mirroring the review's own cited false-positive
+	// words, not just the fixture's built-in "system".
+	for i := range filler {
+		filler[i].Claim = "every requirement: " + filler[i].Claim
+	}
+	target := settledClaim("R-target", "team-a", "every requirement governs the system")
+
+	g := &ontology.Graph{Requirements: append(append([]ontology.Requirement{}, filler...), target)}
+
+	// Candidate shares ONLY corpus-common words ("every", "requirement",
+	// "system") with R-target — "governs" vs "protects" keeps every OTHER
+	// token disjoint, so no rare/topical token is shared.
+	res := Confront(g, "every requirement protects the system")
+	for _, hit := range res.Settled {
+		if hit.ID == "R-target" {
+			t.Errorf("R-target fired as a duplicate suspect (%+v) on a candidate sharing only corpus-common words (every/requirement/system) — corpus-common exclusion did not engage", hit)
+		}
+	}
+}
+
+// TestConfront_RareSharedTokensStillFire is the positive-direction companion
+// to TestConfront_CorpusCommonWordsAloneDoNotFire: a candidate sharing a
+// genuinely rare, narrow token with a SETTLED requirement (in addition to
+// corpus-common words) must still fire — proving the frequency exclusion
+// narrows the signal, it does not silently disable CONFRONT altogether.
+func TestConfront_RareSharedTokensStillFire(t *testing.T) {
+	t.Parallel()
+	n := frequencyCorpusSize()
+	filler := buildFrequencyCorpus(n)
+	for i := range filler {
+		filler[i].Claim = "every requirement: " + filler[i].Claim
+	}
+	target := settledClaim("R-target-rare", "team-a", "every requirement governs the system quarantine escalation window")
+
+	g := &ontology.Graph{Requirements: append(append([]ontology.Requirement{}, filler...), target)}
+
+	// Shares corpus-common words AND two rare, narrow tokens (quarantine,
+	// escalation) — two, not one, because with no opposite marker present
+	// MinLexicalOverlapTokens (2) is the threshold that must be cleared.
+	res := Confront(g, "every requirement protects the system quarantine escalation period")
+	found := false
+	for _, hit := range res.Settled {
+		if hit.ID == "R-target-rare" {
+			found = true
+			wantRare := map[string]bool{"quarantine": false, "escalation": false}
+			for _, tok := range hit.Shared {
+				if _, ok := wantRare[tok]; ok {
+					wantRare[tok] = true
+				}
+			}
+			for tok, seen := range wantRare {
+				if !seen {
+					t.Errorf("R-target-rare hit.Shared = %v, want it to include the rare token %q", hit.Shared, tok)
+				}
+			}
+		}
+	}
+	if !found {
+		t.Errorf("R-target-rare did not fire — it shares the rare, narrow tokens quarantine/escalation with the candidate and should still be flagged")
 	}
 }
 

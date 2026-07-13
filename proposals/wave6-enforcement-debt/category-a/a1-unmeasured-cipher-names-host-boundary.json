@@ -1,0 +1,37 @@
+{
+  "assumptions": [
+    "A-finite-context-operators"
+  ],
+  "claim": "While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call.",
+  "created_at": "2026-07-05",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand"
+  ],
+  "enforcement": "ENFORCED",
+  "evidence": [],
+  "id": "R-unmeasured-cipher-names-host-boundary",
+  "kind": "Requirement",
+  "last_reviewed_at": "2026-07-13",
+  "m_tag": "",
+  "owner": "ai-agent",
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-unmeasured-cipher-names-user-action"
+    },
+    {
+      "kind": "replaces",
+      "target": "R-measure-context-size"
+    }
+  ],
+  "review_after": "2027-02-12",
+  "settled_at": "2026-07-12",
+  "source_refs": [
+    "internal/generator/livestate.go",
+    "internal/generator/testdata/fixture/live-state.md"
+  ],
+  "status": "SETTLED",
+  "summary": "",
+  "why": "REPLACES R-unmeasured-cipher-names-user-action (steward verdict 2026-07-05). Measuring working-context would require the sovereign host's statusline / global configuration to deliver ctx_pct — cooperation the framework will not reach for (R-work-within-launch-dir). The prior atom demanded the UNMEASURED line name the exact command to run; the only such command (setup_context_hook.py --patch-global --apply) patched the host and is now removed. Naming a nonexistent in-bounds command would be dishonest, so the cipher instead states the host boundary plainly. This is realized by the static constant ctxLineStatic (internal/generator/livestate.go:25): the exact string 'context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary' is emitted verbatim as the last line of every LIVE-STATE block by BuildLiveState (internal/generator/livestate.go), which runs on every `hotam gen-spec` and `hotam land`. The fixture at internal/generator/testdata/fixture/live-state.md asserts this line is rendered exactly. The cipher measures only if the local stdin payload honestly carries ctx_pct. STRUCTURAL (not ENFORCED): the static-line presence is upheld by the generator's own rendering (the line is a hardcoded constant, not computed), not by a dedicated enforcer test. ENFORCED 2026-07-13: TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand in internal/generator/atoms_livestate_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-claude-adapter",
+  "claim": "The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Steward verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet implemented: setup-hooks and the attention adapter are Planned (previously implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [],
+  "assumptions": [
+    "A-text-grounded-in-models"
+  ],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-sensorium-committed"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-04",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-08-12",
+  "evidence": [],
+  "source_refs": []
+}

@@ -51,8 +51,19 @@ type ConfrontResult struct {
 // an opposite marker is also present). REJECTED hits additionally carry any
 // known REPLACES successor (via ontology.ReplacesMap) so the operator can cite
 // the replacement instead of re-deriving the rejected idea.
+//
+// Tokens on BOTH sides (candidate and requirement) are filtered through the
+// SAME corpus-common exclusion InspectLexicalClaimOverlap uses
+// (corpusCommonTokens(g), computed fresh from g's own SETTLED claims) —
+// see inspect.go's doc comments for the full rationale. In practice this
+// means a candidate that shares only domain-frequent connective words with a
+// SETTLED requirement (e.g. "requirement", "enforce", "every" in this
+// project's own corpus) no longer counts as a duplicate/re-litigation
+// suspect purely on that overlap; it takes a rarer, more topically specific
+// shared token (or an opposite marker) to fire.
 func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
-	candTokens := claimTokens(candidateText)
+	common := corpusCommonTokens(g)
+	candTokens := claimTokens(candidateText, common)
 	candLower := strings.ToLower(candidateText)
 	candMarks := markerHits(candLower)
 
@@ -65,7 +76,7 @@ func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
 		default:
 			continue
 		}
-		hit := confrontHit(candTokens, candMarks, r)
+		hit := confrontHit(candTokens, candMarks, r, common)
 		if hit == nil {
 			continue
 		}
@@ -84,6 +95,17 @@ func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
 	sortConfrontHits(settled)
 	sortConfrontHits(rejected)
 
+	// Settled/Rejected are array-typed JSON fields consumed by `hotam
+	// confront --json`: normalize nil to an empty (non-nil) slice so a
+	// clear result (the common case — no overlap found) marshals to `[]`,
+	// not `null`, keeping the shape stable for machine consumers.
+	if settled == nil {
+		settled = []ConfrontHit{}
+	}
+	if rejected == nil {
+		rejected = []ConfrontHit{}
+	}
+
 	return ConfrontResult{
 		Candidate: candidateText,
 		Settled:   settled,
@@ -98,8 +120,10 @@ func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
 // different-owner term, which is undefined for an owner-less candidate): the
 // overlap bar is MinLexicalOverlapTokens (2) normally, lowered to
 // MinLexicalOverlapTokensWithMarker (1) when an opposite marker is present.
-func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r ontology.Requirement) *ConfrontHit {
-	reqTokens := claimTokens(r.Claim)
+// common is the corpus-common token set (corpusCommonTokens(g)) applied to
+// r's tokens on top of the stop-word filter — see Confront's doc comment.
+func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r ontology.Requirement, common map[string]struct{}) *ConfrontHit {
+	reqTokens := claimTokens(r.Claim, common)
 	var shared []string
 	for t := range candTokens {
 		if _, ok := reqTokens[t]; ok {

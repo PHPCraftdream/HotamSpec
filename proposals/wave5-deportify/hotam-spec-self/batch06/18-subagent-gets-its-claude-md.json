@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-subagent-gets-its-claude-md",
+  "claim": "A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. Not yet implemented: spawn-agent is Planned (not implemented) in methodology.Tools (internal/methodology/tools_data.go), and the generator (internal/generator) produces a single consolidated root CLAUDE.md with no per-agent sub-operator crystal files -- because with one OP-director and zero active sub-agents there is no second agent to hand a crystal to (R-claude-md-consolidates-when-single-agent). (Historical note: in the original implementation the spawn_agent tool composed the per-agent CLAUDE.md into the subagent prompt before dispatch, firing the BUILD-TRIGGER on P22.C.) RE-ATOMIZED Wave 8 move 2 (2026-07-03): the prior compound claim ('shall receive its OWN crystal AND return CONCLUSIONS only') had its second half trimmed because it duplicated R-delegation-conclusions-only verbatim; this atom now owns only the crystal-provisioning half. The substance remains live: when a real sub-operator is delegated, it must boot from its own substrate-derived CLAUDE.md rather than raw context; the materializer for that crystal is unimplemented substrate that arrives alongside R-sub-agent-crystal-triad's per-agent generation. PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

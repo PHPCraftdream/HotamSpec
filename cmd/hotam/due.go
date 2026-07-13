@@ -89,11 +89,19 @@ func buildDueReport(g *ontology.Graph, today string) DueReport {
 		}
 	}
 
+	// Overdue/NeverReviewedSample are array-typed JSON fields: initialize
+	// them non-nil so `--json` always emits `[]` on a clean graph (zero
+	// overdue / zero never-reviewed) instead of `null` — a nil Go slice and
+	// an empty one are semantically the same "no rows" here, but
+	// encoding/json distinguishes them, and a null array is a common
+	// footgun for machine consumers (e.g. `for x of null` throws in JS).
 	report := DueReport{
-		Today:              today,
-		OverdueCount:       len(overdue),
-		NeverReviewedCount: len(neverReviewed),
-		DueSoonCount:       dueSoonCount,
+		Today:               today,
+		OverdueCount:        len(overdue),
+		Overdue:             []DueEntry{},
+		NeverReviewedCount:  len(neverReviewed),
+		NeverReviewedSample: []DueEntry{},
+		DueSoonCount:        dueSoonCount,
 	}
 	for _, c := range overdue {
 		report.Overdue = append(report.Overdue, DueEntry{

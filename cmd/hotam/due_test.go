@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -101,6 +102,61 @@ func TestFormatDueReport_NeverReviewedFoldedNotOneLinePerRequirement(t *testing.
 	text := formatDueReport(report)
 	if !strings.Contains(text, "NEVER-REVIEWED: 2 requirement(s)") {
 		t.Errorf("expected summary count line, got:\n%s", text)
+	}
+}
+
+// TestBuildDueReport_JSONEmptyArraysNotNull is the byte-level regression pin
+// for the P2 "empty arrays instead of null in JSON output" fix: on a graph
+// with zero OVERDUE and zero NEVER-REVIEWED SETTLED requirements, the
+// marshaled `hotam due --json` payload must literally contain
+// `"overdue":[]` and `"never_reviewed_sample":[]`, never `"overdue":null` /
+// `"never_reviewed_sample":null`. A Go-level len()==0 or !=nil check would
+// not prove what encoding/json actually emits, so this asserts the raw
+// marshaled bytes.
+func TestBuildDueReport_JSONEmptyArraysNotNull(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			// SETTLED, freshly reviewed, review window far in the future:
+			// neither OVERDUE nor NEVER-REVIEWED.
+			{
+				ID: "R-fresh", Owner: "sa", Status: ontology.StatusSETTLED,
+				LastReviewedAt: "2026-07-01", ReviewAfter: "2030-01-01",
+			},
+		},
+	}
+	path := filepath.Join(dir, "graph.json")
+	if err := loader.WriteGraph(path, g); err != nil {
+		t.Fatalf("write graph: %v", err)
+	}
+	loaded, err := loadDomainGraph(dir)
+	if err != nil {
+		t.Fatalf("loadDomainGraph: %v", err)
+	}
+
+	report := buildDueReport(loaded, "2026-07-12")
+	if report.OverdueCount != 0 || report.NeverReviewedCount != 0 {
+		t.Fatalf("fixture is not empty as expected: overdue=%d never_reviewed=%d", report.OverdueCount, report.NeverReviewedCount)
+	}
+
+	data, err := json.Marshal(report)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	raw := string(data)
+
+	if !strings.Contains(raw, `"overdue":[]`) {
+		t.Errorf("expected literal `\"overdue\":[]` in marshaled JSON, got:\n%s", raw)
+	}
+	if strings.Contains(raw, `"overdue":null`) {
+		t.Errorf("marshaled JSON must never contain `\"overdue\":null`, got:\n%s", raw)
+	}
+	if !strings.Contains(raw, `"never_reviewed_sample":[]`) {
+		t.Errorf("expected literal `\"never_reviewed_sample\":[]` in marshaled JSON, got:\n%s", raw)
+	}
+	if strings.Contains(raw, `"never_reviewed_sample":null`) {
+		t.Errorf("marshaled JSON must never contain `\"never_reviewed_sample\":null`, got:\n%s", raw)
 	}
 }
 

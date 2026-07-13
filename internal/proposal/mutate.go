@@ -136,8 +136,17 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.MTag = coalesceStr(p.MTag, "", existing.MTag)
 		applied.Summary = coalesceStr(p.Summary, "", existing.Summary)
 		applied.CreatedAt = coalesceStr(p.CreatedAt, "", existing.CreatedAt)
-		if p.Status == ontology.StatusSETTLED {
-			applied.SettledAt = defaultStr(p.SettledAt, today)
+		// settled_at records WHEN the requirement was first decided SETTLED --
+		// it must be stamped once, on the DRAFT/other -> SETTLED transition,
+		// and otherwise preserved. An UPDATE proposal always resends the
+		// current status (validation requires a non-empty status), so
+		// "p.Status == SETTLED" alone can't distinguish a real transition
+		// from a content-only edit of an already-SETTLED requirement;
+		// checking existing.Status too is what makes that distinction.
+		if p.SettledAt != "" {
+			applied.SettledAt = p.SettledAt
+		} else if p.Status == ontology.StatusSETTLED && existing.Status != ontology.StatusSETTLED {
+			applied.SettledAt = today
 		}
 		applied.LastReviewedAt = coalesceStr(p.LastReviewedAt, "", existing.LastReviewedAt)
 		applied.ReviewAfter = coalesceStr(p.ReviewAfter, "", existing.ReviewAfter)

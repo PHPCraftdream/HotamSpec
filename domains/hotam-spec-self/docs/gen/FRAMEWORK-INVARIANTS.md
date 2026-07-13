@@ -5,7 +5,7 @@ reader: framework-author
 
 Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery), not business claims the operator mediates as reality. This index holds exactly those framework-internal atoms, relocated out of the root CLAUDE.md CONSTITUTION index (R-constitution-separates-plumbing, Phase 3, task #9).
 
-> Full claim + WHY + assumptions: `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` (roster) · enforcement detail: `docs/gen/UNENFORCED.md`.
+> Full claim + WHY + assumptions: `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` (roster) · enforcement detail: `domains/hotam-spec-self/docs/gen/UNENFORCED.md`.
 > Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.
 > No atom here changed status by this relocation — every id below is (and remains) SETTLED in the graph; only ITS RENDER LOCATION moved.
 
@@ -16,18 +16,18 @@ R-agent-has-docs-dir [E]
 R-agent-has-own-tools-dir [E]
 R-agent-is-a-directory [E]
 R-agent-is-recursive-director [E]
-R-agent-map-generated [S]
+R-agent-map-generated [E]
 R-agent-references-shared-docs [P]
 R-agent-scoped-constitution [P]
 R-context-budget-rule [E]
-R-crystal-carries-mediation-loop [S]
-R-crystal-carries-recursion-seed [S]
-R-crystal-carries-role-seed [S]
+R-crystal-carries-mediation-loop [E]
+R-crystal-carries-recursion-seed [E]
+R-crystal-carries-role-seed [E]
 R-crystal-is-claude-md [P]
 R-crystal-reload-by-reference [P]
 R-crystal-tree-hierarchy [P]
 R-operator-crystal-embeds-thinking-distilled [S]
-R-operator-crystal-embeds-tools-distilled [S]
+R-operator-crystal-embeds-tools-distilled [E]
 R-operator-has-context-budget [E]
 R-operator-is-frozen-dataclass [E]
 R-operator-may-have-parent [E]
@@ -39,9 +39,9 @@ R-operator-type-vs-facet [E]
 **Substrate / Anchoring**
 
 R-anchor-taxonomy [E]
-R-claude-md-consolidates-when-single-agent [S]
+R-claude-md-consolidates-when-single-agent [E]
 R-claude-md-live-state-generated [E]
-R-claude-md-template-driven [P]
+R-claude-md-template-driven [E]
 
 **Check / Invariant**
 
@@ -57,15 +57,15 @@ R-statemachine-terminal-or-cyclic [E]
 
 **Framework Self**
 
-R-content-free-no-business-data [P]
-R-content-free-no-examples [P]
-R-content-free-no-seed-graph [P]
+R-content-free-no-business-data [E]
+R-content-free-no-examples [E]
+R-content-free-no-seed-graph [E]
 R-content-layout-evolution [E]
 R-deterministic-generation [E]
 R-drift-structurally-impossible [E]
-R-empty-content-calm-banner [S]
+R-empty-content-calm-banner [E]
 R-empty-content-gen-notice [S]
-R-empty-content-wellformed [S]
+R-empty-content-wellformed [E]
 
 **Lifecycle / Process / Goal**
 
@@ -79,18 +79,18 @@ R-lifecycle-validates-requirement [E]
 R-process-drives-existing-entities [E]
 R-process-goal-owner-is-operator-aspect [E]
 R-process-lifecycle-wellformed-aspect [E]
-R-process-opt-in [S]
+R-process-opt-in [E]
 R-process-roles-declared-aspect [E]
 R-process-typed-anchors-extended [E]
 R-process-types-exist [E]
 
 **Boot / Glossary / History / Docs**
 
-R-docs-generated-from-requirements [P]
+R-docs-generated-from-requirements [E]
 R-glossary-drift-stable [E]
 R-glossary-generated [E]
-R-glossary-sync-fails-dead [P]
-R-glossary-sync-fails-unused [P]
+R-glossary-sync-fails-dead [E]
+R-glossary-sync-fails-unused [E]
 R-history-generated-from-decided [E]
 R-history-generated-from-rejected [E]
 
@@ -104,11 +104,11 @@ R-dependency-drives-sequential [E]
 R-dependency-tracked [E]
 R-director-agent-required-per-domain [E]
 R-domain-declares-director [E]
-R-domain-has-docs-dir [S]
+R-domain-has-docs-dir [E]
 R-domain-has-manifest [E]
 R-domain-is-a-directory [E]
-R-domain-map-generated [S]
-R-domain-owns-docs-gen [S]
+R-domain-map-generated [E]
+R-domain-owns-docs-gen [E]
 R-domain-owns-graph-py [E]
 R-domain-owns-tools-and-agents [S]
 R-enforceability-kind-declared [E]
@@ -121,7 +121,7 @@ R-entity-instance-id-prefix [E]
 R-entity-instance-refs-resolve [E]
 R-entity-instance-required-fields [E]
 R-entity-instance-state-in-lifecycle [E]
-R-entity-is-declarative [S]
+R-entity-is-declarative [E]
 R-entity-reuses-lifecycle [E]
 R-entity-state-conflict-surfaced [E]
 R-entity-type-lifecycle-wellformed [E]
@@ -131,16 +131,16 @@ R-method-matches-docstring [E]
 R-parallel-mutating-agents-use-worktree [S]
 R-post-compact-regen-from-substrate [P]
 R-project-name-hotam-spec [P]
-R-recently-rejected-surfaced [S]
-R-root-claude-md-is-sentinel-only [S]
+R-recently-rejected-surfaced [E]
+R-root-claude-md-is-sentinel-only [E]
 R-shared-thinking-doc-from-canon-sections [E]
 R-shared-tool-doc-from-docstring-and-help [E]
 R-step-invokes-known-transition [E]
 R-sub-agent-crystal-triad [P]
 R-subagent-gets-its-claude-md [P]
-R-three-cipher-pulse-structurally-injected [P]
-R-tool-is-its-own-requirement [P]
-R-tools-registry-generated [P]
+R-three-cipher-pulse-structurally-injected [E]
+R-tool-is-its-own-requirement [E]
+R-tools-registry-generated [E]
 
 **Tool-derived requirements**
 

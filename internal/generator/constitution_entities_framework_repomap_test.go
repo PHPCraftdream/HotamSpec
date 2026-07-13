@@ -6,9 +6,9 @@ import (
 )
 
 // hotamSpecSelfFixtureGenDocs reconstructs the docs/gen/ file listing that
-// the Go port writes for domains/hotam-spec-self — matching the real domain's
+// the generator writes for domains/hotam-spec-self — matching the real domain's
 // actual generated file set. It excludes AUDIT.md (a separate, low-traffic
-// review-tool artifact the Go port does not generate at all) and
+// review-tool artifact the generator does not produce at all) and
 // DECISIONS.md/ENTITIES.md (both legitimately absent for hotam-spec-self: no
 // M-tagged OPEN requirements, no entity_types declared). Used by the
 // real-domain determinism/smoke tests in byteidentical_test.go.
@@ -57,7 +57,7 @@ func fixtureGenDocs() []GenDocEntry {
 func TestBuildConstitution_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildConstitution(g)
+	got := BuildConstitution(g, "fixture-domain")
 	want, err := os.ReadFile("testdata/fixture/CONSTITUTION.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)

@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-tension-audit-presents-only",
+  "claim": "The deterministic tension-shortlist tool shall never mutate any domain graph.json: its only outputs are a printed shortlist and an advisory recommendation, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The generative-audit tool performs the CONFRONT-adjacent first act of sight, but sight is not decision (R-ai-presents-not-decides). The tension-shortlist capability is realized as `hotam inspect` (internal/diagnose/inspect.go), which is structurally read-only by construction: a Candidate record (internal/diagnose/inspect.go) is ALWAYS advisory — it never blocks a write, never changes exit code (exit code always 0 regardless of how many candidates are found), and never decides anything. The recommendation text (advice function) explicitly invokes R-ai-presents-not-decides / R-decided-needs-human-signoff. If the sweep could write a Conflict node it would be deciding a tension exists rather than presenting a candidate; the steward must draft any ProposedConflict from a row. Keeping the tool read-only over the graph preserves the present-never-decide boundary at the generation organ. (Historical note: the original tool was tools/audit_tensions.py; its read-only property was proven by test_audit_never_writes_graph_py.) `hotam inspect` inherits the same read-only discipline by construction — it operates on an in-memory graph pointer for read only, with no write path. PROSE (not ENFORCED): the read-only property is upheld by code structure (inspect.go has no graph mutation calls), not by a machine enforcer test that asserts the absence of writes.",
+  "last_reviewed_at": "2026-07-13"
+}

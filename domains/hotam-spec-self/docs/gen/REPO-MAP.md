@@ -34,13 +34,19 @@ reader: ai-agent
 - `cmd/hotam/gen_spec.go` — regenerates docs/gen/ from the executable model (methodology + graph), making drift structurally impossible.  →  R-tool-gen-spec
 - `cmd/hotam/all_violations.go` — print all invariant violations; exit 1 if any.
 - `cmd/hotam/what_now.go` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
+- `cmd/hotam/init_cmd.go` — scaffold a new domain from scratch, anywhere on disk.
+- `cmd/hotam/req.go` — compact agentic read interface over the domain graph (show/list/search/context/related).
+- `cmd/hotam/due.go` — advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
+- `cmd/hotam/inspect.go` — advisory listing of semantic conflict candidates with evidence, filtered by score.
+- `cmd/hotam/confront.go` — CONFRONT step of the mediation loop: duplicate/re-litigation guard before writing.
+- `cmd/hotam/land.go` — apply a proposal, regenerate docs, re-check invariants: the primary land pipeline.
 
-Not yet ported to the Go CLI (Python-era tools with no `hotam` subcommand yet): attention, attention_hook,
-audit_atomicity, audit_tensions, claude_md_diff_watch, closure, confront, context, context_producer,
-create_agent, create_axis, create_domain, create_entity_type, delegate, emit_cipher, gate_status,
-hotam_req, invoke_agent, land, mark_revisit_evaluated, review, setup_context_hook, setup_hooks,
+Registered in the methodology but not yet implemented as `hotam` subcommands: attention, attention_hook,
+audit_atomicity, audit_tensions, claude_md_diff_watch, closure, context, context_producer,
+create_agent, create_axis, create_domain, create_entity_type, emit_cipher, gate_status,
+invoke_agent, mark_revisit_evaluated, review, setup_context_hook, setup_hooks,
 spawn_agent, spawn_log_isolation_status, ticket_comment, ticket_create, ticket_edit, ticket_list,
-ticket_move, ticket_show, update_baseline.
+ticket_move, ticket_show.
 
 **Domain content** (`domains/hotam-spec-self/`)
 

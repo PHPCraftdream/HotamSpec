@@ -97,7 +97,15 @@ func InspectEntityStateConflicts(g *ontology.Graph) []Candidate {
 
 // stopWords is a small, fixed English stop-word list for the lexical
 // claim-overlap heuristic below. Stemming is deliberately NOT applied (task
-// scope: "стемминг не нужен") — only lowercasing + stop-word removal.
+// scope: "стемминг не нужен") — only lowercasing + stop-word removal. This
+// list is deliberately GENERIC English closed-class vocabulary (articles,
+// conjunctions, modal verbs) — it carries no business/domain content, so it
+// stays framework-appropriate regardless of which domain graph is loaded
+// (R-content-free-no-business-data). It catches the same noise in every
+// domain; it does NOT and cannot catch a domain's own frequently-repeated
+// OPEN-class nouns/verbs (e.g. "requirement", "enforce", "graph" in this
+// project's own self-describing corpus) — that is what corpusCommonTokens
+// below is for.
 var stopWords = map[string]struct{}{
 	"a": {}, "an": {}, "the": {}, "is": {}, "are": {}, "was": {}, "were": {},
 	"be": {}, "been": {}, "being": {}, "to": {}, "of": {}, "in": {}, "on": {},
@@ -110,15 +118,97 @@ var stopWords = map[string]struct{}{
 
 var tokenRE = regexp.MustCompile(`[a-z0-9]+`)
 
+// MinCorpusSizeForFrequencyFilter is the minimum number of SETTLED claims a
+// graph must carry before corpus-frequency exclusion (corpusCommonTokens)
+// activates. Below this size, "frequency" is not a meaningful signal — a
+// 2-3-requirement test fixture would have every shared token look
+// "common" (document frequency 50-100%) purely from small-sample noise, which
+// would silently zero out the token sets the existing table-driven tests
+// depend on. Below the guard, callers fall back to plain stop-word-only
+// filtering (claimTokens' original, still-correct behavior).
+const MinCorpusSizeForFrequencyFilter = 8
+
+// CorpusCommonTokenFraction is the document-frequency ceiling above which a
+// token is treated as "corpus-common" and excluded from lexical-overlap
+// scoring, exactly like a stop word. A token appearing in more than this
+// fraction of SETTLED claims is, empirically, not a discriminative topical
+// anchor for THIS domain — it is domain-frequent connective tissue (measured
+// on hotam-spec-self's own 234 SETTLED requirements: "every" 26.5%, "graph"
+// 19.7%, "operator" 19.7%, "requirement" 12.4%, "steward" 7.3%, "proposal"
+// 6.4% all clear this ceiling, while genuinely narrower topical words like
+// "system" 2.1% or "budget" 3.0% stay under it). This is computed fresh from
+// whatever graph is loaded at call time — it is NOT a hardcoded word list, so
+// it adapts automatically to any domain's own vocabulary without baking
+// business content into framework source (R-content-free-no-business-data: a
+// fixed list of THIS domain's frequent nouns living in internal/diagnose
+// would itself be exactly the kind of content-in-framework-source violation
+// batch A4 closed enforcement debt on). 5% was chosen empirically against the
+// real hotam-spec-self graph: it cleared the noise the review flagged
+// (lexical_claim_overlap candidates dropped 1231→234, spot-checked to
+// confirm the survivors keep genuinely narrow shared vocabulary — see
+// inspect_test.go's TestCorpusCommonTokens_* for the regression pin).
+const CorpusCommonTokenFraction = 0.05
+
+// corpusCommonTokens computes, from the SETTLED requirements of g, the set of
+// tokens whose document frequency (fraction of SETTLED claims that contain
+// the token at least once) exceeds CorpusCommonTokenFraction. Returns an
+// empty (non-nil) set when the corpus has fewer than
+// MinCorpusSizeForFrequencyFilter SETTLED requirements — see that constant's
+// doc comment for why. The result is a pure function of the graph passed in;
+// nothing here is baked into the framework's source across domains.
+func corpusCommonTokens(g *ontology.Graph) map[string]struct{} {
+	var settled []ontology.Requirement
+	for _, r := range g.Requirements {
+		if r.Status == ontology.StatusSETTLED {
+			settled = append(settled, r)
+		}
+	}
+	common := map[string]struct{}{}
+	if len(settled) < MinCorpusSizeForFrequencyFilter {
+		return common
+	}
+	docFreq := map[string]int{}
+	for _, r := range settled {
+		seen := map[string]struct{}{}
+		for _, tok := range tokenRE.FindAllString(strings.ToLower(r.Claim), -1) {
+			if _, stop := stopWords[tok]; stop {
+				continue
+			}
+			if len(tok) < 3 {
+				continue
+			}
+			seen[tok] = struct{}{}
+		}
+		for tok := range seen {
+			docFreq[tok]++
+		}
+	}
+	ceiling := CorpusCommonTokenFraction * float64(len(settled))
+	for tok, n := range docFreq {
+		if float64(n) > ceiling {
+			common[tok] = struct{}{}
+		}
+	}
+	return common
+}
+
 // claimTokens normalizes a claim string into a set of significant tokens:
-// lowercase, split on non-alphanumeric, stop words dropped. No stemming.
-func claimTokens(claim string) map[string]struct{} {
+// lowercase, split on non-alphanumeric, stop words dropped, and any token in
+// common (corpus-common tokens computed by corpusCommonTokens, or nil to skip
+// that layer) also dropped. No stemming. Corpus-common exclusion is an
+// EXTRA filter layer beyond stopWords, not a replacement for it: a token can
+// be domain-common without being a generic English stop word, and vice
+// versa.
+func claimTokens(claim string, common map[string]struct{}) map[string]struct{} {
 	out := map[string]struct{}{}
 	for _, tok := range tokenRE.FindAllString(strings.ToLower(claim), -1) {
 		if _, stop := stopWords[tok]; stop {
 			continue
 		}
 		if len(tok) < 3 {
+			continue
+		}
+		if _, isCommon := common[tok]; isCommon {
 			continue
 		}
 		out[tok] = struct{}{}
@@ -188,7 +278,25 @@ const MinLexicalOverlapTokensWithMarker = 1
 // when a marker hit is present (see MinLexicalOverlapTokensWithMarker),
 // since the marker itself is strong evidence. Each hit becomes a Candidate
 // carrying the shared tokens / marker words as evidence.
+//
+// Tokens are additionally filtered through corpusCommonTokens(g) — a
+// document-frequency exclusion computed FRESH from this graph's own SETTLED
+// claims (see its doc comment). This is what keeps this heuristic from
+// mistaking two claims that share only domain-frequent connective vocabulary
+// (e.g. "requirement", "graph", "enforce" in a methodology describing
+// itself) for a genuine topical anchor: those tokens are dropped from BOTH
+// the overlap-count gate and the score before pairwise comparison begins, so
+// a pair surviving purely on generic domain nouns no longer clears the
+// MinLexicalOverlapTokens bar at all (not just "scores lower"). This does
+// NOT guarantee zero false negatives: a real tension whose ONLY shared
+// vocabulary happens to be corpus-common words, with no opposite marker and
+// no rarer shared token, will still be missed — exactly the same class of
+// miss the plain stop-word list already accepted for generic English words,
+// now extended to this domain's own frequent words. Below
+// MinCorpusSizeForFrequencyFilter SETTLED requirements this exclusion is a
+// no-op (empty set) and behavior is identical to stop-words-only.
 func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
+	common := corpusCommonTokens(g)
 	var settled []ontology.Requirement
 	for _, r := range g.Requirements {
 		if r.Status == ontology.StatusSETTLED {
@@ -206,7 +314,7 @@ func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
 	pre := make([]tokenized, len(settled))
 	for i, r := range settled {
 		lower := strings.ToLower(r.Claim)
-		pre[i] = tokenized{req: r, tokens: claimTokens(r.Claim), lower: lower, marks: markerHits(lower)}
+		pre[i] = tokenized{req: r, tokens: claimTokens(r.Claim, common), lower: lower, marks: markerHits(lower)}
 	}
 
 	var out []Candidate

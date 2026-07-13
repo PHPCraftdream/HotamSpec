@@ -4,7 +4,7 @@ package methodology
 // Sections registry: the framework-level narrative (the tension-graph
 // inversion, the three invisibilities, the closed loop, the AI's three
 // roles, storage, package structure, the canon-section scheme). Every other
-// pre-port module doc (stakeholder/axis/assumption/requirement/conflict/
+// module doc (stakeholder/axis/assumption/requirement/conflict/
 // graph/lifecycle/operator/process/invariants) duplicated a Section already
 // registered in sections_data.go and was retired in favor of rendering from
 // that Section (see module_docs.go's ModuleDocstring in internal/generator).

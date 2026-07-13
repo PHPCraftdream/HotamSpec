@@ -1,0 +1,29 @@
+{
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "claim": "The three-cipher pulse (top action / debt / context) shall be structurally present in the LIVE-STATE block of the root CLAUDE.md, regenerated on every gen-spec / land, so the operator's per-turn ORIENT step reads it by reference rather than re-deriving it.",
+  "created_at": "2026-06-30",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestBuildLiveState_ThreeCipherPulsePresent"
+  ],
+  "enforcement": "ENFORCED",
+  "evidence": [],
+  "id": "R-three-cipher-pulse-structurally-injected",
+  "kind": "Requirement",
+  "last_reviewed_at": "2026-07-13",
+  "m_tag": "",
+  "owner": "framework-author",
+  "relations": [],
+  "review_after": "2027-02-12",
+  "settled_at": "2026-07-12",
+  "source_refs": [
+    "internal/generator/livestate.go",
+    "internal/generator/claudemd.go",
+    "cmd/hotam/land.go"
+  ],
+  "status": "SETTLED",
+  "summary": "",
+  "why": "Closes the per-turn edge of the inversion. The three-cipher pulse (top action / debt / context) is required by the boot ritual to be cited in the first sentence of every substantive reply (R-boot-cite-in-first-sentence). The pulse IS structurally generated: BuildLiveState (internal/generator/livestate.go) reads diagnose.DiagnoseSignals for the top-action line, computes the SETTLED/DRAFT/OPEN/closeable-debt counts for the debt line, and emits the context line (ctxLineStatic — the honest UNMEASURED explanation) verbatim; this runs on every `hotam gen-spec` and every `hotam land` (cmd/hotam/land.go step b → genSpec → BuildLiveState). The Mediation loop step 1 (ORIENT, embedded in CLAUDE.md) instructs the operator to reload this pulse by reference. NOT YET IMPLEMENTED is the automatic per-turn HOOK INJECTION: emit-cipher is Planned (not Implemented) in methodology.Tools, so the pulse is present in LIVE-STATE but the operator reads it manually per the ORIENT step, not via an auto-injected hook. (Historical note: the original emit_cipher.py was a UserPromptSubmit hook in .claude/settings.local.json that read the LIVE-STATE sentinels and emitted a JSON hookSpecificOutput consumed by the host harness, structurally forcing the pulse into every user turn; proven by test_user_prompt_submit_hook_emits_cipher.) The original WHY stands: structural presence of the pulse prevents the operator from forgetting to orient. PROSE (not ENFORCED): no enforcer test exists. ENFORCED 2026-07-13: TestBuildLiveState_ThreeCipherPulsePresent in internal/generator/atoms_livestate_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
+}

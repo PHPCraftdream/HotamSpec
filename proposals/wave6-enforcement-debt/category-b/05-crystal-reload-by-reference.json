@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-reload-by-reference",
+  "claim": "An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "Atom of R-operator-crystal-is-claude-md (reload-by-reference concern). Re-carrying wastes context budget; reloading by reference is the offload instrument. RECLASSIFIED 2026-07-13: enforceability ENFORCEABLE -> INHERENTLY_PROSE (agent consultation, fm) -- this describes runtime behavior of a live agent's own working-context management, which is unobservable to this repository's test suite by construction: no test process can inspect what a session's context window is carrying versus re-fetching.",
+  "assumptions": [],
+  "enforcement": "PROSE",
+  "enforceability": "INHERENTLY_PROSE"
+}

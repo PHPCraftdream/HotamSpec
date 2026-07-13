@@ -1,0 +1,32 @@
+{
+  "kind": "Requirement",
+  "id": "R-active-loop-apply-tool",
+  "claim": "A CLI command (`hotam apply-proposal`, `cmd/hotam`) shall consume an approved Proposed* JSON proposal and mechanically apply the change to the domain's graph.json (`domains/<name>/graph.json`) via `internal/proposal.Apply`, never by a hand-edit.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "Atom of R-active-loop-playbooks (tool concern). `hotam apply-proposal` (and the `hotam land` pipeline that wraps apply + gen-spec + all-violations) lands a steward-approved JSON proposal into domains/<name>/graph.json and runs the regen+verify pipeline (internal/proposal + internal/generator + internal/invariants). The graph is plain JSON data (not source code spliced by AST), so applying a proposal is a JSON write, never an AST edit (previously implemented as tools/apply_proposal.py + spec/content/graph.py). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestApply_Requirement_UpdateAppendsHistory"
+  ],
+  "assumptions": [],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-active-loop-playbooks"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-08-12",
+  "evidence": [],
+  "source_refs": [
+    "cmd/hotam/apply_proposal.go",
+    "cmd/hotam/land.go",
+    "internal/proposal/apply.go"
+  ]
+}

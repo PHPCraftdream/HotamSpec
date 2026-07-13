@@ -7,13 +7,15 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 ---
 
-## `R-claude-md-consolidates-when-single-agent` (STRUCTURAL)
+## `R-claude-md-consolidates-when-single-agent` (ENFORCED)
 
 **Claim.** While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.
 
-**Why.** Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads is premature complexity. `hotam gen-spec` (internal/generator/claudemd.go) emits a single CLAUDE.md from the active domain's graph; the AGENT-MAP block (RenderAgentMapBlock) renders '_(no sub-operators yet)_' because no agent has been scaffolded in the Go port yet (the agents/ infrastructure -- create-agent -- is Declared, not ported).
+**Why.** Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads is premature complexity. `hotam gen-spec` (internal/generator/claudemd.go) emits a single CLAUDE.md from the active domain's graph; the AGENT-MAP block (RenderAgentMapBlock) renders '_(no sub-operators yet)_' because no agent has been scaffolded yet (the agents/ infrastructure -- create-agent -- is Planned). ENFORCED 2026-07-13: TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-09-12
 
@@ -24,6 +26,9 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 - 2026-07-12 — last_reviewed_at: →2026-07-01; review_after: →2027-01-01
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_framework_claude_md_purity.py::test_exactly_one_claude_md_in_repo]→[]; settled_at: 2026-07-01→2026-07-12
 - 2026-07-12 — claim: While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, gen_spec.py shall generate exactly one CLAUDE.md file at r…→While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file…; why: Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…→Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…; last_reviewed_at: 2026-07-01→2026-07-12; review_after: 2027-01-01→2026-09-12; source_refs: []→[internal/generator/claudemd.go, cmd/hotam/gen_spec.go]
+- 2026-07-13 — why: Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…→Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…→Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal]
+- 2026-07-13 — why: Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…→Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second conc…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-claude-md-live-state-generated` (ENFORCED)
 
@@ -42,11 +47,13 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [test_docs_gen.py::test_claude_md_live_state_up_to_date]→[TestBuildLiveState_RendersOnFixture]; settled_at: 2026-06-30→2026-07-12
 
-## `R-claude-md-template-driven` (PROSE)
+## `R-claude-md-template-driven` (ENFORCED)
 
 **Claim.** CLAUDE.md shall be generated by substituting <!-- mind --> and <!-- business --> placeholders in CLAUDE.md.template.txt with rendered content, preserving all other template text verbatim.
 
-**Why.** The prior sentinel-surgery approach (editing ~10 separate BEGIN/END marker pairs scattered through an existing file) made it impossible for a human to add durable plain-text notes anywhere in CLAUDE.md without risking accidental clobbering by a future block-insertion bug. The template model inverts this: exactly two named placeholders are substituted; everything else in the template -- including any hand-written notes a human adds -- survives every regeneration verbatim. Simpler mental model, same anti-drift guarantee for the two generated zones. (Wave 1 seed-coherence pass: enforced_by's second entry 'test_regen_byte_identical' is ambiguous -- two test files each define a function with that bare name -- corrected to the specific file, caught by the new check_enforced_by_resolvable invariant.)
+**Why.** The prior sentinel-surgery approach (editing ~10 separate BEGIN/END marker pairs scattered through an existing file) made it impossible for a human to add durable plain-text notes anywhere in CLAUDE.md without risking accidental clobbering by a future block-insertion bug. The template model inverts this: exactly two named placeholders are substituted; everything else in the template -- including any hand-written notes a human adds -- survives every regeneration verbatim. Simpler mental model, same anti-drift guarantee for the two generated zones. (Wave 1 seed-coherence pass: enforced_by's second entry 'test_regen_byte_identical' is ambiguous -- two test files each define a function with that bare name -- corrected to the specific file, caught by the new check_enforced_by_resolvable invariant.) ENFORCED 2026-07-13: TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph.
+
+**Enforced by:** `TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest`
 
 **Last reviewed.** 2026-07-01
 
@@ -56,14 +63,17 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 
 - 2026-07-12 — last_reviewed_at: →2026-07-01; review_after: →2027-01-01
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_hand_written_note_in_template_survives_regen, test_claude_md_template.py::test_regen_byte_identical]→[]; settled_at: 2026-07-01→2026-07-12
+- 2026-07-13 — why: The prior sentinel-surgery approach (editing ~10 separate BEGIN/END marker pairs scattered through an existing file) made it impossible for a human t…→The prior sentinel-surgery approach (editing ~10 separate BEGIN/END marker pairs scattered through an existing file) made it impossible for a human t…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest]
 
-## `R-content-free-no-business-data` (PROSE)
+## `R-content-free-no-business-data` (ENFORCED)
 
 **Claim.** The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders).
 
-**Why.** Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. Reworded 2026-07-12 for the Go port: the framework source moved from spec/src/hotam_spec/ (Python) to internal/* + cmd/hotam/*, and all business data (requirements, axes, stakeholders) lives exclusively in per-domain graphs (domains/*/graph.json). WHY stands: business data in the framework packages would couple them to a specific domain, violating content-free neutrality. PROSE (not ENFORCED): the original enforcer (test_content_free.py::test_no_domain_instances_in_tensio_src) was Python and is not ported.
+**Why.** Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hotam/*) ship no business data: all requirements, axes, and stakeholders live exclusively in per-domain graphs (domains/*/graph.json). Business data in the framework packages would couple them to a specific domain, violating content-free neutrality. PROSE (not ENFORCED): the no-business-data enforcer is not yet implemented (historically test_content_free.py::test_no_domain_instances_in_tensio_src). ENFORCED 2026-07-13: TestContentFree_NoBusinessData in internal/selfcheck/contentfree_test.go mechanically verifies this claim by static source scan: a denylist of business axis slugs plus non-canonical stakeholder IDs (sourced from the live business graph, with the canonical reader-role contract exempt) is matched against string literals in non-test framework source. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestContentFree_NoBusinessData`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2027-02-12
 
@@ -72,14 +82,19 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: The framework spec/src/hotam_spec/ shall ship no business data (no example requirements, no example axes, no business stakeholders).→The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders).; why: Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. WHY: business data in the framework source w…→Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. Reworded 2026-07-12 for the Go port: the fra…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2027-02-12
+- 2026-07-13 — why: Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. Reworded 2026-07-12 for the Go port: the fra…→Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hota…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hota…→Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hota…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestContentFree_NoBusinessData]
+- 2026-07-13 — why: Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hota…→Atom of R-content-free-framework (no-business-data concern). D1 split decided by domain-user 2026-06-30. The framework packages (internal/*, cmd/hota…; settled_at: 2026-07-13→2026-07-12
 
-## `R-content-free-no-examples` (PROSE)
+## `R-content-free-no-examples` (ENFORCED)
 
 **Claim.** The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content.
 
-**Why.** Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user's real content and misleads adopters into thinking it is real content. In the Go port this holds by construction: there are no Python-style Requirement(...) builder calls anywhere in source; all business content lives in domains/<name>/graph.json loaded by internal/loader at runtime, never compiled into the framework's Go source.
+**Why.** Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user's real content and misleads adopters into thinking it is real content. This holds by construction: all business content lives in domains/<name>/graph.json loaded by internal/loader at runtime, never compiled into the framework source. ENFORCED 2026-07-13: TestContentFree_NoExamples in internal/selfcheck/contentfree_test.go mechanically verifies this claim by static source scan: no populated graph-node composite literal (Requirement/Conflict/Axis/Stakeholder/...) may appear outside the two content-intake boundaries internal/proposal and cmd/hotam/init_cmd.go. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestContentFree_NoExamples`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-09-12
 
@@ -90,14 +105,19 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: The framework shall not include illustrative example Requirement(...) calls in its source modules, keeping worked examples in spec/tests/fixtures/see…→The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are…; why: Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in src/ drifts from the fixture…→Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go]
+- 2026-07-13 — why: Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…→Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…→Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestContentFree_NoExamples]
+- 2026-07-13 — why: Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…→Atom of R-content-free-framework (no-examples concern). D1 split decided by domain-user 2026-06-30. WHY: example data in source drifts from the user'…; settled_at: 2026-07-13→2026-07-12
 
-## `R-content-free-no-seed-graph` (PROSE)
+## `R-content-free-no-seed-graph` (ENFORCED)
 
 **Claim.** The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json.
 
-**Why.** Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts. In the Go port this holds by construction: internal/loader/loader.go (LoadGraph) reads domains/<name>/graph.json from disk; no graph content is compiled into the framework's Go source.
+**Why.** Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter to delete example data before starting, and risks silent merge conflicts. This holds by construction: internal/loader/loader.go (LoadGraph) reads domains/<name>/graph.json from disk; no graph content is compiled into the framework source. ENFORCED 2026-07-13: TestContentFree_NoSeedGraph in internal/selfcheck/contentfree_test.go behaviorally verifies this claim: loader.LoadGraph on an empty graph yields zero nodes (no seed injection) and round-trips a one-stakeholder/one-requirement graph exactly, proving the loader reads from disk and embeds no seed graph. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestContentFree_NoSeedGraph`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-09-12
 
@@ -108,16 +128,19 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_content_free.py::test_no_domain_instances_in_tensio_src]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: The framework shall not embed a seed TensionGraph -- load_content_graph() discovers the user's graph by convention from spec/content/graph.py:build_g…→The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.j…; why: Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…→Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go]
+- 2026-07-13 — why: Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…→Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…→Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestContentFree_NoSeedGraph]
+- 2026-07-13 — why: Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…→Atom of R-content-free-framework (no-seed-graph concern). D1 split decided by domain-user 2026-06-30. WHY: a baked-in seed graph forces every adopter…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-content-layout-evolution` (ENFORCED)
 
 **Claim.** Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.
 
-**Why.** M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.json, with gen-spec discovering all of them. Single-file spec/content/graph.py is superseded by this layout. In the Go port: domains/<name>/graph.json is the graph source, internal/loader (LoadGraph) discovers it, and `hotam gen-spec` (internal/generator) regenerates docs/gen/*.md from it. ENFORCED by check_domain_manifest_exists_and_importable (internal/invariants/domain_structure.go).
+**Why.** M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' question moot -- the answer is per-domain directories, each owning its own graph.json, with gen-spec discovering all of them. domains/<name>/graph.json is the graph source, internal/loader (LoadGraph) discovers it, and `hotam gen-spec` (internal/generator) regenerates docs/gen/*.md from it (superseding the earlier single-file content graph). ENFORCED by check_domain_manifest_exists_and_importable (internal/invariants/domain_structure.go). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_domain_manifest_exists_and_importable`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-09-12
 
@@ -128,6 +151,8 @@ The atomic requirements that govern how the substrate (graph + generated docs) b
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_domain_manifest_exists_and_importable, test_tool_create_domain.py::test_creates_required_files]→[check_domain_manifest_exists_and_importable]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: Domain content shall live in per-domain directories under domains/<name>/graph.py, with multi-domain federation implemented via the domains/ layout i…→Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.; why: M8 + M9. DECIDED 2026-06-30: P17 implemented the multi-domain layout (domains/<name>/graph.py + manifest.py + agents/director/) making the 'one file …→M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-09-12; source_refs: []→[internal/loader/loader.go, internal/invariants/domain_structure.go, cmd/hotam/gen_spec.go]
+- 2026-07-13 — why: M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…→M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…→M8 + M9. DECIDED 2026-06-30: the multi-domain layout (domains/<name>/graph.json + manifest.json + agents/director/) makes the 'one file or split?' qu…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-deterministic-generation` (ENFORCED)
 

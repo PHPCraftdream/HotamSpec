@@ -50,11 +50,16 @@ plain data: `domains/<name>/docs/gen/graph.json`. `hotam apply-proposal`
 6. Only if the violation set did not grow, write the mutated graph back to
    `graph.json` (`internal/loader.WriteGraph`).
 
-There is no separate `--dry-run` or `--batch` flag today (unlike the Python
-prototype) — each `hotam apply-proposal` call applies exactly one proposal
-file containing exactly one JSON object; run the command once per proposal,
-and re-run `hotam gen-spec --domain <path>` afterward to regenerate the
-`docs/gen/*.md` views from the updated graph.
+There is no `--dry-run` flag today. There IS a `--batch <dir>` flag on both
+`hotam apply-proposal` and `hotam land`: point it at a directory of `*.json`
+proposal files and every one is applied atomically, in filename order
+(all-or-nothing — if any proposal in the batch fails steps 1-5 above, the
+whole batch is rejected and `graph.json` is left completely untouched, not
+partially written). Without `--batch`, each `hotam apply-proposal` call
+applies exactly one proposal file containing exactly one JSON object; either
+way, `hotam apply-proposal` alone does not regenerate docs -- run `hotam
+gen-spec --domain <path>` afterward, or use `hotam land` (single proposal or
+`--batch <dir>`) to apply + regenerate + re-verify in one step.
 
 ## Enum reference
 

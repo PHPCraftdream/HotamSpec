@@ -59,10 +59,10 @@ func BuildToolDocs() map[string]string {
 // actually work, not intentions").
 func statusBadge(s methodology.Status) string {
 	switch s {
-	case methodology.Ported:
-		return "[PORTED]"
-	case methodology.Declared:
-		return "[DECLARED — not ported]"
+	case methodology.Implemented:
+		return "[IMPLEMENTED]"
+	case methodology.Planned:
+		return "[PLANNED — not implemented]"
 	default:
 		return "[" + string(s) + "]"
 	}
@@ -73,10 +73,10 @@ func statusBadge(s methodology.Status) string {
 // opens the doc after the badge caught their eye.
 func statusLine(s methodology.Status) string {
 	switch s {
-	case methodology.Ported:
-		return "Ported — this is a real `hotam` CLI subcommand; running it does something."
-	case methodology.Declared:
-		return "Declared — methodology surface only; no Go command exists for it yet. The name below is historical (pre-port Python methodology); invoking it as `hotam <name>` will fail with \"unknown command\"."
+	case methodology.Implemented:
+		return "Implemented — this is a real `hotam` CLI subcommand; running it does something."
+	case methodology.Planned:
+		return "Planned — methodology surface only; no Go command exists for it yet; invoking it as `hotam <name>` will fail with \"unknown command\"."
 	default:
 		return string(s)
 	}

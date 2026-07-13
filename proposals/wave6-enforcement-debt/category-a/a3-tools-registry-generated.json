@@ -1,0 +1,29 @@
+{
+  "kind": "Requirement",
+  "id": "R-tools-registry-generated",
+  "claim": "The list of available tools shall be generated from a single methodology.Tools registry (internal/methodology), never hand-maintained in prose -- each tool carries its Canon section, purpose, and Implemented/Planned status, and the EMBEDDED-TOOLS block of CLAUDE.md is rendered from it.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestRenderEmbeddedToolsBlock_IsPureRegistryProjection"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "m_tag": "",
+  "summary": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-02-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/methodology/tools_data.go",
+    "internal/generator/tool_reqs.go",
+    "internal/generator/claudemd.go"
+  ],
+  "why": "The docs-as-code pattern applied to tool inventories -- a new tool without a registry entry simply does not appear in the tool reference, making drift structurally visible. The registry is methodology.Tools (internal/methodology/tools_data.go), populated via Tools.MustRegister in an init() block: each entry carries Command, Canon (§-section), Purpose (the usage/claim text), and Status (Implemented or Planned). The EMBEDDED-TOOLS block in CLAUDE.md is rendered from this registry (internal/generator), so the tool reference on every gen-spec is always in sync with the declared tool set. A separate data table (internal/generator/tool_reqs.go: toolRequirementData) projects each tool into a STRUCTURAL R-tool-\u003cbasename\u003e requirement (R-tool-is-its-own-requirement). (Historical note: the original mechanism scanned spec/tools/*.py and per-agent spec/agents/\u003cname\u003e/tools/*.py on the filesystem; that filesystem scan was replaced by the explicit registry, since tools are now CLI subcommands, not discoverable .py modules — but the 'generated, never hand-maintained in prose' discipline is preserved: both the registry and the tool_reqs table are code, and the rendered output is always derived from them.) PROSE (not ENFORCED): the registry-completeness property has no enforcer test (proven historically by test_repo_map.py::test_repo_map_complete and test_repo_map.py::test_repo_map_tool_xref_present). ENFORCED 2026-07-13: TestRenderEmbeddedToolsBlock_IsPureRegistryProjection in internal/generator/claudemd_coverage_test.go mechanically verifies this claim."
+}

@@ -1,0 +1,25 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-map-shows-pulse",
+  "claim": "The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532 on axis speed-vs-verification) was INVISIBLE from the root crystal and the banner 'every contradiction is visible' was false at the altitude of the whole repo. gen_spec._domain_pulse runs what_now.diagnose per domain into the DOMAIN-MAP (the first eye); emit_cipher._other_domains_open sums the non-pinned domains' open actions into the pulse (the second eye). Both are generated, so they cannot drift from real graph state (R-deterministic-generation). Refines R-domain-map-generated. ENFORCED 2026-07-13: TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. This enforcement covers only the DOMAIN-MAP open-actions pulse line; the claim's 'emit_cipher' wording is separately-tracked stale phrasing from the Python era (no Go emit_cipher mechanism exists) and is not asserted here.",
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse"
+  ],
+  "enforceability": "ENFORCEABLE",
+  "m_tag": "",
+  "summary": "",
+  "created_at": "2026-07-03",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-03",
+  "review_after": "2027-01-03",
+  "evidence": [],
+  "source_refs": []
+}

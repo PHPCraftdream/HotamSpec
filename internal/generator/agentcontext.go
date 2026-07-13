@@ -66,6 +66,9 @@ func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 	lines = append(lines, fmt.Sprintf("- Enforcement gap detail: `domains/%s/docs/gen/UNENFORCED.md`.", domainName))
 	lines = append(lines, fmt.Sprintf("- Framework-internal atoms: `domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md`.", domainName))
 	lines = append(lines, "- Review-freshness detail (which ids, how overdue): `hotam due --domain domains/"+domainName+"`.")
+	lines = append(lines, "")
+
+	lines = append(lines, renderAgentContextDocsGenIndex(domainName)...)
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 }
@@ -124,6 +127,51 @@ func renderAgentContextCounters(g *ontology.Graph) []string {
 		"## Status counters",
 		"",
 		fmt.Sprintf("SETTLED %d · DRAFT %d · REJECTED %d · OVERDUE %d (as of %s)", settled, draft, rejected, overdue, today),
+	}
+}
+
+// renderAgentContextDocsGenIndex renders the "## docs/gen/ file index" section:
+// a which-do-I-actually-need-to-read categorization of every top-level file
+// this domain's docs/gen/ holds (R-domain-owns-docs-gen's manifest), split into
+// MANDATORY (named directly in this domain's CLAUDE.md boot text — an agent
+// following ORIENT/LOCATE reads these essentially every session), REFERENCE
+// (thinking/tools + the remaining topic docs — read on demand for a specific
+// task, never at boot), and ARCHIVAL (change-log / self-contained-snapshot
+// material with no boot-time consumer). Added per external-review task #83:
+// the review's complaint was that an agent has no way to tell boot-critical
+// docs/gen files from optional/historical ones without reading every one; this
+// closes that gap in the generator source (not a hand-edit of the output) so
+// the index regenerates and can never drift from the actual boot text above.
+// graph.json is explicitly ARCHIVAL/self-contained here, NOT deadweight: its
+// existence is mandated by R-drift-structurally-impossible ("The generated
+// docs/gen/*.md and graph.json shall equal the regeneration of the current
+// graph, byte-for-byte") and verified by
+// TestBuildGraphJSON_ByteIdenticalToFixture — it is a read-only, portable,
+// human-browsable snapshot of the domain graph co-located with its own
+// markdown shadow, not something any tool reads back at runtime.
+func renderAgentContextDocsGenIndex(domainName string) []string {
+	base := "domains/" + domainName + "/docs/gen/"
+	return []string{
+		"## docs/gen/ file index (which files do I actually need to read?)",
+		"",
+		"MANDATORY (named directly in this domain's CLAUDE.md boot text — read essentially every session):",
+		"- `AGENT-CONTEXT.md` (this file) — compact boot digest.",
+		"- `" + base + "REQUIREMENTS.md` — full requirement roster (LOCATE step).",
+		"- `" + base + "TENSIONS.md` — conflict clusters (LOCATE step).",
+		"- `" + base + "UNENFORCED.md` — enforcement-gap detail behind the top-action line.",
+		"- `" + base + "FRAMEWORK-INVARIANTS.md` — framework-internal atoms behind the Constitution index.",
+		"",
+		"REFERENCE (load on demand for a specific task, not at boot):",
+		"- `" + base + "CONSTITUTION.md`, `GLOSSARY.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.",
+		"- `" + base + "atoms-operator.md`, `atoms-substrate.md`, `atoms-discipline.md`, `atoms-check.md` — per-category atom detail.",
+		"- `" + base + "live-state.md` — the same pulse this file's Live-state section already carries, standalone.",
+		"- `" + base + "OPEN.md` — open-question detail behind the OPEN status.",
+		"- `" + base + "thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.",
+		"- `" + base + "tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.",
+		"",
+		"ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):",
+		"- `" + base + "HISTORY.md` — REJECTED + DECIDED change-log; anti-relitigation lookup only.",
+		"- `" + base + "graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.",
 	}
 }
 

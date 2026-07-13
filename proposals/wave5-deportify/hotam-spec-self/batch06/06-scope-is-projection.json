@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-scope-is-projection",
+  "claim": "An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared graph), never a copy of any node.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "M18/P-scope. Resolves R-partition-vs-border's open question by rejecting both extremes: a strict partition forbids any shared object (loses the ability to model deliberate cross-cutting delegation); an ad-hoc declared-border overlap invites hand-maintained edge lists that drift from the graph. The projection is projectScope(g, prefixes) in internal/invariants/scope_process.go: it builds a scopeView (sets of requirement+conflict ids) purely from the graph by id-prefix match (strings.HasPrefix(r.ID, p) for any p in the operator's Scope prefixes), on demand, with no copied node data. This is the exact prefix-match discipline the generator already uses for per-domain CONSTITUTION digests, so the projection can never fork from the single writer (R-no-hand-edit-graph). The declaring prefix tuple is carried by Operator.Scope (internal/ontology/operator.go). The projection is consumed by check_scoped_node_has_single_presenter to compute overlaps, so the projection is load-bearing in the invariant layer today even though only one OP-director (Scope=()) currently exists.",
+  "last_reviewed_at": "2026-07-13"
+}

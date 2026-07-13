@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-latent-connectors-cluster-by-assumption",
+  "claim": "The what-now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Verified noise shape: 22 P5 lines were 21 pairs sharing one assumption plus 1 genuinely distinct candidate drowned by them. Clustering by the pairs' specific-shared-assumption signature renders the review surface at the size of the decision space while keeping every pair visible. ontology.LatentConnectorClusters (internal/ontology/graph_traversal.go) groups latent-connector pairs by their shared-assumption signature key, producing LatentCluster records (Assumptions, Requirements, Pairs). DiagnoseSignals (internal/diagnose/signal.go) renders each cluster as ONE PLatentConnector (priority 5) signal via the what-now harness, with the full pair list visible in the message. The same detector is reused by hotam inspect (InspectSharedAssumptionClusters in internal/diagnose/inspect.go). A threshold shift was rejected: it only moves the noise cliff. ENFORCED via TestLatentConnectorSuspectsAndClusters (internal/ontology/graph_smoke_test.go).",
+  "last_reviewed_at": "2026-07-13"
+}

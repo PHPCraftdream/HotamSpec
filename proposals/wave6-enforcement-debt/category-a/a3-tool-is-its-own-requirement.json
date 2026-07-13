@@ -1,0 +1,33 @@
+{
+  "kind": "Requirement",
+  "id": "R-tool-is-its-own-requirement",
+  "claim": "Every tool registered in the methodology.Tools registry whose entry opens with a Canon: §\u003ctopic\u003e marker shall be projected into a STRUCTURAL tool-derived requirement R-tool-\u003cbasename\u003e with that tool's claim text, enforced by its named enforcer test when one exists.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestScanToolRequirements_ProjectsEveryEntryToRequirement"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-setup-claude-generates-settings"
+    }
+  ],
+  "m_tag": "",
+  "summary": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-02-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/generator/tool_reqs.go",
+    "internal/generator/frameworkinvariants.go"
+  ],
+  "why": "The sensor-substrate inversion taken one step deeper: not only does code generate the operator's prompt, the tool IS its own requirement. The claim is the tool's purpose, the registry entry is the declaration, the enforcer test (when present) is the guard. Removing the tool removes the R; lying in the purpose is caught by the enforcer test failing (when one exists). This eliminates the prose gap between 'R written in graph' and 'tool implementing R'. The projection is realized by internal/generator/tool_reqs.go: a static data table (toolRequirementData) carries one ToolRequirement per tool (Basename, CanonSection, Claim, Enforcer); ScanToolRequirements() projects each into R-tool-\u003cbasename\u003e (underscores→hyphens); BuildToolDerivedSection() renders them into FRAMEWORK-INVARIANTS.md under 'Tool-derived requirements', and BuildFrameworkInvariants also lists them in the constitution index. (Historical note: the original mechanism scanned spec/tools/*.py for module docstrings opening with 'Canon: §\u003ctopic\u003e — \u003cclaim\u003e'; that filesystem scan was replaced by the explicit data table, since tools are now CLI subcommands in cmd/hotam/, not discoverable .py modules with parseable docstrings — but the 1:1 tool→R projection discipline is preserved.) PROSE (not ENFORCED): the projection itself has no enforcer test (proven historically by test_tool_derived_requirements.py); the data table is maintained by hand alongside the methodology.Tools registry. ENFORCED 2026-07-13: TestScanToolRequirements_ProjectsEveryEntryToRequirement in internal/generator/tool_reqs_test.go mechanically verifies this claim."
+}

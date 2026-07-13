@@ -84,7 +84,7 @@ type SearchResult struct {
 func Search(g *ontology.Graph, text string) []SearchResult {
 	needle := strings.ToLower(strings.TrimSpace(text))
 	if needle == "" {
-		return nil
+		return []SearchResult{}
 	}
 	const (
 		rankID = iota
@@ -92,7 +92,7 @@ func Search(g *ontology.Graph, text string) []SearchResult {
 		rankWhy
 		rankNone
 	)
-	var out []SearchResult
+	out := []SearchResult{}
 	for _, r := range g.Requirements {
 		rank := rankNone
 		if strings.Contains(strings.ToLower(r.ID), needle) {

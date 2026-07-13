@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-spawn-log-carries-isolation",
+  "claim": "Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: spawn-agent is Planned in methodology.Tools -- there is no spawn-log writer, no spawn-log.jsonl, and no isolation/mutating fields, because no sub-agent spawning machinery exists at all (R-claude-md-consolidates-when-single-agent: one operator, zero active sub-agents). Wave 5 (measurable slices of discipline): the spawn-log records WHO/WHAT/WHEN (R-task-spawn-log-runtime) but the spec calls for it to also record the isolation posture under which a sub-agent ran, so a parallel-mutating-agent hazard has a trace -- two additive fields (isolation=worktree|shared, mutating=bool), defaulting to shared/false, backward-compatible with every pre-existing caller. (Historical note: the original writer was tools/spawn_agent.py, whose freeze under R-speculative-aspects-frozen was partially lifted by explicit steward act -- GO given for Wave 5 -- to add the two CLI flags and matching log fields.) The writer half (this atom) and the honest reader half (R-parallel-mutating-agents-use-worktree, which can only check log-internal consistency, not runtime concurrency) are both unimplemented together, since both depend on the unimplemented spawn machinery. PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

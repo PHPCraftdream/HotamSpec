@@ -1,0 +1,26 @@
+{
+  "kind": "Requirement",
+  "id": "R-project-root-not-hardcoded",
+  "claim": "HotamSpec resolves the consumer's project root through a single function, paths.ProjectRoot() (internal/paths/project_root.go), via a documented R1-R6 priority chain, never through a raw runtime.Caller-based parents-climb guess at the consumer's files.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "paths.ProjectRoot() (internal/paths/project_root.go) resolves the project root via a six-level priority chain: R1 env HOTAM_SPEC_PROJECT_ROOT, R2 env HOTAM_SPEC_DOMAINS_ROOT (parent), R3 bottom-up search for Go-native markers (domains/, delegations/, or the SECONDARY-marker quorum), R4 .hotam-spec-project marker file, R5 legacy pyproject.toml [tool.hotam-spec].project_root fallback, R6 self-hosting fallback (repo root via go.mod). Every path that reads/writes consumer content (domains/, tickets/, CLAUDE.md, docs/gen) is derived from this resolver. FOUND ISSUE (not fixed): the historical Python claim asserted an AST-scanning enforcer (test_project_root_not_hardcoded.py) that syntactically scans every committed framework .py for a Path(__file__).resolve().parents[N] climb joined to consumer data. No such AST scanner exists -- there is no Go equivalent that syntactically scans internal/*.go for a runtime.Caller-based parents-climb to consumer data. The named enforcer TestProjectRoot_Priority_NativeMarkerBeatsPyproject (internal/paths/) tests the resolver's R3-over-R5 priority, NOT the 'no hardcoded consumer-root climb' discipline. The enforcement/enforced_by are out of scope for this content batch; enforcement is ENFORCED with a priority-chain test that does not verify the no-hardcode claim. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestProjectRoot_Priority_NativeMarkerBeatsPyproject"
+  ],
+  "assumptions": [],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-09",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-12-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/paths/project_root.go",
+    "internal/paths/project_root_chain_test.go"
+  ]
+}

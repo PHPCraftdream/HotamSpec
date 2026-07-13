@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-conflict-addressing-resolves-variables",
+  "claim": "`hotam apply-proposal` shall resolve a Conflict by its string ID when locating the Conflict node a proposal addresses, whether the ID is given directly or via a variable-style alias.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The C-8600b1b8 lesson: an earlier executable-graph design bound each Conflict's axis/context to local variables (c1_axis..c6_axis / c1_ctx..c6_ctx in domains/hotam-spec-self/graph.py), so literal-only matching in _find_conflict_call made every existing Conflict unaddressable and the standing P3 CONFLICT_STALLED action mechanically unlandable; the fix folded module/function-level `name = \"literal\"` assignments. This concern is structurally moot today: the graph is plain JSON data (graph.json), not executable source, so Conflict nodes carry plain string IDs with no variable indirection. findConflictIndex (internal/proposal/mutate.go) locates a conflict by exact ID match on the JSON graph -- no variable resolution is needed. This repairs the ACT half of the mediation loop for conflict transitions (R-active-loop-apply-tool).",
+  "last_reviewed_at": "2026-07-13"
+}

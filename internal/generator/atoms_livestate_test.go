@@ -3,6 +3,8 @@ package generator
 import (
 	"strings"
 	"testing"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // TestBuildAtoms_* are covered by TestGenSpec_DeterministicOnRealDomain and
@@ -40,5 +42,131 @@ func TestBuildLiveState_RendersOnFixture(t *testing.T) {
 	// "nodes" and "NODE_COUNT measure", not "chars"/"CRYSTAL_CHARS".
 	if !strings.Contains(got, "NODE_COUNT measure") {
 		t.Errorf("BuildLiveState: expected NODE_COUNT measure branch for fixture graph, got:\n%s", got)
+	}
+}
+
+// TestBuildLiveState_ThreeCipherPulsePresent enforces
+// R-three-cipher-pulse-structurally-injected: the LIVE-STATE block must
+// structurally carry all three pulse ciphers — top action, debt, and context
+// — so the operator's ORIENT step reads them by reference. Distinct from
+// TestBuildLiveState_RendersOnFixture (which checks graph/crystal budget
+// lines): this asserts the context cipher specifically, the one the existing
+// test does not cover.
+func TestBuildLiveState_ThreeCipherPulsePresent(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildLiveState(g, 5000)
+	for _, want := range []string{"- **top action:**", "- **debt:**", "- context: UNMEASURED"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("LIVE-STATE three-cipher pulse missing fragment %q (top action / debt / context):\n%s", want, got)
+		}
+	}
+}
+
+// TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand enforces
+// R-unmeasured-cipher-names-host-boundary: while context is UNMEASURED, the
+// context line must honestly name the host-cooperation boundary and must NOT
+// suggest a command-to-call (no backtick command, no hotam invocation, no
+// .py script). This guards against a regression to the removed
+// setup_context_hook.py --apply "fix".
+func TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildLiveState(g, 5000)
+
+	// extract the context line
+	var ctxLine string
+	for _, line := range strings.Split(got, "\n") {
+		if strings.HasPrefix(line, "- context: ") {
+			ctxLine = line
+			break
+		}
+	}
+	if ctxLine == "" {
+		t.Fatalf("LIVE-STATE has no context line:\n%s", got)
+	}
+
+	// must name the host-cooperation boundary explicitly
+	if !strings.Contains(ctxLine, "host cooperation") {
+		t.Errorf("context line must name the host-cooperation boundary, got:\n%s", ctxLine)
+	}
+	if !strings.Contains(ctxLine, "will not touch") {
+		t.Errorf("context line must state the framework will not touch the host, got:\n%s", ctxLine)
+	}
+
+	// must name NO command-to-call
+	for _, bad := range []string{"`", "hotam ", ".py", "--apply"} {
+		if strings.Contains(ctxLine, bad) {
+			t.Errorf("context line must name no command-to-call, but contains %q:\n%s", bad, ctxLine)
+		}
+	}
+}
+
+// TestBuildAtoms_GroupsSettledByTopicAndRendersNonEmpty enforces
+// R-docs-generated-from-requirements: the atoms-*.md builders group SETTLED
+// requirements by topic-id prefix and render each matched requirement's claim,
+// excluding non-SETTLED ones. The small fixture (R-fixture-*) cannot exercise
+// the non-empty branch (its ids match no topic prefix — see the note above), so
+// a synthetic graph carries one SETTLED + one DRAFT requirement to prove the
+// grouping + SETTLED filter + non-empty rendering directly.
+func TestBuildAtoms_GroupsSettledByTopicAndRendersNonEmpty(t *testing.T) {
+	t.Parallel()
+
+	// BuildAtomsCheck: a SETTLED R-check- req is grouped + rendered; a DRAFT
+	// R-check- req with the same prefix is excluded by the SETTLED filter.
+	settled := ontology.Requirement{
+		ID:     "R-check-settled-atom",
+		Status: ontology.StatusSETTLED,
+		Claim:  "UNIQUE_SETTLED_CHECK_CLAIM_MARKER",
+		Why:    "settled why",
+	}
+	draft := ontology.Requirement{
+		ID:     "R-check-draft-atom",
+		Status: ontology.StatusDRAFT,
+		Claim:  "UNIQUE_DRAFT_CHECK_CLAIM_MARKER",
+		Why:    "draft why",
+	}
+	g := &ontology.Graph{Requirements: []ontology.Requirement{settled, draft}}
+
+	got := BuildAtomsCheck(g)
+	if strings.TrimSpace(got) == "" {
+		t.Fatal("BuildAtomsCheck: empty output")
+	}
+	if strings.Contains(got, "_No atomic requirements in this topic yet._") {
+		t.Errorf("BuildAtomsCheck should match the SETTLED R-check- req, got the empty-selection notice:\n%s", got)
+	}
+	if !strings.Contains(got, "UNIQUE_SETTLED_CHECK_CLAIM_MARKER") {
+		t.Errorf("BuildAtomsCheck must render the matched SETTLED requirement's claim:\n%s", got)
+	}
+	if strings.Contains(got, "UNIQUE_DRAFT_CHECK_CLAIM_MARKER") {
+		t.Errorf("BuildAtomsCheck must NOT render a DRAFT requirement (SETTLED filter), but the draft claim appeared:\n%s", got)
+	}
+
+	// exercise the other three builders with one SETTLED match each: non-empty
+	// + the matched claim renders (grouping by each builder's own prefix).
+	cases := []struct {
+		name   string
+		build  func(*ontology.Graph) string
+		prefix string
+	}{
+		{"Operator", BuildAtomsOperator, "R-operator-"},
+		{"Substrate", BuildAtomsSubstrate, "R-claude-md-"},
+		{"Discipline", BuildAtomsDiscipline, "R-anchor-"},
+	}
+	for _, c := range cases {
+		marker := "UNIQUE_SETTLED_" + strings.ToUpper(c.name) + "_MARKER"
+		gg := &ontology.Graph{Requirements: []ontology.Requirement{
+			{ID: c.prefix + "settled-marker", Status: ontology.StatusSETTLED, Claim: marker, Why: "x"},
+		}}
+		out := c.build(gg)
+		if strings.TrimSpace(out) == "" {
+			t.Errorf("BuildAtoms%s: empty output", c.name)
+		}
+		if strings.Contains(out, "_No atomic requirements in this topic yet._") {
+			t.Errorf("BuildAtoms%s should match its SETTLED %s req, got empty notice:\n%s", c.name, c.prefix, out)
+		}
+		if !strings.Contains(out, marker) {
+			t.Errorf("BuildAtoms%s must render the matched SETTLED requirement's claim:\n%s", c.name, out)
+		}
 	}
 }

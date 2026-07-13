@@ -1,0 +1,25 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-has-docs-dir",
+  "claim": "Every domains/\u003cname\u003e/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The docs/ wrapper cleanly separates machine-generated output (docs/gen/) from hand-written domain material without requiring two separate top-level directories. Domain operators need a place to put domain-level notes, ADRs, and glossaries that are domain-specific and not governed by the framework generator. Keeping everything under docs/ mirrors the spec/docs/ structure established for the framework level. ENFORCED 2026-07-13: TestDomainHasDocsDir_RealDomains in internal/invariants/domain_has_docs_dir_test.go mechanically verifies this claim.",
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestDomainHasDocsDir_RealDomains"
+  ],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-06-30",
+  "review_after": "2026-12-30",
+  "evidence": [],
+  "source_refs": []
+}

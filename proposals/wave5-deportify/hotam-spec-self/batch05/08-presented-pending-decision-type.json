@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-presented-pending-decision-type",
+  "claim": "The presented-awaiting-decision state shall live in a dedicated runtime folder structure (pending/ vs applied/), surfaced by the harness -- not as a new graph node type.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "why": "Not yet implemented: no pending-proposal tracking exists. Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). The intended design splits a runtime proposals/ area into pending/ (proposal awaiting steward verdict) and applied/ (landed proposal, moved there after apply), with a PENDING_PROPOSAL band in what-now listing each pending file with its age in days. None of this is implemented: the what-now harness (cmd/hotam/what_now.go) renders only graph-derived signals from DiagnoseSignals (internal/diagnose/signal.go) -- there is no pending-proposal band (the P6/PENDING_PROPOSAL label exists in priorityLabel but has no signal producer), no pending/applied folder split, and no .runtime/ proposal tracking. The P6 label in what_now.go is dead code retained for continuity. (Historical Python landing split spec/.runtime/proposals/ into pending/ vs applied/, moved by apply_proposal.py.) PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

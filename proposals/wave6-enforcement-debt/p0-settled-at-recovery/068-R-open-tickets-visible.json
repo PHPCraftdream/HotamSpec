@@ -1,0 +1,23 @@
+{
+  "kind": "Requirement",
+  "id": "R-open-tickets-visible",
+  "claim": "The what-now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into DiagnoseSignals.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: no open-tickets band exists. The steward's backlog moved onto disk; without a pulse band the queue is invisible until someone remembers to ls tickets/ (R-agent-never-lost). Like the pending-proposal / revisit-marker bands it would read the filesystem, so it stays OUT of DiagnoseSignals (internal/diagnose/signal.go) to keep generated docs byte-stable (R-deterministic-generation). what-now (cmd/hotam/what_now.go) renders only graph-derived signals from DiagnoseSignals -- there is no open-tickets band, and the on-disk ticket tools (ticket-create/list/show/move/edit/comment) are all Planned (not yet implemented in methodology.Tools). (Historical Python enforcement: tests/test_open_tickets_band.py reported open tickets by status, silent when none, excluded from diagnose.) PROSE (not ENFORCED): no enforcer exists. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [],
+  "assumptions": [
+    "A-text-grounded-in-models"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-03",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-12-12",
+  "evidence": [],
+  "source_refs": []
+}

@@ -153,7 +153,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"GLOSSARY.md", BuildGlossary},
 		{"HISTORY.md", BuildHistory},
 		{"DECISIONS.md", BuildDecisions},
-		{"CONSTITUTION.md", BuildConstitution},
+		{"CONSTITUTION.md", func(g *ontology.Graph) string { return BuildConstitution(g, "hotam-spec-self") }},
 		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
@@ -174,5 +174,96 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 	}
 	if strings.TrimSpace(graphJSON) == "" {
 		t.Error("docs-gen-graph.json: empty output against real domain graph")
+	}
+}
+
+// TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty enforces R-smoke-test:
+// load the REAL hotam-spec-self domain graph (not the small fixture) and run
+// every graph-dependent Build* template — including the atoms builders, the
+// root-CLAUDE.md and AGENT-CONTEXT renderers, and the tool-derived section that
+// the existing smoke test omits — asserting each returns non-empty output and
+// none panics. The explicit per-call recover guard turns a panic (the framework
+// "falling over on real data") into a named failure rather than a bare crash.
+func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
+	t.Parallel()
+	g := loadDomainGraph(t)
+	repoRoot := t.TempDir()
+
+	type build struct {
+		name string
+		fn   func(*ontology.Graph) string
+	}
+	builds := []build{
+		{"REQUIREMENTS.md", BuildRequirements},
+		{"TENSIONS.md", BuildTensions},
+		{"OPEN.md", BuildOpen},
+		{"UNENFORCED.md", BuildUnenforced},
+		{"GLOSSARY.md", BuildGlossary},
+		{"HISTORY.md", BuildHistory},
+		{"DECISIONS.md", BuildDecisions},
+		{"CONSTITUTION.md", func(g *ontology.Graph) string { return BuildConstitution(g, "hotam-spec-self") }},
+		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
+		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
+		{"REPO-MAP.md", func(g *ontology.Graph) string {
+			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
+		}},
+		{"ATOMS_OPERATOR.md", BuildAtomsOperator},
+		{"ATOMS_SUBSTRATE.md", BuildAtomsSubstrate},
+		{"ATOMS_DISCIPLINE.md", BuildAtomsDiscipline},
+		{"ATOMS_CHECK.md", BuildAtomsCheck},
+		{"CLAUDE.md", func(g *ontology.Graph) string {
+			return RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 27646, nil)
+		}},
+		{"AGENT-CONTEXT.md", func(g *ontology.Graph) string { return BuildAgentContext(g, "hotam-spec-self", 27646) }},
+		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646) }},
+	}
+	for _, b := range builds {
+		var out string
+		var panicked bool
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					panicked = true
+					t.Errorf("%s: PANIC running against real domain graph: %v", b.name, r)
+				}
+			}()
+			out = b.fn(g)
+		}()
+		if panicked {
+			continue
+		}
+		if strings.TrimSpace(out) == "" {
+			t.Errorf("%s: empty output against real domain graph", b.name)
+		}
+	}
+
+	// graph-json build (returns error, not string)
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("docs-gen-graph.json: PANIC: %v", r)
+			}
+		}()
+		graphJSON, err := BuildGraphJSON(g)
+		if err != nil {
+			t.Fatalf("BuildGraphJSON: %v", err)
+		}
+		if strings.TrimSpace(graphJSON) == "" {
+			t.Error("docs-gen-graph.json: empty output against real domain graph")
+		}
+	}()
+
+	// registry-derived builder (no graph dependency, but part of the gen pipeline)
+	var derived string
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("tool-derived-section.md: PANIC: %v", r)
+			}
+		}()
+		derived = BuildToolDerivedSection()
+	}()
+	if strings.TrimSpace(derived) == "" {
+		t.Error("tool-derived-section.md: empty output")
 	}
 }

@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforcement-perimeter-baselines-guarded",
+  "claim": "A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: the CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard mechanism that intercepts direct edits to baseline files. The reference design is a PreToolUse hook that denies Edit/Write to spec/tests/*_baseline.json and the active-domain pin, with sanctioned updates routed through a dedicated update-baseline tool (historically _graph_guard.py + tools/update_baseline.py). Without a guard on baselines, a ratchet test (e.g. atomicity) can be silently defeated by editing the baseline JSON to include the offending id -- the same self-judging-the-judge problem as unguarded graph.json edits (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

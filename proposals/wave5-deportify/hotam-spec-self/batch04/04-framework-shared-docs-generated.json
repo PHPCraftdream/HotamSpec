@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-framework-shared-docs-generated",
+  "claim": "The framework shall generate thinking/*.md and tools/*.md deterministically from the methodology section registry and tool registry (the single source of truth).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Shared docs are the single authoritative reference for framework thinking and tool usage across all agents and domains. Generating them deterministically from the registries ensures they cannot drift from the code (R-drift-structurally-impossible). BuildThinkingDocs (internal/generator/thinkingdocs.go) renders one Markdown doc per methodology.Sections entry, and BuildToolDocs (internal/generator/tooldocs.go) renders one per methodology.Tools entry; both are called by gen-spec (cmd/hotam/gen_spec.go) which writes them to domains/<name>/docs/gen/thinking/<slug>.md and domains/<name>/docs/gen/tools/<command>.md. The registries (internal/methodology) are the single source of truth (historically the Python module docstrings and argparse --help output). The ENFORCED label is backed by TestBuildThinkingDocsCountMatchesSections (internal/generator/thinkingdocs_tooldocs_test.go), which verifies the thinking-docs count matches the section registry.",
+  "last_reviewed_at": "2026-07-13"
+}

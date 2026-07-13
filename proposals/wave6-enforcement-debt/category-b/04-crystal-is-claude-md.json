@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-is-claude-md",
+  "claim": "Each operator's crystallized substrate shall be its own CLAUDE.md file.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "Atom of R-operator-crystal-is-claude-md (identity concern). CLAUDE.md is auto-loaded by the harness, making it the natural crystal location. RECLASSIFIED 2026-07-13: enforceability ENFORCEABLE -> INHERENTLY_PROSE (agent consultation, fm) -- this is a naming/identity design decision (the crystal file IS named CLAUDE.md, by construction of the generator), not a runtime property a test can independently verify without simply re-asserting the same decision (an assertion that a constant filename equals \"CLAUDE.md\" would be a vacuous test, not a proof of the concept).",
+  "assumptions": [],
+  "enforcement": "PROSE",
+  "enforceability": "INHERENTLY_PROSE"
+}

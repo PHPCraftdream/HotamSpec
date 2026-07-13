@@ -77,10 +77,10 @@ func TestNamedSectionVariables(t *testing.T) {
 func TestToolsComplete(t *testing.T) {
 	t.Parallel()
 	tools := Tools.All()
-	// 10 Ported (gen_spec, what_now, apply_proposal, gate, all_violations,
-	// req, due, inspect, confront, land — every real `hotam` CLI subcommand)
-	// + 27 Declared (Python-era methodology surface not yet ported).
-	const want = 37
+	// 11 Implemented (gen_spec, what_now, apply_proposal, gate, all_violations,
+	// req, due, status, inspect, confront, land — every real `hotam` CLI subcommand)
+	// + 27 Planned (methodology surface not yet implemented as Go commands).
+	const want = 38
 	if len(tools) != want {
 		t.Fatalf("expected %d tools, got %d", want, len(tools))
 	}
@@ -95,27 +95,56 @@ func TestToolsComplete(t *testing.T) {
 			t.Errorf("tool %q has empty Purpose", tl.Command)
 		}
 		switch tl.Status {
-		case Ported, Declared:
+		case Implemented, Planned:
 		default:
 			t.Errorf("tool %q has unknown Status %q", tl.Command, tl.Status)
 		}
 	}
 }
 
-// TestToolsPortedCount pins the exact count of Ported tools (as opposed to
-// TestToolsComplete's total, which also counts Declared) so a future edit
+// TestToolsImplementedCount pins the exact count of Implemented tools (as opposed to
+// TestToolsComplete's total, which also counts Planned) so a future edit
 // that accidentally demotes/promotes a tool's Status is caught even though
 // the total count wouldn't change.
-func TestToolsPortedCount(t *testing.T) {
+func TestToolsImplementedCount(t *testing.T) {
 	t.Parallel()
-	ported := 0
+	implemented := 0
 	for _, tl := range Tools.All() {
-		if tl.Status == Ported {
-			ported++
+		if tl.Status == Implemented {
+			implemented++
 		}
 	}
-	const wantPorted = 10
-	if ported != wantPorted {
-		t.Fatalf("expected %d Ported tools, got %d", wantPorted, ported)
+	const wantImplemented = 11
+	if implemented != wantImplemented {
+		t.Fatalf("expected %d Implemented tools, got %d", wantImplemented, implemented)
+	}
+}
+
+// TestStatusToolRegisteredImplemented enforces R-status-single-command-summary's
+// existence half: the `status` tool must be registered in the methodology
+// registry as Implemented, with a non-empty Purpose describing the composed
+// what-now/due/all-violations summary, so the registry entry (read by
+// cmd/hotam/tool_wiring.go and by the generated EMBEDDED-TOOLS crystal block)
+// can never silently regress to Planned or disappear. The behavioral half
+// (the aggregation actually matching what-now/due/all-violations) is
+// enforced separately by cmd/hotam's
+// TestBuildStatusReport_MatchesWhatNowDueAllViolations, which cannot live
+// under internal/ (it needs cmd/hotam's unexported helpers) and so cannot be
+// named directly in enforced_by (see internal/gate's Test*-name resolver,
+// scoped to internal/**/*_test.go).
+func TestStatusToolRegisteredImplemented(t *testing.T) {
+	t.Parallel()
+	tool, ok := Tools.Get("status")
+	if !ok {
+		t.Fatal("status tool not registered in methodology.Tools")
+	}
+	if tool.Status != Implemented {
+		t.Errorf("status tool Status = %q, want Implemented", tool.Status)
+	}
+	if tool.Command != "status" {
+		t.Errorf("status tool Command = %q, want %q", tool.Command, "status")
+	}
+	if tool.Purpose == "" {
+		t.Error("status tool has empty Purpose")
 	}
 }

@@ -6,7 +6,7 @@ import "github.com/PHPCraftdream/HotamSpec/internal/methodology"
 // Tool registry to attach a real Run function. internal/methodology must stay
 // free of any dependency on cmd/hotam (it is package main; methodology is an
 // importable library package other tools, e.g. the generator, also depend
-// on) — so tools_data.go declares every Ported Tool with Run: nil, and this
+// on) — so tools_data.go declares every Implemented Tool with Run: nil, and this
 // file patches those entries in place via registry.Update once cmd/hotam
 // itself (which already links in every cmd* function below) is loaded.
 //
@@ -38,6 +38,7 @@ func init() {
 	wireToolRun("all_violations", cmdAllViolations)
 	wireToolRun("req", cmdReq)
 	wireToolRun("due", cmdDue)
+	wireToolRun("status", cmdStatus)
 	wireToolRun("inspect", cmdInspect)
 	wireToolRun("confront", cmdConfront)
 	wireToolRun("land", cmdLand)
@@ -46,10 +47,10 @@ func init() {
 // wireToolRun patches the Run field of the already-registered Tool named
 // name, leaving every other field (Command, Canon, Purpose, Status) exactly
 // as tools_data.go declared it. It panics (via registry.Update) if name was
-// never registered — a mismatch here is a wiring bug (a Ported tool renamed
+// never registered — a mismatch here is a wiring bug (an Implemented tool renamed
 // or removed in tools_data.go without updating this file, or vice versa),
-// and TestToolWiring_EveryPortedToolHasRun in tool_wiring_test.go exists to
-// catch the inverse mistake: a Ported tool that this file forgot to wire.
+// and TestToolWiring_EveryImplementedToolHasRun in tool_wiring_test.go exists to
+// catch the inverse mistake: an Implemented tool that this file forgot to wire.
 func wireToolRun(name string, run func(args []string) error) {
 	tool, ok := methodology.Tools.Get(name)
 	if !ok {

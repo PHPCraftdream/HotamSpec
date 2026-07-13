@@ -98,6 +98,21 @@ func Context(g *ontology.Graph, id string) (ContextCard, error) {
 		return shared[i].RelKind < shared[j].RelKind
 	})
 
+	// Relations/Conflicts/SharedAssumptionWith are array-typed JSON fields
+	// (`hotam req context --json`) built incrementally above by append
+	// inside conditional loops that may never fire (a leaf requirement with
+	// no relations/conflicts/shared-assumption peers) — normalize any that
+	// stayed nil to an empty slice so they marshal to `[]`, not `null`.
+	if relations == nil {
+		relations = []NeighborRef{}
+	}
+	if conflicts == nil {
+		conflicts = []ConflictCard{}
+	}
+	if shared == nil {
+		shared = []NeighborRef{}
+	}
+
 	return ContextCard{
 		Requirement:          card,
 		Relations:            relations,
@@ -171,6 +186,13 @@ func relatedToRequirement(g *ontology.Graph, id string) ([]NeighborRef, error) {
 		}
 		return out[i].ID < out[j].ID
 	})
+	// Array-typed JSON field for `hotam req related --json`: a requirement
+	// with no relations/assumptions/incoming-refs/conflict-memberships is a
+	// real (not exceptional) case — normalize nil to `[]` so it marshals
+	// that way instead of `null`.
+	if out == nil {
+		out = []NeighborRef{}
+	}
 	return out, nil
 }
 
@@ -195,6 +217,9 @@ func relatedToConflict(g *ontology.Graph, id string) ([]NeighborRef, error) {
 		}
 		return out[i].ID < out[j].ID
 	})
+	if out == nil {
+		out = []NeighborRef{}
+	}
 	return out, nil
 }
 
@@ -222,5 +247,8 @@ func relatedToAssumption(g *ontology.Graph, id string) ([]NeighborRef, error) {
 		}
 		return out[i].ID < out[j].ID
 	})
+	if out == nil {
+		out = []NeighborRef{}
+	}
 	return out, nil
 }

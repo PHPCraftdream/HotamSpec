@@ -13,8 +13,7 @@ import "strings"
 //  3. ReplaceBlock(text, name, content) — splice new content between
 //     sentinels, preserving the surrounding text byte-for-byte.
 //
-// Ported 1:1 from spec/src/hotam_spec/claude_md.py (Python reference,
-// backup/python-legacy-2026-07-12). Pure string functions, no file I/O.
+// Pure string functions, no file I/O.
 
 // BeginSentinel returns the "<!-- <name>:BEGIN -->" sentinel for a block name.
 func BeginSentinel(name string) string {

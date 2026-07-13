@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-entity-derived-requirement",
+  "claim": "Each EntityType in the domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the check_entity_* family covering it.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Mirrors R-tool-is-its-own-requirement at the entity layer: an EntityType IS its own requirement; deleting it removes the R; changing its description changes the claim. Eliminates the prose gap between 'R about entity behavior' and 'EntityType implementing it'. renderEntityDerivedConstitutionSection (internal/generator/entities.go) projects each EntityType as a '- **R-entity-<slug>**' line into FRAMEWORK-INVARIANTS.md via BuildFrameworkInvariants (internal/generator/frameworkinvariants.go), listing the entityCoveringChecks family as enforced_by. The invariant check_entity_type_constitution_projection is registered but is a NO-OP (filesystem-coherence check that does not fit the pure-graph Check signature; the guarantee is carried by the byte-identity test layer instead). Dormant-but-real: 0 entity_types in the active domain today makes the projection section empty (rendered only when len(g.EntityTypes) > 0), not falsely enforced -- the guard is live and will project the moment a domain declares an EntityType. Wording precision (Wave 7 move 3a): entity-derived requirements are framework-plumbing, relocated out of CONSTITUTION.md into FRAMEWORK-INVARIANTS.md; the projection target is FRAMEWORK-INVARIANTS.md.",
+  "last_reviewed_at": "2026-07-13"
+}

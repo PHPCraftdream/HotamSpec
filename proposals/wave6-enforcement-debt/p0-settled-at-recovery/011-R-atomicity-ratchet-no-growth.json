@@ -1,0 +1,32 @@
+{
+  "kind": "Requirement",
+  "id": "R-atomicity-ratchet-no-growth",
+  "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "why": "R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human judgment no check_* can force wholesale. But the DIRECTION of the debt (is it growing or merely being carried) IS mechanically checkable via a ratchet: a live COMPOUND set is re-derived from the audit's own classification and fails RED the instant a COMPOUND id appears that is not already in the frozen baseline (R-commit-boundary-checkable slice-of-a-broader-claim). Not yet implemented: the audit-atomicity tool and its frozen baseline are Planned (previously implemented as spec/tools/audit_atomicity.py + spec/tests/atomicity_compound_baseline.json, guarded by test_atomicity_ratchet.py). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [],
+  "assumptions": [
+    "A-text-grounded-in-models"
+  ],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-requirement-claim-is-atomic"
+    },
+    {
+      "kind": "refines",
+      "target": "R-check-method-is-atomic"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-02",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-08-12",
+  "evidence": [],
+  "source_refs": []
+}

@@ -77,7 +77,7 @@ func TestCheckMethodMatchesDocstring_Noop(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}}
 	if vs := runCheck(t, "check_method_matches_docstring", g); len(vs) != 0 {
-		t.Fatalf("check_method_matches_docstring is an honest no-op in the Go port; expected no violations, got %v", vs)
+		t.Fatalf("check_method_matches_docstring is an honest no-op; expected no violations, got %v", vs)
 	}
 }
 
@@ -85,6 +85,6 @@ func TestCheckRulesAsDataClassificationCoherent_Noop(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}}
 	if vs := runCheck(t, "check_rules_as_data_classification_coherent", g); len(vs) != 0 {
-		t.Fatalf("check_rules_as_data_classification_coherent is an honest no-op in the Go port; expected no violations, got %v", vs)
+		t.Fatalf("check_rules_as_data_classification_coherent is an honest no-op; expected no violations, got %v", vs)
 	}
 }

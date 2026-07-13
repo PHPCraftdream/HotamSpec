@@ -1,0 +1,28 @@
+{
+  "kind": "Requirement",
+  "id": "R-docs-generated-from-requirements",
+  "claim": "Per-topic narrative files (atoms-operator.md, atoms-substrate.md, atoms-discipline.md, atoms-check.md) shall be generated from SETTLED requirements grouped by topic, written into the active domain's docs/gen/ by the generator.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Director asked: build a system that generates topic-grouped descriptions in the docs folder. BUILD: this phase. The generator (internal/generator/atoms.go) groups SETTLED requirements by topic predicate via selectSettled and renders each group through renderAtoms, producing four atoms-*.md files written into domains/<name>/docs/gen/ by cmd/hotam/gen_spec.go (the layout is per-domain under docs/gen/ rather than at a repo-root docs/methodology/atoms/; the content is the same, the path differs). (Wave 1 seed-coherence pass: enforced_by's second entry previously named a tool source path 'tools/gen_spec.py::build_methodology_atoms' rather than a test — corrected; the requirement stands at PROSE since no dedicated Test* guards the atoms builders, though TestGenerator_DoubleRegenerateIsIdentical exercises them for determinism.) ENFORCED 2026-07-13: TestBuildAtoms_GroupsSettledByTopicAndRendersNonEmpty in internal/generator/atoms_livestate_test.go mechanically verifies this claim. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestBuildAtoms_GroupsSettledByTopicAndRendersNonEmpty"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-10-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/generator/atoms.go",
+    "cmd/hotam/gen_spec.go"
+  ]
+}

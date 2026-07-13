@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-carries-short-form",
+  "claim": "The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Not yet implemented: the short-form mechanism (summary-priority, first-sentence fallback; historically short_form() in the earlier implementation) is not implemented. The generator (internal/generator/claudemd.go) currently uses runeTruncate for imperative text -- mechanical rune-count truncation that is exactly the pattern this requirement prohibits. The Requirement struct carries a Summary field (internal/ontology/requirement.go) that a short-form renderer would consult first; wiring that field into a meaningful short-form renderer across all crystal text is follow-up work.",
+  "last_reviewed_at": "2026-07-13"
+}

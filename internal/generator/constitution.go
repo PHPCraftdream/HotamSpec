@@ -67,7 +67,10 @@ func set(ids ...string) map[string]struct{} {
 	return out
 }
 
-func BuildConstitution(g *ontology.Graph) string {
+func BuildConstitution(g *ontology.Graph, domainName string) string {
+	if domainName == "" {
+		domainName = "hotam-spec-self"
+	}
 	reqByID := make(map[string]ontology.Requirement, len(g.Requirements))
 	for _, r := range g.Requirements {
 		reqByID[r.ID] = r
@@ -189,9 +192,9 @@ func BuildConstitution(g *ontology.Graph) string {
 	lines = append(lines, "  2. `hotam gen-spec` (twice)                            → deterministic?")
 	lines = append(lines, "  3. `hotam what-now --limit 20`                         → what is the top action?")
 	lines = append(lines, "  4. `hotam all-violations`                              → any structural violations?")
-	lines = append(lines, "  5. Read `docs/gen/UNENFORCED.md`                      → what's claimed but not guaranteed?")
-	lines = append(lines, "  6. Read `docs/gen/HISTORY.md`                         → what's been decided / rejected?")
-	lines = append(lines, "  7. Read `docs/gen/DECISIONS.md`                       → which M-decisions are open?")
+	lines = append(lines, "  5. Read `domains/"+domainName+"/docs/gen/UNENFORCED.md`     → what's claimed but not guaranteed?")
+	lines = append(lines, "  6. Read `domains/"+domainName+"/docs/gen/HISTORY.md`        → what's been decided / rejected?")
+	lines = append(lines, "  7. Read `domains/"+domainName+"/docs/gen/DECISIONS.md`      → which M-decisions are open?")
 	lines = append(lines, "")
 	lines = append(lines, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get steward\napproval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.\nThe closure check (R-verify-closure-per-action) will confirm advancement.")
 	lines = append(lines, "")

@@ -1,0 +1,33 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-wellformed",
+  "claim": "A freshly-cloned framework with an empty graph shall pass all structural invariants â€” an empty graph is well-formed.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Atom of R-empty-content-is-legitimate (well-formedness concern). D2 split decided by domain-user 2026-06-30. WHY: if an empty graph is malformed, the framework punishes adopters for having nothing to model yet. This holds structurally: loader.validateGraph (internal/loader/loader.go) iterates over each slice and checks per-element fields â€” an empty graph (zero axes, stakeholders, assumptions, requirements, conflicts, operators, goals, entity types, entities) has nothing to violate, so it loads successfully; likewise invariants.AllViolations (internal/invariants/all_violations.go) over an empty graph returns zero violations because every check iterates an empty slice. An empty graph is well-formed by construction. There is no dedicated empty-graph-wellformed test, but the property is exercised by the loader/generator test fixtures that build minimal graphs and assert zero violations (the historical test_empty_graph_is_wellformed asserted the same property). ENFORCED 2026-07-13: TestEmptyContentWellFormed in internal/invariants/empty_content_test.go mechanically verifies this claim: AllViolations over a completely empty ontology.Graph returns zero violations (an empty graph is well-formed by construction). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestEmptyContentWellFormed"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-empty-content-is-legitimate"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-10-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/loader/loader.go",
+    "internal/invariants/all_violations.go"
+  ]
+}

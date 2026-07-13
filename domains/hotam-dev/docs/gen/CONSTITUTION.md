@@ -56,9 +56,9 @@ Run, in order:
   2. `hotam gen-spec` (twice)                            → deterministic?
   3. `hotam what-now --limit 20`                         → what is the top action?
   4. `hotam all-violations`                              → any structural violations?
-  5. Read `docs/gen/UNENFORCED.md`                      → what's claimed but not guaranteed?
-  6. Read `docs/gen/HISTORY.md`                         → what's been decided / rejected?
-  7. Read `docs/gen/DECISIONS.md`                       → which M-decisions are open?
+  5. Read `domains/hotam-dev/docs/gen/UNENFORCED.md`     → what's claimed but not guaranteed?
+  6. Read `domains/hotam-dev/docs/gen/HISTORY.md`        → what's been decided / rejected?
+  7. Read `domains/hotam-dev/docs/gen/DECISIONS.md`      → which M-decisions are open?
 
 If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook
 (`docs/playbooks/`), surface assumptions, propose 2-3 variants, get steward

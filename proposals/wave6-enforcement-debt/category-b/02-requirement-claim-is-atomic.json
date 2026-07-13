@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-requirement-claim-is-atomic",
+  "claim": "Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: no mechanical enforcer exists. The historical mechanical enforcer was tools/audit_atomicity.py (surfacing Requirements with compound claims as a deterministic audit signal, per docs/gen/AUDIT.md) plus tests/test_atomicity_ratchet.py::test_no_new_compound_requirements_beyond_baseline as a strict zero-COMPOUND gate over live SETTLED/OPEN claims, with an atomicity_compound_baseline.json ratchet. audit-atomicity is Planned (not implemented) in the methodology.Tools registry, and no check_* or test enforces claim atomicity -- the discipline is currently carried by review convention only. The substance (one concern per claim, compound claims split into separate atoms) remains the live editorial discipline; only its mechanical detection is not yet implemented. R-atomicity-ratchet-no-growth is the sibling requirement meant to carry the growth-direction half; both are PROSE (not ENFORCED). Waves 1-3 of atomization applied the discipline to the meta-domain manually; this content refresh itself follows that same hand-applied atomicity discipline. RECLASSIFIED 2026-07-13: enforceability ENFORCEABLE -> INHERENTLY_PROSE (agent consultation, fm) -- whether a claim asserts 'exactly one concern' is a semantic judgment (no parser reliably distinguishes a conjunction of distinct concerns from a compound description of one concern); a heuristic classifier is at best advisory, not a proof of atomicity. The mechanical, provable half of this discipline (growth-direction ratchet against a baseline) is carried by the sibling R-atomicity-ratchet-no-growth, which remains ENFORCEABLE.",
+  "assumptions": [],
+  "enforcement": "PROSE",
+  "enforceability": "INHERENTLY_PROSE"
+}

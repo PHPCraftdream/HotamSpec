@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-root-claude-md-is-sentinel-only",
+  "claim": "The root CLAUDE.md (and its AGENTS.md/GEMINI.md siblings) shall be rendered by gen-spec from a template whose body is a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Substrate-generates-operator at root level. Hand-written prose drifts; the framework's mind is assembled by gen-spec from spec/docs/thinking/* (shared DRY source) and the domain graph, and the root is a thin shell pointing into both. The root CLAUDE.md is produced by generator.RenderClaudeMDFromTemplate (internal/generator/claudemd.go) when gen-spec is invoked with --claude-md pointing at the root path; the same bytes are also written to AGENTS.md and GEMINI.md (cmd/hotam/gen_spec.go). The body uses the sentinel-pair pattern from internal/generator/claudemd_sentinel.go (WrapBlock/ExtractBlock), so every generated region sits between e.g. <!-- LIVE-STATE:BEGIN --> ... <!-- LIVE-STATE:END --> markers and is rewritten wholesale on each regen, making hand-edits between sentinels structurally impossible to preserve. RESOLVED -- REPLACES the old hand-written prose in root CLAUDE.md (P19a). FOUND ISSUE (not fixed): no test or check_* verifies the on-disk root CLAUDE.md contains no hand-written prose between sentinels (the original structural enforcer, tests/test_root_claude_md_is_sentinel_only.py, was not carried over). The property holds today because the file is regenerated wholesale from the template, but the guard against a future hand-edit is absent; the requirement is STRUCTURAL with no enforced_by.",
+  "last_reviewed_at": "2026-07-13"
+}

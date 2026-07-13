@@ -14,7 +14,7 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	invs := All.All()
 	const expected = 88
 	if len(invs) != expected {
-		t.Fatalf("expected %d registered invariants (89 Python def check_* minus 1 non-graph helper check_lifecycle_wellformed, which became the unregistered lifecycleWellformedIssues helper in the Go port), got %d", expected, len(invs))
+		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}
 }
 

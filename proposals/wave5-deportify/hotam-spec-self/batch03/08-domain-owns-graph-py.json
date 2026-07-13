@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-graph-py",
+  "claim": "Each `domains/<name>/` owns its own graph store (`graph.json`) defining its requirement/conflict/assumption graph, loaded and written via the shared loader.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Isolates each domain's requirement graph from all others. The single-file convention is `graph.json` loaded by loader.LoadGraph / written by loader.WriteGraph (internal/loader/loader.go), with each domain carrying its own domains/<name>/graph.json; the loader (marshalCanonical/atomicWriteFile) provides canonical serialization and atomic writes. The domain tooling reuses the same loader with a path argument (graphPathForDomain in cmd/hotam/common.go). Cross-domain references are explicitly forbidden: a requirement is local or it is a shared framework node. NOTE: the requirement ID retains its historical '-graph-py' suffix (the graph store was once spec/content/graph.py; renaming the ID is a separate operation) — the substance it names is domain ownership of its own graph store, today realized as graph.json + internal/loader.",
+  "last_reviewed_at": "2026-07-13"
+}

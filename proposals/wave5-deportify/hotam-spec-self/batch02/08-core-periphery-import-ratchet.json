@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-core-periphery-import-ratchet",
+  "claim": "A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Intra-package sibling of R-core-imports-stdlib-or-hotam-spec-only (which guards the INTER-package arrow). Not yet implemented: the automated AST import-ratchet enforcer does not exist (historically spec/tests/test_core_periphery_import_direction.py, a static import scan mirroring test_backend_neutral_scope.py, that proved the core was clean plus a negative control proving the scanner was not vacuous). The property holds structurally in the current dependency graph (internal/ontology, internal/invariants, internal/proposal as core; internal/diagnose, internal/generator as periphery) but no automated enforcer exists yet.",
+  "last_reviewed_at": "2026-07-13"
+}

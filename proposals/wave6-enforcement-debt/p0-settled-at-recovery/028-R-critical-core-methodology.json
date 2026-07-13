@@ -1,0 +1,36 @@
+{
+  "kind": "Requirement",
+  "id": "R-critical-core-methodology",
+  "claim": "The methodology's own critical core shall be the six invariants named in criticalCoreNames (internal/generator/constitution.go), guarding every path by which a contradiction could be introduced without being seen.",
+  "owner": "domain-user",
+  "status": "SETTLED",
+  "why": "Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being seen. The six are named in internal/generator/constitution.go (criticalCoreNames: check_steward_not_a_member_owner, check_operator_steward_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question) and rendered into docs/gen/CONSTITUTION.md by the generator. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "check_no_dangling_assumption_owner",
+    "check_no_dangling_requirement_owner",
+    "check_no_dangling_requirement_assumptions",
+    "check_no_dangling_requirement_relations",
+    "check_no_dangling_conflict_refs"
+  ],
+  "assumptions": [
+    "A-text-grounded-in-models"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-critical-core-scope"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-09-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/generator/constitution.go"
+  ]
+}

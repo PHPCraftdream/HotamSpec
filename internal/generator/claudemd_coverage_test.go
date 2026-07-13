@@ -1,11 +1,14 @@
 package generator
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -50,13 +53,15 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 	if !strings.Contains(out, "Operator of `hotam-spec-self`") {
 		t.Errorf("OPERATOR-ROLE did not embed the domain name: missing 'Operator of'")
 	}
-	// EMBEDDED-THINKING must reference the thinking-docs index
-	if !strings.Contains(out, "spec/docs/thinking/") {
+	// EMBEDDED-THINKING must reference the thinking-docs index (real path:
+	// domains/<domain>/docs/gen/thinking/, not the nonexistent spec/docs/thinking/
+	// this used to assert -- see the external-review path-accuracy fix)
+	if !strings.Contains(out, "docs/gen/thinking/") {
 		t.Errorf("EMBEDDED-THINKING thinking-doc pointer missing")
 	}
-	// EMBEDDED-TOOLS must list the ported `req` tool
+	// EMBEDDED-TOOLS must list the implemented `req` tool
 	if !strings.Contains(out, "`hotam req`") {
-		t.Errorf("EMBEDDED-TOOLS missing ported req tool reference")
+		t.Errorf("EMBEDDED-TOOLS missing implemented req tool reference")
 	}
 	// trailing human-notes marker must survive byte-for-byte
 	if !strings.Contains(out, "survives every regeneration verbatim") {
@@ -140,8 +145,10 @@ func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 	if strings.Contains(out, "_archive") {
 		t.Errorf("underscore-prefixed dir must be skipped, but appeared in output")
 	}
-	// known manifest for hotam-dev carries a Russian purpose string
-	if !strings.Contains(out, "модель разработки") {
+	// known manifest for hotam-dev carries a purpose string (English since
+	// the deportify/English-only wave translated knownDomainManifests's
+	// hotam-dev entry -- this used to assert the Russian original was present).
+	if !strings.Contains(out, "developing the Hotam-Spec repository itself") {
 		t.Errorf("known manifest description not embedded for hotam-dev")
 	}
 	// the fixture has 3 SETTLED requirements → atoms-count line
@@ -424,5 +431,395 @@ func TestFlagFor(t *testing.T) {
 	}
 	if got := flagFor("BOGUS"); got != "?" {
 		t.Errorf("flagFor(unknown) = %q, want ?", got)
+	}
+}
+
+// === Batch A2 enforcement-debt closure (wave6 category-a) ===
+//
+// The seven tests below mechanically enforce SETTLED claims that were still
+// PROSE/STRUCTURAL + ENFORCEABLE. Each drives a real renderer against the
+// fixture graph (or a synthetic graph where the fixture cannot exercise the
+// branch) and asserts the claim's observable projection, so a regression in
+// the renderer fails the test rather than silently drifting.
+
+// TestRenderRecentlyRejectedBlock_SurfacesEveryMarkerCarrier enforces
+// R-recently-rejected-surfaced: the RECENTLY-REJECTED block must list EVERY
+// REJECTED requirement whose why carries the "REJECTED — REPLACES" marker
+// (completeness), and must EXCLUDE a REJECTED requirement that carries neither
+// the prose marker nor a structural replaces edge (discrimination). Stays under
+// recentlyRejectedCap so each carrier's id appears verbatim.
+func TestRenderRecentlyRejectedBlock_SurfacesEveryMarkerCarrier(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{Requirements: []ontology.Requirement{
+		{ID: "R-marker-one", Status: ontology.StatusREJECTED, Why: "REJECTED — REPLACES R-succ-one"},
+		{ID: "R-marker-two", Status: ontology.StatusREJECTED, Why: "REJECTED — REPLACES R-succ-two"},
+		{ID: "R-rejected-untracked", Status: ontology.StatusREJECTED, Why: "rejected with no marker and no replaces edge"},
+	}}
+	out := RenderRecentlyRejectedBlock(g)
+	// completeness: every marker carrier is listed by id
+	for _, id := range []string{"R-marker-one", "R-marker-two"} {
+		if !strings.Contains(out, id) {
+			t.Errorf("RECENTLY-REJECTED must list marker-carrier %q:\n%s", id, out)
+		}
+	}
+	// discrimination: the untracked rejection (no marker, no edge) must NOT appear
+	if strings.Contains(out, "R-rejected-untracked") {
+		t.Errorf("RECENTLY-REJECTED must NOT list a rejection lacking both the marker and a replaces edge:\n%s", out)
+	}
+	// the total reflects exactly the two carriers
+	if !strings.Contains(out, "REJECTED (REPLACES known)** (2)") {
+		t.Errorf("RECENTLY-REJECTED should report 2 carriers, got:\n%s", out)
+	}
+}
+
+// TestRenderDomainMapBlock_KnownDomainCarriesAllSixFields enforces
+// R-domain-map-generated: each DOMAIN-MAP entry for a known domain must carry
+// all six presentation fields — id, purpose/description, goals, director, path,
+// atoms-count. The existing DomainMap tests assert only purpose + atoms-count;
+// this completes the goals/director/path coverage against the fixture graph.
+func TestRenderDomainMapBlock_KnownDomainCarriesAllSixFields(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "domains", "hotam-dev"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	fixture := loadFixtureGraph(t)
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture})
+	for _, want := range []string{
+		"### hotam-dev",                     // id
+		"- **purpose** — ",                  // description
+		"- **goals** — ",                    // goals
+		"- **director** — ",                 // director
+		"- **path** — `domains/hotam-dev/`", // path
+		"- **atoms-count** — 3 SETTLED",     // atoms-count (fixture has 3 SETTLED)
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("DOMAIN-MAP hotam-dev entry missing field %q:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse enforces the DOMAIN-MAP
+// half of R-domain-map-shows-pulse: each entry must carry an "open actions" line
+// with the domain's open-action COUNT and its TOP action. The fixture graph has
+// a DETECTED conflict, a HELD conflict, and an OPEN requirement, so domainPulse
+// yields a non-zero count with a top-action line. (The claim's emit_cipher half
+// is separately-tracked stale phrasing from the Python era and is intentionally
+// NOT asserted here.)
+func TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "domains", "hotam-dev"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	fixture := loadFixtureGraph(t)
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{"hotam-dev": fixture})
+
+	var oaLine string
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, "**open actions** — ") {
+			oaLine = line
+			break
+		}
+	}
+	if oaLine == "" {
+		t.Fatalf("DOMAIN-MAP hotam-dev entry missing the open-actions line:\n%s", out)
+	}
+	// the fixture has real signals → the line must NOT be the clean-graph branch
+	if strings.Contains(oaLine, "graph clean)") {
+		t.Fatalf("fixture graph yields open actions; expected the pulse branch, got the clean branch: %s", oaLine)
+	}
+	// pulse format: count + top-action carrying a [Pn] priority marker
+	if !strings.Contains(oaLine, "(top: [P") {
+		t.Errorf("open-actions line must carry the top action with a [Pn] priority marker, got: %s", oaLine)
+	}
+}
+
+// TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents enforces
+// R-agent-map-generated: the root crystal must contain an AGENT-MAP sentinel
+// block, and in the zero-sub-agent case (today's only reachable state) it must
+// render an explicit "no sub-operators yet" marker rather than an empty block —
+// so the operator can distinguish "no agents" from "block missing".
+func TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+
+	inner, ok := ExtractBlock(out, "AGENT-MAP")
+	if !ok {
+		t.Fatalf("root crystal missing the AGENT-MAP sentinel block")
+	}
+	if strings.TrimSpace(inner) == "" {
+		t.Fatalf("AGENT-MAP block is empty — must render an explicit empty marker, not nothing")
+	}
+	if !strings.Contains(inner, "no sub-operators") {
+		t.Errorf("zero-sub-agent AGENT-MAP must render an explicit 'no sub-operators' marker, got:\n%s", inner)
+	}
+}
+
+// TestRenderClaudeMDFromTemplate_NoProseBetweenSentinels enforces
+// R-root-claude-md-is-sentinel-only: the regenerated root crystal must be a
+// minimal framework-identity header + sentinel-bounded generated blocks + the
+// trailing durable-notes marker, with NO stray hand-written prose in the gaps
+// between sentinel blocks. Walks every line outside a sentinel span and asserts
+// each inter-block gap is whitespace-only.
+func TestRenderClaudeMDFromTemplate_NoProseBetweenSentinels(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+
+	blockNames := []string{
+		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
+		"EMBEDDED-TOOLS", "OPERATOR-RECURSION",
+		"LIVE-STATE", "DOMAIN-MAP", "CONSTITUTION", "AGENT-MAP",
+		"CONCEPT-MAP", "RECENTLY-REJECTED",
+	}
+	begins := make(map[string]bool)
+	ends := make(map[string]bool)
+	for _, n := range blockNames {
+		begins[BeginSentinel(n)] = true
+		ends[EndSentinel(n)] = true
+	}
+
+	// Walk lines, collecting contiguous regions of text OUTSIDE any sentinel
+	// block. A BEGIN flushes the accumulated outside region and enters a block;
+	// an END leaves a block; everything else, when outside, accumulates.
+	var regions []string
+	inside := false
+	var cur strings.Builder
+	for _, line := range strings.Split(out, "\n") {
+		tl := strings.TrimSpace(line)
+		switch {
+		case begins[tl]:
+			regions = append(regions, cur.String())
+			cur.Reset()
+			inside = true
+		case ends[tl]:
+			inside = false
+		default:
+			if !inside {
+				cur.WriteString(line)
+				cur.WriteString("\n")
+			}
+		}
+	}
+	regions = append(regions, cur.String())
+	if len(regions) < 3 {
+		t.Fatalf("expected header + gaps + trailing regions, got %d region(s)", len(regions))
+	}
+
+	// region 0 = the framework-identity header (before the first BEGIN)
+	header := regions[0]
+	for _, want := range []string{"# CLAUDE.md — Hotam-Spec framework", "**Hotam-Spec**", "Boot:"} {
+		if !strings.Contains(header, want) {
+			t.Errorf("header region missing %q:\n%s", want, header)
+		}
+	}
+	// regions 1..len-2 = inter-block gaps — the core claim: whitespace-only
+	for i := 1; i < len(regions)-1; i++ {
+		if strings.TrimSpace(regions[i]) != "" {
+			t.Errorf("inter-block gap %d must be whitespace-only (no hand-written prose between sentinels), got:\n%q", i, regions[i])
+		}
+	}
+	// last region = the trailing durable-notes marker
+	trailing := regions[len(regions)-1]
+	if !strings.Contains(trailing, "survives every regeneration verbatim") {
+		t.Errorf("trailing region must carry the durable-notes marker, got:\n%s", trailing)
+	}
+}
+
+// TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest enforces
+// R-claude-md-template-driven: rendering substitutes the two template
+// placeholders (<!-- mind --> / <!-- business -->) with rendered content and
+// preserves every other template line verbatim, with the single known exception
+// of the boot line's deep-dive pointer (spec/docs/thinking/ → the
+// domain-qualified path, a documented targeted replace).
+func TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	const domain = "hotam-spec-self"
+	out := RenderClaudeMDFromTemplate(g, domain, repoRoot, 4200, nil)
+
+	// both placeholders must be substituted away
+	if strings.Contains(out, mindPlaceholder) {
+		t.Errorf("mind placeholder was not substituted")
+	}
+	if strings.Contains(out, businessPlaceholder) {
+		t.Errorf("business placeholder was not substituted")
+	}
+	// every other template line preserved verbatim
+	for _, want := range []string{
+		"# CLAUDE.md — Hotam-Spec framework",
+		"**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.",
+		"<!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("a non-placeholder template line was NOT preserved verbatim; missing %q", want)
+		}
+	}
+	// ...except the boot line's deep-dive pointer — the one documented targeted
+	// domain-qualified replace: the bare spec/docs/thinking/ form must be GONE
+	// and the domain-qualified form must be PRESENT.
+	if strings.Contains(out, "`spec/docs/thinking/`") {
+		t.Errorf("boot pointer should be domain-qualified, but the bare spec/docs/thinking/ form survived")
+	}
+	if !strings.Contains(out, "`domains/"+domain+"/docs/gen/thinking/`") {
+		t.Errorf("boot pointer should carry the domain-qualified deep-dive path")
+	}
+}
+
+// TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal enforces
+// R-claude-md-consolidates-when-single-agent: for a single-domain / zero-sub-
+// agent fixture, the root renderer emits exactly ONE consolidated crystal
+// containing ALL operator-prompt content (the full MIND + BUSINESS bucket), not
+// per-agent files. The consolidation condition is rendered into the crystal
+// itself: the AGENT-MAP reports "no sub-operators yet" and the
+// OPERATOR-RECURSION block states "exactly ONE CLAUDE.md (this file)" under the
+// R-claude-md-consolidates-when-single-agent anchor.
+func TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil)
+
+	// the single render consolidates the FULL operator prompt: all eleven MIND +
+	// BUSINESS blocks present in one string (no per-agent split)
+	for _, block := range []string{
+		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
+		"EMBEDDED-TOOLS", "OPERATOR-RECURSION",
+		"LIVE-STATE", "DOMAIN-MAP", "CONSTITUTION", "AGENT-MAP",
+		"CONCEPT-MAP", "RECENTLY-REJECTED",
+	} {
+		if _, ok := ExtractBlock(out, block); !ok {
+			t.Errorf("consolidated crystal missing block %s (single-domain render must carry the full prompt)", block)
+		}
+	}
+	// the zero-sub-agent consolidation trigger is rendered into the crystal
+	agentMap, ok := ExtractBlock(out, "AGENT-MAP")
+	if !ok || !strings.Contains(agentMap, "no sub-operators") {
+		t.Errorf("zero-sub-agent AGENT-MAP must report 'no sub-operators yet' (the consolidation trigger):\n%s", agentMap)
+	}
+	// the consolidation rule is stated in the OPERATOR-RECURSION block
+	recursion, ok := ExtractBlock(out, "OPERATOR-RECURSION")
+	if !ok || !strings.Contains(recursion, "exactly ONE CLAUDE.md (this file)") {
+		t.Errorf("OPERATOR-RECURSION must state the 'exactly ONE CLAUDE.md' consolidation rule:\n%s", recursion)
+	}
+	if !ok || !strings.Contains(recursion, "R-claude-md-consolidates-when-single-agent") {
+		t.Errorf("OPERATOR-RECURSION must cite the consolidation anchor:\n%s", recursion)
+	}
+}
+
+// === Batch A3 enforcement-debt closure (wave6 category-a) ===
+
+// TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed enforces
+// R-operator-crystal-embeds-tools-distilled: the EMBEDDED-TOOLS block renders
+// one full line per Implemented tool (command + purpose + Implemented status)
+// while collapsing all Planned tools into a single count summary line — never
+// one line per Planned tool. A regression that gave Planned tools individual
+// lines or dropped an Implemented tool's line fails this test.
+func TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed(t *testing.T) {
+	t.Parallel()
+	out := RenderEmbeddedToolsBlock()
+
+	var implemented, planned []methodology.Tool
+	for _, tl := range methodology.Tools.All() {
+		if tl.Status == methodology.Implemented {
+			implemented = append(implemented, tl)
+		} else {
+			planned = append(planned, tl)
+		}
+	}
+	if len(implemented) == 0 {
+		t.Fatal("precondition: registry has no Implemented tools — test is meaningless")
+	}
+
+	// one full line per Implemented tool: "- **<display>** — <purpose> Implemented (`hotam <display>`)."
+	for _, tl := range implemented {
+		display := strings.ReplaceAll(tl.Command, "_", "-")
+		if !strings.Contains(out, "- **"+display+"** — ") {
+			t.Errorf("Implemented tool %q missing its own line (display %q):\n%s", tl.Command, display, out)
+		}
+		if !strings.Contains(out, "Implemented (`hotam "+display+"`).") {
+			t.Errorf("Implemented tool %q missing the 'Implemented (`hotam %s`).' status suffix", tl.Command, display)
+		}
+		if !strings.Contains(out, tl.Purpose) {
+			t.Errorf("Implemented tool %q purpose text missing from its line", tl.Command)
+		}
+	}
+
+	// the count of Implemented status lines must equal the Implemented registry count
+	implementedLines := 0
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, "Implemented (`hotam ") {
+			implementedLines++
+		}
+	}
+	if implementedLines != len(implemented) {
+		t.Errorf("expected %d Implemented status lines, got %d", len(implemented), implementedLines)
+	}
+
+	// Planned tools must be collapsed into exactly ONE summary line, NOT one line each
+	if len(planned) > 0 {
+		summaryCount := strings.Count(out, "additional tools registered in the methodology but not yet implemented")
+		if summaryCount != 1 {
+			t.Errorf("expected exactly 1 Planned summary line, got %d", summaryCount)
+		}
+		want := fmt.Sprintf("- %d additional tools", len(planned))
+		if !strings.Contains(out, want) {
+			t.Errorf("Planned summary line should report %d tools, missing %q:\n%s", len(planned), want, out)
+		}
+		for _, tl := range planned {
+			if strings.Contains(out, "- **"+strings.ReplaceAll(tl.Command, "_", "-")+"** — ") {
+				t.Errorf("Planned tool %q must be collapsed into the summary, not given its own line", tl.Command)
+			}
+		}
+	}
+}
+
+// TestRenderEmbeddedToolsBlock_IsPureRegistryProjection enforces
+// R-tools-registry-generated: the EMBEDDED-TOOLS block is a pure projection of
+// the methodology.Tools registry — every Implemented entry appears, and every
+// `hotam <command>` invocation in the output names a real Implemented registry
+// tool (drift guard in both directions: nothing missing, nothing invented).
+func TestRenderEmbeddedToolsBlock_IsPureRegistryProjection(t *testing.T) {
+	t.Parallel()
+	out := RenderEmbeddedToolsBlock()
+
+	implementedDisplays := make(map[string]bool)
+	plannedCount := 0
+	for _, tl := range methodology.Tools.All() {
+		display := strings.ReplaceAll(tl.Command, "_", "-")
+		if tl.Status == methodology.Implemented {
+			implementedDisplays[display] = true
+		} else {
+			plannedCount++
+		}
+	}
+
+	// forward direction: every Implemented tool's display name appears
+	for display := range implementedDisplays {
+		if !strings.Contains(out, "**"+display+"**") {
+			t.Errorf("Implemented tool %q does not appear in output — registry entry missing from projection", display)
+		}
+	}
+
+	// reverse direction: every `hotam <cmd>` invocation names an Implemented registry tool
+	cmdRE := regexp.MustCompile("`hotam ([a-z0-9-]+)`")
+	for _, m := range cmdRE.FindAllStringSubmatch(out, -1) {
+		cmd := m[1]
+		if !implementedDisplays[cmd] {
+			t.Errorf("output invokes `hotam %s` but no Implemented registry tool has that display name — drift (invented tool)", cmd)
+		}
+	}
+
+	// the planned summary count must equal the registry's Planned count
+	if plannedCount > 0 {
+		want := fmt.Sprintf("- %d additional tools", plannedCount)
+		if !strings.Contains(out, want) {
+			t.Errorf("Planned summary should report %d (registry Planned count), missing %q", plannedCount, want)
+		}
 	}
 }

@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-goal-type-vs-facet",
+  "claim": "Goal shall be its own first-class struct type (not a Requirement facet), with typed anchor 'GOAL-' and its own GoalLifecycle.",
+  "owner": "domain-user",
+  "status": "SETTLED",
+  "why": "M19. DECIDED 2026-06-30 (already recorded in old M-table as DECIDED P9): Goal is a new type, not a Requirement facet. Rationale: the Gap = (Goal - current state) is semantically distinct from a static Requirement claim; a Requirement facet would lose that target-state semantics and the burn-down-to-zero pattern. Goal is a dedicated struct in internal/ontology/process.go (internal/ontology/process.go:Goal), with its own GoalLifecycle (ACTIVE -> MET / ABANDONED). R-goal-is-first-class-type is SETTLED and enforced by check_typed_anchors_goal (internal/invariants/typed_anchors.go), which verifies every Goal.ID starts with 'GOAL-'.",
+  "last_reviewed_at": "2026-07-13"
+}

@@ -1,0 +1,37 @@
+{
+  "assumptions": [
+    "A-finite-context-operators"
+  ],
+  "claim": "Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.",
+  "created_at": "2026-07-02",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestRenderOperatorRecursionBlock_SameSeedNarrowed"
+  ],
+  "enforcement": "ENFORCED",
+  "evidence": [],
+  "id": "R-crystal-carries-recursion-seed",
+  "kind": "Requirement",
+  "last_reviewed_at": "2026-07-13",
+  "m_tag": "",
+  "owner": "framework-author",
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-context-bounded-delegation"
+    },
+    {
+      "kind": "refines",
+      "target": "R-sub-agent-crystal-triad"
+    }
+  ],
+  "review_after": "2026-09-12",
+  "settled_at": "2026-07-13",
+  "source_refs": [
+    "internal/generator/claudemd.go",
+    "internal/methodology/tools_data.go"
+  ],
+  "status": "SETTLED",
+  "summary": "",
+  "why": "Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, zero active sub-agents), agent crystals must not exist, so the crystal carries the description of HOW to spawn -- the same Role/Loop seed with a narrower scope filter (R-sub-agent-crystal-triad) -- plus the conclusions-only return contract (R-delegation-conclusions-only). The block is emitted by RenderOperatorRecursionBlock (internal/generator/claudemd.go) with the active domain name interpolated into the spawn-path example. The spawn machinery itself (create-agent, spawn-agent commands) is Planned (internal/methodology/tools_data.go); the OPERATOR-RECURSION block documents the procedure for when the machinery is built. ENFORCED 2026-07-13: TestRenderOperatorRecursionBlock_SameSeedNarrowed in internal/generator/claudemd_sentinel_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
+}

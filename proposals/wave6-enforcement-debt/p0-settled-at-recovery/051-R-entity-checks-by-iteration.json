@@ -1,0 +1,27 @@
+{
+  "kind": "Requirement",
+  "id": "R-entity-checks-by-iteration",
+  "claim": "The check_entity_* invariant family shall cover every declared EntityType by iterating g.EntityTypes, requiring no new check_* code per additional type.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Parametric iteration is what makes the entity aspect scale: one invariant covers all types today and tomorrow. Per-type invariants would grow the check surface linearly and force framework edits on every domain addition -- the inverse of the content-free design. checkEntityTypeLifecycleWellformed (internal/invariants/entity_checks.go) iterates g.EntityTypes directly, calling the shared lifecycleWellformedIssues function on each EntityType.Lifecycle; the same parametric-iteration pattern is used by every check_entity_* invariant (check_entity_instance_state_in_lifecycle, check_entity_instance_required_fields, etc.). Adding an EntityType to the graph requires zero new check_* code. Wave 1 mechanical-honesty pass (2026-07-02) promoted this from STRUCTURAL to ENFORCED once a demo fixture proved the iteration claim end-to-end; the iteration is directly visible in the check source and exercised by the entity_checks_test.go fixtures. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "check_entity_type_lifecycle_wellformed"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-11-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/invariants/entity_checks.go"
+  ]
+}

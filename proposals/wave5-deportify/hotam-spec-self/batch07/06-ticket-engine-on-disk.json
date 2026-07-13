@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-ticket-engine-on-disk",
+  "claim": "Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: the on-disk ticket engine. All ticket-* tools (ticket_create, ticket_move, ticket_edit, ticket_comment, ticket_list, ticket_show) are Planned (not Implemented) in methodology.Tools (internal/methodology/tools_data.go), so neither the on-disk ticket format nor the folder-move lifecycle exists as a hotam CLI command today. (Historical note: the original mechanism was the ticket_* tool family — tools/ticket_create.py, ticket_move.py — where a ticket was a committed file whose status was its folder, so a status change was a visible file move with a git footprint; JSON-between-sentinels frontmatter kept the machine header exact under a stdlib-only parser (R-core-imports-stdlib-or-hotam-spec-only).) The steward's original WHY stands: a chat-based queue evaporates between sessions; a committed file whose status is its folder makes a status change a visible file move with a git footprint. When the ticket engine is implemented, the format (tickets/<status>/T-<n>.md with JSON-frontmatter header + Markdown body) and the folder-as-status lifecycle should be preserved. PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

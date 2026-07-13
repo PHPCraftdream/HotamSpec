@@ -1,0 +1,11 @@
+{
+  "kind": "Requirement",
+  "id": "R-check-method-is-atomic",
+  "claim": "Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "why": "Not yet implemented: the audit-atomicity command (which flagged check_* functions with compound conditions) is Planned (internal/methodology/tools_data.go). Previously implemented as spec/tools/audit_atomicity.py, which walked invariants.py and reported multi-rule families into docs/gen/AUDIT.md, making the discipline machine-auditable; the strict zero-COMPOUND gate (test_atomicity_ratchet.py::test_no_new_compound_invariants_beyond_baseline) has no current equivalent. R-atomicity-ratchet-no-growth remains the permanent, more general growth-direction mechanism; this atom's own enforcement is honest PROSE debt until the audit tool is implemented. RECLASSIFIED 2026-07-13: enforceability ENFORCEABLE -> INHERENTLY_PROSE (agent consultation, fm) -- whether a check_* function enforces 'exactly one rule' is a judgment about the semantics of the code inside it, the same class of unprovable-by-parser claim as R-requirement-claim-is-atomic's sibling reclassification. The growth-direction half remains carried by R-atomicity-ratchet-no-growth (ENFORCEABLE).",
+  "assumptions": [],
+  "enforcement": "PROSE",
+  "enforceability": "INHERENTLY_PROSE"
+}

@@ -1,0 +1,31 @@
+{
+  "id": "R-process-opt-in",
+  "kind": "Requirement",
+  "claim": "The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple.",
+  "why": "Atom of R-process-aspect-first (opt-in concern). Core cost must not be imposed on domains that do not model processes. ENFORCED 2026-07-13: TestProcessIsOptIn in internal/ontology/process_opt_in_test.go mechanically verifies this claim: a zero-value ontology.Graph defaults to an empty Processes slice (the Process aspect is opt-in; the loader injects no default Process).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestProcessIsOptIn"
+  ],
+  "assumptions": [
+    "A-text-grounded-in-models",
+    "A-bootstrap-self-applies"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-process-aspect-first"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-06-30",
+  "review_after": "2026-12-30",
+  "evidence": [],
+  "source_refs": []
+}

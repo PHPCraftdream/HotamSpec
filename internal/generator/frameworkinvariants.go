@@ -183,7 +183,7 @@ func BuildFrameworkInvariants(g *ontology.Graph, domainName string) string {
 	lines = append(lines, "")
 	lines = append(lines, "Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery), not business claims the operator mediates as reality. This index holds exactly those framework-internal atoms, relocated out of the root CLAUDE.md CONSTITUTION index (R-constitution-separates-plumbing, Phase 3, task #9).")
 	lines = append(lines, "")
-	lines = append(lines, "> Full claim + WHY + assumptions: `"+rosterPath+"` (roster) · enforcement detail: `docs/gen/UNENFORCED.md`.")
+	lines = append(lines, "> Full claim + WHY + assumptions: `"+rosterPath+"` (roster) · enforcement detail: `domains/"+domainName+"/docs/gen/UNENFORCED.md`.")
 	lines = append(lines, "> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.")
 	lines = append(lines, "> No atom here changed status by this relocation — every id below is (and remains) SETTLED in the graph; only ITS RENDER LOCATION moved.")
 	lines = append(lines, "")

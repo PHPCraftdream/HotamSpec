@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-host-spawn-leaves-trace",
+  "claim": "Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an equivalent host hook.",
+  "owner": "pipeline-operator",
+  "status": "SETTLED",
+  "why": "Not yet implemented: no `.runtime/spawn-log.jsonl` writer exists in this system today (the `.runtime` directory does not exist in the repo). spawn_agent and spawn_log_isolation_status are both Planned in methodology.Tools (not yet available as `hotam` CLI commands), so the host-spawn trace path they would provide is not present. (Previously implemented as `tools/spawn_agent.py --log-only` -- Wave 10 move 2a -- which appended a spawn-log row agent/task-first-line/stamp/isolation/mutating WITHOUT composing a crystal, proven by `test_log_only_writes_row_without_composing_prompt`.) The category distinction from R-task-spawn-log-runtime (hotam-spec-self) still holds: a host-level Agent-tool spawn is a platform primitive external to the framework's own code, distinct from an explicit spawn_agent invocation composing a domain sub-operator's crystal. The original WHY stands: every host spawn must leave a durable runtime trace so the isolation discipline is auditable. STRUCTURAL (not ENFORCED): no enforcer exists; whether the operator actually records each host spawn is operator discipline, not mechanically provable from the graph.",
+  "enforcement": "STRUCTURAL",
+  "enforceability": "ENFORCEABLE",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-03-12"
+}

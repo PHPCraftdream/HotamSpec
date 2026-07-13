@@ -60,8 +60,8 @@ func TestApply_Requirement_UpdateAppendsHistory(t *testing.T) {
 	if r.Claim != "revised claim for R-1" {
 		t.Errorf("Claim = %q, want revised", r.Claim)
 	}
-	if r.SettledAt != today {
-		t.Errorf("SettledAt = %q, want %q", r.SettledAt, today)
+	if r.SettledAt != "" {
+		t.Errorf("SettledAt = %q, want preserved empty -- R-1 was already SETTLED before this UPDATE, so a content-only edit must NOT re-stamp settled_at to today (that would erase the real settle date)", r.SettledAt)
 	}
 	if r.Why != "why R-1" {
 		t.Errorf("Why = %q, want preserved original (patch semantics)", r.Why)
@@ -71,6 +71,61 @@ func TestApply_Requirement_UpdateAppendsHistory(t *testing.T) {
 	}
 	if r.History[0].At != today {
 		t.Errorf("History[0].At = %q, want %q", r.History[0].At, today)
+	}
+}
+
+// TestApply_Requirement_SettledTransitionStampsSettledAt covers the OTHER
+// half of the settled_at contract: a genuine DRAFT -> SETTLED transition
+// (not a same-status content edit) DOES stamp settled_at to today, when the
+// proposal doesn't supply an explicit settled_at itself.
+func TestApply_Requirement_SettledTransitionStampsSettledAt(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].Status = ontology.StatusDRAFT
+	g.Requirements[0].SettledAt = ""
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:     "R-1",
+		Claim:  "now settled",
+		Owner:  "sa",
+		Status: ontology.StatusSETTLED,
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	r, ok := findReq(reload(t, path), "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.SettledAt != today {
+		t.Errorf("SettledAt = %q, want %q (real DRAFT->SETTLED transition)", r.SettledAt, today)
+	}
+}
+
+// TestApply_Requirement_ExplicitSettledAtAlwaysWins covers the third case:
+// an explicit settled_at in the proposal always takes effect, whether or not
+// this is a real status transition -- e.g. backdating a requirement whose
+// true settle date predates when it was recorded in the graph.
+func TestApply_Requirement_ExplicitSettledAtAlwaysWins(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph()) // R-1 already SETTLED, SettledAt ""
+	p := ProposedRequirement{
+		ID:        "R-1",
+		Claim:     "claim R-1",
+		Owner:     "sa",
+		Status:    ontology.StatusSETTLED,
+		SettledAt: "2026-01-01",
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	r, ok := findReq(reload(t, path), "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.SettledAt != "2026-01-01" {
+		t.Errorf("SettledAt = %q, want explicit %q", r.SettledAt, "2026-01-01")
 	}
 }
 
@@ -176,6 +231,49 @@ func TestApply_ConflictTransition_HeldRequiresVariants(t *testing.T) {
 		DecidedBy:    "outsider",
 	}
 	assertApplyFails(t, path, p, "2 distinct")
+}
+
+// TestApply_ConflictTransition_DirectIDResolves_UnknownIDErrors enforces
+// R-conflict-addressing-resolves-variables: findConflictIndex (mutate.go)
+// locates a Conflict by its direct string ID — the "direct form" addressing
+// mode — and an unknown/nonexistent ID must surface as an ERROR, never a silent
+// no-op (which would silently drop a steward decision) nor a panic.
+//
+// Two halves in one test: (A) a transition addressed by the literal conflict ID
+// is located and mutates the conflict; (B) a nonexistent ID errors and leaves
+// the graph on disk untouched. If findConflictIndex ever returned a silent
+// -1-without-error path or the mutate stopped checking idx<0, half B fails.
+func TestApply_ConflictTransition_DirectIDResolves_UnknownIDErrors(t *testing.T) {
+	t.Parallel()
+	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
+	path := writeTempGraph(t, baseGraph())
+
+	// Half A — direct-form ID resolves: the literal conflict ID is located and
+	// the lifecycle mutates to exactly what was sent.
+	resolve := ProposedConflictTransition{
+		ConflictID:   cid,
+		NewLifecycle: "REVISIT_WHEN(next quarterly review)",
+	}
+	if err := Apply(path, today, resolve); err != nil {
+		t.Fatalf("Apply with valid direct conflict_id %q: %v", cid, err)
+	}
+	c, ok := findConflict(reload(t, path), cid)
+	if !ok {
+		t.Fatalf("conflict %s missing after apply", cid)
+	}
+	if c.Lifecycle != "REVISIT_WHEN(next quarterly review)" {
+		t.Errorf("direct-form ID did not resolve: Lifecycle = %q, want REVISIT_WHEN(...)", c.Lifecycle)
+	}
+
+	// Half B — unknown/nonexistent ID errors (not a silent no-op, not a panic),
+	// and the graph on disk is left unchanged. assertApplyFails asserts both the
+	// error substring and that the file is byte-identical before/after.
+	bad := ProposedConflictTransition{
+		ConflictID:   "C-does-not-exist-anywhere",
+		NewLifecycle: "DECIDED(x)",
+		DecidedBy:    "outsider",
+	}
+	assertApplyFails(t, path, bad, "not found")
 }
 
 func TestApply_Rejection(t *testing.T) {

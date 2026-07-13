@@ -1,0 +1,30 @@
+{
+  "assumptions": [
+    "A-bootstrap-self-applies"
+  ],
+  "claim": "Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
+  "created_at": "2026-07-02",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw"
+  ],
+  "enforcement": "ENFORCED",
+  "evidence": [],
+  "id": "R-crystal-carries-role-seed",
+  "kind": "Requirement",
+  "last_reviewed_at": "2026-07-02",
+  "m_tag": "",
+  "owner": "framework-author",
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-crystal-is-claude-md"
+    }
+  ],
+  "review_after": "2027-01-02",
+  "settled_at": "2026-07-12",
+  "source_refs": [],
+  "status": "SETTLED",
+  "summary": "",
+  "why": "Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (everything important-yet-invisible becomes a typed anchored node under a steward; tension is held, never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad). ENFORCED 2026-07-13: TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw in internal/generator/claudemd_sentinel_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
+}

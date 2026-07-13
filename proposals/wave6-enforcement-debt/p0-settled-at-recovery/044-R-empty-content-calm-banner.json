@@ -1,0 +1,33 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-calm-banner",
+  "claim": "When the active domain has no content yet (empty graph), `hotam what-now` shall render a calm 'no content yet'-style signal, not an error.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Atom of R-empty-content-is-legitimate (calm-banner concern). D2 split decided by domain-user 2026-06-30. WHY: an error on missing content scares off new adopters who have not populated their domain yet. The calm behavior holds PARTIALLY: what-now over an EMPTY-but-present graph (0 nodes, graph.json loads successfully) returns 'none â€” graph clean' via formatSignals (cmd/hotam/what_now.go) â€” it does not error on an empty graph, which is the spirit of this requirement. However the 'missing graph.json' case (a freshly cloned framework with no graph.json at all) is NOT yet handled with a calm banner: loader.LoadGraph (internal/loader/loader.go) returns a read error and what-now propagates it rather than rendering a welcoming notice. The historical tools/what_now.py calm-banner path (test_main_empty_content_prints_calm_banner) is the reference design for implementing the missing-file calm path. The empty-graph case is covered structurally; the missing-file case remains an honest gap. ENFORCED 2026-07-13: TestEmptyContentCalmBanner in internal/diagnose/empty_content_test.go mechanically verifies this claim: DiagnoseSignals over an empty graph yields zero signals without panicking, and TopAction renders the calm 'none — graph clean' signal rather than an error. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestEmptyContentCalmBanner"
+  ],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-empty-content-is-legitimate"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-10-12",
+  "evidence": [],
+  "source_refs": [
+    "cmd/hotam/what_now.go",
+    "internal/loader/loader.go"
+  ]
+}

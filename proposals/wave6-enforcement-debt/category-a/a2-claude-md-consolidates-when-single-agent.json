@@ -1,0 +1,45 @@
+{
+  "kind": "Requirement",
+  "id": "R-claude-md-consolidates-when-single-agent",
+  "claim": "While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads is premature complexity. `hotam gen-spec` (internal/generator/claudemd.go) emits a single CLAUDE.md from the active domain's graph; the AGENT-MAP block (RenderAgentMapBlock) renders '_(no sub-operators yet)_' because no agent has been scaffolded yet (the agents/ infrastructure -- create-agent -- is Planned). ENFORCED 2026-07-13: TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph.",
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-agent-has-own-crystal"
+    },
+    {
+      "kind": "replaces",
+      "target": "R-domain-owns-claude-md"
+    },
+    {
+      "kind": "replaces",
+      "target": "R-framework-claude-md-is-domain-free"
+    },
+    {
+      "kind": "replaces",
+      "target": "R-root-claude-md-contains-domain-crystal"
+    }
+  ],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal"
+  ],
+  "enforceability": "ENFORCEABLE",
+  "m_tag": "",
+  "summary": "",
+  "created_at": "2026-07-01",
+  "settled_at": "2026-07-13",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-09-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/generator/claudemd.go",
+    "cmd/hotam/gen_spec.go"
+  ]
+}

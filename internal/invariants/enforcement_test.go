@@ -59,7 +59,7 @@ func TestCheckEnforcedByResolvable_OKRegisteredCheck(t *testing.T) {
 }
 
 // TestCheckEnforcedByResolvable_FiresOnStaleLowercaseTestName documents the
-// semantic change from the Python-era no-op: a bare lowercase test_* name is
+// semantic change from the earlier no-op: a bare lowercase test_* name is
 // NOT a valid Go test function (Go requires Test*), so it now fires instead of
 // being silently trusted. This is exactly the wave-2 regression shape.
 func TestCheckEnforcedByResolvable_FiresOnStaleLowercaseTestName(t *testing.T) {
@@ -68,7 +68,7 @@ func TestCheckEnforcedByResolvable_FiresOnStaleLowercaseTestName(t *testing.T) {
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	vs := runCheck(t, "check_enforced_by_resolvable", g)
 	if !hasViolationFor(vs, "R-1") {
-		t.Fatalf("a bare lowercase test_* name is a dead reference in the Go port; expected a violation, got %v", vs)
+		t.Fatalf("a bare lowercase test_* name is a dead reference; expected a violation, got %v", vs)
 	}
 }
 
@@ -85,7 +85,7 @@ func TestCheckEnforcedByResolvable_OKRealTestEntry(t *testing.T) {
 }
 
 // TestCheckEnforcedByResolvable_FiresOnPythonPytestNodeId is the headline
-// wave-2 regression guard: a leftover Python pytest node-id (test_x.py or
+// wave-2 regression guard: a leftover pytest-style node-id (test_x.py or
 // test_x.py::test_y) does not resolve to any Go check_*/Test* and must fire.
 func TestCheckEnforcedByResolvable_FiresOnPythonPytestNodeId(t *testing.T) {
 	t.Parallel()
@@ -97,7 +97,7 @@ func TestCheckEnforcedByResolvable_FiresOnPythonPytestNodeId(t *testing.T) {
 		g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 		vs := runCheck(t, "check_enforced_by_resolvable", g)
 		if !hasViolationFor(vs, "R-1") {
-			t.Fatalf("expected violation for Python-style enforced_by %q, got %v", bad, vs)
+			t.Fatalf("expected violation for stale pytest-style enforced_by %q, got %v", bad, vs)
 		}
 	}
 }
@@ -160,7 +160,7 @@ func TestCheckEnforcedByTestHasTeeth_Noop(t *testing.T) {
 	r := reqEnforced("R-1", "sa", "test_foo")
 	g := &ontology.Graph{Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 	if vs := runCheck(t, "check_enforced_by_test_has_teeth", g); len(vs) != 0 {
-		t.Fatalf("check_enforced_by_test_has_teeth is an honest no-op in the Go port; expected no violations, got %v", vs)
+		t.Fatalf("check_enforced_by_test_has_teeth is an honest no-op; expected no violations, got %v", vs)
 	}
 }
 

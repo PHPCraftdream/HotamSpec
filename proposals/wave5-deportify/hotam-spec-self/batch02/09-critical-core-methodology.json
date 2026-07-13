@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-critical-core-methodology",
+  "claim": "The methodology's own critical core shall be the six invariants named in criticalCoreNames (internal/generator/constitution.go), guarding every path by which a contradiction could be introduced without being seen.",
+  "owner": "domain-user",
+  "status": "SETTLED",
+  "why": "Atom of R-critical-core-scope (methodology scope). M7 resolved: these six guard every path by which a contradiction could be introduced without being seen. The six are named in internal/generator/constitution.go (criticalCoreNames: check_steward_not_a_member_owner, check_operator_steward_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question) and rendered into docs/gen/CONSTITUTION.md by the generator.",
+  "last_reviewed_at": "2026-07-13"
+}

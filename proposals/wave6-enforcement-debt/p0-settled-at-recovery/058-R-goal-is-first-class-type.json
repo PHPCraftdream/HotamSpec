@@ -1,0 +1,33 @@
+{
+  "kind": "Requirement",
+  "id": "R-goal-is-first-class-type",
+  "claim": "Goal shall be its own first-class struct type (not a Requirement facet) with typed anchor 'GOAL-'.",
+  "owner": "domain-user",
+  "status": "SETTLED",
+  "why": "Atom of R-goal-as-target-state (type identity concern). Goal is defined as a dedicated struct in internal/ontology/process.go (fields: ID, Owner, TargetState, Lifecycle, Why, DeclOrder), distinct from the Requirement struct -- it is not a facet or field of Requirement. The canonical lifecycle is GoalLifecycle (internal/ontology/process.go: ACTIVE -> MET / ABANDONED). The typed-anchor discipline is enforced by check_typed_anchors_goal (internal/invariants/typed_anchors.go), which verifies every Goal.ID starts with 'GOAL-'. M19 resolved. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "check_typed_anchors_goal"
+  ],
+  "assumptions": [
+    "A-bootstrap-self-applies"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-goal-as-target-state"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-11-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/ontology/process.go",
+    "internal/invariants/typed_anchors.go"
+  ]
+}

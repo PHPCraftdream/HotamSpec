@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-has-own-tools-dir",
+  "claim": "Each domain-agent shall carry a `tools/` subdirectory holding its private tools.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in internal/invariants but is an HONEST NO-OP: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.",
+  "last_reviewed_at": "2026-07-13"
+}

@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-is-a-directory",
+  "claim": "A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private tools. Enforcing checks check_agent_has_agents_subdir and check_agent_has_docs_subdir are registered in internal/invariants but are HONEST NO-OPS: they check the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.",
+  "last_reviewed_at": "2026-07-13"
+}

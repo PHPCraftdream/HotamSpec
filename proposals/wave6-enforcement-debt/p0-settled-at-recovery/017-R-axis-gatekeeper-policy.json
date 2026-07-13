@@ -1,0 +1,24 @@
+{
+  "kind": "Requirement",
+  "id": "R-axis-gatekeeper-policy",
+  "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists. The confront engine that would power the similarity check IS implemented (internal/diagnose/confront.go, `hotam confront`), but the create-axis command itself is Planned (internal/methodology/tools_data.go). The policy stands for the moment create-axis is built: it would reuse confront's lexical token/stem overlap scorer against every existing Axis's slug+description, refuse on a score >= threshold (default 0.35, naming the nearest existing axis), and admit only via --force-new '<justification>' folded into the landed proposal's why field (never a silent override). Exact-slug duplicates would be refused unconditionally (no --force-new escape -- that is re-declaration, not creation). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [],
+  "assumptions": [],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-09-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/diagnose/confront.go",
+    "internal/methodology/tools_data.go"
+  ]
+}

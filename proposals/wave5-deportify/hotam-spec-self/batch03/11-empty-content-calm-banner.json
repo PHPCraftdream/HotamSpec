@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-empty-content-calm-banner",
+  "claim": "When the active domain has no content yet (empty graph), `hotam what-now` shall render a calm 'no content yet'-style signal, not an error.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Atom of R-empty-content-is-legitimate (calm-banner concern). D2 split decided by domain-user 2026-06-30. WHY: an error on missing content scares off new adopters who have not populated their domain yet. The calm behavior holds PARTIALLY: what-now over an EMPTY-but-present graph (0 nodes, graph.json loads successfully) returns 'none — graph clean' via formatSignals (cmd/hotam/what_now.go) — it does not error on an empty graph, which is the spirit of this requirement. However the 'missing graph.json' case (a freshly cloned framework with no graph.json at all) is NOT yet handled with a calm banner: loader.LoadGraph (internal/loader/loader.go) returns a read error and what-now propagates it rather than rendering a welcoming notice. The historical tools/what_now.py calm-banner path (test_main_empty_content_prints_calm_banner) is the reference design for implementing the missing-file calm path. The empty-graph case is covered structurally; the missing-file case remains an honest gap.",
+  "last_reviewed_at": "2026-07-13"
+}

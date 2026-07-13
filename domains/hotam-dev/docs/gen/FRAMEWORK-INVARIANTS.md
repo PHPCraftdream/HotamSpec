@@ -5,7 +5,7 @@ reader: (unresolved-reader)
 
 Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery), not business claims the operator mediates as reality. This index holds exactly those framework-internal atoms, relocated out of the root CLAUDE.md CONSTITUTION index (R-constitution-separates-plumbing, Phase 3, task #9).
 
-> Full claim + WHY + assumptions: `domains/hotam-dev/docs/gen/REQUIREMENTS.md` (roster) · enforcement detail: `docs/gen/UNENFORCED.md`.
+> Full claim + WHY + assumptions: `domains/hotam-dev/docs/gen/REQUIREMENTS.md` (roster) · enforcement detail: `domains/hotam-dev/docs/gen/UNENFORCED.md`.
 > Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.
 > No atom here changed status by this relocation — every id below is (and remains) SETTLED in the graph; only ITS RENDER LOCATION moved.
 

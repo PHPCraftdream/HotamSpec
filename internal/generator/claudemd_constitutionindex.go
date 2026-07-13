@@ -11,10 +11,7 @@ import (
 // Canon: §Requirement — R-constitution-is-index: the CLAUDE.md CONSTITUTION
 // sentinel block is a compact index over SETTLED requirements (id +
 // enforcement flag only), distinct from the full docs/gen/CONSTITUTION.md
-// catalog (BuildConstitution, constitution.go). Ported from
-// spec/tools/gen_spec.py's build_constitution_index_model /
-// _render_constitution_block / _cluster_index_items (Python reference,
-// backup/python-legacy-2026-07-12).
+// catalog (BuildConstitution, constitution.go).
 //
 // frameworkPlumbingIDs, digestCategories, enforcementFlag,
 // isFrameworkPlumbing, categorizeRequirement, and constitutionIndexLine
@@ -62,7 +59,7 @@ func flagFor(enforcement string) string {
 // index tokens: requirements sharing a cluster representative collapse
 // into one "<rep> [<flag>] (+N related: <id>[<flag>], ...)" token; every
 // other requirement renders as a plain "<id> [<flag>]" token (via the
-// shared constitutionIndexLine). Ported from _cluster_index_items.
+// shared constitutionIndexLine).
 func clusterIndexItems(reqs []ontology.Requirement) []string {
 	byRepresentative := make(map[string][]ontology.Requirement)
 	for _, r := range reqs {
@@ -200,6 +197,7 @@ func BuildConstitutionBlock(g *ontology.Graph, domainName string) string {
 	agentContextPath := fmt.Sprintf("domains/%s/docs/gen/AGENT-CONTEXT.md", domainName)
 	rosterPath := fmt.Sprintf("domains/%s/docs/gen/REQUIREMENTS.md", domainName)
 	invariantsPath := fmt.Sprintf("domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md", domainName)
+	unenforcedPath := fmt.Sprintf("domains/%s/docs/gen/UNENFORCED.md", domainName)
 
 	lines := []string{
 		generatedHeaderComment,
@@ -207,7 +205,7 @@ func BuildConstitutionBlock(g *ontology.Graph, domainName string) string {
 		"### Constitution index (business + discipline SETTLED requirements — summary)",
 		"",
 		fmt.Sprintf("> Full id+flag index: `%s`. Full claim + WHY + assumptions: `%s` (roster) ·", agentContextPath, rosterPath),
-		fmt.Sprintf("> one requirement: `hotam req show <id> --domain domains/%s`. enforcement detail: `docs/gen/UNENFORCED.md`.", domainName),
+		fmt.Sprintf("> one requirement: `hotam req show <id> --domain domains/%s`. enforcement detail: `%s`.", domainName, unenforcedPath),
 		"> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.",
 		fmt.Sprintf("> Framework internals (%d atoms): `%s`.", nPlumbing, invariantsPath),
 		"",

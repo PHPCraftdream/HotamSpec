@@ -1,0 +1,25 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-docs-gen",
+  "claim": "Each `domains/\u003cname\u003e/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Generated docs are the human-readable shadow of the graph (R-deterministic-generation). Keeping them inside the domain directory ensures each operator's boot sequence reads only its own REQUIREMENTS.md/TENSIONS.md/OPEN.md, not a mixed-domain dump. The anti-drift meta-test must be domain-scoped accordingly. ENFORCED 2026-07-13: TestDomainOwnsDocsGen_NoForeignOrOrphanFiles in internal/generator/docs_gen_ownership_test.go mechanically verifies this claim.",
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestDomainOwnsDocsGen_NoForeignOrOrphanFiles"
+  ],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-06-30",
+  "review_after": "2026-12-30",
+  "evidence": [],
+  "source_refs": []
+}

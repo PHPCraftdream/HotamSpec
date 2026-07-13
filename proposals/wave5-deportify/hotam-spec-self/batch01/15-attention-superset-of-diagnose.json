@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-superset-of-diagnose",
+  "claim": "The live attention list collect(g) shall be a superset of the deterministic graph subset diagnose(g), equal to it exactly when no runtime-fs sources are injected.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The honest split at the centre of the attention design: the SUBSTRATE (gen-spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so it consumes ONLY the deterministic graph diagnosis; the LIVE AGENT wants more -- pending proposals, open tickets, stale audit, unread revisit markers -- which read the filesystem and are non-deterministic. Rather than couple those into the graph diagnosis (breaking determinism and polluting graph tests), the filesystem sources are INJECTED by the live consumer via collect(runtime_sources=...): the registry holds graph-only sources, the live consumer supplies the fs half, so collect(agent) is a superset of diagnose(substrate). Not yet implemented: the attention layer is Planned (the deterministic graph diagnosis it builds on does live in internal/diagnose, Implemented); previously implemented in src/hotam_spec/attention.py with what_now.runtime_fs_sources(), guarded by tests/test_attention_core.py.",
+  "last_reviewed_at": "2026-07-13"
+}

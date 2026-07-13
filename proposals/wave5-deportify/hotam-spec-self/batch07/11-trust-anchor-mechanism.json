@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-trust-anchor-mechanism",
+  "claim": "Every decision shall be personally signed by the human steward -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the DEFAULT (personal signature) half: the steward's answer is that the existing decided_by + commit-author pairing IS the anchor; no additional cryptographic layer is required today. The mechanism is Conflict.DecidedBy (internal/ontology/conflict.go:48, a Stakeholder.id reference on every DECIDED Conflict) plus git commit authorship (the repo's own author trail). Cadence is 'per decision' (every DECIDED Conflict), not periodic -- the steward signs each contradiction resolution as it happens, which is stronger than 'quarterly/per-PR' polling. ENFORCED by two atomic checks registered directly in the invariant registry (internal/invariants/conflict_decided_held.go): check_decided_has_nonempty_decided_by (asserts DecidedBy is non-empty on every DECIDED Conflict) and check_decided_by_is_known_stakeholder (asserts the DecidedBy value is a registered Stakeholder.id), both exercised by conflict_decided_held_test.go. (Historical note: enforced_by originally cited a thin non-registered delegator wrapping sub-checks in hotam_spec/invariants.py ~line 3415; the two current atomic checks ARE real ALL registry members, so the bijection holds without the delegator indirection.)",
+  "last_reviewed_at": "2026-07-13"
+}

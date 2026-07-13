@@ -300,10 +300,12 @@ func (p ProposedReviewMark) validate() error {
 	if strings.TrimSpace(p.RequirementID) == "" {
 		return validationError("'requirement_id' is required for a ReviewMark proposal.")
 	}
-	if strings.TrimSpace(p.ReviewAfter) == "" && len(trimNonEmpty(p.Evidence)) == 0 && strings.TrimSpace(p.ReviewedAt) == "" {
+	if len(trimNonEmpty(p.Evidence)) == 0 {
 		return validationError(
-			"a ReviewMark proposal must set at least one of 'reviewed_at', 'review_after', " +
-				"'evidence' — an empty mark is a no-op.")
+			"'evidence' is required for a ReviewMark proposal — it is the attestation " +
+				"the steward inspects to confirm the review was substantive; without it a mark " +
+				"is indistinguishable from an administrative date backfill (R-review-mark-" +
+				"carries-evidence).")
 	}
 	return nil
 }

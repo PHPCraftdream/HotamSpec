@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-leaves-trace",
+  "claim": "Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl).",
+  "owner": "pipeline-operator",
+  "status": "SETTLED",
+  "why": "Not yet implemented: no `.runtime/land-log.jsonl` writer exists in this system today (the `.runtime` directory does not exist in the repo). `hotam land` (cmd/hotam/land.go) runs apply-proposal -> gen-spec -> all-violations but writes no runtime land-log, and gate_status is Planned in methodology.Tools (not yet available as a `hotam` CLI command), so nothing reads a land-log to answer the commit-boundary question (R-commit-boundary-checkable, hotam-spec-self). (Previously implemented as a `spec/.runtime/land-log.jsonl` writer recording the verification tier T1/T2 and the test outcome, which gate_status read.) The original WHY stands: without an auditable land-log trace there is no durable record of what actually got verified before landing. PROSE (not ENFORCED): no enforcer exists.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-03-12"
+}

@@ -7,13 +7,15 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ---
 
-## `R-agent-code-imports-framework` (PROSE)
+## `R-agent-code-imports-framework` (ENFORCED)
 
 **Claim.** An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itself shall never import back from any agent's private tools/ directory.
 
-**Why.** First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend on the shared framework, never the reverse. Not yet ported in the Go port: no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported), so the directional scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is reversed. Historically enforced in the Python prototype by a static AST scan (test_agent_import_direction.py). REPOINTED 2026-07-02 (Wave 7 move 4): assumption A-agent-code-imports-framework-directionally names this requirement's actual premise.
+**Why.** First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend on the shared framework, never the reverse. Not yet implemented: no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Planned), so the directional scan is vacuously green; it fires the moment a real agent with private tools is spawned and the direction is reversed (previously enforced by a static AST scan, test_agent_import_direction.py). REPOINTED 2026-07-02 (Wave 7 move 4): assumption A-agent-code-imports-framework-directionally names this requirement's actual premise. ENFORCED 2026-07-13: TestAgentCode_ImportsFramework in internal/selfcheck/imports_test.go mechanically verifies this claim by static source scan: no import path in any .go file under internal/ and cmd/hotam/ contains an /agents/ or /tools/ segment (domain-owned runtime dirs are never Go import targets). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestAgentCode_ImportsFramework`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -22,6 +24,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_agent_import_direction.py::test_framework_body_never_imports_from_an_agent_tools_dir, test_agent_import_direction.py::test_shared_tools_never_i…→[]; settled_at: 2026-07-02→2026-07-12
 - 2026-07-12 — claim: An agent's code shall import the framework body (hotam_spec.*) as shared infrastructure, and hotam_spec.* itself shall never import back from any age…→An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itsel…; why: First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Mechanically checkable: a static AST scan (mirroring test_backend_…→First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-08-12
+- 2026-07-13 — why: First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…→First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…→First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestAgentCode_ImportsFramework]
+- 2026-07-13 — why: First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…→First half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). Directional dependency discipline: agent private code may depend o…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-conduct-is-rules-not-tests` (PROSE)
 
@@ -41,9 +46,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).
 
-**Why.** An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable PURPOSE placed next to SCOPE keeps the agent's contract in one place, distinct from the prose README. Not yet ported in the Go port: the agents/ scaffolding infrastructure (create-agent, scope/purpose declaration) is Declared, not ported, so no agent exists to declare a PURPOSE yet; the policy stands for the moment one is scaffolded.
+**Why.** An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable PURPOSE placed next to SCOPE keeps the agent's contract in one place, distinct from the prose README. Not yet implemented: the agents/ scaffolding infrastructure (create-agent, scope/purpose declaration) is Planned, so no agent exists to declare a PURPOSE yet; the policy stands for the moment one is scaffolded. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -52,16 +57,18 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.→Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alon…; why: An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-has-docs-dir` (ENFORCED)
 
 **Claim.** Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes, separate from any generated content.
 
-**Why.** Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. Enforcing check check_agent_has_docs_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
+**Why.** Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. Enforcing check check_agent_has_docs_subdir is registered in internal/invariants but is an HONEST NO-OP: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_agent_has_docs_subdir`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -69,16 +76,18 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — claim: Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent p…→Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes,…; why: Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operato…→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-has-own-tools-dir` (ENFORCED)
 
 **Claim.** Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
 
-**Why.** Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
+**Why.** Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in internal/invariants but is an HONEST NO-OP: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_agent_has_tools_subdir`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -87,16 +96,18 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_agent_has_tools_subdir, test_tool_create_agent.py::test_creates_required_files, test_invariants.py::test_check_agent_has_tools_subdir_fires_on…→[check_agent_has_tools_subdir]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — why: Scoping the agent's available actions — private tools are not exposed to other agents. BUILD-TRIGGER: same as R-agent-is-a-directory. Promoted DRAF…→Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…→Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…→Scoping the agent's available actions -- private tools are not exposed to other agents. Enforcing check check_agent_has_tools_subdir is registered in…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-is-a-directory` (ENFORCED)
 
 **Claim.** A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.
 
-**Why.** An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private tools. Enforcing checks check_agent_has_agents_subdir and check_agent_has_docs_subdir are registered in internal/invariants but are HONEST NO-OPS in the Go port: they check the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
+**Why.** An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private tools. Enforcing checks check_agent_has_agents_subdir and check_agent_has_docs_subdir are registered in internal/invariants but are HONEST NO-OPS: they check the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_agent_has_agents_subdir`, `check_agent_has_docs_subdir`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -105,16 +116,18 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_agent_has_agents_subdir, check_agent_has_docs_subdir, test_tool_create_agent.py]→[check_agent_has_agents_subdir, check_agent_has_docs_subdir]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: A domain-agent shall be represented as a directory at `spec/agents/<name>/`.→A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.; why: The user's clarification today: agent = folder with own logic, not sh-invocation. BUILD-TRIGGER: a real second operator (beyond OP-director) needs to…→An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…→An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…→An agent is a folder with its own logic, not a shell invocation -- the directory is the recursion slot for sub-agents and the boundary for private to…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-is-recursive-director` (ENFORCED)
 
 **Claim.** Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.
 
-**Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit -- a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. Enforcing check check_agent_has_agents_subdir is registered in internal/invariants but is an HONEST NO-OP in the Go port: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet.
+**Why.** Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn sub-agents in its own agents/ without touching sibling or parent directories. The empty-leaf convention makes the recursion's base case structurally explicit -- a leaf agent is an agent that has no sub-agents, represented as an empty directory rather than a missing one. Enforcing check check_agent_has_agents_subdir is registered in internal/invariants but is an HONEST NO-OP: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_agent_has_agents_subdir`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -122,14 +135,18 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — claim: Every agent at `spec/agents/<a>/` or `domains/*/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the rec…→Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminatin…; why: Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-graph-parallelism): each agent can spawn …→Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…→Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…→Recursive directory structure encodes the delegation hierarchy (R-delegation-conclusions-only, R-dependency-drives-parallelism): each agent can spawn…; settled_at: 2026-07-13→2026-07-12
 
-## `R-agent-map-generated` (STRUCTURAL)
+## `R-agent-map-generated` (ENFORCED)
 
 **Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
 
-**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/generator; RenderAgentMapBlock in claudemd.go) emits the AGENT-MAP block from the graph; today it renders '_(no sub-operators yet)_' because no agent has been scaffolded in the Go port yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Declared, not ported). The block materializes the moment a real sub-operator is scaffolded.
+**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/generator; RenderAgentMapBlock in claudemd.go) emits the AGENT-MAP block from the graph; today it renders '_(no sub-operators yet)_' because no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Planned). The block materializes the moment a real sub-operator is scaffolded. ENFORCED 2026-07-13: TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -140,6 +157,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count…→CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of…; why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_static.go]
+- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents]
+- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-never-lost` (ENFORCED)
 
@@ -165,9 +185,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), without duplicating their content.
 
-**Why.** Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand; the SCOPE filter means agents only reference tool docs for tools they actually use. Not yet ported in the Go port: per-agent crystals and their SHARED-DOCS block are part of the agents/ infrastructure (Declared, not ported); the shared thinking docs themselves are regenerated by `hotam gen-spec` under domains/<name>/docs/gen/thinking/. Historically the paths pointed at spec/docs/thinking/*.md and spec/docs/tools/*.md.
+**Why.** Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHARED-DOCS reference block keeps each agent crystal thin while granting operators access to the full framework reasoning on demand; the SCOPE filter means agents only reference tool docs for tools they actually use. Not yet implemented: per-agent crystals and their SHARED-DOCS block are part of the agents/ infrastructure (Planned); the shared thinking docs themselves are regenerated by `hotam gen-spec` under domains/<name>/docs/gen/thinking/ (historically the paths pointed at spec/docs/thinking/*.md and spec/docs/tools/*.md). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -176,14 +196,16 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_domain_isolation_p17.py::test_agent_shared_docs_block_present]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to spec/docs/thinking/*.md (all) and spec/docs/tools/*.md (filtered by …→Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), wi…; why: Duplicating shared framework content into each agent crystal guarantees drift — the copies diverge the moment any framework docstring changes. A SH…→Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…→Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…→Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-scoped-constitution` (PROSE)
 
 **Claim.** For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
 
-**Why.** Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus; per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. Not yet ported in the Go port: `hotam gen-spec` (internal/generator) regenerates the single consolidated operator crystal today (R-claude-md-consolidates-when-single-agent); the per-agent scoped-constitution path is part of the agents/ infrastructure (Declared, not ported) and materializes only when a real sub-agent is scaffolded.
+**Why.** Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md would overload sub-agents with irrelevant requirements and dilute their focus; per-agent generation enforces the bounded-context discipline (R-context-bounded-delegation) structurally. Not yet implemented: `hotam gen-spec` (internal/generator) regenerates the single consolidated operator crystal today (R-claude-md-consolidates-when-single-agent); the per-agent scoped-constitution path is part of the agents/ infrastructure (Planned) and materializes only when a real sub-agent is scaffolded. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-08-12
 
@@ -192,6 +214,8 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_agent_scoped_constitution.py]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: For each spec/agents/<name>/ directory, gen_spec.py shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of…→For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's…; why: Each sub-operator needs an operator-prompt scoped to its domain -- the framework-agent sees R-check-* and R-bijection-*, the finance-agent sees R-fin…→Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …→Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …→Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …; settled_at: 2026-07-13→2026-07-12
 
 ## `R-boot-cite-in-first-sentence` (PROSE)
 
@@ -239,13 +263,15 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_thinking_contains_distilled_topic_content, test_embedded_thinking_tools.py::test_embedded_thinking_bl…→[]; settled_at: 2026-07-02→2026-07-12
 
-## `R-operator-crystal-embeds-tools-distilled` (STRUCTURAL)
+## `R-operator-crystal-embeds-tools-distilled` (ENFORCED)
 
-**Claim.** The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block projecting one line per tool (command + purpose + Ported/Declared status) from the methodology.Tool registry, not a multi-line distillate.
+**Claim.** The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block projecting one line per tool (command + purpose + Implemented/Planned status) from the methodology.Tool registry, not a multi-line distillate.
 
-**Why.** REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tools. In the Go port, the EMBEDDED-TOOLS block is rendered by RenderEmbeddedToolsBlock (internal/generator/claudemd.go), which projects methodology.Tools.All() (internal/methodology/tools_data.go) sorted by Command, producing one line per tool: '- **<command>** — <purpose> Ported (`hotam <cmd>`).' or 'Not yet ported.' The status suffix is driven by the Tool.Status field (Ported/Declared), making this block a live projection of the registry rather than hand-maintained prose (P1-6: the hand-maintained version drifted stale, so it was replaced by this registry projection to make that class of drift structurally impossible). The full per-tool detail (Canon, Purpose, Status sections) lives in docs/gen/tools/<command>.md, generated by BuildToolDocs (internal/generator/tooldocs.go). STRUCTURAL: no check_* enforcer -- the byte-identical regeneration test layer (internal/generator/) carries the structural guarantee.
+**Why.** REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tools. The EMBEDDED-TOOLS block is rendered by RenderEmbeddedToolsBlock (internal/generator/claudemd.go), which projects methodology.Tools.All() (internal/methodology/tools_data.go) sorted by Command, producing one line per tool: '- **<command>** — <purpose> Implemented (`hotam <cmd>`).' or 'Not yet implemented.' The status suffix is driven by the Tool.Status field (Implemented/Planned), making this block a live projection of the registry rather than hand-maintained prose (P1-6: the hand-maintained version drifted stale, so it was replaced by this registry projection to make that class of drift structurally impossible). The full per-tool detail (Canon, Purpose, Status sections) lives in docs/gen/tools/<command>.md, generated by BuildToolDocs (internal/generator/tooldocs.go). STRUCTURAL: no check_* enforcer -- the byte-identical regeneration test layer (internal/generator/) carries the structural guarantee. ENFORCED 2026-07-13: TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed in internal/generator/claudemd_coverage_test.go mechanically verifies this claim. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Enforced by:** `TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed`
+
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-12-12
 
@@ -256,6 +282,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-07-02; review_after: →2027-01-02
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_embedded_thinking_tools.py::test_embedded_tools_contains_distilled_tool_content, test_embedded_thinking_tools.py::test_embedded_thinking_block_…→[]; settled_at: 2026-07-02→2026-07-12
 - 2026-07-12 — claim: The operator's CLAUDE.md shall embed a table of tool name + Canon sentence (via short_form) plus a path link to spec/docs/tools/<basename>.md, not a …→The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block projecting one line per tool (command + purpose + Ported/Declared status) from the metho…; why: REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed ~12k chars across 30+ tools. A s…→REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…; last_reviewed_at: 2026-07-02→2026-07-12; review_after: 2027-01-02→2026-12-12; source_refs: []→[internal/generator/claudemd.go, internal/methodology/tool.go, internal/generator/tooldocs.go]
+- 2026-07-13 — claim: The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block projecting one line per tool (command + purpose + Ported/Declared status) from the metho…→The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block projecting one line per tool (command + purpose + Implemented/Planned status) from the m…; why: REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…→REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…→REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed]
+- 2026-07-13 — why: REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…→REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-operator-has-context-budget` (ENFORCED)
 
@@ -278,11 +307,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** An Operator shall be a dedicated struct type in internal/ontology/operator.go carrying the typed anchor 'OP-', with field mutations performed only through the proposal system.
 
-**Why.** Atom of R-operator-acting-facet (type identity concern). In the Go port, Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeholder, Lifecycle, ContextBudget, Parent *string, Scope, Why, DeclOrder). Go has no frozen-dataclass language primitive (unlike Python's @dataclass(frozen=True)); immutability is a DISCIPLINE, not a structurally-enforced guarantee: there are no setter methods, and field-level mutations are performed only through the proposal system (ProposedOperatorBudget.mutate in internal/proposal/mutate.go re-writes g.Operators[idx].ContextBudget). The typed-anchor discipline ('OP-' prefix) is enforced by check_typed_anchors_operator (internal/invariants/typed_anchors.go). OP-director is the first instance. FOUND ISSUE (not fixed): the claim's 'field mutations only through proposals' discipline is NOT structurally verified -- check_typed_anchors_operator only verifies the OP- prefix, not the immutability discipline. The enforcement/enforced_by are out of scope for this content batch; the enforcement is ENFORCED with check_typed_anchors_operator, which honestly tests only the prefix half.
+**Why.** Atom of R-operator-acting-facet (type identity concern). Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeholder, Lifecycle, ContextBudget, Parent *string, Scope, Why, DeclOrder). Go has no frozen-dataclass language primitive (historically Python's @dataclass(frozen=True) provided one), so immutability is a DISCIPLINE, not a structurally-enforced guarantee: there are no setter methods, and field-level mutations are performed only through the proposal system (ProposedOperatorBudget.mutate in internal/proposal/mutate.go re-writes g.Operators[idx].ContextBudget). The typed-anchor discipline ('OP-' prefix) is enforced by check_typed_anchors_operator (internal/invariants/typed_anchors.go). OP-director is the first instance. FOUND ISSUE (not fixed): the claim's 'field mutations only through proposals' discipline is NOT structurally verified -- check_typed_anchors_operator only verifies the OP- prefix, not the immutability discipline. The enforcement/enforced_by are out of scope for this content batch; the enforcement is ENFORCED with check_typed_anchors_operator, which honestly tests only the prefix half. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_typed_anchors_operator`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-12-12
 
@@ -293,6 +322,8 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [check_typed_anchors_operator, test_operator.py]→[check_typed_anchors_operator]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: An Operator shall be a frozen dataclass in hotam_spec.operator with typed anchor 'OP-'.→An Operator shall be a dedicated struct type in internal/ontology/operator.go carrying the typed anchor 'OP-', with field mutations performed only th…; why: Atom of R-operator-acting-facet (type identity concern). hotam_spec.operator.Operator is a frozen dataclass; OP-director is the first instance.→Atom of R-operator-acting-facet (type identity concern). In the Go port, Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeh…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-12-12; source_refs: []→[internal/ontology/operator.go, internal/invariants/typed_anchors.go, internal/proposal/mutate.go]
+- 2026-07-13 — why: Atom of R-operator-acting-facet (type identity concern). In the Go port, Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeh…→Atom of R-operator-acting-facet (type identity concern). Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeholder, Lifecycle…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Atom of R-operator-acting-facet (type identity concern). Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeholder, Lifecycle…→Atom of R-operator-acting-facet (type identity concern). Operator is a plain struct (internal/ontology/operator.go: fields ID, Stakeholder, Lifecycle…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-operator-may-have-parent` (ENFORCED)
 
@@ -331,11 +362,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** The operator-prompt CLAUDE.md shall include a CONSTITUTION block (compact per-category summary of SETTLED requirements) generated deterministically from the active domain's graph.json, with the full id+claim roster in docs/gen/CONSTITUTION.md.
 
-**Why.** Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. In the Go port, two layers carry this: (1) BuildConstitutionBlock (internal/generator/claudemd_constitutionindex.go) renders the CLAUDE.md CONSTITUTION sentinel block as a compact per-category SUMMARY (category label + count only, P2-1 compaction), generated from the active domain's SETTLED requirements; (2) BuildConstitution (internal/generator/constitution.go) renders the full docs/gen/CONSTITUTION.md catalog (all SETTLED requirements grouped by category with id + enforcement flag + claim). Both are pure functions of the in-memory graph, called by gen-spec (cmd/hotam/gen_spec.go). Enforced by TestBuildConstitution_ByteIdenticalToFixture (internal/generator/), which asserts the full catalog is byte-identical to its fixture -- proving deterministic generation from the graph.
+**Why.** Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. Two layers carry this: (1) BuildConstitutionBlock (internal/generator/claudemd_constitutionindex.go) renders the CLAUDE.md CONSTITUTION sentinel block as a compact per-category SUMMARY (category label + count only, P2-1 compaction), generated from the active domain's SETTLED requirements; (2) BuildConstitution (internal/generator/constitution.go) renders the full docs/gen/CONSTITUTION.md catalog (all SETTLED requirements grouped by category with id + enforcement flag + claim). Both are pure functions of the in-memory graph, called by gen-spec (cmd/hotam/gen_spec.go). Enforced by TestBuildConstitution_ByteIdenticalToFixture (internal/generator/), which asserts the full catalog is byte-identical to its fixture -- proving deterministic generation from the graph. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `TestBuildConstitution_ByteIdenticalToFixture`
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-12-12
 
@@ -346,14 +377,16 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforced_by: [test_constitution_block_generated]→[TestBuildConstitution_ByteIdenticalToFixture]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: The operator-prompt CLAUDE.md shall include a CONSTITUTION block listing all SETTLED requirements grouped by category, generated deterministically fr…→The operator-prompt CLAUDE.md shall include a CONSTITUTION block (compact per-category summary of SETTLED requirements) generated deterministically f…; why: Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from code. The atomized SETTLEDs are now the actual constit…→Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. In the Go port, two la…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-12-12; source_refs: []→[internal/generator/claudemd_constitutionindex.go, internal/generator/constitution.go, cmd/hotam/gen_spec.go]
+- 2026-07-13 — why: Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. In the Go port, two la…→Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. Two layers carry this:…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. Two layers carry this:…→Realizes the sensor-substrate inversion: consciousness (the operator-prompt) is GENERATED from the graph, not hand-maintained. Two layers carry this:…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-operator-prompt-loaded-at-session-start` (PROSE)
 
 **Claim.** A SessionStart hook shall run `hotam gen-spec` before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.
 
-**Why.** Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that automatically runs gen-spec at session boot. Closes the boot edge of the sensor-substrate inversion (R-operator-prompt-from-substrate): without SessionStart regen, the host may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL / LIVE-STATE blocks reflect an older graph state. The historical Python mechanism was a SessionStart hook in .claude/settings.local.json running gen_spec.py; the Go equivalent would invoke `hotam gen-spec` from a host-side hook, but no such hook is wired in this port. PROSE (not ENFORCED): no enforcer exists in the Go port.
+**Why.** Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that automatically runs gen-spec at session boot. Closes the boot edge of the sensor-substrate inversion (R-operator-prompt-from-substrate): without SessionStart regen, the host may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL / LIVE-STATE blocks reflect an older graph state. The equivalent would invoke `hotam gen-spec` from a host-side hook, but no such hook is wired. (Historical Python mechanism: a SessionStart hook in .claude/settings.local.json ran gen_spec.py.) PROSE (not ENFORCED): no enforcer exists. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
-**Last reviewed.** 2026-07-12
+**Last reviewed.** 2026-07-13
 
 **Review after.** 2026-12-12
 
@@ -364,6 +397,8 @@ The atomic requirements that constitute the operator's role, identity, and disci
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_session_start_hook_runs_gen_spec]→[]; settled_at: 2026-06-30→2026-07-12
 - 2026-07-12 — claim: A SessionStart hook in .claude/settings.local.json shall run gen_spec.py before the operator's first turn of any session, ensuring root CLAUDE.md is …→A SessionStart hook shall run `hotam gen-spec` before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived …; why: Closes the boot edge of the sensor-substrate inversion. Without SessionStart regen, Claude Code may auto-load a stale CLAUDE.md whose DOMAIN-CRYSTAL …→Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechan…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-12-12; source_refs: []→[cmd/hotam/gen_spec.go]
+- 2026-07-13 — why: Not yet ported in the Go port: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechan…→Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that a…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that a…→Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that a…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-operator-references-stakeholder` (ENFORCED)
 

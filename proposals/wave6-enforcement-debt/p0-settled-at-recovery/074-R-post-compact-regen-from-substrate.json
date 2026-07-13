@@ -1,0 +1,25 @@
+{
+  "kind": "Requirement",
+  "id": "R-post-compact-regen-from-substrate",
+  "claim": "A PostCompact hook shall run `hotam gen-spec` after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PostCompact integration, so there is no mechanism that automatically runs gen-spec after an auto-compact event. Auto-compact rewrites session context but does not re-read CLAUDE.md unless triggered. Without this hook, the operator post-compact runs on summary + stale CLAUDE.md. The equivalent would invoke `hotam gen-spec` from a host-side hook, but no such hook is wired. (Historical Python mechanism: a PostCompact hook in .claude/settings.local.json ran gen_spec.py.) PROSE (not ENFORCED): no enforcer exists. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [],
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-12-12",
+  "evidence": [],
+  "source_refs": [
+    "cmd/hotam/gen_spec.go"
+  ]
+}

@@ -1,6 +1,8 @@
 package query
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -256,11 +258,38 @@ func TestSearch_CaseInsensitive(t *testing.T) {
 func TestSearch_Empty(t *testing.T) {
 	t.Parallel()
 	g := fixtureGraph()
-	if got := Search(g, ""); got != nil {
-		t.Errorf("expected nil for empty search text, got %v", got)
+	// Search returns a non-nil empty slice (not nil) for both "no query
+	// text" and "query text with no matches" so `hotam req search --json`
+	// always marshals the results field to `[]`, never `null` — see
+	// TestSearch_NoMatches_JSONArrayNotNull for the byte-level proof.
+	if got := Search(g, ""); got == nil || len(got) != 0 {
+		t.Errorf("expected non-nil empty slice for empty search text, got %v", got)
 	}
-	if got := Search(g, "no-such-text-anywhere"); len(got) != 0 {
-		t.Errorf("expected no matches, got %v", got)
+	if got := Search(g, "no-such-text-anywhere"); got == nil || len(got) != 0 {
+		t.Errorf("expected non-nil empty slice for no matches, got %v", got)
+	}
+}
+
+// TestSearch_NoMatches_JSONArrayNotNull is the byte-level regression pin for
+// the P2 "empty arrays instead of null in JSON output" fix: `hotam req
+// search --json` on a query with zero matches must marshal to a literal `[]`
+// array, never `null`. A Go-level len()==0/!=nil check does not prove what
+// encoding/json actually emits, so this asserts the raw marshaled bytes.
+func TestSearch_NoMatches_JSONArrayNotNull(t *testing.T) {
+	t.Parallel()
+	g := fixtureGraph()
+	results := Search(g, "no-such-text-anywhere-zzz-qxp")
+	if len(results) != 0 {
+		t.Fatalf("fixture must produce zero matches, got %d", len(results))
+	}
+
+	data, err := json.Marshal(results)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	raw := string(data)
+	if raw != "[]" {
+		t.Errorf("expected marshaled JSON `[]` for zero search results, got %q", raw)
 	}
 }
 
@@ -442,5 +471,101 @@ func TestFormatContext_NoPanic(t *testing.T) {
 	text := FormatContext(cc)
 	if text == "" {
 		t.Fatal("FormatContext returned empty text")
+	}
+}
+
+// TestShow_RequirementCard_JSONArraysNotNull is the byte-level regression pin
+// for the P2 "empty arrays instead of null in JSON output" fix: R-gamma in
+// fixtureGraph has zero Assumptions, Relations, EnforcedBy, Evidence,
+// SourceRefs and History (all left at the Go zero value, nil, exactly like a
+// requirement whose graph.json entry has those keys null or omitted) — a
+// realistic case, not a synthetic edge case (see the real
+// domains/hotam-spec-self/graph.json entries for
+// R-review-mark-requires-substantive-review / R-t1-selector-as-land-default,
+// which currently carry `"enforced_by": null`). `hotam req show --json` on
+// such a requirement must marshal every one of those fields to `[]`, never
+// `null`.
+func TestShow_RequirementCard_JSONArraysNotNull(t *testing.T) {
+	t.Parallel()
+	g := fixtureGraph()
+	card, err := ShowRequirement(g, "R-gamma")
+	if err != nil {
+		t.Fatalf("ShowRequirement: %v", err)
+	}
+	if len(card.Assumptions) != 0 || len(card.Relations) != 0 || len(card.EnforcedBy) != 0 ||
+		len(card.Evidence) != 0 || len(card.SourceRefs) != 0 || len(card.History) != 0 {
+		t.Fatalf("fixture R-gamma must have zero array fields, got %+v", card)
+	}
+
+	data, err := json.Marshal(card)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	raw := string(data)
+	for _, field := range []string{"assumptions", "relations", "enforced_by", "evidence", "source_refs", "history"} {
+		wantEmpty := `"` + field + `":[]`
+		wantNull := `"` + field + `":null`
+		if !strings.Contains(raw, wantEmpty) {
+			t.Errorf("expected literal `%s` in marshaled JSON, got:\n%s", wantEmpty, raw)
+		}
+		if strings.Contains(raw, wantNull) {
+			t.Errorf("marshaled JSON must never contain `%s`, got:\n%s", wantNull, raw)
+		}
+	}
+}
+
+// TestRelated_LeafRequirement_JSONArrayNotNull covers a requirement with no
+// outgoing/incoming relations, no assumptions and no conflict membership
+// (R-gamma in fixtureGraph) — Related's zero-neighbor case. `hotam req
+// related --json` must marshal this to a literal `[]`, never `null`.
+func TestRelated_LeafRequirement_JSONArrayNotNull(t *testing.T) {
+	t.Parallel()
+	g := fixtureGraph()
+	refs, err := Related(g, "R-gamma")
+	if err != nil {
+		t.Fatalf("Related: %v", err)
+	}
+	if len(refs) != 0 {
+		t.Fatalf("fixture R-gamma must have zero relations, got %v", refs)
+	}
+
+	data, err := json.Marshal(refs)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if got := string(data); got != "[]" {
+		t.Errorf("expected marshaled JSON `[]` for a leaf requirement's related-neighbors, got %q", got)
+	}
+}
+
+// TestContext_LeafRequirement_JSONArraysNotNull covers a requirement with no
+// outgoing/incoming relations and no conflict membership (R-gamma) —
+// Context's Relations/Conflicts/SharedAssumptionWith zero case. `hotam req
+// context --json` must marshal each to a literal `[]`, never `null`.
+func TestContext_LeafRequirement_JSONArraysNotNull(t *testing.T) {
+	t.Parallel()
+	g := fixtureGraph()
+	cc, err := Context(g, "R-gamma")
+	if err != nil {
+		t.Fatalf("Context: %v", err)
+	}
+	if len(cc.Relations) != 0 || len(cc.Conflicts) != 0 || len(cc.SharedAssumptionWith) != 0 {
+		t.Fatalf("fixture R-gamma must have zero relations/conflicts/shared-assumption peers, got %+v", cc)
+	}
+
+	data, err := json.Marshal(cc)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	raw := string(data)
+	for _, field := range []string{"relations", "conflicts", "shared_assumption_with"} {
+		wantEmpty := `"` + field + `":[]`
+		wantNull := `"` + field + `":null`
+		if !strings.Contains(raw, wantEmpty) {
+			t.Errorf("expected literal `%s` in marshaled JSON, got:\n%s", wantEmpty, raw)
+		}
+		if strings.Contains(raw, wantNull) {
+			t.Errorf("marshaled JSON must never contain `%s`, got:\n%s", wantNull, raw)
+		}
 	}
 }

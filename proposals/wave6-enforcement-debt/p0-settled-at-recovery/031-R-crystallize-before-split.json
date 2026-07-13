@@ -1,0 +1,27 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystallize-before-split",
+  "claim": "On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "why": "SETTLED (P7): the order discipline is structurally bound. The apply-proposal mechanism (internal/proposal) crystallizes via Proposal types; the constitution (internal/generator/constitution.go, docs/gen/CONSTITUTION.md) names the ORDER explicitly. Splitting is for irreducible size, crystallizing is for un-offloaded knowledge; delegation is the lever of last resort. Splitting before crystallizing fragments knowledge that could have been freed in place. The over-budget REFLECTION finding (ReflectOverBudgetOperators, internal/diagnose/finding.go) renders the ordered imperative: 'crystallize first (R-crystallize-before-split); if still over, delegate a sub-domain (R-context-bounded-delegation).' The closure tool that would verify advancement before any split is considered is Planned (internal/methodology/tools_data.go). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "STRUCTURAL",
+  "enforceability": "INHERENTLY_PROSE",
+  "enforced_by": [],
+  "assumptions": [
+    "A-finite-context-operators"
+  ],
+  "relations": [],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-06-30",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2026-09-12",
+  "evidence": [],
+  "source_refs": [
+    "internal/proposal/apply.go",
+    "internal/diagnose/finding.go",
+    "internal/generator/constitution.go"
+  ]
+}

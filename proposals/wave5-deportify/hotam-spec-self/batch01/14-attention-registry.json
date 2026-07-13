@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-registry",
+  "claim": "An agent-agnostic attention-source registry shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Steward verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in the what-now diagnosis, half as CLI-only bands -- with no single, agent-agnostic, importable-as-a-library place an arbitrary agent could call to learn what needs attention. This lifts them into ONE core with an explicit registry of named sources, each producing typed AttentionSignal records the substrate and any agent share; the graph-source diagnosis is deterministic (byte-identical across runs) so it can feed the byte-stable substrate. Not yet implemented: the attention registry is Planned (previously implemented as src/hotam_spec/attention.py (ATTENTION_SOURCES), guarded by tests/test_attention_core.py).",
+  "last_reviewed_at": "2026-07-13"
+}

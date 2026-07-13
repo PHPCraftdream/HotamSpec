@@ -31,16 +31,14 @@ var _ = All.MustRegister("check_section_anchors_known", Invariant{
 		"'Canon: section Requirement') found in any framework definition MUST appear in the methodology glossary. " +
 		"An unrecognised section-anchor token is an invented term (R-speak-by-reference violation) that makes " +
 		"R-anchor-everything structurally unsafe -- the anchor does not resolve. " +
-		"In this Go port the Python AST walk over docstrings is replaced by a structural check: every Invariant " +
-		"carries Canon as a TYPED *methodology.Section pointer that physically cannot reference a non-existent " +
-		"section (the compiler guarantees the pointer was obtained from Sections.MustRegister). The only remaining " +
-		"failure mode is a nil Canon -- an Invariant created without setting the field -- which this check catches.",
-	Why: "the Python original walked every source file with ast, extracted section-sign tokens from docstrings via " +
-		"regex, and checked each against glossary.term_slugs(). That mechanism is structurally unnecessary in Go: " +
-		"the methodology lives as DATA in methodology.Sections (named *Section values), and every Invariant.Canon " +
+		"Here the section-anchor check is structural: every Invariant carries Canon as a TYPED *methodology.Section " +
+		"pointer that physically cannot reference a non-existent section (the compiler guarantees the pointer was obtained " +
+		"from Sections.MustRegister). The only remaining failure mode is a nil Canon -- an Invariant created without setting " +
+		"the field -- which this check catches.",
+	Why: "the methodology lives as DATA in methodology.Sections (named *Section values), and every Invariant.Canon " +
 		"is a typed pointer INTO that registry obtained at registration time. A typed pointer to a *methodology.Section " +
 		"cannot dangle -- it was produced by MustRegister, which stores the pointer in the registry map. The only way " +
-		"an anchor can be 'unknown' is if Canon was left nil, which this check detects directly without any AST scan. " +
+		"an anchor can be 'unknown' is if Canon was left nil, which this check detects directly. " +
 		"This is the same 'provability not no-op' pattern as check_scoped_node_has_single_presenter: the invariant " +
 		"is load-bearing for the property it guarantees, even though the current graph makes the failure impossible. " +
 		"References: R-anchor-everything, R-speak-by-reference, test_glossary_sync.",
@@ -118,14 +116,13 @@ var _ = All.MustRegister("check_bijection_r_to_enforcer", Invariant{
 		"(2) ORPHAN DETECTION -- every function in the registry MUST be named by at least one SETTLED/ENFORCED " +
 		"requirement's enforced_by (when at least one such requirement exists). A check_* function that no SETTLED/ENFORCED " +
 		"requirement points to is an orphan -- it runs but is not anchored to a claim. SHARED enforcers (one check_* named " +
-		"by multiple requirements) are acceptable and are not violations. In the Go port the registry is all-inclusive " +
+		"by multiple requirements) are acceptable and are not violations. The registry is all-inclusive " +
 		"(thin delegators are registered alongside atomic checks), so orphan detection naturally includes delegators " +
 		"no requirement names -- this is architecturally honest, not a false positive.",
 	Why: "the bijection between claim and check is what makes ENFORCED mean something beyond a label. An unresolvable " +
-		"enforcer name hides compoundness; an orphan check hides unclaimed guarantees. The Python original built " +
-		"inv_names from the curated ALL_INVARIANTS tuple (which excluded thin delegators); the Go registry includes " +
-		"everything registered via MustRegister, so the bijection surface is wider. This is the correct Go adaptation: " +
-		"the registry is the single source of truth, and orphan detection against it reveals which registered invariants " +
+		"enforcer name hides compoundness; an orphan check hides unclaimed guarantees. The registry includes everything " +
+		"registered via MustRegister (thin delegators alongside atomic checks), so the bijection surface is wide: the " +
+		"registry is the single source of truth, and orphan detection against it reveals which registered invariants " +
 		"no SETTLED/ENFORCED requirement has claimed. References: R-bijection-r-to-enforcer.",
 	Check: checkBijectionRToEnforcer,
 })
@@ -137,23 +134,20 @@ func checkMethodMatchesDocstring(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_method_matches_docstring", Invariant{
 	Name:  "check_method_matches_docstring",
 	Canon: methodology.Invariants,
-	Claim: "each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages (honest no-op in the Go port).",
-	Rule: "RULE (original Python): for every function in ALL_INVARIANTS, it MUST have a docstring, that docstring MUST " +
+	Claim: "each check_* docstring RULE shares non-trivial lexical overlap with its Violation messages (honest no-op).",
+	Rule: "RULE: for every function in ALL_INVARIANTS, it MUST have a docstring, that docstring MUST " +
 		"contain a RULE line, and the RULE line extracted from its docstring MUST share at least 5 percent Jaccard token " +
 		"overlap with the concatenated text of all Violation messages in the function body. A mismatch means the docstring " +
 		"describes a different rule from what the code enforces (silent drift). " +
-		"This invariant is an HONEST NO-OP in the Go port.",
-	Why: "the Python original parsed each check_* function's source with ast, extracted the RULE line from the docstring, " +
-		"extracted Violation message string literals from the AST body, computed Jaccard token overlap, and flagged " +
-		"functions below 5 percent as docstring-body drift. In Go, the entire premise collapses: Invariant.Claim, " +
-		"Invariant.Rule, Invariant.Why and Invariant.Check are FIELDS OF ONE STRUCTURE registered together via " +
-		"MustRegister -- they are DATA living next to the logic, not raw text separately extracted from an AST-parsed " +
-		"docstring. The drift mode this check caught in Python (a docstring that says one thing while the function body " +
-		"does another, with no structural link between them) cannot arise the same way in Go: the description and the " +
-		"logic are colocated in the same struct literal, authored in the same edit, reviewed in the same diff. This makes " +
-		"the check architecturally inapplicable, not merely unimplemented. The Go equivalent of docstring-body coherence " +
-		"is enforced at code-review time (the Claim/Rule/Why text sits directly above the Check function in the same var " +
-		"block) and structurally by the registry_complete_test which asserts no Claim/Rule/Why is empty. " +
+		"This invariant is an HONEST NO-OP.",
+	Why: "this check is architecturally inapplicable here, not merely unimplemented. Invariant.Claim, Invariant.Rule, " +
+		"Invariant.Why and Invariant.Check are FIELDS OF ONE STRUCTURE registered together via MustRegister -- they are " +
+		"DATA living next to the logic, not raw text separately extracted from a docstring. The drift mode this check " +
+		"targets (a docstring that says one thing while the function body does another, with no structural link between " +
+		"them) cannot arise: the description and the logic are colocated in the same struct literal, authored in the same " +
+		"edit, reviewed in the same diff. The equivalent of docstring-body coherence is enforced at code-review time (the " +
+		"Claim/Rule/Why text sits directly above the Check function in the same var block) and structurally by the " +
+		"registry_complete_test which asserts no Claim/Rule/Why is empty. " +
 		"References: R-method-matches-docstring.",
 	Check: checkMethodMatchesDocstring,
 })
@@ -165,21 +159,21 @@ func checkRulesAsDataClassificationCoherent(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_rules_as_data_classification_coherent", Invariant{
 	Name:  "check_rules_as_data_classification_coherent",
 	Canon: methodology.Invariants,
-	Claim: "the rules-as-data classification table and the invariant registry name exactly the same functions (honest no-op in the Go port).",
-	Rule: "RULE (original Python, R-rules-as-data, M22 HYBRID): every function in ALL_INVARIANTS MUST have exactly one " +
+	Claim: "the rules-as-data classification table and the invariant registry name exactly the same functions (honest no-op).",
+	Rule: "RULE (R-rules-as-data, M22 HYBRID): every function in ALL_INVARIANTS MUST have exactly one " +
 		"row in RULES_AS_DATA_TABLE (no missing classification, no duplicate row), and every row's name MUST resolve to " +
 		"a function in ALL_INVARIANTS (no stale row surviving a rename or removal). Every row's kind MUST be in " +
 		"RULES_AS_DATA_KINDS (TABLE_DRIVEN or BESPOKE). The classification table is the DATA half of the HYBRID verdict -- " +
 		"if it silently drifts out of sync with ALL_INVARIANTS, the table stops being a trustworthy map. " +
-		"This invariant is an HONEST NO-OP in the Go port.",
-	Why: "the RULES_AS_DATA_TABLE -- a Python data structure classifying each check_* as TABLE_DRIVEN or BESPOKE -- does " +
-		"not exist in the Go port. In Python it served the M22 'rules as data' design: an agent could read the table to " +
+		"This invariant is an HONEST NO-OP.",
+	Why: "the RULES_AS_DATA_TABLE -- a metadata table classifying each check_* as TABLE_DRIVEN or BESPOKE -- does not " +
+		"exist in this implementation. It served the M22 'rules as data' design: an agent could read the table to " +
 		"understand which invariants were homogeneous per-kind structural checks (generated by iterating a shared shape) " +
-		"versus irreducibly hand-written bespoke logic. The Go port does not carry this metadata table: the classification " +
-		"lives implicitly in the code structure (table-driven checks iterate g.EntityTypes or similar collections; bespoke " +
-		"checks walk specific graph topology). Without a RULES_AS_DATA_TABLE to drift against the registry, the coherence " +
-		"check has nothing to verify -- it is architecturally inapplicable, not merely unimplemented. If a future Go " +
-		"milestone reintroduces explicit classification metadata, this check should be revived to guard its coherence " +
-		"with the registry. References: R-rules-as-data, M22.",
+		"versus irreducibly hand-written bespoke logic. This implementation does not carry the metadata table: the " +
+		"classification lives implicitly in the code structure (table-driven checks iterate g.EntityTypes or similar " +
+		"collections; bespoke checks walk specific graph topology). Without a RULES_AS_DATA_TABLE to drift against the " +
+		"registry, the coherence check has nothing to verify -- it is architecturally inapplicable, not merely " +
+		"unimplemented. If a future milestone reintroduces explicit classification metadata, this check should be revived " +
+		"to guard its coherence with the registry. References: R-rules-as-data, M22.",
 	Check: checkRulesAsDataClassificationCoherent,
 })

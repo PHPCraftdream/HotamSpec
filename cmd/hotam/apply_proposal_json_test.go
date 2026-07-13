@@ -204,12 +204,12 @@ func TestParseProposal_AllKinds_SnakeCaseRoundTrip(t *testing.T) {
 }
 
 // TestParseProposal_EntityType_ObjectShape covers EntityType separately from
-// the table above: its nested States/Transitions/Fields are Go structs with
-// snake_case tags (JSON object shape), not Python's compact array-triple
-// wire format (docs/PROPOSAL-REFERENCE.md describes the array-triple shape
-// as the Python tool's contract; this Go port's ProposedEntityType has no
-// custom UnmarshalJSON to accept that compact form -- see the final report
-// for this documented divergence).
+// the table above: its nested States/Transitions/Fields are structs with
+// snake_case tags (JSON object shape), not the compact array-triple wire
+// format (docs/PROPOSAL-REFERENCE.md describes the array-triple shape as an
+// alternative contract; ProposedEntityType has no custom UnmarshalJSON to
+// accept that compact form -- see the final report for this documented
+// divergence).
 func TestParseProposal_EntityType_ObjectShape(t *testing.T) {
 	t.Parallel()
 	data := []byte(`{

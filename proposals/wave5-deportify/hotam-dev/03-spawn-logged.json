@@ -1,0 +1,13 @@
+{
+  "kind": "Requirement",
+  "id": "R-spawn-logged",
+  "claim": "Every sub-agent spawn shall be appended to the runtime spawn-log (.runtime/spawn-log.jsonl).",
+  "owner": "pipeline-operator",
+  "status": "SETTLED",
+  "why": "Not yet implemented: no `.runtime/spawn-log.jsonl` writer exists in this system today (the `.runtime` directory does not exist in the repo). spawn_agent and spawn_log_isolation_status are both Planned in methodology.Tools (not yet available as `hotam` CLI commands), so there is no tool that appends a spawn row. (Previously implemented as `tools/spawn_agent.py`, proven by `test_spawn_log_written`, which proved only the MECHANISM -- the tool appends a row when invoked against a tmp runtime dir -- NOT coverage of real host spawns.) The category distinction still holds: an explicit spawn_agent invocation composing a domain sub-operator's crystal -- currently ZERO such sub-operators in this domain, per the Agent Map '(no sub-operators yet)' -- is category-distinct from a host-level Agent-tool spawn, covered by R-host-spawn-leaves-trace. The original WHY stands: without a trace of every spawn, R-delegation-conclusions-only and R-task-spawn-log-runtime (hotam-spec-self) cannot be audited after the fact. STRUCTURAL (not ENFORCED): no enforcer exists; this atom stands as the discipline that the trace SHOULD exist for every spawn.",
+  "enforcement": "STRUCTURAL",
+  "enforceability": "ENFORCEABLE",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-03-12"
+}

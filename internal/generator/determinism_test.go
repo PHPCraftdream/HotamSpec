@@ -16,7 +16,7 @@ func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
 		{"Glossary", BuildGlossary(g), BuildGlossary(g)},
 		{"History", BuildHistory(g), BuildHistory(g)},
 		{"Decisions", BuildDecisions(g), BuildDecisions(g)},
-		{"Constitution", BuildConstitution(g), BuildConstitution(g)},
+		{"Constitution", BuildConstitution(g, "hotam-spec-self"), BuildConstitution(g, "hotam-spec-self")},
 		{"Entities", BuildEntities(g, "hotam-spec-self"), BuildEntities(g, "hotam-spec-self")},
 		{"RepoMap", BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false), BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)},
 		{"FrameworkInvariants", BuildFrameworkInvariants(g, "hotam-spec-self"), BuildFrameworkInvariants(g, "hotam-spec-self")},

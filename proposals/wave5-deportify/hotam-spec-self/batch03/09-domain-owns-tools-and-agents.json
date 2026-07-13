@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-tools-and-agents",
+  "claim": "Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursive-director). Requiring both to exist even when empty makes scaffolding deterministic and avoids missing-directory failures in tooling that expects the full layout. Not yet enforced: the agent-subdir checks (check_agent_has_agents_subdir, check_agent_has_docs_subdir, check_agent_has_tools_subdir in internal/invariants/domain_structure.go) are HONEST NO-OPS — the invariant contract operates on an in-memory graph and cannot reach the filesystem. In practice the domains on disk (domains/hotam-spec-self/, domains/hotam-dev/) currently carry only docs/, graph.json, manifest.json, and graph.lock — no tools/ or agents/ subdirectories — and the create_domain scaffolding tool that would materialize them is Planned, not yet implemented (internal/methodology/tools_data.go). The layout requirement stands for the moment create_domain is built.",
+  "last_reviewed_at": "2026-07-13"
+}

@@ -97,11 +97,10 @@ var _ = All.MustRegister("check_assumption_machine_checks_syntactic", Invariant{
 	Name:  "check_assumption_machine_checks_syntactic",
 	Canon: methodology.Assumption,
 	Claim: "every non-empty machine_check is a well-formed expression, not prose.",
-	Rule: "for each Assumption whose machine_check is set (non-nil), the trimmed value MUST be non-empty. The Python " +
-		"source additionally compiles machine_check in 'eval' mode to guarantee it is a syntactically valid Python " +
-		"expression; this Go port performs the structural non-empty check only. Full expression-syntax validation " +
-		"(language-specific AST compilation) is deferred to a future validation layer that has access to the " +
-		"expression mini-language's parser. This does NOT execute the formula and does NOT assert it is TRUE.",
+	Rule: "for each Assumption whose machine_check is set (non-nil), the trimmed value MUST be non-empty. This check " +
+		"performs the structural non-empty check only; full expression-syntax validation (language-specific AST " +
+		"compilation) is deferred to a future validation layer that has access to the expression mini-language's parser. " +
+		"This does NOT execute the formula and does NOT assert it is TRUE.",
 	Why: "the two machine_checks carried in the self-domain graph evaluate against different, not-yet-materialized " +
 		"namespaces, so EXECUTING them would require inventing that namespace, which R-uncrystallizable-automated " +
 		"forbids doing speculatively. What CAN be guaranteed structurally, without inventing semantics, is that the " +
@@ -357,14 +356,14 @@ var _ = All.MustRegister("check_entities_md_lists_all_types", Invariant{
 	Claim: "every declared EntityType appears as a section in the generated ENTITIES.md.",
 	Rule: "for each domain in domains/<name>/ whose graph declares entity_types, the corresponding " +
 		"domains/<name>/docs/gen/ENTITIES.md MUST contain a section header '## <slug>' for every EntityType slug. " +
-		"This is a FILESYSTEM-COHERENCE check -- the Python source walks the domains directory, loads each domain's " +
-		"graph independently, and reads the committed generated ENTITIES.md file from disk. The Go invariant " +
-		"contract (Check func(*ontology.Graph) []Violation) operates on an in-memory graph only and has no access " +
-		"to the filesystem; therefore this check is a NO-OP in the Go port.",
+		"This is a FILESYSTEM-COHERENCE check -- it walks the domains directory, loads each domain's graph " +
+		"independently, and reads the committed generated ENTITIES.md file from disk. The invariant contract " +
+		"(Check func(*ontology.Graph) []Violation) operates on an in-memory graph only and has no access to the " +
+		"filesystem; therefore this check is a NO-OP.",
 	Why: "this check does not fit the pure-graph invariant contract: it reads generated doc files from disk and " +
-		"compares them against per-domain graphs loaded independently. In the Go architecture, filesystem-coherence " +
+		"compares them against per-domain graphs loaded independently. In this architecture, filesystem-coherence " +
 		"checks belong to the generator/byte-identity layer (internal/generator), which has access to both the " +
-		"filesystem and the build pipeline. Porting this as a graph-only invariant would either require adding a " +
+		"filesystem and the build pipeline. Implementing this as a graph-only invariant would either require adding a " +
 		"filesystem path parameter (breaking the uniform Check signature) or re-deriving the doc content from the " +
 		"graph (which defeats the purpose of checking the committed file). A legitimate no-op here mirrors the " +
 		"pattern of check_doc_reader_resolves_to_stakeholder: the structural guarantee is real, but its enforcement " +
@@ -382,14 +381,14 @@ var _ = All.MustRegister("check_entity_type_constitution_projection", Invariant{
 	Claim: "every declared EntityType appears as R-entity-<slug> in the generated FRAMEWORK-INVARIANTS.md.",
 	Rule: "for each domain in domains/<name>/ whose graph declares entity_types, the corresponding " +
 		"domains/<name>/docs/gen/FRAMEWORK-INVARIANTS.md MUST contain a row naming 'R-entity-<slug>' for every " +
-		"EntityType slug. This is a FILESYSTEM-COHERENCE check -- the Python source walks the domains directory, " +
-		"loads each domain's graph independently, and reads the committed generated FRAMEWORK-INVARIANTS.md file " +
-		"from disk. The Go invariant contract (Check func(*ontology.Graph) []Violation) operates on an in-memory " +
-		"graph only and has no access to the filesystem; therefore this check is a NO-OP in the Go port.",
+		"EntityType slug. This is a FILESYSTEM-COHERENCE check -- it walks the domains directory, loads each " +
+		"domain's graph independently, and reads the committed generated FRAMEWORK-INVARIANTS.md file from disk. " +
+		"The invariant contract (Check func(*ontology.Graph) []Violation) operates on an in-memory graph only and " +
+		"has no access to the filesystem; therefore this check is a NO-OP.",
 	Why: "this check does not fit the pure-graph invariant contract: it reads generated doc files from disk and " +
-		"compares them against per-domain graphs. In the Go architecture, filesystem-coherence checks belong to the " +
+		"compares them against per-domain graphs. In this architecture, filesystem-coherence checks belong to the " +
 		"generator/byte-identity layer (internal/generator), which has access to both the filesystem and the build " +
-		"pipeline. Porting this as a graph-only invariant would break the uniform Check signature or defeat the " +
+		"pipeline. Implementing this as a graph-only invariant would break the uniform Check signature or defeat the " +
 		"purpose of checking the committed file. A legitimate no-op here mirrors the pattern of " +
 		"check_doc_reader_resolves_to_stakeholder: the structural guarantee is real, but its enforcement lives in " +
 		"a different architectural layer. Reference: R-drift-structurally-impossible.",

@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforcement-perimeter-visible",
+  "claim": "A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Not yet implemented: there is no sha256 hash-pin test covering the enforcement-perimeter source files (internal/invariants, internal/gate, internal/diagnose, etc.) and no baseline-update tool in the CLI. The reference design is a test that computes sha256 over the enforcement-perimeter sources and fails RED until the baseline JSON is consciously updated (historically test_enforcement_perimeter_pinned.py over invariants.py, gate.py, enforcer_resolution.py, attention.py, _graph_guard.py). The rationale is still valid: enforcement code is legitimately edited (adding checks, fixing bugs), so a hard deny would be wrong, but silent weakening (e.g. return nil in a check) must be VISIBLE -- the hash-pin test forces a baseline update that appears in the diff, making the change reviewable (Enf#3 + supervector A). PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

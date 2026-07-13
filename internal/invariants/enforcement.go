@@ -83,11 +83,11 @@ func checkEnforcedByResolvable(g *ontology.Graph) []Violation {
 				continue
 			}
 			// Non-check_* entries MUST resolve to a real top-level Go Test*
-			// function. This is what catches a regression back to Python-style
+			// function. This is what catches a regression back to stale
 			// pytest node-ids (test_x.py, test_x.py::test_y) or bare lowercase
-			// test_* names -- dead references in the Go port. Wave 2 rebound
-			// these to real Test*/check_* names; this guard keeps that rebound
-			// from quietly undoing.
+			// test_* names -- dead references. Wave 2 rebound these to real
+			// Test*/check_* names; this guard keeps that rebound from quietly
+			// undoing.
 			if scanErr != nil {
 				out = append(out, Violation{
 					Check: "check_enforced_by_resolvable",
@@ -119,13 +119,13 @@ var _ = All.MustRegister("check_enforced_by_resolvable", Invariant{
 	Claim: "every ENFORCED requirement's enforced_by entry resolves -- a check_* to a registered invariant, a Test* to a real Go test function.",
 	Rule: "for each SETTLED+ENFORCED Requirement, every enforced_by entry MUST resolve to a real enforcer: a check_* name MUST be a registered " +
 		"invariant (the All registry), and any other entry MUST be a real top-level Test* function name found under internal/**/*_test.go " +
-		"(the SAME scan internal/gate uses for targeted test selection). A typo, a stale/renamed check_*, a leftover Python-style pytest node-id " +
+		"(the SAME scan internal/gate uses for targeted test selection). A typo, a stale/renamed check_*, a leftover pytest-style node-id " +
 		"(test_x.py, test_x.py::test_y), a bare lowercase test_* name, or any other unresolvable string fires a Violation naming the entry.",
-	Why: "this is the regression guard for the wave-2 rebound that replaced 157 broken Python pytest-style enforced_by references (test_x.py::test_y) " +
-		"with real Go Test*/check_* names. Before this, the invariant resolved ONLY the check_* half via the registry and silently no-op'd every " +
+	Why: "this is the regression guard for the wave-2 rebound that replaced 157 broken pytest-style enforced_by references (test_x.py::test_y) " +
+		"with real Test*/check_* names. Before this, the invariant resolved ONLY the check_* half via the registry and silently no-op'd every " +
 		"other entry (test_*, file paths) on the assumption that runtime verification covered them -- an assumption that let the very regression it " +
 		"was meant to catch survive undetected in domains wave 2 did not touch. Reusing gate.TestFuncNames (walkTestFuncs over internal/) keeps a " +
-		"single source of truth for 'what is a real Go test enforcer' across targeted selection and this audit, so the two can never disagree. " +
+		"single source of truth for 'what is a real test enforcer' across targeted selection and this audit, so the two can never disagree. " +
 		"check_enforced_names_invariant only verifies enforced_by is NON-EMPTY; a real typo or a stale .py ref passes it silently, and this invariant " +
 		"makes that debt visible directly.",
 	Check: checkEnforcedByResolvable,
@@ -138,19 +138,16 @@ func checkEnforcedByTestHasTeeth(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_enforced_by_test_has_teeth", Invariant{
 	Name:  "check_enforced_by_test_has_teeth",
 	Canon: methodology.Requirement,
-	Claim: "every enforced_by bare test_* function has real assertions (no-op in the Go port).",
-	Rule: "RULE (original): when an enforced_by entry resolves to a bare test_* function name, that function's body MUST " +
-		"contain at least one assert statement, pytest.raises call, or other function call (which could assert internally). " +
-		"A test whose body is only pass/docstring/Ellipsis with no assertions and no calls is a toothless stub -- it makes " +
-		"\"ENFORCED\" a lie.",
-	Why: "no-op in this Go port. The original walked the Python test files and AST-parsed each bare test_* function body to " +
-		"confirm it was not an empty stub (enforcer_resolution.test_func_has_teeth). That check is fundamentally tied to " +
-		"Python's AST and the pytest node-id model; in the Go port the equivalent question is answered at RUNTIME -- a " +
-		"toothless Go test function either fails to compile or passes vacuously only until the invariant it claims to " +
-		"enforce actually regresses, at which point go test catches it directly. There is no static, graph-local way (nor " +
-		"need) to reproduce the AST body scan, so this invariant is an honest no-op rather than a partial port. Resolvability " +
-		"(check_enforced_by_resolvable) and non-emptiness (check_enforced_names_invariant) remain load-bearing; teeth does " +
-		"not translate.",
+	Claim: "every enforced_by bare test_* function has real assertions (honest no-op).",
+	Rule: "RULE: when an enforced_by entry resolves to a bare test_* function name, that function's body MUST " +
+		"contain at least one real assertion or exercising call. A test whose body is empty or only a placeholder with " +
+		"no assertions and no calls is a toothless stub -- it makes \"ENFORCED\" a lie.",
+	Why: "this invariant is an honest no-op. Whether a test function has real assertions is answered at RUNTIME, not by a " +
+		"graph invariant: a toothless test function either fails to compile or passes vacuously only until the requirement it " +
+		"claims to enforce actually regresses, at which point go test catches it directly. There is no static, graph-local " +
+		"way (nor need) to scan test bodies for assertions, so this invariant is an honest no-op rather than a partial " +
+		"implementation. Resolvability (check_enforced_by_resolvable) and non-emptiness (check_enforced_names_invariant) " +
+		"remain load-bearing; teeth does not translate to a graph check.",
 	Check: checkEnforcedByTestHasTeeth,
 })
 

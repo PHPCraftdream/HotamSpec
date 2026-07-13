@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-no-hand-edit-graph",
+  "claim": "Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land`, with direct hand-edits prohibited outside of bootstrap events.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json>` or `hotam land` (cmd/hotam/apply_proposal.go, cmd/hotam/land.go), which load a Proposed* JSON, validate it, mutate the in-memory graph, check for new invariant violations, and only then write graph.json + graph.lock (internal/proposal/apply.go). Not yet implemented as a deterministic host-hook guard: the CLI is a pure command-line tool with no PreToolUse / host-hook integration, so there is no mechanism that mechanically blocks direct Edit/Write on graph.json. (Historically the Python _graph_guard.py PreToolUse hook provided that mechanical block.) Without a guard on graph.json, a hand-edit can bypass the proposal protocol's validation+invariant-check gate -- the same self-judging-the-judge problem (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists.",
+  "last_reviewed_at": "2026-07-13"
+}

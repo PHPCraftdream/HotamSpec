@@ -182,7 +182,7 @@ func TestApplyProposal_SmokeEndToEnd(t *testing.T) {
 		t.Fatalf("parseProposal: %v", err)
 	}
 	gp := graphPathForDomain(domainDir)
-	if err := proposal.Apply(gp, "2026-07-12", p); err != nil {
+	if err := proposal.Apply(gp, "2026-07-13", p); err != nil {
 		t.Fatalf("apply: %v", err)
 	}
 	data, err := os.ReadFile(gp)

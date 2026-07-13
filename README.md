@@ -1,6 +1,19 @@
 # HotamSpec
 
-Go-порт методологии Hotam-Spec — подхода к работе с конфликтующими бизнес-требованиями, моделируемыми как граф напряжений (tension graph). Противоречивые требования — не баг, а свойство модели: они держатся открытыми как узлы `Conflict`, а не тихо отбрасываются.
+A Go implementation of the Hotam-Spec methodology — a discipline for working
+with conflicting business requirements modeled as a **tension graph**.
+Contradictory requirements are not a bug but a property of the model: they are
+kept open as `Conflict` nodes, never silently discarded.
+
+The repository ships `hotam`, a CLI that reads a domain's `graph.json`, applies
+typed proposals, regenerates documentation from the executable model, and
+diagnoses the next correct action — making drift between spec, tests, and
+business decisions structurally visible.
+
+> Background: an earlier Python prototype of this methodology lives in the git
+> history (it was superseded by this Go implementation, which is now the
+> canonical one). It is referenced only for historical context, not as a
+> supported artifact.
 
 ## Install
 
@@ -8,70 +21,118 @@ Go-порт методологии Hotam-Spec — подхода к работе
 go install github.com/PHPCraftdream/HotamSpec/cmd/hotam@latest
 ```
 
-Кладёт бинарник `hotam` в `$GOBIN` (или `$(go env GOPATH)/bin`). Требует Go 1.25+ (см. `go.mod`). Module path в `go.mod` совпадает с git remote; до публикации первого релиз-тега `@latest` не резолвится — используйте `go install <path>@<конкретный тег или коммит>`, либо собирайте из исходников (см. ниже).
+This puts the `hotam` binary in `$GOBIN` (or `$(go env GOPATH)/bin`). It requires
+Go 1.25+ (see `go.mod`). The module path in `go.mod` matches the git remote;
+until a first release tag is published, `@latest` will not resolve — use
+`go install <path>@<specific-tag-or-commit>` or build from source (see
+[Build](#build) below).
 
-Сборка из исходников (для разработки или пока не опубликован первый релиз-тег) — см. раздел «Сборка» ниже.
-
-### Версия
+### Version
 
 ```bash
 hotam version
-# или
+# or
 hotam --version
 ```
 
-Печатает `hotam dev` для локальной сборки без флагов. Релизная сборка проставляет версию через `ldflags`:
+Prints `hotam dev (commit: unknown, built: unknown)` for a plain local build.
+Release builds inject the version (and commit/build date) via `-ldflags`:
 
 ```bash
-go build -ldflags "-X main.version=v0.1.0" -o bin/hotam ./cmd/hotam
+go build -ldflags "-X main.version=v0.1.0 -X main.commit=abc1234 -X main.buildDate=2026-07-12" \
+  -o bin/hotam ./cmd/hotam
 ```
 
-### Тегирование релиза (процесс, не выполнено в этой волне)
+### Tagging a release (process, not done in this wave)
 
-Когда стюард решает опубликовать версию: подтвердить/выправить расхождение module path ↔ remote (TODO выше) → прогнать `go test ./...` на чистом дереве → проставить git-тег вида `v0.x.y` на коммит → (опционально) собрать релизные бинарники с `-ldflags "-X main.version=v0.x.y"` для целевых платформ. Тег не создаётся автоматически этим документом — это ручной шаг стюарда.
+When the steward decides to publish a version: confirm the module path ↔ remote
+match (see `go.mod`) → run `go test ./...` on a clean tree → place a git tag of
+the form `v0.x.y` on the commit → (optionally) build release binaries with
+`-ldflags "-X main.version=v0.x.y ..."` for the target platforms. Tagging is a
+manual steward step, not something this document performs.
 
-## Сборка
+## Build
 
 ```bash
 go build -o bin/hotam ./cmd/hotam
 ```
 
-или без сборки бинарника:
+or, without producing a binary:
 
 ```bash
 go run ./cmd/hotam <command> [flags] [args]
 ```
 
-## Команды CLI
+## CLI commands
 
-Бинарник `hotam` (см. `cmd/hotam/main.go`) поддерживает пять команд:
+The `hotam` binary (see `cmd/hotam/main.go`) implements thirteen commands:
 
-```bash
+```
+hotam init <dir> [--name <domain-name>]
+        Scaffold a new domain: minimal graph.json (seed Stakeholder + seed
+        SETTLED Requirement, all-violations=0 immediately), manifest.json,
+        docs/gen/, and a README.md pointing at the next commands to run.
+        <dir> may be anywhere on disk — it does not need to live under this
+        repository or contain a domains/ ancestor.
+
 hotam gen-spec [--domain <path>]
-        Сгенерировать docs/gen/*.md + graph.json для графа домена.
+        Generate all docs/gen/*.md + graph.json for a domain graph.
 
 hotam what-now [--domain <path>] [--limit N]
-        Показать top-N приоритизированных сигналов (по умолчанию 20).
+        Print the top-N diagnosed signals (default 20).
 
-hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD
-        Применить proposal к графу домена.
+hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]
+        Apply a proposal to a domain graph. Low-level: does not regenerate
+        docs — run gen-spec after, or use land instead. With --batch <dir>,
+        every *.json in <dir> is applied atomically in filename order
+        (all-or-nothing): if any proposal fails the graph is untouched.
 
-hotam land <proposal.json> --domain <path> --today YYYY-MM-DD
-        Применить proposal, перегенерировать docs/gen и перепроверить инварианты за один шаг.
+hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--claude-md <path>] [--batch <dir>]
+        Apply a proposal, regenerate docs/gen for the domain, then re-check
+        all invariants in one step. With --batch <dir>, every *.json in <dir>
+        is applied atomically in filename order and docs are regenerated
+        exactly once (not once per proposal).
 
 hotam gate <target-anchor> [--domain <path>]
-        Выбрать Tier-1 подмножество тестов для целевого узла.
+        Select a Tier-1 test subset for a target node.
 
 hotam all-violations [--domain <path>]
-        Показать все нарушения инвариантов; exit 1, если есть хоть одно.
+        Print all invariant violations; exit 1 if any are found.
+
+hotam req <show|list|search|context|related> [args] [--domain <path>] [--json]
+        Compact agentic read interface over the domain graph
+        (hotam req -h for details).
+
+hotam due [--domain <path>] [--today YYYY-MM-DD] [--json]
+        Advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
+        Never gates; exit code always 0.
+
+hotam status [--domain <path>] [--today YYYY-MM-DD] [--json]
+        Single-shot compact summary combining what-now's top action + debt,
+        due's freshness counts, and all-violations' violation count, so an
+        agent doesn't need to run all three separately. Never gates; exit
+        code always 0.
+
+hotam inspect [--domain <path>] [--json] [--limit N] [--min-score N]
+        Advisory listing of semantic conflict candidates with evidence
+        (shared-assumption clusters, entity-state suspects, lexical claim
+        overlap, axis co-reference). --min-score (default 5) suppresses
+        low-signal candidates; 0 shows all. Never gates; exit code always 0.
+
+hotam confront <text> [--domain <path>] [--file <path>] [--json]
+        CONFRONT step of the mediation loop: checks a candidate claim for
+        lexical overlap with SETTLED requirements (duplicate guard) and
+        REJECTED history (anti-relitigation) before anything is written.
+        <text> is a quoted positional; --file <path> reads a long draft.
+        Reuses the inspect overlap engine. Never gates; exit code always 0.
 
 hotam version | hotam --version
-        Показать версию бинарника (см. раздел Install → Версия выше).
+        Print the hotam binary version (see Version above).
 ```
 
-`--domain` по умолчанию — `domains/hotam-spec-self`, путь резолвится относительно корня проекта.
+`--domain` defaults to `domains/hotam-spec-self`, resolved via the project root.
 
-## Тесты
+## Tests
 
 ```bash
 go test ./...
@@ -79,37 +140,43 @@ go vet ./...
 go test -race ./...
 ```
 
-## Структура репозитория
+## Repository structure
 
 ```
-cmd/hotam/            CLI-точка входа и подкоманды
+cmd/hotam/            CLI entry point and subcommands
 internal/
-  ontology/            типы узлов графа (Requirement, Conflict, Assumption, ...)
-  loader/               чтение graph.json
-  proposal/             валидация и применение Proposed*-структур
-  invariants/           check_*-инварианты графа
-  diagnose/              вычисление сигналов (what-now)
-  gate/                    выбор Tier-1 тестов по якорю
-  generator/               генерация docs/gen/*.md из графа
-  methodology/             справочные данные методологии
-  registry/                 реестр инструментов
-  paths/                    резолюция корня проекта
+  ontology/           graph node types (Requirement, Conflict, Assumption, ...)
+  loader/             graph.json reader
+  proposal/           validation and application of Proposed* structures
+  invariants/         check_* graph invariants
+  diagnose/           signal computation (what-now, inspect, confront)
+  gate/               Tier-1 test selection by anchor
+  generator/          docs/gen/*.md generation from the graph
+  freshness/          OVERDUE / NEVER-REVIEWED reporting (due)
+  query/              compact read interface (req)
+  methodology/        methodology reference data
+  registry/           tool registry
+  paths/              project-root resolution
 domains/
-  hotam-spec-self/       граф самоописания методологии
-  hotam-dev/               граф разработки самого репозитория
-docs/                      справочная документация (в т.ч. PROPOSAL-REFERENCE.md)
+  hotam-spec-self/    the methodology modeling itself
+  hotam-dev/          development of this very repository
+docs/                 reference docs (incl. PROPOSAL-REFERENCE.md, QUICKSTART-CONSUMER.md)
 ```
 
-## Рабочий цикл агента
+## Agent workflow loop
 
-1. `hotam what-now` — узнать приоритетное следующее действие.
-2. Составить JSON-предложение (proposal) — формат см. `docs/PROPOSAL-REFERENCE.md`.
-3. `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD` — применить.
-4. `hotam gen-spec --domain <path>` — перегенерировать документацию из графа.
-5. `hotam all-violations --domain <path>` — убедиться, что граф остаётся структурно корректным.
+1. `hotam what-now` — learn the prioritized next action.
+2. Draft a JSON proposal — format in `docs/PROPOSAL-REFERENCE.md`.
+3. `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD` — apply
+   (or use `hotam land` to also regenerate docs and re-check invariants).
+4. `hotam gen-spec --domain <path>` — regenerate documentation from the graph
+   (already done by `land`; run separately if you used `apply-proposal`).
+5. `hotam all-violations --domain <path>` — confirm the graph stays structurally
+   sound.
 
-Ручное редактирование `graph.json` не допускается — все изменения идут через `apply-proposal` (см. `CONTRIBUTING.md`).
+Hand-editing `graph.json` is not allowed — every change goes through
+`apply-proposal` / `land` (see `CONTRIBUTING.md`).
 
-## Лицензия
+## License
 
-Dual-licensed под MIT OR Apache-2.0 — см. `LICENSE-MIT` и `LICENSE-APACHE`.
+Dual-licensed under MIT OR Apache-2.0 — see `LICENSE-MIT` and `LICENSE-APACHE`.

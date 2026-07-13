@@ -1,0 +1,27 @@
+{
+  "assumptions": [],
+  "claim": "A tool shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension.",
+  "created_at": "2026-07-03",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestInspect_DeterministicShortlist"
+  ],
+  "enforcement": "ENFORCED",
+  "evidence": [],
+  "id": "R-tension-audit-shortlist-tool",
+  "kind": "Requirement",
+  "last_reviewed_at": "2026-07-13",
+  "m_tag": "",
+  "owner": "framework-author",
+  "relations": [],
+  "review_after": "2027-02-12",
+  "settled_at": "2026-07-12",
+  "source_refs": [
+    "internal/diagnose/inspect.go",
+    "internal/diagnose/inspect_test.go",
+    "cmd/hotam/inspect.go"
+  ],
+  "status": "SETTLED",
+  "summary": "",
+  "why": "The framework held tensions well but historically did not FIND them (0 of 8 conflicts machine-surfaced over its whole history; latent-mining covered 0 pairs; 3 axes never fired). This tool closes the missing first-act-of-sight half of the mediation loop by sweeping the WHOLE settled graph. The capability is realized as `hotam inspect` (internal/diagnose/inspect.go): a deterministic, LLM-free advisory that surfaces tension candidates via four heuristics - InspectSharedAssumptionClusters (pairs sharing a DEAD/HOLDS assumption that one alone cannot break), InspectEntityStateConflicts (two requirements asserting incompatible states on the same entity), InspectLexicalClaimOverlap (natural-language claim pairs with high token overlap but different owners), and InspectAxisCoReference (requirements co-referencing the same Axis with opposing pull). Each surfaced Candidate carries its heuristic name, the member ids, an evidence string, and a score, so a human can review the shortlist. (Historical note: the original tool was tools/audit_tensions.py, which used different heuristics - POLE axis-pole pull / MODAL prohibition-vs-obligation / NOUN cross-owner overlap; the current inspect heuristics reimagines the same first-act-of-sight with graph-structural signals better suited to the current ontology, and those pole/modal/noun tests were not carried forward.) Deterministic and stdlib-only so the shortlist is reproducible and gate-safe (exit code always 0; never gates). PROSE (not ENFORCED): the shortlist is an advisory tool with no enforcer test asserting its heuristics fire on specific fixtures (the inspect heuristics are exercised by table-driven tests in inspect_test.go but as correctness checks, not as enforcement of this requirement). ENFORCED 2026-07-13: TestInspect_DeterministicShortlist in internal/diagnose/inspect_test.go mechanically verifies this claim. NOISE FIX 2026-07-13 (external review, P1): on the real hotam-spec-self graph InspectLexicalClaimOverlap was over-firing (1231 of 1232 total candidates), because its stop-word list is generic English closed-class vocabulary and cannot catch a self-describing methodology's own frequently-repeated open-class words (e.g. \"requirement\" at 12.4% document frequency, \"graph\" 19.7%, \"every\" 26.5% across the 234 SETTLED claims) -- two claims sharing only such words were being scored as topically related when they were not. Fixed by computing a document-frequency table over the loaded graph's own SETTLED claims at call time (corpusCommonTokens in internal/diagnose/inspect.go) and excluding any token appearing in more than CorpusCommonTokenFraction (5%) of SETTLED claims from the shared-token overlap count, exactly like a stop word -- this is derived fresh from whatever domain graph is loaded, never a hardcoded word list, so it stays content-free across domains (R-content-free-no-business-data) and adapts automatically to each domain's own vocabulary. Below MinCorpusSizeForFrequencyFilter (8) SETTLED requirements the exclusion is a no-op and behavior is unchanged, since frequency is not a meaningful signal on tiny corpora. Confirmed via total-candidate count on the real graph: 1231 lexical_claim_overlap candidates before -> 234 after (81% reduction), spot-checked to confirm the dropped pairs shared only corpus-common connective words (e.g. \"never\", \"framework\", \"steward\" alone) with no real topical anchor, while the surviving top-scoring candidates now carry genuinely narrow shared vocabulary. `hotam confront` reuses the same exclusion (Confront/confrontHit in internal/diagnose/confront.go), so a candidate sharing only corpus-common words with a SETTLED/REJECTED requirement no longer surfaces as a duplicate/re-litigation suspect. This does NOT guarantee zero false negatives: a real tension whose only shared vocabulary happens to be corpus-common, with no opposite marker and no rarer shared token, is still missed -- the same class of miss the plain stop-word list already accepted for generic English words, now extended to a domain's own frequent words."
+}

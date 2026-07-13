@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-claude-md-consolidates-when-single-agent",
+  "claim": "While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "Applies R-crystallize-before-split to file structure itself: don't split the operator-prompt into per-domain/per-agent files until a real second concurrent operator actually needs its own bounded crystal. Maintaining synchronized scaffold files that nobody reads is premature complexity. `hotam gen-spec` (internal/generator/claudemd.go) emits a single CLAUDE.md from the active domain's graph; the AGENT-MAP block (RenderAgentMapBlock) renders '_(no sub-operators yet)_' because no agent has been scaffolded yet (the agents/ infrastructure -- create-agent -- is Planned).",
+  "last_reviewed_at": "2026-07-13"
+}
