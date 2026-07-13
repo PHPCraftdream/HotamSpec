@@ -1,0 +1,25 @@
+{
+  "kind": "Requirement",
+  "id": "R-committed-code-no-home-writes",
+  "claim": "Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "SPLIT from R-work-within-launch-dir 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): the original 'operator shall confine all file mutations to its launch directory' claim bundled two genuinely different things -- (1) committed framework CODE that writes into the host home (statically, mechanically checkable: an AST scanner over committed source), and (2) a live agent shelling out at RUNTIME through bash/tool-calls to touch the home dir (not statically checkable -- discipline of prose). This atom is the structural/mechanically-checkable half (1); the residual live-conduct half (2) stays at R-work-within-launch-dir (now INHERENTLY_PROSE, same category as R-agent-conduct-is-rules-not-tests). The original enforcement was a Python AST scanner (tests/test_launch_dir_write_scope.py, ENFORCED 2026-07-10) that was NOT carried forward into the Go port (reverted to PROSE 2026-07-12); this atom re-ports that scanner to Go. Steward verdict 2026-07-05 stands verbatim (from the original why): the framework is a guest in the host's home -- it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. Trigger for the original rule: the operator once proposed setup_context_hook.py --patch-global --apply, which patched the global host configuration (a host-sovereignty violation that a host update overwrites anyway). EXACT MECHANICAL RULE (enforced by TestLaunchDirWriteScope_NoHomeWriteColocation in internal/selfcheck/launch_dir_scope_test.go): for every NON-TEST, NON-TESTDATA .go file under internal/ and cmd/hotam/, no function body may contain BOTH a home-directory reference (os.UserHomeDir(), os.Getenv(\"HOME\"), os.Getenv(\"USERPROFILE\"), or a string literal starting with \"~/\") AND a filesystem-write sink (os.WriteFile/Create/Mkdir/MkdirAll/Remove/RemoveAll/Rename/Symlink/Chmod); the conjunction within one *ast.FuncDecl body is the hit (same-function co-location, the scope within which a computed home path can flow into a write -- matches the spirit of the original Python scanner). os.OpenFile is deliberately excluded (read-or-write; the explicit write primitives cover the unambiguous case); os/user.Current().HomeDir is out of scope today (this repo imports neither, and would only matter under the same conjunction). The framework tree currently has ZERO home-directory references (verified 2026-07-13), so the scan is green today and fails RED the moment a committed function computes a home path next to a write sink. Refines R-work-within-launch-dir (the broad launch-dir principle, whose live-conduct residual carries the genuinely-unobservable half).",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "TestLaunchDirWriteScope_NoHomeWriteColocation"
+  ],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-work-within-launch-dir"
+    }
+  ],
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-01-13",
+  "evidence": [
+    "internal/selfcheck/launch_dir_scope_test.go::TestLaunchDirWriteScope_NoHomeWriteColocation (green on real repo: zero home-dir references in committed source)",
+    "internal/selfcheck/launch_dir_scope_test.go::TestLaunchDirWriteScope_DetectsColocation (non-vacuity control: synthetic co-location is flagged, lone home-ref and lone write-sink are not)"
+  ]
+}

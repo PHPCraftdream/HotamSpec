@@ -260,6 +260,7 @@
     "R-claude-md-template-driven",
     "R-claude-md-tree-of-crystals",
     "R-commit-boundary-checkable",
+    "R-committed-code-no-home-writes",
     "R-conflict-addressing-resolves-variables",
     "R-conflict-held-state",
     "R-conflict-is-connector-node",
@@ -537,6 +538,26 @@
       ],
       "status": "SETTLED",
       "why": "The centerpiece. Generalizes dev-coin's 'drift is structurally impossible' to 'being lost is structurally impossible'. `hotam what-now` (internal/diagnose) composes the named REFLECTION predicates in priority order and derives the prioritized next action from any graph state, so an agent is never forced to guess."
+    },
+    {
+      "assumptions": [],
+      "claim": "Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home.",
+      "enforced_by": [
+        "TestLaunchDirWriteScope_NoHomeWriteColocation"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [
+        "internal/selfcheck/launch_dir_scope_test.go::TestLaunchDirWriteScope_NoHomeWriteColocation (green on real repo: zero home-dir references in committed source)",
+        "internal/selfcheck/launch_dir_scope_test.go::TestLaunchDirWriteScope_DetectsColocation (non-vacuity control: synthetic co-location is flagged, lone home-ref and lone write-sink are not)"
+      ],
+      "history": [],
+      "id": "R-committed-code-no-home-writes",
+      "last_reviewed_at": "2026-07-13",
+      "owner": "framework-author",
+      "review_after": "2027-01-13",
+      "source_refs": [],
+      "status": "SETTLED",
+      "why": "SPLIT from R-work-within-launch-dir 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): the original 'operator shall confine all file mutations to its launch directory' claim bundled two genuinely different things -- (1) committed framework CODE that writes into the host home (statically, mechanically checkable: an AST scanner over committed source), and (2) a live agent shelling out at RUNTIME through bash/tool-calls to touch the home dir (not statically checkable -- discipline of prose). This atom is the structural/mechanically-checkable half (1); the residual live-conduct half (2) stays at R-work-within-launch-dir (now INHERENTLY_PROSE, same category as R-agent-conduct-is-rules-not-tests). The original enforcement was a Python AST scanner (tests/test_launch_dir_write_scope.py, ENFORCED 2026-07-10) that was NOT carried forward into the Go port (reverted to PROSE 2026-07-12); this atom re-ports that scanner to Go. Steward verdict 2026-07-05 stands verbatim (from the original why): the framework is a guest in the host's home -- it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. Trigger for the original rule: the operator once proposed setup_context_hook.py --patch-global --apply, which patched the global host configuration (a host-sovereignty violation that a host update overwrites anyway). EXACT MECHANICAL RULE (enforced by TestLaunchDirWriteScope_NoHomeWriteColocation in internal/selfcheck/launch_dir_scope_test.go): for every NON-TEST, NON-TESTDATA .go file under internal/ and cmd/hotam/, no function body may contain BOTH a home-directory reference (os.UserHomeDir(), os.Getenv(\"HOME\"), os.Getenv(\"USERPROFILE\"), or a string literal starting with \"~/\") AND a filesystem-write sink (os.WriteFile/Create/Mkdir/MkdirAll/Remove/RemoveAll/Rename/Symlink/Chmod); the conjunction within one *ast.FuncDecl body is the hit (same-function co-location, the scope within which a computed home path can flow into a write -- matches the spirit of the original Python scanner). os.OpenFile is deliberately excluded (read-or-write; the explicit write primitives cover the unambiguous case); os/user.Current().HomeDir is out of scope today (this repo imports neither, and would only matter under the same conjunction). The framework tree currently has ZERO home-directory references (verified 2026-07-13), so the scan is green today and fails RED the moment a committed function computes a home path next to a write sink. Refines R-work-within-launch-dir (the broad launch-dir principle, whose live-conduct residual carries the genuinely-unobservable half)."
     },
     {
       "assumptions": [],
@@ -9566,7 +9587,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness and the global configuration -- unless the user explicitly requests otherwise.",
+      "claim": "A live operator, executing at runtime through shell commands or tool calls, shall confine all file mutations to its launch working directory -- never touching the host harness or global configuration unless the user explicitly requests otherwise; this live-conduct discipline is not statically checkable (no committed-code test can observe a runtime shell-out) and is enforced as honest PROSE.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -9595,6 +9616,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он �…→Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он �…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "claim: The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness and …→A live operator, executing at runtime through shell commands or tool calls, shall confine all file mutations to its launch working directory -- never…; why: Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он �…→SPLIT 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): this requirement was split …; enforceability: ENFORCEABLE→INHERENTLY_PROSE"
         }
       ],
       "id": "R-work-within-launch-dir",
@@ -9603,7 +9629,7 @@
       "review_after": "2027-02-12",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросит иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global host configuration to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a host update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. The codebase is internal/ + cmd/hotam/ (compiled Go); the tools that motivated the original incident (setup_context_hook.py, setup_hooks.py, _claude_settings.py -- all of which wrote into a consumer repo's .claude/ or, in the incident, the global config) are Planned (not Implemented) in methodology.Tools (internal/methodology/tools_data.go), so the committed-code write vector that actually fired does not exist today. (Historical note: the original ENFORCED mechanism was tests/test_launch_dir_write_scope.py, an AST scanner over every committed framework .py for a home-rooted path reference (Path.home() / os.path.expanduser('~...') / a literal starting with '~/') co-located with a filesystem-write sink (open(...,'w'/'a'/'x'), write_text/write_bytes/mkdir/touch/rmtree/unlink/replace/rename/symlink_to/chmod/makedirs/remove/copy*/move) that failed RED on any hit; that scanner was not carried forward, so no equivalent test AST-scans internal/ + cmd/hotam/ for os.UserHomeDir / home-path writes.) FOUND ISSUE (not fixed): this requirement was ENFORCED in the original era via the AST scanner; that scanner was never carried forward and the enforcement was downgraded to PROSE. The rule's residual half (a live agent shelling out through bash at runtime to touch the home dir) always was and remains discipline-of-prose (R-agent-conduct-is-rules-not-tests). The enforcement/enforced_by are out of scope for this content batch; documented as debt rather than reworded into a lie. The original WHY stands: the framework works strictly within its launch directory until the user asks otherwise."
+      "why": "SPLIT 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): this requirement was split into two atoms because its single claim bundled two genuinely different things -- (1) committed framework CODE writing into the host home (statically, mechanically checkable) and (2) a live agent shelling out at RUNTIME to touch the home dir (not statically checkable). The structural/code half is now its own ENFORCED atom R-committed-code-no-home-writes (refines this one), enforced by a Go AST scanner (TestLaunchDirWriteScope_NoHomeWriteColocation in internal/selfcheck/launch_dir_scope_test.go) re-ported from the original Python test_launch_dir_write_scope.py. THIS atom keeps the residual live-agent-runtime-conduct half (2): an operator shelling out through bash/tool-calls at runtime and touching the home directory is not statically observable -- no committed-code test can see it -- so it is honest discipline-of-prose, the same category as R-agent-conduct-is-rules-not-tests, which it now mirrors (enforceability ENFORCEABLE -> INHERENTLY_PROSE, since the live-conduct half is the highest abstraction that code cannot verify). Steward verdict 2026-07-05 stands verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросит иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global host configuration -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a host update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. History: this ID was briefly ENFORCED 2026-07-10 via the Python AST scanner, reverted to PROSE 2026-07-12 when that scanner was not carried forward; the 2026-07-13 split moves the mechanically-checkable half to R-committed-code-no-home-writes (ENFORCED) and keeps the genuinely-unobservable live-conduct half here as INHERENTLY_PROSE -- more honest than a blanket INHERENTLY_PROSE on the original bundled claim (which would have been a regression from its ENFORCED state 3 days earlier), per decision brief section 6."
     },
     {
       "assumptions": [

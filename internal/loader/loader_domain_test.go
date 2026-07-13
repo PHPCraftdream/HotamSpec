@@ -23,7 +23,7 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		{"axes", len(g.Axes), 9},
 		{"stakeholders", len(g.Stakeholders), 4},
 		{"assumptions", len(g.Assumptions), 16},
-		{"requirements", len(g.Requirements), 280},
+		{"requirements", len(g.Requirements), 281},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
