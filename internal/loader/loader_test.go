@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -318,5 +319,114 @@ func TestSortedCopy_PreservesInput(t *testing.T) {
 	}
 	if out[0].ID != "R-1" || out[1].ID != "R-2" || out[2].ID != "R-3" {
 		t.Errorf("sortedCopy wrong order: %v", []string{out[0].ID, out[1].ID, out[2].ID})
+	}
+}
+
+// TestLoadGraph_NoSchemaVersion_BackwardCompat verifies that a graph.json with
+// NO schema_version field (today's two committed domain graphs before backfill,
+// and any synthetic fixture that omits it) loads successfully — the loader
+// defaults a missing/zero version to CurrentSchemaVersion for backward
+// compatibility rather than rejecting it.
+func TestLoadGraph_NoSchemaVersion_BackwardCompat(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	out := filepath.Join(dir, "graph.json")
+	noVersion := `{"axes": [{"slug": "ax-1", "description": "d", "decl_order": 0}]}` + "\n"
+	if err := os.WriteFile(out, []byte(noVersion), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	g, err := LoadGraph(out)
+	if err != nil {
+		t.Fatalf("LoadGraph without schema_version must succeed (backward compat): %v", err)
+	}
+	if g.SchemaVersion != ontology.CurrentSchemaVersion {
+		t.Errorf("SchemaVersion: got %d, want %d (CurrentSchemaVersion)", g.SchemaVersion, ontology.CurrentSchemaVersion)
+	}
+	if len(g.Axes) != 1 || g.Axes[0].Slug != "ax-1" {
+		t.Errorf("expected one axis ax-1, got %+v", g.Axes)
+	}
+}
+
+// TestLoadGraph_CurrentSchemaVersion_RoundTrip verifies that a graph.json
+// carrying the current schema_version loads, and that WriteGraph→LoadGraph
+// preserves the version through a full round-trip.
+func TestLoadGraph_CurrentSchemaVersion_RoundTrip(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "graph.json")
+	cv := ontology.CurrentSchemaVersion
+	withVersion := `{"schema_version": ` + strconv.Itoa(cv) + `, "axes": [{"slug": "ax-1", "description": "d", "decl_order": 0}]}` + "\n"
+	if err := os.WriteFile(src, []byte(withVersion), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	g1, err := LoadGraph(src)
+	if err != nil {
+		t.Fatalf("LoadGraph with current schema_version: %v", err)
+	}
+	if g1.SchemaVersion != cv {
+		t.Fatalf("SchemaVersion: got %d, want %d", g1.SchemaVersion, cv)
+	}
+	// Round-trip through WriteGraph → LoadGraph.
+	rt := filepath.Join(dir, "rt", "graph.json")
+	if err := WriteGraph(rt, g1); err != nil {
+		t.Fatalf("WriteGraph: %v", err)
+	}
+	g2, err := LoadGraph(rt)
+	if err != nil {
+		t.Fatalf("LoadGraph round-trip: %v", err)
+	}
+	if g2.SchemaVersion != cv {
+		t.Errorf("round-trip SchemaVersion: got %d, want %d", g2.SchemaVersion, cv)
+	}
+}
+
+// TestLoadGraph_NewerSchemaVersion_ClearError is the regression guard for the
+// forward-compatibility concern: a graph.json whose schema_version is NEWER
+// than the binary supports must produce a clear, actionable error naming the
+// version gap — not an opaque "json: unknown field" decode failure.
+func TestLoadGraph_NewerSchemaVersion_ClearError(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	out := filepath.Join(dir, "graph.json")
+	future := ontology.CurrentSchemaVersion + 5
+	futureJSON := `{"schema_version": ` + strconv.Itoa(future) + `, "future_field": []}` + "\n"
+	if err := os.WriteFile(out, []byte(futureJSON), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	_, err := LoadGraph(out)
+	if err == nil {
+		t.Fatalf("LoadGraph: expected error for newer schema_version, got nil")
+	}
+	if !strings.Contains(err.Error(), "newer than this hotam binary supports") {
+		t.Errorf("error must explain the version gap, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "upgrade hotam") {
+		t.Errorf("error must suggest upgrading hotam, got: %v", err)
+	}
+	// Must NOT surface as the opaque unknown-field error from DisallowUnknownFields.
+	if strings.Contains(err.Error(), "unknown field") {
+		t.Errorf("error must not be opaque 'unknown field' for a newer version, got: %v", err)
+	}
+}
+
+// TestLoadGraph_UnknownFieldOnCurrentVersion_StillCaught verifies that adding
+// schema_version tolerance did NOT weaken DisallowUnknownFields for the CURRENT
+// version — a genuinely unrecognized field (a typo, not a newer version) on a
+// current-version graph is still rejected with a message naming the bad key.
+func TestLoadGraph_UnknownFieldOnCurrentVersion_StillCaught(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	out := filepath.Join(dir, "graph.json")
+	cv := ontology.CurrentSchemaVersion
+	bad := `{"schema_version": ` + strconv.Itoa(cv) + `, "axes": [], "bogus_key": 42}` + "\n"
+	if err := os.WriteFile(out, []byte(bad), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	_, err := LoadGraph(out)
+	if err == nil {
+		t.Fatalf("LoadGraph: expected error for unknown field on current version, got nil")
+	}
+	if !strings.Contains(err.Error(), "bogus_key") && !strings.Contains(err.Error(), "unknown") {
+		t.Errorf("error must name the unknown key, got: %v", err)
 	}
 }

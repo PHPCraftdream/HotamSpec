@@ -89,6 +89,7 @@ func BuildGraphJSON(g *ontology.Graph) (string, error) {
 	payload := map[string]any{
 		"generated_from": "domains/<active>/graph.json",
 		"note":           "READ-ONLY generated snapshot. Source of truth is the domain's graph.json; edit the graph only via `hotam apply-proposal` (R-no-hand-edit-graph, R-per-node-json-store REJECTED).",
+		"schema_version": ontology.CurrentSchemaVersion,
 		"requirements":   reqMaps,
 		"conflicts":      conflictMaps,
 		"assumptions":    assumptionMaps,

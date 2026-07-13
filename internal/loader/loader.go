@@ -12,16 +12,17 @@ import (
 )
 
 type graphDTO struct {
-	Axes         []ontology.Axis           `json:"axes"`
-	Stakeholders []ontology.Stakeholder    `json:"stakeholders"`
-	Assumptions  []ontology.Assumption     `json:"assumptions"`
-	Requirements []ontology.Requirement    `json:"requirements"`
-	Conflicts    []ontology.Conflict       `json:"conflicts"`
-	Operators    []ontology.Operator       `json:"operators"`
-	Processes    []ontology.Process        `json:"processes"`
-	Goals        []ontology.Goal           `json:"goals"`
-	EntityTypes  []ontology.EntityType     `json:"entity_types"`
-	Entities     []ontology.EntityInstance `json:"entities"`
+	SchemaVersion int                       `json:"schema_version"`
+	Axes          []ontology.Axis           `json:"axes"`
+	Stakeholders  []ontology.Stakeholder    `json:"stakeholders"`
+	Assumptions   []ontology.Assumption     `json:"assumptions"`
+	Requirements  []ontology.Requirement    `json:"requirements"`
+	Conflicts     []ontology.Conflict       `json:"conflicts"`
+	Operators     []ontology.Operator       `json:"operators"`
+	Processes     []ontology.Process        `json:"processes"`
+	Goals         []ontology.Goal           `json:"goals"`
+	EntityTypes   []ontology.EntityType     `json:"entity_types"`
+	Entities      []ontology.EntityInstance `json:"entities"`
 }
 
 func LoadGraph(path string) (*ontology.Graph, error) {
@@ -29,6 +30,38 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load graph: read %s: %w", path, err)
 	}
+
+	// Version probe: decode just schema_version with a lenient decoder (no
+	// DisallowUnknownFields) so a genuinely newer format is reported with a
+	// clear, actionable error instead of the opaque "json: unknown field"
+	// that the strict decoder below would emit for the new top-level fields a
+	// future version would carry.
+	var probe struct {
+		SchemaVersion int `json:"schema_version"`
+	}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return nil, fmt.Errorf("load graph: decode %s: %w", path, err)
+	}
+	sv := probe.SchemaVersion
+	if sv == 0 {
+		// Missing/zero schema_version → treat as the current version for
+		// backward compatibility with pre-version graph.json files.
+		sv = ontology.CurrentSchemaVersion
+	}
+	switch sv {
+	case ontology.CurrentSchemaVersion:
+		// today's format — proceed to the strict decode below.
+	default:
+		if sv > ontology.CurrentSchemaVersion {
+			return nil, fmt.Errorf(
+				"load graph: %s: schema_version %d is newer than this hotam binary supports (max %d) — upgrade hotam or downgrade the graph",
+				path, sv, ontology.CurrentSchemaVersion)
+		}
+		// sv < CurrentSchemaVersion: no older versions exist yet (this is v1).
+		// When a future bump introduces a real older version, add a migration
+		// case here before falling through to the strict decode.
+	}
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 	var dto graphDTO
@@ -36,18 +69,19 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		return nil, fmt.Errorf("load graph: decode %s: %w", path, err)
 	}
 	g := &ontology.Graph{
-		Axes:         dto.Axes,
-		Stakeholders: dto.Stakeholders,
-		Assumptions:  dto.Assumptions,
-		Requirements: dto.Requirements,
-		Conflicts:    dto.Conflicts,
-		Operators:    dto.Operators,
-		Processes:    dto.Processes,
-		Goals:        dto.Goals,
-		EntityTypes:  dto.EntityTypes,
-		Entities:     dto.Entities,
-		SelfHosting:  resolveSelfHosting(path),
-		DomainDir:    filepath.Dir(path),
+		SchemaVersion: ontology.CurrentSchemaVersion,
+		Axes:          dto.Axes,
+		Stakeholders:  dto.Stakeholders,
+		Assumptions:   dto.Assumptions,
+		Requirements:  dto.Requirements,
+		Conflicts:     dto.Conflicts,
+		Operators:     dto.Operators,
+		Processes:     dto.Processes,
+		Goals:         dto.Goals,
+		EntityTypes:   dto.EntityTypes,
+		Entities:      dto.Entities,
+		SelfHosting:   resolveSelfHosting(path),
+		DomainDir:     filepath.Dir(path),
 	}
 	if err := validateGraph(g); err != nil {
 		return nil, fmt.Errorf("load graph: %s: %w", path, err)
@@ -74,16 +108,17 @@ func WriteGraph(path string, g *ontology.Graph) error {
 
 func marshalCanonical(g *ontology.Graph) ([]byte, error) {
 	dto := graphDTO{
-		Axes:         sortedCopy(g.Axes, func(a ontology.Axis) string { return a.Slug }),
-		Stakeholders: sortedCopy(g.Stakeholders, func(s ontology.Stakeholder) string { return s.ID }),
-		Assumptions:  sortedCopy(g.Assumptions, func(a ontology.Assumption) string { return a.ID }),
-		Requirements: sortedCopy(g.Requirements, func(r ontology.Requirement) string { return r.ID }),
-		Conflicts:    sortedCopy(g.Conflicts, func(c ontology.Conflict) string { return c.ID }),
-		Operators:    sortedCopy(g.Operators, func(o ontology.Operator) string { return o.ID }),
-		Processes:    sortedCopy(g.Processes, func(p ontology.Process) string { return p.ID }),
-		Goals:        sortedCopy(g.Goals, func(gl ontology.Goal) string { return gl.ID }),
-		EntityTypes:  sortedCopy(g.EntityTypes, func(et ontology.EntityType) string { return et.Slug }),
-		Entities:     sortedCopy(g.Entities, func(e ontology.EntityInstance) string { return e.ID }),
+		SchemaVersion: ontology.CurrentSchemaVersion,
+		Axes:          sortedCopy(g.Axes, func(a ontology.Axis) string { return a.Slug }),
+		Stakeholders:  sortedCopy(g.Stakeholders, func(s ontology.Stakeholder) string { return s.ID }),
+		Assumptions:   sortedCopy(g.Assumptions, func(a ontology.Assumption) string { return a.ID }),
+		Requirements:  sortedCopy(g.Requirements, func(r ontology.Requirement) string { return r.ID }),
+		Conflicts:     sortedCopy(g.Conflicts, func(c ontology.Conflict) string { return c.ID }),
+		Operators:     sortedCopy(g.Operators, func(o ontology.Operator) string { return o.ID }),
+		Processes:     sortedCopy(g.Processes, func(p ontology.Process) string { return p.ID }),
+		Goals:         sortedCopy(g.Goals, func(gl ontology.Goal) string { return gl.ID }),
+		EntityTypes:   sortedCopy(g.EntityTypes, func(et ontology.EntityType) string { return et.Slug }),
+		Entities:      sortedCopy(g.Entities, func(e ontology.EntityInstance) string { return e.ID }),
 	}
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)

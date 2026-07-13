@@ -1,17 +1,36 @@
 package ontology
 
+// CurrentSchemaVersion is the schema_version written into every graph.json by
+// the loader's canonical writer (loader.marshalCanonical / WriteGraph) and the
+// maximum version the loader accepts. graph.json is a single-repo internal
+// format — a plain integer, not semver.
+//
+// Bump this ONLY for a STRUCTURAL format change (a new top-level field, a
+// changed field shape) that requires a real migration step. When you bump it:
+//  1. Add a migration case to the version switch in loader.LoadGraph.
+//  2. Update any byte-identity / round-trip fixtures that hardcode the old
+//     byte layout.
+//
+// Do NOT bump for content changes to domain graphs — only for format changes.
+const CurrentSchemaVersion = 1
+
 type Graph struct {
-	Axes         []Axis           `json:"axes"`
-	Stakeholders []Stakeholder    `json:"stakeholders"`
-	Assumptions  []Assumption     `json:"assumptions"`
-	Requirements []Requirement    `json:"requirements"`
-	Conflicts    []Conflict       `json:"conflicts"`
-	Operators    []Operator       `json:"operators"`
-	Processes    []Process        `json:"processes"`
-	Goals        []Goal           `json:"goals"`
-	EntityTypes  []EntityType     `json:"entity_types"`
-	Entities     []EntityInstance `json:"entities"`
-	SelfHosting  bool             `json:"self_hosting"`
+	// SchemaVersion is the graph.json format version this graph was written
+	// with. Populated by the loader (LoadGraph) and stamped by the writer
+	// (marshalCanonical); always CurrentSchemaVersion on round-trip. Serialized
+	// as json:"schema_version" so it round-trips through graph.json.
+	SchemaVersion int              `json:"schema_version"`
+	Axes          []Axis           `json:"axes"`
+	Stakeholders  []Stakeholder    `json:"stakeholders"`
+	Assumptions   []Assumption     `json:"assumptions"`
+	Requirements  []Requirement    `json:"requirements"`
+	Conflicts     []Conflict       `json:"conflicts"`
+	Operators     []Operator       `json:"operators"`
+	Processes     []Process        `json:"processes"`
+	Goals         []Goal           `json:"goals"`
+	EntityTypes   []EntityType     `json:"entity_types"`
+	Entities      []EntityInstance `json:"entities"`
+	SelfHosting   bool             `json:"self_hosting"`
 	// DomainDir is the filesystem path of the domain directory this graph was
 	// loaded from (the resolved --domain path, i.e. the parent dir of
 	// graph.json). Populated by the loader at LoadGraph time; deliberately

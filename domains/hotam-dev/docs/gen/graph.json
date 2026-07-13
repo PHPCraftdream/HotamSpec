@@ -326,6 +326,7 @@
       "why": "This atom reflects, inside the hotam-dev domain, the self-practice crystallized by the framework atom R-parallel-mutating-agents-use-worktree (hotam-spec-self): after the 2026-06-30/07-01 incident where two parallel agents in one shared tree lost work to a history-rewrite, the pipeline adopted per-agent worktree isolation (isolation:'worktree') as the sanctioned way to run mutating agents concurrently. It is honestly modeled here as a hotam-dev requirement (not a cross-domain reference) because a Conflict's members must be co-domain: it lets the sequential-vs-isolated-parallel tension between overlapping-scope waves (R-wave-strictly-sequential) and isolated parallelism be modeled as a first-class Conflict node in the domain that actually runs the pipeline. Enforcement is PROSE: whether an agent ACTUALLY runs in a worktree is operator discipline, not mechanically provable from this graph."
     }
   ],
+  "schema_version": 1,
   "stakeholders": [
     {
       "domain": "reviews and approves waves/commits; sole authority to request a push",

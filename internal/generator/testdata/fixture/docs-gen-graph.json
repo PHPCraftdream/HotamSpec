@@ -234,6 +234,7 @@
       "why": "Coverage needs the REJECTED branch — replaced by R-fixture-settled-prose (anti-relitigation)."
     }
   ],
+  "schema_version": 1,
   "stakeholders": [
     {
       "domain": "fixture-domain",
