@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -293,42 +294,215 @@ func TestRenderOperatorRecursionBlock_DefaultDomain(t *testing.T) {
 
 // --- pure helpers ---
 
-func TestRuneTruncate(t *testing.T) {
+// TestShortForm_SummaryPriority enforces the summary-priority half of
+// R-crystal-carries-short-form: when a non-empty summary is supplied it is
+// returned verbatim (trimmed), regardless of the text — the explicit summary
+// is the meaningful short form, never a truncation of the text.
+func TestShortForm_SummaryPriority(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		in           string
-		keep         int
-		keepEllipsis string // "..."-suffixed expected when truncation occurs
-		truncated    bool
+		name    string
+		text    string
+		summary string
+		want    string
 	}{
-		{"short", 100, "", false},           // well under threshold → unchanged
-		{"abcdefghij", 5, "abcde...", true}, // ASCII truncation
-		{"aaaaaaaaaaaa", 5, "aaaaa...", true},
+		{"summary wins over long text", strings.Repeat("x", 300), "the short version", "the short version"},
+		{"summary wins over multi-sentence text", "First sentence. Second sentence.", "use this instead", "use this instead"},
+		{"summary is trimmed", "ignored", "  trimmed summary  ", "trimmed summary"},
+		{"empty text with summary", "", "summary only", "summary only"},
 	}
 	for _, c := range cases {
-		got := runeTruncate(c.in, c.keep)
-		if c.truncated {
-			// runeTruncate appends "..." only when len(runes) > keep; build expectation
-			want := string([]rune(c.in)[:c.keep]) + "..."
-			if got != want {
-				t.Errorf("runeTruncate(%q,%d) = %q, want %q", c.in, c.keep, got, want)
-			}
-		} else {
-			if got != c.in {
-				t.Errorf("runeTruncate(%q,%d) = %q, want unchanged", c.in, c.keep, got)
-			}
+		if got := shortForm(c.text, c.summary); got != c.want {
+			t.Errorf("%s: shortForm(%q, %q) = %q, want %q", c.name, c.text, c.summary, got, c.want)
 		}
 	}
-	// Cyrillic must be truncated by rune count, not byte count
-	cyr := strings.Repeat("я", 200)
-	got := runeTruncate(cyr, 137)
-	if !strings.HasSuffix(got, "...") {
-		t.Errorf("long Cyrillic string should be truncated with ellipsis")
+	// empty summary must NOT short-circuit: it falls through to firstWholeSentence.
+	if got := shortForm("Only sentence.", ""); got != "Only sentence." {
+		t.Errorf("empty summary should fall through to first-whole-sentence, got %q", got)
 	}
-	// the kept prefix length in runes must be exactly 137
-	kept := []rune(strings.TrimSuffix(got, "..."))
-	if len(kept) != 137 {
-		t.Errorf("runeTruncate kept %d runes, want 137 (must be rune-aware not byte-aware)", len(kept))
+}
+
+// TestFirstWholeSentence_SentenceBoundary enforces the first-whole-sentence
+// fallback half of R-crystal-carries-short-form: text without a summary is
+// reduced to its leading whole sentence, splitting on '.', '!', or '?'
+// followed by whitespace or end-of-string — never a hard rune cutoff mid-word.
+func TestFirstWholeSentence_SentenceBoundary(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			"two sentences, period+space boundary",
+			"First whole sentence here. Second sentence follows.",
+			"First whole sentence here.",
+		},
+		{"single sentence ending text", "Only one sentence.", "Only one sentence."},
+		{"exclamation boundary", "Stop! Do more.", "Stop!"},
+		{"question boundary", "Is this real? Yes.", "Is this real?"},
+		{
+			"no terminator returns whole text",
+			"no sentence terminator at all in this string",
+			"no sentence terminator at all in this string",
+		},
+		{
+			"period not followed by whitespace is not a boundary (decimal)",
+			"value is 3.14 exactly",
+			"value is 3.14 exactly",
+		},
+		{
+			"trailing period at end of string is a boundary",
+			"ends with a period.",
+			"ends with a period.",
+		},
+		{"empty string", "   ", ""},
+		{"leading whitespace trimmed", "   Trimmed first. Second.", "Trimmed first."},
+	}
+	for _, c := range cases {
+		if got := firstWholeSentence(c.in); got != c.want {
+			t.Errorf("%s: firstWholeSentence(%q) = %q, want %q", c.name, c.in, got, c.want)
+		}
+	}
+}
+
+// TestShortForm_NoMidWordEllipsis enforces the core prohibition of
+// R-crystal-carries-short-form: a realistic long imperative message must NOT
+// produce a mid-word "..." stub in the rendered short form. The fixture graph's
+// real top message ends in "See docs/gen/UNENFORCED.md." which the old
+// runeTrunate reduced to the mid-word stub "See doc..."; shortForm must instead
+// yield a whole-sentence short form with no "..." suffix.
+func TestShortForm_NoMidWordEllipsis(t *testing.T) {
+	t.Parallel()
+	long := "REFLECTION on enforcement-gradient — 42 SETTLED requirements are " +
+		"closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not " +
+		"guaranteed, soft context-debt. See docs/gen/UNENFORCED.md."
+	got := shortForm(long, "")
+	if strings.HasSuffix(got, "...") {
+		t.Errorf("short form must not end with a mid-word '...' stub, got %q", got)
+	}
+	if !strings.HasSuffix(got, ".") {
+		t.Errorf("short form should end at a whole-sentence terminator, got %q", got)
+	}
+	// the second sentence ("See docs/...") must NOT leak — only the first
+	// whole sentence is the short form.
+	if strings.Contains(got, "See docs") {
+		t.Errorf("short form should be the first whole sentence only, but includes the second: %q", got)
+	}
+	want := "REFLECTION on enforcement-gradient — 42 SETTLED requirements are " +
+		"closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not " +
+		"guaranteed, soft context-debt."
+	if got != want {
+		t.Errorf("shortForm(long,\"\") = %q, want %q", got, want)
+	}
+}
+
+// TestSummaryForTarget enforces the Requirement-lookup helper that wires
+// summary-priority into domainPulse (R-crystal-carries-short-form): a target
+// equal to a Requirement ID returns that requirement's Summary; any other
+// target (an axis label, an assumption ID, a composite) returns "" so the
+// caller falls back to the first-whole-sentence short form.
+func TestSummaryForTarget(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-real-one", Summary: "the explicit summary"},
+			{ID: "R-empty-summary", Summary: ""},
+		},
+	}
+	if got := summaryForTarget(g, "R-real-one"); got != "the explicit summary" {
+		t.Errorf("summaryForTarget resolving hit = %q, want %q", got, "the explicit summary")
+	}
+	if got := summaryForTarget(g, "R-empty-summary"); got != "" {
+		t.Errorf("summaryForTarget on a Requirement with empty Summary = %q, want \"\" (fall through)", got)
+	}
+	if got := summaryForTarget(g, "enforcement-gradient"); got != "" {
+		t.Errorf("summaryForTarget on a non-Requirement label = %q, want \"\"", got)
+	}
+	if got := summaryForTarget(g, ""); got != "" {
+		t.Errorf("summaryForTarget on empty target = %q, want \"\"", got)
+	}
+}
+
+// TestDomainPulse_SummaryPreferredWhenTargetResolves enforces the
+// summary-priority wiring inside domainPulse (R-crystal-carries-short-form):
+// when the TOP signal's Target resolves to a Requirement carrying a non-empty
+// Summary, the pulse line carries that summary rather than a sentence of the
+// message. Built from a synthetic graph that deterministically yields a P0
+// signal whose Target is a Requirement ID (ReflectDeadAssumptionOnEnforcer:
+// an ENFORCED requirement resting on a DEAD assumption), so summary-priority is
+// the reachable path — not a fixture-dependent guess.
+func TestDomainPulse_SummaryPreferredWhenTargetResolves(t *testing.T) {
+	t.Parallel()
+	today := "2026-07-13"
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{{
+			ID:          "R-enforced-target",
+			Status:      ontology.StatusSETTLED,
+			Enforcement: ontology.EnforcementENFORCED,
+			Assumptions: []string{"A-dead-one"},
+			Summary:     "INJECTED_SUMMARY_MARKER",
+		}},
+		Assumptions: []ontology.Assumption{{
+			ID:     "A-dead-one",
+			Status: ontology.AssumptionDEAD,
+		}},
+	}
+	signals := diagnose.DiagnoseSignals(g, today)
+	if len(signals) == 0 {
+		t.Fatal("synthetic graph should yield at least one signal")
+	}
+	if signals[0].Target != "R-enforced-target" {
+		t.Fatalf("test setup invariant: top signal target = %q, want R-enforced-target", signals[0].Target)
+	}
+	_, line := domainPulse(g, today)
+	if !strings.Contains(line, "INJECTED_SUMMARY_MARKER") {
+		t.Errorf("domainPulse should prefer the resolved Requirement's Summary, got: %s", line)
+	}
+	if strings.Contains(line, "...") {
+		t.Errorf("domainPulse must never emit mid-word '...', got: %s", line)
+	}
+}
+
+// TestDomainPulse_LongMessageUsesFirstSentence enforces the fallback path of
+// domainPulse (R-crystal-carries-short-form): a top signal whose Target does
+// NOT resolve to a Requirement (a reflection axis label) is rendered as the
+// first whole sentence of its message, never a mid-word truncation. Built from
+// a synthetic graph with >5 closeable-debt requirements so
+// ReflectUnenforcedSettled fires its two-sentence message (ending
+// "See docs/gen/UNENFORCED.md.") whose old runeTruncate form produced the
+// mid-word stub "See doc...".
+func TestDomainPulse_LongMessageUsesFirstSentence(t *testing.T) {
+	t.Parallel()
+	today := "2026-07-13"
+	reqs := make([]ontology.Requirement, 0, 6)
+	for i := 0; i < 6; i++ {
+		reqs = append(reqs, ontology.Requirement{
+			ID:             fmt.Sprintf("R-debt-%d", i),
+			Status:         ontology.StatusSETTLED,
+			Enforcement:    ontology.EnforcementSTRUCTURAL,
+			Enforceability: ontology.EnforceabilityENFORCEABLE,
+		})
+	}
+	g := &ontology.Graph{Requirements: reqs}
+	signals := diagnose.DiagnoseSignals(g, today)
+	if len(signals) == 0 {
+		t.Fatal("synthetic graph should yield at least one signal")
+	}
+	if signals[0].Target != "enforcement-gradient" {
+		t.Fatalf("test setup invariant: top signal target = %q, want enforcement-gradient", signals[0].Target)
+	}
+	_, line := domainPulse(g, today)
+	if strings.Contains(line, "...") {
+		t.Errorf("domainPulse must never emit mid-word '...', got: %s", line)
+	}
+	// the second sentence ("See docs/gen/UNENFORCED.md.") must be dropped at
+	// the first whole-sentence boundary, not leaked/truncated mid-word.
+	if strings.Contains(line, "See docs") {
+		t.Errorf("short form should be the first whole sentence only, got: %s", line)
+	}
+	if !strings.Contains(line, "soft context-debt.") {
+		t.Errorf("first-whole-sentence short form should carry the first sentence's end, got: %s", line)
 	}
 }
 

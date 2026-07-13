@@ -229,26 +229,72 @@ var knownDomainManifests = map[string]domainManifest{
 	},
 }
 
-// runeTruncate truncates s to at most n runes (never mid-rune), appending
-// "..." when truncation occurred. The cutoff mirrors imperative[:137] +
-// "..." for len(imperative) > 140 — rune-based (not byte-based) because the
-// graph carries Cyrillic text whose codepoint count differs from its byte
-// count.
-func runeTruncate(s string, keep int) string {
-	if utf8.RuneCountInString(s) <= keep+3 {
+// shortForm renders a meaningful short form of text per
+// R-crystal-carries-short-form: it prefers an explicit summary when one is
+// provided, otherwise falls back to the first whole sentence of text. It NEVER
+// mechanically truncates mid-word with an ellipsis — the steward verdict
+// ("All that gets truncated must not be truncated but have a short version")
+// declares mid-word stubs an illusion of knowledge. A sentence boundary is a
+// '.', '!', or '?' followed by whitespace or end-of-string; with no boundary
+// the whole trimmed text is returned.
+func shortForm(text, summary string) string {
+	if s := strings.TrimSpace(summary); s != "" {
 		return s
 	}
-	r := []rune(s)
-	if len(r) <= keep {
-		return s
+	return firstWholeSentence(text)
+}
+
+// firstWholeSentence returns the leading sentence of text: everything up to
+// and including the first sentence terminator ('.', '!', '?') that is
+// followed by whitespace or the end of the string. When no such boundary
+// exists the whole trimmed text is returned unchanged. This replaces the
+// mechanical rune-count truncation (mid-word "..." stubs) that
+// R-crystal-carries-short-form prohibits.
+func firstWholeSentence(text string) string {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return ""
 	}
-	return string(r[:keep]) + "..."
+	runes := []rune(text)
+	for i := 0; i < len(runes); i++ {
+		switch runes[i] {
+		case '.', '!', '?':
+			if i == len(runes)-1 {
+				return text
+			}
+			if next := runes[i+1]; next == ' ' || next == '\t' || next == '\n' || next == '\r' {
+				return string(runes[:i+1])
+			}
+		}
+	}
+	return text
+}
+
+// summaryForTarget returns the Summary of the Requirement whose ID equals
+// target, if one exists in g; otherwise "" (so the caller falls back to the
+// first-whole-sentence short form of the message). A Signal.Target is often a
+// reflection axis or composite label rather than a Requirement ID, so a miss
+// is the normal path and summary-priority applies only when the target
+// resolves to a real Requirement carrying a non-empty Summary.
+func summaryForTarget(g *ontology.Graph, target string) string {
+	if target == "" {
+		return ""
+	}
+	for _, r := range g.Requirements {
+		if r.ID == target {
+			return r.Summary
+		}
+	}
+	return ""
 }
 
 // domainPulse mirrors _domain_pulse: a domain's open-action count plus a
 // one-line rendering of its top-priority action, via the same
 // DiagnoseSignals used for the root LIVE-STATE cipher. Returns (0, "") on a
-// clean graph.
+// clean graph. The top action's message is rendered via shortForm
+// (R-crystal-carries-short-form): summary-priority when the target resolves
+// to a Requirement carrying a Summary, else the first whole sentence — never
+// mechanical mid-word truncation.
 func domainPulse(dg *ontology.Graph, today string) (int, string) {
 	signals := diagnose.DiagnoseSignals(dg, today)
 	if len(signals) == 0 {
@@ -256,9 +302,7 @@ func domainPulse(dg *ontology.Graph, today string) (int, string) {
 	}
 	top := signals[0]
 	imperative := strings.Join(strings.Fields(top.Message), " ")
-	if utf8.RuneCountInString(imperative) > 140 {
-		imperative = runeTruncate(imperative, 137)
-	}
+	imperative = shortForm(imperative, summaryForTarget(dg, top.Target))
 	return len(signals), fmt.Sprintf("[P%d] %s: %s", top.Priority, top.Target, imperative)
 }
 

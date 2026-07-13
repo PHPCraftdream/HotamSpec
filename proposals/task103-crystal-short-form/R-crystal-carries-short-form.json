@@ -1,0 +1,17 @@
+{
+  "kind": "Requirement",
+  "id": "R-crystal-carries-short-form",
+  "claim": "The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestShortForm_SummaryPriority",
+    "TestFirstWholeSentence_SentenceBoundary",
+    "TestShortForm_NoMidWordEllipsis",
+    "TestSummaryForTarget",
+    "TestDomainPulse_SummaryPreferredWhenTargetResolves",
+    "TestDomainPulse_LongMessageUsesFirstSentence"
+  ],
+  "why": "Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions — the exact pattern this requirement prohibits. Implemented (task #103): the generator (internal/generator/claudemd.go) now renders short forms via shortForm(text, summary) — summary-priority (when a top signal's Target resolves to a Requirement carrying a non-empty Summary, that Summary is used), else firstWholeSentence(text), which splits on '.', '!', or '?' followed by whitespace or end-of-string and never cuts mid-word. The one violating call site — domainPulse's DOMAIN-MAP top-action pulse line, whose old runeTruncate form reduced '...See docs/gen/UNENFORCED.md.' to the mid-word stub 'See doc...' — is replaced; runeTruncate itself is deleted as now fully unused (its sole production caller was domainPulse; runeTruncateEllipsis is a separate, retained helper with a different single-'…' purpose). The Requirement.Summary field (internal/ontology/requirement.go) is consulted via summaryForTarget. Scope is deliberately tight: only the crystal-rendering site this requirement governs was converted; cmd/hotam/confront.go's runeTruncatePreview (a CLI diagnostic preview, not crystal rendering) is intentionally untouched. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
+}

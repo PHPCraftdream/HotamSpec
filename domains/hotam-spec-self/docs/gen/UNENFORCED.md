@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 161 / SETTLED 236; closeable debt 42; inherent discipline 33; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 162 / SETTLED 236; closeable debt 41; inherent discipline 33; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -61,7 +61,6 @@ judgment calls no check_* could ever verify.
 | `R-work-within-launch-dir` | PROSE | `framework-author` | The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness and the global configuration -- unless the user explicitly requests otherwise. |
 | `R-enforcement-perimeter-baselines-guarded` | PROSE | `framework-author` | A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool. |
 | `R-enforcement-perimeter-visible` | PROSE | `framework-author` | A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool. |
-| `R-crystal-carries-short-form` | STRUCTURAL | `framework-author` | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
 | `R-run-speed-guarded` | PROSE | `framework-author` | Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline. |
 | `R-delegation-is-a-file` | PROSE | `framework-author` | Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via a dedicated delegate tool), so git carries the who/when/what history of every hand-off. |
 
@@ -264,6 +263,7 @@ judgment calls no check_* could ever verify.
 | `R-proposed-stakeholder-kind-exists` | TestApply_Stakeholder | The proposal protocol shall include a ProposedStakeholder kind (Kind="Stakeholder") that materializes a new Stakeholder node in the active domain's graph by appending to g.Stakeholders, refusing a duplicate id. |
 | `R-assumption-implements-state` | check_assumption_status_valid | An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD. |
 | `R-unmeasured-cipher-names-host-boundary` | TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand | While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call. |
+| `R-crystal-carries-short-form` | TestShortForm_SummaryPriority, TestFirstWholeSentence_SentenceBoundary, TestShortForm_NoMidWordEllipsis, TestSummaryForTarget, TestDomainPulse_SummaryPreferredWhenTargetResolves, TestDomainPulse_LongMessageUsesFirstSentence | The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word. |
 | `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff | A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 | `R-project-root-not-hardcoded` | TestProjectRoot_Priority_NativeMarkerBeatsPyproject | HotamSpec resolves the consumer's project root through a single function, paths.ProjectRoot() (internal/paths/project_root.go), via a documented R1-R6 priority chain, never through a raw runtime.Caller-based parents-climb guess at the consumer's files. |
 | `R-requirement-freshness-fields` | check_requirement_history_wellformed | A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing. |
