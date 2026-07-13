@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"time"
-	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -45,20 +43,27 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	}
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	domainName := domainNameFromDir(domainDir)
-	charCount := 0
-	if claudeMDPath != "" {
-		data, err := os.ReadFile(claudeMDPath)
-		if err != nil {
-			// A first-ever render has no prior CLAUDE.md to measure; this
-			// is expected (used = 0 when no CLAUDE.md exists yet) rather
-			// than erroring — only a genuine I/O failure (permissions, etc.)
-			// is fatal.
-			if !os.IsNotExist(err) {
-				return nil, fmt.Errorf("read --claude-md %s: %w", claudeMDPath, err)
-			}
-		} else {
-			charCount = utf8.RuneCountInString(string(data))
-		}
+
+	// Resident-crystal char count (CRYSTAL_CHARS budget measure,
+	// R-context-budget-rule): a fixpoint computed at generation time, NOT a
+	// read of a stale pre-existing CLAUDE.md. The crystal's LIVE-STATE block
+	// embeds its own rune count, so the measurement must converge
+	// (render→measure→re-render until the embedded number stops changing);
+	// the converged value feeds BOTH the root crystal (CLAUDE.md/AGENTS.md/
+	// GEMINI.md) AND docs/gen/AGENT-CONTEXT.md + live-state.md, which carry
+	// the same LIVE-STATE block via BuildLiveState. The --claude-md flag
+	// below gates only whether the root crystal is written to disk, not
+	// whether the measurement is computed — so a gen-spec run WITHOUT
+	// --claude-md still embeds the correct fixpoint count into AGENT-CONTEXT.md
+	// (closing the former mode-dependent "0 chars" disagreement).
+	repoRoot, err := paths.ProjectRootOrRaise()
+	if err != nil {
+		return nil, fmt.Errorf("resolve project root for crystal char-count fixpoint: %w", err)
+	}
+	domainGraphs := map[string]*ontology.Graph{domainName: g}
+	charCount, err := generator.ComputeCrystalCharCountFixpoint(g, domainName, repoRoot, domainGraphs, today)
+	if err != nil {
+		return nil, err
 	}
 
 	var written []string
@@ -202,20 +207,16 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	}
 	written = append(written, toolPaths...)
 
-	// Root CLAUDE.md (R-claude-md-template-driven): only rendered when
-	// --claude-md points at a path. The reference behavior is an
-	// unconditional root-crystal regen, but this CLI is also used against
-	// non-root domain checkouts / tests where no CLAUDE.md is wanted — the
-	// flag opts in. charCount (read above, from whatever CLAUDE.md already
-	// exists at that path, 0 if absent) feeds the LIVE-STATE CRYSTAL_CHARS
-	// budget line; the freshly rendered file is then written back to the
-	// SAME path.
+	// Root CLAUDE.md (R-claude-md-template-driven): the crystal is WRITTEN
+	// to disk only when --claude-md points at a path — the reference behavior
+	// is an unconditional root-crystal regen, but this CLI is also used
+	// against non-root domain checkouts / tests where no CLAUDE.md is wanted,
+	// so the flag opts in to the write. charCount is the converged fixpoint
+	// computed unconditionally above (against this same render), so the
+	// bytes written here embed the crystal's true self-measurement — not a
+	// stale pre-existing-file size — and two consecutive --claude-md passes
+	// over the same tree now converge byte-for-byte.
 	if claudeMDPath != "" {
-		repoRoot, err := paths.ProjectRootOrRaise()
-		if err != nil {
-			return written, fmt.Errorf("resolve project root for --claude-md: %w", err)
-		}
-		domainGraphs := map[string]*ontology.Graph{domainName: g}
 		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs, today)
 		claudeMDBytes := []byte(claudeMD)
 

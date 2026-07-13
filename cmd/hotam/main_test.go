@@ -207,31 +207,125 @@ func indexOf(haystack, needle string) int {
 	return -1
 }
 
-func TestGenSpec_ClaudeMDRuneCount(t *testing.T) {
+func TestGenSpec_CrystalCharCountIsRenderedFixpoint(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 
-	content := "Hello, 世界!\nThis is a test string."
+	// A bogus, deliberately wrong pre-existing file at the --claude-md path.
+	// Pre-fix, genSpec read THIS file's rune count and embedded it into
+	// LIVE-STATE; this test fails against that bug because the bogus count
+	// cannot equal the rendered crystal's real rune count.
+	bogus := "BOGUS pre-existing crystal content — must be ignored, not measured.\n"
 	claudeMDPath := filepath.Join(t.TempDir(), "CLAUDE.md")
-	if err := os.WriteFile(claudeMDPath, []byte(content), 0o644); err != nil {
-		t.Fatalf("write claude md: %v", err)
+	if err := os.WriteFile(claudeMDPath, []byte(bogus), 0o644); err != nil {
+		t.Fatalf("write bogus claude md: %v", err)
 	}
 
-	_, err := genSpec(domainDir, claudeMDPath, "2026-07-12")
-	if err != nil {
+	if _, err := genSpec(domainDir, claudeMDPath, "2026-07-12"); err != nil {
 		t.Fatalf("genSpec with claude-md: %v", err)
 	}
 
-	liveStatePath := filepath.Join(domainDir, "docs", "gen", "live-state.md")
-	data, err := os.ReadFile(liveStatePath)
+	// The rendered crystal's actual rune count is the fixpoint that must be
+	// embedded everywhere.
+	crystal, err := os.ReadFile(claudeMDPath)
+	if err != nil {
+		t.Fatalf("read rendered CLAUDE.md: %v", err)
+	}
+	crystalRunes := utf8.RuneCountInString(string(crystal))
+	want := fmt.Sprintf("resident crystal %d chars", crystalRunes)
+
+	liveState, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "live-state.md"))
 	if err != nil {
 		t.Fatalf("read live-state.md: %v", err)
 	}
+	if !contains(string(liveState), want) {
+		t.Errorf("live-state.md does not embed the rendered crystal's own rune count %q (the bogus pre-existing file's size must NOT be measured)\nactual content:\n%s", want, string(liveState))
+	}
 
-	expected := utf8.RuneCountInString(content)
-	want := fmt.Sprintf("resident crystal %d chars", expected)
-	if !contains(string(data), want) {
-		t.Errorf("live-state.md does not contain %q\nactual content:\n%s", want, string(data))
+	// AGENT-CONTEXT.md carries the same LIVE-STATE block and must agree with
+	// the root crystal — no mode-dependent "0 chars" disagreement.
+	agentContext, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "AGENT-CONTEXT.md"))
+	if err != nil {
+		t.Fatalf("read AGENT-CONTEXT.md: %v", err)
+	}
+	if !contains(string(agentContext), want) {
+		t.Errorf("AGENT-CONTEXT.md does not embed the same resident-crystal count %q — the two LIVE-STATE carriers must agree\nactual content:\n%s", want, string(agentContext))
+	}
+
+	if crystalRunes == utf8.RuneCountInString(bogus) {
+		t.Errorf("embedded crystal count %d equals the bogus pre-existing file's size — the stale-file read was not removed", crystalRunes)
+	}
+	if crystalRunes == 0 {
+		t.Errorf("embedded crystal count is 0 — the fixpoint measurement was not computed (the former no---claude-md \"0 chars\" bug)")
+	}
+}
+
+// TestGenSpec_CrystalFixpointConvergesAcrossRuns is the convergence proof for
+// the self-referential crystal-size measurement: running genSpec TWICE over
+// the SAME tree (same domain dir, same --claude-md path, same --today) must
+// produce byte-identical output, including the LIVE-STATE "resident crystal N
+// chars" line specifically. Pre-fix, genSpec read the size of the
+// PRE-EXISTING CLAUDE.md (written by the previous run) BEFORE regenerating, so
+// pass 2 embedded pass 1's file size into a differently-sized file — the
+// "resident crystal N chars" line changed every pass and never converged,
+// which is exactly why CI's regen-idempotency check (regen twice, diff) was
+// red. This reproduces that exact two-pass-over-one-tree scenario.
+func TestGenSpec_CrystalFixpointConvergesAcrossRuns(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	claudeMDPath := filepath.Join(t.TempDir(), "CLAUDE.md")
+	const today = "2026-07-12"
+
+	// Pass 1: no pre-existing CLAUDE.md exists yet.
+	if _, err := genSpec(domainDir, claudeMDPath, today); err != nil {
+		t.Fatalf("genSpec (pass 1): %v", err)
+	}
+	crystal1, err := os.ReadFile(claudeMDPath)
+	if err != nil {
+		t.Fatalf("read CLAUDE.md (pass 1): %v", err)
+	}
+	liveState1, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "live-state.md"))
+	if err != nil {
+		t.Fatalf("read live-state.md (pass 1): %v", err)
+	}
+	agentContext1, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "AGENT-CONTEXT.md"))
+	if err != nil {
+		t.Fatalf("read AGENT-CONTEXT.md (pass 1): %v", err)
+	}
+
+	// Pass 2: over the SAME tree — now CLAUDE.md exists from pass 1, which is
+	// exactly the state that triggered the stale-read bug.
+	if _, err := genSpec(domainDir, claudeMDPath, today); err != nil {
+		t.Fatalf("genSpec (pass 2): %v", err)
+	}
+	crystal2, err := os.ReadFile(claudeMDPath)
+	if err != nil {
+		t.Fatalf("read CLAUDE.md (pass 2): %v", err)
+	}
+	liveState2, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "live-state.md"))
+	if err != nil {
+		t.Fatalf("read live-state.md (pass 2): %v", err)
+	}
+	agentContext2, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "AGENT-CONTEXT.md"))
+	if err != nil {
+		t.Fatalf("read AGENT-CONTEXT.md (pass 2): %v", err)
+	}
+
+	if string(crystal1) != string(crystal2) {
+		t.Errorf("CLAUDE.md differs between two genSpec passes over the same tree — the resident-crystal size measurement did not converge:\n--- pass 1 live-state ---\n%s\n--- pass 2 live-state ---\n%s", liveState1, liveState2)
+	}
+	if string(liveState1) != string(liveState2) {
+		t.Errorf("live-state.md differs between two genSpec passes over the same tree — not converged:\n--- pass 1 ---\n%s\n--- pass 2 ---\n%s", liveState1, liveState2)
+	}
+	if string(agentContext1) != string(agentContext2) {
+		t.Errorf("AGENT-CONTEXT.md differs between two genSpec passes over the same tree — not converged")
+	}
+
+	// The converged embedded number must equal the crystal's actual rune
+	// count (the fixpoint), proving the LIVE-STATE line is self-consistent.
+	want := fmt.Sprintf("resident crystal %d chars", utf8.RuneCountInString(string(crystal2)))
+	if !contains(string(liveState2), want) {
+		t.Errorf("live-state.md embedded number is not the rendered crystal's own rune count %q\nactual:\n%s", want, string(liveState2))
 	}
 }
 

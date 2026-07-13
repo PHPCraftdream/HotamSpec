@@ -541,3 +541,48 @@ func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, 
 	// RenderOperatorRecursionBlock's domain substitution.
 	return strings.ReplaceAll(strings.Join(outLines, "\n"), "`spec/docs/thinking/`", "`domains/"+effectiveDomain+"/docs/gen/thinking/`")
 }
+
+// maxCrystalFixpointIterations caps the render→measure→re-render loop that
+// converges the resident crystal's self-referential CRYSTAL_CHARS measurement.
+// The ONLY way the embedded number can shift the rendered length is a
+// digit-count change (e.g. "9999"→"10000" is +1 char); convergence in ≤3
+// iterations is guaranteed for any realistic crystal size, so 5 is a generous
+// guard against a non-convergent (oscillating) measurement that should never
+// occur in practice.
+const maxCrystalFixpointIterations = 5
+
+// ComputeCrystalCharCountFixpoint computes the fixpoint rune-count of the
+// rendered root crystal. The resident crystal's LIVE-STATE block embeds its
+// OWN character count (the CRYSTAL_CHARS budget line, R-context-budget-rule),
+// so the measurement is self-referential: embedding a different count can
+// shift the rendered length (a digit-count change like "9999"→"10000" adds
+// one char), which changes the very number being embedded. The fixpoint is
+// the count that, when embedded, produces a crystal whose rune count equals
+// that count.
+//
+// It iterates render→measure (rune count via utf8.RuneCountInString, the
+// convention every other CRYSTAL_CHARS call site uses)→re-render until the
+// embedded number stops changing, capped at maxCrystalFixpointIterations; a
+// non-convergence returns an error (oscillation should be impossible since
+// only a small number's digit count can shift, but it is guarded anyway).
+//
+// The returned fixpoint is what every LIVE-STATE carrier (the root crystal
+// AND docs/gen/AGENT-CONTEXT.md + live-state.md, which reuse BuildLiveState)
+// must embed so the two artifacts agree regardless of the --claude-md flag
+// (which gates only the crystal's DISK WRITE, not whether the measurement is
+// computed). This replaces the former buggy mechanism that read the size of a
+// stale pre-existing CLAUDE.md from the previous run — a read that made two
+// consecutive gen-spec passes never converge and left AGENT-CONTEXT.md stuck
+// at "0 chars" whenever --claude-md was omitted.
+func ComputeCrystalCharCountFixpoint(g *ontology.Graph, domainName, repoRoot string, domainGraphs map[string]*ontology.Graph, today string) (int, error) {
+	count := 0
+	for i := 0; i < maxCrystalFixpointIterations; i++ {
+		rendered := RenderClaudeMDFromTemplate(g, domainName, repoRoot, count, domainGraphs, today)
+		measured := utf8.RuneCountInString(rendered)
+		if measured == count {
+			return count, nil
+		}
+		count = measured
+	}
+	return count, fmt.Errorf("crystal char-count fixpoint did not converge after %d iterations (last measurement %d) — the resident crystal's self-referential size measurement is oscillating, which should be impossible since only a digit-count shift can change the rendered length", maxCrystalFixpointIterations, count)
+}
