@@ -56,7 +56,7 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	// whether the measurement is computed — so a gen-spec run WITHOUT
 	// --claude-md still embeds the correct fixpoint count into AGENT-CONTEXT.md
 	// (closing the former mode-dependent "0 chars" disagreement).
-	repoRoot, err := paths.ProjectRootOrRaise()
+	repoRoot, err := repoRootForDomain(domainDir)
 	if err != nil {
 		return nil, fmt.Errorf("resolve project root for crystal char-count fixpoint: %w", err)
 	}
@@ -239,4 +239,29 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	}
 
 	return written, nil
+}
+
+// repoRootForDomain resolves the repository root used to render the
+// DOMAIN-MAP block (RenderDomainMapBlock lists filepath.Join(repoRoot,
+// "domains")). When domainDir follows the established <repoRoot>/domains/
+// <name> convention (see internal/generator/claudemd.go's repoRoot doc
+// comment: "the parent of domains/"), repoRoot is derived directly from
+// domainDir's own path — this is required for genuinely external projects
+// (any --domain outside this repository), where paths.ProjectRootOrRaise()'s
+// CWD-based marker search has no reason to find anything and must not be
+// asked to (R-project-root-not-hardcoded; see
+// cmd/hotam/external_e2e_test.go, which regressed when this call was made
+// unconditional in task #102 without this fallback: hotam land against a
+// foreign project fails loudly instead of resolving via --domain alone).
+//
+// domainDir fixtures that do NOT follow the domains/<name> layout (e.g. this
+// package's own test helpers, which copy a domain straight into a bare
+// t.TempDir() with no domains/ parent) fall back to
+// paths.ProjectRootOrRaise(), preserving the pre-existing CWD-based
+// resolution those tests already rely on.
+func repoRootForDomain(domainDir string) (string, error) {
+	if filepath.Base(filepath.Dir(domainDir)) == "domains" {
+		return filepath.Dir(filepath.Dir(domainDir)), nil
+	}
+	return paths.ProjectRootOrRaise()
 }
