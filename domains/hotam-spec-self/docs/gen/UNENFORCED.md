@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 162 / SETTLED 236; closeable debt 41; inherent discipline 33; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 162 / SETTLED 236; closeable debt 40; inherent discipline 34; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -23,7 +23,6 @@ judgment calls no check_* could ever verify.
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-axis-gatekeeper-policy` | PROSE | `ai-agent` | Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification. |
-| `R-working-vs-substrate-budget` | PROSE | `framework-author` | The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded. |
 | `R-subagent-gets-its-claude-md` | PROSE | `framework-author` | A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain. |
 | `R-task-spawn-log-runtime` | PROSE | `ai-agent` | The spawn_agent tool shall append a spawn-log entry to .runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation. |
 | `R-audit-atomicity-tool` | PROSE | `framework-author` | An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool, not by a one-off hand invocation. |
@@ -31,15 +30,15 @@ judgment calls no check_* could ever verify.
 | `R-crystal-tree-hierarchy` | PROSE | `ai-agent` | The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget. |
 | `R-agent-scoped-constitution` | PROSE | `framework-author` | For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes. |
 | `R-agent-declares-purpose` | PROSE | `framework-author` | Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE). |
-| `R-domain-owns-tools-and-agents` | STRUCTURAL | `framework-author` | Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty. |
+| `R-domain-owns-tools-and-agents` | PROSE | `framework-author` | Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or sub-agent is actually created — not eagerly scaffolded; a domain with no sub-tools/sub-agents yet correctly carries neither directory. |
 | `R-agent-references-shared-docs` | PROSE | `framework-author` | Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), without duplicating their content. |
 | `R-operator-prompt-loaded-at-session-start` | PROSE | `framework-author` | A SessionStart hook shall run `hotam gen-spec` before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state. |
 | `R-post-compact-regen-from-substrate` | PROSE | `framework-author` | A PostCompact hook shall run `hotam gen-spec` after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version. |
-| `R-project-name-hotam-spec` | PROSE | `framework-author` | The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for the filesystem, repository, and Go module path suffix), closing M1. |
+| `R-project-name-hotam-spec` | PROSE | `framework-author` | The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam-spec-self`, the `hotam` CLI binary name, and repository slug conventions), while the Go module path shall match the real git remote and is deliberately `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, per commit 4325ac8), closing M1. |
 | `R-sub-agent-crystal-triad` | PROSE | `framework-author` | Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION). |
 | `R-operator-crystal-embeds-thinking-distilled` | STRUCTURAL | `framework-author` | The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (via short_form) plus a path link to spec/docs/thinking/<slug>.md, not a multi-line RULE+WHY distillate. |
 | `R-speculative-aspects-frozen` | PROSE | `framework-author` | The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need. |
-| `R-presented-pending-decision-type` | PROSE | `framework-reviewer` | The presented-awaiting-decision state shall live in a dedicated runtime folder structure (pending/ vs applied/), surfaced by the harness -- not as a new graph node type. |
+| `R-presented-pending-decision-type` | PROSE | `framework-reviewer` | Proposals shall be organized under wave-numbered folders in `proposals/` (`waveN-<slug>/`, optionally with batch subfolders), which serves the pending-vs-applied practical need without a dedicated `pending/`/`applied/` runtime split or a new graph node type; a proposal file lives in its wave folder from the TRANSLATE step through LAND. |
 | `R-land-tier-trace` | PROSE | `framework-author` | Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected test node-ids (or the literal 'full'), and verify/closure outcome to a runtime land-log, written AFTER the verify step so the record states what actually ran. |
 | `R-commit-boundary-checkable` | PROSE | `framework-author` | A gate-status command shall answer, from a runtime land-log, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline. |
 | `R-atomicity-ratchet-no-growth` | PROSE | `framework-reviewer` | The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline. |
@@ -75,6 +74,7 @@ judgment calls no check_* could ever verify.
 | `R-delegation-conclusions-only` | STRUCTURAL | `framework-author` | When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail. |
 | `R-crystallize-knowledge-to-code` | STRUCTURAL | `ai-agent` | An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context. |
 | `R-crystallize-before-split` | STRUCTURAL | `ai-agent` | On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget. |
+| `R-working-vs-substrate-budget` | PROSE | `framework-author` | The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded. |
 | `R-uncrystallizable-is-missing-type` | STRUCTURAL | `framework-reviewer` | Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted). |
 | `R-observation-evidence-scope` | STRUCTURAL | `framework-reviewer` | Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request. |
 | `R-uncrystallizable-automated` | STRUCTURAL | `framework-reviewer` | Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type. |

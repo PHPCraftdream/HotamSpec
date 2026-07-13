@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-owns-tools-and-agents",
+  "claim": "Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or sub-agent is actually created — not eagerly scaffolded; a domain with no sub-tools/sub-agents yet correctly carries neither directory.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursive-director). UPDATED 2026-07-13 (task #113, decision brief §3): reworded from 'shall contain both tools/ and agents/, even if empty' to lazy-materialization semantics — these directories shall materialize only when a real sub-tool/sub-agent is actually created, not eagerly scaffolded for every domain. A domain with no sub-tools/sub-agents yet correctly carries NEITHER directory; their absence is the correct state, not a violation. This extends the already-SETTLED lazy-materialization precedent R-claude-md-consolidates-when-single-agent ('Sub-agent crystals materialize only at real spawn time' — CLAUDE.md Recursion section) to the tools/ and agents/ subdirs. The eager always-true invariant is retired: the honest no-op checks (check_agent_has_agents_subdir / check_agent_has_docs_subdir / check_agent_has_tools_subdir in internal/invariants/domain_structure.go) operate on the in-memory graph and cannot reach the filesystem, and inventing the first filesystem-touching invariant check to enforce eager PRESENCE is a category change not worth the low-value structural nicety (decision brief §3 option (b) over (a)/(c)). Enforcement downgraded STRUCTURAL -> PROSE: the reworded claim describes a lazy/conditional state (absence is correct), so no meaningful check enforces eager presence; a future filesystem-aware check verifying 'dirs present iff a sub-agent/sub-tool exists' is theoretically buildable (hence enforceability stays ENFORCEABLE, not INHERENTLY_PROSE) but out of scope today.",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE"
+}

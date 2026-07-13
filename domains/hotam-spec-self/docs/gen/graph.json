@@ -2316,6 +2316,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: SETTLED (P8): in the Go port the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live g…→SETTLED (P8): the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live graph nodes -- g…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "why: SETTLED (P8): the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live graph nodes -- g…→SETTLED (P8): the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live graph nodes -- g…; enforceability: ENFORCEABLE→INHERENTLY_PROSE"
         }
       ],
       "id": "R-working-vs-substrate-budget",
@@ -2327,7 +2332,7 @@
         "internal/generator/livestate.go"
       ],
       "status": "SETTLED",
-      "why": "SETTLED (P8): the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live graph nodes -- graphSize(g) = len(g.Requirements) + len(g.Conflicts) + len(g.Assumptions) -- never the crystallized substrate. When an operator's NODE_COUNT measure exceeds its budget limit, it emits a Finding (Condition: reflect_over_budget_operators) telling the operator to crystallize first (R-crystallize-before-split) and, if still over, delegate a sub-domain (R-context-bounded-delegation). This Finding is composed by AllFindings (internal/diagnose/finding.go), surfaced by `hotam what-now`, and rendered into the LIVE-STATE budget line by BuildLiveState (internal/generator/livestate.go) on every gen-spec / land. Bounding the substrate would punish the very act -- crystallizing -- that the budget rewards. Only un-offloaded working knowledge competes for context, so only it is metered. The CRYSTAL_CHARS measure (when an operator's budget uses chars instead of node count) is rendered in the LIVE-STATE crystal/budget line (internal/generator/livestate.go) from the resident CLAUDE.md char count. PROSE (not ENFORCED): the over-budget predicate is a diagnosis signal (advisory Finding), not a gate -- it fires when budget is exceeded but does not block a write (proven historically by test_reflection.py)."
+      "why": "SETTLED (P8): the over-budget REFLECTION predicate (ReflectOverBudgetOperators, internal/diagnose/finding.go) measures only the live graph nodes -- graphSize(g) = len(g.Requirements) + len(g.Conflicts) + len(g.Assumptions) -- never the crystallized substrate. Only un-offloaded working knowledge competes for context, so only it is metered; bounding the substrate would punish the very act -- crystallizing -- that the budget rewards. RECLASSIFIED 2026-07-13 (task #113, decision brief §7): enforceability ENFORCEABLE -> INHERENTLY_PROSE. This is an architectural/design-principle claim ('the budget bounds only the WORKING store, leaving substrate free') where any test would be vacuous or just re-assert the design — the same shape as this session's already-landed R-crystal-is-claude-md / R-crystal-reload-by-reference INHERENTLY_PROSE reclassifications (decision brief §7, matching their proposals in proposals/wave6-enforcement-debt/category-b/). The mechanical teeth this principle motivates already live in its ENFORCED sibling R-context-budget-rule (check_operator_within_budget, CRYSTAL_CHARS measure), whose own why-text explicitly credits this requirement by name as its design rationale ('which R-working-vs-substrate-budget declares free', 'per R-working-vs-substrate-budget') — reclassifying (NOT rejecting) keeps the claim, ID, and that cross-reference valid, so the citation does NOT break; rejecting this source of the explanation would leave a dangling citation (decision brief §7 option (a) over (b)). The REFLECTION-tier Finding (advisory, surfaces via `hotam what-now` / the LIVE-STATE budget line) is composed by AllFindings (internal/diagnose/finding.go) and rendered by BuildLiveState (internal/generator/livestate.go); it does not block a write."
     },
     {
       "assumptions": [
@@ -5742,9 +5747,9 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty.",
+      "claim": "Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or sub-agent is actually created — not eagerly scaffolded; a domain with no sub-tools/sub-agents yet correctly carries neither directory.",
       "enforced_by": [],
-      "enforcement": "STRUCTURAL",
+      "enforcement": "PROSE",
       "evidence": [],
       "history": [
         {
@@ -5771,6 +5776,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursiv…→tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursiv…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "claim: Each `domains/<name>/` shall contain both a `tools/` directory (private tools) and an `agents/` directory (sub-operators), even if empty.→Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or…; why: tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursiv…→tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursiv…; enforcement: STRUCTURAL→PROSE"
         }
       ],
       "id": "R-domain-owns-tools-and-agents",
@@ -5782,7 +5792,7 @@
         "internal/methodology/tools_data.go"
       ],
       "status": "SETTLED",
-      "why": "tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursive-director). Requiring both to exist even when empty makes scaffolding deterministic and avoids missing-directory failures in tooling that expects the full layout. Not yet enforced: the agent-subdir checks (check_agent_has_agents_subdir, check_agent_has_docs_subdir, check_agent_has_tools_subdir in internal/invariants/domain_structure.go) are HONEST NO-OPS — the invariant contract operates on an in-memory graph and cannot reach the filesystem. In practice the domains on disk (domains/hotam-spec-self/, domains/hotam-dev/) currently carry only docs/, graph.json, manifest.json, and graph.lock — no tools/ or agents/ subdirectories — and the create_domain scaffolding tool that would materialize them is Planned, not yet implemented (internal/methodology/tools_data.go). The layout requirement stands for the moment create_domain is built. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
+      "why": "tools/ holds domain-specific scripts that must not pollute the shared cmd/hotam body. agents/ is the recursive sub-operator tree (R-agent-is-recursive-director). UPDATED 2026-07-13 (task #113, decision brief §3): reworded from 'shall contain both tools/ and agents/, even if empty' to lazy-materialization semantics — these directories shall materialize only when a real sub-tool/sub-agent is actually created, not eagerly scaffolded for every domain. A domain with no sub-tools/sub-agents yet correctly carries NEITHER directory; their absence is the correct state, not a violation. This extends the already-SETTLED lazy-materialization precedent R-claude-md-consolidates-when-single-agent ('Sub-agent crystals materialize only at real spawn time' — CLAUDE.md Recursion section) to the tools/ and agents/ subdirs. The eager always-true invariant is retired: the honest no-op checks (check_agent_has_agents_subdir / check_agent_has_docs_subdir / check_agent_has_tools_subdir in internal/invariants/domain_structure.go) operate on the in-memory graph and cannot reach the filesystem, and inventing the first filesystem-touching invariant check to enforce eager PRESENCE is a category change not worth the low-value structural nicety (decision brief §3 option (b) over (a)/(c)). Enforcement downgraded STRUCTURAL -> PROSE: the reworded claim describes a lazy/conditional state (absence is correct), so no meaningful check enforces eager presence; a future filesystem-aware check verifying 'dirs present iff a sub-agent/sub-tool exists' is theoretically buildable (hence enforceability stays ENFORCEABLE, not INHERENTLY_PROSE) but out of scope today."
     },
     {
       "assumptions": [
@@ -6775,7 +6785,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for the filesystem, repository, and Go module path suffix), closing M1.",
+      "claim": "The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam-spec-self`, the `hotam` CLI binary name, and repository slug conventions), while the Go module path shall match the real git remote and is deliberately `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, per commit 4325ac8), closing M1.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -6799,6 +6809,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name …→M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "claim: The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for the filesystem, repository, and Go module path suffix), closing M1.→The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam…; why: M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name …→M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name …"
         }
       ],
       "id": "R-project-name-hotam-spec",
@@ -6807,7 +6822,7 @@
       "review_after": "2026-12-30",
       "source_refs": [],
       "status": "SETTLED",
-      "why": "M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name and the user's chosen identity. Convention: 'Hotam-Spec' in prose (capitalized hyphen), 'hotam-spec' kebab-case for the filesystem and repository; the Go module path is github.com/PHPCraftdream/HotamSpec. (Historically a Python package 'hotam_spec' with a PyPI 'hotam-spec' distribution; the project is now a Go module.) Renames completed in three sequential passes (#89 package, #90 domain, #91 prose). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
+      "why": "M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name and the user's chosen identity. UPDATED 2026-07-13 (task #113, decision brief §4): the Go module-path-suffix clause was reworded to legalize the current, deliberately-chosen module path `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, matching the real git remote — set in commit 4325ac8 'chore: rename Go module to match the real git remote'). The earlier kebab-case-for-module-suffix demand was visibly drifted from reality: the actual go.mod reads 'module github.com/PHPCraftdream/HotamSpec', and renaming it back to kebab-case would be a 119-file / 178-import-occurrence mechanical change that reverses a conscious recent decision (decision brief §4 option (b) over (a), which was flagged as the highest-risk option in the whole batch of 9). Kebab-case remains the rule for domain-level artifacts that already legitimately are kebab/lowercase (directory names like domains/hotam-spec-self, the hotam CLI binary name) — only the module-path-suffix clause changed to match reality. Convention: 'Hotam-Spec' in prose (capitalized hyphen). (Historically a Python package 'hotam_spec' with a PyPI 'hotam-spec' distribution; the project is now a Go module.) Renames completed in three sequential passes (#89 package, #90 domain, #91 prose)."
     },
     {
       "assumptions": [
@@ -7548,7 +7563,7 @@
     },
     {
       "assumptions": [],
-      "claim": "The presented-awaiting-decision state shall live in a dedicated runtime folder structure (pending/ vs applied/), surfaced by the harness -- not as a new graph node type.",
+      "claim": "Proposals shall be organized under wave-numbered folders in `proposals/` (`waveN-<slug>/`, optionally with batch subfolders), which serves the pending-vs-applied practical need without a dedicated `pending/`/`applied/` runtime split or a new graph node type; a proposal file lives in its wave folder from the TRANSLATE step through LAND.",
       "enforced_by": [],
       "enforcement": "PROSE",
       "evidence": [],
@@ -7577,6 +7592,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: no pending-proposal tracking exists. Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещ…→Not yet implemented: no pending-proposal tracking exists. Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещ…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "claim: The presented-awaiting-decision state shall live in a dedicated runtime folder structure (pending/ vs applied/), surfaced by the harness -- not as a …→Proposals shall be organized under wave-numbered folders in `proposals/` (`waveN-<slug>/`, optionally with batch subfolders), which serves the pendin…; why: Not yet implemented: no pending-proposal tracking exists. Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещ…→Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке�…"
         }
       ],
       "id": "R-presented-pending-decision-type",
@@ -7588,7 +7608,7 @@
         "internal/diagnose/signal.go"
       ],
       "status": "SETTLED",
-      "why": "Not yet implemented: no pending-proposal tracking exists. Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). The intended design splits a runtime proposals/ area into pending/ (proposal awaiting steward verdict) and applied/ (landed proposal, moved there after apply), with a PENDING_PROPOSAL band in what-now listing each pending file with its age in days. None of this is implemented: the what-now harness (cmd/hotam/what_now.go) renders only graph-derived signals from DiagnoseSignals (internal/diagnose/signal.go) -- there is no pending-proposal band (the P6/PENDING_PROPOSAL label exists in priorityLabel but has no signal producer), no pending/applied folder split, and no .runtime/ proposal tracking. The P6 label in what_now.go is dead code retained for continuity. (Historical Python landing split spec/.runtime/proposals/ into pending/ vs applied/, moved by apply_proposal.py.) PROSE (not ENFORCED): no enforcer exists. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
+      "why": "Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). UPDATED 2026-07-13 (task #113, decision brief §9): reworded from 'shall live in a dedicated runtime folder structure (pending/ vs applied/), surfaced by the harness' to legalize the OBSERVED practice — proposals live in wave-numbered folders under proposals/ (waveN-<slug>/, optionally with batch subfolders), which already serves the pending/applied practical need without a formal pre-approval staging step or a new graph node type. Verified today (2026-07-13): proposals/ carries 13 wave-named folders spanning wave1 through wave9 (9 wave numbers, several multi-folder: wave1×2, wave3×3, wave9×2), plus 2 task*-named folders = 15 entries total; wave6 alone landed 8 sub-batches in one session. The wave-folder practice models the 'applied' half well; the 'pending' half is handled in-workflow (TRANSLATE drafts a .json, PRESENT shows the steward, LAND applies) without needing an on-disk pre-approval artifact. The literal pending/applied split (option (a)) would require a workflow change — changing WHEN a proposal file gets written (before vs after approval) — which is more invasive than the engineering task alone (decision brief §9). The P6/PENDING_PROPOSAL label in cmd/hotam/what_now.go priorityLabel remains dead code (no signal producer); no .runtime/ proposal tracking exists. (Historical Python landing split spec/.runtime/proposals/ into pending/ vs applied/, moved by apply_proposal.py — not carried into the Go port.) PROSE (not ENFORCED): no enforcer exists."
     },
     {
       "assumptions": [

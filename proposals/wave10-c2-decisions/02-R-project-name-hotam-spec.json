@@ -1,0 +1,10 @@
+{
+  "kind": "Requirement",
+  "id": "R-project-name-hotam-spec",
+  "claim": "The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam-spec-self`, the `hotam` CLI binary name, and repository slug conventions), while the Go module path shall match the real git remote and is deliberately `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, per commit 4325ac8), closing M1.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "M1 (package name) was OPEN since the framework's first incarnation as 'tensio'. The rename to Hotam-Spec aligns the project with its repository name and the user's chosen identity. UPDATED 2026-07-13 (task #113, decision brief §4): the Go module-path-suffix clause was reworded to legalize the current, deliberately-chosen module path `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, matching the real git remote — set in commit 4325ac8 'chore: rename Go module to match the real git remote'). The earlier kebab-case-for-module-suffix demand was visibly drifted from reality: the actual go.mod reads 'module github.com/PHPCraftdream/HotamSpec', and renaming it back to kebab-case would be a 119-file / 178-import-occurrence mechanical change that reverses a conscious recent decision (decision brief §4 option (b) over (a), which was flagged as the highest-risk option in the whole batch of 9). Kebab-case remains the rule for domain-level artifacts that already legitimately are kebab/lowercase (directory names like domains/hotam-spec-self, the hotam CLI binary name) — only the module-path-suffix clause changed to match reality. Convention: 'Hotam-Spec' in prose (capitalized hyphen). (Historically a Python package 'hotam_spec' with a PyPI 'hotam-spec' distribution; the project is now a Go module.) Renames completed in three sequential passes (#89 package, #90 domain, #91 prose).",
+  "enforcement": "PROSE",
+  "enforceability": "ENFORCEABLE"
+}
