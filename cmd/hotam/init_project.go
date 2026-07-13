@@ -14,9 +14,10 @@ import (
 // multi-domain-friendly name rather than the dir's basename (which would
 // duplicate the project name: ./acme/domains/acme) or the framework's own
 // self-modeling domain name "hotam-spec-self" (which would be confusing for an
-// external business project). See the marker-resolution note in cmdInitProject's
-// next-steps for why this default does NOT match the bare-`--domain`-less
-// resolution convention (cmd/hotam/common.go's defaultDomainRel).
+// external business project). init-project records this name as the project's
+// active-domain preference in the marker file, so a bare `hotam <command>`
+// (no --domain) run from inside the project resolves to domains/<name> via
+// resolveDomain's tier-3 marker resolution (cmd/hotam/common.go).
 const defaultInitProjectDomain = "main"
 
 // cmdInitProject implements `hotam init-project <dir> [--domain <name>]
@@ -74,15 +75,12 @@ func cmdInitProject(args []string) error {
 	fmt.Printf("  hotam land <proposal.json> --domain %s --today %s\n", domainRel, today)
 	fmt.Printf("  hotam what-now --domain %s\n", domainRel)
 	fmt.Printf("  hotam all-violations --domain %s\n", domainRel)
-	// Marker-resolution honesty note (see initProject's doc comment +
-	// cmd/hotam/common.go's defaultDomainRel): the marker resolves the project
-	// root, but a bare `hotam <cmd>` with NO --domain joins the resolved root
-	// with the hardcoded "domains/hotam-spec-self" default, which does not match
-	// a project scaffolded as domains/<name>. So name the domain explicitly (or
-	// set HOTAM_SPEC_DOMAINS_ROOT=<dir>/domains) until that convention is
-	// generalized.
-	fmt.Printf("  # the .hotam-spec-project marker resolves the project root, so --domain %s\n", domainRel)
-	fmt.Printf("  # (a path relative to the project root) works from inside %s; --domain <abs-path> also works.\n", rawDir)
+	// The marker now records the active domain (paths.WriteActiveDomain at
+	// scaffold time), so a bare `hotam <command>` with no --domain resolves to
+	// domains/<name> from inside the project (resolveDomain tier-3 marker
+	// resolution). --domain <path> remains available for scripts/explicitness.
+	fmt.Printf("  # the marker records the active domain, so a bare `hotam <command>` (no --domain)\n")
+	fmt.Printf("  # works from inside %s; --domain %s remains available for scripts/explicitness.\n", rawDir, domainRel)
 	return nil
 }
 
@@ -123,11 +121,16 @@ func initProject(dir, domainName, today string) ([]string, error) {
 		return nil, err
 	}
 
-	// (3) Write the project-root marker. An empty file is correct and
-	// sufficient: internal/paths R4 resolution (searchMarkerFileUpward) only
-	// ever checks file EXISTENCE via os.Stat — it never parses marker content.
-	if err := writeFileMkdir(markerPath, []byte{}); err != nil {
-		return written, err
+	// (3) Write the project-root marker, recording the scaffolded domain as the
+	// active-domain preference. paths.WriteActiveDomain writes
+	// {"active_domain": "<name>"} as 2-space-indented JSON with a trailing
+	// newline. internal/paths R4 resolution (searchMarkerFileUpward) only ever
+	// checks file EXISTENCE via os.Stat — it never parses content — so this
+	// JSON payload is purely additive and does not change project-root
+	// detection. It lets a bare `hotam <command>` resolve to domains/<name>
+	// from inside the project (resolveDomain tier 3).
+	if err := paths.WriteActiveDomain(markerPath, domainName); err != nil {
+		return written, fmt.Errorf("write %s: %w", markerPath, err)
 	}
 	written = append(written, markerPath)
 

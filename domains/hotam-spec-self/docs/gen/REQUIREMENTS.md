@@ -386,6 +386,7 @@ Projected from the tool registry, one entry per tool whose first doc line matche
 - **R-tool-ticket-list** — *list tickets, optionally filtered by status or assignee (read-only).* [STRUCTURAL·tool · §Ticket] [enforcer: (none)]
 - **R-tool-ticket-move** — *move a ticket to a new status (relocates the file + records the transition in History).* [STRUCTURAL·tool · §Ticket] [enforcer: `test_tool_ticket_move`]
 - **R-tool-ticket-show** — *print one ticket's header, body, comments and full History (read-only).* [STRUCTURAL·tool · §Ticket] [enforcer: (none)]
+- **R-tool-use** — *sets the active-domain preference for the current project by recording it in the project-root marker, so a bare `hotam <command>` targets the chosen domain.* [STRUCTURAL·tool · §Domain] [enforcer: (none)]
 - **R-tool-version** — *prints the hotam binary's version, commit, and build date.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
 - **R-tool-what-now** — *derives the prioritized next correct action from any graph state, making being-lost structurally impossible.* [STRUCTURAL·tool · §Harness] [enforcer: (none)]
 

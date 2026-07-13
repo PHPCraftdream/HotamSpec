@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 // TestInitProject_ScaffoldFromCleanDir exercises initProject (the testable
@@ -21,10 +23,14 @@ func TestInitProject_ScaffoldFromCleanDir(t *testing.T) {
 		t.Fatalf("initProject: %v", err)
 	}
 
-	// Project-root marker (R4 existence-only resolution → empty file is correct).
+	// Project-root marker exists and records the active domain (R4 resolution
+	// is existence-only, so the JSON payload is additive and never breaks it).
 	marker := filepath.Join(dir, ".hotam-spec-project")
 	if _, err := os.Stat(marker); err != nil {
 		t.Errorf("project-root marker not created: %v", err)
+	}
+	if name, ok := paths.ReadActiveDomain(marker); !ok || name != "main" {
+		t.Errorf("initProject should record active_domain=main in the marker, got name=%q ok=%v", name, ok)
 	}
 
 	// Root crystal: CLAUDE.md + AGENTS.md + GEMINI.md at the project root.

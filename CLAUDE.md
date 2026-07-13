@@ -106,6 +106,7 @@ One RULE per §-section; full Canon/Narrative/Why at `domains/hotam-spec-self/do
 - **land** — Usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]. Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants). Implemented (`hotam land`).
 - **req** — Usage: hotam req <show|list|search|context|related> [args] [--domain <path>] [--json]. Compact agentic read interface over the domain graph (internal/query): answers 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc. Implemented (`hotam req`).
 - **status** — Usage: hotam status [--domain <path>] [--today YYYY-MM-DD] [--json]. Single-shot compact summary combining what-now's top action + debt (internal/diagnose), due's freshness counts (internal/freshness), and all-violations' violation count (internal/invariants), so an agent doesn't need to run all three separately. Never gates; exit code always 0. Implemented (`hotam status`).
+- **use** — Usage: hotam use <domain-name>. Sets the active-domain preference for the current project: records {"active_domain": "<name>"} in the project-root marker so a bare `hotam <command>` (no --domain) targets the chosen domain. Refuses if <root>/domains/<name>/graph.json does not exist. Implemented (`hotam use`).
 - **version** — Usage: hotam version, hotam --version. Prints the hotam binary's version, commit, and build date (build-time defaults "dev"/"unknown"/"unknown", overridable via -ldflags -X main.version/commit/buildDate). Implemented (`hotam version`).
 - **what-now** — Usage: hotam what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD]. Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible. Implemented (`hotam what-now`).
 - 27 additional tools registered in the methodology but not yet implemented as Go commands — full list + per-tool purpose: `docs/gen/tools/` (one .md per tool) or `internal/methodology/tools_data.go`.
@@ -127,7 +128,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 37 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - **debt:** 165/237 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 37 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 305 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 19335 chars (headroom 130665)
+- **graph:** 305 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 19657 chars (headroom 130343)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

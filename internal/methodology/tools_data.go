@@ -120,6 +120,15 @@ func init() {
 		Enforcer: "",
 		Run:      nil,
 	})
+	Tools.MustRegister("use", Tool{
+		Command:  "use",
+		Canon:    "§Domain",
+		Purpose:  "Usage: hotam use <domain-name>. Sets the active-domain preference for the current project: records {\"active_domain\": \"<name>\"} in the project-root marker so a bare `hotam <command>` (no --domain) targets the chosen domain. Refuses if <root>/domains/<name>/graph.json does not exist.",
+		Status:   Implemented,
+		Claim:    "sets the active-domain preference for the current project by recording it in the project-root marker, so a bare `hotam <command>` targets the chosen domain.",
+		Enforcer: "",
+		Run:      nil,
+	})
 	Tools.MustRegister("version", Tool{
 		Command:  "version",
 		Canon:    "§Operator",

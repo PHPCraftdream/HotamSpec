@@ -51,6 +51,7 @@ R-tool-ticket-edit [S]
 R-tool-ticket-list [S]
 R-tool-ticket-move [S]
 R-tool-ticket-show [S]
+R-tool-use [S]
 R-tool-version [S]
 R-tool-what-now [S]
 

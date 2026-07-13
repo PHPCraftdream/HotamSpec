@@ -9,8 +9,15 @@ import (
 )
 
 const (
-	EnvProjectRoot          = "HOTAM_SPEC_PROJECT_ROOT"
-	EnvDomainsRoot          = "HOTAM_SPEC_DOMAINS_ROOT"
+	EnvProjectRoot = "HOTAM_SPEC_PROJECT_ROOT"
+	EnvDomainsRoot = "HOTAM_SPEC_DOMAINS_ROOT"
+	// EnvActiveDomain names a domain by NAME (not a path), e.g. "main". Unlike
+	// EnvProjectRoot/EnvDomainsRoot (which name absolute or CWD-relative PATHS
+	// and feed project-root resolution), it selects which domain under an
+	// already-resolved <project-root>/domains/ a bare `hotam <command>` targets.
+	// It is a tier-2 active-domain resolver in cmd/hotam/common.go's
+	// resolveDomain, below explicit --domain and above the marker file.
+	EnvActiveDomain         = "HOTAM_DOMAIN"
 	MarkerFilename          = ".hotam-spec-project"
 	PyprojectTable          = "hotam-spec"
 	PyprojectRootKey        = "project_root"

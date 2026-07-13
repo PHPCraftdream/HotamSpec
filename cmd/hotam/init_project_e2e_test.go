@@ -16,11 +16,10 @@ import (
 //
 //   - init-project scaffolds the project marker + base domain + root crystal;
 //   - the scaffolded domain is invariant-clean (0 violations);
-//   - the project-root marker resolves (paths.ProjectRoot R4) so a follow-up
-//     from inside the project finds the root — but the bare `--domain`-less
-//     path then joins the HARDCODED default "domains/hotam-spec-self"
-//     (cmd/hotam/common.go defaultDomainRel), which does not match a project
-//     scaffolded as domains/main; this is the documented, asserted limitation;
+//   - the project-root marker resolves (paths.ProjectRoot R4) AND records the
+//     scaffolded domain as the active-domain preference, so a bare
+//     `hotam status` (no --domain) from inside the project SUCCEEDS and
+//     targets domains/main (resolveDomain tier-3 marker resolution);
 //   - an explicit --domain domains/main (relative, CWD-rooted) works from
 //     inside the project, and an explicit absolute --domain works from outside;
 //   - a second init-project on the same dir refuses (overwrite guard).
@@ -121,24 +120,28 @@ func TestExternal_InitProject(t *testing.T) {
 		t.Errorf("scaffolded domain is not clean:\n%s", avOut)
 	}
 
-	// (5) MARKER-RESOLUTION PROOF + honest limitation: run with NO --domain
-	// from CWD inside the project. The marker resolves the project root
-	// (paths.ProjectRoot R4 finds .hotam-spec-project), but resolveDomain then
-	// joins the HARDCODED default "domains/hotam-spec-self"
-	// (cmd/hotam/common.go defaultDomainRel), which does not exist for a
-	// project scaffolded as domains/main. So this MUST fail — and the failure
-	// must reference "hotam-spec-self" (the joined default path), NOT the
-	// ProjectRootUnresolved diagnostic, proving the marker DID resolve the
-	// root and the only miss is the default-domain-name convention.
+	// (5) ACTIVE-DOMAIN RESOLUTION PROOF (the review-5 fix): run with NO
+	// --domain from CWD inside the project. The marker resolves the project
+	// root (paths.ProjectRoot R4 finds .hotam-spec-project) AND init-project
+	// recorded the scaffolded domain ("main") as the active-domain preference,
+	// so resolveDomain's tier-3 marker resolution joins the root with
+	// domains/main. So this MUST succeed and print the status pulse — the
+	// inverse of the pre-fix behavior, where the hardcoded default
+	// "domains/hotam-spec-self" missed. The honesty-over-magic stderr notice
+	// ("resolved domain: main (via .hotam-spec-project marker)") fires on the
+	// magic-resolution path; CombinedOutput merges it with stdout.
 	noDomOut, noDomErr := runAt(projDir, "status")
-	if noDomErr == nil {
-		t.Fatalf("bare `hotam status` (no --domain) unexpectedly succeeded inside a domains/main project — the hardcoded default should have missed:\n%s", noDomOut)
+	if noDomErr != nil {
+		t.Fatalf("bare `hotam status` (no --domain) failed inside a domains/main project after the active-domain fix — marker resolution regressed:\n%v\nOUTPUT:\n%s", noDomErr, noDomOut)
 	}
-	if !strings.Contains(noDomOut, "hotam-spec-self") {
-		t.Errorf("bare `hotam status` failure should reference the joined default domain path 'domains/hotam-spec-self' (proving the marker resolved root); got:\n%s", noDomOut)
+	if !strings.Contains(noDomOut, "violations:") {
+		t.Errorf("bare `hotam status` output missing the status pulse (violations line):\n%s", noDomOut)
 	}
-	if strings.Contains(noDomOut, "could not resolve a project root") || strings.Contains(noDomOut, "ProjectRootUnresolved") {
-		t.Errorf("marker should have resolved the project root, but got an unresolved-root diagnostic — marker resolution regressed:\n%s", noDomOut)
+	if !strings.Contains(noDomOut, "resolved domain: main") {
+		t.Errorf("bare `hotam status` should report the tier-3 marker resolution on stderr (\"resolved domain: main ...\"), got:\n%s", noDomOut)
+	}
+	if strings.Contains(noDomOut, "hotam-spec-self") {
+		t.Errorf("bare `hotam status` should target domains/main, not the legacy hotam-spec-self default; output references it:\n%s", noDomOut)
 	}
 
 	// (6) Explicit relative --domain from CWD inside the project works.

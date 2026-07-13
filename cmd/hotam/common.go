@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
@@ -18,8 +19,41 @@ func newFlagSet(name string) *flag.FlagSet {
 	return fs
 }
 
+// defaultDomainRel is the legacy relative path "domains/<name>" used in
+// --domain flag-help strings across this package (gen-spec, status, req, …).
+// It stays accurate as a help-text description because tier 4 (legacy default)
+// still resolves to exactly this path for this repository's own self-hosting
+// workflow and for any project with no recorded active-domain preference.
 const defaultDomainRel = "domains/hotam-spec-self"
 
+// defaultDomainName is the tier-4 (legacy) domain NAME used when neither the
+// HOTAM_DOMAIN env var nor a marker-file active_domain preference yields a
+// name. It is the domain-name component of defaultDomainRel above.
+const defaultDomainName = "hotam-spec-self"
+
+// resolveDomain resolves the target domain directory for a command, applying a
+// 4-tier active-domain resolution order. The project root is resolved ONCE via
+// paths.ProjectRootOrRaise(); the domain NAME is then picked by
+// resolveActiveDomainName and joined as <root>/domains/<name>.
+//
+// Resolution tiers (highest priority first):
+//
+//  1. Explicit --domain <path> (domainFlag != ""): resolved verbatim via
+//     filepath.Abs. No project-root resolution, no stderr notice — byte-
+//     identical to pre-active-domain behavior so every script/flag-based call
+//     is unaffected.
+//  2. HOTAM_DOMAIN env var: a domain NAME resolved as <root>/domains/<name>.
+//     Emits one stderr notice ("resolved domain: <name> (via HOTAM_DOMAIN env)").
+//  3. active_domain recorded in the .hotam-spec-project marker file
+//     (paths.ReadActiveDomain). Emits one stderr notice
+//     ("resolved domain: <name> (via .hotam-spec-project marker)").
+//  4. Legacy default defaultDomainName ("hotam-spec-self"): SILENT, so this
+//     repository's own everyday bare-command usage and any test relying on the
+//     silent default see zero new output.
+//
+// Tiers 2 and 3 emit a single stderr line (never stdout) so an agent is never
+// surprised by which domain a bare command silently targeted ("honesty over
+// magic"), while the unsurprising tier-1 and tier-4 cases stay noise-free.
 func resolveDomain(domainFlag string) (string, error) {
 	if domainFlag != "" {
 		abs, err := filepath.Abs(domainFlag)
@@ -32,7 +66,35 @@ func resolveDomain(domainFlag string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(root, defaultDomainRel), nil
+	name, source := resolveActiveDomainName(root)
+	if source != "" {
+		fmt.Fprintf(os.Stderr, "resolved domain: %s (via %s)\n", name, source)
+	}
+	return filepath.Join(root, "domains", name), nil
+}
+
+// resolveActiveDomainName picks the active domain NAME for a resolved project
+// root, returning the name and a human-readable source describing where it came
+// from. A non-empty source means a genuinely new magic-resolution path (tiers 2
+// or 3) fired and should be reported on stderr; source == "" means the silent
+// tier-4 legacy default applies and must produce no notice.
+//
+// Priority order:
+//
+//  1. HOTAM_DOMAIN env var (paths.EnvActiveDomain), trimmed of whitespace —
+//     source "HOTAM_DOMAIN env".
+//  2. active_domain in the <root>/.hotam-spec-project marker — source
+//     ".hotam-spec-project marker".
+//  3. Legacy default defaultDomainName — source "" (silent).
+func resolveActiveDomainName(root string) (name, source string) {
+	if env := strings.TrimSpace(os.Getenv(paths.EnvActiveDomain)); env != "" {
+		return env, "HOTAM_DOMAIN env"
+	}
+	markerPath := filepath.Join(root, paths.MarkerFilename)
+	if n, ok := paths.ReadActiveDomain(markerPath); ok {
+		return n, ".hotam-spec-project marker"
+	}
+	return defaultDomainName, ""
 }
 
 func graphPathForDomain(domainDir string) string {
