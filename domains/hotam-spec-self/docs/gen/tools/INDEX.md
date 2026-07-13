@@ -2,13 +2,13 @@
 
 # Tool docs index
 
-42 tools registered — **15 Implemented** (real `hotam` CLI subcommands) · **27 Planned** (methodology surface only; no Go command exists yet).
+43 tools registered — **16 Implemented** (real `hotam` CLI subcommands) · **27 Planned** (methodology surface only; no Go command exists yet).
 
 This index splits the tool registry so a browser of `docs/gen/tools/` can tell at a glance which entries are real commands versus aspirational methodology surface. The root crystal's Tool reference block (`EMBEDDED-TOOLS`) collapses the Planned tools into a one-line summary; each per-tool `.md` file below carries full Status/Canon/Purpose detail.
 
 ## Implemented (real commands)
 
-These 15 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.
+These 16 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.
 
 - [`hotam all-violations`](all_violations.md) — Prints all invariant violations for a domain graph (internal/invariants); exits 1 if any are found.
 - [`hotam apply-proposal`](apply_proposal.md) — Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.
@@ -20,6 +20,7 @@ These 15 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — runni
 - [`hotam init-project`](init_project.md) — Bootstraps an external business project's full Hotam-Spec layout in one call: scaffolds a base domain under <dir>/domains/<name> (default main) via init, writes the project-root marker (.hotam-spec-project), and renders the root crystal (CLAUDE.md/AGENTS.md/GEMINI.md) + all docs/gen/* via gen-spec. Refuses to overwrite an existing project marker or CLAUDE.md.
 - [`hotam inspect`](inspect.md) — Advisory listing of semantic conflict candidates with evidence (internal/diagnose): shared-assumption clusters, entity-state suspects, lexical claim overlap, axis co-reference. --min-score (default 5) suppresses low-signal candidates; 0 shows all. Never gates; exit code always 0.
 - [`hotam land`](land.md) — Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants).
+- [`hotam propose`](propose.md) — Drafts valid proposal JSON from flags (schema knowledge in the tool, not agent memory), runs an automatic confront check before writing, and optionally --land (apply+regen+reverify) in the same call. Complex kinds (Conflict, EntityType, …) keep the hand-authored-JSON path (hotam land <file.json>).
 - [`hotam req`](req.md) — Compact agentic read interface over the domain graph (internal/query): answers 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc.
 - [`hotam status`](status.md) — Single-shot compact summary combining what-now's top action + debt (internal/diagnose), due's freshness counts (internal/freshness), and all-violations' violation count (internal/invariants), so an agent doesn't need to run all three separately. Never gates; exit code always 0.
 - [`hotam use`](use.md) — Sets the active-domain preference for the current project: records {"active_domain": "<name>"} in the project-root marker so a bare `hotam <command>` (no --domain) targets the chosen domain. Refuses if <root>/domains/<name>/graph.json does not exist.

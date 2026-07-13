@@ -129,6 +129,15 @@ func init() {
 		Enforcer: "",
 		Run:      nil,
 	})
+	Tools.MustRegister("propose", Tool{
+		Command:  "propose",
+		Canon:    "§Proposal",
+		Purpose:  "Usage: hotam propose <requirement|rejection|stakeholder> [flags] [--domain <path>] [--today YYYY-MM-DD] [--out <path>] [--land] [--claude-md <path>] [--json]. Drafts valid proposal JSON from flags (schema knowledge in the tool, not agent memory), runs an automatic confront check before writing, and optionally --land (apply+regen+reverify) in the same call. Complex kinds (Conflict, EntityType, …) keep the hand-authored-JSON path (hotam land <file.json>).",
+		Status:   Implemented,
+		Claim:    "drafts valid proposal JSON from flags and runs an automatic confront check before writing, collapsing the draft→confront→write→(land) workflow into one invocation.",
+		Enforcer: "",
+		Run:      nil,
+	})
 	Tools.MustRegister("version", Tool{
 		Command:  "version",
 		Canon:    "§Operator",

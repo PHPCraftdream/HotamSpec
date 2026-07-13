@@ -373,6 +373,7 @@ Projected from the tool registry, one entry per tool whose first doc line matche
 - **R-tool-invoke-agent** — *invokes a sub-agent by loading its CLAUDE.md as the operator-prompt and printing it to stdout.* [STRUCTURAL·tool · §Agent] [enforcer: `test_tool_invoke_agent`]
 - **R-tool-land** — *single CLI entry point over gate/gate_status/closure.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_land`]
 - **R-tool-mark-revisit-evaluated** — *record that a DECIDED conflict's revisit_marker was evaluated.* [STRUCTURAL·tool · §Conflict] [enforcer: `test_tool_mark_revisit_evaluated`]
+- **R-tool-propose** — *drafts valid proposal JSON from flags and runs an automatic confront check before writing, collapsing the draft→confront→write→(land) workflow into one invocation.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
 - **R-tool-req** — *compact agentic read interface over the domain graph, answering 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc.* [STRUCTURAL·tool · §Requirement] [enforcer: (none)]
 - **R-tool-review** — *single CLI entry point over the low-traffic review tools.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_review`]
 - **R-tool-setup-context-hook** — *installs/removes the project-local hook that feeds the context producer.* [STRUCTURAL·tool · §Context] [enforcer: `test_tool_setup_context_hook`]

@@ -40,6 +40,7 @@ reader: ai-agent
 - `cmd/hotam/inspect.go` — advisory listing of semantic conflict candidates with evidence, filtered by score.
 - `cmd/hotam/confront.go` — CONFRONT step of the mediation loop: duplicate/re-litigation guard before writing.
 - `cmd/hotam/land.go` — apply a proposal, regenerate docs, re-check invariants: the primary land pipeline.
+- `cmd/hotam/propose.go` — draft proposal JSON from flags + automatic confront check + optional --land.
 
 Registered in the methodology but not yet implemented as `hotam` subcommands: attention, attention_hook,
 audit_atomicity, audit_tensions, claude_md_diff_watch, closure, context, context_producer,

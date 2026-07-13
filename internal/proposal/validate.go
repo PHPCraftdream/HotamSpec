@@ -319,6 +319,19 @@ func (p ProposedReviewMark) validate() error {
 	return nil
 }
 
+// Validate runs a proposal's own kind-specific validation (the same check
+// internal/proposal.Apply runs internally before mutating a graph), exposed
+// so callers can validate a proposal BEFORE writing it to disk (e.g. `hotam
+// propose`) without duplicating any per-kind rule. It performs no disk I/O
+// and does not mutate any graph.
+func Validate(p Proposal) error {
+	a, ok := p.(actor)
+	if !ok {
+		return fmt.Errorf("proposal kind %q does not implement validation", p.Kind())
+	}
+	return a.validate()
+}
+
 func trimNonEmpty(in []string) []string {
 	out := make([]string, 0, len(in))
 	for _, s := range in {

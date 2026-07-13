@@ -45,6 +45,7 @@ func init() {
 	wireToolRun("init", cmdInit)
 	wireToolRun("init_project", cmdInitProject)
 	wireToolRun("use", cmdUse)
+	wireToolRun("propose", cmdPropose)
 	wireToolRun("version", cmdVersion)
 }
 

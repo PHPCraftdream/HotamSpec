@@ -70,64 +70,47 @@ func cmdLand(args []string) error {
 		return err
 	}
 
-	// Snapshot graph.json + graph.lock BEFORE step (a) writes a new graph,
-	// so a failure in a LATER stage (gen-spec or the post-regen violations
-	// check) can roll the domain back to this pre-land state instead of
-	// leaving a new graph.json on disk next to stale docs. A not-yet-existing
-	// file (first-ever land into a brand-new domain) is recorded as absent so
-	// rollback can REMOVE it rather than write empty bytes. Any other read
-	// failure (permissions, I/O) is fatal here, before land touches anything.
+	if *batchDir != "" {
+		return cmdLandBatch(*batchDir, domainDir, *today, *claudeMD)
+	}
+
+	if fs.NArg() < 1 {
+		return fmt.Errorf("usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]")
+	}
+	return landProposalFile(fs.Arg(0), domainDir, *claudeMD, *today)
+}
+
+// cmdLandBatch is the --batch <dir> code path of `hotam land`: snapshot,
+// apply every *.json in <dir> atomically, regen docs, re-verify, and roll
+// back on failure. It is the batch counterpart to landProposalFile; the two
+// share the same snapshot/genSpec/allViolations/rollback shape but differ in
+// the apply step (ApplyBatch vs applyProposalFile).
+func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
 		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
 	}
 
-	// (a) apply: batch (--batch <dir>, atomic all-or-nothing) or a single
-	// positional proposal file. Either way a successful return means the
-	// graph on disk is structurally valid; only the docs remain stale until
-	// step (b) runs.
-	if *batchDir != "" {
-		proposals, err := loadBatchDir(*batchDir)
-		if err != nil {
-			return fmt.Errorf("apply step failed, nothing landed: %w", err)
-		}
-		gp := graphPathForDomain(domainDir)
-		if err := proposal.ApplyBatch(gp, *today, proposals); err != nil {
-			return fmt.Errorf("apply step failed, nothing landed: %w", err)
-		}
-		fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
-	} else {
-		if fs.NArg() < 1 {
-			return fmt.Errorf("usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]")
-		}
-		proposalFile := fs.Arg(0)
-		p, gp, err := applyProposalFile(proposalFile, domainDir, *today)
-		if err != nil {
-			return fmt.Errorf("apply step failed, nothing landed: %w", err)
-		}
-		fmt.Printf("applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
-	}
-
-	// (b) gen-spec: regenerate docs/gen/*.md + graph.json from the graph
-	// apply-proposal just wrote, so docs never drift from the graph they
-	// describe. If this fails AFTER apply already wrote the new graph.json,
-	// roll the domain back to the snapshot so graph and docs stay mutually
-	// consistent instead of diverging.
-	written, err := genSpec(domainDir, *claudeMD, *today)
+	proposals, err := loadBatchDir(batchDir)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, *claudeMD, *today)
+		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+	}
+	gp := graphPathForDomain(domainDir)
+	if err := proposal.ApplyBatch(gp, today, proposals); err != nil {
+		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+	}
+	fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
+
+	written, err := genSpec(domainDir, claudeMDPath, today)
+	if err != nil {
+		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 		return rolledBackError("doc regeneration failed", err, rerr)
 	}
 	fmt.Printf("regenerated %d doc(s)\n", len(written))
 
-	// (c) all-violations: safety-net re-verification, not the primary gate
-	// (see the function doc above) — apply already rejected an
-	// invariant-breaking write before anything touched disk. If it finds
-	// violations anyway, the SAME rollback as step (b) applies: restore the
-	// pre-land graph + docs rather than leaving a now-invalid graph on disk.
 	violations, err := allViolations(domainDir)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, *claudeMD, *today)
+		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 		return rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
@@ -135,7 +118,49 @@ func cmdLand(args []string) error {
 			fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
-		rerr := rollbackLand(domainDir, snapshot, *claudeMD, *today)
+		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		return rolledBackError("graph invalid after gen-spec", cause, rerr)
+	}
+
+	fmt.Println("landed: graph applied, docs regenerated, 0 violations")
+	return nil
+}
+
+// landProposalFile runs the full land pipeline (snapshot, apply, regen,
+// re-verify, rollback-on-failure) against a single already-written proposal
+// file. Shared by cmdLand's single-file mode and `hotam propose`'s --land
+// flag, so both paths are provably identical — the transactional snapshot/
+// rollback logic lives in exactly one place.
+func landProposalFile(proposalFile, domainDir, claudeMDPath, today string) error {
+	snapshot, err := snapshotGraphFiles(domainDir)
+	if err != nil {
+		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
+	}
+
+	p, gp, err := applyProposalFile(proposalFile, domainDir, today)
+	if err != nil {
+		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+	}
+	fmt.Printf("applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
+
+	written, err := genSpec(domainDir, claudeMDPath, today)
+	if err != nil {
+		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		return rolledBackError("doc regeneration failed", err, rerr)
+	}
+	fmt.Printf("regenerated %d doc(s)\n", len(written))
+
+	violations, err := allViolations(domainDir)
+	if err != nil {
+		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		return rolledBackError("violation check failed to run", err, rerr)
+	}
+	if len(violations) > 0 {
+		for _, v := range violations {
+			fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
+		}
+		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
+		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 		return rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 

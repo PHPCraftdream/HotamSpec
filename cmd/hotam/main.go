@@ -75,6 +75,8 @@ func main() {
 		err = cmdInspect(args)
 	case "confront":
 		err = cmdConfront(args)
+	case "propose":
+		err = cmdPropose(args)
 	case "-h", "--help", "help":
 		printUsage(os.Stdout)
 		return
@@ -157,6 +159,14 @@ Commands:
         REJECTED history (anti-relitigation) before anything is written.
         <text> is a quoted positional; --file <path> reads a long draft.
         Reuses the inspect overlap engine. Never gates; exit code always 0.
+  propose <requirement|rejection|stakeholder> [flags]
+        Draft a proposal JSON from flags (schema knowledge lives in the tool,
+        not the agent's memory), run an automatic CONFRONT check before
+        writing, and optionally --land (apply+regen+reverify) in the same call.
+        Kinds: requirement (--id, --claim, --owner, --status, …), rejection
+        (--requirement-id, --reason, --replaced-by), stakeholder (--id,
+        --name, --domain, --why). Complex kinds (Conflict, EntityType, …)
+        keep the hand-authored-JSON path (hotam land <file.json>).
   version, --version
         Print the hotam binary version.
 
@@ -183,6 +193,7 @@ Commands:
 // next positional token as its "value"). Today the only boolean flag is --json.
 var boolFlagNames = map[string]bool{
 	"json": true,
+	"land": true,
 }
 
 // reorderFlagsFirst moves every token starting with "-" (and its value, if it
