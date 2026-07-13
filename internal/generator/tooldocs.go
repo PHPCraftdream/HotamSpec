@@ -1,6 +1,8 @@
 package generator
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -80,4 +82,86 @@ func statusLine(s methodology.Status) string {
 	default:
 		return string(s)
 	}
+}
+
+// purposeExcerpt strips the "Usage: hotam <cmd> [flags]. " prefix from an
+// Implemented tool's Purpose text, yielding just the descriptive sentence for
+// the compact INDEX listing. Purpose fields that don't start with "Usage:"
+// (Planned tools use "Not implemented. Historically: …") are returned
+// unchanged — they're already short.
+func purposeExcerpt(p string) string {
+	const usagePrefix = "Usage:"
+	if !strings.HasPrefix(p, usagePrefix) {
+		return p
+	}
+	rest := p[len(usagePrefix):]
+	if idx := strings.Index(rest, ". "); idx >= 0 {
+		return strings.TrimSpace(rest[idx+2:])
+	}
+	return strings.TrimSpace(rest)
+}
+
+// BuildToolDocsIndex renders docs/gen/tools/INDEX.md: a single entry-point
+// page that splits the tool registry into Implemented (real `hotam` CLI
+// subcommands a consumer can run) and Planned (methodology surface only, no
+// Go command exists), so a browser of docs/gen/tools/ is not misled by the
+// raw file count (40 .md files, only 13 of which back runnable commands) into
+// thinking every entry is a working command.
+//
+// It is purely additive: BuildToolDocs still emits one .md per tool unchanged.
+// The index reuses the same methodology.Tools registry and the same
+// statusBadge/statusLine vocabulary the per-tool docs already carry, so the
+// distinction "implemented vs planned" is consistent everywhere it appears
+// (per-tool badge → root-crystal EMBEDDED-TOOLS collapse → this index).
+func BuildToolDocsIndex() string {
+	tools := methodology.Tools.All()
+	sorted := make([]methodology.Tool, len(tools))
+	copy(sorted, tools)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Command < sorted[j].Command })
+
+	var implemented, planned []methodology.Tool
+	for _, t := range sorted {
+		if t.Status == methodology.Implemented {
+			implemented = append(implemented, t)
+		} else {
+			planned = append(planned, t)
+		}
+	}
+
+	lines := []string{
+		Banner,
+		"",
+		"# Tool docs index",
+		"",
+		fmt.Sprintf("%d tools registered — **%d Implemented** (real `hotam` CLI subcommands) · **%d Planned** (methodology surface only; no Go command exists yet).",
+			len(sorted), len(implemented), len(planned)),
+		"",
+		"This index splits the tool registry so a browser of `docs/gen/tools/` can tell at a glance which entries are real commands versus aspirational methodology surface. The root crystal's Tool reference block (`EMBEDDED-TOOLS`) collapses the Planned tools into a one-line summary; each per-tool `.md` file below carries full Status/Canon/Purpose detail.",
+		"",
+		"## Implemented (real commands)",
+		"",
+		fmt.Sprintf("These %d are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.", len(implemented)),
+		"",
+	}
+	for _, t := range implemented {
+		displayName := strings.ReplaceAll(t.Command, "_", "-")
+		lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, purposeExcerpt(t.Purpose)))
+	}
+
+	lines = append(lines, "", "## Planned (methodology surface only — no command exists)", "")
+	if len(planned) == 0 {
+		lines = append(lines, "_(none — all registered tools are implemented.)_")
+	} else {
+		lines = append(lines, fmt.Sprintf(
+			"These %d are registered in the methodology registry (`internal/methodology/tools_data.go`) as future-work surface. Invoking any of them as `hotam <name>` fails with \"unknown command\". Their per-tool `.md` files exist for design-continuity reference only.",
+			len(planned),
+		))
+		lines = append(lines, "")
+		for _, t := range planned {
+			displayName := strings.ReplaceAll(t.Command, "_", "-")
+			lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, purposeExcerpt(t.Purpose)))
+		}
+	}
+
+	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 }

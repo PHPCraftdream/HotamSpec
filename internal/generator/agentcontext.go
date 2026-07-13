@@ -171,6 +171,7 @@ func renderAgentContextDocsGenIndex(domainName string) []string {
 		"- `" + base + "live-state.md` — the same pulse this file's Live-state section already carries, standalone.",
 		"- `" + base + "OPEN.md` — open-question detail behind the OPEN status.",
 		"- `" + base + "thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.",
+		"- `" + base + "tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).",
 		"- `" + base + "tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.",
 		"",
 		"ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):",

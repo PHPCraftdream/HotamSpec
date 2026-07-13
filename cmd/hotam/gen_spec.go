@@ -207,6 +207,17 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	}
 	written = append(written, toolPaths...)
 
+	// tools/INDEX.md: a single entry-point page splitting the registry into
+	// Implemented (real commands) vs Planned (methodology surface only), so a
+	// browser of docs/gen/tools/ is not misled by the raw file count (40 .md
+	// files, only 13 backing runnable commands). Purely additive — one extra
+	// file alongside the per-tool docs above.
+	toolIndexPath := filepath.Join(genDir, "tools", "INDEX.md")
+	if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex())); err != nil {
+		return written, err
+	}
+	written = append(written, toolIndexPath)
+
 	// Root CLAUDE.md (R-claude-md-template-driven): the crystal is WRITTEN
 	// to disk only when --claude-md points at a path — the reference behavior
 	// is an unconditional root-crystal regen, but this CLI is also used
