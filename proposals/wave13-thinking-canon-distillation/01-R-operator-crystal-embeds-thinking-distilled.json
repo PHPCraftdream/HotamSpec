@@ -1,0 +1,40 @@
+{
+  "kind": "Requirement",
+  "id": "R-operator-crystal-embeds-thinking-distilled",
+  "claim": "The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to domains/<domain>/docs/gen/thinking/<slug>.md, not a multi-line RULE+WHY distillate.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach: even compressed RULE+WHY pairs consumed ~19k chars across 22 topics. The implemented design embeds one real RULE sentence per §-section, sourced from Section.Canon (internal/methodology/sections_data.go) -- the same registry BuildThinkingDocs (internal/generator/thinkingdocs.go) reads from, so Canon is the single source of truth for both the inlined RULE and the full thinking-doc on disk (domains/<domain>/docs/gen/thinking/<slug>.md). The thinking/*.md docs are themselves generated FROM this registry's Canon/Narrative/Why, so sourcing the inlined rule from Canon adds no new source of truth. Each Canon is guarded through shortForm(canon, \"\") (firstWholeSentence) as future-proofing against multi-sentence Canon drift (R-crystal-carries-short-form); today's 29 Canon values are single standalone sentences (2694 chars total, min 44 / max 178 / avg 93), so no truncation occurs and the short-form guard is a pure regression hedge. The rendered '- **§X** — <Canon>' block costs ~3.3k chars; the resident crystal moved 16458 -> 19335 chars (+2877), far below the 150000-char host cap (R-context-budget-rule, ENFORCED via ComputeCrystalCharCountFixpoint) and nowhere near the ~200k the OLD full-text embedding reached. Claim path/name fixes landed in this same proposal: corrected the Python-era 'short_form' name to the Go identifier 'shortForm', and the stale 'spec/docs/thinking/<slug>.md' path to 'domains/<domain>/docs/gen/thinking/<slug>.md' (matching the generator's path convention). ENFORCED 2026-07-13 via three tests in internal/generator/claudemd_coverage_test.go: TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection (every registered section's short-formed Canon appears in the rendered block, bullet shape verified), TestRenderEmbeddedThinkingBlock_NoMidWordTruncation (no mid-word '...' stub for any current Canon value -- regression guard mirroring TestShortForm_NoMidWordEllipsis), TestRenderEmbeddedThinkingBlock_CrystalWithinBudget (crystal char-count fixpoint converges and stays under the 130000 warn threshold).",
+  "assumptions": [
+    "A-python-stack"
+  ],
+  "relations": [
+    {
+      "kind": "replaces",
+      "target": "R-operator-crystal-embeds-thinking"
+    }
+  ],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection",
+    "TestRenderEmbeddedThinkingBlock_NoMidWordTruncation",
+    "TestRenderEmbeddedThinkingBlock_CrystalWithinBudget"
+  ],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-02",
+  "settled_at": "2026-07-12",
+  "last_reviewed_at": "2026-07-13",
+  "review_after": "2027-02-12",
+  "evidence": [
+    "internal/generator/claudemd_coverage_test.go::TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection — every registered methodology.Sections entry's short-formed Canon appears as a '- **§X** — <rule>' line in RenderEmbeddedThinkingBlock output, and the thinking-doc path pointer survives.",
+    "internal/generator/claudemd_coverage_test.go::TestRenderEmbeddedThinkingBlock_NoMidWordTruncation — the rendered block contains no '...' stub for any current Canon value (firstWholeSentence returns each single-sentence Canon whole).",
+    "internal/generator/claudemd_coverage_test.go::TestRenderEmbeddedThinkingBlock_CrystalWithinBudget — ComputeCrystalCharCountFixpoint converges against the fixture graph and the resulting crystal char count is under the 130000 warn threshold, a sanity check against the documented historical ~200k budget breach."
+  ],
+  "source_refs": [
+    "internal/generator/claudemd.go",
+    "internal/methodology/sections_data.go",
+    "internal/generator/thinkingdocs.go"
+  ]
+}

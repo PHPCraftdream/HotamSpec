@@ -87,34 +87,43 @@ func RenderMediationLoopBlock() string {
 }
 
 // RenderEmbeddedThinkingBlock renders the EMBEDDED-THINKING block content
-// (without sentinels): a compact index of the framework's thinking-topics,
-// one linkable line per §-section, derived from methodology.Sections
-// (internal/methodology/sections_data.go). The full RULE/Canon/Narrative/Why
-// text lives in domains/<domainName>/docs/gen/thinking/<slug>.md (generated
-// by BuildThinkingDocs, written by cmd/hotam/gen_spec.go's genSpec), so
-// duplicating it inline here was pure context-debt — the resident seed only
-// needs the index to know a topic exists and where to read it.
+// (without sentinels): one RULE line per §-section, each sourcing its rule
+// text from Section.Canon (internal/methodology/sections_data.go) — the same
+// registry BuildThinkingDocs reads from, so Canon is the single source of
+// truth for both the inlined RULE and the full thinking-doc on disk.
 //
-// This used to be the hand-baked embeddedThinkingText constant in
-// claudemd_static.go; that constant had drifted to 23 alphabetical entries
-// while the registry grew to 29 (§Loop/§Ticket/§Tick/§Constitution/§Context/
-// §Atoms had silently dropped out). Deriving from the registry fixes that drift
-// the same way RenderEmbeddedToolsBlock does for tools.
+// R-operator-crystal-embeds-thinking-distilled demands exactly this: a real
+// RULE sentence per topic embedded inline (the operator sees the gist without
+// fetching), plus a path link to the full Canon/Narrative/Why at
+// domains/<domainName>/docs/gen/thinking/<slug>.md. The old version rendered
+// only a bare slug-list ("§Agent · §Assumption · ...") whose "One RULE per
+// §-section" label was therefore false — zero rule text appeared. Sourcing
+// from Canon makes the label literally true and adds no new source of truth
+// (the thinking/*.md docs are themselves generated FROM this same registry's
+// Canon/Narrative/Why via BuildThinkingDocs).
+//
+// Each Canon is guarded through shortForm(canon, "") (firstWholeSentence) as a
+// defensive measure against future Canon drift into multi-sentence text: the
+// current Canon values are already single standalone sentences, so this is
+// pure future-proofing, not truncation of anything today. It degrades
+// gracefully (whole-sentence short form, never mid-word "..." stub,
+// R-crystal-carries-short-form) if a future Canon value grows verbose.
 func RenderEmbeddedThinkingBlock(domainName string) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
 	sections := methodology.Sections.All()
-	names := make([]string, len(sections))
-	for i, s := range sections {
-		names[i] = s.Slug
-	}
 	lines := []string{
 		generatedHeaderComment,
 		"",
 		"### Methodology — how to think",
 		"",
-		"One RULE per §-section; full Canon/Narrative/Why at `domains/" + domainName + "/docs/gen/thinking/<slug>.md` (slug = lowercased §-name): " + strings.Join(names, " · ") + ".",
+		"One RULE per §-section; full Canon/Narrative/Why at `domains/" + domainName + "/docs/gen/thinking/<slug>.md` (slug = lowercased §-name).",
+		"",
+	}
+	for _, s := range sections {
+		rule := shortForm(s.Canon, "")
+		lines = append(lines, "- **"+s.Slug+"** — "+rule)
 	}
 	return strings.Join(lines, "\n")
 }

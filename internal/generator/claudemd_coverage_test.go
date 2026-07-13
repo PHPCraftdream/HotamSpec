@@ -70,6 +70,76 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 	}
 }
 
+// TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection enforces
+// R-operator-crystal-embeds-thinking-distilled: the EMBEDDED-THINKING block
+// must embed one RULE line per §-section, sourcing its rule text from the
+// section's Canon (guarded through shortForm/firstWholeSentence), not a bare
+// slug-list. Every registered section's short-formed Canon must appear in the
+// rendered block, and the bullet must follow the "- **§X** — <rule>" shape.
+func TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection(t *testing.T) {
+	t.Parallel()
+	out := RenderEmbeddedThinkingBlock("hotam-spec-self")
+	sections := methodology.Sections.All()
+	if len(sections) == 0 {
+		t.Fatal("methodology.Sections must not be empty")
+	}
+	for _, s := range sections {
+		want := "- **" + s.Slug + "** — " + shortForm(s.Canon, "")
+		if !strings.Contains(out, want) {
+			t.Errorf("EMBEDDED-THINKING missing the Canon-distilled RULE line for %s; want line %q", s.Slug, want)
+		}
+	}
+	// the path link to the full thinking-doc must survive (deep-dive pointer)
+	if !strings.Contains(out, "docs/gen/thinking/<slug>.md") {
+		t.Errorf("EMBEDDED-THINKING must keep the thinking-doc path pointer")
+	}
+}
+
+// TestRenderEmbeddedThinkingBlock_NoMidWordTruncation mirrors
+// TestShortForm_NoMidWordEllipsis's no-mid-word-stub contract
+// (R-crystal-carries-short-form) for the EMBEDDED-THINKING block: for every
+// current Canon value, the embedded RULE must NOT be truncated mid-word with
+// a "..." stub. Today's Canon values are single standalone sentences, so the
+// firstWholeSentence guard returns them whole; this test is a regression guard
+// against future Canon drift into verbose multi-sentence text.
+func TestRenderEmbeddedThinkingBlock_NoMidWordTruncation(t *testing.T) {
+	t.Parallel()
+	out := RenderEmbeddedThinkingBlock("hotam-spec-self")
+	if strings.Contains(out, "...") {
+		t.Errorf("EMBEDDED-THINKING must not contain a mid-word '...' stub, but got:\n%s", out)
+	}
+	for _, s := range methodology.Sections.All() {
+		rule := shortForm(s.Canon, "")
+		if strings.HasSuffix(rule, "...") {
+			t.Errorf("RULE for %s was truncated mid-word: %q", s.Slug, rule)
+		}
+	}
+}
+
+// TestRenderEmbeddedThinkingBlock_CrystalWithinBudget is a crystal-size
+// regression guard (R-context-budget-rule). The historical failure mode this
+// requirement's own `why` documents is the OLD multi-paragraph RULE+WHY era
+// that blew the crystal to ~200k chars and breached the 150k host cap. This
+// sanity-checks that the full root crystal — which now carries the
+// Canon-distilled EMBEDDED-THINKING block — still converges to a fixpoint and
+// stays comfortably below the cap. The EMBEDDED-THINKING block is
+// registry-driven and identical across domains, so Canon growth would show up
+// in the fixture crystal too; the 130000 bound (the documented warn threshold)
+// leaves generous headroom under the 150000 hard cap.
+func TestRenderEmbeddedThinkingBlock_CrystalWithinBudget(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	count, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, "2026-07-13")
+	if err != nil {
+		t.Fatalf("crystal char-count fixpoint did not converge: %v", err)
+	}
+	const warnThreshold = 130000
+	if count >= warnThreshold {
+		t.Errorf("root crystal char count %d exceeds the %d warn threshold (R-context-budget-rule); the EMBEDDED-THINKING Canon distillation likely regressed the budget", count, warnThreshold)
+	}
+}
+
 // TestBuildAgentContext_Fixture drives the AGENT-CONTEXT.md renderer, which
 // reuses the LIVE-STATE, diagnose-signals, status-counter, and constitution-
 // index building blocks. Asserts each section header renders.
