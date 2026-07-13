@@ -36,6 +36,12 @@ func cmdApplyProposal(args []string) error {
 		if err != nil {
 			return err
 		}
+		// Advisory confront-at-gate (warn-only, never blocks): run AFTER every
+		// proposal is parsed but BEFORE ApplyBatch mutates the graph, so all N
+		// candidates are checked against the SAME starting snapshot.
+		if err := confrontBatchSummary(domainDir, proposals); err != nil {
+			return err
+		}
 		gp := graphPathForDomain(domainDir)
 		if err := proposal.ApplyBatch(gp, *today, proposals); err != nil {
 			return err
@@ -49,7 +55,19 @@ func cmdApplyProposal(args []string) error {
 		return fmt.Errorf("usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]")
 	}
 	proposalFile := fs.Arg(0)
-	p, gp, err := applyProposalFile(proposalFile, domainDir, *today)
+	// Parse the proposal ONCE so the advisory confront-at-gate (warn-only,
+	// never blocks — R-ai-presents-not-decides) runs BEFORE the apply outcome
+	// is printed, then the same parsed value drives the apply. A duplicate /
+	// re-litigation warning is therefore visible even when the apply then
+	// succeeds (it always proceeds regardless).
+	p, err := parseProposalFile(proposalFile)
+	if err != nil {
+		return err
+	}
+	if err := confrontBeforeApply(domainDir, p); err != nil {
+		return err
+	}
+	gp, err := applyProposalValue(p, domainDir, *today)
 	if err != nil {
 		return err
 	}
@@ -58,28 +76,32 @@ func cmdApplyProposal(args []string) error {
 	return nil
 }
 
-// applyProposalFile reads a proposal JSON file from disk, strictly decodes
-// it, and applies it to domainDir's graph.json (internal/proposal.Apply
-// already re-verifies invariants against the mutated graph BEFORE writing —
-// see internal/proposal/apply.go — so a successful return here means the
-// graph on disk is structurally valid, just not yet re-rendered into
-// docs/gen/). It returns the decoded proposal and the graph path that was
-// written, so callers (cmdApplyProposal, cmdLand) can report what happened
-// without re-parsing.
-func applyProposalFile(proposalFile, domainDir, today string) (proposal.Proposal, string, error) {
-	data, err := os.ReadFile(proposalFile)
+// parseProposalFile reads a proposal JSON file from disk and strictly decodes
+// it into a Proposed* value via the same parseProposal path. Shared by
+// landProposalFile and by the command-level branches that parse the proposal
+// ONCE for an advisory confront check before applying (so the file is read a
+// single time, not twice).
+func parseProposalFile(path string) (proposal.Proposal, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, "", fmt.Errorf("read proposal %s: %w", proposalFile, err)
+		return nil, fmt.Errorf("read proposal %s: %w", path, err)
 	}
-	p, err := parseProposal(data)
-	if err != nil {
-		return nil, "", err
-	}
+	return parseProposal(data)
+}
+
+// applyProposalValue applies an already-parsed proposal to domainDir's
+// graph.json (internal/proposal.Apply re-verifies invariants against the
+// mutated graph BEFORE writing — see internal/proposal/apply.go — so a
+// successful return means the graph on disk is structurally valid). It returns
+// the graph path that was written. This is the file-I/O-free apply core,
+// shared by landProposalValue (land pipeline) and the command-level branches
+// that parse once + run a confront check + apply.
+func applyProposalValue(p proposal.Proposal, domainDir, today string) (string, error) {
 	gp := graphPathForDomain(domainDir)
 	if err := proposal.Apply(gp, today, p); err != nil {
-		return nil, "", err
+		return "", err
 	}
-	return p, gp, nil
+	return gp, nil
 }
 
 // loadBatchDir reads every *.json file in dir, sorted by filename, and

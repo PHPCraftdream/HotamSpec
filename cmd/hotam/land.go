@@ -16,13 +16,14 @@ import (
 // AGENTS.md diverged until someone remembers to run gen-spec by hand.
 //
 // land runs three steps in sequence, reusing the exact same code paths as
-// the standalone commands (applyProposalFile / ApplyBatch / genSpec /
+// the standalone commands (applyProposalValue / ApplyBatch / genSpec /
 // allViolations) so its behavior is provably identical to running them one
 // at a time:
 //
-//  1. apply the proposal — a single positional file (applyProposalFile) or a
-//     whole directory of proposals applied atomically via --batch
-//     (loadBatchDir + proposal.ApplyBatch). Strict decode; Apply/ApplyBatch
+//  1. apply the proposal — a single positional file (parseProposalFile +
+//     applyProposalValue) or a whole directory of proposals applied atomically
+//     via --batch (loadBatchDir + proposal.ApplyBatch). Strict decode;
+//     Apply/ApplyBatch
 //     reject the write outright if the mutated graph would introduce new
 //     invariant violations — see internal/proposal/apply.go.
 //  2. regenerate docs/gen/*.md + graph.json for the domain from the newly
@@ -77,14 +78,27 @@ func cmdLand(args []string) error {
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]")
 	}
-	return landProposalFile(fs.Arg(0), domainDir, *claudeMD, *today)
+	// Parse the proposal ONCE so the advisory confront-at-gate (warn-only,
+	// never blocks — R-ai-presents-not-decides) runs BEFORE the land outcome,
+	// then the same parsed value drives the land pipeline. A parse failure is
+	// wrapped as "apply step failed" exactly as landProposalFile did when it
+	// owned the parse, preserving the existing error contract.
+	proposalFile := fs.Arg(0)
+	p, err := parseProposalFile(proposalFile)
+	if err != nil {
+		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+	}
+	if err := confrontBeforeApply(domainDir, p); err != nil {
+		return err
+	}
+	return landProposalValue(p, domainDir, *claudeMD, *today)
 }
 
 // cmdLandBatch is the --batch <dir> code path of `hotam land`: snapshot,
 // apply every *.json in <dir> atomically, regen docs, re-verify, and roll
 // back on failure. It is the batch counterpart to landProposalFile; the two
 // share the same snapshot/genSpec/allViolations/rollback shape but differ in
-// the apply step (ApplyBatch vs applyProposalFile).
+// the apply step (ApplyBatch vs applyProposalValue).
 func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
@@ -94,6 +108,13 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
 	proposals, err := loadBatchDir(batchDir)
 	if err != nil {
 		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+	}
+	// Advisory confront-at-gate (warn-only, never blocks): run AFTER every
+	// proposal is parsed but BEFORE ApplyBatch mutates the graph, so all N
+	// candidates are checked against the SAME starting snapshot the batch then
+	// applies atomically.
+	if err := confrontBatchSummary(domainDir, proposals); err != nil {
+		return err
 	}
 	gp := graphPathForDomain(domainDir)
 	if err := proposal.ApplyBatch(gp, today, proposals); err != nil {
@@ -128,16 +149,38 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
 
 // landProposalFile runs the full land pipeline (snapshot, apply, regen,
 // re-verify, rollback-on-failure) against a single already-written proposal
-// file. Shared by cmdLand's single-file mode and `hotam propose`'s --land
-// flag, so both paths are provably identical — the transactional snapshot/
-// rollback logic lives in exactly one place.
+// file. It is a thin read+parse wrapper over parseProposalFile +
+// landProposalValue. Shared by cmdLand's single-file mode and `hotam propose`'s
+// --land flag, so both paths are provably identical — the transactional
+// snapshot/rollback logic lives in exactly one place (landProposalValue).
+//
+// No confront check runs here (or inside landProposalValue): `hotam propose
+// --land` runs its OWN confront in runPropose before calling this function, so
+// embedding one here would double-print the report on that path. The direct
+// `hotam land <file>` path runs its confront at the cmdLand command level
+// before calling landProposalValue.
 func landProposalFile(proposalFile, domainDir, claudeMDPath, today string) error {
+	p, err := parseProposalFile(proposalFile)
+	if err != nil {
+		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+	}
+	return landProposalValue(p, domainDir, claudeMDPath, today)
+}
+
+// landProposalValue runs the full land pipeline (snapshot, apply an
+// already-parsed proposal, regen, re-verify, rollback-on-failure). It is the
+// parse-free core shared by landProposalFile (which reads + parses the file)
+// and the cmdLand single-file command branch (which parses once for an
+// advisory confront check before landing). The transactional snapshot/rollback
+// lives here so every caller that lands a single proposal shares one
+// implementation.
+func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string) error {
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
 		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
 	}
 
-	p, gp, err := applyProposalFile(proposalFile, domainDir, today)
+	gp, err := applyProposalValue(p, domainDir, today)
 	if err != nil {
 		return fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
