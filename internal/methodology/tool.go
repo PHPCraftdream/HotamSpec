@@ -24,7 +24,18 @@ type Tool struct {
 	Canon   string
 	Purpose string
 	Status  Status
-	Run     func(args []string) error
+	// Claim is the one-sentence requirement-claim text projected into the
+	// STRUCTURAL R-tool-<basename> requirement (id = "R-tool-" + Command with
+	// underscores → hyphens) at render time. It is the sole source of the
+	// tool-derived requirement claim text (R-tool-is-its-own-requirement).
+	Claim string
+	// Enforcer is the OPTIONAL historical enforcer-test name carried for
+	// documentary continuity from the Python era. It is purely descriptive —
+	// it has never resolved to an actually-running Go test, and an empty
+	// string means "no historical enforcer name". Do not infer a stronger
+	// contract than that.
+	Enforcer string
+	Run      func(args []string) error
 }
 
 var Tools = registry.New[Tool]()
