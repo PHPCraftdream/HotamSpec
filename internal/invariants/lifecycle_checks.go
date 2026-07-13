@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 func lifecycleWellformedIssues(lc ontology.Lifecycle) []string {
@@ -359,6 +359,29 @@ var _ = All.MustRegister("check_operator_steward_not_self", Invariant{
 	Check: checkOperatorStewardNotSelf,
 })
 
+// crystalPathForDomain resolves the resident-crystal path (root CLAUDE.md)
+// for a domain using the established <repoRoot>/domains/<name> convention
+// (see cmd/hotam/gen_spec.go's repoRootForDomain): when the domain
+// directory's parent is literally "domains", the crystal root is the
+// grandparent. It returns ok=false when the domain does not follow that
+// layout OR DomainDir is unset -- the check then treats size as 0
+// (already-documented graceful-absence behavior).
+//
+// Unlike repoRootForDomain, it deliberately does NOT fall back to a
+// CWD-based project-root search: for an external --domain such a search
+// resolves THIS framework's own root (or nothing at all), measuring an
+// unrelated crystal and producing false violations/non-violations. The
+// domain's own layout is the only input (task #108).
+func crystalPathForDomain(domainDir string) (string, bool) {
+	if domainDir == "" {
+		return "", false
+	}
+	if filepath.Base(filepath.Dir(domainDir)) != "domains" {
+		return "", false
+	}
+	return filepath.Join(filepath.Dir(filepath.Dir(domainDir)), "CLAUDE.md"), true
+}
+
 func checkOperatorWithinBudget(g *ontology.Graph) []Violation {
 	var out []Violation
 	for _, op := range g.Operators {
@@ -382,10 +405,9 @@ func checkOperatorWithinBudget(g *ontology.Graph) []Violation {
 			}
 		case ontology.BudgetMeasureCRYSTAL_CHARS:
 			size := 0
-			if root, ok := paths.ProjectRoot(); ok {
-				data, err := os.ReadFile(filepath.Join(root, "CLAUDE.md"))
-				if err == nil {
-					size = len(string(data))
+			if crystalPath, ok := crystalPathForDomain(g.DomainDir); ok {
+				if data, err := os.ReadFile(crystalPath); err == nil {
+					size = utf8.RuneCountInString(string(data))
 				}
 			}
 			if size > limit {

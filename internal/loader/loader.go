@@ -47,6 +47,7 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		EntityTypes:  dto.EntityTypes,
 		Entities:     dto.Entities,
 		SelfHosting:  resolveSelfHosting(path),
+		DomainDir:    filepath.Dir(path),
 	}
 	if err := validateGraph(g); err != nil {
 		return nil, fmt.Errorf("load graph: %s: %w", path, err)

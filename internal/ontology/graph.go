@@ -12,6 +12,14 @@ type Graph struct {
 	EntityTypes  []EntityType     `json:"entity_types"`
 	Entities     []EntityInstance `json:"entities"`
 	SelfHosting  bool             `json:"self_hosting"`
+	// DomainDir is the filesystem path of the domain directory this graph was
+	// loaded from (the resolved --domain path, i.e. the parent dir of
+	// graph.json). Populated by the loader at LoadGraph time; deliberately
+	// unserialized (json:"-") so it never round-trips through graph.json or
+	// DisallowUnknownFields. Lets domain-scoped checks resolve files relative
+	// to the graph actually being checked instead of a CWD-based project-root
+	// search, which resolves THIS framework's own root for external domains.
+	DomainDir string `json:"-"`
 }
 
 func (g *Graph) IsEmpty() bool {
