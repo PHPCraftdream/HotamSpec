@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 // TestGenSpec_MissingGraphRendersCalmNotice enforces R-empty-content-gen-notice:
@@ -72,5 +74,89 @@ func TestGenSpec_MissingGraph_MalformedStillErrors(t *testing.T) {
 	}
 	if _, err := genSpec(domainDir, "", "2026-07-12"); err == nil {
 		t.Fatal("R-empty-content-gen-notice non-vacuity: a malformed graph.json must still produce a real decode error, got nil")
+	}
+}
+
+// chdirAndRestore changes the process working directory to dir for the
+// duration of the test, restoring the original on cleanup. It mirrors
+// internal/paths's same-named helper (project_root_chain_test.go), which is
+// package-private there and so cannot be imported here. Used by the
+// repoRootForDomain tier-3 test below, which must isolate CWD from this
+// repo's own tree (whose domains/ marker would otherwise satisfy the
+// ProjectRootOrRaise fallback) to exercise the no-markers-found branch.
+func chdirAndRestore(t *testing.T, dir string) {
+	t.Helper()
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(orig)
+	})
+}
+
+// TestRepoRootForDomain_DomainsConvention covers tier 1: a domainDir whose
+// parent is literally "domains" derives repoRoot as the parent of domains/,
+// with no CWD/env dependency (tier 1 is checked before any marker search).
+// This is the common in-repo / external-project-convention case, unchanged
+// by the tier-3 addition.
+func TestRepoRootForDomain_DomainsConvention(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	domainDir := filepath.Join(root, "domains", "acme")
+	got := repoRootForDomain(domainDir)
+	if got != root {
+		t.Errorf("repoRootForDomain(%q) = %q, want %q (parent of domains/)", domainDir, got, root)
+	}
+}
+
+// TestRepoRootForDomain_ProjectRootResolves covers tier 2: a domainDir that
+// does NOT follow the domains/<name> layout, where paths.ProjectRootOrRaise()
+// succeeds (here via the R1 env override HOTAM_SPEC_PROJECT_ROOT). The
+// resolved root must be the env-supplied project root — this preserves the
+// CWD/env-based resolution that copySelfDomain-style fixtures (flat
+// t.TempDir()/hotam-spec-self layouts) and TestGenSpec_SmokeWritesByte
+// IdenticalFiles rely on when go test runs from inside this checkout.
+func TestRepoRootForDomain_ProjectRootResolves(t *testing.T) {
+	// Bare domain dir with no domains/ parent — tier 1 is skipped.
+	domainDir := filepath.Join(t.TempDir(), "hotam-spec-self")
+	target := t.TempDir()
+	t.Setenv(paths.EnvProjectRoot, target)
+	got := repoRootForDomain(domainDir)
+	if got != target {
+		t.Errorf("repoRootForDomain(%q) = %q, want env-resolved project root %q", domainDir, got, target)
+	}
+}
+
+// TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir covers tier 3: a
+// bare domain dir with NO project markers discoverable (both project-root env
+// vars cleared, CWD an isolated marker-less temp dir outside the repo). This
+// is exactly the shape `hotam init <dir>` scaffolds anywhere on disk and then
+// advertises via "next: hotam gen-spec --domain <dir>". repoRootForDomain
+// must NOT error — it returns domainDir itself, which RenderDomainMapBlock
+// turns into the graceful "domains/ directory absent" text (the e2e test
+// asserts the rendered output; this asserts the resolution function).
+//
+// CWD/env isolation mirrors internal/paths's
+// TestProjectRootOrRaise_FailureNoEnv exactly.
+func TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir(t *testing.T) {
+	empty := t.TempDir()
+	chdirAndRestore(t, empty)
+	t.Setenv(paths.EnvProjectRoot, "")
+	t.Setenv(paths.EnvDomainsRoot, "")
+
+	// Sanity: with this isolation, ProjectRootOrRaise itself must fail —
+	// otherwise the tier-3 branch is unreachable and the test would be vacuous.
+	if _, err := paths.ProjectRootOrRaise(); err == nil {
+		t.Fatalf("precondition broken: ProjectRootOrRaise unexpectedly succeeded from an isolated marker-less CWD; tier-3 branch cannot be exercised here")
+	}
+
+	domainDir := filepath.Join(t.TempDir(), "bare-acme")
+	got := repoRootForDomain(domainDir)
+	if got != domainDir {
+		t.Errorf("repoRootForDomain(%q) = %q, want domainDir itself (tier-3 fallback when no project root resolves)", domainDir, got)
 	}
 }

@@ -67,10 +67,7 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 	// whether the measurement is computed — so a gen-spec run WITHOUT
 	// --claude-md still embeds the correct fixpoint count into AGENT-CONTEXT.md
 	// (closing the former mode-dependent "0 chars" disagreement).
-	repoRoot, err := repoRootForDomain(domainDir)
-	if err != nil {
-		return nil, fmt.Errorf("resolve project root for crystal char-count fixpoint: %w", err)
-	}
+	repoRoot := repoRootForDomain(domainDir)
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
 	charCount, err := generator.ComputeCrystalCharCountFixpoint(g, domainName, repoRoot, domainGraphs, today)
 	if err != nil {
@@ -265,10 +262,14 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 
 // repoRootForDomain resolves the repository root used to render the
 // DOMAIN-MAP block (RenderDomainMapBlock lists filepath.Join(repoRoot,
-// "domains")). When domainDir follows the established <repoRoot>/domains/
-// <name> convention (see internal/generator/claudemd.go's repoRoot doc
+// "domains")). Resolution is three tiers, and never errors — an explicit
+// --domain is a complete instruction that must not be blocked by project-root
+// discovery.
+//
+// Tier 1 — <repoRoot>/domains/<name> convention: when domainDir's parent is
+// literally "domains" (see internal/generator/claudemd.go's repoRoot doc
 // comment: "the parent of domains/"), repoRoot is derived directly from
-// domainDir's own path — this is required for genuinely external projects
+// domainDir's own path. This is required for genuinely external projects
 // (any --domain outside this repository), where paths.ProjectRootOrRaise()'s
 // CWD-based marker search has no reason to find anything and must not be
 // asked to (R-project-root-not-hardcoded; see
@@ -276,16 +277,32 @@ func genSpec(domainDir, claudeMDPath, today string) ([]string, error) {
 // unconditional in task #102 without this fallback: hotam land against a
 // foreign project fails loudly instead of resolving via --domain alone).
 //
+// Tier 2 — non-conforming layout where ProjectRootOrRaise() SUCCEEDS:
 // domainDir fixtures that do NOT follow the domains/<name> layout (e.g. this
 // package's own test helpers, which copy a domain straight into a bare
 // t.TempDir() with no domains/ parent) fall back to
-// paths.ProjectRootOrRaise(), preserving the pre-existing CWD-based
-// resolution those tests already rely on.
-func repoRootForDomain(domainDir string) (string, error) {
+// paths.ProjectRootOrRaise(), preserving the pre-existing CWD-based resolution
+// those tests already rely on.
+//
+// Tier 3 — non-conforming layout where ProjectRootOrRaise() FAILS: a
+// genuinely bare domain dir with no project markers discoverable from CWD —
+// exactly the shape `hotam init <dir>` scaffolds anywhere on disk and then
+// points the user at via "next: hotam gen-spec --domain <dir>". Rather than
+// propagate the error, return domainDir itself as the minimal root.
+// RenderDomainMapBlock then looks for <domainDir>/domains, does not find it
+// (a bare domain dir has no domains/ subdirectory of its own), and renders
+// its existing graceful "_(no domains yet — domains/ directory absent)_"
+// text — the correct "no DOMAIN-MAP siblings" outcome for a domain with no
+// sibling domains to list. The render path is ALREADY graceful about an
+// empty/absent domains root, so no error is needed here.
+func repoRootForDomain(domainDir string) string {
 	if filepath.Base(filepath.Dir(domainDir)) == "domains" {
-		return filepath.Dir(filepath.Dir(domainDir)), nil
+		return filepath.Dir(filepath.Dir(domainDir))
 	}
-	return paths.ProjectRootOrRaise()
+	if root, err := paths.ProjectRootOrRaise(); err == nil {
+		return root
+	}
+	return domainDir
 }
 
 // loadGraphOrEmpty loads the domain's graph.json, mirroring loadDomainGraph,

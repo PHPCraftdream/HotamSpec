@@ -208,6 +208,101 @@ func TestExternal_InitApplyLandReqWhatNowAllViolations(t *testing.T) {
 	}
 }
 
+// TestExternal_InitGenSpecOutsideAnyProject_BareDomain reproduces the review-5
+// R5-b bug: `hotam init <dir>` scaffolds a domain at ANY <dir> (no domains/
+// <name> ancestor required — init takes the path as-is via filepath.Abs) and
+// then prints "next: hotam gen-spec --domain <dir>", but `hotam gen-spec`
+// used to fail with ProjectRootUnresolved for a genuinely bare <dir> outside
+// any Hotam-Spec project — breaking the exact workflow init advertises.
+//
+// Unlike TestExternal_InitApplyLandReqWhatNowAllViolations above (whose
+// domainDir is filepath.Join(workDir,"my-external-project","domains","acme")
+// — a domains/<name> layout that hits repoRootForDomain's tier-1 branch and
+// never reaches the fallback), this test's domainDir is BARE:
+// filepath.Join(workDir,"bare-project"), with NO domains/ parent at all. For
+// such a layout repoRootForDomain skips tier 1, tier 2 (ProjectRootOrRaise,
+// with env cleared and CWD an empty marker-less temp dir) fails, and tier 3
+// must return domainDir itself — letting gen-spec succeed and
+// RenderDomainMapBlock render its graceful "domains/ directory absent" text
+// instead of erroring.
+func TestExternal_InitGenSpecOutsideAnyProject_BareDomain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("external e2e: builds a real binary + spawns child processes; skipped in -short")
+	}
+	t.Parallel()
+
+	repoRoot := repoRootForTest(t)
+	binPath := buildSharedHotamBinary(t)
+
+	// A work dir OUTSIDE the repo, carrying NONE of internal/paths'
+	// project-root markers — this is the binary's CWD, so any marker-based
+	// project-root fallback has nothing to resolve against.
+	workDir, err := os.MkdirTemp("", "hotam-bare-work-")
+	if err != nil {
+		t.Fatalf("MkdirTemp workDir: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(workDir) })
+	if isInsideForTest(workDir, repoRoot) {
+		t.Fatalf("test invariant broken: workDir %s resolved inside repo root %s", workDir, repoRoot)
+	}
+	for _, marker := range []string{"domains", "delegations", "CLAUDE.md", ".claude", "tickets", "pyproject.toml"} {
+		if _, err := os.Stat(filepath.Join(workDir, marker)); err == nil {
+			t.Fatalf("test invariant broken: workDir unexpectedly contains marker %q", marker)
+		}
+	}
+
+	// BARE domain dir: directly under workDir, NO domains/ parent. This is
+	// exactly the shape `hotam init <dir>` supports anywhere on disk.
+	domainDir := filepath.Join(workDir, "bare-project")
+
+	run := func(env []string, args ...string) string {
+		t.Helper()
+		cmd := exec.Command(binPath, args...)
+		cmd.Dir = workDir
+		if env != nil {
+			cmd.Env = env
+		}
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("hotam %s failed: %v\nOUTPUT:\n%s", strings.Join(args, " "), err, out)
+		}
+		return string(out)
+	}
+	clearedEnv := filteredEnv(t, "HOTAM_SPEC_PROJECT_ROOT", "HOTAM_SPEC_DOMAINS_ROOT")
+
+	// (a) hotam init scaffolds the bare domain — must succeed (unchanged).
+	initOut := run(clearedEnv, "init", domainDir, "--name", "acme")
+	if !strings.Contains(initOut, `initialized domain "acme"`) {
+		t.Fatalf("init output missing confirmation line:\n%s", initOut)
+	}
+
+	// (b) hotam gen-spec --domain <bare-dir> — THIS is the call that used to
+	// fail with ProjectRootUnresolved (the binary's run() above fatals on any
+	// non-zero exit, so this assertion directly fails the test against the
+	// pre-fix code). After the tier-3 fix it must succeed and print a
+	// non-empty file listing.
+	genSpecOut := run(clearedEnv, "gen-spec", "--domain", domainDir)
+	if strings.TrimSpace(genSpecOut) == "" {
+		t.Fatalf("gen-spec on a bare domain produced no file listing")
+	}
+
+	// (c) DOMAIN-MAP only renders into the root crystal via --claude-md; a
+	// bare gen-spec without it never writes CLAUDE.md. Run with --claude-md
+	// to exercise the DOMAIN-MAP block and assert the graceful empty-render
+	// text ("domains/ directory absent") — the outcome that replaces the old
+	// hard error for a domain with no sibling domains to list.
+	claudeMDPath := filepath.Join(domainDir, "CLAUDE.md")
+	run(clearedEnv, "gen-spec", "--domain", domainDir, "--claude-md", claudeMDPath)
+	crystal, err := os.ReadFile(claudeMDPath)
+	if err != nil {
+		t.Fatalf("read generated CLAUDE.md: %v", err)
+	}
+	const gracefulMarker = "domains/ directory absent"
+	if !strings.Contains(string(crystal), gracefulMarker) {
+		t.Errorf("CLAUDE.md DOMAIN-MAP should carry the graceful empty text %q for a bare domain with no siblings; got:\n%s", gracefulMarker, string(crystal))
+	}
+}
+
 // repoRootForTest resolves this module's root (the directory containing
 // go.mod) via runtime.Caller, exactly like internal/paths.repoRoot's own
 // (unexported) fallback — duplicated here rather than imported because
