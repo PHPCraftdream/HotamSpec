@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-atomicity-ratchet-no-growth",
+  "claim": "The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline.",
+  "owner": "framework-reviewer",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the audit_atomicity tool (Planned) — the ratchet needs the audit baseline the tool produces"
+}

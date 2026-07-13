@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-claude-adapter",
+  "claim": "The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the attention_hook tool + setup_hooks tool (Planned) + the internal/attention package (absent)"
+}

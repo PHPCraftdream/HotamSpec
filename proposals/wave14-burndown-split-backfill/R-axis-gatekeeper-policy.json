@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-axis-gatekeeper-policy",
+  "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the create_axis tool (Planned) — the gatekeeper check is part of the creation path"
+}

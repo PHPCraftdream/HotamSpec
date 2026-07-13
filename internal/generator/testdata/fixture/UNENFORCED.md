@@ -14,15 +14,21 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 1 / SETTLED 3; closeable debt 1; inherent discipline 1; DRAFT 1; OPEN 1; REJECTED 1.**
+**Burn-down: SETTLED-ENFORCED 1 / SETTLED 3; closeable-now 1; feature-blocked 0; inherent discipline 1; DRAFT 1; OPEN 1; REJECTED 1.**
 
 ---
 
-## Closeable debt (ENFORCEABLE, no enforcer yet)
+## Closeable debt — closeable now (real, actionable)
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
 | `R-fixture-settled-prose` | PROSE | `S-ai-agent` | A SETTLED requirement with PROSE/ENFORCEABLE enforcement counts as closeable debt. |
+
+## Closeable debt — feature-blocked (honest roadmap, not neglected)
+
+These ENFORCEABLE requirements stay PROSE because the feature they describe does not exist yet — a real enforcement test is impossible until the blocking feature is built (the build itself is frozen by R-speculative-aspects-frozen). The per-item `blocked_on` column names the specific Planned tool or absent package. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md for the full cluster analysis.
+
+_None — no closeable-debt requirement is feature-blocked._
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 

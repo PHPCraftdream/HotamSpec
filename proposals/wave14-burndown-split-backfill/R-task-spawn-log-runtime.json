@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-task-spawn-log-runtime",
+  "claim": "The spawn_agent tool shall append a spawn-log entry to .runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation.",
+  "owner": "ai-agent",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the spawn_agent tool (Planned) + the .runtime/spawn-log.jsonl infrastructure (absent)"
+}

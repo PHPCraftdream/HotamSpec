@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-agent-references-shared-docs",
+  "claim": "Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), without duplicating their content.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the create_agent tool (Planned) + the agent-crystal rendering path"
+}

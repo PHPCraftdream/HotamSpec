@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-audit-atomicity-tool",
+  "claim": "An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool, not by a one-off hand invocation.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the audit_atomicity tool (Planned in internal/methodology/tools_data.go)"
+}

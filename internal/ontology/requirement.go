@@ -69,10 +69,34 @@ type Requirement struct {
 	SourceRefs     []string       `json:"source_refs"`
 	History        []HistoryEntry `json:"history"`
 	DeclOrder      int            `json:"decl_order"`
+	// BlockedOn names the specific not-yet-built feature (a Planned tool from
+	// internal/methodology/tools_data.go, or an absent Go package) that prevents
+	// a real enforcement test from being written for this requirement TODAY,
+	// even though it is otherwise ENFORCEABLE. Empty means "no known blocker —
+	// this is real, actionable closeable debt, not feature-blocked roadmap"
+	// (see docs/reviews/2026-07-13-c1-roadmap-debt-triage.md, the analytical
+	// source for this field's initial backfill).
+	BlockedOn string `json:"blocked_on,omitempty"`
 }
 
 func (r Requirement) IsCloseableDebt() bool {
 	return r.Enforcement != EnforcementENFORCED && r.Enforceability == EnforceabilityENFORCEABLE
+}
+
+// IsCloseableDebtNow is the actionable subset of closeable debt: a real test
+// could be written for it TODAY if someone did the work (no missing feature
+// blocks it). Mutually exclusive with IsFeatureBlockedDebt; their union equals
+// IsCloseableDebt.
+func (r Requirement) IsCloseableDebtNow() bool {
+	return r.IsCloseableDebt() && r.BlockedOn == ""
+}
+
+// IsFeatureBlockedDebt is the honestly-documented roadmap subset of closeable
+// debt: the requirement describes a feature that does not exist yet, so no real
+// enforcement test is possible until the blocking feature is built. See
+// R-speculative-aspects-frozen.
+func (r Requirement) IsFeatureBlockedDebt() bool {
+	return r.IsCloseableDebt() && r.BlockedOn != ""
 }
 
 func (r Requirement) IsOpen() bool {

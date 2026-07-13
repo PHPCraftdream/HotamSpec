@@ -24,6 +24,7 @@ type snapshot struct {
 	ReviewAfter    string
 	Evidence       []string
 	SourceRefs     []string
+	BlockedOn      string
 }
 
 func snapshotFrom(r ontology.Requirement) snapshot {
@@ -51,6 +52,7 @@ func snapshotFrom(r ontology.Requirement) snapshot {
 		ReviewAfter:    r.ReviewAfter,
 		Evidence:       ev,
 		SourceRefs:     sr,
+		BlockedOn:      r.BlockedOn,
 	}
 }
 
@@ -107,6 +109,7 @@ func summarizeFieldDiff(old snapshot, applied snapshot) string {
 		{"review_after", old.ReviewAfter, applied.ReviewAfter},
 		{"evidence", sliceKey(old.Evidence), sliceKey(applied.Evidence)},
 		{"source_refs", sliceKey(old.SourceRefs), sliceKey(applied.SourceRefs)},
+		{"blocked_on", old.BlockedOn, applied.BlockedOn},
 	}
 	var parts []string
 	for _, d := range diffs {

@@ -14,11 +14,11 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 0 / SETTLED 9; closeable debt 6; inherent discipline 3; DRAFT 0; OPEN 0; REJECTED 0.**
+**Burn-down: SETTLED-ENFORCED 0 / SETTLED 9; closeable-now 6; feature-blocked 0; inherent discipline 3; DRAFT 0; OPEN 0; REJECTED 0.**
 
 ---
 
-## Closeable debt (ENFORCEABLE, no enforcer yet)
+## Closeable debt — closeable now (real, actionable)
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
@@ -28,6 +28,12 @@ judgment calls no check_* could ever verify.
 | `R-land-leaves-trace` | PROSE | `pipeline-operator` | Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl). |
 | `R-wave-strictly-sequential` | STRUCTURAL | `pipeline-operator` | Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently. |
 | `R-host-spawn-leaves-trace` | STRUCTURAL | `pipeline-operator` | Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an equivalent host hook. |
+
+## Closeable debt — feature-blocked (honest roadmap, not neglected)
+
+These ENFORCEABLE requirements stay PROSE because the feature they describe does not exist yet — a real enforcement test is impossible until the blocking feature is built (the build itself is frozen by R-speculative-aspects-frozen). The per-item `blocked_on` column names the specific Planned tool or absent package. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md for the full cluster analysis.
+
+_None — no closeable-debt requirement is feature-blocked._
 
 ## Inherent discipline (INHERENTLY_PROSE — not debt, permanent by design)
 

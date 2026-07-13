@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforcement-perimeter-visible",
+  "claim": "A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on a content-hash pin mechanism + a baseline-update tool (both unregistered)"
+}

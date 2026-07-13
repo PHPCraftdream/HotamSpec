@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-attention-agent-agnostic-core",
+  "claim": "The attention core shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the internal/attention package (absent on disk)"
+}

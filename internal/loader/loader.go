@@ -51,15 +51,26 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 	switch sv {
 	case ontology.CurrentSchemaVersion:
 		// today's format — proceed to the strict decode below.
+	case 1:
+		// v1 is a real prior version (the graph.json format before the additive
+		// Requirement.blocked_on field landed). It requires NO data
+		// transformation: blocked_on is a purely additive OPTIONAL field
+		// (`json:"blocked_on,omitempty"`), so a v1 file that simply lacks it
+		// decodes losslessly into the v2 Requirement struct as the Go
+		// zero-value "" — there is nothing for DisallowUnknownFields to reject
+		// (v1 data has no field the v2 struct does not recognize). Proceed to
+		// the same strict decode below. A genuine data-SHAPE change in a future
+		// version (a renamed/removed field, a changed shape) would need real
+		// transformation code inserted here before the strict decode.
 	default:
 		if sv > ontology.CurrentSchemaVersion {
 			return nil, fmt.Errorf(
 				"load graph: %s: schema_version %d is newer than this hotam binary supports (max %d) — upgrade hotam or downgrade the graph",
 				path, sv, ontology.CurrentSchemaVersion)
 		}
-		// sv < CurrentSchemaVersion: no older versions exist yet (this is v1).
-		// When a future bump introduces a real older version, add a migration
-		// case here before falling through to the strict decode.
+		// sv < 1 is unreachable: 1 is the first versioned format. A missing
+		// schema_version is normalized to CurrentSchemaVersion above; a real
+		// prior version lower than 1 does not exist.
 	}
 
 	dec := json.NewDecoder(bytes.NewReader(data))

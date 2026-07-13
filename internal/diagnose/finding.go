@@ -46,23 +46,55 @@ func ReflectDraftOverhang(g *ontology.Graph) []Finding {
 }
 
 func ReflectUnenforcedSettled(g *ontology.Graph) []Finding {
-	var nUnenforced int
+	// P0 counts ONLY closeable-now debt: a real test could be written for it
+	// TODAY if someone did the work. Feature-blocked debt (the described
+	// feature does not exist yet) is NOT actionable debt — it is surfaced
+	// separately as a lower-priority Advisory by ReflectFeatureBlockedDebt so
+	// the P0 signal reflects genuine urgency, not frozen roadmap.
+	var nCloseableNow int
 	for _, r := range g.Requirements {
-		if r.Status == ontology.StatusSETTLED && r.IsCloseableDebt() {
-			nUnenforced++
+		if r.Status == ontology.StatusSETTLED && r.IsCloseableDebtNow() {
+			nCloseableNow++
 		}
 	}
-	if nUnenforced > 5 {
+	if nCloseableNow > 5 {
 		return []Finding{{
 			Condition: "reflect_unenforced_settled",
 			Target:    "enforcement-gradient",
 			Imperative: fmt.Sprintf(
-				"%d SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.",
-				nUnenforced,
+				"%d SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.",
+				nCloseableNow,
 			),
 		}}
 	}
 	return nil
+}
+
+// ReflectFeatureBlockedDebt surfaces feature-blocked closeable debt as a
+// lower-priority Advisory (P7): these ENFORCEABLE requirements stay PROSE
+// because the feature they describe does not exist yet, so no honest test is
+// possible until the blocking feature is built (itself frozen by
+// R-speculative-aspects-frozen). This is informational roadmap visibility, not
+// a P0 actionability trigger — it fires whenever the count is nonzero.
+func ReflectFeatureBlockedDebt(g *ontology.Graph) []Finding {
+	var nFeatureBlocked int
+	for _, r := range g.Requirements {
+		if r.Status == ontology.StatusSETTLED && r.IsFeatureBlockedDebt() {
+			nFeatureBlocked++
+		}
+	}
+	if nFeatureBlocked == 0 {
+		return nil
+	}
+	return []Finding{{
+		Condition: "reflect_feature_blocked_debt",
+		Target:    "feature-blocked-roadmap",
+		Advisory:  true,
+		Imperative: fmt.Sprintf(
+			"%d SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.",
+			nFeatureBlocked,
+		),
+	}}
 }
 
 func ReflectOverBudgetOperators(g *ontology.Graph) []Finding {
@@ -264,6 +296,7 @@ func AllFindings(g *ontology.Graph) []Finding {
 	var out []Finding
 	out = append(out, ReflectDraftOverhang(g)...)
 	out = append(out, ReflectUnenforcedSettled(g)...)
+	out = append(out, ReflectFeatureBlockedDebt(g)...)
 	out = append(out, ReflectOverBudgetOperators(g)...)
 	out = append(out, ReflectDeadAssumptionOnEnforcer(g)...)
 	out = append(out, ReflectDerivedButUnbuilt(g)...)

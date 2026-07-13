@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-subagent-gets-its-claude-md",
+  "claim": "A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the create_agent tool (Planned) + per-agent crystal rendering in gen-spec"
+}

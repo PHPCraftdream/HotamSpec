@@ -46,6 +46,7 @@ type ProposedRequirement struct {
 	ReviewAfter    string              `json:"review_after"`
 	Evidence       []string            `json:"evidence"`
 	SourceRefs     []string            `json:"source_refs"`
+	BlockedOn      string              `json:"blocked_on"`
 }
 
 func (p ProposedRequirement) Kind() string         { return KindRequirement }

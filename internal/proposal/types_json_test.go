@@ -35,7 +35,7 @@ func TestProposedStructs_JSONTagsRoundTrip(t *testing.T) {
 				"summary": "s", "created_at": "2026-01-01",
 				"settled_at": "2026-01-02", "last_reviewed_at": "2026-01-03",
 				"review_after": "2026-06-01", "evidence": ["e1"],
-				"source_refs": ["doc.md"]
+				"source_refs": ["doc.md"], "blocked_on": "blocked on Planned tool T"
 			}`,
 			into: func() (any, error) {
 				var p ProposedRequirement
@@ -48,7 +48,7 @@ func TestProposedStructs_JSONTagsRoundTrip(t *testing.T) {
 				"summary": "s", "created_at": "2026-01-01",
 				"settled_at": "2026-01-02", "last_reviewed_at": "2026-01-03",
 				"review_after": "2026-06-01", "evidence": ["e1"],
-				"source_refs": ["doc.md"]
+				"source_refs": ["doc.md"], "blocked_on": "blocked on Planned tool T"
 			}`), &p)
 				return p, err
 			},

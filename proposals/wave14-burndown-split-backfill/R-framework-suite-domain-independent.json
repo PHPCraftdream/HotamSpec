@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-framework-suite-domain-independent",
+  "claim": "The framework test subset shall pass green under ANY active domain, or none, independent of which business domain is pinned.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on test-tiering infrastructure — independence is only assertable once the partition exists"
+}

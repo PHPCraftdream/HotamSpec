@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-delegation-is-a-file",
+  "claim": "Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via a dedicated delegate tool), so git carries the who/when/what history of every hand-off.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on a delegate tool (unregistered, not even Planned) managing the delegations/ directory"
+}

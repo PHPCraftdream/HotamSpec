@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-spawn-log-carries-isolation",
+  "claim": "Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the spawn_agent tool (Planned) + the .runtime/spawn-log.jsonl infrastructure (absent)"
+}

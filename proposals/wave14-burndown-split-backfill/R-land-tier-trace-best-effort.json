@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-tier-trace-best-effort",
+  "claim": "A broken or unwritable spec/.runtime/land-log.jsonl location shall never fail an otherwise-green apply -- the write is best-effort, warn only.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the .runtime/land-log.jsonl writer (absent)"
+}

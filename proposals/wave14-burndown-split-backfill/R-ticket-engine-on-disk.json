@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-ticket-engine-on-disk",
+  "claim": "Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the ticket_* tool family (create/edit/move/comment/list/show), Planned in internal/methodology/tools_data.go"
+}

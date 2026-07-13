@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-post-compact-regen-from-substrate",
+  "claim": "A PostCompact hook shall run `hotam gen-spec` after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the setup_hooks tool (Planned) + a host PostCompact hook"
+}

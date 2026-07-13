@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-land-tier-trace",
+  "claim": "Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected test node-ids (or the literal 'full'), and verify/closure outcome to a runtime land-log, written AFTER the verify step so the record states what actually ran.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the .runtime/land-log.jsonl writer (absent) + the gate_status tool (Planned)"
+}

@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforcement-perimeter-baselines-guarded",
+  "claim": "A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on a baseline-update tool (unregistered) + host PreToolUse hooks (not committed)"
+}

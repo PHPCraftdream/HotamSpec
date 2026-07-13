@@ -152,6 +152,7 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.ReviewAfter = coalesceStr(p.ReviewAfter, "", existing.ReviewAfter)
 		applied.Evidence = coalesceSlice(p.Evidence, existing.Evidence)
 		applied.SourceRefs = coalesceSlice(p.SourceRefs, existing.SourceRefs)
+		applied.BlockedOn = coalesceStr(p.BlockedOn, "", existing.BlockedOn)
 
 		summary := summarizeFieldDiff(old, snapshotFrom(applied))
 		if summary != "" {
@@ -188,6 +189,7 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		ReviewAfter:    p.ReviewAfter,
 		Evidence:       append([]string(nil), p.Evidence...),
 		SourceRefs:     append([]string(nil), p.SourceRefs...),
+		BlockedOn:      p.BlockedOn,
 	}
 	g.Requirements = append(g.Requirements, newReq)
 	return nil

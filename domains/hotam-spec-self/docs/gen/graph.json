@@ -1136,6 +1136,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on late…→M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on late…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_axis tool (Planned) — the gatekeeper check is part of the creation path"
         }
       ],
       "id": "R-axis-gatekeeper-policy",
@@ -2940,6 +2945,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. BUILD-TRIGGER status: the historica…→The Delegation.returns conclusions-only contract (R-delegation-conclusions-only) made concrete for sub-operators. Not yet implemented: spawn-agent is…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_agent tool (Planned) + per-agent crystal rendering in gen-spec"
         }
       ],
       "id": "R-subagent-gets-its-claude-md",
@@ -3600,6 +3610,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet ported in the Go port. The historical mechanism was tools/spawn_agent.py, which composed a sub-agent's task prompt by prepending the agent's …→Not yet implemented: a dedicated spawn-log mechanism. The `spawn_agent` tool is Planned (not Implemented) in methodology.Tools (internal/methodology/…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the spawn_agent tool (Planned) + the .runtime/spawn-log.jsonl infrastructure (absent)"
         }
       ],
       "id": "R-task-spawn-log-runtime",
@@ -3785,6 +3800,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: R-prefer-tool-over-hand applied to atomicity audits: a deterministic tool re-derives the COMPOUND sets and the R↔enforcer bijection every run rathe…→R-prefer-tool-over-hand applied to atomicity audits: a deterministic tool re-derives the COMPOUND sets and the R↔enforcer bijection every run rathe…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the audit_atomicity tool (Planned in internal/methodology/tools_data.go)"
         }
       ],
       "id": "R-audit-atomicity-tool",
@@ -5172,6 +5192,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_constitution_gen.py]→[]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_agent/spawn_agent/invoke_agent tools (Planned) — no second operator exists to form a tree"
         }
       ],
       "id": "R-crystal-tree-hierarchy",
@@ -5425,6 +5450,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …→Each sub-operator needs an operator-prompt scoped to its domain -- one agent sees one prefix family, another sees another. A single global CLAUDE.md …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_agent tool (Planned) + the scoped-rendering path in internal/generator"
         }
       ],
       "id": "R-agent-scoped-constitution",
@@ -5487,6 +5517,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_agent tool (Planned) — no non-director agent exists to carry a PURPOSE"
         }
       ],
       "id": "R-agent-declares-purpose",
@@ -6142,6 +6177,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…→Duplicating shared framework content into each agent crystal guarantees drift -- the copies diverge the moment any framework docstring changes. A SHA…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_agent tool (Planned) + the agent-crystal rendering path"
         }
       ],
       "id": "R-agent-references-shared-docs",
@@ -6706,6 +6746,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that a…→Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / SessionStart integration, so there is no mechanism that a…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the setup_hooks tool (Planned) + a host SessionStart hook"
         }
       ],
       "id": "R-operator-prompt-loaded-at-session-start",
@@ -6800,6 +6845,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PostCompact integration, so there is no mechanism that au…→Not yet implemented: the Go CLI (cmd/hotam) is a pure command-line tool with no host-hook / PostCompact integration, so there is no mechanism that au…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the setup_hooks tool (Planned) + a host PostCompact hook"
         }
       ],
       "id": "R-post-compact-regen-from-substrate",
@@ -7041,6 +7091,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can rea…→Records the director's explicit framing for the FUTURE shape of a real second agent: a sub-agent inherits (1) base methodology thinking so it can rea…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the create_agent tool (Planned) — the triad is only renderable once a real sub-agent exists"
         }
       ],
       "id": "R-sub-agent-crystal-triad",
@@ -7958,6 +8013,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: there is no land-log.jsonl (or any runtime land-trace file) written by hotam land or any other CLI command. (Historically the Py…→Not yet implemented: there is no land-log.jsonl (or any runtime land-trace file) written by hotam land or any other CLI command. (Historically the Py…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the .runtime/land-log.jsonl writer (absent) + the gate_status tool (Planned)"
         }
       ],
       "id": "R-land-tier-trace",
@@ -8003,6 +8063,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace i…→R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace i…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the gate_status tool (Planned) + the land-log it reads (absent)"
         }
       ],
       "id": "R-commit-boundary-checkable",
@@ -8304,6 +8369,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human …→R-requirement-claim-is-atomic and R-check-method-is-atomic are both honestly STRUCTURAL -- 'decompose into separate requirements/functions' is human …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the audit_atomicity tool (Planned) — the ratchet needs the audit baseline the tool produces"
         }
       ],
       "id": "R-atomicity-ratchet-no-growth",
@@ -8634,6 +8704,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet ported in the Go port. Wave 5 (measurable slices of discipline): the historical spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-ru…→Not yet implemented: spawn-agent is Planned in methodology.Tools -- there is no spawn-log writer, no spawn-log.jsonl, and no isolation/mutating field…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the spawn_agent tool (Planned) + the .runtime/spawn-log.jsonl infrastructure (absent)"
         }
       ],
       "id": "R-spawn-log-carries-isolation",
@@ -8736,6 +8811,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_dry_run_writes_no_log]→[]; settled_at: 2026-07-03→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the .runtime/land-log.jsonl writer (absent)"
         }
       ],
       "id": "R-land-tier-trace-skips-dry-run",
@@ -8764,6 +8844,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_apply_proposal_land_log.py::test_land_log_write_failure_is_best_effort]→[]; settled_at: 2026-07-03→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the .runtime/land-log.jsonl writer (absent)"
         }
       ],
       "id": "R-land-tier-trace-best-effort",
@@ -8928,6 +9013,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [tests/test_what_now.py::test_staleness_never_run_fires, tests/test_what_now.py::test_staleness_fresh_is_silent, tests/test_what_now.py::test_stalene…→[]; settled_at: 2026-07-03→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the audit_tensions tool (Planned) + the what-now staleness signal"
         }
       ],
       "id": "R-tension-audit-staleness-visible",
@@ -8964,6 +9054,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet ported in the Go port. A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's …→Not yet implemented: a revisit-evaluation band does not exist. A DECIDED conflict's revisit_marker names the CONDITION under which the decision shoul…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the mark_revisit_evaluated tool (Planned) + the what-now signal"
         }
       ],
       "id": "R-revisit-markers-evaluated",
@@ -9143,6 +9238,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet ported in the Go port. The historical generator was tools/setup_hooks.py, which produced the committed project settings.json (the portable se…→Not yet implemented: setup-hooks is Planned in methodology.Tools, and the adapter tools it would wire (attention-hook, claude-md-diff-watch, context-…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the setup_hooks tool (Planned in internal/methodology/tools_data.go)"
         }
       ],
       "id": "R-sensorium-committed",
@@ -9239,6 +9339,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet ported in the Go port. The historical mechanism was the ticket_* tool family (tools/ticket_create.py, ticket_move.py): a ticket was a committ…→Not yet implemented: the on-disk ticket engine. All ticket-* tools (ticket_create, ticket_move, ticket_edit, ticket_comment, ticket_list, ticket_show…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the ticket_* tool family (create/edit/move/comment/list/show), Planned in internal/methodology/tools_data.go"
         }
       ],
       "id": "R-ticket-engine-on-disk",
@@ -9277,6 +9382,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet ported in the Go port. The historical mechanism was the ticket_* tool family (tools/ticket_create.py, ticket_move.py, ticket_comment.py, tick…→Not yet implemented: the ticket engine and its History-append mechanism. All ticket-* tools (ticket_create, ticket_move, ticket_comment, ticket_edit)…; last_reviewed_at: 2026-07-12→2026-07-13"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the ticket_* tool family (the History appender is part of the engine), Planned in internal/methodology/tools_data.go"
         }
       ],
       "id": "R-ticket-carries-history",
@@ -9343,6 +9453,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: no open-tickets band exists. The steward's backlog moved onto disk; without a pulse band the queue is invisible until someone re…→Not yet implemented: no open-tickets band exists. The steward's backlog moved onto disk; without a pulse band the queue is invisible until someone re…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the ticket_* tool family + the what-now open_tickets signal producer, Planned in internal/methodology/tools_data.go"
         }
       ],
       "id": "R-open-tickets-visible",
@@ -9386,6 +9501,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in the what-now diagnosis, half as CLI-only bands -- with no si…→Steward verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in the what-now diagnosis, half as CLI-only bands -- with no si…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the internal/attention package (absent) + the attention tool (Planned in internal/methodology/tools_data.go)"
         }
       ],
       "id": "R-attention-registry",
@@ -9429,6 +9549,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothi…→Steward verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothi…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the internal/attention package (absent on disk)"
         }
       ],
       "id": "R-attention-agent-agnostic-core",
@@ -9472,6 +9597,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: The honest split at the centre of the attention design: the SUBSTRATE (gen-spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so …→The honest split at the centre of the attention design: the SUBSTRATE (gen-spec / LIVE-STATE) must stay byte-stable (R-deterministic-generation), so …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the internal/attention package (absent) — the superset relationship is only testable once both sides exist"
         }
       ],
       "id": "R-attention-superset-of-diagnose",
@@ -9515,6 +9645,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list i…→Steward verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list i…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on the attention_hook tool + setup_hooks tool (Planned) + the internal/attention package (absent)"
         }
       ],
       "id": "R-attention-claude-adapter",
@@ -9556,6 +9691,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- fir…→Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- fir…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on test-tiering infrastructure (build tags / package layout, absent)"
         }
       ],
       "id": "R-framework-suite-tiered",
@@ -9592,6 +9732,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть �…→Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть �…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on test-tiering infrastructure — independence is only assertable once the partition exists"
         }
       ],
       "id": "R-framework-suite-domain-independent",
@@ -9753,6 +9898,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: the CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard mechanism that …→Not yet implemented: the CLI (cmd/hotam) is a pure command-line tool with no host-hook / PreToolUse integration, so there is no guard mechanism that …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on a baseline-update tool (unregistered) + host PreToolUse hooks (not committed)"
         }
       ],
       "id": "R-enforcement-perimeter-baselines-guarded",
@@ -9794,6 +9944,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Not yet implemented: there is no sha256 hash-pin test covering the enforcement-perimeter source files (internal/invariants, internal/gate, internal/d…→Not yet implemented: there is no sha256 hash-pin test covering the enforcement-perimeter source files (internal/invariants, internal/gate, internal/d…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on a content-hash pin mechanism + a baseline-update tool (both unregistered)"
         }
       ],
       "id": "R-enforcement-perimeter-visible",
@@ -9914,6 +10069,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforcement: ENFORCED→PROSE; enforced_by: [test_run_speed_guard.py::TestSpeedGuardDecision::test_speed_guard_fails_on_regression]→[]; settled_at: 2026-07-05→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on a timing harness + per-machine baseline store (both absent)"
         }
       ],
       "id": "R-run-speed-guarded",
@@ -9999,6 +10159,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Steward verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их истор…→Steward verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их истор…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-13",
+          "decided_by": "",
+          "summary": "blocked_on: →blocked on a delegate tool (unregistered, not even Planned) managing the delegations/ directory"
         }
       ],
       "id": "R-delegation-is-a-file",
@@ -10294,7 +10459,7 @@
       "why": "REJECTED — REPLACES by enforceability (ENFORCEABLE | INHERENTLY_PROSE) + Requirement.is_closeable_debt(). The ratchet pressure the binarization was meant to deliver is ALREADY binary and lives on a different axis than the descriptive enforcement gradient. is_closeable_debt() returns `enforcement != ENFORCED and enforceability == ENFORCEABLE` — it ignores the PROSE-vs-STRUCTURAL distinction entirely and keys the only normative pressure (real, closeable debt) off enforceability, not off which of the three descriptive tiers a claim sits in. Concretely: most STRUCTURAL nodes already carry enforceability=INHERENTLY_PROSE and are therefore NOT counted as debt; after Этап T (#122) real closeable debt is down to 2 nodes. Binarizing PROSE/STRUCTURAL/ENFORCED would be a ~50-site code refactor (proposal.py, apply_proposal.py, gen_spec.py, PROPOSAL-REFERENCE.md, ~270 existing graph nodes) for exactly zero change to the debt metric. The three-level enforcement value is retained as a DESCRIPTIVE, non-normative scale (how deeply a claim is crystallized: recorded / addressable / auto-checked) — useful for reading and reporting — while all normative convergence pressure stays on the already-binary enforceability + is_closeable_debt() pair. REVISIT WHEN a second, independent normative consumer of the STRUCTURAL tier appears (something that must treat STRUCTURAL differently from PROSE for a gate/metric, not merely for display). — (was: external-review backlog item D3 — binarize the enforcement gradient.) — (was: External-review backlog item D3. Proposed to binarize the enforcement scale.)"
     }
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "stakeholders": [
     {
       "domain": "framework integrity, direction, philosophical premises",

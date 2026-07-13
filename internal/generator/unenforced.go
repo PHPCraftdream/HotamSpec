@@ -33,12 +33,20 @@ func BuildUnenforced(g *ontology.Graph) string {
 			settledUnenforced = append(settledUnenforced, r)
 		}
 	}
-	var closeableDebt, inherentProse []ontology.Requirement
+	// The closeable-debt band splits into two disjoint subsets whose union
+	// equals IsCloseableDebt: closeable-now (real, actionable — a test could
+	// be written today) and feature-blocked (the requirement describes a
+	// feature that does not exist yet, so no honest test is possible until the
+	// blocking feature is built). INHERENTLY_PROSE requirements remain a
+	// separate permanent-discipline band.
+	var closeableNow, featureBlocked, inherentProse []ontology.Requirement
 	for _, r := range settledUnenforced {
-		if r.IsCloseableDebt() {
-			closeableDebt = append(closeableDebt, r)
-		} else {
+		if !r.IsCloseableDebt() {
 			inherentProse = append(inherentProse, r)
+		} else if r.IsFeatureBlockedDebt() {
+			featureBlocked = append(featureBlocked, r)
+		} else {
+			closeableNow = append(closeableNow, r)
 		}
 	}
 
@@ -67,22 +75,40 @@ func BuildUnenforced(g *ontology.Graph) string {
 
 	lines = append(lines,
 		"**Burn-down: SETTLED-ENFORCED "+strconv.Itoa(len(settledEnforced))+" / SETTLED "+strconv.Itoa(len(settled))+
-			"; closeable debt "+strconv.Itoa(len(closeableDebt))+"; inherent discipline "+strconv.Itoa(len(inherentProse))+
+			"; closeable-now "+strconv.Itoa(len(closeableNow))+"; feature-blocked "+strconv.Itoa(len(featureBlocked))+
+			"; inherent discipline "+strconv.Itoa(len(inherentProse))+
 			"; DRAFT "+strconv.Itoa(len(draft))+"; OPEN "+strconv.Itoa(len(openReqs))+"; REJECTED "+strconv.Itoa(len(rejected))+".**")
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")
 
-	lines = append(lines, "## Closeable debt (ENFORCEABLE, no enforcer yet)")
+	lines = append(lines, "## Closeable debt — closeable now (real, actionable)")
 	lines = append(lines, "")
-	if len(closeableDebt) == 0 {
-		lines = append(lines, "_None — all ENFORCEABLE SETTLED requirements are ENFORCED._")
+	if len(closeableNow) == 0 {
+		lines = append(lines, "_None — every ENFORCEABLE SETTLED requirement is either ENFORCED or feature-blocked._")
 		lines = append(lines, "")
 	} else {
 		lines = append(lines, "| id | enforcement | owner | claim |")
 		lines = append(lines, "|---|---|---|---|")
-		for _, r := range closeableDebt {
+		for _, r := range closeableNow {
 			lines = append(lines, "| `"+r.ID+"` | "+r.Enforcement+" | `"+r.Owner+"` | "+Cell(r.Claim)+" |")
+		}
+		lines = append(lines, "")
+	}
+
+	lines = append(lines, "## Closeable debt — feature-blocked (honest roadmap, not neglected)")
+	lines = append(lines, "")
+	lines = append(lines,
+		"These ENFORCEABLE requirements stay PROSE because the feature they describe does not exist yet — a real enforcement test is impossible until the blocking feature is built (the build itself is frozen by R-speculative-aspects-frozen). The per-item `blocked_on` column names the specific Planned tool or absent package. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md for the full cluster analysis.")
+	lines = append(lines, "")
+	if len(featureBlocked) == 0 {
+		lines = append(lines, "_None — no closeable-debt requirement is feature-blocked._")
+		lines = append(lines, "")
+	} else {
+		lines = append(lines, "| id | enforcement | owner | blocked_on | claim |")
+		lines = append(lines, "|---|---|---|---|---|")
+		for _, r := range featureBlocked {
+			lines = append(lines, "| `"+r.ID+"` | "+r.Enforcement+" | `"+r.Owner+"` | "+Cell(r.BlockedOn)+" | "+Cell(r.Claim)+" |")
 		}
 		lines = append(lines, "")
 	}

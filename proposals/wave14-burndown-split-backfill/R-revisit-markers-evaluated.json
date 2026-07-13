@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-revisit-markers-evaluated",
+  "claim": "The what-now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the mark_revisit_evaluated tool (Planned) + the what-now signal"
+}

@@ -125,6 +125,95 @@ func TestReflectUnenforcedSettled_InherentlyProseDoesNotCount(t *testing.T) {
 	}
 }
 
+// TestReflectUnenforcedSettled_FeatureBlockedDoesNotTripP0 is the core
+// regression guard for the burn-down split: a graph whose closeable debt is
+// overwhelmingly FEATURE-BLOCKED (BlockedOn set) but has FEW closeable-now items
+// must NOT trip the P0 enforcement-gradient signal. Before the split, all 7
+// would have counted as one undifferentiated band and fired at >5; now only the
+// 1 closeable-now item counts, which is <= 5, so the P0 signal stays silent.
+// The feature-blocked items are surfaced by the separate Advisory finding, not
+// here.
+func TestReflectUnenforcedSettled_FeatureBlockedDoesNotTripP0(t *testing.T) {
+	t.Parallel()
+	reqs := make([]ontology.Requirement, 0, 8)
+	// 1 closeable-now item (no blocker) — below the >5 P0 threshold.
+	reqs = append(reqs, settledReq("R-now"))
+	// 7 feature-blocked items — must NOT count toward the P0 signal.
+	for i := 0; i < 7; i++ {
+		r := settledReq("R-blk-" + string(rune('a'+i)))
+		r.BlockedOn = "blocked on a Planned tool"
+		reqs = append(reqs, r)
+	}
+	g := &ontology.Graph{Requirements: reqs}
+	if fs := ReflectUnenforcedSettled(g); len(fs) != 0 {
+		t.Errorf("feature-blocked debt must NOT trip the P0 signal (only 1 closeable-now <= 5), got %d findings", len(fs))
+	}
+}
+
+func TestReflectUnenforcedSettled_CloseableNowCounts(t *testing.T) {
+	t.Parallel()
+	// 6 closeable-now items (no blocker) — just over the >5 threshold.
+	reqs := make([]ontology.Requirement, 0, 13)
+	for i := 0; i < 6; i++ {
+		reqs = append(reqs, settledReq("R-now-"+string(rune('a'+i))))
+	}
+	// 7 feature-blocked items mixed in — must not change the closeable-now count.
+	for i := 0; i < 7; i++ {
+		r := settledReq("R-blk-" + string(rune('a'+i)))
+		r.BlockedOn = "blocked on a Planned tool"
+		reqs = append(reqs, r)
+	}
+	g := &ontology.Graph{Requirements: reqs}
+	fs := ReflectUnenforcedSettled(g)
+	if len(fs) != 1 {
+		t.Fatalf("6 closeable-now should fire exactly once, got %d", len(fs))
+	}
+	if !strings.Contains(fs[0].Imperative, "6 SETTLED requirements are closeable now") {
+		t.Errorf("P0 message should name the closeable-now count of 6, got: %q", fs[0].Imperative)
+	}
+}
+
+func TestReflectFeatureBlockedDebt_FiresAdvisory(t *testing.T) {
+	t.Parallel()
+	reqs := make([]ontology.Requirement, 0, 8)
+	reqs = append(reqs, settledReq("R-now")) // closeable-now, not feature-blocked
+	for i := 0; i < 7; i++ {
+		r := settledReq("R-blk-" + string(rune('a'+i)))
+		r.BlockedOn = "blocked on a Planned tool"
+		reqs = append(reqs, r)
+	}
+	g := &ontology.Graph{Requirements: reqs}
+	fs := ReflectFeatureBlockedDebt(g)
+	if len(fs) != 1 {
+		t.Fatalf("7 feature-blocked items should fire once, got %d", len(fs))
+	}
+	if fs[0].Condition != "reflect_feature_blocked_debt" {
+		t.Errorf("condition: got %q, want reflect_feature_blocked_debt", fs[0].Condition)
+	}
+	if !fs[0].Advisory {
+		t.Error("feature-blocked finding must be Advisory (routes to P7, not P0)")
+	}
+	if !strings.Contains(fs[0].Imperative, "7 SETTLED requirements are feature-blocked debt") {
+		t.Errorf("advisory message should name the count of 7, got: %q", fs[0].Imperative)
+	}
+	if !strings.Contains(fs[0].Imperative, "c1-roadmap-debt-triage.md") {
+		t.Errorf("advisory should point at the triage doc, got: %q", fs[0].Imperative)
+	}
+}
+
+func TestReflectFeatureBlockedDebt_ZeroDoesNotFire(t *testing.T) {
+	t.Parallel()
+	// Only closeable-now items — no feature-blocked debt at all.
+	reqs := make([]ontology.Requirement, 7)
+	for i := range reqs {
+		reqs[i] = settledReq("R-" + string(rune('a'+i)))
+	}
+	g := &ontology.Graph{Requirements: reqs}
+	if fs := ReflectFeatureBlockedDebt(g); len(fs) != 0 {
+		t.Errorf("zero feature-blocked items should not fire, got %d", len(fs))
+	}
+}
+
 func TestReflectOverBudgetOperators_NodeCountFires(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{

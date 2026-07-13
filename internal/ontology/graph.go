@@ -12,7 +12,7 @@ package ontology
 //     byte layout.
 //
 // Do NOT bump for content changes to domain graphs — only for format changes.
-const CurrentSchemaVersion = 1
+const CurrentSchemaVersion = 2
 
 type Graph struct {
 	// SchemaVersion is the graph.json format version this graph was written

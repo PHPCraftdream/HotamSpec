@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-framework-suite-tiered",
+  "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- 'framework' (exercising internal/ mechanics) or 'domain' (asserting concrete self-domain content) -- so the framework tier is a separately selectable, self-contained subset.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on test-tiering infrastructure (build tags / package layout, absent)"
+}

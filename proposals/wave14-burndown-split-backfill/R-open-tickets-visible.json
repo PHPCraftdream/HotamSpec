@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-open-tickets-visible",
+  "claim": "The what-now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into DiagnoseSignals.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the ticket_* tool family + the what-now open_tickets signal producer, Planned in internal/methodology/tools_data.go"
+}

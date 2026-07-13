@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "axes": [
     { "slug": "speed-vs-safety", "description": "Ship fast vs. verify thoroughly.", "decl_order": 0 },
     { "slug": "centralize-vs-delegate", "description": "One operator vs. many sub-operators.", "decl_order": 1 }

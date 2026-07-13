@@ -1,0 +1,8 @@
+{
+  "kind": "Requirement",
+  "id": "R-sub-agent-crystal-triad",
+  "claim": "Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "blocked_on": "blocked on the create_agent tool (Planned) — the triad is only renderable once a real sub-agent exists"
+}
