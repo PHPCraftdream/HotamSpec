@@ -43,6 +43,7 @@ func init() {
 	wireToolRun("confront", cmdConfront)
 	wireToolRun("land", cmdLand)
 	wireToolRun("init", cmdInit)
+	wireToolRun("init_project", cmdInitProject)
 	wireToolRun("version", cmdVersion)
 }
 

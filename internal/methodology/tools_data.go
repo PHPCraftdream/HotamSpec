@@ -87,6 +87,13 @@ func init() {
 		Status:  Implemented,
 		Run:     nil,
 	})
+	Tools.MustRegister("init_project", Tool{
+		Command: "init_project",
+		Canon:   "§Domain",
+		Purpose: "Usage: hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD]. Bootstraps an external business project's full Hotam-Spec layout in one call: scaffolds a base domain under <dir>/domains/<name> (default main) via init, writes the project-root marker (.hotam-spec-project), and renders the root crystal (CLAUDE.md/AGENTS.md/GEMINI.md) + all docs/gen/* via gen-spec. Refuses to overwrite an existing project marker or CLAUDE.md.",
+		Status:  Implemented,
+		Run:     nil,
+	})
 	Tools.MustRegister("version", Tool{
 		Command: "version",
 		Canon:   "§Operator",

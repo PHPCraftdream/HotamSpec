@@ -49,6 +49,8 @@ func main() {
 		err = cmdVersion(args)
 	case "init":
 		err = cmdInit(args)
+	case "init-project":
+		err = cmdInitProject(args)
 	case "gen-spec":
 		err = cmdGenSpec(args)
 	case "what-now":
@@ -98,6 +100,13 @@ Commands:
         docs/gen/, and a README.md pointing at the next commands to run.
         <dir> may be anywhere on disk — it does not need to live under this
         repository or contain a domains/ ancestor.
+  init-project <dir> [--domain <name>] [--today YYYY-MM-DD]
+        Bootstrap an external business project's full Hotam-Spec layout in one
+        call: scaffold a base domain under <dir>/domains/<name> (default
+        <name>=main), write the project-root marker (.hotam-spec-project), and
+        render the root crystal (CLAUDE.md/AGENTS.md/GEMINI.md) + all docs/gen/*
+        via gen-spec. Refuses to overwrite an existing project marker or
+        CLAUDE.md. <dir> may be anywhere on disk.
   gen-spec [--domain <path>]
         Generate all docs/gen/*.md + graph.json for a domain graph.
   what-now [--domain <path>] [--limit N]
