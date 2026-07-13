@@ -6,21 +6,21 @@ func init() {
 	Tools.MustRegister("gen_spec", Tool{
 		Command: "gen_spec",
 		Canon:   "§Generator",
-		Purpose: "Usage: hotam gen-spec [--domain <path>]. Regenerates docs/gen/*.md + graph.json for a domain graph from the executable model (internal/generator + internal/ontology), making drift structurally impossible.",
+		Purpose: "Usage: hotam gen-spec [--domain <path>] [--today YYYY-MM-DD] [--claude-md <path>]. Regenerates docs/gen/*.md + graph.json for a domain graph from the executable model (internal/generator + internal/ontology), making drift structurally impossible.",
 		Status:  Implemented,
 		Run:     nil,
 	})
 	Tools.MustRegister("what_now", Tool{
 		Command: "what_now",
 		Canon:   "§Harness",
-		Purpose: "Usage: hotam what-now [--domain <path>] [--limit N]. Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible.",
+		Purpose: "Usage: hotam what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD]. Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible.",
 		Status:  Implemented,
 		Run:     nil,
 	})
 	Tools.MustRegister("apply_proposal", Tool{
 		Command: "apply_proposal",
 		Canon:   "§Proposal",
-		Purpose: "Usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD. Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.",
+		Purpose: "Usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]. Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.",
 		Status:  Implemented,
 		Run:     nil,
 	})
@@ -76,7 +76,7 @@ func init() {
 	Tools.MustRegister("land", Tool{
 		Command: "land",
 		Canon:   "§Closure",
-		Purpose: "Usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--claude-md <path>]. Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants).",
+		Purpose: "Usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]. Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants).",
 		Status:  Implemented,
 		Run:     nil,
 	})

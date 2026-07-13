@@ -1,6 +1,9 @@
 package methodology
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestSectionsComplete(t *testing.T) {
 	t.Parallel()
@@ -147,5 +150,41 @@ func TestStatusToolRegisteredImplemented(t *testing.T) {
 	}
 	if tool.Purpose == "" {
 		t.Error("status tool has empty Purpose")
+	}
+}
+
+// TestToolPurposeDocumentsRealFlags guards against the doc-drift class fixed by
+// the registry/flag sync: a real CLI flag (registered in cmd/hotam/<tool>.go's
+// flag.FlagSet) that the registry's Purpose "Usage:" string omits. It cannot
+// detect NEW flags added without docs (that would require importing package
+// main, an import cycle), but it pins the specific flags that had drifted so a
+// revert of this fix fails loudly. The asserted substrings match the usage
+// strings cmd/hotam prints on a missing-argument error exactly.
+func TestToolPurposeDocumentsRealFlags(t *testing.T) {
+	t.Parallel()
+	required := map[string][]string{
+		// --today and --claude-md were added to gen-spec's FlagSet but its
+		// Purpose omitted them.
+		"gen_spec": {"--today YYYY-MM-DD", "--claude-md <path>"},
+		// --today was added to what-now's FlagSet but its Purpose omitted it.
+		"what_now": {"--today YYYY-MM-DD"},
+		// --batch is an alternative invocation mode of apply-proposal that its
+		// Purpose omitted (see cmd/hotam/apply_proposal.go's own usage string).
+		"apply_proposal": {"--batch <dir>"},
+		// --batch is an alternative invocation mode of land that its Purpose
+		// omitted (see cmd/hotam/land.go's own usage string).
+		"land": {"--batch <dir>", "--claude-md <path>"},
+	}
+	for cmd, flags := range required {
+		tool, ok := Tools.Get(cmd)
+		if !ok {
+			t.Errorf("tool %q not registered", cmd)
+			continue
+		}
+		for _, f := range flags {
+			if !strings.Contains(tool.Purpose, f) {
+				t.Errorf("tool %q Purpose missing %q in its Usage string\nPurpose: %s", cmd, f, tool.Purpose)
+			}
+		}
 	}
 }

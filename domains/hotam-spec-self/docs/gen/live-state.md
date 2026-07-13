@@ -2,6 +2,6 @@
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 41 SETTLED requirements are closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - **debt:** 162/236 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 304 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 15872 chars (headroom 134128)
+- **graph:** 304 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 15967 chars (headroom 134033)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary

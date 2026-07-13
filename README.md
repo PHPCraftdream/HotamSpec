@@ -75,10 +75,10 @@ hotam init <dir> [--name <domain-name>]
         <dir> may be anywhere on disk — it does not need to live under this
         repository or contain a domains/ ancestor.
 
-hotam gen-spec [--domain <path>]
+hotam gen-spec [--domain <path>] [--today YYYY-MM-DD] [--claude-md <path>]
         Generate all docs/gen/*.md + graph.json for a domain graph.
 
-hotam what-now [--domain <path>] [--limit N]
+hotam what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD]
         Print the top-N diagnosed signals (default 20).
 
 hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]

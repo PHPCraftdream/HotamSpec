@@ -12,4 +12,4 @@ Implemented — this is a real `hotam` CLI subcommand; running it does something
 
 ## Purpose
 
-Usage: hotam gen-spec [--domain <path>]. Regenerates docs/gen/*.md + graph.json for a domain graph from the executable model (internal/generator + internal/ontology), making drift structurally impossible.
+Usage: hotam gen-spec [--domain <path>] [--today YYYY-MM-DD] [--claude-md <path>]. Regenerates docs/gen/*.md + graph.json for a domain graph from the executable model (internal/generator + internal/ontology), making drift structurally impossible.

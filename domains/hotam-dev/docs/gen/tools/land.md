@@ -12,4 +12,4 @@ Implemented — this is a real `hotam` CLI subcommand; running it does something
 
 ## Purpose
 
-Usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--claude-md <path>]. Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants).
+Usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]. Single CLI entry point over apply-proposal -> gen-spec -> all-violations (internal/proposal + internal/generator + internal/invariants).

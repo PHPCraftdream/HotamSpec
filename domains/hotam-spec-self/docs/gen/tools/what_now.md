@@ -12,4 +12,4 @@ Implemented — this is a real `hotam` CLI subcommand; running it does something
 
 ## Purpose
 
-Usage: hotam what-now [--domain <path>] [--limit N]. Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible.
+Usage: hotam what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD]. Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible.

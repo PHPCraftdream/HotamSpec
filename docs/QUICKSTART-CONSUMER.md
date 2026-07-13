@@ -156,12 +156,6 @@ views (`REQUIREMENTS.md`, `TENSIONS.md`, `CONSTITUTION.md`, ...) under
 hotam gen-spec --domain domains/my-shop
 ```
 
-(Known issue at the time of writing: `gen-spec` can fail while writing its
-per-tool doc pages if a command's usage string contains characters that are
-illegal in a filename on your OS — e.g. Windows rejects `[`/`]`/`<`/`>` in
-path segments. `all-violations`/`apply-proposal`/`req`/`gate` above are
-unaffected; only the `docs/gen/tools/*.md` step of `gen-spec` can trip this.)
-
 ## 6. Verify the graph stays structurally sound
 
 ```bash
