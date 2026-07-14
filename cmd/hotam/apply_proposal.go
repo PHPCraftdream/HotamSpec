@@ -36,7 +36,7 @@ func cmdApplyProposal(args []string) error {
 		// Advisory confront-at-gate (warn-only, never blocks): run AFTER every
 		// proposal is parsed but BEFORE ApplyBatch mutates the graph, so all N
 		// candidates are checked against the SAME starting snapshot.
-		if err := confrontBatchSummary(domainDir, proposals); err != nil {
+		if err := confrontBatchSummary(domainDir, proposals, false); err != nil {
 			return err
 		}
 		gp := graphPathForDomain(domainDir)
@@ -61,7 +61,7 @@ func cmdApplyProposal(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := confrontBeforeApply(domainDir, p); err != nil {
+	if err := confrontBeforeApply(domainDir, p, false); err != nil {
 		return err
 	}
 	gp, err := applyProposalValue(p, domainDir, *today)

@@ -59,6 +59,7 @@ func cmdLand(args []string) error {
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (passed through to gen-spec)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
+	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 
 	if *today == "" {
@@ -71,11 +72,18 @@ func cmdLand(args []string) error {
 	}
 
 	if *batchDir != "" {
-		return cmdLandBatch(*batchDir, domainDir, *today, *claudeMD)
+		result, err := cmdLandBatch(*batchDir, domainDir, *today, *claudeMD, *asJSON)
+		if err != nil {
+			return err
+		}
+		if *asJSON {
+			return printJSON(result)
+		}
+		return nil
 	}
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>]")
+		return fmt.Errorf("usage: hotam land <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--claude-md <path>] [--json]")
 	}
 	// Parse the proposal ONCE so the advisory confront-at-gate (warn-only,
 	// never blocks — R-ai-presents-not-decides) runs BEFORE the land outcome,
@@ -87,10 +95,17 @@ func cmdLand(args []string) error {
 	if err != nil {
 		return fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
-	if err := confrontBeforeApply(domainDir, p); err != nil {
+	if err := confrontBeforeApply(domainDir, p, *asJSON); err != nil {
 		return err
 	}
-	return landProposalValue(p, domainDir, *claudeMD, *today)
+	result, err := landProposalValue(p, domainDir, *claudeMD, *today, *asJSON)
+	if err != nil {
+		return err
+	}
+	if *asJSON {
+		return printJSON(result)
+	}
+	return nil
 }
 
 // cmdLandBatch is the --batch <dir> code path of `hotam land`: snapshot,
@@ -98,56 +113,61 @@ func cmdLand(args []string) error {
 // back on failure. It is the batch counterpart to landProposalFile; the two
 // share the same snapshot/genSpec/allViolations/rollback shape but differ in
 // the apply step (ApplyBatch vs applyProposalValue).
-func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
+func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) (*LandResult, error) {
 	// Resolve the effective crystal path once (see landProposalValue for the
 	// rationale): the forward genSpec and every rollback re-render in this
 	// batch path must agree on whether the root crystal is in scope.
 	claudeMDPath = resolveClaudeMDPath(domainDir, claudeMDPath)
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
-		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
+		return nil, fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
 	}
 
 	proposals, err := loadBatchDir(batchDir)
 	if err != nil {
-		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
 	// Advisory confront-at-gate (warn-only, never blocks): run AFTER every
 	// proposal is parsed but BEFORE ApplyBatch mutates the graph, so all N
 	// candidates are checked against the SAME starting snapshot the batch then
 	// applies atomically.
-	if err := confrontBatchSummary(domainDir, proposals); err != nil {
-		return err
+	if err := confrontBatchSummary(domainDir, proposals, asJSON); err != nil {
+		return nil, err
 	}
 	gp := graphPathForDomain(domainDir)
 	if err := proposal.ApplyBatch(gp, today, proposals); err != nil {
-		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
-	fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
+	fmt.Fprintf(landOut(asJSON), "applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
 
 	written, _, err := genSpec(domainDir, claudeMDPath, today, "")
 	if err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
-		return rolledBackError("doc regeneration failed", err, rerr)
+		return nil, rolledBackError("doc regeneration failed", err, rerr)
 	}
-	fmt.Printf("regenerated %d doc(s)\n", len(written))
+	fmt.Fprintf(landOut(asJSON), "regenerated %d doc(s)\n", len(written))
 
 	violations, err := allViolations(domainDir)
 	if err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
-		return rolledBackError("violation check failed to run", err, rerr)
+		return nil, rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
 		for _, v := range violations {
-			fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
+			fmt.Fprintf(landOut(asJSON), "[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
-		return rolledBackError("graph invalid after gen-spec", cause, rerr)
+		return nil, rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 
-	fmt.Println("landed: graph applied, docs regenerated, 0 violations")
-	return nil
+	fmt.Fprintln(landOut(asJSON), "landed: graph applied, docs regenerated, 0 violations")
+	return &LandResult{
+		Landed:          true,
+		GraphPath:       gp,
+		RegeneratedDocs: len(written),
+		Violations:      []string{},
+	}, nil
 }
 
 // landProposalFile runs the full land pipeline (snapshot, apply, regen,
@@ -162,12 +182,12 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
 // embedding one here would double-print the report on that path. The direct
 // `hotam land <file>` path runs its confront at the cmdLand command level
 // before calling landProposalValue.
-func landProposalFile(proposalFile, domainDir, claudeMDPath, today string) error {
+func landProposalFile(proposalFile, domainDir, claudeMDPath, today string, asJSON bool) (*LandResult, error) {
 	p, err := parseProposalFile(proposalFile)
 	if err != nil {
-		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
-	return landProposalValue(p, domainDir, claudeMDPath, today)
+	return landProposalValue(p, domainDir, claudeMDPath, today, asJSON)
 }
 
 // resolveClaudeMDPath returns the effective root-crystal path a land operation
@@ -265,7 +285,7 @@ func isActiveOrUnambiguousDomain(repoRoot, domainDir string) bool {
 // advisory confront check before landing). The transactional snapshot/rollback
 // lives here so every caller that lands a single proposal shares one
 // implementation.
-func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string) error {
+func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string, asJSON bool) (*LandResult, error) {
 	// Resolve the effective crystal path ONCE so every downstream step — the
 	// forward genSpec AND any rollback re-render — agrees on whether the root
 	// crystal is in scope for this land. An explicit --claude-md wins; absent
@@ -275,38 +295,68 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	claudeMDPath = resolveClaudeMDPath(domainDir, claudeMDPath)
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
-		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
+		return nil, fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
 	}
 
 	gp, err := applyProposalValue(p, domainDir, today)
 	if err != nil {
-		return fmt.Errorf("apply step failed, nothing landed: %w", err)
+		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
-	fmt.Printf("applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
+	fmt.Fprintf(landOut(asJSON), "applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
 
 	written, _, err := genSpec(domainDir, claudeMDPath, today, "")
 	if err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
-		return rolledBackError("doc regeneration failed", err, rerr)
+		return nil, rolledBackError("doc regeneration failed", err, rerr)
 	}
-	fmt.Printf("regenerated %d doc(s)\n", len(written))
+	fmt.Fprintf(landOut(asJSON), "regenerated %d doc(s)\n", len(written))
 
 	violations, err := allViolations(domainDir)
 	if err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
-		return rolledBackError("violation check failed to run", err, rerr)
+		return nil, rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
 		for _, v := range violations {
-			fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
+			fmt.Fprintf(landOut(asJSON), "[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
-		return rolledBackError("graph invalid after gen-spec", cause, rerr)
+		return nil, rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 
-	fmt.Println("landed: graph applied, docs regenerated, 0 violations")
-	return nil
+	fmt.Fprintln(landOut(asJSON), "landed: graph applied, docs regenerated, 0 violations")
+	return &LandResult{
+		Landed:          true,
+		Anchor:          p.TargetAnchor(),
+		GraphPath:       gp,
+		RegeneratedDocs: len(written),
+		Violations:      []string{},
+	}, nil
+}
+
+// LandResult is the --json envelope for a successful `hotam land` (or
+// `hotam propose --land`) invocation: whether the graph was applied, the
+// anchor landed (empty for batch mode), the graph path written, how many docs
+// were regenerated, and any violations found. On the failure path no
+// LandResult is produced — the error is returned to main.go which routes it to
+// stderr and exits non-zero, consistently with every other command.
+type LandResult struct {
+	Landed          bool     `json:"landed"`
+	Anchor          string   `json:"anchor,omitempty"`
+	GraphPath       string   `json:"graph_path,omitempty"`
+	RegeneratedDocs int      `json:"regenerated_docs"`
+	Violations      []string `json:"violations"`
+}
+
+// landOut returns the writer for operational land messages. When asJSON is
+// true, messages go to os.Stderr so stdout carries exactly one JSON document;
+// otherwise they go to os.Stdout (byte-identical to pre-JSON behavior).
+func landOut(asJSON bool) *os.File {
+	if asJSON {
+		return os.Stderr
+	}
+	return os.Stdout
 }
 
 // graphSnapshot captures the pre-apply bytes of a domain's graph.json and

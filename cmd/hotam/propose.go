@@ -101,11 +101,13 @@ func extractProposeKind(args []string) (kind string, rest []string, err error) {
 // result (always present — confront always runs for a valid draft), the path
 // the JSON was written to, and whether --land applied it.
 type proposeResult struct {
-	Kind     string                  `json:"kind"`
-	Anchor   string                  `json:"anchor"`
-	Confront diagnose.ConfrontResult `json:"confront"`
-	Written  string                  `json:"written"`
-	Landed   bool                    `json:"landed"`
+	Kind            string                  `json:"kind"`
+	Anchor          string                  `json:"anchor"`
+	Confront        diagnose.ConfrontResult `json:"confront"`
+	Written         string                  `json:"written"`
+	Landed          bool                    `json:"landed"`
+	RegeneratedDocs int                     `json:"regenerated_docs,omitempty"`
+	Violations      []string                `json:"violations,omitempty"`
 }
 
 // ---- requirement ----
@@ -281,6 +283,11 @@ func runPropose(
 	}
 
 	if asJSON {
+		// JSON path: run the land step (if any) FIRST, in stderr-routed mode,
+		// then emit exactly ONE JSON document to stdout with the land outcome
+		// populated. This is the fix for the review-8 R8-c bug where the early
+		// printJSON left a JSON document on stdout BEFORE landProposalFile
+		// printed its own prose to the same stream.
 		result := proposeResult{
 			Kind:     p.Kind(),
 			Anchor:   p.TargetAnchor(),
@@ -288,16 +295,25 @@ func runPropose(
 			Written:  outPath,
 			Landed:   land,
 		}
-		if err := printJSON(result); err != nil {
-			return err
+		if land {
+			lr, err := landProposalFile(outPath, domainDir, claudeMDPath, today, true)
+			if err != nil {
+				return err
+			}
+			result.RegeneratedDocs = lr.RegeneratedDocs
+			result.Violations = lr.Violations
 		}
-	} else {
-		fmt.Print(formatConfrontReport(confrontResult))
-		fmt.Printf("wrote %s %s proposal to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(outPath))
+		return printJSON(result)
 	}
 
+	// Non-JSON path: byte-identical to pre-fix behavior — print the confront
+	// report and write confirmation immediately, THEN run the land step (if
+	// any) with its own prose on stdout.
+	fmt.Print(formatConfrontReport(confrontResult))
+	fmt.Printf("wrote %s %s proposal to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(outPath))
+
 	if land {
-		if err := landProposalFile(outPath, domainDir, claudeMDPath, today); err != nil {
+		if _, err := landProposalFile(outPath, domainDir, claudeMDPath, today, false); err != nil {
 			return err
 		}
 	}

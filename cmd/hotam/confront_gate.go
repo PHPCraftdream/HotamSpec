@@ -27,13 +27,13 @@ import (
 // (R-ai-presents-not-decides). The apply/land always proceeds regardless of
 // what confront finds. A graph-load failure is returned (the apply would fail
 // to load the graph anyway), matching propose.go's confront behavior.
-func confrontBeforeApply(domainDir string, p proposal.Proposal) error {
+func confrontBeforeApply(domainDir string, p proposal.Proposal, asJSON bool) error {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return err
 	}
 	result := diagnose.Confront(g, proposeConfrontText(p))
-	fmt.Print(formatConfrontReport(result))
+	fmt.Fprint(landOut(asJSON), formatConfrontReport(result))
 	return nil
 }
 
@@ -67,7 +67,7 @@ type confrontBatchDigestItem struct {
 // (matching formatConfrontReport's own "always an explicit verdict" contract).
 //
 // Advisory only: never blocks the batch apply (R-ai-presents-not-decides).
-func confrontBatchSummary(domainDir string, proposals []proposal.Proposal) error {
+func confrontBatchSummary(domainDir string, proposals []proposal.Proposal, asJSON bool) error {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return err
@@ -102,18 +102,19 @@ func confrontBatchSummary(domainDir string, proposals []proposal.Proposal) error
 		flagged = append(flagged, item)
 	}
 
+	out := landOut(asJSON)
 	if len(flagged) == 0 {
-		fmt.Printf("confront batch: %d/%d proposals clear — no overlap detected\n", len(proposals), len(proposals))
+		fmt.Fprintf(out, "confront batch: %d/%d proposals clear — no overlap detected\n", len(proposals), len(proposals))
 		return nil
 	}
-	fmt.Printf("confront batch: %d/%d proposals flagged for possible overlap:\n", len(flagged), len(proposals))
+	fmt.Fprintf(out, "confront batch: %d/%d proposals flagged for possible overlap:\n", len(flagged), len(proposals))
 	for _, it := range flagged {
 		if it.TopID != "" {
-			fmt.Printf("  - %s %s: %d hit(s) (top: %s, score %d)\n", it.Kind, it.Anchor, it.Hits, it.TopID, it.TopScore)
+			fmt.Fprintf(out, "  - %s %s: %d hit(s) (top: %s, score %d)\n", it.Kind, it.Anchor, it.Hits, it.TopID, it.TopScore)
 		} else {
-			fmt.Printf("  - %s %s: %d hit(s)\n", it.Kind, it.Anchor, it.Hits)
+			fmt.Fprintf(out, "  - %s %s: %d hit(s)\n", it.Kind, it.Anchor, it.Hits)
 		}
 	}
-	fmt.Println("  (advisory; batch proceeds regardless)")
+	fmt.Fprintln(out, "  (advisory; batch proceeds regardless)")
 	return nil
 }
