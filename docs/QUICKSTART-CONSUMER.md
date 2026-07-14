@@ -82,7 +82,8 @@ hotam init domains/my-second-shop --name my-second-shop
 
 This creates `domains/my-second-shop/graph.json` with the same seed
 Stakeholder + seed Requirement, `domains/my-second-shop/manifest.json`
-(`{"self_hosting": false}`), an empty `domains/my-second-shop/docs/gen/`
+(`{"self_hosting": false, "gen_profile": "consumer"}`), an empty
+`domains/my-second-shop/docs/gen/`
 directory ready for `hotam gen-spec`, and a
 `domains/my-second-shop/README.md` pointing back at the next commands to
 run.

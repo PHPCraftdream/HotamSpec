@@ -86,9 +86,9 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 	if _, err := initDomain(domainDir, "test-external"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
-	// initDomain writes {"self_hosting": false} with NO gen_profile field,
-	// so genSpec(...,"") resolves to "full" — proving the default is
-	// backward-compatible. We pass explicit "consumer" here to test the cut.
+	// initDomain writes {"self_hosting": false, "gen_profile": "consumer"}
+	// (R8-e: unified with init-project). We pass explicit "consumer" here to
+	// test the cut directly regardless of the manifest default.
 
 	consumerWritten, _, err := genSpec(domainDir, "", "2026-07-13", "consumer")
 	if err != nil {
@@ -186,7 +186,15 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	}
 
 	// (5) Empty profile against a manifest without gen_profile → resolves to
-	//     "full" → same file set as explicit "full".
+	//     "full" → same file set as explicit "full". initDomain now writes
+	//     gen_profile: consumer (R8-e), so to test the ResolveGenProfile
+	//     absent-field fallback (backward compat for pre-existing domains
+	//     whose manifests predate the profile feature) we must explicitly
+	//     write a gen_profile-less manifest here.
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false}\n"), 0o644); err != nil {
+		t.Fatalf("write gen_profile-less manifest: %v", err)
+	}
 	emptyWritten, _, err := genSpec(domainDir, "", "2026-07-13", "")
 	if err != nil {
 		t.Fatalf("genSpec empty-profile: %v", err)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -111,5 +112,108 @@ func TestInitProject_RefusesWhenClaudeMDExists(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "CLAUDE.md") || !strings.Contains(err.Error(), "already exists") {
 		t.Errorf("refusal error should name CLAUDE.md already exists, got: %v", err)
+	}
+}
+
+// readManifestGenProfile reads a domain's manifest.json and returns its
+// gen_profile value (empty string when the field is absent — matching
+// loader.ResolveGenProfile's absent-field semantics for test readability).
+func readManifestGenProfile(t *testing.T, manifestPath string) string {
+	t.Helper()
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("read manifest %s: %v", manifestPath, err)
+	}
+	var m struct {
+		GenProfile string `json:"gen_profile"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("unmarshal manifest %s: %v", manifestPath, err)
+	}
+	return m.GenProfile
+}
+
+// TestInitAndInitProject_DefaultToSameGenProfile proves the R8-e fix: bare
+// `hotam init` (initDomain) and `hotam init-project` (initProject) both
+// default to the SAME gen-spec profile (consumer) in their scaffolded
+// manifests. Before the fix, initDomain wrote no gen_profile field at all
+// (silently resolving to "full" via ResolveGenProfile's absent-field
+// fallback), while initProject wrote "consumer" — two different defaults for
+// two onboarding paths with no flag or message explaining the divergence.
+func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
+	t.Parallel()
+
+	// (1) initDomain (bare `hotam init`).
+	initDir := t.TempDir()
+	if _, err := initDomain(initDir, "bare"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	bareProfile := readManifestGenProfile(t, filepath.Join(initDir, "manifest.json"))
+
+	// (2) initProject (`hotam init-project`).
+	projDir := t.TempDir()
+	if _, err := initProject(projDir, "main", "2026-07-14"); err != nil {
+		t.Fatalf("initProject: %v", err)
+	}
+	projProfile := readManifestGenProfile(t, filepath.Join(projDir, "domains", "main", "manifest.json"))
+
+	// (3) Both must be "consumer" and equal.
+	if bareProfile != "consumer" {
+		t.Errorf("initDomain manifest gen_profile = %q, want \"consumer\"", bareProfile)
+	}
+	if projProfile != "consumer" {
+		t.Errorf("initProject manifest gen_profile = %q, want \"consumer\"", projProfile)
+	}
+	if bareProfile != projProfile {
+		t.Errorf("init and init-project default to different profiles: init=%q init-project=%q", bareProfile, projProfile)
+	}
+}
+
+// TestCmdInit_ProfileFlagOverridesDefault proves the --profile flag on
+// `hotam init` works in both directions: --profile full overrides
+// initDomain's consumer default, and the bare default (no flag) writes
+// consumer. This ensures an operator who needs the heavier
+// framework-self-hosting doc set can still get it from bare `hotam init`.
+//
+// cmdInit receives args AFTER main.go's reorderFlagsFirst has moved flags
+// ahead of positional arguments (Go's stdlib flag stops at the first non-flag
+// token), so these in-process calls pass flags first to mirror that.
+func TestCmdInit_ProfileFlagOverridesDefault(t *testing.T) {
+	t.Parallel()
+
+	// --profile full overrides the consumer default.
+	dirFull := t.TempDir()
+	domainFull := filepath.Join(dirFull, "mydomain")
+	if err := cmdInit([]string{"--name", "mydomain", "--profile", "full", domainFull}); err != nil {
+		t.Fatalf("cmdInit --profile full: %v", err)
+	}
+	if got := readManifestGenProfile(t, filepath.Join(domainFull, "manifest.json")); got != "full" {
+		t.Errorf("cmdInit --profile full: manifest gen_profile = %q, want \"full\"", got)
+	}
+
+	// No flag → consumer default (initDomain's own default).
+	dirDefault := t.TempDir()
+	domainDefault := filepath.Join(dirDefault, "mydomain")
+	if err := cmdInit([]string{"--name", "mydomain", domainDefault}); err != nil {
+		t.Fatalf("cmdInit (default): %v", err)
+	}
+	if got := readManifestGenProfile(t, filepath.Join(domainDefault, "manifest.json")); got != "consumer" {
+		t.Errorf("cmdInit (default): manifest gen_profile = %q, want \"consumer\"", got)
+	}
+
+	// --profile consumer is an explicit no-op (same as default).
+	dirConsumer := t.TempDir()
+	domainConsumer := filepath.Join(dirConsumer, "mydomain")
+	if err := cmdInit([]string{"--name", "mydomain", "--profile", "consumer", domainConsumer}); err != nil {
+		t.Fatalf("cmdInit --profile consumer: %v", err)
+	}
+	if got := readManifestGenProfile(t, filepath.Join(domainConsumer, "manifest.json")); got != "consumer" {
+		t.Errorf("cmdInit --profile consumer: manifest gen_profile = %q, want \"consumer\"", got)
+	}
+
+	// Invalid value is rejected.
+	dirBad := t.TempDir()
+	if err := cmdInit([]string{"--profile", "bogus", filepath.Join(dirBad, "x")}); err == nil {
+		t.Fatal("cmdInit --profile bogus should return an error, got nil")
 	}
 }

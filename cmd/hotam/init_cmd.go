@@ -9,14 +9,14 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
-// cmdInit implements `hotam init <dir> [--name <domain-name>]` — the
-// scaffold command that closes the "applicability to external projects"
-// gap (TaskList P1-7 / applicability score 3/10): before this command
-// existed, a team wanting to adopt Hotam-Spec in ITS OWN repository had to
-// hand-write a graph.json from scratch (see docs/QUICKSTART-CONSUMER.md
-// step 2's `cat > graph.json <<'EOF' ... EOF` bootstrap) with no scaffold
-// and no e2e proof the `hotam` binary even works outside this repo's own
-// checkout.
+// cmdInit implements `hotam init <dir> [--name <domain-name>] [--profile
+// consumer|full]` — the scaffold command that closes the "applicability to
+// external projects" gap (TaskList P1-7 / applicability score 3/10): before
+// this command existed, a team wanting to adopt Hotam-Spec in ITS OWN
+// repository had to hand-write a graph.json from scratch (see
+// docs/QUICKSTART-CONSUMER.md step 2's `cat > graph.json <<'EOF' ... EOF`
+// bootstrap) with no scaffold and no e2e proof the `hotam` binary even works
+// outside this repo's own checkout.
 //
 // init creates the minimal on-disk shape a domain needs to be immediately
 // usable:
@@ -35,9 +35,13 @@ import (
 //     `hotam init` stays a pure scaffold step and the doc-generation step
 //     stays observable/separate, matching QUICKSTART-CONSUMER.md's own
 //     step-by-step structure).
-//   - <dir>/manifest.json — {"self_hosting": false}, so
-//     internal/loader.resolveSelfHosting reads a real, explicit value
-//     instead of silently defaulting via a missing file.
+//   - <dir>/manifest.json — {"self_hosting": false, "gen_profile":
+//     "consumer"}, so internal/loader.resolveSelfHosting reads a real,
+//     explicit value instead of silently defaulting via a missing file, and
+//     ResolveGenProfile resolves to the consumer profile — matching
+//     init-project's own default so both onboarding paths are consistent
+//     (R8-e: --profile full overrides this to the heavier full-profile
+//     output set for a domain that needs framework-self-hosting-style docs).
 //   - <dir>/README.md — a short pointer back at the graph + the `hotam`
 //     commands to run next, so a directory listing alone orients a human.
 //
@@ -52,12 +56,20 @@ import (
 func cmdInit(args []string) error {
 	fs := newFlagSet("init")
 	name := fs.String("name", "", "domain name (default: the last path segment of <dir>)")
+	profile := fs.String("profile", "", "gen-spec profile: consumer|full (default: consumer, matching init-project; full produces the heavier framework-self-hosting doc set)")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>]")
+		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full]")
 	}
 	rawDir := fs.Arg(0)
+
+	switch *profile {
+	case "", loader.GenProfileConsumer, loader.GenProfileFull:
+		// valid — empty falls through to initDomain's consumer default.
+	default:
+		return fmt.Errorf("--profile must be %q, %q, or empty (default consumer), got %q", loader.GenProfileConsumer, loader.GenProfileFull, *profile)
+	}
 
 	domainDir, err := filepath.Abs(rawDir)
 	if err != nil {
@@ -73,6 +85,19 @@ func cmdInit(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// initDomain defaults to the consumer gen-spec profile (matching
+	// init-project). An explicit --profile full overrides that by rewriting
+	// the manifest initDomain just wrote — mirroring init-project's own
+	// historical manifest-rewrite pattern. An explicit --profile consumer (or
+	// empty) is a no-op: initDomain already wrote consumer.
+	if *profile == loader.GenProfileFull {
+		manifestPath := filepath.Join(domainDir, "manifest.json")
+		if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false, \"gen_profile\": \"full\"}\n")); err != nil {
+			return err
+		}
+	}
+
 	for _, p := range written {
 		fmt.Println(relPathForDisplay(p))
 	}
@@ -124,7 +149,7 @@ func initDomain(domainDir, domainName string) ([]string, error) {
 	written := []string{graphPath, loader.LockPath(graphPath)}
 
 	manifestPath := filepath.Join(domainDir, "manifest.json")
-	if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false}\n")); err != nil {
+	if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false, \"gen_profile\": \"consumer\"}\n")); err != nil {
 		return nil, err
 	}
 	written = append(written, manifestPath)

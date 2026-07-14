@@ -68,12 +68,14 @@ go run ./cmd/hotam <command> [flags] [args]
 The `hotam` binary (see `cmd/hotam/main.go`) implements 17 commands:
 
 ```
-hotam init <dir> [--name <domain-name>]
+hotam init <dir> [--name <domain-name>] [--profile consumer|full]
         Scaffold a new domain: minimal graph.json (seed Stakeholder + seed
-        SETTLED Requirement, all-violations=0 immediately), manifest.json,
+        SETTLED Requirement, all-violations=0 immediately), manifest.json
+        (defaults to the consumer gen-spec profile, matching init-project),
         docs/gen/, and a README.md pointing at the next commands to run.
-        <dir> may be anywhere on disk — it does not need to live under this
-        repository or contain a domains/ ancestor.
+        --profile full overrides to the heavier framework-self-hosting doc
+        set. <dir> may be anywhere on disk — it does not need to live under
+        this repository or contain a domains/ ancestor.
 
 hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD]
         Bootstrap an external business project's full Hotam-Spec layout in

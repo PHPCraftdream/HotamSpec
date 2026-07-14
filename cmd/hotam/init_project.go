@@ -121,23 +121,12 @@ func initProject(dir, domainName, today string) ([]string, error) {
 		return nil, err
 	}
 
-	// (2b) init-project defaults EXTERNAL projects to the consumer gen-spec
-	// profile: rewrite the manifest.json initDomain just wrote to add
-	// "gen_profile": "consumer". This mirrors initDomain's own manifest-write
-	// pattern (hardcoded JSON literal) and follows the resolveSelfHosting /
-	// ResolveGenProfile precedent of reading per-domain persistent settings
-	// from manifest.json. Option (b) from the task plan: a small second write
-	// overwriting initDomain's manifest, rather than threading a new
-	// parameter through initDomain's signature — keeps initDomain unchanged
-	// for bare `hotam init` (used by tests, resolving to "full" when
-	// gen_profile is absent). genSpec's profile parameter is passed "" below
-	// so it resolves from this manifest, making the consumer-file-count
-	// reduction visible immediately on the very first gen-spec inside
-	// init-project's own pipeline.
-	manifestPath := filepath.Join(domainDir, "manifest.json")
-	if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false, \"gen_profile\": \"consumer\"}\n")); err != nil {
-		return nil, err
-	}
+	// (2b) initDomain already writes gen_profile: consumer into the
+	// manifest (R8-e: unified with init-project's own historical default), so
+	// no second manifest write is needed here. genSpec's profile parameter is
+	// passed "" below so it resolves from that manifest, making the
+	// consumer-file-count reduction visible immediately on the very first
+	// gen-spec inside init-project's own pipeline.
 
 	// (3) Write the project-root marker, recording the scaffolded domain as the
 	// active-domain preference. paths.WriteActiveDomain writes
