@@ -319,3 +319,62 @@ func TestCrystalLinks_RealDomainRecentlyRejectedFooterReferencesExistOnDisk(t *t
 		}
 	}
 }
+
+// toolIndexLinkTargetRE extracts the .md target from a markdown link as
+// emitted by generator.BuildToolDocsIndex's Implemented section (the
+// `[`hotam <name>`](<command>.md)` shape). Scoped to the narrow link SYNTAX
+// this exact function emits (not the broader crystal-prose scanning problem
+// extractCrystalPathTokens solves), so a simple ](capture.md) is enough.
+// Used by TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk to prove no
+// markdown link in the consumer-profile INDEX.md points at a file that was
+// never written (the task #144 / R8-a acceptance criterion: before the fix
+// all 27 Planned tools shipped dead `](<cmd>.md)` links because genSpec's
+// toolIsImplemented filter skips their pages entirely under consumer).
+var toolIndexLinkTargetRE = regexp.MustCompile(`\]\(([^)]+\.md)\)`)
+
+// TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk is the link-existence
+// acceptance test for task #144 (R8-a, review-8): it runs a REAL consumer-
+// profile genSpec against a scratch domain, reads the generated
+// docs/gen/tools/INDEX.md from disk, extracts every markdown link
+// `[...](<target>.md)` in it, and asserts each target resolves to a real
+// `.md` file that actually exists in the tools/ directory. Under the
+// consumer profile genSpec writes per-tool pages ONLY for Implemented tools
+// (the toolIsImplemented filter skips the 27 Planned tools), so before the
+// fix BuildToolDocsIndex rendered 27 dead `](<cmd>.md)` links to Planned
+// tools whose pages were never written — this test failed against that
+// pre-fix code (confirmed during this task: temporarily reverting
+// BuildToolDocsIndex to the pre-fix always-link Planned rendering made this
+// test fail with 27 missing-file errors).
+func TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk(t *testing.T) {
+	t.Parallel()
+
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "test-toolindex-linkcheck")
+	if _, err := initDomain(domainDir, "test-toolindex-linkcheck"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
+		t.Fatalf("genSpec consumer: %v", err)
+	}
+
+	indexPath := filepath.Join(domainDir, "docs", "gen", "tools", "INDEX.md")
+	content, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read generated INDEX.md: %v", err)
+	}
+	text := string(content)
+
+	matches := toolIndexLinkTargetRE.FindAllStringSubmatch(text, -1)
+	if len(matches) == 0 {
+		t.Fatalf("extracted zero markdown links from INDEX.md -- the Implemented section must carry real links (its pages are always written); extraction regex likely broken")
+	}
+
+	toolsDir := filepath.Join(domainDir, "docs", "gen", "tools")
+	for _, m := range matches {
+		target := m[1]
+		p := filepath.Join(toolsDir, target)
+		if _, err := os.Stat(p); err != nil {
+			t.Errorf("consumer INDEX.md links to %q but it does not exist on disk at %s: %v", target, p, err)
+		}
+	}
+}

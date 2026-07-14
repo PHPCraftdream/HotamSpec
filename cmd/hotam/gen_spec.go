@@ -301,7 +301,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// files, only 13 backing runnable commands). Purely additive — one extra
 	// file alongside the per-tool docs above.
 	toolIndexPath := filepath.Join(genDir, "tools", "INDEX.md")
-	if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex())); err != nil {
+	if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex(consumer))); err != nil {
 		return written, nil, err
 	}
 	written = append(written, toolIndexPath)

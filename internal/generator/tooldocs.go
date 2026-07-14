@@ -113,7 +113,17 @@ func purposeExcerpt(p string) string {
 // statusBadge/statusLine vocabulary the per-tool docs already carry, so the
 // distinction "implemented vs planned" is consistent everywhere it appears
 // (per-tool badge → root-crystal EMBEDDED-TOOLS collapse → this index).
-func BuildToolDocsIndex() string {
+//
+// consumer selects the output profile (loader.GenProfileConsumer when true,
+// matching genSpec's own local): under the consumer profile genSpec writes
+// per-tool `.md` pages ONLY for Implemented tools (the toolIsImplemented
+// filter in gen_spec.go skips Planned tools entirely), so a markdown link to
+// a Planned tool's `.md` would point at a file that was never written. Under
+// consumer the Planned section therefore renders tool names as plain
+// backtick code spans (no `[...](....md)` link wrapper) and drops the
+// framework-internal source-file reference from its intro sentence. Under
+// the full profile the Planned section renders byte-identical to before.
+func BuildToolDocsIndex(consumer bool) string {
 	tools := methodology.Tools.All()
 	sorted := make([]methodology.Tool, len(tools))
 	copy(sorted, tools)
@@ -152,14 +162,35 @@ func BuildToolDocsIndex() string {
 	if len(planned) == 0 {
 		lines = append(lines, "_(none — all registered tools are implemented.)_")
 	} else {
-		lines = append(lines, fmt.Sprintf(
-			"These %d are registered in the methodology registry (`internal/methodology/tools_data.go`) as future-work surface. Invoking any of them as `hotam <name>` fails with \"unknown command\". Their per-tool `.md` files exist for design-continuity reference only.",
-			len(planned),
-		))
+		if consumer {
+			// Consumer: genSpec writes NO per-tool .md pages for Planned
+			// tools (the toolIsImplemented filter skips them), so the
+			// full-profile intro's reference to `internal/methodology/
+			// tools_data.go` (a framework SOURCE FILE that does not exist in
+			// an external consumer's project) and its claim that "Their
+			// per-tool `.md` files exist" are both false under this profile.
+			// Rephrase to point at the CLI's own discovery surface instead.
+			lines = append(lines, fmt.Sprintf(
+				"These %d are registered in the methodology registry as future-work surface (see `hotam -h` / `hotam status` for the real command set). Invoking any of them as `hotam <name>` fails with \"unknown command\".",
+				len(planned),
+			))
+		} else {
+			lines = append(lines, fmt.Sprintf(
+				"These %d are registered in the methodology registry (`internal/methodology/tools_data.go`) as future-work surface. Invoking any of them as `hotam <name>` fails with \"unknown command\". Their per-tool `.md` files exist for design-continuity reference only.",
+				len(planned),
+			))
+		}
 		lines = append(lines, "")
 		for _, t := range planned {
 			displayName := strings.ReplaceAll(t.Command, "_", "-")
-			lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, purposeExcerpt(t.Purpose)))
+			if consumer {
+				// No per-tool .md page was written for this Planned tool, so
+				// a markdown link would be dead — render the command name as
+				// a plain backtick code span (no link wrapper).
+				lines = append(lines, fmt.Sprintf("- `hotam %s` — %s", displayName, purposeExcerpt(t.Purpose)))
+			} else {
+				lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, purposeExcerpt(t.Purpose)))
+			}
 		}
 	}
 
