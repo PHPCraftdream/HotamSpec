@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
@@ -401,5 +402,338 @@ func TestCmdLand_SuccessPathDoesNotRollBack(t *testing.T) {
 	// pre-land).
 	if _, err := os.Stat(lp); err != nil {
 		t.Errorf("graph.lock should exist after a successful land, stat=%v", err)
+	}
+}
+
+// crystalDebtLine extracts the LIVE-STATE debt line (the one carrying "SETTLED
+// ENFORCED") from a rendered crystal or live-state.md body. Returns "" when no
+// such line is present. Used to prove a regenerated crystal reflects the
+// post-apply graph (its debt line differs from the pre-apply baseline).
+func crystalDebtLine(s string) string {
+	for _, line := range strings.Split(s, "\n") {
+		if strings.Contains(line, "SETTLED ENFORCED") {
+			return line
+		}
+	}
+	return ""
+}
+
+// TestResolveClaudeMDPath unit-tests the helper directly across every branch:
+// explicit override, CLAUDE.md-present, marker-present (no CLAUDE.md), and the
+// no-convention negative. Each case uses a domains-parented domainDir so
+// repoRootForDomain tier-1 resolves to a test-controlled root (no CWD leak).
+func TestResolveClaudeMDPath(t *testing.T) {
+	t.Parallel()
+
+	t.Run("explicit_wins", func(t *testing.T) {
+		t.Parallel()
+		root := t.TempDir()
+		domainDir := filepath.Join(root, "domains", "d")
+		if err := os.MkdirAll(domainDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		// Even with a CLAUDE.md at root, explicit must win.
+		if err := os.WriteFile(filepath.Join(root, "CLAUDE.md"), []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if got := resolveClaudeMDPath(domainDir, "/operator/override/CLAUDE.md"); got != "/operator/override/CLAUDE.md" {
+			t.Errorf("explicit non-empty path must win; got %q", got)
+		}
+	})
+
+	t.Run("claude_md_present", func(t *testing.T) {
+		t.Parallel()
+		root := t.TempDir()
+		domainDir := filepath.Join(root, "domains", "d")
+		if err := os.MkdirAll(domainDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		want := filepath.Join(root, "CLAUDE.md")
+		if err := os.WriteFile(want, []byte("existing crystal"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if got := resolveClaudeMDPath(domainDir, ""); got != want {
+			t.Errorf("CLAUDE.md present: got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("marker_present_no_claude_md", func(t *testing.T) {
+		t.Parallel()
+		root := t.TempDir()
+		domainDir := filepath.Join(root, "domains", "d")
+		if err := os.MkdirAll(domainDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		// Marker exists but no CLAUDE.md yet — still returns the candidate
+		// path so land can bootstrap the crystal where a project convention
+		// already exists.
+		if err := os.WriteFile(filepath.Join(root, paths.MarkerFilename), []byte("{}"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		want := filepath.Join(root, "CLAUDE.md")
+		if got := resolveClaudeMDPath(domainDir, ""); got != want {
+			t.Errorf("marker present: got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("no_convention_returns_empty", func(t *testing.T) {
+		t.Parallel()
+		root := t.TempDir()
+		domainDir := filepath.Join(root, "domains", "d")
+		if err := os.MkdirAll(domainDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		// No CLAUDE.md, no marker → no auto-write.
+		if got := resolveClaudeMDPath(domainDir, ""); got != "" {
+			t.Errorf("no convention: got %q, want \"\"", got)
+		}
+	})
+}
+
+// TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD is the positive case for
+// the fix (review-6 R6-d): `hotam land` WITHOUT --claude-md, against a domain
+// whose project root already carries a root CLAUDE.md, must auto-regenerate
+// CLAUDE.md/AGENTS.md/GEMINI.md — closing the gap where docs/gen/*.md was fresh
+// but the boot crystal an agent reads was stale. Without the fix,
+// resolveClaudeMDPath does not exist and the stale sentinel bytes survive land
+// untouched (this test FAILS on the pre-fix code).
+func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+
+	// Pre-create a STALE root crystal so (a) resolveClaudeMDPath detects the
+	// project-root convention and (b) we can prove land OVERWRITES it.
+	stale := []byte("STALE-CRYSTAL-BASELINE\n")
+	for _, name := range []string{"CLAUDE.md", "AGENTS.md", "GEMINI.md"} {
+		if err := os.WriteFile(filepath.Join(projectRoot, name), stale, 0o644); err != nil {
+			t.Fatalf("write stale %s: %v", name, err)
+		}
+	}
+
+	// Capture the pre-apply debt line from docs/gen (rendered WITHOUT touching
+	// the crystal) so the freshness assertion below is robust to whatever the
+	// fixture's current DRAFT count is.
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", ""); err != nil {
+		t.Fatalf("baseline genSpec: %v", err)
+	}
+	baselineLS, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "live-state.md"))
+	if err != nil {
+		t.Fatalf("read baseline live-state.md: %v", err)
+	}
+	baselineDebt := crystalDebtLine(string(baselineLS))
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-auto-crystal",
+		"claim": "land without --claude-md must auto-regenerate the root crystal",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "auto-crystal coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	claude, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read post-land CLAUDE.md: %v", err)
+	}
+	// (a) Overwritten — no longer the stale sentinel.
+	if string(claude) == string(stale) {
+		t.Fatal("CLAUDE.md was NOT regenerated — still the stale baseline")
+	}
+	// (b) A real render.
+	if !strings.Contains(string(claude), "# CLAUDE.md — Hotam-Spec framework") {
+		t.Errorf("CLAUDE.md does not carry the crystal header — not a real render")
+	}
+	// (c) FRESH — the debt line changed because a DRAFT requirement was added.
+	if postDebt := crystalDebtLine(string(claude)); postDebt == "" {
+		t.Errorf("CLAUDE.md has no LIVE-STATE debt line")
+	} else if postDebt == baselineDebt {
+		t.Errorf("CLAUDE.md debt line unchanged from baseline — crystal does not reflect the applied proposal:\nbaseline: %s\npost:     %s", baselineDebt, postDebt)
+	}
+
+	// AGENTS.md and GEMINI.md must be byte-identical to CLAUDE.md (same render
+	// fanned out together).
+	for _, name := range []string{"AGENTS.md", "GEMINI.md"} {
+		got, err := os.ReadFile(filepath.Join(projectRoot, name))
+		if err != nil {
+			t.Fatalf("read post-land %s: %v", name, err)
+		}
+		if string(got) != string(claude) {
+			t.Errorf("%s differs from CLAUDE.md — crystal fan-out wrote non-identical content", name)
+		}
+	}
+}
+
+// TestCmdLand_NoAutoCrystal_WhenNoProjectRootConvention is the negative case:
+// a domain NOT linked to any project-root convention (no CLAUDE.md, no
+// .hotam-spec-project marker at the resolved root) must NOT spontaneously
+// create a crystal when --claude-md is omitted. Guards against over-eager
+// writes into bare/isolated domains. Without the fix this passes trivially;
+// it must KEEP passing with the fix.
+func TestCmdLand_NoAutoCrystal_WhenNoProjectRootConvention(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	// Deliberately create NO CLAUDE.md and NO marker at projectRoot.
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-no-crystal",
+		"claim": "no crystal must appear without a project-root convention",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "negative auto-crystal coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	for _, name := range []string{"CLAUDE.md", "AGENTS.md", "GEMINI.md"} {
+		if _, err := os.Stat(filepath.Join(projectRoot, name)); err == nil {
+			t.Errorf("%s was spontaneously created at the project root — resolveClaudeMDPath should return \"\" with no crystal/marker convention", name)
+		}
+	}
+}
+
+// TestCmdLand_ExplicitClaudeMD_OverridesAutoDetect proves the operator
+// override still wins: even when a root CLAUDE.md exists (so auto-detect WOULD
+// fire), an explicit --claude-md points land at a DIFFERENT path and leaves the
+// auto-detected crystal untouched. Without resolveClaudeMDPath's explicit-wins
+// branch this would write to the wrong place.
+func TestCmdLand_ExplicitClaudeMD_OverridesAutoDetect(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+
+	// Pre-create CLAUDE.md at projectRoot so auto-detect is armed.
+	stale := []byte("STALE-AUTO-DETECT-TARGET\n")
+	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), stale, 0o644); err != nil {
+		t.Fatalf("write stale CLAUDE.md: %v", err)
+	}
+
+	// Explicit --claude-md points ELSEWHERE.
+	otherDir := t.TempDir()
+	explicit := filepath.Join(otherDir, "CLAUDE.md")
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-override",
+		"claim": "explicit --claude-md must override auto-detection",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "override coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-07-14",
+		"--claude-md", explicit,
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	// The EXPLICIT path got the real render.
+	got, err := os.ReadFile(explicit)
+	if err != nil {
+		t.Fatalf("read explicit CLAUDE.md: %v", err)
+	}
+	if !strings.Contains(string(got), "# CLAUDE.md — Hotam-Spec framework") {
+		t.Errorf("explicit --claude-md path was not written with a real render")
+	}
+	for _, name := range []string{"AGENTS.md", "GEMINI.md"} {
+		if _, err := os.Stat(filepath.Join(otherDir, name)); err != nil {
+			t.Errorf("%s not written alongside explicit CLAUDE.md: %v", name, err)
+		}
+	}
+
+	// The auto-detected projectRoot/CLAUDE.md must be UNTOUCHED (still stale).
+	projClaude, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read projectRoot CLAUDE.md: %v", err)
+	}
+	if string(projClaude) != string(stale) {
+		t.Errorf("projectRoot/CLAUDE.md was modified despite explicit --claude-md override (len stale=%d got=%d)", len(stale), len(projClaude))
+	}
+}
+
+// TestCmdLand_AutoCrystal_IdempotentAcrossGenspec guards against
+// self-referential drift in the rune-count fixpoint: landing (which
+// auto-writes the crystal via genSpec) and then re-running genSpec on the same
+// auto-detected path must produce byte-identical crystal bytes. This project
+// has hit rune-count fixpoint drift before (see ComputeCrystalCharCountFixpoint
+// in gen_spec.go); a regression would make two consecutive renders differ.
+func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	// Seed a crystal so resolveClaudeMDPath arms the auto-write.
+	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), []byte("seed"), 0o644); err != nil {
+		t.Fatalf("write seed CLAUDE.md: %v", err)
+	}
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-idempotent",
+		"claim": "auto-written crystal must be stable across consecutive gen-spec runs",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "fixpoint idempotency coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	first, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read first CLAUDE.md: %v", err)
+	}
+
+	// Re-run genSpec on the SAME auto-detected path; the graph is unchanged
+	// since land, so the crystal must converge to the identical fixpoint.
+	resolved := resolveClaudeMDPath(domainDir, "")
+	if resolved == "" {
+		t.Fatal("resolveClaudeMDPath returned empty despite seeded CLAUDE.md")
+	}
+	if _, _, err := genSpec(domainDir, resolved, "2026-07-14", ""); err != nil {
+		t.Fatalf("second genSpec: %v", err)
+	}
+	second, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read second CLAUDE.md: %v", err)
+	}
+
+	if string(first) != string(second) {
+		t.Fatalf("auto-written crystal is NOT byte-identical across two gen-spec runs — rune-count fixpoint drift (len first=%d second=%d)", len(first), len(second))
 	}
 }

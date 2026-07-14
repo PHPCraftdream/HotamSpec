@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
@@ -100,6 +102,10 @@ func cmdLand(args []string) error {
 // share the same snapshot/genSpec/allViolations/rollback shape but differ in
 // the apply step (ApplyBatch vs applyProposalValue).
 func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string) error {
+	// Resolve the effective crystal path once (see landProposalValue for the
+	// rationale): the forward genSpec and every rollback re-render in this
+	// batch path must agree on whether the root crystal is in scope.
+	claudeMDPath = resolveClaudeMDPath(domainDir, claudeMDPath)
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
 		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
@@ -167,6 +173,38 @@ func landProposalFile(proposalFile, domainDir, claudeMDPath, today string) error
 	return landProposalValue(p, domainDir, claudeMDPath, today)
 }
 
+// resolveClaudeMDPath returns the effective root-crystal path a land operation
+// should regenerate. An explicit non-empty path always wins (operator
+// override). Otherwise, if domainDir resolves to a real project root (via
+// repoRootForDomain) that already carries a root CLAUDE.md or a
+// .hotam-spec-project marker, land defaults to regenerating
+// <repoRoot>/CLAUDE.md automatically — closing the class of bug where
+// graph.json + docs/gen/*.md are fresh but the crystal an agent actually boots
+// from is stale. A domain NOT linked to any such project root (e.g. an isolated
+// test fixture, or a bare domain nobody has run init-project / hotam use on)
+// gets no auto-write — this only activates where a crystal convention already
+// exists.
+//
+// The CLAUDE.md / marker checks are DIRECT os.Stat calls at repoRoot itself,
+// not an upward walk, so this function is not vulnerable to the ancestor-
+// marker contamination shape (a stray marker several levels above) — only
+// repoRootForDomain's own internal tier-2 ProjectRootOrRaise() call walks
+// upward, and only for non-domains/<name> layouts.
+func resolveClaudeMDPath(domainDir, explicit string) string {
+	if explicit != "" {
+		return explicit
+	}
+	repoRoot := repoRootForDomain(domainDir)
+	candidate := filepath.Join(repoRoot, "CLAUDE.md")
+	if _, err := os.Stat(candidate); err == nil {
+		return candidate
+	}
+	if _, err := os.Stat(filepath.Join(repoRoot, paths.MarkerFilename)); err == nil {
+		return candidate
+	}
+	return ""
+}
+
 // landProposalValue runs the full land pipeline (snapshot, apply an
 // already-parsed proposal, regen, re-verify, rollback-on-failure). It is the
 // parse-free core shared by landProposalFile (which reads + parses the file)
@@ -175,6 +213,13 @@ func landProposalFile(proposalFile, domainDir, claudeMDPath, today string) error
 // lives here so every caller that lands a single proposal shares one
 // implementation.
 func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string) error {
+	// Resolve the effective crystal path ONCE so every downstream step — the
+	// forward genSpec AND any rollback re-render — agrees on whether the root
+	// crystal is in scope for this land. An explicit --claude-md wins; absent
+	// that, a domain linked to a real project root (CLAUDE.md or marker
+	// present) auto-regenerates the crystal so docs/gen and the boot crystal
+	// can never diverge again (see resolveClaudeMDPath).
+	claudeMDPath = resolveClaudeMDPath(domainDir, claudeMDPath)
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
 		return fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)

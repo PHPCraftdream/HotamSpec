@@ -15,16 +15,44 @@ import (
 const selfDomainGraph = "../../domains/hotam-spec-self/graph.json"
 const selfDomainManifest = "../../domains/hotam-spec-self/manifest.json"
 
+// copySelfDomain scaffolds the self-hosting domain fixture at
+// <tempRoot>/domains/hotam-spec-self and returns the domain dir. The
+// domains/<name> parent makes repoRootForDomain's tier-1 resolve the project
+// root to the temp root itself, so the fixture is HERMETIC: it never leaks
+// through tier-2's CWD-based ProjectRootOrRaise() walk to THIS repo's real
+// root (which carries a real CLAUDE.md + .hotam-spec-project marker). Without
+// this, any land without --claude-md would auto-write the real crystal
+// (resolveClaudeMDPath), and DOMAIN-MAP rendering would list the real repo's
+// sibling domains — both cross-test contamination. Tests that need to control
+// whether the project root carries a crystal/marker use
+// copySelfDomainUnderRoot directly.
 func copySelfDomain(t *testing.T) string {
 	t.Helper()
-	dir := t.TempDir()
-	domainDir := filepath.Join(dir, "hotam-spec-self")
+	_, domainDir := copySelfDomainUnderRoot(t)
+	return domainDir
+}
+
+// copySelfDomainUnderRoot scaffolds the self-hosting domain fixture at
+// <root>/domains/hotam-spec-self and returns BOTH the synthetic project root
+// and the domain dir. Placing the domain under a domains/ parent makes
+// repoRootForDomain's tier-1 (<root>/domains/<name>) resolve the project root
+// to the temp root itself, so resolveClaudeMDPath's os.Stat checks run against
+// the temp root (fully test-controlled) rather than leaking through tier-2's
+// CWD-based ProjectRootOrRaise() walk to THIS repo's real root (which carries
+// a real CLAUDE.md + .hotam-spec-project marker and would otherwise be
+// contaminated by any land auto-crystal-write). Callers that WANT the land
+// auto-crystal-write to fire create <root>/CLAUDE.md or .hotam-spec-project;
+// callers that DON'T leave the root empty so resolveClaudeMDPath returns "".
+func copySelfDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
+	t.Helper()
+	projectRoot = t.TempDir()
+	domainDir = filepath.Join(projectRoot, "domains", "hotam-spec-self")
 	if err := os.MkdirAll(domainDir, 0o755); err != nil {
 		t.Fatalf("mkdir domain: %v", err)
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
 	copyFile(t, selfDomainManifest, filepath.Join(domainDir, "manifest.json"))
-	return domainDir
+	return projectRoot, domainDir
 }
 
 func copyFile(t *testing.T, src, dst string) {
