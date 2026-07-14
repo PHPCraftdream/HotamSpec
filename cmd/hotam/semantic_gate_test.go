@@ -344,3 +344,115 @@ func TestSemanticConflictGate_ProposeLandPath(t *testing.T) {
 		t.Fatalf("propose --land with --decision-ref should succeed: %v", err)
 	}
 }
+
+// TestSemanticConflictGate_HadConflictReturnValue directly exercises the
+// semanticConflictGate (hadConflict bool, err error) contract introduced to
+// fix the false-positive ack-history bug. The return value must reflect
+// whether a real conflict signal (blockers) was found — INDEPENDENT of ack
+// flags — so the caller can gate appendAckHistory correctly:
+//
+//   - no conflict + no ack   → hadConflict=false, err=nil
+//   - no conflict + ack      → hadConflict=false, err=nil  (ack alone must NOT
+//     imply a conflict; this is the core of the regression)
+//   - real conflict + no ack → hadConflict=true,  err!=nil (refusal)
+//   - real conflict + ack    → hadConflict=true,  err=nil  (ack overrides)
+func TestSemanticConflictGate_HadConflictReturnValue(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+
+	// Seed a SETTLED requirement carrying "always encrypt" so a contradicting
+	// claim with "never encrypt" trips the opposite-marker signal.
+	first := writeReqProposalJSON(t, "R-gate-had-conflict-seed",
+		"export service must always encrypt records")
+	if err := cmdLand([]string{"--domain", domainDir, "--today", "2026-07-14", first}); err != nil {
+		t.Fatalf("land seed: %v", err)
+	}
+
+	const conflictingClaim = "export service must never encrypt records"
+	const benignClaim = "a completely benign requirement about tea quality grading"
+
+	// Case 1: no conflict, no ack → no conflict, no error.
+	hc, err := semanticConflictGate(domainDir, proposal.ProposedRequirement{
+		ID: "R-benign-1", Claim: benignClaim, Owner: "owner", Status: "SETTLED", Why: "t",
+	}, landAckOptions{})
+	if err != nil {
+		t.Fatalf("benign claim, no ack: expected no error, got %v", err)
+	}
+	if hc {
+		t.Error("benign claim, no ack: expected hadConflict=false, got true")
+	}
+
+	// Case 2: no conflict, but ack supplied → STILL hadConflict=false. This is
+	// the regression core: ack flags must not fabricate a conflict.
+	hc, err = semanticConflictGate(domainDir, proposal.ProposedRequirement{
+		ID: "R-benign-2", Claim: benignClaim, Owner: "owner", Status: "SETTLED", Why: "t",
+	}, landAckOptions{DecisionRef: "no conflict here"})
+	if err != nil {
+		t.Fatalf("benign claim, ack: expected no error, got %v", err)
+	}
+	if hc {
+		t.Error("benign claim, ack: expected hadConflict=false, got true (ack must not imply conflict)")
+	}
+
+	// Case 3: real conflict, no ack → hadConflict=true, error (refusal).
+	hc, err = semanticConflictGate(domainDir, proposal.ProposedRequirement{
+		ID: "R-never-3", Claim: conflictingClaim, Owner: "owner", Status: "SETTLED", Why: "t",
+	}, landAckOptions{})
+	if err == nil {
+		t.Fatal("conflicting claim, no ack: expected refusal error, got nil")
+	}
+	if !hc {
+		t.Error("conflicting claim, no ack: expected hadConflict=true, got false")
+	}
+
+	// Case 4: real conflict, ack supplied → hadConflict=true, no error.
+	hc, err = semanticConflictGate(domainDir, proposal.ProposedRequirement{
+		ID: "R-never-4", Claim: conflictingClaim, Owner: "owner", Status: "SETTLED", Why: "t",
+	}, landAckOptions{DecisionRef: "decided both apply"})
+	if err != nil {
+		t.Fatalf("conflicting claim, ack: expected no error, got %v", err)
+	}
+	if !hc {
+		t.Error("conflicting claim, ack: expected hadConflict=true, got false")
+	}
+}
+
+// TestSemanticConflictGate_NoFalseAckHistoryOnNonConflictingLand is the
+// end-to-end regression for the R9-a bug: landing a NON-conflicting requirement
+// with --decision-ref must succeed (ack flags are an optional override, never
+// a requirement) AND must NOT write a false "semantic conflict acknowledged"
+// History entry. Before the fix, appendAckHistory fired whenever ackOpts.hasAck()
+// was true regardless of whether the gate found a real conflict.
+func TestSemanticConflictGate_NoFalseAckHistoryOnNonConflictingLand(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+	gp := graphPathForDomain(domainDir)
+
+	// Land a benign requirement WITH --decision-ref. The seed requirement
+	// carries no opposite markers, so there is nothing to acknowledge.
+	benign := writeReqProposalJSON(t, "R-gate-benign-ack-noconflict",
+		"a completely benign requirement about tea quality grading scales")
+	if err := cmdLand([]string{
+		"--domain", domainDir, "--today", "2026-07-14",
+		"--decision-ref", "no real conflict to acknowledge",
+		benign,
+	}); err != nil {
+		t.Fatalf("non-conflicting land with --decision-ref must succeed (ack is an override, not a requirement): %v", err)
+	}
+
+	// Read the requirement back from graph.json and inspect its History slice
+	// directly: it must contain NO "semantic conflict acknowledged" entry.
+	g, err := loader.LoadGraph(gp)
+	if err != nil {
+		t.Fatalf("load graph: %v", err)
+	}
+	r, ok := ontology.RequirementByID(g, "R-gate-benign-ack-noconflict")
+	if !ok {
+		t.Fatal("R-gate-benign-ack-noconflict not found in graph")
+	}
+	for _, h := range r.History {
+		if strings.Contains(h.Summary, "semantic conflict acknowledged") {
+			t.Errorf("non-conflicting land must not record a false ack entry, but History has: %q", h.Summary)
+		}
+	}
+}

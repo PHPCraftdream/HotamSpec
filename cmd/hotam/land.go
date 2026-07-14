@@ -312,8 +312,13 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	// Semantic-conflict gate: refuse to land a ProposedRequirement whose claim
 	// carries an opposite marker against an existing SETTLED requirement,
 	// unless the operator supplied --ack-conflict or --decision-ref. Runs
-	// BEFORE the snapshot so a refusal leaves the graph untouched.
-	if err := semanticConflictGate(domainDir, p, ackOpts); err != nil {
+	// BEFORE the snapshot so a refusal leaves the graph untouched. hadConflict
+	// is reused below to gate appendAckHistory: the audit trail is written only
+	// when a real conflict was detected, not merely because ack flags were
+	// passed (prevents a false "semantic conflict acknowledged" entry on a
+	// non-conflicting land with --decision-ref).
+	hadConflict, err := semanticConflictGate(domainDir, p, ackOpts)
+	if err != nil {
 		return nil, err
 	}
 
@@ -337,9 +342,11 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 
 	// Persist the human-decision audit trail (--ack-conflict / --decision-ref)
 	// AFTER apply wrote the new/updated requirement but BEFORE regen renders
-	// the docs, so the History entry appears in the generated output. A failure
+	// the docs, so the History entry appears in the generated output. Guarded
+	// on hadConflict (a real signal was found) AND ackOpts.hasAck(): ack flags
+	// without a real conflict must NOT write a false audit entry. A failure
 	// here triggers the same rollback as any other post-apply failure.
-	if ackOpts.hasAck() {
+	if hadConflict && ackOpts.hasAck() {
 		if err := appendAckHistory(gp, p, today, ackOpts); err != nil {
 			rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 			return nil, rolledBackError("ack history append failed", err, rerr)

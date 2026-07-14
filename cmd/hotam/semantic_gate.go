@@ -81,15 +81,22 @@ func (o landAckOptions) hasAck() bool {
 // BOTH `hotam land <file>` and `hotam propose requirement --land` (both funnel
 // through landProposalValue) and is NOT duplicated in two places. Batch mode
 // (`--batch <dir>`) is explicitly DEFERRED — see cmdLandBatch's doc comment.
-func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAckOptions) error {
+//
+// Returns hadConflict=true IFF a high-confidence signal (blockers) was found,
+// regardless of whether an ack overrode the refusal. The caller uses this to
+// gate appendAckHistory: the audit trail must be written ONLY when a real
+// conflict existed, not merely because ack flags were passed (landing a
+// non-conflicting requirement with --decision-ref must NOT record a false
+// "semantic conflict acknowledged" entry).
+func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAckOptions) (hadConflict bool, err error) {
 	pr, ok := p.(proposal.ProposedRequirement)
 	if !ok {
-		return nil // gate applies only to requirement claims
+		return false, nil // gate applies only to requirement claims
 	}
 
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
-		return fmt.Errorf("semantic-conflict gate: %w", err)
+		return false, fmt.Errorf("semantic-conflict gate: %w", err)
 	}
 
 	// Validate --ack-conflict references a real Conflict node BEFORE using it
@@ -105,7 +112,7 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 			}
 		}
 		if !found {
-			return fmt.Errorf(
+			return false, fmt.Errorf(
 				"--ack-conflict %q does not match any Conflict node in the graph — "+
 					"provide an existing C-... id (create one via `hotam apply-proposal <conflict.json>` first)",
 				ackOpts.AckConflict)
@@ -130,13 +137,15 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 		}
 	}
 	if len(blockers) == 0 {
-		return nil // no high-confidence semantic conflict
+		return false, nil // no high-confidence semantic conflict
 	}
 
 	// Ack provided (either form) → proceed. The tool required a decision to be
-	// recorded; it does not verify the decision's correctness.
+	// recorded; it does not verify the decision's correctness. hadConflict is
+	// true: a real signal WAS found, even though the ack overrides the refusal,
+	// so the audit trail is legitimately written.
 	if ackOpts.hasAck() {
-		return nil
+		return true, nil
 	}
 
 	// Refuse: name the SPECIFIC conflicting anchor(s) and their claims, and
@@ -153,7 +162,7 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 	b.WriteString(fmt.Sprintf("  --decision-ref <text>   record a free-text reference to where the decision was made (e.g. ticket, meeting, steward+date)\n"))
 	b.WriteString("\nThis gate does not decide correctness — it requires that a decision be RECORDED first ")
 	b.WriteString("(R-ai-presents-not-decides, R-decided-needs-human-signoff).")
-	return fmt.Errorf("%s", b.String())
+	return true, fmt.Errorf("%s", b.String())
 }
 
 // markerWordSet extracts the individual words from an opposite-marker label
