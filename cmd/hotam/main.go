@@ -176,16 +176,18 @@ Commands:
         REJECTED history (anti-relitigation) before anything is written.
         <text> is a quoted positional; --file <path> reads a long draft.
         Reuses the inspect overlap engine. Never gates; exit code always 0.
-  propose <requirement|rejection|stakeholder> [flags]
+  propose <requirement|rejection|stakeholder|axis|assumption|conflict> [flags]
         Draft a proposal JSON from flags (schema knowledge lives in the tool,
         not the agent's memory), run an automatic CONFRONT check before
         writing, and optionally --land (apply+regen+reverify) in the same call.
         Kinds: requirement (--id, --claim, --owner, --status, …), rejection
         (--requirement-id, --reason, --replaced-by), stakeholder (--id,
-        --name, --stakeholder-domain, --why). --domain always means the
+        --name, --stakeholder-domain, --why), axis (--slug, --description),
+        assumption (--id, --statement, --status, --owner), conflict (--axis,
+        --context, --members, --steward). --domain always means the
         TARGET GRAPH DIRECTORY across every kind (including stakeholder).
-        Complex kinds (Conflict, EntityType, …) keep the hand-authored-JSON
-        path (hotam land <file.json>).
+        Other complex kinds (ConflictTransition, EntityType, …) keep the
+        hand-authored-JSON path (hotam land <file.json>).
   version, --version
         Print the hotam binary version.
 

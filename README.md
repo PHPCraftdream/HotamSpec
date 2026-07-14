@@ -157,15 +157,17 @@ hotam confront <text> [--domain <path>] [--file <path>] [--proposal <path>] [--j
         <text>/--file. Reuses the inspect overlap engine. Never gates; exit
         code always 0.
 
-hotam propose <requirement|rejection|stakeholder> [flags]
+hotam propose <requirement|rejection|stakeholder|axis|assumption|conflict> [flags]
         Draft a proposal JSON from flags (schema knowledge lives in the
         tool, not agent memory), run an automatic CONFRONT check before
         writing, and optionally --land (apply+regen+reverify) in the same
         call. Kinds: requirement (--id, --claim, --owner, --status, …),
         rejection (--requirement-id, --reason, --replaced-by), stakeholder
-        (--id, --name, --domain, --why). Complex kinds (Conflict,
-        EntityType, …) keep the hand-authored-JSON path (hotam land
-        <file.json>).
+        (--id, --name, --domain, --why), axis (--slug, --description),
+        assumption (--id, --statement, --status, --owner), conflict (--axis,
+        --context, --members, --steward). Other complex kinds
+        (ConflictTransition, EntityType, …) keep the hand-authored-JSON path
+        (hotam land <file.json>).
 
 hotam version | hotam --version
         Print the hotam binary version (see Version above).

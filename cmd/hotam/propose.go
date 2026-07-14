@@ -29,10 +29,10 @@ import (
 // (reusing landProposalFile, shared with `hotam land`'s single-file mode, so
 // both paths are provably identical).
 //
-// Implemented kinds: requirement, rejection, stakeholder. Complex kinds
-// (Conflict, ConflictTransition, EntityType, etc.) keep the existing
-// hand-authored-JSON path (`hotam apply-proposal <file.json>` / `hotam land
-// <file.json>`).
+// Implemented kinds: requirement, rejection, stakeholder, axis, assumption,
+// conflict. Other complex kinds (ConflictTransition, EntityType, etc.) keep
+// the existing hand-authored-JSON path (`hotam apply-proposal <file.json>` /
+// `hotam land <file.json>`).
 func cmdPropose(args []string) error {
 	kind, rest, err := extractProposeKind(args)
 	if err != nil {
@@ -45,8 +45,14 @@ func cmdPropose(args []string) error {
 		return cmdProposeRejection(rest)
 	case "stakeholder":
 		return cmdProposeStakeholder(rest)
+	case "axis":
+		return cmdProposeAxis(rest)
+	case "assumption":
+		return cmdProposeAssumption(rest)
+	case "conflict":
+		return cmdProposeConflict(rest)
 	default:
-		return fmt.Errorf("unknown propose kind %q — kinds: requirement, rejection, stakeholder", kind)
+		return fmt.Errorf("unknown propose kind %q — kinds: requirement, rejection, stakeholder, axis, assumption, conflict", kind)
 	}
 }
 
@@ -88,7 +94,7 @@ func extractProposeKind(args []string) (kind string, rest []string, err error) {
 		break
 	}
 	if kindIdx < 0 {
-		return "", nil, fmt.Errorf("usage: hotam propose <kind> [flags] — kinds: requirement, rejection, stakeholder")
+		return "", nil, fmt.Errorf("usage: hotam propose <kind> [flags] — kinds: requirement, rejection, stakeholder, axis, assumption, conflict")
 	}
 	kind = args[kindIdx]
 	rest = append([]string{}, args[:kindIdx]...)
@@ -231,6 +237,118 @@ func cmdProposeStakeholder(args []string) error {
 	return runPropose(p, *domainFlag, *today, *out, *land, landAckOptions{}, *claudeMD, *asJSON)
 }
 
+// ---- axis ----
+
+func cmdProposeAxis(args []string) error {
+	fs := newFlagSet("propose axis")
+	slug := fs.String("slug", "", "kebab-case axis slug, e.g. latency-vs-cost (required)")
+	description := fs.String("description", "", "axis description text (required)")
+	why := fs.String("why", "", "rationale / why this axis exists")
+	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
+	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
+	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<slug>.json relative to cwd)")
+	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
+	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
+	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
+	fs.Parse(args)
+
+	for _, c := range []struct{ flag, label string }{
+		{*slug, "slug"}, {*description, "description"},
+	} {
+		if strings.TrimSpace(c.flag) == "" {
+			return fmt.Errorf("--%s is required for propose axis", c.label)
+		}
+	}
+
+	p := proposal.ProposedAxis{
+		Slug:        *slug,
+		Description: *description,
+		Why:         *why,
+	}
+
+	return runPropose(p, *domain, *today, *out, *land, landAckOptions{}, *claudeMD, *asJSON)
+}
+
+// ---- assumption ----
+
+func cmdProposeAssumption(args []string) error {
+	fs := newFlagSet("propose assumption")
+	id := fs.String("id", "", "assumption id, e.g. A-something (required)")
+	statement := fs.String("statement", "", "assumption statement text (required)")
+	status := fs.String("status", "", "assumption status: HOLDS, UNCERTAIN, DEAD, IMPLEMENTS (required)")
+	owner := fs.String("owner", "", "owner stakeholder id (required)")
+	why := fs.String("why", "", "rationale / why this assumption exists")
+	createdAt := fs.String("created-at", "", "creation date YYYY-MM-DD (defaults to --today)")
+	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
+	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
+	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<id>.json relative to cwd)")
+	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
+	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
+	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
+	fs.Parse(args)
+
+	for _, c := range []struct{ flag, label string }{
+		{*id, "id"}, {*statement, "statement"}, {*status, "status"}, {*owner, "owner"},
+	} {
+		if strings.TrimSpace(c.flag) == "" {
+			return fmt.Errorf("--%s is required for propose assumption", c.label)
+		}
+	}
+
+	p := proposal.ProposedAssumption{
+		ID:        *id,
+		Statement: *statement,
+		Status:    *status,
+		Owner:     *owner,
+		Why:       *why,
+		CreatedAt: *createdAt,
+	}
+
+	return runPropose(p, *domain, *today, *out, *land, landAckOptions{}, *claudeMD, *asJSON)
+}
+
+// ---- conflict ----
+
+func cmdProposeConflict(args []string) error {
+	fs := newFlagSet("propose conflict")
+	axis := fs.String("axis", "", "existing axis slug, e.g. latency-vs-cost (required)")
+	context := fs.String("context", "", "free-text context describing the tension (required)")
+	members := fs.String("members", "", "comma-separated requirement ids (R-...) in tension, at least two distinct (required)")
+	steward := fs.String("steward", "", "stakeholder id who stewards this conflict — must NOT own any member (required)")
+	sharedAssumption := fs.String("shared-assumption", "", "assumption id (A-...) shared by the conflict members")
+	note := fs.String("note", "", "free-text note")
+	initialLifecycle := fs.String("initial-lifecycle", "", "initial lifecycle: DETECTED (default) or DECIDED(...)")
+	decidedBy := fs.String("decided-by", "", "human decider id (required when --initial-lifecycle starts with DECIDED)")
+	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
+	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
+	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<conflict-id>.json relative to cwd)")
+	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
+	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
+	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
+	fs.Parse(args)
+
+	for _, c := range []struct{ flag, label string }{
+		{*axis, "axis"}, {*context, "context"}, {*members, "members"}, {*steward, "steward"},
+	} {
+		if strings.TrimSpace(c.flag) == "" {
+			return fmt.Errorf("--%s is required for propose conflict", c.label)
+		}
+	}
+
+	p := proposal.ProposedConflict{
+		Axis:             *axis,
+		Context:          *context,
+		Members:          splitCSV(*members),
+		Steward:          *steward,
+		SharedAssumption: *sharedAssumption,
+		Note:             *note,
+		InitialLifecycle: *initialLifecycle,
+		DecidedBy:        *decidedBy,
+	}
+
+	return runPropose(p, *domain, *today, *out, *land, landAckOptions{}, *claudeMD, *asJSON)
+}
+
 // ---- shared pipeline ----
 
 // runPropose is the shared draft→confront→write→(land) pipeline used by every
@@ -338,6 +456,12 @@ func proposeConfrontText(p proposal.Proposal) string {
 		return v.Reason
 	case proposal.ProposedStakeholder:
 		return v.Name + " " + v.Why
+	case proposal.ProposedAxis:
+		return v.Slug + " " + v.Description
+	case proposal.ProposedAssumption:
+		return v.Statement
+	case proposal.ProposedConflict:
+		return v.Context
 	default:
 		return p.TargetAnchor()
 	}
@@ -352,6 +476,11 @@ func defaultProposeOutPath(p proposal.Proposal) string {
 	switch v := p.(type) {
 	case proposal.ProposedRejection:
 		return filepath.Join("proposals", "draft-reject-"+v.RequirementID+".json")
+	case proposal.ProposedAxis:
+		// ProposedAxis.TargetAnchor() returns "Axis:" + slug (note the COLON),
+		// which is illegal in a Windows filename. Use the bare slug instead,
+		// mirroring how ProposedRejection gets its own explicit case.
+		return filepath.Join("proposals", "draft-"+v.Slug+".json")
 	default:
 		return filepath.Join("proposals", "draft-"+p.TargetAnchor()+".json")
 	}

@@ -639,6 +639,9 @@ func TestProposeHelp_RealBinary_PerKindPerFlagHelp(t *testing.T) {
 		{"requirement", []string{"-claim", "-owner", "-status", "-id"}},
 		{"rejection", []string{"-requirement-id", "-reason", "-replaced-by"}},
 		{"stakeholder", []string{"-id", "-name", "-stakeholder-domain"}},
+		{"axis", []string{"-slug", "-description"}},
+		{"assumption", []string{"-id", "-statement", "-status", "-owner"}},
+		{"conflict", []string{"-axis", "-context", "-members", "-steward"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.kind, func(t *testing.T) {
@@ -695,5 +698,343 @@ func newRequirementForTest() proposal.ProposedRequirement {
 		Owner:  "framework-author",
 		Status: "DRAFT",
 		Why:    "unit coverage for marshalProposalFile",
+	}
+}
+
+// ---- axis / assumption / conflict (task #149, review-8 R8-f) ----
+
+// TestCmdPropose_Axis_ConstructsValidJSON covers the axis subcommand: --slug +
+// --description produce a valid Axis proposal JSON, re-parseable through
+// parseProposal.
+func TestCmdPropose_Axis_ConstructsValidJSON(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "axis.json")
+
+	err := cmdPropose([]string{
+		"axis",
+		"--slug", "propose-test-axis",
+		"--description", "an axis for testing the propose command",
+		"--why", "coverage for propose axis",
+		"--domain", domainDir,
+		"--out", outPath,
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose axis: %v", err)
+	}
+	data, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	p, err := parseProposal(data)
+	if err != nil {
+		t.Fatalf("parseProposal: %v\nraw:\n%s", err, data)
+	}
+	if p.Kind() != "Axis" {
+		t.Errorf("Kind = %q, want Axis", p.Kind())
+	}
+	ap, ok := p.(proposal.ProposedAxis)
+	if !ok {
+		t.Fatalf("parsed proposal is %T, want proposal.ProposedAxis", p)
+	}
+	if ap.Slug != "propose-test-axis" {
+		t.Errorf("Slug = %q, want propose-test-axis", ap.Slug)
+	}
+	body := string(data)
+	for _, want := range []string{
+		`"kind": "Axis"`,
+		`"slug": "propose-test-axis"`,
+		`"description"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("written JSON missing %q\nraw:\n%s", want, body)
+		}
+	}
+}
+
+// TestCmdPropose_Assumption_ConstructsValidJSON covers the assumption
+// subcommand: --id + --statement + --status + --owner produce a valid
+// Assumption proposal JSON.
+func TestCmdPropose_Assumption_ConstructsValidJSON(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "asmp.json")
+
+	err := cmdPropose([]string{
+		"assumption",
+		"--id", "A-propose-test-assumption",
+		"--statement", "operators run inside the launch directory",
+		"--status", "HOLDS",
+		"--owner", "framework-author",
+		"--why", "coverage for propose assumption",
+		"--created-at", "2026-07-14",
+		"--domain", domainDir,
+		"--out", outPath,
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose assumption: %v", err)
+	}
+	data, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	p, err := parseProposal(data)
+	if err != nil {
+		t.Fatalf("parseProposal: %v\nraw:\n%s", err, data)
+	}
+	if p.Kind() != "Assumption" {
+		t.Errorf("Kind = %q, want Assumption", p.Kind())
+	}
+	ap, ok := p.(proposal.ProposedAssumption)
+	if !ok {
+		t.Fatalf("parsed proposal is %T, want proposal.ProposedAssumption", p)
+	}
+	if ap.Status != "HOLDS" {
+		t.Errorf("Status = %q, want HOLDS", ap.Status)
+	}
+	body := string(data)
+	for _, want := range []string{
+		`"kind": "Assumption"`,
+		`"id": "A-propose-test-assumption"`,
+		`"statement"`,
+		`"created_at": "2026-07-14"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("written JSON missing %q\nraw:\n%s", want, body)
+		}
+	}
+}
+
+// TestCmdPropose_Conflict_ConstructsValidJSON covers the conflict subcommand:
+// --axis + --context + --members + --steward produce a valid Conflict proposal
+// JSON. Members are split from the --members CSV.
+func TestCmdPropose_Conflict_ConstructsValidJSON(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "conf.json")
+
+	err := cmdPropose([]string{
+		"conflict",
+		"--axis", "core-vs-aspect",
+		"--context", "propose conflict test fixture context",
+		"--members", "R-active-loop-apply-tool, R-agent-code-imports-framework",
+		"--steward", "domain-user",
+		"--shared-assumption", "A-propose-test-shared",
+		"--note", "coverage for propose conflict",
+		"--domain", domainDir,
+		"--out", outPath,
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose conflict: %v", err)
+	}
+	data, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	p, err := parseProposal(data)
+	if err != nil {
+		t.Fatalf("parseProposal: %v\nraw:\n%s", err, data)
+	}
+	if p.Kind() != "Conflict" {
+		t.Errorf("Kind = %q, want Conflict", p.Kind())
+	}
+	cp, ok := p.(proposal.ProposedConflict)
+	if !ok {
+		t.Fatalf("parsed proposal is %T, want proposal.ProposedConflict", p)
+	}
+	if cp.Axis != "core-vs-aspect" {
+		t.Errorf("Axis = %q, want core-vs-aspect", cp.Axis)
+	}
+	if len(cp.Members) != 2 {
+		t.Errorf("Members len = %d, want 2 (got %v)", len(cp.Members), cp.Members)
+	}
+	body := string(data)
+	for _, want := range []string{
+		`"kind": "Conflict"`,
+		`"axis": "core-vs-aspect"`,
+		`"steward": "domain-user"`,
+		`"R-active-loop-apply-tool"`,
+		`"R-agent-code-imports-framework"`,
+		`"shared_assumption": "A-propose-test-shared"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("written JSON missing %q\nraw:\n%s", want, body)
+		}
+	}
+}
+
+// TestCmdPropose_Axis_Land_AppliesRegeneratesReverifies is the --land test for
+// the axis kind: after writing, --land must apply the axis to the graph and
+// regenerate docs. Axis has no interaction with other nodes (no member/steward
+// checks), so a fresh slug is sufficient.
+func TestCmdPropose_Axis_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "axis-land.json")
+
+	err := cmdPropose([]string{
+		"axis",
+		"--slug", "propose-test-axis-land",
+		"--description", "an axis landed via propose --land",
+		"--domain", domainDir,
+		"--out", outPath,
+		"--today", "2026-07-14",
+		"--land",
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose axis --land: %v", err)
+	}
+	graphData, err := os.ReadFile(graphPathForDomain(domainDir))
+	if err != nil {
+		t.Fatalf("read graph.json: %v", err)
+	}
+	if !strings.Contains(string(graphData), "propose-test-axis-land") {
+		t.Error("graph.json does not contain the new axis slug after propose --land")
+	}
+}
+
+// TestCmdPropose_Assumption_Land_AppliesRegeneratesReverifies is the --land
+// test for the assumption kind. Assumption has no interaction with other nodes
+// (only an id-uniqueness check), so a fresh A-id is sufficient.
+func TestCmdPropose_Assumption_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "asmp-land.json")
+
+	err := cmdPropose([]string{
+		"assumption",
+		"--id", "A-propose-test-assumption-land",
+		"--statement", "an assumption landed via propose --land",
+		"--status", "UNCERTAIN",
+		"--owner", "framework-author",
+		"--domain", domainDir,
+		"--out", outPath,
+		"--today", "2026-07-14",
+		"--land",
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose assumption --land: %v", err)
+	}
+	graphData, err := os.ReadFile(graphPathForDomain(domainDir))
+	if err != nil {
+		t.Fatalf("read graph.json: %v", err)
+	}
+	if !strings.Contains(string(graphData), "A-propose-test-assumption-land") {
+		t.Error("graph.json does not contain the new assumption id after propose --land")
+	}
+}
+
+// TestCmdPropose_Conflict_Land_AppliesRegeneratesReverifies is the --land test
+// for the conflict kind. Unlike axis/assumption, a Conflict's Members must
+// already exist as real Requirements in the target graph, the axis must exist,
+// and the steward must NOT own any member — ProposedConflict.mutate enforces
+// all three. Additionally, the self-host invariant
+// check_constituting_not_in_unresolved_conflict refuses a DETECTED conflict
+// holding two SETTLED requirements, so the fixture lands the conflict in a
+// DECIDED(...) initial lifecycle (a human decision already recorded) — exactly
+// the shape the --ack-conflict escape hatch (task #147) expects to cite.
+func TestCmdPropose_Conflict_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "conf-land.json")
+
+	err := cmdPropose([]string{
+		"conflict",
+		"--axis", "core-vs-aspect",
+		"--context", "propose conflict land e2e unique context fixture",
+		"--members", "R-active-loop-apply-tool,R-agent-code-imports-framework",
+		"--steward", "domain-user",
+		"--initial-lifecycle", "DECIDED(human-steward-2026-07-14)",
+		"--decided-by", "framework-reviewer",
+		"--note", "e2e coverage for propose conflict --land",
+		"--domain", domainDir,
+		"--out", outPath,
+		"--today", "2026-07-14",
+		"--land",
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose conflict --land: %v", err)
+	}
+	graphData, err := os.ReadFile(graphPathForDomain(domainDir))
+	if err != nil {
+		t.Fatalf("read graph.json: %v", err)
+	}
+	// A Conflict's anchor is its ConflictIdentity (a C-<hash>), which is
+	// deterministic on axis+context. Verify both members and the steward are
+	// recorded in the graph.
+	body := string(graphData)
+	for _, want := range []string{
+		"R-active-loop-apply-tool",
+		"R-agent-code-imports-framework",
+		`"steward": "domain-user"`,
+		`"axis": "core-vs-aspect"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("graph.json missing %q after conflict --land", want)
+		}
+	}
+}
+
+// TestDefaultProposeOutPath_AxisHasNoColon is the direct unit test for the
+// Axis landmine in defaultProposeOutPath: ProposedAxis.TargetAnchor() returns
+// "Axis:" + slug (note the COLON), which is illegal in a Windows filename. The
+// explicit Axis case must use the bare slug instead, producing a colon-free
+// path. This is the test that catches the landmine if the explicit case is
+// removed.
+func TestDefaultProposeOutPath_AxisHasNoColon(t *testing.T) {
+	t.Parallel()
+	p := proposal.ProposedAxis{Slug: "test-axis-slug", Description: "x"}
+	path := defaultProposeOutPath(p)
+	if strings.Contains(path, ":") {
+		t.Errorf("axis default out path contains an illegal colon: %q "+
+			"(ProposedAxis.TargetAnchor() is \"Axis:\"+slug — the explicit case must use the bare slug)", path)
+	}
+	want := filepath.Join("proposals", "draft-test-axis-slug.json")
+	if path != want {
+		t.Errorf("axis default out path = %q, want %q", path, want)
+	}
+}
+
+// TestCmdPropose_Axis_DefaultOutPath_WrittenWithoutColon is the end-to-end
+// proof that the Axis defaultProposeOutPath fix survives a real write: it
+// spawns the compiled hotam binary with cwd set to a temp dir (so the relative
+// default path lands there), runs `propose axis` WITHOUT --out, and confirms
+// the file is actually written to the colon-free default path. This catches
+// the landmine at the OS-write layer (Windows would reject a path with ':').
+func TestCmdPropose_Axis_DefaultOutPath_WrittenWithoutColon(t *testing.T) {
+	if testing.Short() {
+		t.Skip("axis default-out e2e: builds/spawns a real binary; skipped in -short")
+	}
+	t.Parallel()
+	binPath := buildSharedHotamBinary(t)
+	domainDir := copySelfDomain(t)
+	cwd := t.TempDir()
+
+	slug := "default-out-axis"
+	cmd := exec.Command(binPath,
+		"propose", "axis",
+		"--slug", slug,
+		"--description", "an axis written to the default out path",
+		"--domain", domainDir,
+	)
+	cmd.Dir = cwd
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("hotam propose axis (no --out) failed: %v\n%s", err, out)
+	}
+	// The default path is proposals/draft-<slug>.json relative to cwd.
+	defaultPath := filepath.Join(cwd, "proposals", "draft-"+slug+".json")
+	if _, err := os.Stat(defaultPath); err != nil {
+		t.Fatalf("default out path %s was not written: %v", defaultPath, err)
+	}
+	// The landmine: without the explicit Axis case, the filename would be
+	// "draft-Axis:<slug>.json" (ProposedAxis.TargetAnchor() is "Axis:"+slug).
+	// A colon in the FILENAME component is illegal on Windows — the drive-letter
+	// colon in the absolute path prefix is legitimate, so check only the base.
+	base := filepath.Base(defaultPath)
+	if strings.Contains(base, ":") {
+		t.Errorf("default out filename contains an illegal colon: %q (full path %q)", base, defaultPath)
+	}
+	if !strings.HasPrefix(base, "draft-"+slug) {
+		t.Errorf("default out filename = %q, want prefix draft-%s", base, slug)
 	}
 }
