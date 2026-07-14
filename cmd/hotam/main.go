@@ -207,10 +207,26 @@ Commands:
 // KEEP THIS LIST IN SYNC with every fs.Bool(...) call in cmd/hotam/*.go: adding
 // a new boolean flag to a subcommand's FlagSet without adding its name here
 // reintroduces the exact bug this map fixes (the new bool flag would eat the
-// next positional token as its "value"). Today the only boolean flag is --json.
+// next positional token as its "value"). Today the real fs.Bool(...)-backed
+// flags are --json and --land.
+//
+// "h" and "help" are a SPECIAL case: they are NOT registered via any
+// fs.Bool(...) call anywhere in this codebase — they are Go's stdlib flag
+// package's OWN built-in help recognition, valid on every FlagSet regardless
+// of what that FlagSet explicitly registers (flag.ExitOnError's Parse prints
+// usage and calls os.Exit(0) when it sees -h/-help). They are listed here
+// anyway because this map's OTHER consumer, reorderFlagsFirst below, and
+// cmdPropose's own kind-scanner (propose.go) both use it as a generic
+// "does this flag take a value" oracle over raw argv BEFORE any FlagSet
+// exists to ask — without "h"/"help" here, `hotam propose requirement -h`
+// gets misparsed: -h looks value-taking, swallows "requirement" as its
+// "value", and the kind is never found, so the per-flag help synthesized by
+// the subcommand's own FlagSet.Parse(["-h"]) is never reached.
 var boolFlagNames = map[string]bool{
 	"json": true,
 	"land": true,
+	"h":    true,
+	"help": true,
 }
 
 // reorderFlagsFirst moves every token starting with "-" (and its value, if it

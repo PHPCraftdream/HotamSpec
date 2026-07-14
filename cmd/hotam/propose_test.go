@@ -461,6 +461,211 @@ func TestCmdPropose_UnknownKindReturnsError(t *testing.T) {
 	}
 }
 
+// TestExtractProposeKind_HelpFlagIsFoundAsBareFlagNotSwallowed is the
+// argument-handling unit proof for finding N2 (`hotam propose requirement -h`
+// printed the generic top-level usage line instead of per-flag help).
+//
+// Root cause (traced in cmd/hotam/main.go and this file, pre-fix): -h was not
+// in boolFlagNames, so (1) reorderFlagsFirst(["requirement", "-h"]) reordered
+// to ["-h", "requirement"] (an unrecognized flag with nothing left to
+// swallow), and (2) the OLD inline kind-scanner in cmdPropose, running on
+// that reordered slice, saw "-h" at i=0, isBoolFlag("-h") false, and args[1]
+// ("requirement") not dash-prefixed — so it treated "-h requirement" as a
+// flag+value PAIR and consumed BOTH tokens, leaving kindIdx == -1 and firing
+// the generic "usage: hotam propose <kind>" error instead of ever reaching
+// cmdProposeRequirement's own FlagSet.Parse(["-h"]).
+//
+// This test calls extractProposeKind DIRECTLY (the kind-scanner extracted
+// from cmdPropose for testability) and stops there — it deliberately never
+// reaches fs.Parse, because flag.ExitOnError's Parse calls os.Exit(0) from
+// inside the stdlib on -h/-help, which would silently truncate the rest of
+// this test binary's run if invoked in-process. See
+// TestProposeHelp_RealBinary_PerKindPerFlagHelp (testbinary-based, in this
+// file) for the end-to-end proof that the real per-flag help is printed.
+func TestExtractProposeKind_HelpFlagIsFoundAsBareFlagNotSwallowed(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name     string
+		args     []string
+		wantKind string
+		wantRest []string
+	}{
+		{
+			name:     "post-reorderFlagsFirst shape (as main() actually calls it)",
+			args:     reorderFlagsFirst([]string{"requirement", "-h"}),
+			wantKind: "requirement",
+			wantRest: []string{"-h"},
+		},
+		{
+			name:     "raw pre-reorder shape",
+			args:     []string{"requirement", "-h"},
+			wantKind: "requirement",
+			wantRest: []string{"-h"},
+		},
+		{
+			name:     "--help double-dash spelling",
+			args:     reorderFlagsFirst([]string{"rejection", "--help"}),
+			wantKind: "rejection",
+			wantRest: []string{"--help"},
+		},
+		{
+			name:     "-h ahead of the kind (already-reordered shape)",
+			args:     []string{"-h", "stakeholder"},
+			wantKind: "stakeholder",
+			wantRest: []string{"-h"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			kind, rest, err := extractProposeKind(tc.args)
+			if err != nil {
+				t.Fatalf("extractProposeKind(%v): unexpected error: %v", tc.args, err)
+			}
+			if kind != tc.wantKind {
+				t.Errorf("kind = %q, want %q (args=%v)", kind, tc.wantKind, tc.args)
+			}
+			if len(rest) != len(tc.wantRest) {
+				t.Fatalf("rest = %v, want %v (args=%v)", rest, tc.wantRest, tc.args)
+			}
+			for i := range tc.wantRest {
+				if rest[i] != tc.wantRest[i] {
+					t.Errorf("rest[%d] = %q, want %q (args=%v)", i, rest[i], tc.wantRest[i], tc.args)
+				}
+			}
+		})
+	}
+}
+
+// TestExtractProposeKind_ExistingFlagCombinationsUnchanged is the
+// non-regression guard for the extractProposeKind refactor (pulling the
+// inline kind-scanner out of cmdPropose into a named, testable helper): every
+// pre-existing flag combination for every kind must resolve to the exact same
+// kind/rest split as before the refactor — this is a testability refactor,
+// not a behavior change, beyond the -h/-help fix itself.
+func TestExtractProposeKind_ExistingFlagCombinationsUnchanged(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name     string
+		args     []string
+		wantKind string
+		wantRest []string
+	}{
+		{
+			name:     "kind first, flags after",
+			args:     []string{"requirement", "--id", "R-x", "--claim", "y"},
+			wantKind: "requirement",
+			wantRest: []string{"--id", "R-x", "--claim", "y"},
+		},
+		{
+			name:     "post-reorderFlagsFirst shape, flags before kind",
+			args:     reorderFlagsFirst([]string{"requirement", "--id", "R-x", "--domain", "/tmp/x"}),
+			wantKind: "requirement",
+			wantRest: []string{"--id", "R-x", "--domain", "/tmp/x"},
+		},
+		{
+			name:     "bool flag (--json) ahead of kind does not swallow it",
+			args:     reorderFlagsFirst([]string{"--json", "requirement", "--id", "R-x"}),
+			wantKind: "requirement",
+			wantRest: []string{"--json", "--id", "R-x"},
+		},
+		{
+			name:     "equals-form flag ahead of kind",
+			args:     []string{"--domain=/tmp/x", "stakeholder"},
+			wantKind: "stakeholder",
+			wantRest: []string{"--domain=/tmp/x"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			kind, rest, err := extractProposeKind(tc.args)
+			if err != nil {
+				t.Fatalf("extractProposeKind(%v): unexpected error: %v", tc.args, err)
+			}
+			if kind != tc.wantKind {
+				t.Errorf("kind = %q, want %q (args=%v)", kind, tc.wantKind, tc.args)
+			}
+			if len(rest) != len(tc.wantRest) {
+				t.Fatalf("rest = %v, want %v (args=%v)", rest, tc.wantRest, tc.args)
+			}
+			for i := range tc.wantRest {
+				if rest[i] != tc.wantRest[i] {
+					t.Errorf("rest[%d] = %q, want %q (args=%v)", i, rest[i], tc.wantRest[i], tc.args)
+				}
+			}
+		})
+	}
+}
+
+// TestExtractProposeKind_NoKindReturnsUsageError proves the "no positional
+// kind found" error path (e.g. all-flags input) is unchanged by the refactor.
+func TestExtractProposeKind_NoKindReturnsUsageError(t *testing.T) {
+	t.Parallel()
+	_, _, err := extractProposeKind([]string{"--json"})
+	if err == nil {
+		t.Fatal("expected usage error when no positional kind is present")
+	}
+	if !strings.Contains(err.Error(), "usage: hotam propose <kind>") {
+		t.Errorf("error = %q, want it to mention the usage line", err.Error())
+	}
+}
+
+// TestProposeHelp_RealBinary_PerKindPerFlagHelp is the end-to-end proof that
+// `hotam propose <kind> -h` prints REAL per-flag help (flag.ExitOnError's
+// stdlib output, e.g. "-claim", "-owner") and exits 0 — not the generic
+// "usage: hotam propose <kind> [flags]" line, and not a non-zero exit.
+//
+// This spawns the REAL compiled hotam binary as a subprocess (the existing
+// buildSharedHotamBinary pattern from testbinary_test.go) specifically
+// because flag.ExitOnError's Parse calls os.Exit(0) directly from inside the
+// Go standard library when it sees -h/-help; if this were invoked in-process
+// (calling cmdProposeRequirement([]string{"-h"}) etc. directly from a test
+// function) the entire `go test` BINARY would exit at that point, silently
+// truncating every test that would have run after it — with a MISLEADING
+// green/PASS-looking exit code. Subprocess isolation is the only safe way to
+// exercise the real -h code path.
+func TestProposeHelp_RealBinary_PerKindPerFlagHelp(t *testing.T) {
+	if testing.Short() {
+		t.Skip("propose -h e2e: builds/spawns a real binary; skipped in -short")
+	}
+	t.Parallel()
+	binPath := buildSharedHotamBinary(t)
+
+	cases := []struct {
+		kind      string
+		wantFlags []string
+	}{
+		{"requirement", []string{"-claim", "-owner", "-status", "-id"}},
+		{"rejection", []string{"-requirement-id", "-reason", "-replaced-by"}},
+		{"stakeholder", []string{"-id", "-name", "-stakeholder-domain"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
+			for _, helpSpelling := range []string{"-h", "-help", "--help"} {
+				t.Run(helpSpelling, func(t *testing.T) {
+					t.Parallel()
+					cmd := exec.Command(binPath, "propose", tc.kind, helpSpelling)
+					out, err := cmd.CombinedOutput()
+					if err != nil {
+						t.Fatalf("hotam propose %s %s: expected exit 0, got error %v\noutput:\n%s", tc.kind, helpSpelling, err, out)
+					}
+					body := string(out)
+					if strings.Contains(body, "usage: hotam propose <kind>") {
+						t.Errorf("hotam propose %s %s printed the GENERIC top-level usage line instead of per-flag help:\n%s", tc.kind, helpSpelling, body)
+					}
+					for _, wantFlag := range tc.wantFlags {
+						if !strings.Contains(body, wantFlag) {
+							t.Errorf("hotam propose %s %s output missing expected per-flag help %q\noutput:\n%s", tc.kind, helpSpelling, wantFlag, body)
+						}
+					}
+				})
+			}
+		})
+	}
+}
+
 // TestMarshalProposalFile_RoundTripsThroughParseProposal proves the JSON
 // written by marshalProposalFile is consumable by parseProposal + Validate +
 // Apply — closing the "write → re-read" loop at the unit level.

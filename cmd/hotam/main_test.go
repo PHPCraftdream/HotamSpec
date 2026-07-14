@@ -248,6 +248,46 @@ func TestIsBoolFlag(t *testing.T) {
 	}
 }
 
+// TestIsBoolFlag_HelpSpellings is the unit proof that every dash spelling of
+// help ("-h", "--h", "-help", "--help") normalizes (via isBoolFlag's leading
+// "-" strip) to the same boolFlagNames entries added for finding N2
+// (`hotam propose requirement -h` printed the generic usage line instead of
+// per-flag help). -h/-help are NOT registered via any fs.Bool(...) call
+// anywhere in this codebase — they are Go's stdlib flag package's own
+// built-in help recognition — but reorderFlagsFirst and cmdPropose's
+// extractProposeKind both need to treat them as value-less BEFORE any
+// FlagSet exists to ask, which is why they live in boolFlagNames too.
+func TestIsBoolFlag_HelpSpellings(t *testing.T) {
+	t.Parallel()
+	for _, tok := range []string{"-h", "--h", "-help", "--help"} {
+		if !isBoolFlag(tok) {
+			t.Errorf("isBoolFlag(%q) = false, want true (help spellings must be treated as value-less)", tok)
+		}
+	}
+}
+
+// TestReorderFlagsFirst_HelpFlagDoesNotConsumePositional is the
+// reorderFlagsFirst-level proof for finding N2: given
+// ["requirement", "-h"] (as `hotam propose requirement -h` produces after
+// os.Args[2:] splitting), -h must NOT be treated as consuming a following
+// token as its value — there is none here, but critically -h itself must
+// end up correctly recognized as a value-less bool flag so downstream
+// scanners (extractProposeKind) see it as a bare flag, not a flag+value
+// pair that swallows "requirement".
+func TestReorderFlagsFirst_HelpFlagDoesNotConsumePositional(t *testing.T) {
+	t.Parallel()
+	got := reorderFlagsFirst([]string{"requirement", "-h"})
+	want := []string{"-h", "requirement"}
+	if len(got) != len(want) {
+		t.Fatalf("len got %d, want %d: %v", len(got), len(want), got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("index %d: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
 func TestApplyProposal_SmokeEndToEnd(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)

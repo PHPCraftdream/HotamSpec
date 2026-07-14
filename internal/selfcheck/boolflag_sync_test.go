@@ -37,10 +37,20 @@ import (
 //	           boolFlagNames. A registration with no matching key is the live
 //	           bug (task #107 regression).
 //	REVERSE  — every key in boolFlagNames corresponds to at least one real
-//	           .Bool("<name>", ...) registration. A stale/orphaned entry left in
-//	           the map after its registration is removed is also real drift
-//	           (harmless to argv parsing today, but it lies about the package's
-//	           actual boolean flags and would mask a future re-registration).
+//	           .Bool("<name>", ...) registration, WITH ONE DOCUMENTED EXCEPTION:
+//	           "h" and "help" (see boolFlagNamesNonRegisteredExceptions below).
+//	           They are never registered via fs.Bool(...) anywhere — they are
+//	           Go's stdlib flag package's OWN built-in help recognition, valid
+//	           on every FlagSet regardless of what it explicitly registers —
+//	           yet reorderFlagsFirst and cmdPropose's extractProposeKind both
+//	           need to treat "-h"/"-help"/"--help" as value-less BEFORE any
+//	           FlagSet exists to ask (finding N2: `hotam propose requirement
+//	           -h` printed the generic usage line instead of real per-flag
+//	           help until these were added). Any OTHER stale/orphaned entry
+//	           left in the map after its registration is removed is still real
+//	           drift (harmless to argv parsing today, but it lies about the
+//	           package's actual boolean flags and would mask a future
+//	           re-registration).
 //
 // This test scans NON-TEST source only (so this scanner's own *_test.go file is
 // excluded, as is every *_test.go). Because cmd/hotam is package main, the map
@@ -88,12 +98,31 @@ func TestBoolFlagNames_SyncedWithRegistrations(t *testing.T) {
 	}
 
 	// REVERSE: every declared key must correspond to at least one real
-	// registration (no stale/orphaned entries).
+	// registration (no stale/orphaned entries) — except the documented
+	// stdlib-help exception below, which can never have a real .Bool(...)
+	// registration by construction.
 	for name := range declared {
+		if boolFlagNamesNonRegisteredExceptions[name] {
+			continue
+		}
 		if _, ok := registered[name]; !ok {
 			t.Errorf("boolFlagNames drift (REVERSE): %q is declared in boolFlagNames (cmd/hotam/main.go) but no .Bool(%q, ...) registration exists in any non-test cmd/hotam/*.go file — a stale/orphaned entry.", name, name)
 		}
 	}
+}
+
+// boolFlagNamesNonRegisteredExceptions lists boolFlagNames keys that are
+// deliberately never backed by a real fs.Bool(...) registration: "h" and
+// "help" name Go's stdlib flag package's own built-in -h/-help recognition
+// (flag.ExitOnError's Parse handles them internally on every FlagSet), not a
+// flag any cmd/hotam subcommand registers itself. They are still declared in
+// boolFlagNames because reorderFlagsFirst and cmdPropose's extractProposeKind
+// consult that map as a generic "does this raw argv token take a value"
+// oracle BEFORE any FlagSet exists to ask (see the REVERSE rule doc above and
+// main.go's boolFlagNames comment for the full finding-N2 trace).
+var boolFlagNamesNonRegisteredExceptions = map[string]bool{
+	"h":    true,
+	"help": true,
 }
 
 // TestBoolFlagNames_DetectorNonVacuous is the non-vacuity control: synthetic

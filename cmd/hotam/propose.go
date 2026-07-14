@@ -34,10 +34,40 @@ import (
 // hand-authored-JSON path (`hotam apply-proposal <file.json>` / `hotam land
 // <file.json>`).
 func cmdPropose(args []string) error {
-	// reorderFlagsFirst (main.go) moves every flag+value before positionals, so
-	// the kind is the FIRST positional — buried among or after the flag pairs.
-	// We scan using the same isBoolFlag heuristic reorderFlagsFirst uses to
-	// skip flag-value pairs, then extract the first non-flag token as the kind.
+	kind, rest, err := extractProposeKind(args)
+	if err != nil {
+		return err
+	}
+	switch kind {
+	case "requirement":
+		return cmdProposeRequirement(rest)
+	case "rejection":
+		return cmdProposeRejection(rest)
+	case "stakeholder":
+		return cmdProposeStakeholder(rest)
+	default:
+		return fmt.Errorf("unknown propose kind %q — kinds: requirement, rejection, stakeholder", kind)
+	}
+}
+
+// extractProposeKind scans args (already passed through main.go's
+// reorderFlagsFirst, which moves every flag+value pair before positionals,
+// because Go's stdlib flag package stops parsing flags at the first
+// non-flag token) for the first non-flag token — the proposal <kind> — and
+// returns it along with the remaining args (kind removed, order otherwise
+// preserved) for the chosen kind's own FlagSet to parse.
+//
+// It scans using the SAME isBoolFlag heuristic reorderFlagsFirst uses to
+// skip flag-value pairs: a token starting with "-" that is a known bool
+// flag (boolFlagNames, main.go) never consumes the next token; any other
+// flag-shaped token consumes the following token as its value unless it
+// already carries "=" or there is no following token. This must stay in
+// sync with boolFlagNames — notably "-h"/"-help"/"--help" are listed there
+// specifically so they are recognized as value-less here too, letting
+// e.g. `hotam propose requirement -h` correctly find "requirement" as the
+// kind and hand `["-h"]` to cmdProposeRequirement's own FlagSet.Parse,
+// which is what prints the real per-flag help.
+func extractProposeKind(args []string) (kind string, rest []string, err error) {
 	kindIdx := -1
 	i := 0
 	for i < len(args) {
@@ -58,21 +88,12 @@ func cmdPropose(args []string) error {
 		break
 	}
 	if kindIdx < 0 {
-		return fmt.Errorf("usage: hotam propose <kind> [flags] — kinds: requirement, rejection, stakeholder")
+		return "", nil, fmt.Errorf("usage: hotam propose <kind> [flags] — kinds: requirement, rejection, stakeholder")
 	}
-	kind := args[kindIdx]
-	rest := append([]string{}, args[:kindIdx]...)
+	kind = args[kindIdx]
+	rest = append([]string{}, args[:kindIdx]...)
 	rest = append(rest, args[kindIdx+1:]...)
-	switch kind {
-	case "requirement":
-		return cmdProposeRequirement(rest)
-	case "rejection":
-		return cmdProposeRejection(rest)
-	case "stakeholder":
-		return cmdProposeStakeholder(rest)
-	default:
-		return fmt.Errorf("unknown propose kind %q — kinds: requirement, rejection, stakeholder", kind)
-	}
+	return kind, rest, nil
 }
 
 // proposeResult is the --json envelope for a successful `hotam propose`
