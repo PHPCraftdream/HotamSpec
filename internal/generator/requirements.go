@@ -7,7 +7,33 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
-func BuildRequirements(g *ontology.Graph) string {
+// BuildRequirements renders docs/gen/REQUIREMENTS.md: the domain's own
+// requirement roster (and its supporting Stakeholders/Assumptions/Operators/
+// Processes/Goals sections) plus a closing section whose shape depends on
+// consumer.
+//
+// consumer selects the output profile (mirrors the naming/threading
+// convention RenderClaudeMDFromTemplate/RenderEmbeddedThinkingBlock/
+// ComputeCrystalCharCountFixpoint established this wave, task #135, in
+// claudemd.go):
+//
+//   - consumer == false (full profile, the default, backward-compatible
+//     case): output is byte-identical to the historical unconditional
+//     behavior — the closing section is BuildToolDerivedSection() (~44
+//     synthetic requirements describing the HOTAM FRAMEWORK's own CLI
+//     surface) followed by the full "## Methodology (generated from module
+//     docstrings)" encyclopedia (every §-section's Canon/Narrative/Why).
+//   - consumer == true: both of those sections are framework
+//     self-documentation, not the consumer's own business domain content —
+//     an external domain with one seed requirement otherwise gets a
+//     REQUIREMENTS.md dominated by ~27KB of framework internals. They are
+//     replaced by a short closing section: a brief contract statement plus
+//     pointers to where the full detail lives (docs/gen/tools/INDEX.md, the
+//     root crystal, and — since the consumer profile never writes
+//     docs/gen/thinking/*.md, see genSpec's `if !consumer { thinkingDocs :=
+//     ... }` gate in cmd/hotam/gen_spec.go — a note that `--profile full`
+//     unlocks the full methodology reference on demand).
+func BuildRequirements(g *ontology.Graph, consumer bool) string {
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 	stakeholders := NarrativeOrder(g.Stakeholders, func(s ontology.Stakeholder) int { return s.DeclOrder })
 	assumptions := NarrativeOrder(g.Assumptions, func(a ontology.Assumption) int { return a.DeclOrder })
@@ -128,22 +154,57 @@ func BuildRequirements(g *ontology.Graph) string {
 
 	lines = append(lines, "---")
 	lines = append(lines, "")
-	lines = append(lines, BuildToolDerivedSection())
+	if consumer {
+		lines = append(lines, consumerClosingSection()...)
+	} else {
+		lines = append(lines, BuildToolDerivedSection())
 
-	lines = append(lines, "---")
-	lines = append(lines, "")
-	lines = append(lines, "## Methodology (generated from module docstrings)")
-	lines = append(lines, "")
-	for i, me := range ModuleOrder {
-		doc := ModuleDocstring(me.Mod)
-		ordinal := i + 1
-		lines = append(lines, "### "+strconv.Itoa(ordinal)+". "+me.Label+" — `hotam_spec."+me.Mod+"`")
+		lines = append(lines, "---")
 		lines = append(lines, "")
-		if doc != "" {
-			lines = append(lines, doc)
+		lines = append(lines, "## Methodology (generated from module docstrings)")
+		lines = append(lines, "")
+		for i, me := range ModuleOrder {
+			doc := ModuleDocstring(me.Mod)
+			ordinal := i + 1
+			lines = append(lines, "### "+strconv.Itoa(ordinal)+". "+me.Label+" — `hotam_spec."+me.Mod+"`")
 			lines = append(lines, "")
+			if doc != "" {
+				lines = append(lines, doc)
+				lines = append(lines, "")
+			}
 		}
 	}
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
+}
+
+// consumerClosingSection renders the short closing section that REPLACES
+// BuildToolDerivedSection() + the methodology encyclopedia under the
+// consumer profile: a brief contract statement (closely paraphrasing the
+// root crystal's own opening line, claudeMDTemplate in claudemd.go — not new
+// marketing copy) plus pointers to where the full detail lives. It is
+// deliberately a few lines, not a scaled-down copy of the sections it
+// replaces (tool-derived requirements describe the FRAMEWORK's own CLI
+// surface, not the consumer's business domain; the methodology encyclopedia
+// duplicates docs/gen/thinking/*.md and the crystal's own EMBEDDED-THINKING
+// block in full rather than condensed).
+//
+// The last bullet ("full methodology reference: switch to --profile full")
+// is safe to state unconditionally: docs/gen/thinking/*.md is exactly the
+// artifact the consumer profile skips (genSpec's `if !consumer { thinkingDocs
+// := ... }` gate, cmd/hotam/gen_spec.go) and --profile full is what
+// re-enables it, so the pointer never dangles.
+func consumerClosingSection() []string {
+	return []string{
+		"## About Hotam-Spec",
+		"",
+		"**Hotam-Spec** is executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded.",
+		"",
+		"This file covers this domain's own requirement roster only. For the framework itself:",
+		"",
+		"- **Implemented commands** — `docs/gen/tools/INDEX.md`.",
+		"- **Operating loop** (how an agent should read and act on this model) — the root crystal: `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.",
+		"- **Full methodology reference** (every §-section's Canon/Narrative/Why) — not generated under this profile; regenerate with `hotam gen-spec --profile full` if ever needed.",
+		"",
+	}
 }

@@ -129,7 +129,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// this set to stay byte-identical, even though atoms-*.md/live-state.md
 	// are additionally written alongside them on disk (see mdDocs below).
 	repoMapDocs := []generator.GenDocEntry{
-		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g)},
+		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g, consumer)},
 		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
 		{Filename: "OPEN.md", Content: generator.BuildOpen(g)},
 		{Filename: "UNENFORCED.md", Content: generator.BuildUnenforced(g)},
