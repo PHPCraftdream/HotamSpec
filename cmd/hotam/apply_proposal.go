@@ -12,11 +12,26 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
+// cmdApplyProposal implements `hotam apply-proposal`: apply a single proposal
+// (or a directory of them via --batch) to graph.json WITHOUT regenerating docs.
+// It is the lower-level counterpart to `hotam land`, which wraps the same apply
+// in a snapshot/gen-spec/all-violations pipeline.
+//
+// The semantic-conflict gate (semanticConflictGate) runs ONLY on the single-file
+// path, BEFORE applyProposalValue, mirroring landProposalValue's placement so a
+// refusal leaves the graph untouched. --batch mode does NOT run the gate: the
+// gate's --ack-conflict / --decision-ref flags are inherently per-proposal, but
+// batch mode processes a directory of files with no per-file flag mechanism —
+// the same rationale cmdLandBatch documents for `hotam land --batch` (a batch-ack
+// UX belongs in its own task, not bolted on here). The batch confront-at-gate
+// summary (confrontBatchSummary) still runs advisory-only.
 func cmdApplyProposal(args []string) error {
 	fs := newFlagSet("apply-proposal")
 	domain := fs.String("domain", "", "domain directory containing graph.json (default: active-domain chain — HOTAM_DOMAIN env, then .hotam-spec-project marker, then "+defaultDomainRel+")")
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
+	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, steward+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History")
 	fs.Parse(args)
 
 	if *today == "" {
@@ -49,7 +64,7 @@ func cmdApplyProposal(args []string) error {
 	}
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]")
+		return fmt.Errorf("usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>] [--ack-conflict <C-id>] [--decision-ref <text>]")
 	}
 	proposalFile := fs.Arg(0)
 	// Parse the proposal ONCE so the advisory confront-at-gate (warn-only,
@@ -64,9 +79,33 @@ func cmdApplyProposal(args []string) error {
 	if err := confrontBeforeApply(domainDir, p, false); err != nil {
 		return err
 	}
+	// Semantic-conflict gate: refuse to apply a ProposedRequirement whose claim
+	// carries an opposite marker against an existing SETTLED requirement,
+	// unless the operator supplied --ack-conflict or --decision-ref. Runs BEFORE
+	// applyProposalValue so a refusal leaves the graph untouched, mirroring
+	// landProposalValue's placement. hadConflict gates appendAckHistory below:
+	// the audit trail is written only when a real conflict was detected, not
+	// merely because ack flags were passed (same guard as landProposalValue).
+	ackOpts := landAckOptions{AckConflict: *ackConflict, DecisionRef: *decisionRef}
+	hadConflict, err := semanticConflictGate(domainDir, p, ackOpts)
+	if err != nil {
+		return err
+	}
 	gp, err := applyProposalValue(p, domainDir, *today)
 	if err != nil {
 		return err
+	}
+	// Persist the human-decision audit trail (--ack-conflict / --decision-ref)
+	// AFTER apply wrote the node. apply-proposal does not regen docs, but
+	// appendAckHistory writes directly to graph.json (no regen dependency), so
+	// it is safe to call here. Guarded on hadConflict AND ackOpts.hasAck(): ack
+	// flags without a real conflict must NOT write a false audit entry. A
+	// failure here is a bare error return — apply-proposal has no rollback
+	// machinery, consistent with how it handles every other error.
+	if hadConflict && ackOpts.hasAck() {
+		if err := appendAckHistory(gp, p, *today, ackOpts); err != nil {
+			return err
+		}
 	}
 	fmt.Printf("applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
 	fmt.Println("docs not regenerated; run hotam gen-spec or use hotam land")

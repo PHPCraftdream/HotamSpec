@@ -456,3 +456,207 @@ func TestSemanticConflictGate_NoFalseAckHistoryOnNonConflictingLand(t *testing.T
 		}
 	}
 }
+
+// TestApplyProposalGate_RefusesOppositeMarkerConflict is the EXACT review-9
+// R9-b bypass scenario: a requirement is landed via `hotam land` (gated), then a
+// semantically-contradicting requirement is applied via `hotam apply-proposal`
+// (single-file, NOT --land, NOT --batch) WITHOUT --ack-conflict /
+// --decision-ref. Before the fix this path ignored the gate entirely and
+// silently succeeded; after the fix it must REFUSE with the same kind of message
+// `land` produces, and leave the graph untouched.
+func TestApplyProposalGate_RefusesOppositeMarkerConflict(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+	gp := graphPathForDomain(domainDir)
+
+	// Land the first SETTLED requirement via `hotam land` — no conflict yet.
+	first := writeReqProposalJSON(t, "R-apply-always",
+		"export service must always encrypt records")
+	if err := cmdLand([]string{"--domain", domainDir, "--today", "2026-07-14", first}); err != nil {
+		t.Fatalf("land first requirement: %v", err)
+	}
+
+	// Attempt `hotam apply-proposal` (single-file) on the contradicting
+	// requirement WITHOUT ack — the review's exact bypass. Must REFUSE.
+	second := writeReqProposalJSON(t, "R-apply-never",
+		"export service must never encrypt records")
+	err := cmdApplyProposal([]string{"--domain", domainDir, "--today", "2026-07-14", second})
+	if err == nil {
+		t.Fatal("expected apply-proposal gate to refuse the contradicting requirement, got nil error")
+	}
+	errStr := err.Error()
+	if !strings.Contains(errStr, "R-apply-always") {
+		t.Errorf("error must name the conflicting anchor R-apply-always:\n%s", errStr)
+	}
+	if !strings.Contains(errStr, "refusing to land") {
+		t.Errorf("error must state the refusal:\n%s", errStr)
+	}
+	if !strings.Contains(errStr, "--ack-conflict") {
+		t.Errorf("error must suggest --ack-conflict:\n%s", errStr)
+	}
+	if !strings.Contains(errStr, "--decision-ref") {
+		t.Errorf("error must suggest --decision-ref:\n%s", errStr)
+	}
+
+	// The graph must NOT contain the refused requirement.
+	graphData, err := os.ReadFile(gp)
+	if err != nil {
+		t.Fatalf("read graph: %v", err)
+	}
+	if strings.Contains(string(graphData), "R-apply-never") {
+		t.Error("graph must not contain the refused requirement — gate left the graph untouched")
+	}
+}
+
+// TestApplyProposalGate_AckConflictSucceedsAndPersists proves that supplying
+// --ack-conflict <existing-C-id> through `hotam apply-proposal` overrides the
+// refusal, the requirement is applied, and the resulting graph.json carries the
+// ack-history audit trail on the applied requirement (read back directly, since
+// apply-proposal does not regenerate docs).
+func TestApplyProposalGate_AckConflictSucceedsAndPersists(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+	gp := graphPathForDomain(domainDir)
+
+	// Land the first SETTLED requirement.
+	first := writeReqProposalJSON(t, "R-apply-always-2",
+		"export service must always encrypt records")
+	if err := cmdLand([]string{"--domain", domainDir, "--today", "2026-07-14", first}); err != nil {
+		t.Fatalf("land first: %v", err)
+	}
+
+	// Create a valid Conflict node in the graph.
+	conflictID := addTestConflict(t, gp, "2026-07-14",
+		[]string{"R-apply-always-2", "R-domain-exists"})
+
+	// apply-proposal the contradicting requirement WITH --ack-conflict — must succeed.
+	second := writeReqProposalJSON(t, "R-apply-never-2",
+		"export service must never encrypt records")
+	err := cmdApplyProposal([]string{
+		"--domain", domainDir, "--today", "2026-07-14",
+		"--ack-conflict", conflictID,
+		second,
+	})
+	if err != nil {
+		t.Fatalf("apply-proposal with --ack-conflict should succeed: %v", err)
+	}
+
+	// The graph must contain the acked requirement.
+	graphData, err := os.ReadFile(gp)
+	if err != nil {
+		t.Fatalf("read graph: %v", err)
+	}
+	if !strings.Contains(string(graphData), "R-apply-never-2") {
+		t.Error("graph must contain the ack-conflict-applied requirement")
+	}
+
+	// The acked requirement's History must carry the audit trail.
+	g, err := loader.LoadGraph(gp)
+	if err != nil {
+		t.Fatalf("load graph: %v", err)
+	}
+	r, ok := ontology.RequirementByID(g, "R-apply-never-2")
+	if !ok {
+		t.Fatal("R-apply-never-2 not found in graph")
+	}
+	found := false
+	for _, h := range r.History {
+		if strings.Contains(h.Summary, conflictID) {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("History must reference the acked Conflict %s; got history: %v", conflictID, r.History)
+	}
+}
+
+// TestApplyProposalGate_NoFalseAckHistoryOnNonConflictingApply is the
+// false-positive guard carried over to the apply-proposal path (same class of
+// check as TestSemanticConflictGate_NoFalseAckHistoryOnNonConflictingLand but
+// through cmdApplyProposal instead of cmdLand): applying a NON-conflicting
+// requirement with --decision-ref must succeed AND write NO false
+// "semantic conflict acknowledged" History entry.
+func TestApplyProposalGate_NoFalseAckHistoryOnNonConflictingApply(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+	gp := graphPathForDomain(domainDir)
+
+	// apply-proposal a benign requirement WITH --decision-ref. The seed
+	// requirement carries no opposite markers, so there is nothing to acknowledge.
+	benign := writeReqProposalJSON(t, "R-apply-benign-ack-noconflict",
+		"a completely benign requirement about tea quality grading scales")
+	if err := cmdApplyProposal([]string{
+		"--domain", domainDir, "--today", "2026-07-14",
+		"--decision-ref", "no real conflict to acknowledge",
+		benign,
+	}); err != nil {
+		t.Fatalf("non-conflicting apply-proposal with --decision-ref must succeed: %v", err)
+	}
+
+	// Read the requirement back and inspect its History slice directly: it must
+	// contain NO "semantic conflict acknowledged" entry.
+	g, err := loader.LoadGraph(gp)
+	if err != nil {
+		t.Fatalf("load graph: %v", err)
+	}
+	r, ok := ontology.RequirementByID(g, "R-apply-benign-ack-noconflict")
+	if !ok {
+		t.Fatal("R-apply-benign-ack-noconflict not found in graph")
+	}
+	for _, h := range r.History {
+		if strings.Contains(h.Summary, "semantic conflict acknowledged") {
+			t.Errorf("non-conflicting apply-proposal must not record a false ack entry, but History has: %q", h.Summary)
+		}
+	}
+}
+
+// TestApplyProposalGate_BatchModeUnaffectedByGate confirms --batch mode is
+// genuinely unaffected by the gate (an existing-behavior-preserved check, not a
+// new feature): a semantically-contradicting requirement applied via
+// `hotam apply-proposal --batch <dir>` WITHOUT ack must SUCCEED, matching the
+// documented batch-mode exclusion.
+func TestApplyProposalGate_BatchModeUnaffectedByGate(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+	gp := graphPathForDomain(domainDir)
+
+	// Land the first SETTLED requirement.
+	first := writeReqProposalJSON(t, "R-apply-batch-always",
+		"export service must always encrypt records")
+	if err := cmdLand([]string{"--domain", domainDir, "--today", "2026-07-14", first}); err != nil {
+		t.Fatalf("land first: %v", err)
+	}
+
+	// Put the contradicting requirement in a batch dir.
+	batchDir := t.TempDir()
+	jsonStr := `{
+		"kind": "Requirement",
+		"id": "R-apply-batch-never",
+		"claim": "export service must never encrypt records",
+		"owner": "owner",
+		"status": "SETTLED",
+		"why": "batch-mode gate exclusion test"
+	}`
+	second := filepath.Join(batchDir, "01-never.json")
+	if err := os.WriteFile(second, []byte(jsonStr), 0o644); err != nil {
+		t.Fatalf("write batch proposal: %v", err)
+	}
+
+	// apply-proposal --batch on the contradicting requirement WITHOUT ack —
+	// batch mode does NOT run the gate, so this must SUCCEED.
+	if err := cmdApplyProposal([]string{
+		"--domain", domainDir, "--today", "2026-07-14",
+		"--batch", batchDir,
+	}); err != nil {
+		t.Fatalf("batch mode must NOT run the semantic-conflict gate (existing behavior preserved): %v", err)
+	}
+
+	// The graph must contain the batch-applied requirement.
+	graphData, err := os.ReadFile(gp)
+	if err != nil {
+		t.Fatalf("read graph: %v", err)
+	}
+	if !strings.Contains(string(graphData), "R-apply-batch-never") {
+		t.Error("graph must contain the batch-applied requirement")
+	}
+}
