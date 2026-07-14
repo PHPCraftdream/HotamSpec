@@ -49,12 +49,47 @@ func advice(members []string) string {
 	)
 }
 
+// SharedAssumptionClusterBaselineScore is the score floor for the minimal
+// InspectSharedAssumptionClusters case: exactly ONE pair (2 requirements
+// sharing one specific, non-generic assumption — see
+// ontology.GenericAssumptionThreshold — with no mediating Conflict node).
+// Re-examined against InspectLexicalClaimOverlap's own scale (task's
+// explicit ask; that heuristic's formula itself stays untouched): a shared
+// assumption ID is an EXACT structural match (same node, referenced by both
+// requirements), not a fuzzy token co-occurrence — at minimum comparable to
+// InspectLexicalClaimOverlap's plain 2-token/different-owner floor (score
+// 2+1=3), but deliberately kept BELOW defaultInspectMinScore=5 at the
+// 1-pair floor: a single shared assumption between exactly two requirements
+// is real but still thin evidence on its own (it says "these two lean on the
+// same fact," not "these two actively entangle several others around that
+// fact"). Cluster size (Pairs count) is where the genuine density gradient
+// lives — see clusterDensityBonus below — so a cluster only needs to grow
+// past the single-pair floor to clear the default threshold, rather than
+// scoring len(cl.Pairs) directly the way the pre-fix formula did (which
+// scored the SAME minimal single-pair case at 1, an order of magnitude below
+// even a weak lexical hit, despite being an exact rather than fuzzy match).
+const SharedAssumptionClusterBaselineScore = 4
+
+// clusterDensityBonus rewards a cluster growing beyond the minimal single
+// contributing pair: each additional pair means one more requirement (or one
+// more connection among the same requirement set) tangled around the same
+// specific shared assumption — a broader latent connector, not just a
+// coincidental one-off link. Floors at 0 so the baseline is never reduced.
+func clusterDensityBonus(pairs int) int {
+	bonus := pairs - 1
+	if bonus < 0 {
+		bonus = 0
+	}
+	return bonus
+}
+
 // InspectSharedAssumptionClusters reuses ontology.LatentConnectorClusters —
 // the SAME data DiagnoseSignals renders at PLatentConnector priority — and
 // reshapes each cluster into a Candidate. No detection logic is duplicated
 // here; only the presentation differs (what-now shows one summary line per
 // cluster, inspect shows the full cluster + every contributing pair as
-// evidence).
+// evidence). See SharedAssumptionClusterBaselineScore's doc comment for the
+// scoring reasoning.
 func InspectSharedAssumptionClusters(g *ontology.Graph) []Candidate {
 	clusters := ontology.LatentConnectorClusters(g)
 	out := make([]Candidate, 0, len(clusters))
@@ -69,16 +104,45 @@ func InspectSharedAssumptionClusters(g *ontology.Graph) []Candidate {
 			Members:   cl.Requirements,
 			Evidence: "shares assumption(s) [" + strings.Join(cl.Assumptions, ", ") +
 				"] with no mediating Conflict node; contributing pairs: " + strings.Join(pairEvidence, ", "),
-			Score:          len(cl.Pairs),
+			Score:          SharedAssumptionClusterBaselineScore + clusterDensityBonus(len(cl.Pairs)),
 			Recommendation: advice(cl.Requirements),
 		})
 	}
 	return out
 }
 
+// EntityStateConflictBaselineScore is the flat score every
+// InspectEntityStateConflicts candidate carries. ontology.LatentSuspect (the
+// type EntityStateConflictSuspects returns) carries no numeric gradient of
+// its own — Left/Right/Hint only — so there is no per-pair signal to scale
+// against; every suspect is the SAME shape of evidence: two DIFFERENT
+// Processes drive the SAME EntityType to disjoint terminal (resting) states
+// (see ontology.EntityStateConflictSuspects' disjoint-destination check).
+// That is graph-structural fact, not a heuristic guess — two lifecycles
+// converging on states that can never agree is a stronger, more concrete
+// signal than an N-token lexical overlap, which only gestures at shared
+// topic. Calibrated against InspectLexicalClaimOverlap's own scoring scale
+// (deliberately not touched by this task, only read for comparison):
+// MinLexicalOverlapTokens=2 (no marker, different owner) scores 2+1=3;
+// MinLexicalOverlapTokensWithMarker=1 (with an opposite marker) scores
+// 1+3+[+1 if different owner]=4-5. A same-entity/disjoint-destination
+// structural suspect is set one point above that ceiling (6) — strong enough
+// to reliably clear defaultInspectMinScore=5 out of the box (it is real
+// structure, not inferred prose), without being so high it would swamp a
+// high-scoring lexical hit (marker + multi-token overlap can still exceed
+// it). No real domain in this repo currently has an EntityType driven by 2+
+// Processes to exercise this path with live data (hotam-dev has 1 EntityType
+// / 0 Processes; hotam-spec-self has 0 EntityTypes) — the baseline is
+// therefore a reasoned constant, not empirically fit to a candidate set that
+// does not yet exist; revisit with real measurements once a domain grows a
+// Process-driven EntityType with branching resting states.
+const EntityStateConflictBaselineScore = 6
+
 // InspectEntityStateConflicts reuses ontology.EntityStateConflictSuspects —
 // the same detector DiagnoseSignals renders at PLatentConnector priority —
-// and reshapes each suspect pair into a Candidate.
+// and reshapes each suspect pair into a Candidate. See
+// EntityStateConflictBaselineScore's doc comment for why every candidate
+// carries the same flat score.
 func InspectEntityStateConflicts(g *ontology.Graph) []Candidate {
 	suspects := ontology.EntityStateConflictSuspects(g)
 	out := make([]Candidate, 0, len(suspects))
@@ -89,6 +153,7 @@ func InspectEntityStateConflicts(g *ontology.Graph) []Candidate {
 			Heuristic:      HeuristicEntityStateConflict,
 			Members:        members,
 			Evidence:       s.Hint,
+			Score:          EntityStateConflictBaselineScore,
 			Recommendation: advice(members),
 		})
 	}
@@ -431,12 +496,55 @@ func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
 	return out
 }
 
+// AxisCoReferenceBaselineScore is the minimum score any InspectAxisCoReference
+// candidate can carry, awarded purely for the structural fact itself: two
+// SEPARATE Conflict nodes — each already a steward-attended, first-class
+// connector node in the graph, not a heuristic guess — reference the SAME
+// Axis. That is graph ground truth, arguably stronger evidence of real
+// tension-worth-a-look than any token-overlap heuristic can produce, since no
+// inference step is involved at all (the co-reference either exists in the
+// graph or it doesn't). Every real Conflict has at least 2 Members (a
+// "conflict" needs at least a pair to connect), so the smallest possible
+// pair of co-referencing Conflicts carries 2+2=4 combined members — that
+// floor case is deliberately set to land exactly AT defaultInspectMinScore=5
+// (baseline 5, +0 extra members at the floor), so this structural signal is
+// visible by default rather than accidentally always suppressed the way it
+// was before this fix (Score was unset / always 0). See
+// AxisCoReferenceMemberBonus below for how broader entanglement scores
+// higher than the floor.
+const AxisCoReferenceBaselineScore = 5
+
+// AxisCoReferenceMemberFloor is the minimum combined Members count
+// (len(c1.Members)+len(c2.Members)) any two real Conflict nodes can carry —
+// 2 members each is the smallest a Conflict can be. Combined member count
+// above this floor is extra entanglement breadth beyond the minimum
+// structural case, and is rewarded 1 score point per extra member (more
+// requirements pulled into the two co-referencing conflicts = a broader,
+// more consequential tangle worth a steward's attention sooner).
+const AxisCoReferenceMemberFloor = 4
+
+// axisCoReferenceScore combines AxisCoReferenceBaselineScore (awarded for the
+// bare structural fact) with a 1-point-per-member bonus for combined Conflict
+// membership beyond AxisCoReferenceMemberFloor, so two co-referencing
+// Conflicts entangling many requirements score visibly higher than the
+// minimal 2-member+2-member floor case, while never scoring below the
+// baseline.
+func axisCoReferenceScore(c1, c2 ontology.Conflict) int {
+	combined := len(c1.Members) + len(c2.Members)
+	bonus := combined - AxisCoReferenceMemberFloor
+	if bonus < 0 {
+		bonus = 0
+	}
+	return AxisCoReferenceBaselineScore + bonus
+}
+
 // InspectAxisCoReference is heuristic (c) from the task: requirements that
 // are members of DIFFERENT Conflict nodes which nonetheless share the same
 // Axis are "co-referencing" one tension dimension from separate connector
 // nodes — worth a steward glance to decide whether they are really one
 // conflict split in two, or genuinely independent tensions that happen to
-// share a vocabulary axis.
+// share a vocabulary axis. See AxisCoReferenceBaselineScore's doc comment
+// for the scoring reasoning.
 func InspectAxisCoReference(g *ontology.Graph) []Candidate {
 	byAxis := ontology.ConflictsByAxis(g)
 
@@ -466,6 +574,7 @@ func InspectAxisCoReference(g *ontology.Graph) []Candidate {
 					Evidence: "conflicts '" + c1.ID + "' (members: " + strings.Join(c1.Members, ", ") +
 						") and '" + c2.ID + "' (members: " + strings.Join(c2.Members, ", ") +
 						") both reference axis '" + axis + "' but are separate Conflict nodes",
+					Score:          axisCoReferenceScore(c1, c2),
 					Recommendation: advice(members),
 				})
 			}

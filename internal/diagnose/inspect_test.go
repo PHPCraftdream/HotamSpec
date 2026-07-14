@@ -323,6 +323,196 @@ func TestInspectLexicalClaimOverlap_ScoreOrdering(t *testing.T) {
 	}
 }
 
+// buildEntityStateConflictFixture returns a graph with one EntityType
+// ("order") driven by two DIFFERENT Processes whose steps push it to
+// disjoint terminal (resting) states — PR-ship lands it on FULFILLED,
+// PR-cancel lands it on CANCELLED — the exact shape
+// ontology.EntityStateConflictSuspects' disjoint-destination check requires.
+// Mirrors internal/ontology/graph_smoke_test.go's buildSmokeGraph fixture
+// shape (same package cannot be imported directly, so the equivalent nodes
+// are rebuilt here).
+func buildEntityStateConflictFixture() *ontology.Graph {
+	entityTypes := []ontology.EntityType{
+		{
+			Slug: "order",
+			Lifecycle: ontology.Lifecycle{
+				Slug: "order-states",
+				States: []ontology.State{
+					{Name: "PENDING", Kind: ontology.StateKindInitial},
+					{Name: "FULFILLED", Kind: ontology.StateKindQuiescent},
+					{Name: "CANCELLED", Kind: ontology.StateKindQuiescent},
+				},
+				Transitions: []ontology.Transition{
+					{Src: "PENDING", Dst: "FULFILLED", Event: "fulfill"},
+					{Src: "PENDING", Dst: "CANCELLED", Event: "cancel"},
+				},
+			},
+		},
+	}
+	processes := []ontology.Process{
+		{
+			ID: "PR-ship", Lifecycle: ontology.ProcessLifecycle, DrivesEntities: []string{"order"},
+			Steps: []ontology.Step{{Name: "ship", RequiresRole: "ops", Invokes: "order.fulfill"}},
+		},
+		{
+			ID: "PR-cancel", Lifecycle: ontology.ProcessLifecycle, DrivesEntities: []string{"order"},
+			Steps: []ontology.Step{{Name: "abort", RequiresRole: "ops", Invokes: "order.cancel"}},
+		},
+	}
+	return &ontology.Graph{EntityTypes: entityTypes, Processes: processes}
+}
+
+// TestInspectEntityStateConflicts_ScoresBaseline pins
+// EntityStateConflictBaselineScore as the exact score every
+// InspectEntityStateConflicts candidate carries (the underlying
+// ontology.LatentSuspect shape carries no per-pair gradient to scale
+// against — see that constant's doc comment), and proves the score clears
+// defaultInspectMinScore=5 by construction, fixing the bug this task exists
+// to fix (Score was previously always the Go zero value, so this heuristic
+// could never clear ANY positive --min-score).
+func TestInspectEntityStateConflicts_ScoresBaseline(t *testing.T) {
+	t.Parallel()
+	g := buildEntityStateConflictFixture()
+	candidates := InspectEntityStateConflicts(g)
+	if len(candidates) != 1 {
+		t.Fatalf("expected exactly 1 entity-state-conflict candidate, got %d: %+v", len(candidates), candidates)
+	}
+	c := candidates[0]
+	if c.Score != EntityStateConflictBaselineScore {
+		t.Errorf("Score = %d, want EntityStateConflictBaselineScore = %d", c.Score, EntityStateConflictBaselineScore)
+	}
+	if c.Score < defaultInspectMinScoreForTests {
+		t.Errorf("Score = %d must clear the default --min-score threshold %d — this is the exact bug this task fixes", c.Score, defaultInspectMinScoreForTests)
+	}
+	if c.Heuristic != HeuristicEntityStateConflict {
+		t.Errorf("Heuristic = %q, want %q", c.Heuristic, HeuristicEntityStateConflict)
+	}
+}
+
+// defaultInspectMinScoreForTests mirrors cmd/hotam's defaultInspectMinScore
+// (5) without importing the cmd package (internal/diagnose must not depend
+// on cmd/hotam). Kept as a named constant, not a bare literal, so the intent
+// ("the new baseline scores must clear the CLI's real default threshold") is
+// self-documenting at the call site.
+const defaultInspectMinScoreForTests = 5
+
+// buildAxisCoReferenceFixture returns a graph with two SEPARATE Conflict
+// nodes that share the same Axis — the exact shape InspectAxisCoReference
+// looks for. C-floor has the minimum 2 members each side (the smallest a
+// real Conflict node can be), exercising axisCoReferenceScore's floor case;
+// callers that want to test the member-count bonus add extra members on top
+// of this shape.
+func buildAxisCoReferenceFixture() *ontology.Graph {
+	return &ontology.Graph{
+		Conflicts: []ontology.Conflict{
+			{ID: "C-floor-a", Axis: "shared-axis", Members: []string{"R-1", "R-2"}},
+			{ID: "C-floor-b", Axis: "shared-axis", Members: []string{"R-3", "R-4"}},
+		},
+	}
+}
+
+// TestInspectAxisCoReference_FloorScoresAtDefaultThreshold pins the minimal
+// case — two Conflicts sharing an axis, each carrying the smallest possible
+// membership (2) — to AxisCoReferenceBaselineScore exactly (no member bonus
+// at the floor), and proves this floor case clears
+// defaultInspectMinScoreForTests: the task's own real-graph example
+// (hotam-spec-self's "core-vs-aspect" axis, C-8600b1b8 + C-be22cdd1, both
+// 2-member Conflicts) is exactly this floor shape, and was the single
+// candidate the review flagged as always-invisible before this fix (Score
+// was previously unset/0 for every InspectAxisCoReference candidate).
+func TestInspectAxisCoReference_FloorScoresAtDefaultThreshold(t *testing.T) {
+	t.Parallel()
+	g := buildAxisCoReferenceFixture()
+	candidates := InspectAxisCoReference(g)
+	if len(candidates) != 1 {
+		t.Fatalf("expected exactly 1 axis-co-reference candidate, got %d: %+v", len(candidates), candidates)
+	}
+	c := candidates[0]
+	if c.Score != AxisCoReferenceBaselineScore {
+		t.Errorf("Score = %d, want AxisCoReferenceBaselineScore = %d (floor case: 2+2=4 combined members, at AxisCoReferenceMemberFloor)", c.Score, AxisCoReferenceBaselineScore)
+	}
+	if c.Score < defaultInspectMinScoreForTests {
+		t.Errorf("Score = %d must clear the default --min-score threshold %d — this is the exact bug this task fixes", c.Score, defaultInspectMinScoreForTests)
+	}
+	if c.Heuristic != HeuristicAxisCoReference {
+		t.Errorf("Heuristic = %q, want %q", c.Heuristic, HeuristicAxisCoReference)
+	}
+}
+
+// TestInspectAxisCoReference_MemberBonusScalesAboveFloor proves
+// axisCoReferenceScore rewards combined Conflict membership beyond the
+// 2+2=4 floor: three extra members (5 total on one side + 2 on the other =
+// 7 combined, 3 over the floor of 4) must score exactly
+// AxisCoReferenceBaselineScore+3, strictly higher than the floor-case score
+// pinned above.
+func TestInspectAxisCoReference_MemberBonusScalesAboveFloor(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Conflicts: []ontology.Conflict{
+			{ID: "C-broad-a", Axis: "shared-axis", Members: []string{"R-1", "R-2", "R-3", "R-4", "R-5"}},
+			{ID: "C-broad-b", Axis: "shared-axis", Members: []string{"R-6", "R-7"}},
+		},
+	}
+	candidates := InspectAxisCoReference(g)
+	if len(candidates) != 1 {
+		t.Fatalf("expected exactly 1 axis-co-reference candidate, got %d: %+v", len(candidates), candidates)
+	}
+	want := AxisCoReferenceBaselineScore + 3 // combined 7 members, 3 over the 4-member floor
+	if candidates[0].Score != want {
+		t.Errorf("Score = %d, want %d (baseline %d + 3-member bonus)", candidates[0].Score, want, AxisCoReferenceBaselineScore)
+	}
+}
+
+// TestInspectSharedAssumptionClusters_FloorAndDensityBonus pins
+// SharedAssumptionClusterBaselineScore for the minimal 1-pair cluster (2
+// requirements sharing one specific assumption, no mediating Conflict) and
+// proves clusterDensityBonus adds 1 point per pair beyond that floor, using
+// the same 3-requirement/2-pair shape as
+// internal/ontology/graph_smoke_test.go's TestLatentConnectorSuspectsAndClusters
+// fixture (R-1/R-2/R-3 all sharing A-single-customer, fully pairwise
+// connected since none of the pairs are already mediated by a Conflict).
+func TestInspectSharedAssumptionClusters_FloorAndDensityBonus(t *testing.T) {
+	t.Parallel()
+
+	// Minimal case: exactly one pair.
+	floorGraph := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Owner: "team-a", Status: ontology.StatusSETTLED, Assumptions: []string{"A-shared"}},
+			{ID: "R-2", Owner: "team-a", Status: ontology.StatusSETTLED, Assumptions: []string{"A-shared"}},
+		},
+		Assumptions: []ontology.Assumption{{ID: "A-shared", Status: ontology.AssumptionHOLDS}},
+	}
+	floorCandidates := InspectSharedAssumptionClusters(floorGraph)
+	if len(floorCandidates) != 1 {
+		t.Fatalf("expected exactly 1 cluster candidate, got %d: %+v", len(floorCandidates), floorCandidates)
+	}
+	if floorCandidates[0].Score != SharedAssumptionClusterBaselineScore {
+		t.Errorf("floor cluster Score = %d, want SharedAssumptionClusterBaselineScore = %d", floorCandidates[0].Score, SharedAssumptionClusterBaselineScore)
+	}
+
+	// Denser case: 3 requirements all sharing the same assumption, no
+	// mediating Conflict for any pair -> C(3,2)=3 contributing pairs.
+	denseGraph := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Owner: "team-a", Status: ontology.StatusSETTLED, Assumptions: []string{"A-shared"}},
+			{ID: "R-2", Owner: "team-a", Status: ontology.StatusSETTLED, Assumptions: []string{"A-shared"}},
+			{ID: "R-3", Owner: "team-a", Status: ontology.StatusSETTLED, Assumptions: []string{"A-shared"}},
+		},
+		Assumptions: []ontology.Assumption{{ID: "A-shared", Status: ontology.AssumptionHOLDS}},
+	}
+	denseCandidates := InspectSharedAssumptionClusters(denseGraph)
+	if len(denseCandidates) != 1 {
+		t.Fatalf("expected exactly 1 cluster candidate, got %d: %+v", len(denseCandidates), denseCandidates)
+	}
+	wantDense := SharedAssumptionClusterBaselineScore + 2 // 3 pairs, 2 over the 1-pair floor
+	if denseCandidates[0].Score != wantDense {
+		t.Errorf("dense cluster Score = %d, want %d (baseline %d + density bonus for 3 pairs)", denseCandidates[0].Score, wantDense, SharedAssumptionClusterBaselineScore)
+	}
+	if denseCandidates[0].Score <= floorCandidates[0].Score {
+		t.Errorf("denser cluster (3 pairs) must score strictly higher than the 1-pair floor: dense=%d floor=%d", denseCandidates[0].Score, floorCandidates[0].Score)
+	}
+}
+
 func TestAllCandidates_ExitZeroShapeAlwaysAdvisory(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{Requirements: []ontology.Requirement{
