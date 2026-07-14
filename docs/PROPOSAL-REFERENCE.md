@@ -167,7 +167,10 @@ empty), `last_reviewed_at` (ISO date the claim was last re-confronted and
 held, default `""`), `review_after` (ISO date after which re-confrontation is
 due, default `""`), `evidence` (list of free-form evidence strings backing the
 claim, default `[]`), `source_refs` (list of pointers to where the claim
-originated — doc paths, URLs, review ids, commit hashes — default `[]`)
+originated — doc paths, URLs, review ids, commit hashes — default `[]`),
+`blocked_on` (names a Planned tool or absent package that blocks enforcement of
+this claim — marks it feature-blocked debt; default `""`; on an UPDATE, the
+sentinel `"<clear>"` clears an existing value once the blocking feature ships)
 
 ```json
 {
