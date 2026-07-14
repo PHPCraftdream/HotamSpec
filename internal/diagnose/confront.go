@@ -83,8 +83,7 @@ type ConfrontResult struct {
 func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
 	common := corpusCommonTokens(g)
 	candTokens := claimTokens(candidateText, common)
-	candLower := strings.ToLower(candidateText)
-	candMarks := markerHits(candLower)
+	candMarks := markerHits(candidateText)
 
 	replaces := ontology.ReplacesMap(g)
 
@@ -151,7 +150,7 @@ func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r 
 	}
 	sort.Strings(shared)
 
-	opposite := oppositeMarkerBetween(candMarks, markerHits(strings.ToLower(r.Claim)))
+	opposite := oppositeMarkerBetween(candMarks, markerHits(r.Claim))
 
 	threshold := MinLexicalOverlapTokens
 	if opposite != "" {

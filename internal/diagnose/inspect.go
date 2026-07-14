@@ -181,7 +181,21 @@ var stopWords = map[string]struct{}{
 	"can": {}, "could": {}, "may": {}, "might": {}, "not": {}, "no": {},
 }
 
-var tokenRE = regexp.MustCompile(`[a-z0-9]+`)
+// tokenRE tokenizes on Unicode letters/digits (\p{L}\p{N}), not just ASCII
+// [a-z0-9]. This is a necessary companion to the caps-token marker fix
+// below: IsBlockingHit (blocking_hit.go) requires an opposite marker AND at
+// least one shared token that is NOT itself a marker word (the "topical
+// anchor" requirement — see its doc comment) before a hit can BLOCK a
+// land/apply. An ASCII-only tokenizer made every pure-Cyrillic claim
+// tokenize to the empty set, so two Russian claims sharing an obvious
+// topical anchor ("Экспорт записей") would still score zero shared tokens
+// and never clear IsBlockingHit's topical-anchor bar, no matter how strong
+// the caps-token opposite-marker signal was — silently defeating the whole
+// point of this task's Russian-claim blocking demonstration (task
+// #156/R10-b). \p{L}\p{N} is a strict superset of [a-z0-9] for tokenization
+// purposes (every ASCII letter/digit is also \p{L}/\p{N}), so this is
+// additive: no existing English-only claim's token set changes.
+var tokenRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
 
 // MinCorpusSizeForFrequencyFilter is the minimum number of SETTLED claims a
 // graph must carry before corpus-frequency exclusion (corpusCommonTokens)
@@ -313,29 +327,138 @@ var oppositeMarkerPairs = [][2]string{
 	{"only", "any"},
 }
 
-// markerHits returns which side of each opposite-marker pair appears in the
-// (already-lowercased) claim text. "must not" is checked before bare "must"
-// so it isn't double counted as the positive pole.
-func markerHits(lowerClaim string) map[string]string {
+// wordBoundaryRE compiles pattern into a whole-word (ASCII word-boundary
+// aware) matcher: the pattern must not be immediately preceded or followed
+// by an ASCII letter or digit. This is what fixes the substring
+// false-positive bug — plain strings.Contains(lowerClaim, "any") matches
+// inside "company", "many", "anybody"; a `\b`-anchored regexp does not,
+// because Go's RE2 `\b` is itself an ASCII-word-boundary (it does not treat
+// non-ASCII letters, e.g. Cyrillic, as word characters at all — this same
+// property is deliberately reused by capsTokenRE below, where a caps token
+// glued to Cyrillic on either side must still match).
+func wordBoundaryRE(pattern string) *regexp.Regexp {
+	return regexp.MustCompile(`\b` + pattern + `\b`)
+}
+
+// lowerMarkerRE holds the compiled whole-word matchers for the lowercase
+// English heuristic, keyed the same way as oppositeMarkerPairs' literal
+// strings (spaces inside a phrase like "must not" become `\s+` so minor
+// whitespace variation still matches; "mustn't" is handled separately in
+// markerHits, unchanged from before).
+var lowerMarkerRE = map[string]*regexp.Regexp{
+	"never":    wordBoundaryRE(`never`),
+	"always":   wordBoundaryRE(`always`),
+	"must":     wordBoundaryRE(`must`),
+	"must not": wordBoundaryRE(`must\s+not`),
+	"only":     wordBoundaryRE(`only`),
+	"any":      wordBoundaryRE(`any`),
+}
+
+// capsTokenRE holds the compiled whole-word matchers for the ADDITIVE,
+// language-independent reserved-token pass (see capsTokenMarkerHits' doc
+// comment): exact-case ALL-CAPS ASCII tokens, matched with the same `\b`
+// word-boundary rule as lowerMarkerRE — since `\b` is ASCII-word-aware, a
+// token immediately adjacent to another ASCII letter/digit (e.g.
+// "ALWAYSNESS") does NOT match, while a token glued to a non-ASCII letter
+// (e.g. Cyrillic "ВСЕГДАALWAYS") DOES match, because Cyrillic is not an
+// ASCII word character as far as RE2's `\b` is concerned.
+var capsTokenRE = map[string]*regexp.Regexp{
+	"NEVER":    wordBoundaryRE(`NEVER`),
+	"ALWAYS":   wordBoundaryRE(`ALWAYS`),
+	"MUST":     wordBoundaryRE(`MUST`),
+	"MUST NOT": wordBoundaryRE(`MUST\s+NOT`),
+	"ONLY":     wordBoundaryRE(`ONLY`),
+	"ANY":      wordBoundaryRE(`ANY`),
+}
+
+// capsTokenMarkerHits is the ADDITIVE, language-independent detection pass:
+// it scans the ORIGINAL (non-lowercased) claim text for exact-case
+// whole-word matches of the six reserved tokens (ALWAYS, NEVER, MUST NOT,
+// MUST, ONLY, ANY — "MUST NOT" checked before bare "MUST" so it is not
+// double counted as the positive pole, mirroring the existing lowercase
+// precedence logic) and returns hits in the same "a|b" -> side shape
+// markerHits already produces, so the two signals can be unioned directly.
+//
+// This is the mechanism behind the meta-language design (steward design
+// discussion, task #156/R10-b): a business requirement is authored in plain
+// natural language, in ANY language — the reserved CAPS tokens are never
+// written by the business author. They are inserted by the AGENT during the
+// TRANSLATE step of the mediation loop, when it converts a plain-language
+// business claim into a ProposedRequirement's claim text and recognizes a
+// hard universal/prohibition modality (always/never/must/must-not/only-any,
+// in whatever language the source used). See RenderMediationLoopBlock's
+// TRANSLATE step text (claudemd_static.go) for the agent-facing guidance
+// this vocabulary exists to support — the same established pattern as RFC
+// 2119's MUST/SHALL/SHOULD/MAY reserved keywords embedded in prose, except
+// the embedding step here is an agent responsibility, not a human authoring
+// convention.
+//
+// Detection is UNIONED with markerHits' lowercase-English heuristic, never a
+// replacement for it: a claim trips a marker pair if EITHER signal fires.
+func capsTokenMarkerHits(claim string) map[string]string {
 	hits := map[string]string{}
-	hasMustNot := strings.Contains(lowerClaim, "must not") || strings.Contains(lowerClaim, "mustn't")
+	hasMustNot := capsTokenRE["MUST NOT"].MatchString(claim)
+	for _, pair := range oppositeMarkerPairs {
+		a, b := pair[0], pair[1]
+		capsA, capsB := strings.ToUpper(a), strings.ToUpper(b)
+		switch {
+		case a == "must" && b == "must not":
+			if hasMustNot {
+				hits[a+"|"+b] = b
+			} else if capsTokenRE["MUST"].MatchString(claim) {
+				hits[a+"|"+b] = a
+			}
+		default:
+			hasA := capsTokenRE[capsA].MatchString(claim)
+			hasB := capsTokenRE[capsB].MatchString(claim)
+			if hasA && !hasB {
+				hits[a+"|"+b] = a
+			} else if hasB && !hasA {
+				hits[a+"|"+b] = b
+			}
+		}
+	}
+	return hits
+}
+
+// markerHits returns which side of each opposite-marker pair appears in
+// claim, as the UNION of two independent signals: the lowercase-English
+// heuristic (matched against strings.ToLower(claim), whole-word — see
+// wordBoundaryRE for why "company"/"many"/"anybody" no longer
+// false-positive-match "any", the substring bug this fixes) and the
+// caps-token heuristic (capsTokenMarkerHits, matched against the ORIGINAL
+// case, language-independent). "must not"/"MUST NOT" is checked before bare
+// "must"/"MUST" in each pass so it isn't double counted as the positive
+// pole. When both signals fire for the same pair with the SAME side, the
+// lowercase result wins (arbitrary — the sides agree, so it is a no-op
+// choice); a caller never observes disagreement between the two signals for
+// a single pair on a single claim, since each pair has exactly two sides.
+func markerHits(claim string) map[string]string {
+	lowerClaim := strings.ToLower(claim)
+	hits := map[string]string{}
+	hasMustNot := lowerMarkerRE["must not"].MatchString(lowerClaim) || strings.Contains(lowerClaim, "mustn't")
 	for _, pair := range oppositeMarkerPairs {
 		a, b := pair[0], pair[1]
 		switch {
 		case a == "must" && b == "must not":
 			if hasMustNot {
 				hits[a+"|"+b] = b
-			} else if strings.Contains(lowerClaim, "must") {
+			} else if lowerMarkerRE["must"].MatchString(lowerClaim) {
 				hits[a+"|"+b] = a
 			}
 		default:
-			hasA := strings.Contains(lowerClaim, a)
-			hasB := strings.Contains(lowerClaim, b)
+			hasA := lowerMarkerRE[a].MatchString(lowerClaim)
+			hasB := lowerMarkerRE[b].MatchString(lowerClaim)
 			if hasA && !hasB {
 				hits[a+"|"+b] = a
 			} else if hasB && !hasA {
 				hits[a+"|"+b] = b
 			}
+		}
+	}
+	for key, side := range capsTokenMarkerHits(claim) {
+		if _, already := hits[key]; !already {
+			hits[key] = side
 		}
 	}
 	return hits
@@ -411,7 +534,7 @@ func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
 	pre := make([]tokenized, len(settled))
 	for i, r := range settled {
 		lower := strings.ToLower(r.Claim)
-		pre[i] = tokenized{req: r, tokens: claimTokens(r.Claim, common), lower: lower, marks: markerHits(lower)}
+		pre[i] = tokenized{req: r, tokens: claimTokens(r.Claim, common), lower: lower, marks: markerHits(r.Claim)}
 	}
 
 	var out []Candidate
