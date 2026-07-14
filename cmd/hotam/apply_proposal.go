@@ -14,14 +14,11 @@ import (
 
 func cmdApplyProposal(args []string) error {
 	fs := newFlagSet("apply-proposal")
-	domain := fs.String("domain", "", "domain directory containing graph.json (required)")
+	domain := fs.String("domain", "", "domain directory containing graph.json (default: active-domain chain — HOTAM_DOMAIN env, then .hotam-spec-project marker, then "+defaultDomainRel+")")
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
 	fs.Parse(args)
 
-	if *domain == "" {
-		return fmt.Errorf("--domain is required")
-	}
 	if *today == "" {
 		return fmt.Errorf("--today is required (YYYY-MM-DD)")
 	}

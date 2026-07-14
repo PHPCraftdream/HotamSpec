@@ -55,15 +55,12 @@ import (
 // times — the whole point of the batch flag for the ~200-proposal waves.
 func cmdLand(args []string) error {
 	fs := newFlagSet("land")
-	domain := fs.String("domain", "", "domain directory containing graph.json (required)")
+	domain := fs.String("domain", "", "domain directory containing graph.json (default: active-domain chain — HOTAM_DOMAIN env, then .hotam-spec-project marker, then "+defaultDomainRel+")")
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (passed through to gen-spec)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
 	fs.Parse(args)
 
-	if *domain == "" {
-		return fmt.Errorf("--domain is required")
-	}
 	if *today == "" {
 		return fmt.Errorf("--today is required (YYYY-MM-DD)")
 	}

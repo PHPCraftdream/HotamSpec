@@ -180,8 +180,10 @@ Commands:
         writing, and optionally --land (apply+regen+reverify) in the same call.
         Kinds: requirement (--id, --claim, --owner, --status, …), rejection
         (--requirement-id, --reason, --replaced-by), stakeholder (--id,
-        --name, --domain, --why). Complex kinds (Conflict, EntityType, …)
-        keep the hand-authored-JSON path (hotam land <file.json>).
+        --name, --stakeholder-domain, --why). --domain always means the
+        TARGET GRAPH DIRECTORY across every kind (including stakeholder).
+        Complex kinds (Conflict, EntityType, …) keep the hand-authored-JSON
+        path (hotam land <file.json>).
   version, --version
         Print the hotam binary version.
 

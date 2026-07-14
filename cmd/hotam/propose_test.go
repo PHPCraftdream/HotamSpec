@@ -391,9 +391,9 @@ func TestCmdPropose_Stakeholder_ConstructsValidJSON(t *testing.T) {
 		"stakeholder",
 		"--id", "S-propose-test",
 		"--name", "Propose Test Team",
-		"--domain", "hotam-spec-self",
+		"--stakeholder-domain", "hotam-spec-self",
 		"--why", "coverage for the stakeholder subcommand",
-		"--domain-dir", domainDir,
+		"--domain", domainDir,
 		"--out", outPath,
 	})
 	if err != nil {
@@ -409,6 +409,42 @@ func TestCmdPropose_Stakeholder_ConstructsValidJSON(t *testing.T) {
 	}
 	if p.Kind() != "Stakeholder" {
 		t.Errorf("Kind = %q, want Stakeholder", p.Kind())
+	}
+	sp, ok := p.(proposal.ProposedStakeholder)
+	if !ok {
+		t.Fatalf("parsed proposal is %T, want proposal.ProposedStakeholder", p)
+	}
+	if sp.Domain != "hotam-spec-self" {
+		t.Errorf("ProposedStakeholder.Domain = %q, want %q (from --stakeholder-domain)", sp.Domain, "hotam-spec-self")
+	}
+}
+
+// TestCmdPropose_Stakeholder_DomainFlagTargetsGraphDirectory proves --domain
+// on `propose stakeholder` means the TARGET GRAPH DIRECTORY (matching
+// requirement/rejection), not the stakeholder's own business-domain field: an
+// otherwise-valid invocation pointed at a non-existent --domain fails at
+// graph load (confront needs to load the target graph), while
+// --stakeholder-domain is free to name any business domain unrelated to the
+// path.
+func TestCmdPropose_Stakeholder_DomainFlagTargetsGraphDirectory(t *testing.T) {
+	t.Parallel()
+	outPath := filepath.Join(t.TempDir(), "stk.json")
+	missingDomainDir := filepath.Join(t.TempDir(), "does-not-exist")
+
+	err := cmdPropose([]string{
+		"stakeholder",
+		"--id", "S-propose-test-2",
+		"--name", "Propose Test Team 2",
+		"--stakeholder-domain", "some-unrelated-business-domain",
+		"--why", "coverage for --domain semantics",
+		"--domain", missingDomainDir,
+		"--out", outPath,
+	})
+	if err == nil {
+		t.Fatalf("cmdPropose stakeholder with --domain %q should fail (no graph.json there), got success", missingDomainDir)
+	}
+	if _, statErr := os.Stat(outPath); statErr == nil {
+		t.Errorf("proposal JSON should not be written when the target graph directory does not exist")
 	}
 }
 

@@ -177,9 +177,9 @@ func cmdProposeStakeholder(args []string) error {
 	fs := newFlagSet("propose stakeholder")
 	id := fs.String("id", "", "stakeholder id, e.g. S-team-a (required)")
 	name := fs.String("name", "", "human-readable name (required)")
-	domn := fs.String("domain", "", "domain this stakeholder belongs to (required)")
+	domn := fs.String("stakeholder-domain", "", "the stakeholder's own business domain field (required)")
 	why := fs.String("why", "", "rationale for this stakeholder's existence")
-	domainFlag := fs.String("domain-dir", "", "domain directory (default: "+defaultDomainRel+")")
+	domainFlag := fs.String("domain", "", "target graph directory (default: "+defaultDomainRel+") — same meaning as --domain on every other propose subcommand; NOT the stakeholder's own business domain, use --stakeholder-domain for that")
 	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
 	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<id>.json relative to cwd)")
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
@@ -188,7 +188,7 @@ func cmdProposeStakeholder(args []string) error {
 	fs.Parse(args)
 
 	for _, c := range []struct{ flag, label string }{
-		{*id, "id"}, {*name, "name"}, {*domn, "domain"},
+		{*id, "id"}, {*name, "name"}, {*domn, "stakeholder-domain"},
 	} {
 		if strings.TrimSpace(c.flag) == "" {
 			return fmt.Errorf("--%s is required for propose stakeholder", c.label)

@@ -39,9 +39,13 @@ const defaultDomainName = "hotam-spec-self"
 // Resolution tiers (highest priority first):
 //
 //  1. Explicit --domain <path> (domainFlag != ""): resolved verbatim via
-//     filepath.Abs. No project-root resolution, no stderr notice — byte-
-//     identical to pre-active-domain behavior so every script/flag-based call
-//     is unaffected.
+//     filepath.Abs. No project-root resolution — byte-identical to
+//     pre-active-domain behavior so every script/flag-based call is
+//     unaffected. The sole exception is an advisory (never fatal) N5 hint on
+//     stderr when domainFlag has no path separator AND the resolved path
+//     does not exist — a likely sign the caller passed a domain NAME (as
+//     `hotam use` accepts) where a PATH was expected; see the inline comment
+//     at the hint's call site for the exact conditions.
 //  2. HOTAM_DOMAIN env var: a domain NAME resolved as <root>/domains/<name>.
 //     Emits one stderr notice ("resolved domain: <name> (via HOTAM_DOMAIN env)").
 //  3. active_domain recorded in the .hotam-spec-project marker file
@@ -59,6 +63,21 @@ func resolveDomain(domainFlag string) (string, error) {
 		abs, err := filepath.Abs(domainFlag)
 		if err != nil {
 			return "", fmt.Errorf("resolve --domain %q: %w", domainFlag, err)
+		}
+		// N5 advisory hint (never fatal, never blocks): a bare NAME with no
+		// path separator that does not exist on disk is almost certainly a
+		// user passing an active-domain NAME (the kind `hotam use` accepts)
+		// where this flag expects a PATH — e.g. --domain hotam-spec-self
+		// instead of --domain domains/hotam-spec-self. Without this, the
+		// resulting error surfaces later as a confusing "no such file"
+		// buried inside a graph-load path. A single-segment name that DOES
+		// exist (a legitimately named directory checked out at CWD) must
+		// NOT get a spurious hint, so this only fires when both conditions
+		// hold.
+		if !strings.ContainsAny(domainFlag, "/\\") {
+			if _, statErr := os.Stat(abs); statErr != nil {
+				fmt.Fprintf(os.Stderr, "hint: --domain %q looks like a domain NAME, not a path, and no such directory exists here — did you mean %q?\n", domainFlag, "domains/"+domainFlag)
+			}
 		}
 		return abs, nil
 	}

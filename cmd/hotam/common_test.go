@@ -191,6 +191,88 @@ func TestResolveDomain_FourTierPriority(t *testing.T) {
 		}
 	})
 
+	// N5: a bare --domain NAME (no path separator) that does not exist on
+	// disk gets an advisory stderr hint suggesting the domains/<name> path —
+	// review-6 R6-f issue 3. This tier-1 branch never fails the command; the
+	// hint is purely informational.
+	t.Run("tier1_bare_missing_name_gets_hint", func(t *testing.T) {
+		// cwd-relative: run from a fresh temp dir so "hotam-spec-self" (or
+		// whatever bare name we pass) is guaranteed absent there.
+		cwd, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
+		}
+		tmp := t.TempDir()
+		if err := os.Chdir(tmp); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chdir(cwd) })
+
+		var got string
+		stderr := captureStderr(t, func() {
+			g, err := resolveDomain("hotam-spec-self")
+			if err != nil {
+				t.Fatalf("resolveDomain: %v", err)
+			}
+			got = g
+		})
+		want, err := filepath.Abs("hotam-spec-self")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Errorf("resolveDomain(bare name) = %q, want abs %q (hint must not change the returned path)", got, want)
+		}
+		if !strings.Contains(stderr, `--domain "hotam-spec-self"`) || !strings.Contains(stderr, `did you mean "domains/hotam-spec-self"`) {
+			t.Errorf("expected N5 hint mentioning the bare name and the domains/<name> suggestion, got stderr:\n%s", stderr)
+		}
+	})
+
+	// N5 negative case 1: a --domain VALUE containing a path separator must
+	// NOT get the hint even if it doesn't exist, because a path (as opposed
+	// to a bare name) is not the "looks like hotam use's NAME arg" mistake
+	// the hint targets.
+	t.Run("tier1_path_with_separator_no_hint_even_if_missing", func(t *testing.T) {
+		rel := filepath.Join("domains", "does-not-exist-either")
+		var stderr string
+		stderr = captureStderr(t, func() {
+			if _, err := resolveDomain(rel); err != nil {
+				t.Fatalf("resolveDomain: %v", err)
+			}
+		})
+		if stderr != "" {
+			t.Errorf("a --domain value containing a path separator must not get the N5 hint, got stderr:\n%s", stderr)
+		}
+	})
+
+	// N5 negative case 2: a bare single-segment name that DOES exist on disk
+	// (a legitimately named directory checked out at CWD) must NOT get a
+	// spurious hint.
+	t.Run("tier1_bare_name_that_exists_no_hint", func(t *testing.T) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
+		}
+		tmp := t.TempDir()
+		if err := os.Chdir(tmp); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chdir(cwd) })
+
+		if err := os.Mkdir(filepath.Join(tmp, "acme"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+
+		stderr := captureStderr(t, func() {
+			if _, err := resolveDomain("acme"); err != nil {
+				t.Fatalf("resolveDomain: %v", err)
+			}
+		})
+		if stderr != "" {
+			t.Errorf("a bare name that resolves to a REAL existing directory must not get the N5 hint (false positive), got stderr:\n%s", stderr)
+		}
+	})
+
 	// Empty marker (legacy/empty file) degrades to the silent legacy default.
 	t.Run("empty_marker_falls_through_silently", func(t *testing.T) {
 		root := t.TempDir()
