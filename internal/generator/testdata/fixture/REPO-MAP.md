@@ -29,25 +29,25 @@ reader: (unresolved-reader)
 
 **Tools** (`cmd/hotam/`, dispatched by `hotam <command>` / `go run ./cmd/hotam <command>`)
 
-- `cmd/hotam/apply_proposal.go` — mechanical writer for steward-approved JSON proposals.  →  R-tool-apply-proposal
-- `cmd/hotam/gate_cmd.go` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.  →  R-tool-gate
-- `cmd/hotam/gen_spec.go` — regenerates docs/gen/ from the executable model (methodology + graph), making drift structurally impossible.  →  R-tool-gen-spec
-- `cmd/hotam/all_violations.go` — print all invariant violations; exit 1 if any.
-- `cmd/hotam/what_now.go` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.  →  R-tool-what-now
-- `cmd/hotam/init_cmd.go` — scaffold a new domain from scratch, anywhere on disk.
-- `cmd/hotam/req.go` — compact agentic read interface over the domain graph (show/list/search/context/related).
-- `cmd/hotam/due.go` — advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements.
-- `cmd/hotam/inspect.go` — advisory listing of semantic conflict candidates with evidence, filtered by score.
-- `cmd/hotam/confront.go` — CONFRONT step of the mediation loop: duplicate/re-litigation guard before writing.
-- `cmd/hotam/land.go` — apply a proposal, regenerate docs, re-check invariants: the primary land pipeline.
-- `cmd/hotam/propose.go` — draft proposal JSON from flags + automatic confront check + optional --land.
+- `hotam gen-spec` — regenerates docs/gen/ from the executable model (methodology + graph), making drift structurally impossible.
+- `hotam what-now` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.
+- `hotam apply-proposal` — mechanical writer for steward-approved JSON proposals.
+- `hotam gate` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.
+- `hotam all-violations` — prints all invariant violations for a domain graph, exiting 1 if any are found.
+- `hotam req` — compact agentic read interface over the domain graph, answering 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc.
+- `hotam brief` — single-call orientation aggregator for any anchor: the full card + one-hop neighborhood + freshness (for Requirements), replacing the separate req show + req context + req related + due round-trips.
+- `hotam due` — advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements; never gates, exit code always 0.
+- `hotam status` — single-shot compact summary combining what-now's top action + debt, due's freshness counts, and all-violations' violation count, so an agent doesn't need to run all three separately.
+- `hotam inspect` — advisory listing of semantic conflict candidates with evidence: shared-assumption clusters, entity-state suspects, lexical claim overlap, axis co-reference.
+- `hotam confront` — the CONFRONT step's tool: ranks a candidate claim's lexical overlap against SETTLED reality and REJECTED history before anything is written.
+- `hotam land` — single CLI entry point over gate/gate_status/closure.
+- `hotam init` — scaffolds a new domain with a minimal graph.json (seed Stakeholder + seed SETTLED Requirement, all-violations=0 immediately), manifest.json, docs/gen/, and a README.md.
+- `hotam init-project` — bootstraps an external business project's full Hotam-Spec layout in one call: scaffolds a base domain, writes the project-root marker, and renders the root crystal + all docs/gen/* via gen-spec.
+- `hotam use` — sets the active-domain preference for the current project by recording it in the project-root marker, so a bare `hotam <command>` targets the chosen domain.
+- `hotam propose` — drafts valid proposal JSON from flags and runs an automatic confront check before writing, collapsing the draft→confront→write→(land) workflow into one invocation.
+- `hotam version` — prints the hotam binary's version, commit, and build date.
 
-Registered in the methodology but not yet implemented as `hotam` subcommands: attention, attention_hook,
-audit_atomicity, audit_tensions, claude_md_diff_watch, closure, context, context_producer,
-create_agent, create_axis, create_domain, create_entity_type, emit_cipher, gate_status,
-invoke_agent, mark_revisit_evaluated, review, setup_context_hook, setup_hooks,
-spawn_agent, spawn_log_isolation_status, ticket_comment, ticket_create, ticket_edit, ticket_list,
-ticket_move, ticket_show.
+Registered in the methodology but not yet implemented as `hotam` subcommands: attention, attention_hook, audit_atomicity, audit_tensions, claude_md_diff_watch, closure, context, context_producer, create_agent, create_axis, create_domain, create_entity_type, emit_cipher, gate_status, invoke_agent, mark_revisit_evaluated, review, setup_context_hook, setup_hooks, spawn_agent, spawn_log_isolation_status, ticket_comment, ticket_create, ticket_edit, ticket_list, ticket_move, ticket_show.
 
 **Domain content** (`domains/fixture-domain/`)
 

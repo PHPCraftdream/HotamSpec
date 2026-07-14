@@ -1121,3 +1121,60 @@ func TestRenderEmbeddedToolsBlock_IsPureRegistryProjection(t *testing.T) {
 		}
 	}
 }
+
+// TestRenderRepoMapToolsSection_ListsEveryImplementedAndPlannedTool guards
+// REPO-MAP.md's Tools section (review-6 R6-g) against the same drift class
+// its own former doc comment flagged: the section had drifted twice while
+// hand-maintained (found 2026-07-13: 5 of the then-10 Implemented commands
+// missing). renderRepoMapToolsSection (repomap_data.go) now projects the
+// section from methodology.Tools directly, mirroring
+// TestRenderEmbeddedToolsBlock_IsPureRegistryProjection's registry-projection
+// shape for the EMBEDDED-TOOLS block. This test asserts every Implemented
+// tool gets its own `hotam <command>` bullet (with its registry Claim text)
+// and every Planned tool's command name appears in the trailing
+// not-yet-implemented roster — both directions, so neither an omission nor
+// an invented entry can pass silently.
+func TestRenderRepoMapToolsSection_ListsEveryImplementedAndPlannedTool(t *testing.T) {
+	t.Parallel()
+	out := renderRepoMapToolsSection()
+
+	var implemented, planned []methodology.Tool
+	for _, tl := range methodology.Tools.All() {
+		if tl.Status == methodology.Implemented {
+			implemented = append(implemented, tl)
+		} else {
+			planned = append(planned, tl)
+		}
+	}
+	if len(implemented) == 0 {
+		t.Fatal("precondition: registry has no Implemented tools — test is meaningless")
+	}
+	if len(planned) == 0 {
+		t.Fatal("precondition: registry has no Planned tools — test is meaningless")
+	}
+
+	// Every Implemented tool must get its own bullet: `hotam <display>` — <Claim>.
+	for _, tl := range implemented {
+		display := strings.ReplaceAll(tl.Command, "_", "-")
+		wantBullet := "- `hotam " + display + "` — " + tl.Claim
+		if !strings.Contains(out, wantBullet) {
+			t.Errorf("Implemented tool %q: missing bullet %q in Tools section:\n%s", tl.Command, wantBullet, out)
+		}
+	}
+
+	// Every Planned tool's command name must appear in the trailing roster.
+	for _, tl := range planned {
+		if !strings.Contains(out, tl.Command) {
+			t.Errorf("Planned tool %q: not listed in the not-yet-implemented roster:\n%s", tl.Command, out)
+		}
+	}
+
+	// Reverse direction: no Planned tool gets an Implemented-style bullet.
+	for _, tl := range planned {
+		display := strings.ReplaceAll(tl.Command, "_", "-")
+		badBullet := "- `hotam " + display + "` — "
+		if strings.Contains(out, badBullet) {
+			t.Errorf("Planned tool %q should NOT have an Implemented-style bullet (drift: invented command):\n%s", tl.Command, out)
+		}
+	}
+}

@@ -21,7 +21,9 @@ func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, d
 	lines := []string{Banner, ReaderHeaderLine("REPO_MAP", g), ""}
 	lines = append(lines, "# REPO-MAP.md — Repository file index (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, repoMapFrameworkAndToolsContent)
+	lines = append(lines, repoMapFrameworkBodyContent)
+	lines = append(lines, "")
+	lines = append(lines, renderRepoMapToolsSection())
 	lines = append(lines, "")
 
 	lines = append(lines, "**Domain content** (`domains/"+domainName+"/`)")

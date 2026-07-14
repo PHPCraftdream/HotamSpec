@@ -65,7 +65,7 @@ go run ./cmd/hotam <command> [flags] [args]
 
 ## CLI commands
 
-The `hotam` binary (see `cmd/hotam/main.go`) implements fifteen commands:
+The `hotam` binary (see `cmd/hotam/main.go`) implements 17 commands:
 
 ```
 hotam init <dir> [--name <domain-name>]
@@ -90,7 +90,13 @@ hotam use <domain-name>
         if <root>/domains/<name>/graph.json does not exist.
 
 hotam gen-spec [--domain <path>] [--today YYYY-MM-DD] [--claude-md <path>]
+                [--profile consumer|full]
         Generate all docs/gen/*.md + graph.json for a domain graph.
+        --profile overrides the domain's manifest.json gen_profile for this
+        run (without rewriting it): consumer skips thinking/*.md, Planned
+        tool pages, and empty atoms docs for a leaner consumer-facing
+        output; full is the default, backward-compatible output. Omitted
+        (empty) resolves from the domain's manifest, defaulting to full.
 
 hotam what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD]
         Print the top-N diagnosed signals (default 20).
@@ -138,12 +144,16 @@ hotam inspect [--domain <path>] [--json] [--limit N] [--min-score N]
         overlap, axis co-reference). --min-score (default 5) suppresses
         low-signal candidates; 0 shows all. Never gates; exit code always 0.
 
-hotam confront <text> [--domain <path>] [--file <path>] [--json]
+hotam confront <text> [--domain <path>] [--file <path>] [--proposal <path>] [--json]
         CONFRONT step of the mediation loop: checks a candidate claim for
         lexical overlap with SETTLED requirements (duplicate guard) and
         REJECTED history (anti-relitigation) before anything is written.
         <text> is a quoted positional; --file <path> reads a long draft.
-        Reuses the inspect overlap engine. Never gates; exit code always 0.
+        --proposal <path> confronts a full draft proposal JSON file instead:
+        runs both the lexical check AND a structural check (shared-assumption
+        / axis overlap) against the proposal's kind; mutually exclusive with
+        <text>/--file. Reuses the inspect overlap engine. Never gates; exit
+        code always 0.
 
 hotam propose <requirement|rejection|stakeholder> [flags]
         Draft a proposal JSON from flags (schema knowledge lives in the
