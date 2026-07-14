@@ -185,6 +185,55 @@ func searchMarkersUpward(start string, maxDepth int) (string, bool) {
 	return "", false
 }
 
+// DetectAncestorMarker walks upward from start — the same
+// MaxMarkerSearchDepth-bounded ancestor walk ProjectRoot()'s R3 tier
+// (searchMarkersUpward) performs — and reports the first ancestor directory
+// that hasNativeMarker would accept as a project root (any single RELIABLE
+// marker, or the SECONDARY-marker quorum). It exists so tests that need a
+// GENUINELY marker-free CWD ancestry (not just an empty leaf directory) can
+// verify that precondition explicitly and skip with a clear, actionable
+// message when the host machine's environment violates it, instead of either
+// silently passing on a lucky machine or failing red as if production code
+// were broken.
+//
+// It is a thin, READ-ONLY diagnostic: it does not change ProjectRoot()'s or
+// ProjectRootOrRaise()'s resolution in any way, and it is neither more nor
+// less permissive than hasNativeMarker (same reliable-marker-OR-secondary-
+// quorum rule). Returns the first ancestor where a marker matched, the marker
+// names present there that satisfy the rule, and true; or ("", nil, false)
+// when the full search depth finds nothing.
+func DetectAncestorMarker(start string) (ancestor string, matched []string, found bool) {
+	abs, err := filepath.Abs(start)
+	if err != nil {
+		return "", nil, false
+	}
+	current := abs
+	for i := 0; i <= MaxMarkerSearchDepth; i++ {
+		var present []string
+		for _, rel := range ReliableMarkerPaths {
+			if _, err := os.Stat(filepath.Join(current, rel)); err == nil {
+				present = append(present, rel)
+			}
+		}
+		var secondary []string
+		for _, rel := range SecondaryMarkerPaths {
+			if _, err := os.Stat(filepath.Join(current, rel)); err == nil {
+				secondary = append(secondary, rel)
+			}
+		}
+		if len(present) > 0 || len(secondary) >= SecondaryMarkerMinCount {
+			matched = append(append(matched, present...), secondary...)
+			return current, matched, true
+		}
+		parent := filepath.Dir(current)
+		if parent == current {
+			break
+		}
+		current = parent
+	}
+	return "", nil, false
+}
+
 func searchMarkerFileUpward(start string, maxDepth int) (string, bool) {
 	abs, err := filepath.Abs(start)
 	if err != nil {
