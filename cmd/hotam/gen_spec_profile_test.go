@@ -368,3 +368,49 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 		t.Errorf("hand-placed file must STILL survive the consumer→full pass: %v", err)
 	}
 }
+
+// TestGenSpec_ConsumerRequirementsToolsIndexReferenceExistsOnDisk proves the
+// R7-a fix (F2, review-6 @fl follow-up on task #140): the consumer-profile
+// REQUIREMENTS.md closing section's "Implemented commands" pointer must be
+// domain-prefixed AND resolve to a real file on disk after a real
+// consumer-profile gen-spec run — mirroring how claudemd_links_test.go proves
+// the root crystal's own cross-references exist on disk (task #135), applied
+// here to task #140's consumer closing section instead. Before the fix the
+// pointer read the bare `docs/gen/tools/INDEX.md` (missing the
+// domains/<name>/ prefix every other cross-reference in this codebase
+// follows), which would resolve at the repo root — a path that never exists,
+// since every domain's generated docs live under domains/<name>/docs/gen/
+// (see initDomain / repoMapDocs in gen_spec.go).
+func TestGenSpec_ConsumerRequirementsToolsIndexReferenceExistsOnDisk(t *testing.T) {
+	t.Parallel()
+
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "test-linkcheck-requirements")
+	if _, err := initDomain(domainDir, "test-linkcheck-requirements"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
+		t.Fatalf("genSpec consumer: %v", err)
+	}
+
+	reqPath := filepath.Join(domainDir, "docs", "gen", "REQUIREMENTS.md")
+	content, err := os.ReadFile(reqPath)
+	if err != nil {
+		t.Fatalf("read REQUIREMENTS.md: %v", err)
+	}
+	text := string(content)
+
+	domainName := domainNameFromDir(domainDir)
+	wantToken := "domains/" + domainName + "/docs/gen/tools/INDEX.md"
+	if !strings.Contains(text, wantToken) {
+		t.Fatalf("consumer REQUIREMENTS.md must reference %q, got:\n%s", wantToken, text)
+	}
+	if strings.Contains(text, "`docs/gen/tools/INDEX.md`") {
+		t.Errorf("consumer REQUIREMENTS.md must NOT reference the bare, non-domain-prefixed form `docs/gen/tools/INDEX.md`")
+	}
+
+	resolved := filepath.Join(repoRoot, filepath.FromSlash(wantToken))
+	if _, err := os.Stat(resolved); err != nil {
+		t.Errorf("REQUIREMENTS.md references %q but it does not exist on disk at %s: %v", wantToken, resolved, err)
+	}
+}

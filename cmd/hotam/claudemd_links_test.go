@@ -6,6 +6,10 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/generator"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // crystalPathTokenRE extracts backtick-wrapped path-like tokens from a
@@ -24,29 +28,47 @@ var crystalBacktickSpanRE = regexp.MustCompile("`([^`\n]+)`")
 // trailing period ending a sentence, e.g. "...HISTORY.md.").
 var pathLikeSuffixRE = regexp.MustCompile(`\.(md|json)\.?$`)
 
-// extractCrystalPathTokens scans rendered crystal text for backtick-wrapped
-// path tokens that reference a docs/gen/ or domains/ relative file path, and
-// returns the cleaned (trailing-sentence-period stripped) path list, sorted
-// and deduplicated. This is the link-existence test's extraction logic
-// (task #135 / R6-e): every such token is a claim the crystal makes about a
-// file that must actually exist on disk once generated.
+// barePathTokenRE catches a bare (NOT backtick-wrapped) docs/gen/ or
+// domains/ relative path sitting directly in prose, e.g. the F1 regression
+// (review-6 @fl follow-up on task #135/R7-a): claudemd.go's RECENTLY-REJECTED
+// footer shipped "full history + WHY: docs/gen/HISTORY.md, `hotam req show
+// <id>`)_" with the docs/gen/HISTORY.md half OUTSIDE backticks, which made it
+// invisible to crystalBacktickSpanRE by construction — a bare path is still a
+// claim the crystal makes about a file's existence, and must be held to the
+// same standard whether or not the author remembered backticks. Scoped to a
+// single path-segment charset ([A-Za-z0-9_./-]) with no interior whitespace,
+// so it cannot straddle across unrelated prose; anchored to require an actual
+// docs/gen/ or domains/ substring plus a .md/.json suffix, same as the
+// backtick-scoped filters below, to avoid false positives against unrelated
+// prose (verified empirically against this repo's own rendered crystal —
+// see TestExtractCrystalPathTokens_BroadenedExtractorCapturesBareF1Regression).
+var barePathTokenRE = regexp.MustCompile(`[A-Za-z0-9_./-]*(?:docs/gen/|domains/)[A-Za-z0-9_./-]*\.(?:md|json)`)
+
+// extractCrystalPathTokens scans rendered crystal text for path tokens —
+// BOTH backtick-wrapped AND bare (unwrapped) — that reference a docs/gen/ or
+// domains/ relative file path, and returns the cleaned (trailing-sentence-
+// period stripped) path list, sorted and deduplicated. This is the
+// link-existence test's extraction logic (task #135 / R6-e, broadened in
+// task #142 / R7-a to close the bare-path blind spot the original
+// backtick-only extractor had): every such token is a claim the crystal makes
+// about a file that must actually exist on disk once generated.
 func extractCrystalPathTokens(t *testing.T, text string) []string {
 	t.Helper()
 	seen := map[string]bool{}
 	var out []string
-	for _, m := range crystalBacktickSpanRE.FindAllStringSubmatch(text, -1) {
-		candidate := m[1]
+
+	addCandidate := func(candidate string) {
 		// Reject tokens that carry whitespace (a command like "hotam gate
 		// <target-anchor>" or "hotam status --json") -- a real relative file
 		// path is a single unbroken token with no interior space.
 		if strings.ContainsAny(candidate, " \t") {
-			continue
+			return
 		}
 		if !strings.Contains(candidate, "docs/gen/") && !strings.HasPrefix(candidate, "domains/") {
-			continue
+			return
 		}
 		if !pathLikeSuffixRE.MatchString(candidate) {
-			continue
+			return
 		}
 		// Reject templated (non-literal) paths carrying a "<placeholder>"
 		// segment, e.g. "domains/X/docs/gen/thinking/<slug>.md" in the
@@ -54,7 +76,7 @@ func extractCrystalPathTokens(t *testing.T, text string) []string {
 		// construction (it names the whole directory's file-naming scheme,
 		// not one concrete file), so it is not a link-existence claim.
 		if strings.Contains(candidate, "<") || strings.Contains(candidate, ">") {
-			continue
+			return
 		}
 		// Strip a trailing sentence-ending period that isn't part of the
 		// extension itself (".md." -> ".md"), leaving ".json"/".md" intact.
@@ -65,10 +87,22 @@ func extractCrystalPathTokens(t *testing.T, text string) []string {
 			cleaned = strings.TrimSuffix(cleaned, ".")
 		}
 		if seen[cleaned] {
-			continue
+			return
 		}
 		seen[cleaned] = true
 		out = append(out, cleaned)
+	}
+
+	for _, m := range crystalBacktickSpanRE.FindAllStringSubmatch(text, -1) {
+		addCandidate(m[1])
+	}
+	// Bare (non-backtick) tokens: scan the WHOLE text (backticks included --
+	// a bare token can't match inside a backtick span anyway since the regex
+	// has no backtick in its charset, and a genuine backtick-wrapped path is
+	// already covered by the loop above; this second pass exists purely to
+	// catch tokens that were never backtick-wrapped at all).
+	for _, m := range barePathTokenRE.FindAllString(text, -1) {
+		addCandidate(m)
 	}
 	return out
 }
@@ -226,5 +260,62 @@ func TestCrystalLinks_FullProfileStillReferencesThinkingDir(t *testing.T) {
 	entries, err := os.ReadDir(thinkingDir)
 	if err != nil || len(entries) == 0 {
 		t.Fatalf("test precondition failed: full profile should have written docs/gen/thinking/*.md, dir=%s err=%v entries=%d", thinkingDir, err, len(entries))
+	}
+}
+
+// TestCrystalLinks_RealDomainRecentlyRejectedFooterReferencesExistOnDisk is
+// the F1 regression test (task #142 / R7-a, @fl follow-up on task #135):
+// claudemd.go's RECENTLY-REJECTED footer ("_(showing %d of %d ... full
+// history + WHY: ...)_") only renders when the domain has MORE than
+// recentlyRejectedCap (3) REJECTED-with-replaces requirements (see
+// RenderRecentlyRejectedBlock's `if total > recentlyRejectedCap` gate in
+// internal/generator/claudemd.go) — a freshly-scaffolded initDomain() test
+// fixture has zero, so TestCrystalLinks_EveryReferencedPathExistsOnDisk above
+// never actually exercises this branch regardless of how broad its extractor
+// is. This repo's OWN domains/hotam-spec-self graph has 41 such entries
+// (see this repo's root CLAUDE.md's own RECENTLY-REJECTED block), so
+// rendering ITS graph is what reaches the footer at all.
+//
+// Read-only per this task's constraints: loads domains/hotam-spec-self's
+// REAL graph.json (never mutated) and renders the crystal purely in memory
+// via generator.RenderClaudeMDFromTemplate (no genSpec call, so nothing is
+// written to domains/hotam-spec-self/docs/gen/ or anywhere else) — then
+// resolves every extracted path token against THIS repo's real root, whose
+// domains/hotam-spec-self/docs/gen/*.md files already exist on disk from
+// ordinary development (never written by this test).
+//
+// Before the F1 fix, this test failed: the footer's bare "docs/gen/HISTORY.md"
+// (no domains/hotam-spec-self/ prefix) resolved to <repoRoot>/docs/gen/
+// HISTORY.md, which does not exist (this repo's own root has no docs/gen/ —
+// every domain's docs live under domains/<name>/docs/gen/). Confirmed
+// manually during this task: temporarily reverting just the footer's fix
+// back to the bare form made this test fail with exactly that missing path;
+// re-applying the fix made it pass again.
+func TestCrystalLinks_RealDomainRecentlyRejectedFooterReferencesExistOnDisk(t *testing.T) {
+	t.Parallel()
+
+	const graphPath = "../../domains/hotam-spec-self/graph.json"
+	g, err := loader.LoadGraph(graphPath)
+	if err != nil {
+		t.Fatalf("LoadGraph(%s): %v", graphPath, err)
+	}
+	domainGraphs := map[string]*ontology.Graph{"hotam-spec-self": g}
+	text := generator.RenderClaudeMDFromTemplate(g, "hotam-spec-self", "../..", 15000, domainGraphs, "2026-07-14", false)
+
+	const footerMarker = "full history + WHY:"
+	if !strings.Contains(text, footerMarker) {
+		t.Fatalf("test precondition failed: rendered crystal does not contain the RECENTLY-REJECTED footer (marker %q) — domains/hotam-spec-self must carry more than recentlyRejectedCap (3) REJECTED-with-replaces requirements for this branch to render; got:\n%s", footerMarker, text)
+	}
+
+	repoRoot := "../.."
+	tokens := extractCrystalPathTokens(t, text)
+	if len(tokens) == 0 {
+		t.Fatalf("extracted zero path tokens from the rendered crystal -- extraction regex likely broken")
+	}
+	for _, tok := range tokens {
+		p := resolveCrystalPathToken(repoRoot, tok)
+		if _, err := os.Stat(p); err != nil {
+			t.Errorf("crystal references %q but it does not exist on disk at %s: %v", tok, p, err)
+		}
 	}
 }

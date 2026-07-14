@@ -9,7 +9,7 @@ func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
 		name string
 		a, b string
 	}{
-		{"Requirements", BuildRequirements(g, false), BuildRequirements(g, false)},
+		{"Requirements", BuildRequirements(g, "hotam-spec-self", false), BuildRequirements(g, "hotam-spec-self", false)},
 		{"Tensions", BuildTensions(g), BuildTensions(g)},
 		{"Open", BuildOpen(g), BuildOpen(g)},
 		{"Unenforced", BuildUnenforced(g), BuildUnenforced(g)},

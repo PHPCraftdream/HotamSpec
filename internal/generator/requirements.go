@@ -28,12 +28,18 @@ import (
 //     an external domain with one seed requirement otherwise gets a
 //     REQUIREMENTS.md dominated by ~27KB of framework internals. They are
 //     replaced by a short closing section: a brief contract statement plus
-//     pointers to where the full detail lives (docs/gen/tools/INDEX.md, the
-//     root crystal, and — since the consumer profile never writes
-//     docs/gen/thinking/*.md, see genSpec's `if !consumer { thinkingDocs :=
-//     ... }` gate in cmd/hotam/gen_spec.go — a note that `--profile full`
-//     unlocks the full methodology reference on demand).
-func BuildRequirements(g *ontology.Graph, consumer bool) string {
+//     pointers to where the full detail lives (domains/<name>/docs/gen/
+//     tools/INDEX.md, the root crystal, and — since the consumer profile
+//     never writes docs/gen/thinking/*.md, see genSpec's `if !consumer {
+//     thinkingDocs := ... }` gate in cmd/hotam/gen_spec.go — a note that
+//     `--profile full` unlocks the full methodology reference on demand).
+//
+// domainName is used only by the consumer-profile closing section (to
+// domain-prefix the tools/INDEX.md pointer, matching the repo-root-relative
+// convention every other cross-reference inside a generated docs/gen/*.md
+// file follows — see domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md);
+// the full-profile path never reads it.
+func BuildRequirements(g *ontology.Graph, domainName string, consumer bool) string {
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 	stakeholders := NarrativeOrder(g.Stakeholders, func(s ontology.Stakeholder) int { return s.DeclOrder })
 	assumptions := NarrativeOrder(g.Assumptions, func(a ontology.Assumption) int { return a.DeclOrder })
@@ -155,7 +161,7 @@ func BuildRequirements(g *ontology.Graph, consumer bool) string {
 	lines = append(lines, "---")
 	lines = append(lines, "")
 	if consumer {
-		lines = append(lines, consumerClosingSection()...)
+		lines = append(lines, consumerClosingSection(domainName)...)
 	} else {
 		lines = append(lines, BuildToolDerivedSection())
 
@@ -194,7 +200,16 @@ func BuildRequirements(g *ontology.Graph, consumer bool) string {
 // artifact the consumer profile skips (genSpec's `if !consumer { thinkingDocs
 // := ... }` gate, cmd/hotam/gen_spec.go) and --profile full is what
 // re-enables it, so the pointer never dangles.
-func consumerClosingSection() []string {
+//
+// The tools/INDEX.md pointer is domain-prefixed
+// ("domains/<domainName>/docs/gen/tools/INDEX.md"), matching the
+// repo-root-relative convention every other cross-reference inside a
+// generated docs/gen/*.md file follows (see
+// domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md) — a bare
+// "docs/gen/tools/INDEX.md" would resolve at the repo root, which is never
+// where a domain's generated docs live (domains/<name>/docs/gen/, see
+// cmd/hotam/init_project.go).
+func consumerClosingSection(domainName string) []string {
 	return []string{
 		"## About Hotam-Spec",
 		"",
@@ -202,7 +217,7 @@ func consumerClosingSection() []string {
 		"",
 		"This file covers this domain's own requirement roster only. For the framework itself:",
 		"",
-		"- **Implemented commands** — `docs/gen/tools/INDEX.md`.",
+		"- **Implemented commands** — `domains/" + domainName + "/docs/gen/tools/INDEX.md`.",
 		"- **Operating loop** (how an agent should read and act on this model) — the root crystal: `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.",
 		"- **Full methodology reference** (every §-section's Canon/Narrative/Why) — not generated under this profile; regenerate with `hotam gen-spec --profile full` if ever needed.",
 		"",

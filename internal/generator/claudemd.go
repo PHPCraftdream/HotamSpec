@@ -530,7 +530,7 @@ func RenderRecentlyRejectedBlock(g *ontology.Graph) string {
 	if total > recentlyRejectedCap {
 		lines = append(lines, "")
 		lines = append(lines, fmt.Sprintf(
-			"_(showing %d of %d, alphabetical by id — full history + WHY: docs/gen/HISTORY.md, `hotam req show <id>`)_",
+			"_(showing %d of %d, alphabetical by id — full history + WHY: `spec/docs/gen/HISTORY.md`, `hotam req show <id>`)_",
 			len(shown), total,
 		))
 	}

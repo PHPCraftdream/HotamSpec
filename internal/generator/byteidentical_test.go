@@ -114,7 +114,7 @@ func truncate(s string, n int) string {
 func TestBuildRequirements_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildRequirements(g, false)
+	got := BuildRequirements(g, "hotam-spec-self", false)
 	want, err := os.ReadFile("testdata/fixture/REQUIREMENTS.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
@@ -146,7 +146,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		fn   func(*ontology.Graph) string
 	}
 	builds := []build{
-		{"REQUIREMENTS.md", func(g *ontology.Graph) string { return BuildRequirements(g, false) }},
+		{"REQUIREMENTS.md", func(g *ontology.Graph) string { return BuildRequirements(g, "hotam-spec-self", false) }},
 		{"TENSIONS.md", BuildTensions},
 		{"OPEN.md", BuildOpen},
 		{"UNENFORCED.md", BuildUnenforced},
@@ -194,7 +194,7 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		fn   func(*ontology.Graph) string
 	}
 	builds := []build{
-		{"REQUIREMENTS.md", func(g *ontology.Graph) string { return BuildRequirements(g, false) }},
+		{"REQUIREMENTS.md", func(g *ontology.Graph) string { return BuildRequirements(g, "hotam-spec-self", false) }},
 		{"TENSIONS.md", BuildTensions},
 		{"OPEN.md", BuildOpen},
 		{"UNENFORCED.md", BuildUnenforced},

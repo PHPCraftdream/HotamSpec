@@ -19,8 +19,8 @@ func TestBuildRequirements_ConsumerProfileDropsFrameworkNoise(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 
-	full := BuildRequirements(g, false)
-	consumer := BuildRequirements(g, true)
+	full := BuildRequirements(g, "hotam-spec-self", false)
+	consumer := BuildRequirements(g, "hotam-spec-self", true)
 
 	// Marker strings characteristic of each removed section.
 	const toolDerivedMarker = "## Tool-derived requirements" // BuildToolDerivedSection's own heading text
@@ -71,6 +71,38 @@ func TestBuildRequirements_ConsumerProfileDropsFrameworkNoise(t *testing.T) {
 	}
 }
 
+// TestBuildRequirements_ConsumerClosingSectionDomainPrefixesToolsIndex proves
+// the R7-a fix (F2, review-6 @fl follow-up on task #140): the consumer
+// closing section's "Implemented commands" pointer must be domain-prefixed
+// ("domains/<name>/docs/gen/tools/INDEX.md"), matching the repo-root-relative
+// convention every other cross-reference inside a generated docs/gen/*.md
+// file follows (see domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md, whose
+// cross-references are all "domains/hotam-spec-self/docs/gen/X.md" even
+// though the referencing and referenced files are siblings in the same
+// directory) — a bare "docs/gen/tools/INDEX.md" would resolve at the repo
+// root, which is never where a domain's generated docs live (see
+// cmd/hotam/init_project.go).
+func TestBuildRequirements_ConsumerClosingSectionDomainPrefixesToolsIndex(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+
+	const domainName = "some-other-domain"
+	consumer := BuildRequirements(g, domainName, true)
+
+	wantPrefixed := "`domains/" + domainName + "/docs/gen/tools/INDEX.md`"
+	if !strings.Contains(consumer, wantPrefixed) {
+		t.Errorf("consumer closing section must reference %q, got:\n%s", wantPrefixed, consumer)
+	}
+
+	// The bare (bug) form must not survive: a literal "docs/gen/tools/INDEX.md"
+	// NOT preceded by "domains/<name>/" would resolve to a nonexistent
+	// repo-root path.
+	bareForm := "`docs/gen/tools/INDEX.md`"
+	if strings.Contains(consumer, bareForm) {
+		t.Errorf("consumer closing section must NOT reference the bare, non-domain-prefixed form %q", bareForm)
+	}
+}
+
 // TestBuildRequirements_FullProfileByteIdenticalToPreChangeFixture pins
 // full-profile (consumer==false) output to the exact same golden fixture
 // TestBuildRequirements_ByteIdenticalToFixture already checks — restated
@@ -79,7 +111,7 @@ func TestBuildRequirements_ConsumerProfileDropsFrameworkNoise(t *testing.T) {
 func TestBuildRequirements_FullProfileByteIdenticalToPreChangeFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildRequirements(g, false)
+	got := BuildRequirements(g, "hotam-spec-self", false)
 	want, err := os.ReadFile("testdata/fixture/REQUIREMENTS.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
