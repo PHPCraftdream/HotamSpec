@@ -59,6 +59,8 @@ func cmdLand(args []string) error {
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (passed through to gen-spec)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
+	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, steward+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 
@@ -98,7 +100,8 @@ func cmdLand(args []string) error {
 	if err := confrontBeforeApply(domainDir, p, *asJSON); err != nil {
 		return err
 	}
-	result, err := landProposalValue(p, domainDir, *claudeMD, *today, *asJSON)
+	ackOpts := landAckOptions{AckConflict: *ackConflict, DecisionRef: *decisionRef}
+	result, err := landProposalValue(p, domainDir, *claudeMD, *today, ackOpts, *asJSON)
 	if err != nil {
 		return err
 	}
@@ -113,6 +116,16 @@ func cmdLand(args []string) error {
 // back on failure. It is the batch counterpart to landProposalFile; the two
 // share the same snapshot/genSpec/allViolations/rollback shape but differ in
 // the apply step (ApplyBatch vs applyProposalValue).
+//
+// The semantic-conflict gate (semanticConflictGate) does NOT run in batch
+// mode. Rationale: the gate's --ack-conflict / --decision-ref flags are
+// inherently per-proposal, but batch mode processes a directory of files with
+// no per-file flag mechanism; deciding whether each proposal needs its own
+// ack (and what to do when proposal 3 of 10 conflicts mid-batch) is a UX
+// question that belongs in a dedicated batch-ack task, not bolted onto this
+// one. The batch confront-at-gate summary (confrontBatchSummary) still runs
+// as advisory-only visibility, so a conflicting batch is flagged but never
+// blocked — matching the batch's atomic, advisory-only design.
 func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) (*LandResult, error) {
 	// Resolve the effective crystal path once (see landProposalValue for the
 	// rationale): the forward genSpec and every rollback re-render in this
@@ -182,12 +195,15 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 // embedding one here would double-print the report on that path. The direct
 // `hotam land <file>` path runs its confront at the cmdLand command level
 // before calling landProposalValue.
-func landProposalFile(proposalFile, domainDir, claudeMDPath, today string, asJSON bool) (*LandResult, error) {
+//
+// ackOpts threads the --ack-conflict / --decision-ref flags through to the
+// semantic-conflict gate inside landProposalValue.
+func landProposalFile(proposalFile, domainDir, claudeMDPath, today string, ackOpts landAckOptions, asJSON bool) (*LandResult, error) {
 	p, err := parseProposalFile(proposalFile)
 	if err != nil {
 		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
-	return landProposalValue(p, domainDir, claudeMDPath, today, asJSON)
+	return landProposalValue(p, domainDir, claudeMDPath, today, ackOpts, asJSON)
 }
 
 // resolveClaudeMDPath returns the effective root-crystal path a land operation
@@ -278,14 +294,29 @@ func isActiveOrUnambiguousDomain(repoRoot, domainDir string) bool {
 	return domainNameFromDir(domainDir) == activeName
 }
 
-// landProposalValue runs the full land pipeline (snapshot, apply an
-// already-parsed proposal, regen, re-verify, rollback-on-failure). It is the
-// parse-free core shared by landProposalFile (which reads + parses the file)
-// and the cmdLand single-file command branch (which parses once for an
-// advisory confront check before landing). The transactional snapshot/rollback
-// lives here so every caller that lands a single proposal shares one
-// implementation.
-func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string, asJSON bool) (*LandResult, error) {
+// landProposalValue runs the full land pipeline (semantic-conflict gate,
+// snapshot, apply an already-parsed proposal, regen, re-verify,
+// rollback-on-failure). It is the parse-free core shared by landProposalFile
+// (which reads + parses the file) and the cmdLand single-file command branch
+// (which parses once for an advisory confront check before landing). The
+// transactional snapshot/rollback lives here so every caller that lands a
+// single proposal shares one implementation.
+//
+// The semantic-conflict gate runs FIRST, before the snapshot: if it refuses
+// (a ProposedRequirement whose claim carries an opposite marker against an
+// existing SETTLED requirement, with no ack supplied), nothing is mutated. See
+// semanticConflictGate for the signal definition and R-ai-presents-not-decides
+// / R-decided-needs-human-signoff for why this requires a recorded decision
+// rather than auto-resolving.
+func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string, ackOpts landAckOptions, asJSON bool) (*LandResult, error) {
+	// Semantic-conflict gate: refuse to land a ProposedRequirement whose claim
+	// carries an opposite marker against an existing SETTLED requirement,
+	// unless the operator supplied --ack-conflict or --decision-ref. Runs
+	// BEFORE the snapshot so a refusal leaves the graph untouched.
+	if err := semanticConflictGate(domainDir, p, ackOpts); err != nil {
+		return nil, err
+	}
+
 	// Resolve the effective crystal path ONCE so every downstream step — the
 	// forward genSpec AND any rollback re-render — agrees on whether the root
 	// crystal is in scope for this land. An explicit --claude-md wins; absent
@@ -303,6 +334,17 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
 	fmt.Fprintf(landOut(asJSON), "applied %s %s to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(gp))
+
+	// Persist the human-decision audit trail (--ack-conflict / --decision-ref)
+	// AFTER apply wrote the new/updated requirement but BEFORE regen renders
+	// the docs, so the History entry appears in the generated output. A failure
+	// here triggers the same rollback as any other post-apply failure.
+	if ackOpts.hasAck() {
+		if err := appendAckHistory(gp, p, today, ackOpts); err != nil {
+			rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+			return nil, rolledBackError("ack history append failed", err, rerr)
+		}
+	}
 
 	written, _, err := genSpec(domainDir, claudeMDPath, today, "")
 	if err != nil {

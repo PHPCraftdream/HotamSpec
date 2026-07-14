@@ -25,11 +25,30 @@ import (
 // gates, never decides, and never changes exit code. It gives the operator a
 // deterministic shortlist of "looks like X already" before anything is written.
 type ConfrontHit struct {
-	ID         string   `json:"id"`
-	Claim      string   `json:"claim"`
-	Score      int      `json:"score"`
-	Shared     []string `json:"shared"`
-	ReplacedBy []string `json:"replaced_by,omitempty"`
+	ID     string   `json:"id"`
+	Claim  string   `json:"claim"`
+	Score  int      `json:"score"`
+	Shared []string `json:"shared"`
+	// OppositeMarker carries the human-readable "a vs b" label (e.g.
+	// "always vs never") when this hit was strengthened by an opposite-marker
+	// pair split across the candidate and the settled/rejected requirement,
+	// or "" when no such marker contributed. It is the SAME value confrontHit
+	// already folded into Score (+3 bonus); exposing it on the struct lets
+	// callers distinguish "high score from many shared topical tokens"
+	// (relatedness, not contradiction) from "opposite marker present"
+	// (genuine semantic tension) — the distinction the land semantic-conflict
+	// gate (cmd/hotam/semantic_gate.go) uses as its high-confidence signal.
+	OppositeMarker string   `json:"opposite_marker,omitempty"`
+	ReplacedBy     []string `json:"replaced_by,omitempty"`
+}
+
+// HasOppositeMarker reports whether this hit was strengthened by an
+// opposite-marker pair (never/always, must/must not, only/any) split across
+// the candidate and the matched requirement. It is the precise signal a caller
+// uses to decide "this hit is likely a genuine semantic contradiction, not
+// mere topical overlap" — the land semantic-conflict gate's primary trigger.
+func (h ConfrontHit) HasOppositeMarker() bool {
+	return h.OppositeMarker != ""
 }
 
 // ConfrontResult is the full output of one Confront check: the candidate text
@@ -147,10 +166,11 @@ func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r 
 		score += 3
 	}
 	return &ConfrontHit{
-		ID:     r.ID,
-		Claim:  r.Claim,
-		Score:  score,
-		Shared: shared,
+		ID:             r.ID,
+		Claim:          r.Claim,
+		Score:          score,
+		Shared:         shared,
+		OppositeMarker: opposite,
 	}
 }
 

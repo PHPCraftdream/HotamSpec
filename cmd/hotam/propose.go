@@ -131,6 +131,8 @@ func cmdProposeRequirement(args []string) error {
 	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
 	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<id>.json relative to cwd)")
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
+	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal (only meaningful with --land)")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, steward+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History (only meaningful with --land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
 	fs.Parse(args)
@@ -159,7 +161,8 @@ func cmdProposeRequirement(args []string) error {
 		BlockedOn:      *blockedOn,
 	}
 
-	return runPropose(pr, *domain, *today, *out, *land, *claudeMD, *asJSON)
+	ackOpts := landAckOptions{AckConflict: *ackConflict, DecisionRef: *decisionRef}
+	return runPropose(pr, *domain, *today, *out, *land, ackOpts, *claudeMD, *asJSON)
 }
 
 // ---- rejection ----
@@ -191,7 +194,7 @@ func cmdProposeRejection(args []string) error {
 		ReplacedBy:    splitCSV(*replacedBy),
 	}
 
-	return runPropose(p, *domain, *today, *out, *land, *claudeMD, *asJSON)
+	return runPropose(p, *domain, *today, *out, *land, landAckOptions{}, *claudeMD, *asJSON)
 }
 
 // ---- stakeholder ----
@@ -225,7 +228,7 @@ func cmdProposeStakeholder(args []string) error {
 		Why:    *why,
 	}
 
-	return runPropose(p, *domainFlag, *today, *out, *land, *claudeMD, *asJSON)
+	return runPropose(p, *domainFlag, *today, *out, *land, landAckOptions{}, *claudeMD, *asJSON)
 }
 
 // ---- shared pipeline ----
@@ -238,7 +241,7 @@ func cmdProposeStakeholder(args []string) error {
 func runPropose(
 	p proposal.Proposal,
 	domainFlag, today, outPath string,
-	land bool, claudeMDPath string, asJSON bool,
+	land bool, ackOpts landAckOptions, claudeMDPath string, asJSON bool,
 ) error {
 	// Validate the constructed proposal before any graph I/O: a validation
 	// failure is a normal command error (non-zero exit), no file written, no
@@ -296,7 +299,7 @@ func runPropose(
 			Landed:   land,
 		}
 		if land {
-			lr, err := landProposalFile(outPath, domainDir, claudeMDPath, today, true)
+			lr, err := landProposalFile(outPath, domainDir, claudeMDPath, today, ackOpts, true)
 			if err != nil {
 				return err
 			}
@@ -313,7 +316,7 @@ func runPropose(
 	fmt.Printf("wrote %s %s proposal to %s\n", p.Kind(), p.TargetAnchor(), relPathForDisplay(outPath))
 
 	if land {
-		if _, err := landProposalFile(outPath, domainDir, claudeMDPath, today, false); err != nil {
+		if _, err := landProposalFile(outPath, domainDir, claudeMDPath, today, ackOpts, false); err != nil {
 			return err
 		}
 	}
