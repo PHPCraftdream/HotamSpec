@@ -2,6 +2,8 @@
 
 Newest first. Summary = first `#` heading in each file.
 
+Pre-2026-07-08 entries with no live cross-references live under `archive/`; files still referenced from other docs stay at top level so those links don't break.
+
 | Date | File | Summary |
 |---|---|---|
 | 2026-07-13 | [2026-07-13-review5-response-plan.md](2026-07-13-review5-response-plan.md) | Review 5 response plan — sources of truth, domain UX, agent UX (HEAD 9a46847) |
@@ -25,14 +27,14 @@ Newest first. Summary = first `#` heading in each file.
 | 2026-07-09 | [2026-07-09-simplification-plan.md](2026-07-09-simplification-plan.md) | План реализации упрощения — 2026-07-09 |
 | 2026-07-09 | [2026-07-09-simplification-backlog.md](2026-07-09-simplification-backlog.md) | Бэклог упрощения — задачи из пятилинзового ревью 2026-07-09 |
 | 2026-07-05 | [2026-07-05-six-lens-review.md](2026-07-05-six-lens-review.md) | Шестилинзовое ревью Hotam-Spec — 2026-07-05 |
-| _pre-date_ | [lens-6-vision.md](lens-6-vision.md) | Линза 6: Vision — верность себе + 10x |
-| _pre-date_ | [lens-5-engineering.md](lens-5-engineering.md) | Линза 5: Инженерное здоровье — долг и риски роста |
+| _pre-date_ | [lens-6-vision.md](archive/lens-6-vision.md) | Линза 6: Vision — верность себе + 10x |
+| _pre-date_ | [lens-5-engineering.md](archive/lens-5-engineering.md) | Линза 5: Инженерное здоровье — долг и риски роста |
 | _pre-date_ | [lens-5-agent-cognitive-load.md](lens-5-agent-cognitive-load.md) | Линза 5 — Когнитивная нагрузка на агента-оператора |
 | _pre-date_ | [lens-4-roi.md](lens-4-roi.md) | Линза 4 — Практическая применимость и ROI |
-| _pre-date_ | [lens-4-business-door.md](lens-4-business-door.md) | Линза 4: Бизнес-дверь — почему бизнес ещё не вошёл |
-| _pre-date_ | [lens-3-operator-ux.md](lens-3-operator-ux.md) | Линза 3: Оператор-UX — трение и шум |
+| _pre-date_ | [lens-4-business-door.md](archive/lens-4-business-door.md) | Линза 4: Бизнес-дверь — почему бизнес ещё не вошёл |
+| _pre-date_ | [lens-3-operator-ux.md](archive/lens-3-operator-ux.md) | Линза 3: Оператор-UX — трение и шум |
 | _pre-date_ | [lens-3-consumer-usability.md](lens-3-consumer-usability.md) | Линза 3 — Юзабельность Hotam-Spec для нового потребителя «с улицы» |
 | _pre-date_ | [lens-2-overengineering.md](lens-2-overengineering.md) | Линза 2 — Переусложнение и возможности упрощения |
-| _pre-date_ | [lens-2-enforcement.md](lens-2-enforcement.md) | Линза 2: Enforcement-механика — дыры между обещанием и проверкой |
+| _pre-date_ | [lens-2-enforcement.md](archive/lens-2-enforcement.md) | Линза 2: Enforcement-механика — дыры между обещанием и проверкой |
 | _pre-date_ | [lens-1-redundancy.md](lens-1-redundancy.md) | Линза 1 — Избыточность и дублирование |
-| _pre-date_ | [lens-1-ontology.md](lens-1-ontology.md) | Линза 1: Онтология — типовая система |
+| _pre-date_ | [lens-1-ontology.md](archive/lens-1-ontology.md) | Линза 1: Онтология — типовая система |
