@@ -27,7 +27,7 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir() // no domains/ dir → exercises the "absent" branch of DOMAIN-MAP
 
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
 
 	// both template placeholders must have been substituted
 	if strings.Contains(out, mindPlaceholder) {
@@ -78,7 +78,7 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 // rendered block, and the bullet must follow the "- **§X** — <rule>" shape.
 func TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection(t *testing.T) {
 	t.Parallel()
-	out := RenderEmbeddedThinkingBlock("hotam-spec-self")
+	out := RenderEmbeddedThinkingBlock("hotam-spec-self", false)
 	sections := methodology.Sections.All()
 	if len(sections) == 0 {
 		t.Fatal("methodology.Sections must not be empty")
@@ -104,7 +104,7 @@ func TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection(t *testing.T) {
 // against future Canon drift into verbose multi-sentence text.
 func TestRenderEmbeddedThinkingBlock_NoMidWordTruncation(t *testing.T) {
 	t.Parallel()
-	out := RenderEmbeddedThinkingBlock("hotam-spec-self")
+	out := RenderEmbeddedThinkingBlock("hotam-spec-self", false)
 	if strings.Contains(out, "...") {
 		t.Errorf("EMBEDDED-THINKING must not contain a mid-word '...' stub, but got:\n%s", out)
 	}
@@ -130,7 +130,7 @@ func TestRenderEmbeddedThinkingBlock_CrystalWithinBudget(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	count, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, "2026-07-13")
+	count, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, "2026-07-13", false)
 	if err != nil {
 		t.Fatalf("crystal char-count fixpoint did not converge: %v", err)
 	}
@@ -229,8 +229,8 @@ func TestRenderClaudeMDFromTemplate_SameTodayIsByteIdentical(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	a := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
-	b := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	a := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
+	b := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
 	if a != b {
 		t.Fatalf("RenderClaudeMDFromTemplate with the same today value produced different output across two calls — not idempotent")
 	}
@@ -850,7 +850,7 @@ func TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
 
 	inner, ok := ExtractBlock(out, "AGENT-MAP")
 	if !ok {
@@ -874,7 +874,7 @@ func TestRenderClaudeMDFromTemplate_NoProseBetweenSentinels(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
 
 	blockNames := []string{
 		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
@@ -947,7 +947,7 @@ func TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest(t *test
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
 	const domain = "hotam-spec-self"
-	out := RenderClaudeMDFromTemplate(g, domain, repoRoot, 4200, nil, "2026-07-12")
+	out := RenderClaudeMDFromTemplate(g, domain, repoRoot, 4200, nil, "2026-07-12", false)
 
 	// both placeholders must be substituted away
 	if strings.Contains(out, mindPlaceholder) {
@@ -989,7 +989,7 @@ func TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal(t *test
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12")
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
 
 	// the single render consolidates the FULL operator prompt: all eleven MIND +
 	// BUSINESS blocks present in one string (no per-agent split)

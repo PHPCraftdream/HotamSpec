@@ -35,11 +35,19 @@ const businessPlaceholder = "<!-- business -->"
 // CLAUDE.md generation self-contained within this package and avoids a
 // second file-ownership surface at repo root while still producing
 // byte-identical output.
+// bootDeepDiveClause is the boot line's "Deep-dives: ..." sentence, isolated
+// as its own sentinel token (deepDiveClauseSentinel) so RenderClaudeMDFromTemplate
+// can drop it cleanly under the consumer profile (which never writes
+// docs/gen/thinking/ — see genSpec's `if !consumer { thinkingDocs := ... }`
+// gate in cmd/hotam/gen_spec.go) instead of leaving a dangling pointer at a
+// directory that was never generated.
+const deepDiveClauseSentinel = " Deep-dives: `spec/docs/thinking/`."
+
 const claudeMDTemplate = "# CLAUDE.md — Hotam-Spec framework\n" +
 	"\n" +
 	"**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.\n" +
 	"\n" +
-	"Boot: Role + Mediation-loop blocks below = operating seed. Deep-dives: `spec/docs/thinking/`.\n" +
+	"Boot: Role + Mediation-loop blocks below = operating seed." + deepDiveClauseSentinel + "\n" +
 	"\n" +
 	mindPlaceholder + "\n" +
 	"\n" +
@@ -108,17 +116,28 @@ func RenderMediationLoopBlock() string {
 // pure future-proofing, not truncation of anything today. It degrades
 // gracefully (whole-sentence short form, never mid-word "..." stub,
 // R-crystal-carries-short-form) if a future Canon value grows verbose.
-func RenderEmbeddedThinkingBlock(domainName string) string {
+//
+// consumer gates the "full Canon/Narrative/Why at
+// domains/<domainName>/docs/gen/thinking/<slug>.md" clause: genSpec never
+// writes docs/gen/thinking/*.md under the consumer profile (`if !consumer {
+// thinkingDocs := ... }` in cmd/hotam/gen_spec.go), so pointing at that path
+// for a consumer-profile domain would be a broken link. When consumer is
+// true the intro line ends cleanly after "per §-section" instead.
+func RenderEmbeddedThinkingBlock(domainName string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
 	sections := methodology.Sections.All()
+	intro := "One RULE per §-section."
+	if !consumer {
+		intro = "One RULE per §-section; full Canon/Narrative/Why at `domains/" + domainName + "/docs/gen/thinking/<slug>.md` (slug = lowercased §-name)."
+	}
 	lines := []string{
 		generatedHeaderComment,
 		"",
 		"### Methodology — how to think",
 		"",
-		"One RULE per §-section; full Canon/Narrative/Why at `domains/" + domainName + "/docs/gen/thinking/<slug>.md` (slug = lowercased §-name).",
+		intro,
 		"",
 	}
 	for _, s := range sections {
@@ -160,7 +179,7 @@ func RenderEmbeddedToolsBlock() string {
 		generatedHeaderComment,
 		"",
 		fmt.Sprintf(
-			"### Tool reference — %d Implemented, %d Planned. Full list with usage: `hotam -h`. Structured pulse: `hotam status --json`. Agentic access: `hotam req` / `hotam brief`. Complete registry: docs/gen/tools/INDEX.md, internal/methodology/tools_data.go.",
+			"### Tool reference — %d Implemented, %d Planned. Full list with usage: `hotam -h`. Structured pulse: `hotam status --json`. Agentic access: `hotam req` / `hotam brief`. Complete registry: spec/docs/gen/tools/INDEX.md, internal/methodology/tools_data.go.",
 			implementedCount, plannedCount,
 		),
 	}
@@ -180,11 +199,14 @@ func RenderOperatorRecursionBlock(domainName string) string {
 // RenderMindContent renders the MIND bucket: the domain-agnostic "how to
 // think" layer. Order: OPERATOR-ROLE, MEDIATION-LOOP, EMBEDDED-THINKING,
 // EMBEDDED-TOOLS, OPERATOR-RECURSION.
-func RenderMindContent(g *ontology.Graph, domainName string) string {
+//
+// consumer is threaded through to RenderEmbeddedThinkingBlock only — the
+// other four blocks carry no thinking/-directory reference to gate.
+func RenderMindContent(g *ontology.Graph, domainName string, consumer bool) string {
 	parts := []string{
 		WrapBlock("OPERATOR-ROLE", RenderOperatorRoleBlock(g, domainName)),
 		WrapBlock("MEDIATION-LOOP", RenderMediationLoopBlock()),
-		WrapBlock("EMBEDDED-THINKING", RenderEmbeddedThinkingBlock(domainName)),
+		WrapBlock("EMBEDDED-THINKING", RenderEmbeddedThinkingBlock(domainName, consumer)),
 		WrapBlock("EMBEDDED-TOOLS", RenderEmbeddedToolsBlock()),
 		WrapBlock("OPERATOR-RECURSION", RenderOperatorRecursionBlock(domainName)),
 	}
@@ -465,7 +487,7 @@ func RenderRecentlyRejectedBlock(g *ontology.Graph) string {
 		"",
 		"### Recently rejected (anti-relitigation — summary)",
 		"",
-		"Before proposing an architectural change, check this isn't already REJECTED with a REPLACES successor — cite the replacement instead of re-deriving. Full list: `docs/gen/HISTORY.md`.",
+		"Before proposing an architectural change, check this isn't already REJECTED with a REPLACES successor — cite the replacement instead of re-deriving. Full list: `spec/docs/gen/HISTORY.md`.",
 		"",
 	}
 
@@ -556,12 +578,36 @@ func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claud
 // internally via time.Now(), so `hotam gen-spec --today <date>` (or any
 // caller) can render a byte-reproducible crystal independent of wall-clock
 // date — the property CI's regen-idempotency check needs.
-func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph, today string) string {
+//
+// consumer selects the output profile (loader.GenProfileConsumer when true,
+// full otherwise — mirrors genSpec's own `consumer` local in
+// cmd/hotam/gen_spec.go). It gates two things:
+//
+//  1. The "Deep-dives: `spec/docs/thinking/`" clause on the boot line, and
+//     the "full Canon/Narrative/Why at .../thinking/<slug>.md" clause in the
+//     EMBEDDED-THINKING intro (RenderEmbeddedThinkingBlock) — both dropped
+//     when consumer is true, since genSpec never writes
+//     docs/gen/thinking/*.md under the consumer profile. When consumer is
+//     false (the default, backward-compatible case) both clauses render
+//     exactly as before — byte-identical to pre-existing full-profile output.
+//  2. Nothing else: every other block is profile-agnostic.
+//
+// Every generated-content path in the template is rendered against a
+// "spec/..." sentinel prefix (never a bare "docs/gen/..." — see
+// mediationLoopText, the tool-reference line, and the RECENTLY-REJECTED
+// pointer) and domain-qualified here via one targeted replace per sentinel,
+// the same pattern RenderOperatorRecursionBlock uses for its own domain
+// substitution. The two sentinel families ("spec/docs/thinking/" and
+// "spec/docs/gen/") share the "spec/docs/" root but diverge at the next path
+// segment (thinking/ vs gen/), so a single ReplaceAll of the narrower
+// "spec/docs/gen/" prefix cannot also match "spec/docs/thinking/" — no
+// double-processing risk between the two families.
+func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph, today string, consumer bool) string {
 	effectiveDomain := domainName
 	if effectiveDomain == "" {
 		effectiveDomain = "hotam-spec-self"
 	}
-	mind := RenderMindContent(g, domainName)
+	mind := RenderMindContent(g, domainName, consumer)
 	business := RenderBusinessContent(g, domainName, repoRoot, claudeMDCharCount, domainGraphs, today)
 
 	srcLines := strings.Split(claudeMDTemplate, "\n")
@@ -576,12 +622,25 @@ func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, 
 			outLines = append(outLines, line)
 		}
 	}
-	// The boot line's deep-dive pointer is a fixed template string (it can't
-	// carry a %s placeholder without complicating claudeMDTemplate's
-	// mind/business substitution above), so the domain-qualified path is
-	// filled in with one targeted replace here instead -- same pattern as
-	// RenderOperatorRecursionBlock's domain substitution.
-	return strings.ReplaceAll(strings.Join(outLines, "\n"), "`spec/docs/thinking/`", "`domains/"+effectiveDomain+"/docs/gen/thinking/`")
+	out := strings.Join(outLines, "\n")
+
+	// Consumer profile: drop the boot line's deep-dive clause entirely (rather
+	// than domain-qualify a path that was never written) so the line ends
+	// cleanly after "operating seed." with no dangling "Deep-dives:" pointer.
+	if consumer {
+		out = strings.ReplaceAll(out, deepDiveClauseSentinel, "")
+	} else {
+		out = strings.ReplaceAll(out, "`spec/docs/thinking/`", "`domains/"+effectiveDomain+"/docs/gen/thinking/`")
+	}
+
+	// The three bare `docs/gen/...` links (bug 1) are rendered against the
+	// `spec/docs/gen/...` sentinel prefix regardless of profile (all four
+	// target files -- TENSIONS.md, REQUIREMENTS.md, HISTORY.md,
+	// tools/INDEX.md -- are always written by genSpec under EITHER profile),
+	// so this replace is unconditional.
+	out = strings.ReplaceAll(out, "spec/docs/gen/", "domains/"+effectiveDomain+"/docs/gen/")
+
+	return out
 }
 
 // maxCrystalFixpointIterations caps the render→measure→re-render loop that
@@ -616,10 +675,16 @@ const maxCrystalFixpointIterations = 5
 // stale pre-existing CLAUDE.md from the previous run — a read that made two
 // consecutive gen-spec passes never converge and left AGENT-CONTEXT.md stuck
 // at "0 chars" whenever --claude-md was omitted.
-func ComputeCrystalCharCountFixpoint(g *ontology.Graph, domainName, repoRoot string, domainGraphs map[string]*ontology.Graph, today string) (int, error) {
+//
+// consumer is threaded straight through to RenderClaudeMDFromTemplate: the
+// consumer-profile crystal renders a few characters shorter (the dropped
+// deep-dive clauses), so the fixpoint must be measured against the SAME
+// profile genSpec will actually write, or the embedded CRYSTAL_CHARS count
+// would disagree with the real rendered crystal under consumer.
+func ComputeCrystalCharCountFixpoint(g *ontology.Graph, domainName, repoRoot string, domainGraphs map[string]*ontology.Graph, today string, consumer bool) (int, error) {
 	count := 0
 	for i := 0; i < maxCrystalFixpointIterations; i++ {
-		rendered := RenderClaudeMDFromTemplate(g, domainName, repoRoot, count, domainGraphs, today)
+		rendered := RenderClaudeMDFromTemplate(g, domainName, repoRoot, count, domainGraphs, today, consumer)
 		measured := utf8.RuneCountInString(rendered)
 		if measured == count {
 			return count, nil

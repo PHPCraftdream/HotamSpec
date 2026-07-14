@@ -212,7 +212,7 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"ATOMS_DISCIPLINE.md", BuildAtomsDiscipline},
 		{"ATOMS_CHECK.md", BuildAtomsCheck},
 		{"CLAUDE.md", func(g *ontology.Graph) string {
-			return RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 27646, nil, "2026-07-12")
+			return RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 27646, nil, "2026-07-12", false)
 		}},
 		{"AGENT-CONTEXT.md", func(g *ontology.Graph) string { return BuildAgentContext(g, "hotam-spec-self", 27646, "2026-07-12") }},
 		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646, "2026-07-12") }},

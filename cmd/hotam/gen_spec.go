@@ -103,7 +103,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// (closing the former mode-dependent "0 chars" disagreement).
 	repoRoot := repoRootForDomain(domainDir)
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
-	charCount, err := generator.ComputeCrystalCharCountFixpoint(g, domainName, repoRoot, domainGraphs, today)
+	charCount, err := generator.ComputeCrystalCharCountFixpoint(g, domainName, repoRoot, domainGraphs, today, consumer)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -316,7 +316,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// stale pre-existing-file size — and two consecutive --claude-md passes
 	// over the same tree now converge byte-for-byte.
 	if claudeMDPath != "" {
-		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs, today)
+		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs, today, consumer)
 		claudeMDBytes := []byte(claudeMD)
 
 		// CLAUDE.md, AGENTS.md and GEMINI.md all receive the identical

@@ -22,11 +22,11 @@ func TestComputeCrystalCharCountFixpoint_Converges(t *testing.T) {
 	repoRoot := t.TempDir()
 	const today = "2026-07-12"
 
-	fp1, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, today)
+	fp1, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, today, false)
 	if err != nil {
 		t.Fatalf("ComputeCrystalCharCountFixpoint (call 1): %v", err)
 	}
-	fp2, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, today)
+	fp2, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, today, false)
 	if err != nil {
 		t.Fatalf("ComputeCrystalCharCountFixpoint (call 2): %v", err)
 	}
@@ -39,7 +39,7 @@ func TestComputeCrystalCharCountFixpoint_Converges(t *testing.T) {
 
 	// Embedding the fixpoint must yield a crystal whose rune count equals the
 	// fixpoint — the definition of convergence.
-	rendered := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, fp1, nil, today)
+	rendered := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, fp1, nil, today, false)
 	if measured := utf8.RuneCountInString(rendered); measured != fp1 {
 		t.Errorf("fixpoint did not converge: embedding %d produced a crystal of %d runes (want %d)", fp1, measured, fp1)
 	}
@@ -58,11 +58,11 @@ func TestComputeCrystalCharCountFixpoint_RealDomainGraph(t *testing.T) {
 	repoRoot := t.TempDir()
 	const today = "2026-07-12"
 
-	fp, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, today)
+	fp, err := ComputeCrystalCharCountFixpoint(g, "hotam-spec-self", repoRoot, nil, today, false)
 	if err != nil {
 		t.Fatalf("ComputeCrystalCharCountFixpoint on real graph: %v", err)
 	}
-	rendered := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, fp, nil, today)
+	rendered := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, fp, nil, today, false)
 	if got := utf8.RuneCountInString(rendered); got != fp {
 		t.Errorf("fixpoint did not converge on real graph: embedding %d produced %d runes", fp, got)
 	}
