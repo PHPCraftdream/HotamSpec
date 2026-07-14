@@ -1,8 +1,10 @@
 package proposal
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/generator"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
@@ -254,7 +256,7 @@ func TestApply_Requirement_CreateWithLastReviewedAtWithoutEvidenceFails(t *testi
 // a previously-populated enforced_by. Without the sentinel this is impossible
 // — coalesceSlice treats an empty incoming slice as "preserve old" (patch
 // semantics), so downgrading ENFORCED → PROSE/STRUCTURAL could not drop the
-// stale enforcer list. See clearSliceSentinel in mutate.go.
+// stale enforcer list. See clearSentinel in mutate.go.
 func TestApply_Requirement_ClearEnforcedBy(t *testing.T) {
 	t.Parallel()
 	g := baseGraph()
@@ -268,7 +270,7 @@ func TestApply_Requirement_ClearEnforcedBy(t *testing.T) {
 		Owner:       "sa",
 		Status:      ontology.StatusSETTLED,
 		Enforcement: ontology.EnforcementPROSE,
-		EnforcedBy:  []string{clearSliceSentinel},
+		EnforcedBy:  []string{clearSentinel},
 	}
 	if err := Apply(path, today, p); err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -294,9 +296,184 @@ func TestApply_Requirement_ClearSentinelMixedWithRealFails(t *testing.T) {
 		Claim:      "claim R-1",
 		Owner:      "sa",
 		Status:     ontology.StatusSETTLED,
-		EnforcedBy: []string{clearSliceSentinel, "check_typed_anchors"},
+		EnforcedBy: []string{clearSentinel, "check_typed_anchors"},
 	}
-	assertApplyFails(t, path, p, clearSliceSentinel)
+	assertApplyFails(t, path, p, clearSentinel)
+}
+
+// TestApply_Requirement_ClearBlockedOn covers the wave-6 blocked_on
+// close-the-loop fix (review-5 finding N1): an UPDATE proposal whose
+// blocked_on is exactly "<clear>" empties a previously-set blocked_on. Without
+// the sentinel this is impossible — coalesceStr treats an empty incoming
+// value as "preserve old" (patch semantics), so once a requirement is marked
+// feature-blocked debt it could never return to closeable-now even after the
+// blocking feature ships. See resolveBlockedOn / clearSentinel in mutate.go.
+func TestApply_Requirement_ClearBlockedOn(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].BlockedOn = "feature:missing-cli"
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:        "R-1",
+		Claim:     "claim R-1",
+		Owner:     "sa",
+		Status:    ontology.StatusSETTLED,
+		BlockedOn: clearSentinel,
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.BlockedOn != "" {
+		t.Errorf("BlockedOn = %q, want empty (cleared by sentinel)", r.BlockedOn)
+	}
+}
+
+// TestApply_Requirement_UpdateOmittedBlockedOnPreservesExisting pins the
+// unchanged patch semantics: an UPDATE proposal that OMITS blocked_on (an
+// empty string, not the sentinel) must preserve whatever blocked_on was
+// already set — this is the existing coalesceStr behavior, and
+// resolveBlockedOn must not break it while adding the clear path.
+func TestApply_Requirement_UpdateOmittedBlockedOnPreservesExisting(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].BlockedOn = "feature:missing-cli"
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:     "R-1",
+		Claim:  "claim R-1, edited",
+		Owner:  "sa",
+		Status: ontology.StatusSETTLED,
+		// BlockedOn intentionally omitted.
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.BlockedOn != "feature:missing-cli" {
+		t.Errorf("BlockedOn = %q, want preserved %q", r.BlockedOn, "feature:missing-cli")
+	}
+}
+
+// TestApply_Requirement_UpdateRealBlockedOnReplacesExisting pins the normal
+// replace case: an UPDATE proposal with a real non-empty blocked_on value
+// replaces whatever was there before (including replacing one real value with
+// another, not just setting from empty).
+func TestApply_Requirement_UpdateRealBlockedOnReplacesExisting(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].BlockedOn = "feature:old-blocker"
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:        "R-1",
+		Claim:     "claim R-1",
+		Owner:     "sa",
+		Status:    ontology.StatusSETTLED,
+		BlockedOn: "feature:new-blocker",
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.BlockedOn != "feature:new-blocker" {
+		t.Errorf("BlockedOn = %q, want %q", r.BlockedOn, "feature:new-blocker")
+	}
+}
+
+// TestApply_Requirement_CreateWithClearSentinelBlockedOnFails covers the
+// CREATE-path decision for blocked_on's sentinel: a brand-new requirement has
+// no existing blocked_on to clear, so "<clear>" on a CREATE proposal is
+// rejected outright rather than silently writing the literal string
+// "<clear>" into a new requirement's blocked_on.
+func TestApply_Requirement_CreateWithClearSentinelBlockedOnFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedRequirement{
+		ID:        "R-new",
+		Claim:     "a brand new claim",
+		Owner:     "sa",
+		Status:    ontology.StatusDRAFT,
+		BlockedOn: clearSentinel,
+	}
+	assertApplyFails(t, path, p, clearSentinel)
+}
+
+// TestApply_Requirement_ClearBlockedOn_ClosesBurnDownLoop is the end-to-end
+// acceptance test for review-5 finding N1: seed a requirement as
+// feature-blocked debt (IsFeatureBlockedDebt), land an UPDATE proposal that
+// clears blocked_on via the sentinel, regenerate UNENFORCED.md via
+// generator.BuildUnenforced, and confirm the requirement moved from the
+// "feature-blocked" table to the "closeable now" table. This is the actual
+// burn-down-metric closure the review named — clearing the field alone isn't
+// enough if the generator split doesn't react to it.
+func TestApply_Requirement_ClearBlockedOn_ClosesBurnDownLoop(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].BlockedOn = "feature:missing-cli"
+	if !g.Requirements[0].IsFeatureBlockedDebt() {
+		t.Fatalf("setup: R-1 must start as feature-blocked debt")
+	}
+	if g.Requirements[0].IsCloseableDebtNow() {
+		t.Fatalf("setup: R-1 must NOT start as closeable-now")
+	}
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:        "R-1",
+		Claim:     "claim R-1",
+		Owner:     "sa",
+		Status:    ontology.StatusSETTLED,
+		BlockedOn: clearSentinel,
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if !r.IsCloseableDebtNow() {
+		t.Errorf("R-1 IsCloseableDebtNow() = false after clearing blocked_on, want true")
+	}
+	if r.IsFeatureBlockedDebt() {
+		t.Errorf("R-1 IsFeatureBlockedDebt() = true after clearing blocked_on, want false")
+	}
+
+	rendered := generator.BuildUnenforced(got)
+	if !strings.Contains(rendered, "## Closeable debt — closeable now (real, actionable)") {
+		t.Fatalf("rendered UNENFORCED.md missing closeable-now heading:\n%s", rendered)
+	}
+	nowIdx := strings.Index(rendered, "## Closeable debt — closeable now (real, actionable)")
+	blockedIdx := strings.Index(rendered, "## Closeable debt — feature-blocked (honest roadmap, not neglected)")
+	inherentIdx := strings.Index(rendered, "## Inherent discipline")
+	if nowIdx < 0 || blockedIdx < 0 || inherentIdx < 0 {
+		t.Fatalf("rendered UNENFORCED.md missing an expected section heading:\n%s", rendered)
+	}
+	nowSection := rendered[nowIdx:blockedIdx]
+	blockedSection := rendered[blockedIdx:inherentIdx]
+	if !strings.Contains(nowSection, "`R-1`") {
+		t.Errorf("R-1 not found in closeable-now section after clearing blocked_on:\n%s", nowSection)
+	}
+	if strings.Contains(blockedSection, "`R-1`") {
+		t.Errorf("R-1 still present in feature-blocked section after clearing blocked_on:\n%s", blockedSection)
+	}
 }
 
 func TestApply_ConflictTransition_Decided(t *testing.T) {

@@ -29,29 +29,49 @@ func coalesceSlice(newVal, oldVal []string) []string {
 	return cp
 }
 
-// clearSliceSentinel is the explicit opt-in marker a proposal author writes in
-// enforced_by to mean "clear this slice to empty" — exactly ["<clear>"]. It
-// exists because coalesceSlice treats an empty incoming slice as "leave the
-// old value alone" (partial-update / patch semantics, asserted by
+// clearSentinel is the explicit opt-in marker a proposal author writes to mean
+// "clear this field to empty" — exactly "<clear>" (or, for a slice field, the
+// single-element slice ["<clear>"]). It exists because both coalesceSlice and
+// coalesceStr treat an empty incoming value as "leave the old value alone"
+// (partial-update / patch semantics, asserted by
 // TestApply_Requirement_UpdateAppendsHistory), so without an explicit signal
-// there is no way for a ProposedRequirement UPDATE to empty a populated
-// enforced_by. The wave-2 enforced_by rebind NEEDS that: downgrading a
-// requirement from ENFORCED to PROSE/STRUCTURAL must be able to drop its
+// there is no way for a ProposedRequirement UPDATE to empty an already-set
+// field. The wave-2 enforced_by rebind NEEDS that for enforced_by: downgrading
+// a requirement from ENFORCED to PROSE/STRUCTURAL must be able to drop its
 // (now-misleading) stale enforcer list, and the convention for
 // PROSE/STRUCTURAL requirements in this graph is enforced_by == []. The
-// sentinel is consumed during apply (it never reaches graph.json); a proposal
-// that pairs it with other entries, or uses it on the create path, is
-// rejected by validateEnforcedByClearSentinel.
-const clearSliceSentinel = "<clear>"
+// wave-6 blocked_on close-the-loop fix reuses the SAME literal for
+// blocked_on: once a requirement is marked feature-blocked debt, clearing
+// blocked_on back to "" (once the blocking feature ships) needs the same
+// escape from patch semantics — one reserved literal for the whole proposal
+// system is simpler to remember than a family of near-identical sentinels.
+// The sentinel is consumed during apply (it never reaches graph.json); for
+// enforced_by, a proposal that pairs it with other entries is rejected by
+// validateEnforcedByClearSentinel.
+const clearSentinel = "<clear>"
 
 // resolveEnforcedBy is the enforced_by-specific coalesce: a single-element
 // ["<clear>"] clears to an empty slice; any other non-empty value replaces;
 // empty preserves the old value (patch semantics).
 func resolveEnforcedBy(newVal, oldVal []string) []string {
-	if len(newVal) == 1 && newVal[0] == clearSliceSentinel {
+	if len(newVal) == 1 && newVal[0] == clearSentinel {
 		return []string{}
 	}
 	return coalesceSlice(newVal, oldVal)
+}
+
+// resolveBlockedOn is the blocked_on-specific coalesce, mirroring
+// resolveEnforcedBy's shape for a scalar string field: the sentinel
+// "<clear>" clears to ""; any other non-empty value replaces; empty
+// preserves the old value (patch semantics). This is what lets an UPDATE
+// proposal close the feature-blocked -> closeable-now lifecycle loop once
+// the blocking feature ships — see IsCloseableDebtNow / IsFeatureBlockedDebt
+// in internal/ontology/requirement.go.
+func resolveBlockedOn(newVal, oldVal string) string {
+	if newVal == clearSentinel {
+		return ""
+	}
+	return coalesceStr(newVal, "", oldVal)
 }
 
 func coalesceRelations(newVal, oldVal []ontology.Relation) []ontology.Relation {
@@ -152,7 +172,7 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.ReviewAfter = coalesceStr(p.ReviewAfter, "", existing.ReviewAfter)
 		applied.Evidence = coalesceSlice(p.Evidence, existing.Evidence)
 		applied.SourceRefs = coalesceSlice(p.SourceRefs, existing.SourceRefs)
-		applied.BlockedOn = coalesceStr(p.BlockedOn, "", existing.BlockedOn)
+		applied.BlockedOn = resolveBlockedOn(p.BlockedOn, existing.BlockedOn)
 
 		summary := summarizeFieldDiff(old, snapshotFrom(applied))
 		if summary != "" {
@@ -163,6 +183,22 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		}
 		g.Requirements[idx] = applied
 		return nil
+	}
+
+	// blocked_on's clear-sentinel presumes an EXISTING value to clear; a
+	// brand-new requirement has nothing to clear, so the sentinel here is not
+	// a harmless no-op — it is either a copy-pasted UPDATE proposal
+	// misapplied as a CREATE, or an operator who misunderstands the
+	// convention and would otherwise get the literal string "<clear>"
+	// silently written into blocked_on. mutate() (not validate()) is the
+	// right place for this check: validate() is a pure proposal-shape check
+	// with no graph access, so it cannot tell create from update; only here,
+	// having just taken the idx < 0 (create) branch, do we know for certain.
+	if p.BlockedOn == clearSentinel {
+		return validationError(
+			"blocked_on is %q (the clear-sentinel) on a CREATE proposal for %q — "+
+				"a new requirement has no existing blocked_on to clear; omit "+
+				"blocked_on or set a real value.", clearSentinel, p.ID)
 	}
 
 	created := defaultStr(p.CreatedAt, today)

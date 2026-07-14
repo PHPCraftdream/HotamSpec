@@ -44,11 +44,11 @@ func (p ProposedRequirement) validate() error {
 
 // validateEnforcedByClearSentinel enforces that the "<clear>" sentinel, when
 // used, is the ONLY entry in enforced_by — it cannot be combined with real
-// enforcer names and cannot be repeated. See clearSliceSentinel / mutate.go.
+// enforcer names and cannot be repeated. See clearSentinel / mutate.go.
 func validateEnforcedByClearSentinel(enforcedBy []string) error {
 	seen := 0
 	for _, e := range enforcedBy {
-		if e == clearSliceSentinel {
+		if e == clearSentinel {
 			seen++
 		}
 	}
@@ -57,7 +57,7 @@ func validateEnforcedByClearSentinel(enforcedBy []string) error {
 			return validationError(
 				"enforced_by contains the %q clear-sentinel alongside other entries; "+
 					"use exactly [\"%s\"] to clear, or list real enforcers — not both.",
-				clearSliceSentinel, clearSliceSentinel)
+				clearSentinel, clearSentinel)
 		}
 	}
 	return nil
