@@ -43,17 +43,23 @@ func cmdGenSpec(args []string) error {
 	if today == "" {
 		today = time.Now().Format("2006-01-02")
 	}
-	written, err := genSpec(domainDir, *claudeMD, today, *profile)
+	written, removed, err := genSpec(domainDir, *claudeMD, today, *profile)
 	if err != nil {
 		return err
 	}
 	for _, p := range written {
 		fmt.Println(relPathForDisplay(p))
 	}
+	if len(removed) > 0 {
+		fmt.Printf("removed %d stale file(s):\n", len(removed))
+		for _, p := range removed {
+			fmt.Println(relPathForDisplay(p))
+		}
+	}
 	return nil
 }
 
-func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
+func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string, error) {
 	// Profile resolution (R-gen-spec-profile): an explicit non-empty profile
 	// (only cmdGenSpec's --profile flag passes one) overrides the domain's
 	// manifest for THIS invocation without rewriting it. An empty profile
@@ -78,7 +84,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 	// as a real error via loadGraphOrEmpty.
 	g, err := loadGraphOrEmpty(domainDir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	domainName := domainNameFromDir(domainDir)
@@ -99,7 +105,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
 	charCount, err := generator.ComputeCrystalCharCountFixpoint(g, domainName, repoRoot, domainGraphs, today)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var written []string
@@ -219,17 +225,17 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 		mdContents[i] = []byte(d.content)
 	}
 	if err := writeFilesParallel(mdPaths, mdContents); err != nil {
-		return written, err
+		return written, nil, err
 	}
 	written = append(written, mdPaths...)
 
 	graphJSON, err := generator.BuildGraphJSON(g)
 	if err != nil {
-		return written, fmt.Errorf("build graph.json: %w", err)
+		return written, nil, fmt.Errorf("build graph.json: %w", err)
 	}
 	gp := filepath.Join(genDir, "graph.json")
 	if err := writeFileMkdir(gp, []byte(graphJSON)); err != nil {
-		return written, err
+		return written, nil, err
 	}
 	written = append(written, gp)
 
@@ -259,7 +265,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 			thinkingContents[i] = []byte(thinkingDocs[key])
 		}
 		if err := writeFilesParallel(thinkingPaths, thinkingContents); err != nil {
-			return written, err
+			return written, nil, err
 		}
 		written = append(written, thinkingPaths...)
 	}
@@ -285,7 +291,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 		toolContents[i] = []byte(toolDocs[cmd])
 	}
 	if err := writeFilesParallel(toolPaths, toolContents); err != nil {
-		return written, err
+		return written, nil, err
 	}
 	written = append(written, toolPaths...)
 
@@ -296,7 +302,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 	// file alongside the per-tool docs above.
 	toolIndexPath := filepath.Join(genDir, "tools", "INDEX.md")
 	if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex())); err != nil {
-		return written, err
+		return written, nil, err
 	}
 	written = append(written, toolIndexPath)
 
@@ -326,12 +332,92 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, error) {
 		}
 		crystalContents := [][]byte{claudeMDBytes, claudeMDBytes, claudeMDBytes}
 		if err := writeFilesParallel(crystalPaths, crystalContents); err != nil {
-			return written, err
+			return written, nil, err
 		}
 		written = append(written, crystalPaths...)
 	}
 
-	return written, nil
+	// R-profile-switch-cleanup: genSpec only ever WRITES files, never
+	// deletes — so switching a domain's profile from full to consumer (via
+	// --profile, or a manifest gen_profile change landed through `hotam land`)
+	// would leave the now-unwanted thinking/*.md and Planned-tool pages on disk
+	// even though the printed written list shrank. A single cleanup pass at the
+	// end removes any generator-owned file under docs/gen/ that is NOT in this
+	// run's written list — correct in BOTH directions (full→consumer deletes;
+	// consumer→full is a no-op since written only grows). The comparison is
+	// against written, not the profile flag directly, so it stays correct for
+	// any future variance in the written set (e.g. conditional DECISIONS/
+	// ENTITIES), not just the profile switch.
+	removed, err := cleanupStaleGenFiles(genDir, written)
+	if err != nil {
+		return written, nil, err
+	}
+	return written, removed, nil
+}
+
+// cleanupStaleGenFiles deletes generator-owned files under <domainDir>/docs/gen/
+// that exist on disk but are NOT in this run's written list. Deletion is scoped
+// strictly to three categories genSpec is authoritative over — nothing outside
+// docs/gen/ is ever touched, and within docs/gen/ only (1) a CLOSED filename
+// list of top-level files, (2) every docs/gen/thinking/*.md, and (3) every
+// docs/gen/tools/*.md are candidates, so a hand-placed or future file with an
+// unrecognized top-level name is left alone (no blind glob of docs/gen/*.md).
+// thinking/ and tools/ ARE fully globbed because every file in them is
+// generator-owned. It returns the sorted list of deleted file paths so the
+// caller can report the shrinkage.
+func cleanupStaleGenFiles(genDir string, written []string) ([]string, error) {
+	writtenSet := make(map[string]bool, len(written))
+	for _, p := range written {
+		writtenSet[filepath.Clean(p)] = true
+	}
+
+	// (1) Closed list of top-level docs/gen/ filenames genSpec ever produces.
+	// graph.json is always written so it never qualifies for removal, but is
+	// listed for completeness so the candidate set matches genSpec's surface.
+	topLevelFiles := []string{
+		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
+		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
+		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
+		"atoms-discipline.md", "atoms-check.md", "live-state.md",
+		"AGENT-CONTEXT.md", "DECISIONS.md", "ENTITIES.md", "graph.json",
+	}
+	var candidates []string
+	for _, name := range topLevelFiles {
+		candidates = append(candidates, filepath.Join(genDir, name))
+	}
+
+	// (2) thinking/*.md and (3) tools/*.md — every .md in these two directories
+	// is generator-owned (nothing else is ever placed there), so glob-and-diff
+	// against written is safe. A non-existent directory yields an empty match
+	// set from filepath.Glob (nil error), which is the correct no-candidates
+	// outcome.
+	for _, sub := range []string{"thinking", "tools"} {
+		matches, err := filepath.Glob(filepath.Join(genDir, sub, "*.md"))
+		if err != nil {
+			return nil, fmt.Errorf("glob docs/gen/%s: %w", sub, err)
+		}
+		candidates = append(candidates, matches...)
+	}
+
+	var removed []string
+	for _, c := range candidates {
+		cp := filepath.Clean(c)
+		if writtenSet[cp] {
+			continue
+		}
+		if _, err := os.Stat(cp); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("stat stale gen file %s: %w", cp, err)
+		}
+		if err := os.Remove(cp); err != nil {
+			return nil, fmt.Errorf("remove stale gen file %s: %w", cp, err)
+		}
+		removed = append(removed, cp)
+	}
+	sort.Strings(removed)
+	return removed, nil
 }
 
 // toolIsImplemented reports whether the tool with the given Command field

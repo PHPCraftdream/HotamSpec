@@ -90,7 +90,7 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 	// so genSpec(...,"") resolves to "full" — proving the default is
 	// backward-compatible. We pass explicit "consumer" here to test the cut.
 
-	consumerWritten, err := genSpec(domainDir, "", "2026-07-13", "consumer")
+	consumerWritten, _, err := genSpec(domainDir, "", "2026-07-13", "consumer")
 	if err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
@@ -152,7 +152,7 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	}
 
 	// Full profile
-	fullWritten, err := genSpec(domainDir, "", "2026-07-13", "full")
+	fullWritten, _, err := genSpec(domainDir, "", "2026-07-13", "full")
 	if err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
@@ -187,7 +187,7 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 
 	// (5) Empty profile against a manifest without gen_profile → resolves to
 	//     "full" → same file set as explicit "full".
-	emptyWritten, err := genSpec(domainDir, "", "2026-07-13", "")
+	emptyWritten, _, err := genSpec(domainDir, "", "2026-07-13", "")
 	if err != nil {
 		t.Fatalf("genSpec empty-profile: %v", err)
 	}
@@ -218,7 +218,7 @@ func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 	if _, err := initDomain(dirConsumer, "ext"); err != nil {
 		t.Fatalf("initDomain consumer: %v", err)
 	}
-	if _, err := genSpec(dirConsumer, "", "2026-07-13", "consumer"); err != nil {
+	if _, _, err := genSpec(dirConsumer, "", "2026-07-13", "consumer"); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 	consumerTotal, _ := countFilesUnder(t, filepath.Join(dirConsumer, "docs", "gen"))
@@ -227,7 +227,7 @@ func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 	if _, err := initDomain(dirFull, "ext"); err != nil {
 		t.Fatalf("initDomain full: %v", err)
 	}
-	if _, err := genSpec(dirFull, "", "2026-07-13", "full"); err != nil {
+	if _, _, err := genSpec(dirFull, "", "2026-07-13", "full"); err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
 	fullTotal, _ := countFilesUnder(t, filepath.Join(dirFull, "docs", "gen"))
@@ -247,4 +247,124 @@ func sortedBasenames(paths []string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// TestGenSpec_ProfileSwitchCleansStaleFiles proves the R6-c fix: switching a
+// domain's gen-spec profile from full to consumer does NOT just shrink the
+// printed written list — it actually DELETES the now-unwanted thinking/*.md and
+// Planned-tool pages from disk. Before the fix genSpec only ever WROTE files
+// (never deleted), so a full→consumer switch left ~60 stale files on disk even
+// though the printed summary shrank. The round-trip (full→consumer→full) must be
+// non-destructive to content — only file PRESENCE cycles. A hand-placed file
+// inside docs/gen/ with a name outside the closed generator-owned list must
+// survive untouched, proving the cleanup is scoped, not a blind wipe.
+func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
+	t.Parallel()
+
+	// Pick a concrete Planned tool so we can assert its page's PRESENCE/ABSENCE
+	// directly on disk (not just via the written slice).
+	plannedCmd := ""
+	for _, tl := range methodology.Tools.All() {
+		if tl.Status == methodology.Planned {
+			plannedCmd = tl.Command
+			break
+		}
+	}
+	if plannedCmd == "" {
+		t.Fatal("precondition: at least one Planned tool must exist")
+	}
+	plannedToolPage := filepath.Join("docs", "gen", "tools", plannedCmd+".md")
+
+	domainDir := t.TempDir()
+	if _, err := initDomain(domainDir, "test-external"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	genDir := filepath.Join(domainDir, "docs", "gen")
+	thinkingDir := filepath.Join(genDir, "thinking")
+	fullPlannedToolPage := filepath.Join(domainDir, plannedToolPage)
+
+	// (1) full profile: thinking/*.md and the Planned-tool page exist on disk.
+	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full"); err != nil {
+		t.Fatalf("genSpec full (pass 1): %v", err)
+	}
+	fullThinking, err := filepath.Glob(filepath.Join(thinkingDir, "*.md"))
+	if err != nil {
+		t.Fatalf("glob thinking full: %v", err)
+	}
+	if len(fullThinking) == 0 {
+		t.Fatal("full profile must write thinking/*.md, found none on disk")
+	}
+	if _, err := os.Stat(fullPlannedToolPage); err != nil {
+		t.Fatalf("full profile must write planned-tool page %s on disk: %v", plannedCmd, err)
+	}
+
+	// Drop a hand-placed file with a name OUTSIDE the closed top-level list. It
+	// is NOT generator output, so it must survive every cleanup pass below.
+	handPlaced := filepath.Join(genDir, "NOTES-not-generated.md")
+	if err := os.WriteFile(handPlaced, []byte("# hand-placed notes\n"), 0o644); err != nil {
+		t.Fatalf("write hand-placed: %v", err)
+	}
+
+	// (2) consumer profile on the SAME domainDir (simulating a real profile
+	// switch on an existing checkout): thinking/*.md and the Planned-tool page
+	// must now be ABSENT from disk, not merely absent from written.
+	consumerWritten, removed, err := genSpec(domainDir, "", "2026-07-13", "consumer")
+	if err != nil {
+		t.Fatalf("genSpec consumer (pass 2): %v", err)
+	}
+	consumerThinking, err := filepath.Glob(filepath.Join(thinkingDir, "*.md"))
+	if err != nil {
+		t.Fatalf("glob thinking consumer: %v", err)
+	}
+	if len(consumerThinking) != 0 {
+		t.Errorf("consumer profile must DELETE thinking/*.md from disk, found %d file(s): %v", len(consumerThinking), consumerThinking)
+	}
+	if _, err := os.Stat(fullPlannedToolPage); !os.IsNotExist(err) {
+		t.Errorf("consumer profile must DELETE planned-tool page %s from disk, got err=%v", plannedCmd, err)
+	}
+	if _, err := os.Stat(handPlaced); err != nil {
+		t.Errorf("hand-placed docs/gen/NOTES-not-generated.md must survive cleanup, got err=%v", err)
+	}
+	// The cleanup pass must report what it removed (the reporting path), and it
+	// must include the thinking dir + the planned-tool page.
+	if len(removed) == 0 {
+		t.Error("consumer run after full must report removed stale files (removed slice empty)")
+	}
+	removedHas := func(target string) bool {
+		ct := filepath.Clean(target)
+		for _, r := range removed {
+			if filepath.Clean(r) == ct {
+				return true
+			}
+		}
+		return false
+	}
+	if !removedHas(fullPlannedToolPage) {
+		t.Errorf("removed slice must list the deleted planned-tool page %s, got %v", plannedCmd, removed)
+	}
+	// On disk, the only file NOT accounted for by written must be the single
+	// hand-placed file — every stale GENERATOR file must be gone.
+	total, _ := countFilesUnder(t, genDir)
+	if total != len(consumerWritten)+1 {
+		t.Errorf("consumer on-disk=%d, want written(%d)+1 (the hand-placed file) — a larger gap means stale generator output survived cleanup", total, len(consumerWritten))
+	}
+
+	// (3) full profile again on the same domain: everything restored. The
+	// round-trip is non-destructive to content; only file PRESENCE cycles.
+	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full"); err != nil {
+		t.Fatalf("genSpec full (pass 3): %v", err)
+	}
+	restoredThinking, err := filepath.Glob(filepath.Join(thinkingDir, "*.md"))
+	if err != nil {
+		t.Fatalf("glob thinking restored: %v", err)
+	}
+	if len(restoredThinking) != len(fullThinking) {
+		t.Errorf("full→consumer→full round-trip: thinking/ count changed %d → %d", len(fullThinking), len(restoredThinking))
+	}
+	if _, err := os.Stat(fullPlannedToolPage); err != nil {
+		t.Errorf("full→consumer→full round-trip: planned-tool page %s not restored: %v", plannedCmd, err)
+	}
+	if _, err := os.Stat(handPlaced); err != nil {
+		t.Errorf("hand-placed file must STILL survive the consumer→full pass: %v", err)
+	}
 }
