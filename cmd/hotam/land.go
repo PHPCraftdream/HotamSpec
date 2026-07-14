@@ -117,15 +117,23 @@ func cmdLand(args []string) error {
 // share the same snapshot/genSpec/allViolations/rollback shape but differ in
 // the apply step (ApplyBatch vs applyProposalValue).
 //
-// The semantic-conflict gate (semanticConflictGate) does NOT run in batch
-// mode. Rationale: the gate's --ack-conflict / --decision-ref flags are
-// inherently per-proposal, but batch mode processes a directory of files with
-// no per-file flag mechanism; deciding whether each proposal needs its own
-// ack (and what to do when proposal 3 of 10 conflicts mid-batch) is a UX
-// question that belongs in a dedicated batch-ack task, not bolted onto this
-// one. The batch confront-at-gate summary (confrontBatchSummary) still runs
-// as advisory-only visibility, so a conflicting batch is flagged but never
-// blocked — matching the batch's atomic, advisory-only design.
+// The semantic-conflict gate runs in TWO halves on the batch path. The
+// BLOCKING half — opposite-marker detection (diagnose.IsBlockingHit) — now
+// runs INSIDE internal/proposal.ApplyBatch via an injected
+// proposal.ConflictChecker (batchConflictChecker, built here in cmd/hotam
+// using diagnose.IsBlockingHit, since internal/proposal cannot import
+// internal/diagnose directly — R-core-periphery-import-ratchet): each
+// ProposedRequirement is confronted against the rolling in-memory graph (so
+// it catches contradictions against pre-existing state AND against earlier
+// items of the same batch), and ANY blocking hit aborts the ENTIRE batch
+// atomically (disk untouched). The OVERRIDE half — --ack-conflict /
+// --decision-ref — does NOT
+// run in batch mode: those flags are inherently per-proposal, but batch mode
+// processes a directory of files with no per-file flag mechanism; a batch
+// item that trips the blocking gate must be pulled out and landed
+// individually via `hotam land`/`hotam apply-proposal` (single-file) with an
+// explicit ack. The advisory confront-at-gate summary (confrontBatchSummary)
+// also still runs as visibility-only.
 func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) (*LandResult, error) {
 	// Resolve the effective crystal path once (see landProposalValue for the
 	// rationale): the forward genSpec and every rollback re-render in this
@@ -148,7 +156,7 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 		return nil, err
 	}
 	gp := graphPathForDomain(domainDir)
-	if err := proposal.ApplyBatch(gp, today, proposals); err != nil {
+	if err := proposal.ApplyBatch(gp, today, proposals, batchConflictChecker); err != nil {
 		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
 	fmt.Fprintf(landOut(asJSON), "applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))

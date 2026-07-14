@@ -79,8 +79,11 @@ func (o landAckOptions) hasAck() bool {
 // The gate runs BEFORE the transactional snapshot/apply in landProposalValue,
 // so a refusal leaves the graph and docs completely untouched. It applies to
 // BOTH `hotam land <file>` and `hotam propose requirement --land` (both funnel
-// through landProposalValue) and is NOT duplicated in two places. Batch mode
-// (`--batch <dir>`) is explicitly DEFERRED — see cmdLandBatch's doc comment.
+// through landProposalValue) and is NOT duplicated in two places. The batch
+// path (`--batch <dir>`) does NOT call this function — its BLOCKING half runs
+// inside internal/proposal.ApplyBatch (same diagnose.IsBlockingHit predicate,
+// against the rolling in-memory graph); only the ack-OVERRIDE half is absent
+// in batch mode (see cmdLandBatch's and cmdApplyProposal's doc comments).
 //
 // Returns hadConflict=true IFF a high-confidence signal (blockers) was found,
 // regardless of whether an ack overrode the refusal. The caller uses this to
@@ -122,17 +125,14 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 	// Run the SAME confront the land/propose confront-at-gate already uses.
 	result := diagnose.Confront(g, pr.Claim)
 
-	// Collect high-confidence hits: SETTLED requirements with an opposite marker
-	// AND at least one shared token that is NOT itself a marker word. The
-	// topical-token requirement is what keeps the "must/must not" pair from
-	// firing on every pair of requirements where one says "must" and the other
-	// "must not" — "must" is standard requirement language (nearly every claim
-	// uses it), so sharing only "must" proves relatedness to the MARKER, not to
-	// the SUBJECT. A genuine contradiction shares a topical anchor (encrypt,
-	// cache, export, …) in ADDITION to the opposing polarity.
+	// Collect high-confidence hits: SETTLED requirements that IsBlockingHit
+	// flags (opposite marker + topical shared token). The blocking predicate
+	// lives in internal/diagnose (diagnose.IsBlockingHit) so the batch path —
+	// internal/proposal.ApplyBatch, which cannot import cmd/hotam — runs the
+	// SAME check the single-file gate runs.
 	var blockers []diagnose.ConfrontHit
 	for _, h := range result.Settled {
-		if h.HasOppositeMarker() && hasTopicalSharedToken(h) {
+		if diagnose.IsBlockingHit(h) {
 			blockers = append(blockers, h)
 		}
 	}
@@ -165,46 +165,31 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 	return true, fmt.Errorf("%s", b.String())
 }
 
-// markerWordSet extracts the individual words from an opposite-marker label
-// like "must vs must not" → {"must", "not"}, or "never vs always" →
-// {"never", "always"}. These are the words whose presence in BOTH claims is
-// already accounted for by the opposite-marker signal itself, so they should
-// not ALSO count toward the shared-token overlap (doing so would let "must"
-// — a near-universal modal in requirement prose — be the sole shared token
-// for a "must/must not" hit, firing the gate on unrelated claims).
-func markerWordSet(oppositeMarker string) map[string]struct{} {
-	set := map[string]struct{}{}
-	for _, part := range strings.Split(oppositeMarker, " vs ") {
-		for _, w := range strings.Fields(part) {
-			set[w] = struct{}{}
+// batchConflictChecker builds the proposal.ConflictChecker that
+// internal/proposal.ApplyBatch invokes for each ProposedRequirement in a
+// batch. internal/proposal (core) cannot import internal/diagnose
+// (periphery) — see R-core-periphery-import-ratchet, enforced by
+// internal/selfcheck/imports_test.go's TestCorePeriphery_ImportRatchet — so
+// cmd/hotam, which already imports both packages, builds this closure and
+// injects it into ApplyBatch. It runs the SAME diagnose.Confront +
+// diagnose.IsBlockingHit check the single-file semanticConflictGate runs
+// (against g's SETTLED requirements), and — unlike semanticConflictGate —
+// has no ack-override: batch mode has no per-file flag mechanism, so a
+// conflicting item must be pulled out and landed individually with an
+// explicit ack.
+func batchConflictChecker(g *ontology.Graph, claim string) error {
+	result := diagnose.Confront(g, claim)
+	for _, h := range result.Settled {
+		if diagnose.IsBlockingHit(h) {
+			return fmt.Errorf(
+				"semantically contradicts SETTLED requirement %s: %q "+
+					"(opposite-marker signal; shared tokens: [%s]) — "+
+					"batch mode has no --ack-conflict/--decision-ref override: "+
+					"pull this item out and land it individually with an explicit ack",
+				h.ID, h.Claim, strings.Join(h.Shared, ", "))
 		}
 	}
-	return set
-}
-
-// hasTopicalSharedToken reports whether a ConfrontHit has at least one shared
-// token that is NOT one of the opposite-marker words. This distinguishes a
-// genuine semantic contradiction (the two claims share a topical anchor AND
-// have opposing polarity) from a coincidental marker match (the two claims
-// share only the modal "must" because every requirement uses "must", but are
-// otherwise about unrelated subjects). Without this filter, the "must/must
-// not" marker pair would fire on nearly every pair where one uses "must" and
-// the other "must not", since "must" itself counts as a shared token — an
-// unacceptably high false-positive rate for a gate that REFUSES the land.
-//
-// When the hit has no opposite marker (the caller guards against this, but
-// the function is safe to call regardless), any shared token counts.
-func hasTopicalSharedToken(h diagnose.ConfrontHit) bool {
-	if !h.HasOppositeMarker() {
-		return len(h.Shared) > 0
-	}
-	exclude := markerWordSet(h.OppositeMarker)
-	for _, t := range h.Shared {
-		if _, isMarker := exclude[t]; !isMarker {
-			return true
-		}
-	}
-	return false
+	return nil
 }
 
 // appendAckHistory persists the human-decision audit trail on the landed

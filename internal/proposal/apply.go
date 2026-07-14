@@ -9,6 +9,14 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
+// ConflictChecker is injected by a periphery-aware caller (cmd/hotam) so
+// internal/proposal (core) never imports internal/diagnose (periphery) --
+// see R-core-periphery-import-ratchet, enforced by
+// internal/selfcheck/imports_test.go's TestCorePeriphery_ImportRatchet.
+// It returns a non-nil, ready-to-surface error if claim semantically
+// conflicts with SETTLED content in g, or nil if clear.
+type ConflictChecker func(g *ontology.Graph, claim string) error
+
 func errNotFound(label, id string) error {
 	return fmt.Errorf("%s %q not found in the graph. No changes made.", label, id)
 }
@@ -92,7 +100,26 @@ func Apply(graphPath string, today string, p Proposal) error {
 // proposal fails validation, mutation, or introduces new invariant
 // violations, ApplyBatch returns an error naming the offending proposal and
 // the graph on disk (graph.json + graph.lock) is left untouched.
-func ApplyBatch(graphPath string, today string, ps []Proposal) error {
+//
+// SEMANTIC-CONFLICT GATE (batch path): for each ProposedRequirement, BEFORE
+// applyToGraph mutates g, ApplyBatch invokes the injected checkConflict
+// (a ConflictChecker) against the ROLLING in-memory graph — which by the time
+// proposal i is checked already reflects proposals 0..i-1 applied earlier in
+// the SAME batch — and refuses the ENTIRE batch if checkConflict reports a
+// blocking conflict. internal/proposal (core) cannot import internal/diagnose
+// (periphery) — see R-core-periphery-import-ratchet — so the actual
+// opposite-marker + topical-token check (diagnose.IsBlockingHit) is built by
+// cmd/hotam (which imports both packages) and passed in as checkConflict. It
+// catches both contradictions against PRE-EXISTING graph state AND
+// contradictions against an EARLIER item of the same batch (the rolling
+// graph makes that free — no extra bookkeeping). A refusal returns before
+// WriteGraph/WriteLock, so disk stays untouched, exactly like every other
+// ApplyBatch failure. There is NO --ack-conflict / --decision-ref override in
+// batch mode: a conflicting item must be pulled out and landed individually
+// via `hotam land` / `hotam apply-proposal` (single-file) with an explicit
+// ack. checkConflict may be nil, in which case no semantic-conflict checking
+// is performed (used by callers/tests that don't need the gate).
+func ApplyBatch(graphPath string, today string, ps []Proposal, checkConflict ConflictChecker) error {
 	if len(ps) == 0 {
 		return fmt.Errorf("batch is empty — supply at least one proposal")
 	}
@@ -103,6 +130,20 @@ func ApplyBatch(graphPath string, today string, ps []Proposal) error {
 	}
 
 	for i, p := range ps {
+		// Batch semantic-conflict gate: confront this requirement's claim
+		// against the ROLLING in-memory graph (already reflecting proposals
+		// 0..i-1) via the injected checkConflict, and refuse on any blocking
+		// conflict. Runs BEFORE applyToGraph so a refusal leaves g unmutated
+		// and — because the failure returns before the single WriteGraph
+		// below — disk untouched.
+		if checkConflict != nil {
+			if pr, ok := p.(ProposedRequirement); ok {
+				if err := checkConflict(g, pr.Claim); err != nil {
+					return fmt.Errorf("batch proposal %d of %d (%s %s): %w",
+						i+1, len(ps), p.Kind(), p.TargetAnchor(), err)
+				}
+			}
+		}
 		if err := applyToGraph(g, today, p); err != nil {
 			return fmt.Errorf("batch proposal %d of %d (%s %s): %w",
 				i+1, len(ps), p.Kind(), p.TargetAnchor(), err)

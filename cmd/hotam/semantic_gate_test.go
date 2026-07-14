@@ -610,12 +610,13 @@ func TestApplyProposalGate_NoFalseAckHistoryOnNonConflictingApply(t *testing.T) 
 	}
 }
 
-// TestApplyProposalGate_BatchModeUnaffectedByGate confirms --batch mode is
-// genuinely unaffected by the gate (an existing-behavior-preserved check, not a
-// new feature): a semantically-contradicting requirement applied via
-// `hotam apply-proposal --batch <dir>` WITHOUT ack must SUCCEED, matching the
-// documented batch-mode exclusion.
-func TestApplyProposalGate_BatchModeUnaffectedByGate(t *testing.T) {
+// TestApplyProposalGate_BatchModeNowBlocksConflict is the reversal of the
+// pre-R10-a behavior: a semantically-contradicting requirement applied via
+// `hotam apply-proposal --batch <dir>` WITHOUT ack must now be REFUSED (the
+// batch-mode bypass was closed in R10-a). The graph must be left untouched.
+// (Before R10-a this test asserted the opposite — that batch mode succeeded
+// despite the conflict — which was the documented bypass this task removed.)
+func TestApplyProposalGate_BatchModeNowBlocksConflict(t *testing.T) {
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	gp := graphPathForDomain(domainDir)
@@ -627,6 +628,11 @@ func TestApplyProposalGate_BatchModeUnaffectedByGate(t *testing.T) {
 		t.Fatalf("land first: %v", err)
 	}
 
+	before, err := os.ReadFile(gp)
+	if err != nil {
+		t.Fatalf("read graph before: %v", err)
+	}
+
 	// Put the contradicting requirement in a batch dir.
 	batchDir := t.TempDir()
 	jsonStr := `{
@@ -635,7 +641,7 @@ func TestApplyProposalGate_BatchModeUnaffectedByGate(t *testing.T) {
 		"claim": "export service must never encrypt records",
 		"owner": "owner",
 		"status": "SETTLED",
-		"why": "batch-mode gate exclusion test"
+		"why": "batch-mode gate now blocks test"
 	}`
 	second := filepath.Join(batchDir, "01-never.json")
 	if err := os.WriteFile(second, []byte(jsonStr), 0o644); err != nil {
@@ -643,20 +649,92 @@ func TestApplyProposalGate_BatchModeUnaffectedByGate(t *testing.T) {
 	}
 
 	// apply-proposal --batch on the contradicting requirement WITHOUT ack —
-	// batch mode does NOT run the gate, so this must SUCCEED.
-	if err := cmdApplyProposal([]string{
+	// batch mode now runs the blocking half of the gate, so this must REFUSE.
+	err = cmdApplyProposal([]string{
 		"--domain", domainDir, "--today", "2026-07-14",
 		"--batch", batchDir,
-	}); err != nil {
-		t.Fatalf("batch mode must NOT run the semantic-conflict gate (existing behavior preserved): %v", err)
+	})
+	if err == nil {
+		t.Fatal("expected batch mode to refuse the contradicting requirement (R10-a closed the bypass), got nil error")
+	}
+	if !strings.Contains(err.Error(), "R-apply-batch-always") {
+		t.Errorf("error must name the conflicting anchor R-apply-batch-always:\n%s", err.Error())
+	}
+	if !strings.Contains(err.Error(), "semantically contradicts") {
+		t.Errorf("error must state the semantic contradiction:\n%s", err.Error())
 	}
 
-	// The graph must contain the batch-applied requirement.
-	graphData, err := os.ReadFile(gp)
+	// The graph must be byte-identical (nothing from the batch landed).
+	after, err := os.ReadFile(gp)
 	if err != nil {
-		t.Fatalf("read graph: %v", err)
+		t.Fatalf("read graph after: %v", err)
 	}
-	if !strings.Contains(string(graphData), "R-apply-batch-never") {
-		t.Error("graph must contain the batch-applied requirement")
+	if string(before) != string(after) {
+		t.Fatal("graph.json changed despite batch refusal — batch must be all-or-nothing")
+	}
+	if strings.Contains(string(after), "R-apply-batch-never") {
+		t.Error("graph must not contain the refused batch requirement")
+	}
+}
+
+// TestLandGate_BatchModeNowBlocksConflict is the `hotam land --batch <dir>`
+// counterpart to TestApplyProposalGate_BatchModeNowBlocksConflict: the batch
+// path goes through cmdLandBatch → proposal.ApplyBatch, which now runs the
+// blocking half of the semantic-conflict gate. A contradicting batch must be
+// refused and the graph left byte-identical.
+func TestLandGate_BatchModeNowBlocksConflict(t *testing.T) {
+	t.Parallel()
+	domainDir := setupGateTestDomain(t)
+	gp := graphPathForDomain(domainDir)
+
+	// Land the first SETTLED requirement via `hotam land` (single-file).
+	first := writeReqProposalJSON(t, "R-land-batch-always",
+		"export service must always encrypt records")
+	if err := cmdLand([]string{"--domain", domainDir, "--today", "2026-07-14", first}); err != nil {
+		t.Fatalf("land first: %v", err)
+	}
+
+	before, err := os.ReadFile(gp)
+	if err != nil {
+		t.Fatalf("read graph before: %v", err)
+	}
+
+	// Put the contradicting requirement in a batch dir.
+	batchDir := t.TempDir()
+	jsonStr := `{
+		"kind": "Requirement",
+		"id": "R-land-batch-never",
+		"claim": "export service must never encrypt records",
+		"owner": "owner",
+		"status": "SETTLED",
+		"why": "land-batch gate now blocks test"
+	}`
+	conflictFile := filepath.Join(batchDir, "01-never.json")
+	if err := os.WriteFile(conflictFile, []byte(jsonStr), 0o644); err != nil {
+		t.Fatalf("write batch proposal: %v", err)
+	}
+
+	// land --batch on the contradicting requirement — must REFUSE.
+	err = cmdLand([]string{
+		"--domain", domainDir, "--today", "2026-07-14",
+		"--batch", batchDir,
+	})
+	if err == nil {
+		t.Fatal("expected land --batch to refuse the contradicting requirement, got nil error")
+	}
+	if !strings.Contains(err.Error(), "R-land-batch-always") {
+		t.Errorf("error must name the conflicting anchor R-land-batch-always:\n%s", err.Error())
+	}
+
+	// The graph must be byte-identical (nothing from the batch landed).
+	after, err := os.ReadFile(gp)
+	if err != nil {
+		t.Fatalf("read graph after: %v", err)
+	}
+	if string(before) != string(after) {
+		t.Fatal("graph.json changed despite land --batch refusal — batch must be all-or-nothing")
+	}
+	if strings.Contains(string(after), "R-land-batch-never") {
+		t.Error("graph must not contain the refused batch requirement")
 	}
 }

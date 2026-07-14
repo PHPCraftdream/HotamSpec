@@ -17,14 +17,23 @@ import (
 // It is the lower-level counterpart to `hotam land`, which wraps the same apply
 // in a snapshot/gen-spec/all-violations pipeline.
 //
-// The semantic-conflict gate (semanticConflictGate) runs ONLY on the single-file
-// path, BEFORE applyProposalValue, mirroring landProposalValue's placement so a
-// refusal leaves the graph untouched. --batch mode does NOT run the gate: the
-// gate's --ack-conflict / --decision-ref flags are inherently per-proposal, but
-// batch mode processes a directory of files with no per-file flag mechanism —
-// the same rationale cmdLandBatch documents for `hotam land --batch` (a batch-ack
-// UX belongs in its own task, not bolted on here). The batch confront-at-gate
-// summary (confrontBatchSummary) still runs advisory-only.
+// The semantic-conflict gate runs in TWO halves. On the single-file path,
+// semanticConflictGate runs BEFORE applyProposalValue (refuses on a blocking
+// hit unless --ack-conflict / --decision-ref overrides), mirroring
+// landProposalValue's placement so a refusal leaves the graph untouched. On
+// the --batch path, the BLOCKING half runs INSIDE
+// internal/proposal.ApplyBatch via an injected proposal.ConflictChecker
+// (batchConflictChecker, built here in cmd/hotam using diagnose.IsBlockingHit,
+// since internal/proposal cannot import internal/diagnose directly —
+// R-core-periphery-import-ratchet): each ProposedRequirement is confronted
+// against the rolling in-memory graph and ANY blocking hit aborts the ENTIRE
+// batch atomically. The OVERRIDE
+// half (--ack-conflict / --decision-ref) does NOT run in batch mode: those
+// flags are per-proposal, but batch mode has no per-file flag mechanism — a
+// batch item that trips the blocking gate must be pulled out and applied
+// individually with an explicit ack (same rationale cmdLandBatch documents
+// for `hotam land --batch`). The batch confront-at-gate summary
+// (confrontBatchSummary) also still runs advisory-only.
 func cmdApplyProposal(args []string) error {
 	fs := newFlagSet("apply-proposal")
 	domain := fs.String("domain", "", "domain directory containing graph.json (default: active-domain chain — HOTAM_DOMAIN env, then .hotam-spec-project marker, then "+defaultDomainRel+")")
@@ -55,7 +64,7 @@ func cmdApplyProposal(args []string) error {
 			return err
 		}
 		gp := graphPathForDomain(domainDir)
-		if err := proposal.ApplyBatch(gp, *today, proposals); err != nil {
+		if err := proposal.ApplyBatch(gp, *today, proposals, batchConflictChecker); err != nil {
 			return err
 		}
 		fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
