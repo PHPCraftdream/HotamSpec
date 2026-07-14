@@ -737,3 +737,269 @@ func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
 		t.Fatalf("auto-written crystal is NOT byte-identical across two gen-spec runs — rune-count fixpoint drift (len first=%d second=%d)", len(first), len(second))
 	}
 }
+
+// addSecondDomain scaffolds a second domain directory named domainName under
+// <projectRoot>/domains/, copying the same self-domain graph+manifest fixture
+// copySelfDomainUnderRoot uses. It returns the new domain's directory. Used
+// by the R7-b active-domain-awareness tests to build a genuine multi-domain
+// project root (copySelfDomainUnderRoot alone only ever produces one domain
+// under domains/, which is not enough to exercise the "2+ domains, must
+// match the active one" branch of resolveClaudeMDPath).
+func addSecondDomain(t *testing.T, projectRoot, domainName string) string {
+	t.Helper()
+	domainDir := filepath.Join(projectRoot, "domains", domainName)
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("mkdir second domain: %v", err)
+	}
+	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
+	copyFile(t, selfDomainManifest, filepath.Join(domainDir, "manifest.json"))
+	return domainDir
+}
+
+// TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive is the R7-b
+// regression test (review-7 finding: task #134's resolveClaudeMDPath auto-
+// wrote the root crystal for ANY domain linked to a convention-carrying
+// project root, never checking whether that domain was the marker's recorded
+// active_domain — so landing a non-active domain silently hijacked the root
+// crystal's identity). Two domains exist under one project root; the marker
+// records "main" as active; landing the OTHER domain ("second") without
+// --claude-md must leave the root CLAUDE.md byte-identical to its pre-land
+// content. This test FAILS on the pre-fix code (which does not consult the
+// active domain at all).
+func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
+	t.Parallel()
+	// copySelfDomainUnderRoot scaffolds the FIRST domain as
+	// "hotam-spec-self"; that is the name recorded as active_domain below.
+	// The SECOND domain, "second", is the one actually landed here.
+	projectRoot, _ := copySelfDomainUnderRoot(t)
+	secondDomainDir := addSecondDomain(t, projectRoot, "second")
+
+	// Root crystal convention: a real CLAUDE.md, plus a marker recording
+	// hotam-spec-self (not "second") as the active domain.
+	baseline := []byte("BASELINE-ACTIVE-DOMAIN-IS-HOTAM-SPEC-SELF\n")
+	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), baseline, 0o644); err != nil {
+		t.Fatalf("write baseline CLAUDE.md: %v", err)
+	}
+	markerPath := filepath.Join(projectRoot, paths.MarkerFilename)
+	if err := paths.WriteActiveDomain(markerPath, "hotam-spec-self"); err != nil {
+		t.Fatalf("write active-domain marker: %v", err)
+	}
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-non-active-domain",
+		"claim": "landing a non-active domain must not hijack the root crystal",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "R7-b regression coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	// Land into "second" — NOT the marker's active_domain — without
+	// --claude-md.
+	if err := cmdLand([]string{
+		"--domain", secondDomainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read post-land CLAUDE.md: %v", err)
+	}
+	if string(got) != string(baseline) {
+		t.Fatalf("root CLAUDE.md was hijacked by landing the NON-active domain — got %d bytes, want unchanged baseline (%d bytes):\n%s", len(got), len(baseline), string(got))
+	}
+
+	// Sanity: the OTHER two fan-out files must also be untouched (never even
+	// created, since this project root started with only CLAUDE.md).
+	for _, name := range []string{"AGENTS.md", "GEMINI.md"} {
+		if _, err := os.Stat(filepath.Join(projectRoot, name)); err == nil {
+			t.Errorf("%s was spontaneously created at the project root while landing the non-active domain", name)
+		}
+	}
+}
+
+// TestCmdLand_AutoCrystal_WhenLandingDomainIsActive is the positive
+// counterpart to the test above, in a genuine multi-domain project (not the
+// single-domain shortcut): two domains exist under one project root, the
+// marker names hotam-spec-self as active, and landing hotam-spec-self itself
+// must still auto-write the root crystal exactly as task #134 intended. This
+// proves the fix's "matches the active domain" branch actually fires, not
+// just the single-domain unambiguous shortcut.
+func TestCmdLand_AutoCrystal_WhenLandingDomainIsActive(t *testing.T) {
+	t.Parallel()
+	projectRoot, activeDomainDir := copySelfDomainUnderRoot(t)
+	addSecondDomain(t, projectRoot, "second")
+
+	stale := []byte("STALE-CRYSTAL-BASELINE\n")
+	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), stale, 0o644); err != nil {
+		t.Fatalf("write stale CLAUDE.md: %v", err)
+	}
+	markerPath := filepath.Join(projectRoot, paths.MarkerFilename)
+	if err := paths.WriteActiveDomain(markerPath, "hotam-spec-self"); err != nil {
+		t.Fatalf("write active-domain marker: %v", err)
+	}
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-active-domain",
+		"claim": "landing the active domain must still auto-write the crystal",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "R7-b positive-case coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", activeDomainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read post-land CLAUDE.md: %v", err)
+	}
+	if string(got) == string(stale) {
+		t.Fatal("CLAUDE.md was NOT regenerated when landing the genuinely active domain in a multi-domain project")
+	}
+	if !strings.Contains(string(got), "# CLAUDE.md — Hotam-Spec framework") {
+		t.Errorf("CLAUDE.md does not carry the crystal header — not a real render")
+	}
+}
+
+// TestCmdLand_AutoCrystal_SingleDomainNoMarker is explicit coverage for the
+// "single domain under domains/, no active_domain recorded anywhere" branch:
+// unlike the pre-existing TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD
+// (which never writes a marker at all — same shape, but this test names the
+// case explicitly and additionally confirms the marker file itself may be
+// entirely ABSENT, not just silent), a lone domain under <root>/domains/ is
+// unambiguous and must still auto-write even with zero recorded preference.
+func TestCmdLand_AutoCrystal_SingleDomainNoMarker(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+
+	stale := []byte("STALE-SINGLE-DOMAIN-BASELINE\n")
+	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), stale, 0o644); err != nil {
+		t.Fatalf("write stale CLAUDE.md: %v", err)
+	}
+	// Deliberately NO marker file at all.
+	if _, err := os.Stat(filepath.Join(projectRoot, paths.MarkerFilename)); err == nil {
+		t.Fatal("marker unexpectedly present — test setup invariant violated")
+	}
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-single-domain-no-marker",
+		"claim": "a lone domain under domains/ auto-writes even with no marker",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "R7-b single-domain-unambiguous coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read post-land CLAUDE.md: %v", err)
+	}
+	if string(got) == string(stale) {
+		t.Fatal("CLAUDE.md was NOT regenerated for the lone/unambiguous domain under domains/ with no marker")
+	}
+}
+
+// TestCmdLand_AutoCrystal_RepoRootIsDomainDir covers the bare/root-is-the-
+// domain tier-3 layout explicitly: domainDir IS repoRoot (no domains/ parent
+// at all), so there is nothing to disambiguate and auto-write must still
+// fire when a CLAUDE.md/marker convention exists at that same directory.
+//
+// Reaching repoRootForDomain's tier-3 fallback (return domainDir itself)
+// requires BOTH env project-root overrides cleared AND a CWD ancestry with no
+// discoverable project-root marker — otherwise tier-2 (paths.ProjectRootOrRaise)
+// succeeds and resolves to this repo's OWN root instead (its go.mod-anchored
+// R6 fallback finds this checkout unconditionally). Not t.Parallel(): it
+// changes the process CWD via chdirAndRestore, exactly like
+// TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir (gen_spec_test.go),
+// whose isolation pattern this test mirrors.
+func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
+	// Fixture source paths (selfDomainGraph/selfDomainManifest) are CWD-relative
+	// ("../../domains/..."), so they must be copied out BEFORE chdirAndRestore
+	// below repoints the process CWD — otherwise copyFile fails to find them
+	// from the isolated empty dir.
+	root := t.TempDir()
+	copyFile(t, selfDomainGraph, filepath.Join(root, "graph.json"))
+	copyFile(t, selfDomainManifest, filepath.Join(root, "manifest.json"))
+
+	empty := t.TempDir()
+	chdirAndRestore(t, empty)
+	t.Setenv(paths.EnvProjectRoot, "")
+	t.Setenv(paths.EnvDomainsRoot, "")
+	skipIfCwdAncestryNotHermetic(t, empty)
+
+	// Bare layout: graph.json lives directly in root, no domains/ parent, so
+	// repoRootForDomain's tier-1 (domains/<name>) check fails and it falls
+	// through to tier-3 (return domainDir itself, i.e. repoRoot == domainDir)
+	// now that tier-2 is guaranteed to fail by the isolation above.
+
+	stale := []byte("STALE-BARE-ROOT-BASELINE\n")
+	if err := os.WriteFile(filepath.Join(root, "CLAUDE.md"), stale, 0o644); err != nil {
+		t.Fatalf("write stale CLAUDE.md: %v", err)
+	}
+
+	// Sanity: confirm repoRootForDomain really does resolve to domainDir
+	// itself for this bare layout, so this test is exercising the intended
+	// branch and not silently degenerating into the domains/-parented case.
+	if got := repoRootForDomain(root); got != root {
+		t.Fatalf("test setup invariant violated: repoRootForDomain(%q) = %q, want == domainDir (bare layout)", root, got)
+	}
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-bare-root-is-domain",
+		"claim": "a bare root-is-the-domain layout auto-writes with nothing to disambiguate",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "R7-b repoRoot-equals-domainDir coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", root,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(root, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read post-land CLAUDE.md: %v", err)
+	}
+	if string(got) == string(stale) {
+		t.Fatal("CLAUDE.md was NOT regenerated for the bare repoRoot==domainDir layout")
+	}
+}

@@ -187,19 +187,75 @@ func landProposalFile(proposalFile, domainDir, claudeMDPath, today string) error
 // marker contamination shape (a stray marker several levels above) — only
 // repoRootForDomain's own internal tier-2 ProjectRootOrRaise() call walks
 // upward, and only for non-domains/<name> layouts.
+//
+// A second gate (review-7 R7-b, fixing task #134's own regression) then
+// confirms the domain actually being landed is the one the root crystal
+// speaks FOR before auto-writing — the crystal's Role/identity content is
+// domain-specific ("Operator of `<domain>`"), so auto-regenerating it from a
+// non-active domain would silently hijack the root crystal's identity to
+// whichever domain happened to run `land` last. Auto-write proceeds only
+// when one of these holds:
+//
+//  1. repoRoot == domainDir — the bare/single-domain-is-root tier-3 layout,
+//     where there is only ever one domain and nothing to disambiguate.
+//  2. Exactly one directory exists under <repoRoot>/domains/ — a
+//     single-domain project is unambiguous even with no recorded
+//     active-domain preference.
+//  3. The domain being landed (domainNameFromDir) matches the active domain
+//     resolveActiveDomainName resolves for repoRoot (HOTAM_DOMAIN env, then
+//     the .hotam-spec-project marker's active_domain, then the legacy
+//     default name) — this is the genuinely-active-domain case.
+//
+// Everything else (2+ domains under repoRoot/domains/, landing domain not the
+// active one) returns "" — same as the no-convention case — so the operator
+// must pass an explicit --claude-md to update the crystal from a non-active
+// domain's content.
 func resolveClaudeMDPath(domainDir, explicit string) string {
 	if explicit != "" {
 		return explicit
 	}
 	repoRoot := repoRootForDomain(domainDir)
 	candidate := filepath.Join(repoRoot, "CLAUDE.md")
+	hasConvention := false
 	if _, err := os.Stat(candidate); err == nil {
-		return candidate
+		hasConvention = true
+	} else if _, err := os.Stat(filepath.Join(repoRoot, paths.MarkerFilename)); err == nil {
+		hasConvention = true
 	}
-	if _, err := os.Stat(filepath.Join(repoRoot, paths.MarkerFilename)); err == nil {
-		return candidate
+	if !hasConvention {
+		return ""
 	}
-	return ""
+	if !isActiveOrUnambiguousDomain(repoRoot, domainDir) {
+		return ""
+	}
+	return candidate
+}
+
+// isActiveOrUnambiguousDomain reports whether landing domainDir is safe to
+// auto-write repoRoot's crystal for — either because domainDir IS repoRoot
+// (nothing to disambiguate), because it is the only domain under
+// <repoRoot>/domains/ (unambiguous even absent a recorded preference), or
+// because it matches the active domain name resolveActiveDomainName resolves
+// for repoRoot.
+func isActiveOrUnambiguousDomain(repoRoot, domainDir string) bool {
+	if repoRoot == domainDir {
+		return true
+	}
+	domainsRoot := filepath.Join(repoRoot, "domains")
+	entries, err := os.ReadDir(domainsRoot)
+	if err == nil {
+		dirCount := 0
+		for _, e := range entries {
+			if e.IsDir() {
+				dirCount++
+			}
+		}
+		if dirCount == 1 {
+			return true
+		}
+	}
+	activeName, _ := resolveActiveDomainName(repoRoot)
+	return domainNameFromDir(domainDir) == activeName
 }
 
 // landProposalValue runs the full land pipeline (snapshot, apply an
