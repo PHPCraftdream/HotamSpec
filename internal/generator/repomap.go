@@ -17,12 +17,21 @@ import (
 // decisionsWritten/entitiesWritten additionally control the two conditional
 // "_(not written: ...)_ " placeholder lines emitted when DECISIONS.md /
 // ENTITIES.md were withheld because their source registry is empty.
-func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, decisionsWritten, entitiesWritten bool) string {
+//
+// consumer gates the Framework-body section (repoMapFrameworkBodyContent): it
+// describes the FRAMEWORK's own internal/ Go package layout, which does not
+// exist in an external consumer's project, so the entire section is omitted
+// under consumer. The Tools section (renderRepoMapToolsSection — registry-
+// derived CLI commands, no internal/ paths) stays in both profiles. Full
+// profile renders byte-identical to before.
+func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, decisionsWritten, entitiesWritten bool, consumer bool) string {
 	lines := []string{Banner, ReaderHeaderLine("REPO_MAP", g), ""}
 	lines = append(lines, "# REPO-MAP.md — Repository file index (Hotam-Spec)")
 	lines = append(lines, "")
-	lines = append(lines, repoMapFrameworkBodyContent)
-	lines = append(lines, "")
+	if !consumer {
+		lines = append(lines, repoMapFrameworkBodyContent)
+		lines = append(lines, "")
+	}
 	lines = append(lines, renderRepoMapToolsSection())
 	lines = append(lines, "")
 

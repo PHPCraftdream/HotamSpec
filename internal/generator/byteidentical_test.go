@@ -157,7 +157,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
-			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
+			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},
 		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, 27646, "2026-07-12") }},
 	}
@@ -205,7 +205,7 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
-			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false)
+			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},
 		{"ATOMS_OPERATOR.md", BuildAtomsOperator},
 		{"ATOMS_SUBSTRATE.md", BuildAtomsSubstrate},

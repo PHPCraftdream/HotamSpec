@@ -378,3 +378,107 @@ func TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk(t *testing.T) {
 		}
 	}
 }
+
+// TestConsumerProfile_NoFrameworkSourceReferences is the R8-b acceptance test
+// (review-8, task #145): a consumer-profile gen-spec must produce a crystal and
+// REPO-MAP.md with ZERO references to framework-internal paths (`internal/...`)
+// or the build-from-source invocation (`go run ./cmd/hotam`), both of which are
+// dead-end instructions for an external consumer who only has the installed
+// `hotam` binary (neither path exists in their project). Before the fix, a
+// fresh `hotam init-project` consumer domain's REPO-MAP.md carried 21 mentions
+// of `internal/` and its root CLAUDE.md carried 26 mentions of `internal/` /
+// `go run ./cmd/hotam` (confirmed by the orchestrator's own reproduction).
+//
+// Four distinct sources were traced (sources 1-4) plus a 5th found during this
+// fix: (1) Banner + generatedHeaderComment universally reworded to drop `go
+// run ./cmd/hotam` and `internal/generator`; (2) RenderEmbeddedToolsBlock drops
+// its `internal/methodology/tools_data.go` reference under consumer; (3) the
+// entire CONCEPT-MAP block (internal/ontology/*.go paths) omitted under
+// consumer; (4) BuildRepoMap's Framework-body section omitted under consumer;
+// (5) mediationLoopText's `(`internal/proposal`)` removed universally.
+func TestConsumerProfile_NoFrameworkSourceReferences(t *testing.T) {
+	t.Parallel()
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "test-consumer-clean")
+	if _, err := initDomain(domainDir, "test-consumer-clean"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "consumer"); err != nil {
+		t.Fatalf("genSpec consumer: %v", err)
+	}
+
+	// Crystal (CLAUDE.md / AGENTS.md / GEMINI.md — identical content).
+	crystal, err := os.ReadFile(claudeMDPath)
+	if err != nil {
+		t.Fatalf("read crystal: %v", err)
+	}
+	crystalText := string(crystal)
+	if strings.Contains(crystalText, "internal/") {
+		t.Errorf("consumer crystal must not reference any internal/ path, but does:\n%s", firstMatchContext(crystalText, "internal/"))
+	}
+	if strings.Contains(crystalText, "go run ./cmd/hotam") {
+		t.Errorf("consumer crystal must not reference 'go run ./cmd/hotam', but does:\n%s", firstMatchContext(crystalText, "go run ./cmd/hotam"))
+	}
+
+	// REPO-MAP.md.
+	repoMapPath := filepath.Join(domainDir, "docs", "gen", "REPO-MAP.md")
+	repoMap, err := os.ReadFile(repoMapPath)
+	if err != nil {
+		t.Fatalf("read REPO-MAP.md: %v", err)
+	}
+	repoMapText := string(repoMap)
+	if strings.Contains(repoMapText, "internal/") {
+		t.Errorf("consumer REPO-MAP.md must not reference any internal/ path, but does:\n%s", firstMatchContext(repoMapText, "internal/"))
+	}
+	if strings.Contains(repoMapText, "go run ./cmd/hotam") {
+		t.Errorf("consumer REPO-MAP.md must not reference 'go run ./cmd/hotam', but does:\n%s", firstMatchContext(repoMapText, "go run ./cmd/hotam"))
+	}
+}
+
+// TestFullProfile_NoGoRunPrefix confirms the universal reword (source 1): the
+// full-profile crystal must ALSO have no `go run ./cmd/hotam` substring
+// anywhere, since the Banner/generatedHeaderComment/static-header reword
+// intentionally changes this wording in BOTH profiles (it fixes a real
+// inaccuracy in the full profile too, not just consumer). This test does NOT
+// check for `internal/` — the full-profile crystal legitimately retains
+// `internal/` references in CONCEPT-MAP (source 3) and EMBEDDED-TOOLS's
+// tools_data.go pointer (source 2), which are consumer-gated omissions, not
+// universal rewords.
+func TestFullProfile_NoGoRunPrefix(t *testing.T) {
+	t.Parallel()
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "test-full-clean")
+	if _, err := initDomain(domainDir, "test-full-clean"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "full"); err != nil {
+		t.Fatalf("genSpec full: %v", err)
+	}
+	crystal, err := os.ReadFile(claudeMDPath)
+	if err != nil {
+		t.Fatalf("read crystal: %v", err)
+	}
+	if strings.Contains(string(crystal), "go run ./cmd/hotam") {
+		t.Errorf("full-profile crystal must not contain 'go run ./cmd/hotam' (universal reword), but does:\n%s", firstMatchContext(string(crystal), "go run ./cmd/hotam"))
+	}
+}
+
+// firstMatchContext returns a short context window (±80 chars) around the first
+// occurrence of needle in text, for readable test-failure diagnostics.
+func firstMatchContext(text, needle string) string {
+	idx := strings.Index(text, needle)
+	if idx < 0 {
+		return "(not found)"
+	}
+	start := idx - 80
+	if start < 0 {
+		start = 0
+	}
+	end := idx + len(needle) + 80
+	if end > len(text) {
+		end = len(text)
+	}
+	return "..." + text[start:end] + "..."
+}

@@ -153,7 +153,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		entitiesMD = generator.BuildEntities(g, domainName)
 		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "ENTITIES.md", Content: entitiesMD})
 	}
-	repoMapMD := generator.BuildRepoMap(g, domainName, fullRepoMapDocs, decisionsWritten, entitiesWritten)
+	repoMapMD := generator.BuildRepoMap(g, domainName, fullRepoMapDocs, decisionsWritten, entitiesWritten, consumer)
 
 	// Atoms docs: under the consumer profile, each of the four atoms-*.md
 	// files is rendered first (unchanged Build* behavior), then WRITTEN only

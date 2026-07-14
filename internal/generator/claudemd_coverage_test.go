@@ -1031,7 +1031,7 @@ func TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal(t *test
 // redundant.
 func TestRenderEmbeddedToolsBlock_PointerOneLiner(t *testing.T) {
 	t.Parallel()
-	out := RenderEmbeddedToolsBlock()
+	out := RenderEmbeddedToolsBlock(false)
 
 	var implemented, planned []methodology.Tool
 	for _, tl := range methodology.Tools.All() {
@@ -1084,7 +1084,7 @@ func TestRenderEmbeddedToolsBlock_PointerOneLiner(t *testing.T) {
 // counts never silently diverge, nothing invented).
 func TestRenderEmbeddedToolsBlock_IsPureRegistryProjection(t *testing.T) {
 	t.Parallel()
-	out := RenderEmbeddedToolsBlock()
+	out := RenderEmbeddedToolsBlock(false)
 
 	implementedDisplays := make(map[string]bool)
 	implCount := 0

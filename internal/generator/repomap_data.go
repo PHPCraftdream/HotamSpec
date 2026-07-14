@@ -60,7 +60,7 @@ var repoMapFrameworkBodyContent = strings.Join([]string{
 // package relies on (e.g. RenderEmbeddedToolsBlock, ScanToolRequirements).
 func renderRepoMapToolsSection() string {
 	lines := []string{
-		"**Tools** (`cmd/hotam/`, dispatched by `hotam <command>` / `go run ./cmd/hotam <command>`)",
+		"**Tools** (`cmd/hotam/`, dispatched by `hotam <command>`)",
 		"",
 	}
 

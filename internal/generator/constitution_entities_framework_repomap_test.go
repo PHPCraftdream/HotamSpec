@@ -79,7 +79,7 @@ func TestBuildFrameworkInvariants_ByteIdenticalToFixture(t *testing.T) {
 func TestBuildRepoMap_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildRepoMap(g, "fixture-domain", fixtureGenDocs(), true, true)
+	got := BuildRepoMap(g, "fixture-domain", fixtureGenDocs(), true, true, false)
 	want, err := os.ReadFile("testdata/fixture/REPO-MAP.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)
