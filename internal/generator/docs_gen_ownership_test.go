@@ -56,7 +56,7 @@ func ownedGenRelPaths(t *testing.T, g *ontology.Graph) map[string]struct{} {
 	for slug := range BuildThinkingDocs() {
 		owned[filepath.ToSlash(filepath.Join("thinking", slug+".md"))] = struct{}{}
 	}
-	for cmd := range BuildToolDocs() {
+	for cmd := range BuildToolDocs(false) {
 		owned[filepath.ToSlash(filepath.Join("tools", cmd+".md"))] = struct{}{}
 	}
 	// tools/INDEX.md is a generator-owned entry-point page (BuildToolDocsIndex)

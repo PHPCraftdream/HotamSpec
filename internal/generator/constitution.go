@@ -67,7 +67,7 @@ func set(ids ...string) map[string]struct{} {
 	return out
 }
 
-func BuildConstitution(g *ontology.Graph, domainName string) string {
+func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
@@ -175,9 +175,19 @@ func BuildConstitution(g *ontology.Graph, domainName string) string {
 		lines = append(lines, rCCS.Why)
 		lines = append(lines, "")
 	}
-	lines = append(lines, "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by `go test ./internal/invariants/...`. Do NOT skip them; do NOT soften them.")
+	criticalCoreVerifyLine := "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by `go test ./internal/invariants/...`. Do NOT skip them; do NOT soften them."
+	criticalCoreNamesLine := "The six `CRITICAL_CORE_INVARIANTS` (verbatim check names from `internal/invariants`):"
+	if consumer {
+		// Rephrase without naming the Go package path (internal/invariants) —
+		// a dead-end reference for an external consumer with no internal/
+		// tree. The guarantee is identical: the six checks run on every suite
+		// invocation. Full-profile wording (above) stays byte-identical.
+		criticalCoreVerifyLine = "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by the framework's built-in critical-core checks. Do NOT skip them; do NOT soften them."
+		criticalCoreNamesLine = "The six `CRITICAL_CORE_INVARIANTS` (the framework's verbatim critical-core check names):"
+	}
+	lines = append(lines, criticalCoreVerifyLine)
 	lines = append(lines, "")
-	lines = append(lines, "The six `CRITICAL_CORE_INVARIANTS` (verbatim check names from `internal/invariants`):")
+	lines = append(lines, criticalCoreNamesLine)
 	lines = append(lines, "")
 	for _, name := range criticalCoreNames {
 		lines = append(lines, "  - `"+name+"`")

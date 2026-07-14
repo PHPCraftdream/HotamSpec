@@ -436,6 +436,87 @@ func TestConsumerProfile_NoFrameworkSourceReferences(t *testing.T) {
 	}
 }
 
+// TestConsumerProfile_DocsGenNoFrameworkSourceReferences is the R9-c
+// acceptance test (review-9, task #154): the consumer-profile gen-spec must
+// produce ZERO `internal/` references not only in the crystal and REPO-MAP.md
+// (already covered by TestConsumerProfile_NoFrameworkSourceReferences above)
+// but ALSO across the rest of the generated docs tree that that test did NOT
+// check — specifically docs/gen/tools/INDEX.md, every per-tool tools/*.md
+// page actually written, docs/gen/CONSTITUTION.md, and docs/gen/GLOSSARY.md.
+//
+// Before the fix, a fresh consumer `hotam init-project` carried 27 `internal/`
+// line matches across these files (2 in CONSTITUTION.md naming
+// `go test ./internal/invariants/...`, 1 in GLOSSARY.md's
+// "Source: `internal/generator/glossary_terms_data.go`", and 24 across
+// tools/INDEX.md + the per-tool pages whose Purpose text embeds
+// `(internal/...)` parenthetical package pointers). Task #145 (R8-b) closed
+// the crystal and REPO-MAP.md leaks but left these four sources untouched
+// because TestConsumerProfile_NoFrameworkSourceReferences only reads those
+// two files — this test closes that blind spot.
+//
+// The per-tool tools/*.md sweep globs the directory (no hardcoded names) so
+// it stays exhaustive regardless of how many Implemented tools exist.
+func TestConsumerProfile_DocsGenNoFrameworkSourceReferences(t *testing.T) {
+	t.Parallel()
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "test-consumer-docsgen")
+	if _, err := initDomain(domainDir, "test-consumer-docsgen"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
+		t.Fatalf("genSpec consumer: %v", err)
+	}
+
+	genDir := filepath.Join(domainDir, "docs", "gen")
+
+	// tools/INDEX.md + every per-tool tools/*.md page actually written under
+	// consumer (INDEX.md + Implemented tools only — Planned pages are skipped).
+	// Globbed, not hardcoded, so the sweep stays exhaustive.
+	toolMds, err := filepath.Glob(filepath.Join(genDir, "tools", "*.md"))
+	if err != nil {
+		t.Fatalf("glob tools/*.md: %v", err)
+	}
+	if len(toolMds) == 0 {
+		t.Fatalf("test precondition failed: consumer genSpec wrote zero .md files under tools/ — expected INDEX.md + Implemented tool pages")
+	}
+	for _, p := range toolMds {
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatalf("read %s: %v", p, err)
+		}
+		text := string(b)
+		if strings.Contains(text, "internal/") {
+			rel := filepath.ToSlash(strings.TrimPrefix(p, domainDir+string(os.PathSeparator)))
+			t.Errorf("consumer %s must not reference any internal/ path, but does:\n%s", rel, firstMatchContext(text, "internal/"))
+		}
+	}
+
+	// CONSTITUTION.md — two pre-fix leaks: the critical-core verification line
+	// ("verified on every run by `go test ./internal/invariants/...`") and the
+	// check-names line ("verbatim check names from `internal/invariants`").
+	constPath := filepath.Join(genDir, "CONSTITUTION.md")
+	constBytes, err := os.ReadFile(constPath)
+	if err != nil {
+		t.Fatalf("read CONSTITUTION.md: %v", err)
+	}
+	constText := string(constBytes)
+	if strings.Contains(constText, "internal/") {
+		t.Errorf("consumer CONSTITUTION.md must not reference any internal/ path, but does:\n%s", firstMatchContext(constText, "internal/"))
+	}
+
+	// GLOSSARY.md — one pre-fix leak: the "Source:
+	// `internal/generator/glossary_terms_data.go`." clause.
+	glossPath := filepath.Join(genDir, "GLOSSARY.md")
+	glossBytes, err := os.ReadFile(glossPath)
+	if err != nil {
+		t.Fatalf("read GLOSSARY.md: %v", err)
+	}
+	glossText := string(glossBytes)
+	if strings.Contains(glossText, "internal/") {
+		t.Errorf("consumer GLOSSARY.md must not reference any internal/ path, but does:\n%s", firstMatchContext(glossText, "internal/"))
+	}
+}
+
 // TestFullProfile_NoGoRunPrefix confirms the universal reword (source 1): the
 // full-profile crystal must ALSO have no `go run ./cmd/hotam` substring
 // anywhere, since the Banner/generatedHeaderComment/static-header reword

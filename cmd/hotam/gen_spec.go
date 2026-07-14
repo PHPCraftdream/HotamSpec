@@ -133,9 +133,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
 		{Filename: "OPEN.md", Content: generator.BuildOpen(g)},
 		{Filename: "UNENFORCED.md", Content: generator.BuildUnenforced(g)},
-		{Filename: "GLOSSARY.md", Content: generator.BuildGlossary(g)},
+		{Filename: "GLOSSARY.md", Content: generator.BuildGlossary(g, consumer)},
 		{Filename: "HISTORY.md", Content: generator.BuildHistory(g)},
-		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName)},
+		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName, consumer)},
 		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
 	}
 	// REPO-MAP.md lists itself too (the repo-map scan globs docs/gen/*.md
@@ -275,7 +275,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// prose for a command that doesn't exist yet). tools/INDEX.md is written
 	// unconditionally below regardless of profile (cheap, useful, and already
 	// the recommended pointer per the crystal-trim philosophy).
-	toolDocs := generator.BuildToolDocs()
+	toolDocs := generator.BuildToolDocs(consumer)
 	toolKeys := make([]string, 0, len(toolDocs))
 	for cmd := range toolDocs {
 		if consumer && !toolIsImplemented(cmd) {

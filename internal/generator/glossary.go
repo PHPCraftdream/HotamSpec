@@ -16,7 +16,7 @@ var glossaryKindLabels = map[string]string{
 	"CONCEPT":         "Concepts",
 }
 
-func BuildGlossary(g *ontology.Graph) string {
+func BuildGlossary(g *ontology.Graph, consumer bool) string {
 	grouped := map[string][]glossaryTerm{}
 	for _, k := range glossaryKindOrder {
 		grouped[k] = nil
@@ -35,10 +35,19 @@ func BuildGlossary(g *ontology.Graph) string {
 			"controlled vocabulary that every docstring and generated doc must use\n"+
 			"consistently. Terminology drift is invisibility (R-glossary-sync-test).")
 	lines = append(lines, "")
-	lines = append(lines,
-		"Source: `internal/generator/glossary_terms_data.go`. Domain-side business terms\n"+
-			"(R-ids, axis slugs, stakeholders) live in `domains/<name>/graph.json` and are\n"+
-			"listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.")
+	// Under consumer, drop the "Source: `internal/generator/...`." clause — a
+	// dead-end framework-source-file reference for an external consumer with no
+	// internal/ tree. The "Domain-side business terms ..." prose that follows
+	// stays; full-profile output is byte-identical (the Source clause is kept).
+	glossarySourceLine := "Source: `internal/generator/glossary_terms_data.go`. Domain-side business terms\n" +
+		"(R-ids, axis slugs, stakeholders) live in `domains/<name>/graph.json` and are\n" +
+		"listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here."
+	if consumer {
+		glossarySourceLine = "Domain-side business terms\n" +
+			"(R-ids, axis slugs, stakeholders) live in `domains/<name>/graph.json` and are\n" +
+			"listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here."
+	}
+	lines = append(lines, glossarySourceLine)
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")

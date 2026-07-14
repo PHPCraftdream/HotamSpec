@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -9,13 +10,46 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
+// internalPkgParenRE matches a parenthetical clause that points at one or more
+// framework-internal Go package paths — e.g. " (internal/diagnose)" or
+// " (internal/proposal + internal/generator + internal/invariants)" or
+// " (internal/query.Brief)". These pointers are meaningful inside the
+// framework's own source tree but are dead-end references for an external
+// consumer who only has the installed `hotam` binary (no `internal/` tree
+// exists in their project). The leading space is part of the match so the
+// punctuation that followed the parenthetical — a colon, semicolon, comma, or
+// sentence period — lands cleanly against the preceding word after removal:
+// "proposals (internal/proposal):" -> "proposals:", "graph (internal/x);" ->
+// "graph;". Applied ONLY at render time under the consumer profile; the
+// registry's Purpose text (internal/methodology/tools_data.go) stays the single
+// source of truth for both profiles.
+var internalPkgParenRE = regexp.MustCompile(` \(internal/[^)]*\)`)
+
+// stripInternalPkgRefs removes every "(internal/...)" parenthetical package
+// pointer from a Purpose/Canon string, returning grammatically clean prose
+// (no double spaces, no dangling punctuation). regexp.Regexp.ReplaceAllString
+// is safe for concurrent use, so this helper may be called from parallel
+// goroutines (BuildToolDocs renders tools concurrently).
+func stripInternalPkgRefs(s string) string {
+	return internalPkgParenRE.ReplaceAllString(s, "")
+}
+
 // BuildToolDocs renders one Markdown doc per tool. Each tool's content is a
 // pure function of that tool's own fields (read only, no shared mutable
 // state), so the renders run concurrently — same indexed-slice-then-merge
 // shape as invariants.AllViolations — while the final map assembly stays
 // single-threaded (concurrent map writes are not safe in Go even when keys
 // are disjoint).
-func BuildToolDocs() map[string]string {
+//
+// consumer selects the output profile (loader.GenProfileConsumer when true).
+// Under consumer, each Implemented tool's Purpose text has its
+// "(internal/...)" package pointers stripped at render time (see
+// stripInternalPkgRefs); Planned tools are never written under consumer (the
+// toolIsImplemented filter in gen_spec.go skips them), so their content is
+// irrelevant under that profile. Full-profile (consumer==false) output is
+// byte-identical to before this parameter existed — the registry's source
+// strings are rendered verbatim.
+func BuildToolDocs(consumer bool) map[string]string {
 	tools := methodology.Tools.All()
 	keys := make([]string, len(tools))
 	contents := make([]string, len(tools))
@@ -24,6 +58,10 @@ func BuildToolDocs() map[string]string {
 		wg.Add(1)
 		go func(idx int, tool methodology.Tool) {
 			defer wg.Done()
+			purpose := tool.Purpose
+			if consumer && tool.Status == methodology.Implemented {
+				purpose = stripInternalPkgRefs(purpose)
+			}
 			lines := []string{
 				Banner,
 				"",
@@ -39,7 +77,7 @@ func BuildToolDocs() map[string]string {
 				"",
 				"## Purpose",
 				"",
-				tool.Purpose,
+				purpose,
 			}
 			keys[idx] = tool.Command
 			contents[idx] = strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
@@ -155,7 +193,14 @@ func BuildToolDocsIndex(consumer bool) string {
 	}
 	for _, t := range implemented {
 		displayName := strings.ReplaceAll(t.Command, "_", "-")
-		lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, purposeExcerpt(t.Purpose)))
+		desc := purposeExcerpt(t.Purpose)
+		if consumer {
+			// Strip framework-internal package pointers (see
+			// stripInternalPkgRefs) — dead-end references for an external
+			// consumer who has no internal/ tree.
+			desc = stripInternalPkgRefs(desc)
+		}
+		lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, desc))
 	}
 
 	lines = append(lines, "", "## Planned (methodology surface only — no command exists)", "")

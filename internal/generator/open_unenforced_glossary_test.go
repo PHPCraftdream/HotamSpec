@@ -97,7 +97,7 @@ func TestBuildUnenforced_CloseableSplitPartitionsDebt(t *testing.T) {
 func TestBuildGlossary_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildGlossary(g)
+	got := BuildGlossary(g, false)
 	want, err := os.ReadFile("testdata/fixture/GLOSSARY.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)

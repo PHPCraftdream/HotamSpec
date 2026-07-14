@@ -57,7 +57,7 @@ func fixtureGenDocs() []GenDocEntry {
 func TestBuildConstitution_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildConstitution(g, "fixture-domain")
+	got := BuildConstitution(g, "fixture-domain", false)
 	want, err := os.ReadFile("testdata/fixture/CONSTITUTION.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)

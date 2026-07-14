@@ -48,7 +48,7 @@ func TestBuildThinkingDocsSemanticCompleteness(t *testing.T) {
 func TestBuildToolDocsCountMatchesTools(t *testing.T) {
 	t.Parallel()
 	tools := methodology.Tools.All()
-	docs := BuildToolDocs()
+	docs := BuildToolDocs(false)
 	if len(docs) != len(tools) {
 		t.Fatalf("BuildToolDocs: got %d docs, want %d tools", len(docs), len(tools))
 	}
@@ -56,7 +56,7 @@ func TestBuildToolDocsCountMatchesTools(t *testing.T) {
 
 func TestBuildToolDocsSemanticCompleteness(t *testing.T) {
 	t.Parallel()
-	docs := BuildToolDocs()
+	docs := BuildToolDocs(false)
 	for _, tool := range methodology.Tools.All() {
 		doc, ok := docs[tool.Command]
 		if !ok {
