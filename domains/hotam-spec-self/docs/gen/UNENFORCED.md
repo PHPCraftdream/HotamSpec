@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 165 / SETTLED 238; closeable-now 5; feature-blocked 33; inherent discipline 35; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 165 / SETTLED 239; closeable-now 5; feature-blocked 34; inherent discipline 35; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -34,6 +34,7 @@ These ENFORCEABLE requirements stay PROSE because the feature they describe does
 
 | id | enforcement | owner | blocked_on | claim |
 |---|---|---|---|---|
+| `R-domain-overview-projection` | PROSE | `framework-author` | feature:overview-pipeline-generator | Every domain MUST answer the overview question ("how is this domain structured as a whole") with ONE generated projection (OVERVIEW/PIPELINE.md), assembled from Process nodes plus EntityType plus the pipeline references between entities. This projection ALWAYS speaks in the language of the methodology/business-domain author: stage names are taken verbatim from Process.steps as authored, and any Go/code identifier appears ONLY as an adjacent annotation, never as a replacement for the author's own name. The projection's regenerability is the mechanical completeness test against the domain's original prose description: a stage or concept present in the source prose that does not surface anywhere in the projection is a discoverable coverage defect, not a silent gap. |
 | `R-axis-gatekeeper-policy` | PROSE | `ai-agent` | blocked on the create_axis tool (Planned) — the gatekeeper check is part of the creation path | Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification. |
 | `R-subagent-gets-its-claude-md` | PROSE | `framework-author` | blocked on the create_agent tool (Planned) + per-agent crystal rendering in gen-spec | A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain. |
 | `R-task-spawn-log-runtime` | PROSE | `ai-agent` | blocked on the spawn_agent tool (Planned) + the .runtime/spawn-log.jsonl infrastructure (absent) | The spawn_agent tool shall append a spawn-log entry to .runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation. |

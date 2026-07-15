@@ -314,6 +314,7 @@
     "R-domain-is-a-directory",
     "R-domain-map-generated",
     "R-domain-map-shows-pulse",
+    "R-domain-overview-projection",
     "R-domain-owns-claude-md",
     "R-domain-owns-docs-gen",
     "R-domain-owns-graph-py",
@@ -559,6 +560,33 @@
       "source_refs": [],
       "status": "SETTLED",
       "why": "SPLIT from R-work-within-launch-dir 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): the original 'operator shall confine all file mutations to its launch directory' claim bundled two genuinely different things -- (1) committed framework CODE that writes into the host home (statically, mechanically checkable: an AST scanner over committed source), and (2) a live agent shelling out at RUNTIME through bash/tool-calls to touch the home dir (not statically checkable -- discipline of prose). This atom is the structural/mechanically-checkable half (1); the residual live-conduct half (2) stays at R-work-within-launch-dir (now INHERENTLY_PROSE, same category as R-agent-conduct-is-rules-not-tests). The original enforcement was a Python AST scanner (tests/test_launch_dir_write_scope.py, ENFORCED 2026-07-10) that was NOT carried forward into the Go port (reverted to PROSE 2026-07-12); this atom re-ports that scanner to Go. Steward verdict 2026-07-05 stands verbatim (from the original why): the framework is a guest in the host's home -- it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. Trigger for the original rule: the operator once proposed setup_context_hook.py --patch-global --apply, which patched the global host configuration (a host-sovereignty violation that a host update overwrites anyway). EXACT MECHANICAL RULE (enforced by TestLaunchDirWriteScope_NoHomeWriteColocation in internal/selfcheck/launch_dir_scope_test.go): for every NON-TEST, NON-TESTDATA .go file under internal/ and cmd/hotam/, no function body may contain BOTH a home-directory reference (os.UserHomeDir(), os.Getenv(\"HOME\"), os.Getenv(\"USERPROFILE\"), or a string literal starting with \"~/\") AND a filesystem-write sink (os.WriteFile/Create/Mkdir/MkdirAll/Remove/RemoveAll/Rename/Symlink/Chmod); the conjunction within one *ast.FuncDecl body is the hit (same-function co-location, the scope within which a computed home path can flow into a write -- matches the spirit of the original Python scanner). os.OpenFile is deliberately excluded (read-or-write; the explicit write primitives cover the unambiguous case); os/user.Current().HomeDir is out of scope today (this repo imports neither, and would only matter under the same conjunction). The framework tree currently has ZERO home-directory references (verified 2026-07-13), so the scan is green today and fails RED the moment a committed function computes a home path next to a write sink. Refines R-work-within-launch-dir (the broad launch-dir principle, whose live-conduct residual carries the genuinely-unobservable half)."
+    },
+    {
+      "assumptions": [],
+      "claim": "Every domain MUST answer the overview question (\"how is this domain structured as a whole\") with ONE generated projection (OVERVIEW/PIPELINE.md), assembled from Process nodes plus EntityType plus the pipeline references between entities. This projection ALWAYS speaks in the language of the methodology/business-domain author: stage names are taken verbatim from Process.steps as authored, and any Go/code identifier appears ONLY as an adjacent annotation, never as a replacement for the author's own name. The projection's regenerability is the mechanical completeness test against the domain's original prose description: a stage or concept present in the source prose that does not surface anywhere in the projection is a discoverable coverage defect, not a silent gap.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [
+        "internal/ontology/process.go defines Process/Step/Lifecycle but the `prat` business domain (PRAT-hotam/domains/prat) declares zero Process nodes for its own staged methodology",
+        "hotam gen-spec output (domains/hotam-spec-self/docs/gen/*.md) contains no projection assembling Process.steps + EntityType + pipeline references into a single whole-structure overview — confirmed by directory listing (REQUIREMENTS.md, HISTORY.md, UNENFORCED.md, TENSIONS.md, CONSTITUTION.md, FRAMEWORK-INVARIANTS.md, GLOSSARY.md, REPO-MAP.md, live-state.md, AGENT-CONTEXT.md — all confrontation/status-shaped, none overview-shaped)"
+      ],
+      "history": [
+        {
+          "at": "2026-07-15",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin), task #205, 2026-07-15: dogfood memory-for-understanding finding, land R-domain-overview-projection as SETTLED/PROSE feature-blocked debt (follow-on task #201 builds the generator); reserved-token gate hits above are lexical opposite-marker collisions (must/never/always tokens) against unrelated requirements, not substantive semantic conflicts with this claim's subject matter"
+        }
+      ],
+      "id": "R-domain-overview-projection",
+      "last_reviewed_at": "2026-07-15",
+      "owner": "framework-author",
+      "review_after": "2027-01-15",
+      "source_refs": [
+        "internal/ontology/process.go",
+        "domains/hotam-spec-self/graph.json"
+      ],
+      "status": "SETTLED",
+      "why": "Steward finding this session (dogfooded on hotam-spec-self itself): the current substrate (graph + gen-spec docs) is memory FOR CHANGE — confront answers 'what does this contradict,' trace/HISTORY.md answers 'why was this rejected before,' what-now/UNENFORCED.md answers 'what is in debt now.' It is NOT memory FOR UNDERSTANDING — an overview answering 'how is this whole methodology/domain structured, stage by stage.' Verified concretely: an agent asked 'what are the stages of the PRAT methodology' could not answer better from the graph + generated docs than from reading the original prose document directly — no generated projection anywhere assembles Process.steps + EntityType + pipeline edges into one whole-structure view. Diagnosis has two halves. (a) The ontology already carries a §Process type for exactly this (Lifecycle + Steps + roles_required + drives_entities, internal/ontology/process.go) and hotam-spec-self itself uses it (PR-closed-loop, the ORIENT-LOCATE-CONFRONT-TRANSLATE-PRESENT-LAND process instantiated as data) -- but the `prat` business domain (PRAT-hotam/domains/prat) has declared zero Process nodes, so its own staged methodology (e.g. the OTT/GPSM stage sequence) has no typed anchor at all, only prose. (b) `hotam gen-spec` only emits confrontation-shaped docs (REQUIREMENTS.md, HISTORY.md, UNENFORCED.md, TENSIONS.md, ...) -- there is no generated projection of the whole across Process + EntityType + pipeline links. This requirement records the target state; building the generator (OVERVIEW/PIPELINE.md, assembled from Process nodes + EntityType + pipeline references) is tracked as follow-on task #201 and is deliberately NOT implemented by this requirement -- correctly PROSE/feature-blocked (R-speculative-aspects-frozen's sibling pattern: the claim is real and SETTLED, the enforcer does not exist yet, so it is honest roadmap debt, not a silent omission). Regenerability-as-completeness-test mirrors the same principle already SETTLED for gen-code's requirement-atom coverage audit (GEN-CODE-CONTRACT.md §3.1, steward decision 2026-07-15): 'atom found' is not 'claim fully covered' there; here, 'a doc got generated' is not 'the whole structure is represented' -- both demand a mechanical diff against the original source (claim text there, prose document here), not a presence check. The language-fidelity clause (stage names verbatim from Process.steps, Go identifiers as annotation only) is the same discipline already SETTLED for R-crystal-carries-short-form and the zero-Cyrillic-in-code / audit-carries-original-text split in GEN-CODE-CONTRACT.md §1.1: the business author's own words are the primary artifact, code-facing names ride alongside, never replace them."
     },
     {
       "assumptions": [],
