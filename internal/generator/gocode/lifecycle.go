@@ -33,15 +33,19 @@ func RenderLifecycleFile(packageName string, models []*entityModel) ([]byte, err
 	b.WriteString(wrongStateErrorTypeSrc)
 	b.WriteString("\n")
 
-	any := false
+	// The blank line separating wrongStateErrorTypeSrc from the first
+	// rendered transition method is only written when there IS a first
+	// method to separate it from — with zero EntityTypes carrying
+	// transitions (e.g. a 0-EntityType domain), an unconditional blank line
+	// here would leave a dangling blank line at EOF, which `gofmt -l` flags
+	// despite the file otherwise being valid Go (same reasoning
+	// RenderEntitiesFile's needsFmt==false branch already applies to
+	// entities.go).
 	for _, m := range sorted {
 		if len(m.transitions) == 0 {
 			continue
 		}
-		if any {
-			b.WriteString("\n")
-		}
-		any = true
+		b.WriteString("\n")
 		b.WriteString(renderEntityTransitions(m))
 	}
 
@@ -59,16 +63,15 @@ const wrongStateErrorTypeSrc = `// WrongStateError reports that a lifecycle tran
 // type on a state mismatch, so callers/tests can distinguish "illegal
 // transition attempted" from other errors via errors.As.
 type WrongStateError struct {
-	Entity  string
-	Event   string
-	Want    string
-	Got     string
+	Entity string
+	Event  string
+	Want   string
+	Got    string
 }
 
 func (e *WrongStateError) Error() string {
 	return fmt.Sprintf("%s.%s: expected state %q, got %q", e.Entity, e.Event, e.Want, e.Got)
-}
-`
+}`
 
 // renderEntityTransitions renders every transition method for one
 // EntityType, in graph declaration order (not re-sorted — contract §0

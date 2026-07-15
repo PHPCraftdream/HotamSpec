@@ -6,3 +6,1909 @@ Verbatim (original-language) `why` text for every EntityType/state/transition th
 anchors to via `// Atom: ...` comments (GEN-CODE-CONTRACT.md §1.1). Markdown, not code — the zero-Cyrillic
 rule applies only to `.go` files; this file is where the original requirement text legitimately lives.
 
+## Requirements
+
+### R-active-loop-apply-tool {#r-active-loop-apply-tool}
+
+A CLI command (`hotam apply-proposal`, `cmd/hotam`) shall consume an approved Proposed* JSON proposal and mechanically apply the change to the domain's graph.json (`domains/<name>/graph.json`) via `internal/proposal.Apply`, never by a hand-edit.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_active_loop_apply_tool` (t.Log only)
+
+### R-active-loop-playbook-doc {#r-active-loop-playbook-doc}
+
+At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_active_loop_playbook_doc` (t.Log only)
+
+### R-active-loop-protocol {#r-active-loop-protocol}
+
+A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, et al.) shall exist in `internal/proposal` as the typed protocol for steward-approved operator changes, decoded strictly (snake_case json tags, unknown fields rejected).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_active_loop_protocol` (t.Log only)
+
+### R-agent-code-imports-framework {#r-agent-code-imports-framework}
+
+An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itself shall never import back from any agent's private tools/ directory.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_code_imports_framework` (t.Log only)
+
+### R-agent-conduct-is-rules-not-tests {#r-agent-conduct-is-rules-not-tests}
+
+Agent conduct -- the highest abstraction -- shall not be faked as code-checked: what code can verify is ENFORCED with a real test, what only conscience can verify is an honest PROSE rule, and the two are kept explicitly separate.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_conduct_is_rules_not_tests` (t.Log only)
+
+### R-agent-declares-purpose {#r-agent-declares-purpose}
+
+Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_declares_purpose` (t.Log only)
+
+### R-agent-has-docs-dir {#r-agent-has-docs-dir}
+
+Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes, separate from any generated content.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_has_docs_dir` (t.Log only)
+
+### R-agent-has-own-tools-dir {#r-agent-has-own-tools-dir}
+
+Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_has_own_tools_dir` (t.Log only)
+
+### R-agent-is-a-directory {#r-agent-is-a-directory}
+
+A domain-agent shall be represented as a directory at `domains/<name>/agents/<agent>/`.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_is_a_directory` (t.Log only)
+
+### R-agent-is-recursive-director {#r-agent-is-recursive-director}
+
+Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_is_recursive_director` (t.Log only)
+
+### R-agent-map-generated {#r-agent-map-generated}
+
+CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_map_generated` (t.Log only)
+
+### R-agent-never-lost {#r-agent-never-lost}
+
+The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_never_lost` (t.Log only)
+
+### R-agent-references-shared-docs {#r-agent-references-shared-docs}
+
+Each agent CLAUDE.md shall contain a SHARED-DOCS block listing relative paths to the shared thinking docs (all) and tool docs (filtered by SCOPE), without duplicating their content.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_references_shared_docs` (t.Log only)
+
+### R-agent-scoped-constitution {#r-agent-scoped-constitution}
+
+For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_agent_scoped_constitution` (t.Log only)
+
+### R-ai-presents-not-decides {#r-ai-presents-not-decides}
+
+The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_ai_presents_not_decides` (t.Log only)
+
+### R-anchor-everything {#r-anchor-everything}
+
+Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_anchor_everything` (t.Log only)
+
+### R-anchor-taxonomy {#r-anchor-taxonomy}
+
+The typed-anchor prefix set (R-/C-/A-/OP-/GOAL-/PR-/§) is frozen, with Axis.slug staying bare because axes are identified by slug within the graph's axes tuple rather than globally.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_anchor_taxonomy` (t.Log only)
+
+### R-assumption-implements-state {#r-assumption-implements-state}
+
+An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_assumption_implements_state` (t.Log only)
+
+### R-assumption-transition-kind-exists {#r-assumption-transition-kind-exists}
+
+The proposal protocol shall include a ProposedAssumptionTransition kind (kind='AssumptionTransition') that changes an existing Assumption's status (HOLDS/UNCERTAIN/DEAD/IMPLEMENTS) in place via `hotam apply-proposal`, appending the reason to its statement and never deleting the node.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_assumption_transition_kind_exists` (t.Log only)
+
+### R-atomicity-ratchet-no-growth {#r-atomicity-ratchet-no-growth}
+
+The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_atomicity_ratchet_no_growth` (t.Log only)
+
+### R-attention-agent-agnostic-core {#r-attention-agent-agnostic-core}
+
+The attention core shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_attention_agent_agnostic_core` (t.Log only)
+
+### R-attention-claude-adapter {#r-attention-claude-adapter}
+
+The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_attention_claude_adapter` (t.Log only)
+
+### R-attention-registry {#r-attention-registry}
+
+An agent-agnostic attention-source registry shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_attention_registry` (t.Log only)
+
+### R-attention-superset-of-diagnose {#r-attention-superset-of-diagnose}
+
+The live attention list collect(g) shall be a superset of the deterministic graph subset diagnose(g), equal to it exactly when no runtime-fs sources are injected.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_attention_superset_of_diagnose` (t.Log only)
+
+### R-audit-atomicity-tool {#r-audit-atomicity-tool}
+
+An audit of substrate atomicity (compound requirements + compound check_* invariants + R↔enforcer bijection + orphan analysis) shall be performed by a deterministic tool, not by a one-off hand invocation.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_audit_atomicity_tool` (t.Log only)
+
+### R-axis-controlled-vocab {#r-axis-controlled-vocab}
+
+Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_axis_controlled_vocab` (t.Log only)
+
+### R-axis-gatekeeper-policy {#r-axis-gatekeeper-policy}
+
+Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_axis_gatekeeper_policy` (t.Log only)
+
+### R-backend-scope {#r-backend-scope}
+
+The framework names no target backends: the core (graph/JSON proposals/CLI/Go test suite) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_backend_scope` (t.Log only)
+
+### R-bijection-r-to-enforcer {#r-bijection-r-to-enforcer}
+
+Every SETTLED/ENFORCED requirement shall name an existing check_* in the invariant registry (internal/invariants, registered via MustRegister) or a real Test* function in the Go test suite.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_bijection_r_to_enforcer` (t.Log only)
+
+### R-boot-cite-in-first-sentence {#r-boot-cite-in-first-sentence}
+
+The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_boot_cite_in_first_sentence` (t.Log only)
+
+### R-boot-reload-three-facts {#r-boot-reload-three-facts}
+
+The operator shall begin every new turn by re-loading three facts from the substrate: current context %, the top what_now action, and the SETTLED-DRAFT-UNENFORCED ratio.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_boot_reload_three_facts` (t.Log only)
+
+### R-budget-measure {#r-budget-measure}
+
+An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_budget_measure` (t.Log only)
+
+### R-check-method-is-atomic {#r-check-method-is-atomic}
+
+Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_check_method_is_atomic` (t.Log only)
+
+### R-claude-md-consolidates-when-single-agent {#r-claude-md-consolidates-when-single-agent}
+
+While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_claude_md_consolidates_when_single_agent` (t.Log only)
+
+### R-claude-md-live-state-generated {#r-claude-md-live-state-generated}
+
+The live numeric state in CLAUDE.md (top action, debt counts, graph size, crystal headroom, context) shall be generated by gen_spec into a sentinel-delimited block, never hand-written.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_claude_md_live_state_generated` (t.Log only)
+
+### R-claude-md-template-driven {#r-claude-md-template-driven}
+
+CLAUDE.md shall be generated by substituting <!-- mind --> and <!-- business --> placeholders in CLAUDE.md.template.txt with rendered content, preserving all other template text verbatim.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_claude_md_template_driven` (t.Log only)
+
+### R-commit-boundary-checkable {#r-commit-boundary-checkable}
+
+A gate-status command shall answer, from a runtime land-log, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_commit_boundary_checkable` (t.Log only)
+
+### R-committed-code-no-home-writes {#r-committed-code-no-home-writes}
+
+Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_committed_code_no_home_writes` (t.Log only)
+
+### R-conflict-addressing-resolves-variables {#r-conflict-addressing-resolves-variables}
+
+`hotam apply-proposal` shall resolve a Conflict by its string ID when locating the Conflict node a proposal addresses, whether the ID is given directly or via a variable-style alias.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_conflict_addressing_resolves_variables` (t.Log only)
+
+### R-conflict-held-state {#r-conflict-held-state}
+
+Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_conflict_held_state` (t.Log only)
+
+### R-conflict-is-connector-node {#r-conflict-is-connector-node}
+
+A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_conflict_is_connector_node` (t.Log only)
+
+### R-conflict-min-two-members {#r-conflict-min-two-members}
+
+Every Conflict node shall contain at least two distinct Requirement ids in its members tuple.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_conflict_min_two_members` (t.Log only)
+
+### R-conflict-resolved-in-members-or-mediator {#r-conflict-resolved-in-members-or-mediator}
+
+A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_conflict_resolved_in_members_or_mediator` (t.Log only)
+
+### R-conflict-structurally-visible {#r-conflict-structurally-visible}
+
+Every Conflict node shall carry a non-empty axis, context, and steward.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_conflict_structurally_visible` (t.Log only)
+
+### R-confront-includes-aspirations {#r-confront-includes-aspirations}
+
+At the CONFRONT step the operator shall check every change not only against SETTLED rules but also against the graph's goals, IMPLEMENTS aspirations and values, surfacing any contradiction before writing.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_confront_includes_aspirations` (t.Log only)
+
+### R-constituting-requirements-converge {#r-constituting-requirements-converge}
+
+The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_constituting_requirements_converge` (t.Log only)
+
+### R-constitution-is-index {#r-constitution-is-index}
+
+The CONSTITUTION block in root CLAUDE.md shall render each SETTLED requirement as id + enforcement flag [E/S/P] grouped by category, with a pointer to docs/gen/REQUIREMENTS.md for full claims.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_constitution_is_index` (t.Log only)
+
+### R-constitution-separates-plumbing {#r-constitution-separates-plumbing}
+
+The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_constitution_separates_plumbing` (t.Log only)
+
+### R-content-free-no-business-data {#r-content-free-no-business-data}
+
+The framework Go packages (internal/*, cmd/hotam/*) shall ship no business data (no example requirements, no example axes, no business stakeholders).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_content_free_no_business_data` (t.Log only)
+
+### R-content-free-no-examples {#r-content-free-no-examples}
+
+The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_content_free_no_examples` (t.Log only)
+
+### R-content-free-no-seed-graph {#r-content-free-no-seed-graph}
+
+The framework shall not embed a seed TensionGraph -- LoadGraph (internal/loader) discovers the user's graph by convention from domains/<name>/graph.json.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_content_free_no_seed_graph` (t.Log only)
+
+### R-content-layout-evolution {#r-content-layout-evolution}
+
+Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_content_layout_evolution` (t.Log only)
+
+### R-context-bounded-delegation {#r-context-bounded-delegation}
+
+The methodology shall relieve an over-budget operator by splitting its domain into a bounded sub-domain owned by a spawned sub-operator (the horizontal lever).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_context_bounded_delegation` (t.Log only)
+
+### R-context-budget-rule {#r-context-budget-rule}
+
+An operator's RESIDENT working set shall not exceed its context budget (measured by budget.measure — for CRYSTAL_CHARS the char-length of root CLAUDE.md vs the host cap), with any excess flagged as a structural OVERLOADED contradiction by the harness.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_context_budget_rule` (t.Log only)
+
+### R-core-imports-stdlib-or-hotam-spec-only {#r-core-imports-stdlib-or-hotam-spec-only}
+
+Every import in the core Go packages (internal/*, cmd/hotam/*) shall resolve to the Go standard library or the hotam module itself -- no third-party backend/runtime dependency.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_core_imports_stdlib_or_hotam_spec_only` (t.Log only)
+
+### R-core-periphery-import-ratchet {#r-core-periphery-import-ratchet}
+
+A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_core_periphery_import_ratchet` (t.Log only)
+
+### R-critical-core-methodology {#r-critical-core-methodology}
+
+The methodology's own critical core shall be the six invariants named in criticalCoreNames (internal/generator/constitution.go), guarding every path by which a contradiction could be introduced without being seen.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_critical_core_methodology` (t.Log only)
+
+### R-critical-core-per-domain {#r-critical-core-per-domain}
+
+Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_critical_core_per_domain` (t.Log only)
+
+### R-crystal-carries-mediation-loop {#r-crystal-carries-mediation-loop}
+
+Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND -- each step naming its real tool command.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_carries_mediation_loop` (t.Log only)
+
+### R-crystal-carries-recursion-seed {#r-crystal-carries-recursion-seed}
+
+Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_carries_recursion_seed` (t.Log only)
+
+### R-crystal-carries-role-seed {#r-crystal-carries-role-seed}
+
+Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_carries_role_seed` (t.Log only)
+
+### R-crystal-carries-short-form {#r-crystal-carries-short-form}
+
+The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_carries_short_form` (t.Log only)
+
+### R-crystal-is-claude-md {#r-crystal-is-claude-md}
+
+Each operator's crystallized substrate shall be its own CLAUDE.md file.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_is_claude_md` (t.Log only)
+
+### R-crystal-reload-by-reference {#r-crystal-reload-by-reference}
+
+An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_reload_by_reference` (t.Log only)
+
+### R-crystal-tree-hierarchy {#r-crystal-tree-hierarchy}
+
+The delegation hierarchy shall be a tree of CLAUDE.md crystals, one per operator, each bounded by its context budget.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystal_tree_hierarchy` (t.Log only)
+
+### R-crystallize-before-split {#r-crystallize-before-split}
+
+On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystallize_before_split` (t.Log only)
+
+### R-crystallize-knowledge-to-code {#r-crystallize-knowledge-to-code}
+
+An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_crystallize_knowledge_to_code` (t.Log only)
+
+### R-decided-by-verifiable-signature {#r-decided-by-verifiable-signature}
+
+Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_decided_by_verifiable_signature` (t.Log only)
+
+### R-decided-conflict-justifies-itself {#r-decided-conflict-justifies-itself}
+
+Every Conflict in DECIDED lifecycle shall carry either a non-empty rationale in DECIDED(...) or at least one derived Requirement.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_decided_conflict_justifies_itself` (t.Log only)
+
+### R-decided-needs-human-signoff {#r-decided-needs-human-signoff}
+
+A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_decided_needs_human_signoff` (t.Log only)
+
+### R-delegation-conclusions-only {#r-delegation-conclusions-only}
+
+When an operator delegates a sub-domain, the sub-operator shall return only CONCLUSIONS with shared objects declared as an explicit border, never raw detail.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_delegation_conclusions_only` (t.Log only)
+
+### R-delegation-is-a-file {#r-delegation-is-a-file}
+
+Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via a dedicated delegate tool), so git carries the who/when/what history of every hand-off.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_delegation_is_a_file` (t.Log only)
+
+### R-dependency-drives-parallel {#r-dependency-drives-parallel}
+
+Independent sub-graphs in the dependency network may be delegated to parallel sub-operators.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_dependency_drives_parallel` (t.Log only)
+
+### R-dependency-drives-sequential {#r-dependency-drives-sequential}
+
+Dependency chains in the network shall be processed sequentially.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_dependency_drives_sequential` (t.Log only)
+
+### R-dependency-tracked {#r-dependency-tracked}
+
+The system shall track the dependency network between requirements via Requirement.relations (depends_on, refines).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_dependency_tracked` (t.Log only)
+
+### R-deterministic-generation {#r-deterministic-generation}
+
+The Go generator (internal/generator, surfaced as `hotam gen-spec`) shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_deterministic_generation` (t.Log only)
+
+### R-director-agent-required-per-domain {#r-director-agent-required-per-domain}
+
+Every domain must contain a `director` agent at `domains/<name>/agents/director/` as the entry point operator.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_director_agent_required_per_domain` (t.Log only)
+
+### R-doc-names-reader {#r-doc-names-reader}
+
+Every generated doc shall name its reader as an existing Stakeholder id in its header.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_doc_names_reader` (t.Log only)
+
+### R-docs-generated-from-requirements {#r-docs-generated-from-requirements}
+
+Per-topic narrative files (atoms-operator.md, atoms-substrate.md, atoms-discipline.md, atoms-check.md) shall be generated from SETTLED requirements grouped by topic, written into the active domain's docs/gen/ by the generator.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_docs_generated_from_requirements` (t.Log only)
+
+### R-domain-declares-director {#r-domain-declares-director}
+
+Every domain's manifest shall declare a DIRECTOR agent that resolves to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_declares_director` (t.Log only)
+
+### R-domain-has-docs-dir {#r-domain-has-docs-dir}
+
+Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_has_docs_dir` (t.Log only)
+
+### R-domain-has-manifest {#r-domain-has-manifest}
+
+Every `domains/<name>/` directory contains a `manifest.json` defining the domain's identity fields (id, description, goals, director), so the generator can discover a domain's metadata without loading its full graph.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_has_manifest` (t.Log only)
+
+### R-domain-is-a-directory {#r-domain-is-a-directory}
+
+A business domain is represented as a directory at `domains/<name>/`.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_is_a_directory` (t.Log only)
+
+### R-domain-map-generated {#r-domain-map-generated}
+
+The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_map_generated` (t.Log only)
+
+### R-domain-map-shows-pulse {#r-domain-map-shows-pulse}
+
+The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_map_shows_pulse` (t.Log only)
+
+### R-domain-owns-docs-gen {#r-domain-owns-docs-gen}
+
+Each `domains/<name>/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_owns_docs_gen` (t.Log only)
+
+### R-domain-owns-graph-py {#r-domain-owns-graph-py}
+
+Each `domains/<name>/` owns its own graph store (`graph.json`) defining its requirement/conflict/assumption graph, loaded and written via the shared loader.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_owns_graph_py` (t.Log only)
+
+### R-domain-owns-tools-and-agents {#r-domain-owns-tools-and-agents}
+
+Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or sub-agent is actually created — not eagerly scaffolded; a domain with no sub-tools/sub-agents yet correctly carries neither directory.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_owns_tools_and_agents` (t.Log only)
+
+### R-domain-self-hosting-flag {#r-domain-self-hosting-flag}
+
+Framework-jurisdiction invariants (frameworkScopedInvariantNames) shall run only against a graph whose manifest declares self_hosting=true.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_self_hosting_flag` (t.Log only)
+
+### R-drift-structurally-impossible {#r-drift-structurally-impossible}
+
+The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_drift_structurally_impossible` (t.Log only)
+
+### R-empty-content-calm-banner {#r-empty-content-calm-banner}
+
+When the active domain has no content yet (empty graph), `hotam what-now` shall render a calm 'no content yet'-style signal, not an error.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_empty_content_calm_banner` (t.Log only)
+
+### R-empty-content-gen-notice {#r-empty-content-gen-notice}
+
+When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_empty_content_gen_notice` (t.Log only)
+
+### R-empty-content-wellformed {#r-empty-content-wellformed}
+
+A freshly-cloned framework with an empty graph shall pass all structural invariants â€” an empty graph is well-formed.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_empty_content_wellformed` (t.Log only)
+
+### R-enforceability-kind-declared {#r-enforceability-kind-declared}
+
+A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforceability_kind_declared` (t.Log only)
+
+### R-enforced-by-resolvable {#r-enforced-by-resolvable}
+
+Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete enforcer — a registered check_* invariant or a real top-level Test* function under internal/**/*_test.go — via the shared enforcer-resolution logic.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforced_by_resolvable` (t.Log only)
+
+### R-enforced-names-enforcer {#r-enforced-names-enforcer}
+
+An ENFORCED requirement shall name its enforcing invariant or test in enforced_by.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforced_names_enforcer` (t.Log only)
+
+### R-enforcement-first-class {#r-enforcement-first-class}
+
+The enforcement level (PROSE / STRUCTURAL / ENFORCED) shall be a first-class Requirement field with enforced_by anchors naming the check_* invariant or Test* function that guarantees the claim.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforcement_first_class` (t.Log only)
+
+### R-enforcement-levels-declared {#r-enforcement-levels-declared}
+
+A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforcement_levels_declared` (t.Log only)
+
+### R-enforcement-perimeter-baselines-guarded {#r-enforcement-perimeter-baselines-guarded}
+
+A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforcement_perimeter_baselines_guarded` (t.Log only)
+
+### R-enforcement-perimeter-visible {#r-enforcement-perimeter-visible}
+
+A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_enforcement_perimeter_visible` (t.Log only)
+
+### R-entities-md-generated {#r-entities-md-generated}
+
+domains/<name>/docs/gen/ENTITIES.md shall be generated from the domain's graph by gen-spec, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entities_md_generated` (t.Log only)
+
+### R-entity-checks-by-iteration {#r-entity-checks-by-iteration}
+
+The check_entity_* invariant family shall cover every declared EntityType by iterating g.EntityTypes, requiring no new check_* code per additional type.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_checks_by_iteration` (t.Log only)
+
+### R-entity-derived-requirement {#r-entity-derived-requirement}
+
+Each EntityType in the domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the check_entity_* family covering it.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_derived_requirement` (t.Log only)
+
+### R-entity-field-kind-known {#r-entity-field-kind-known}
+
+Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string | number | enum | reference | state).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_field_kind_known` (t.Log only)
+
+### R-entity-instance-id-prefix {#r-entity-instance-id-prefix}
+
+Every EntityInstance.id shall start with 'ENT-<entity_type>-' (typed-anchor discipline).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_instance_id_prefix` (t.Log only)
+
+### R-entity-instance-refs-resolve {#r-entity-instance-refs-resolve}
+
+Every EntityInstance reference field shall resolve in the graph according to its ref_target.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_instance_refs_resolve` (t.Log only)
+
+### R-entity-instance-required-fields {#r-entity-instance-required-fields}
+
+Every EntityInstance shall provide values for all EntityFields with required=True.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_instance_required_fields` (t.Log only)
+
+### R-entity-instance-state-in-lifecycle {#r-entity-instance-state-in-lifecycle}
+
+Every EntityInstance.state shall be a valid state in the corresponding EntityType.lifecycle.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_instance_state_in_lifecycle` (t.Log only)
+
+### R-entity-is-declarative {#r-entity-is-declarative}
+
+The framework shall supply no built-in EntityType values â€” all entity types are declared by domains in build_graph().
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_is_declarative` (t.Log only)
+
+### R-entity-reuses-lifecycle {#r-entity-reuses-lifecycle}
+
+Each EntityType.Lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_reuses_lifecycle` (t.Log only)
+
+### R-entity-state-conflict-surfaced {#r-entity-state-conflict-surfaced}
+
+Two processes driving one EntityType to disjoint terminal or quiescent states shall surface as a P5 LATENT_CONNECTOR action via entity_state_conflict_suspects().
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_state_conflict_surfaced` (t.Log only)
+
+### R-entity-type-lifecycle-wellformed {#r-entity-type-lifecycle-wellformed}
+
+Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_entity_type_lifecycle_wellformed.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_type_lifecycle_wellformed` (t.Log only)
+
+### R-entity-typed-anchors {#r-entity-typed-anchors}
+
+check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_entity_typed_anchors` (t.Log only)
+
+### R-framework-owned-by-no-agent {#r-framework-owned-by-no-agent}
+
+The framework body (`internal/` package tree) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_framework_owned_by_no_agent` (t.Log only)
+
+### R-framework-shared-docs-generated {#r-framework-shared-docs-generated}
+
+The framework shall generate thinking/*.md and tools/*.md deterministically from the methodology section registry and tool registry (the single source of truth).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_framework_shared_docs_generated` (t.Log only)
+
+### R-framework-suite-domain-independent {#r-framework-suite-domain-independent}
+
+The framework test subset shall pass green under ANY active domain, or none, independent of which business domain is pinned.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_framework_suite_domain_independent` (t.Log only)
+
+### R-framework-suite-tiered {#r-framework-suite-tiered}
+
+The test suite shall partition every collected test into exactly one of two responsibility tiers -- 'framework' (exercising internal/ mechanics) or 'domain' (asserting concrete self-domain content) -- so the framework tier is a separately selectable, self-contained subset.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_framework_suite_tiered` (t.Log only)
+
+### R-generations-inherit-doc-test-code {#r-generations-inherit-doc-test-code}
+
+Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_generations_inherit_doc_test_code` (t.Log only)
+
+### R-glossary-drift-stable {#r-glossary-drift-stable}
+
+The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_glossary_drift_stable` (t.Log only)
+
+### R-glossary-generated {#r-glossary-generated}
+
+A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_glossary_generated` (t.Log only)
+
+### R-glossary-sync-fails-dead {#r-glossary-sync-fails-dead}
+
+The glossary sync test shall fail when a defined vocabulary term is not used anywhere in the framework.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_glossary_sync_fails_dead` (t.Log only)
+
+### R-glossary-sync-fails-unused {#r-glossary-sync-fails-unused}
+
+The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_glossary_sync_fails_unused` (t.Log only)
+
+### R-goal-is-first-class-type {#r-goal-is-first-class-type}
+
+Goal shall be its own first-class struct type (not a Requirement facet) with typed anchor 'GOAL-'.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_goal_is_first_class_type` (t.Log only)
+
+### R-goal-owner-is-operator {#r-goal-owner-is-operator}
+
+Goal.owner shall reference an existing Operator.id.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_goal_owner_is_operator` (t.Log only)
+
+### R-goal-target-kind-known {#r-goal-target-kind-known}
+
+Goal.target_state.kind shall be one of the declared TARGET_KINDS.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_goal_target_kind_known` (t.Log only)
+
+### R-goal-type-vs-facet {#r-goal-type-vs-facet}
+
+Goal shall be its own first-class struct type (not a Requirement facet), with typed anchor 'GOAL-' and its own GoalLifecycle.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_goal_type_vs_facet` (t.Log only)
+
+### R-held-carries-variants {#r-held-carries-variants}
+
+A HELD Conflict shall carry at least two elaborated behavior Variants (id, behavior, implies, costs) as a payload field, not as new graph nodes.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_held_carries_variants` (t.Log only)
+
+### R-history-generated-from-decided {#r-history-generated-from-decided}
+
+docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_history_generated_from_decided` (t.Log only)
+
+### R-history-generated-from-rejected {#r-history-generated-from-rejected}
+
+docs/gen/HISTORY.md shall include entries generated from REJECTED markers in requirement WHY blocks.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_history_generated_from_rejected` (t.Log only)
+
+### R-initiator-supplies-domain-content {#r-initiator-supplies-domain-content}
+
+An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec (graph.json).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_initiator_supplies_domain_content` (t.Log only)
+
+### R-land-gate-tier-selector {#r-land-gate-tier-selector}
+
+hotam gate (internal/gate.SelectTier1), when invoked for a target anchor, shall resolve the T1 targeted-enforcer subset from the target's enforced_by tuple (union of resolved check_*/Test* names) instead of requiring the full test suite for that lookup.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_land_gate_tier_selector` (t.Log only)
+
+### R-land-gate-tier-selector-fails-closed {#r-land-gate-tier-selector-fails-closed}
+
+internal/gate.SelectTier1 shall fall back to Confident=false (fail-closed, signaling the caller to run the full suite) on any selection uncertainty: an unknown/unresolvable target anchor, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), or any enforced_by entry that cannot be resolved to a concrete Go check_*/Test* function -- never returning a partial or best-effort subset in an uncertain case.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_land_gate_tier_selector_fails_closed` (t.Log only)
+
+### R-land-is-transactional {#r-land-is-transactional}
+
+hotam land shall leave a domain's graph.json and generated docs mutually consistent even when a later stage (doc regeneration or the post-regen violations check) fails after the proposal apply stage already wrote a new graph.json — a failure rolls back to the pre-land state rather than leaving the graph and docs divergent.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_land_is_transactional` (t.Log only)
+
+### R-land-tier-trace {#r-land-tier-trace}
+
+Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected test node-ids (or the literal 'full'), and verify/closure outcome to a runtime land-log, written AFTER the verify step so the record states what actually ran.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_land_tier_trace` (t.Log only)
+
+### R-land-tier-trace-best-effort {#r-land-tier-trace-best-effort}
+
+A broken or unwritable spec/.runtime/land-log.jsonl location shall never fail an otherwise-green apply -- the write is best-effort, warn only.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_land_tier_trace_best_effort` (t.Log only)
+
+### R-land-tier-trace-skips-dry-run {#r-land-tier-trace-skips-dry-run}
+
+A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_land_tier_trace_skips_dry_run` (t.Log only)
+
+### R-latent-connectors-cluster-by-assumption {#r-latent-connectors-cluster-by-assumption}
+
+The what-now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_latent_connectors_cluster_by_assumption` (t.Log only)
+
+### R-lifecycle-type-exists {#r-lifecycle-type-exists}
+
+A generic lifecycle module shall define State, Transition, and Lifecycle types.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_lifecycle_type_exists` (t.Log only)
+
+### R-lifecycle-validates-conflict {#r-lifecycle-validates-conflict}
+
+Conflict.lifecycle shall validate against the framework-supplied CONFLICT_LIFECYCLE.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_conflict` (t.Log only)
+
+### R-lifecycle-validates-goal {#r-lifecycle-validates-goal}
+
+Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_goal` (t.Log only)
+
+### R-lifecycle-validates-operator {#r-lifecycle-validates-operator}
+
+Operator.lifecycle shall validate against the framework-supplied OPERATOR_LIFECYCLE.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_operator` (t.Log only)
+
+### R-lifecycle-validates-requirement {#r-lifecycle-validates-requirement}
+
+Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_requirement` (t.Log only)
+
+### R-m-tag-format-valid {#r-m-tag-format-valid}
+
+Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_m_tag_format_valid` (t.Log only)
+
+### R-machine-check-syntactic {#r-machine-check-syntactic}
+
+Every non-empty Assumption.machine_check shall be a well-formed Python expression (compilable in eval mode), never free prose.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_machine_check_syntactic` (t.Log only)
+
+### R-method-matches-docstring {#r-method-matches-docstring}
+
+Each check_* function registered in the invariant registry shall carry a Claim/Rule/Why text that shares non-trivial lexical overlap with its Violation messages.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_method_matches_docstring` (t.Log only)
+
+### R-no-hand-edit-graph {#r-no-hand-edit-graph}
+
+Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land`, with direct hand-edits prohibited outside of bootstrap events.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_no_hand_edit_graph` (t.Log only)
+
+### R-no-observation-type {#r-no-observation-type}
+
+The ontology (internal/ontology) shall define no Observation or Evidence struct type anywhere -- Assumption remains the ontology's sole belief-carrying node type.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_no_observation_type` (t.Log only)
+
+### R-observation-evidence-scope {#r-observation-evidence-scope}
+
+Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_observation_evidence_scope` (t.Log only)
+
+### R-open-states-question {#r-open-states-question}
+
+Every requirement whose status begins with 'OPEN' shall carry a non-empty question of the form OPEN(<question>).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_open_states_question` (t.Log only)
+
+### R-open-tickets-visible {#r-open-tickets-visible}
+
+The what-now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into DiagnoseSignals.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_open_tickets_visible` (t.Log only)
+
+### R-operator-crystal-embeds-thinking-distilled {#r-operator-crystal-embeds-thinking-distilled}
+
+The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to domains/<domain>/docs/gen/thinking/<slug>.md, not a multi-line RULE+WHY distillate.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_crystal_embeds_thinking_distilled` (t.Log only)
+
+### R-operator-crystal-embeds-tools-distilled {#r-operator-crystal-embeds-tools-distilled}
+
+The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry and directs the operator to `hotam -h`, `hotam status --json`, `hotam req`, `hotam brief`, and docs/gen/tools/INDEX.md for on-demand detail — a compact pointer-only reference, not a per-tool distillation.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_crystal_embeds_tools_distilled` (t.Log only)
+
+### R-operator-has-context-budget {#r-operator-has-context-budget}
+
+An Operator shall carry a ContextBudget with a positive limit and a declared measure.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_has_context_budget` (t.Log only)
+
+### R-operator-is-frozen-dataclass {#r-operator-is-frozen-dataclass}
+
+An Operator shall be a dedicated struct type in internal/ontology/operator.go carrying the typed anchor 'OP-', with field mutations performed only through the proposal system.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_is_frozen_dataclass` (t.Log only)
+
+### R-operator-may-have-parent {#r-operator-may-have-parent}
+
+An Operator.parent shall reference another Operator.id or be None (root).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_may_have_parent` (t.Log only)
+
+### R-operator-not-self-approve {#r-operator-not-self-approve}
+
+An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_not_self_approve` (t.Log only)
+
+### R-operator-prompt-from-substrate {#r-operator-prompt-from-substrate}
+
+The operator-prompt CLAUDE.md shall include a CONSTITUTION block (compact per-category summary of SETTLED requirements) generated deterministically from the active domain's graph.json, with the full id+claim roster in docs/gen/CONSTITUTION.md.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_prompt_from_substrate` (t.Log only)
+
+### R-operator-prompt-loaded-at-session-start {#r-operator-prompt-loaded-at-session-start}
+
+A SessionStart hook shall run `hotam gen-spec` before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_prompt_loaded_at_session_start` (t.Log only)
+
+### R-operator-references-stakeholder {#r-operator-references-stakeholder}
+
+An Operator.stakeholder shall reference an existing Stakeholder.id.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_references_stakeholder` (t.Log only)
+
+### R-operator-type-vs-facet {#r-operator-type-vs-facet}
+
+Operator shall be its own first-class struct type in internal/ontology/operator.go (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_operator_type_vs_facet` (t.Log only)
+
+### R-overlap-single-presenter {#r-overlap-single-presenter}
+
+Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_overlap_single_presenter` (t.Log only)
+
+### R-parallel-mutating-agents-use-worktree {#r-parallel-mutating-agents-use-worktree}
+
+Parallel agent invocations that mutate tracked repository files shall use git worktree isolation unless their target files are provably disjoint and no history-rewriting git operation is planned during their execution window.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_parallel_mutating_agents_use_worktree` (t.Log only)
+
+### R-post-compact-regen-from-substrate {#r-post-compact-regen-from-substrate}
+
+A PostCompact hook shall run `hotam gen-spec` after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_post_compact_regen_from_substrate` (t.Log only)
+
+### R-prefer-tool-over-hand {#r-prefer-tool-over-hand}
+
+The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_prefer_tool_over_hand` (t.Log only)
+
+### R-presented-pending-decision-type {#r-presented-pending-decision-type}
+
+Proposals shall be organized under wave-numbered folders in `proposals/` (`waveN-<slug>/`, optionally with batch subfolders), which serves the pending-vs-applied practical need without a dedicated `pending/`/`applied/` runtime split or a new graph node type; a proposal file lives in its wave folder from the TRANSLATE step through LAND.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_presented_pending_decision_type` (t.Log only)
+
+### R-private-tools-in-agent-folder {#r-private-tools-in-agent-folder}
+
+Tools available only to one agent shall live under that agent's tools/ subdirectory (domains/<domain>/agents/<name>/tools/).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_private_tools_in_agent_folder` (t.Log only)
+
+### R-process-drives-existing-entities {#r-process-drives-existing-entities}
+
+Every entity slug referenced in a Process.drives_entities shall resolve to a declared EntityType slug in g.entity_types.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_drives_existing_entities` (t.Log only)
+
+### R-process-goal-owner-is-operator-aspect {#r-process-goal-owner-is-operator-aspect}
+
+Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_goal_owner_is_operator_aspect` (t.Log only)
+
+### R-process-lifecycle-wellformed-aspect {#r-process-lifecycle-wellformed-aspect}
+
+Every Process node shall have a well-formed lifecycle validated by check_process_lifecycle_wellformed.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_lifecycle_wellformed_aspect` (t.Log only)
+
+### R-process-opt-in {#r-process-opt-in}
+
+The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_opt_in` (t.Log only)
+
+### R-process-roles-declared-aspect {#r-process-roles-declared-aspect}
+
+Every role referenced in a Process step shall be declared in the Process roles_required tuple.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_roles_declared_aspect` (t.Log only)
+
+### R-process-typed-anchors-extended {#r-process-typed-anchors-extended}
+
+check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_typed_anchors_extended` (t.Log only)
+
+### R-process-types-exist {#r-process-types-exist}
+
+internal/ontology/process.go shall define Process, Step, Goal, TargetState structs, plus ProcessLifecycle and GoalLifecycle canonical lifecycle variables.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_process_types_exist` (t.Log only)
+
+### R-project-name-hotam-spec {#r-project-name-hotam-spec}
+
+The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam-spec-self`, the `hotam` CLI binary name, and repository slug conventions), while the Go module path shall match the real git remote and is deliberately `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, per commit 4325ac8), closing M1.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_project_name_hotam_spec` (t.Log only)
+
+### R-project-root-not-hardcoded {#r-project-root-not-hardcoded}
+
+HotamSpec resolves the consumer's project root through a single function, paths.ProjectRoot() (internal/paths/project_root.go), via a documented R1-R6 priority chain, never through a raw runtime.Caller-based parents-climb guess at the consumer's files.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_project_root_not_hardcoded` (t.Log only)
+
+### R-proposed-conflict-kind-exists {#r-proposed-conflict-kind-exists}
+
+The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via `hotam apply-proposal`.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_proposed_conflict_kind_exists` (t.Log only)
+
+### R-proposed-stakeholder-kind-exists {#r-proposed-stakeholder-kind-exists}
+
+The proposal protocol shall include a ProposedStakeholder kind (Kind="Stakeholder") that materializes a new Stakeholder node in the active domain's graph by appending to g.Stakeholders, refusing a duplicate id.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_proposed_stakeholder_kind_exists` (t.Log only)
+
+### R-recently-rejected-surfaced {#r-recently-rejected-surfaced}
+
+Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every REJECTED requirement whose why contains 'REJECTED — REPLACES' to surface anti-relitigation evidence before re-derivation.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_recently_rejected_surfaced` (t.Log only)
+
+### R-reflection-predicates-first-class {#r-reflection-predicates-first-class}
+
+The operator's self-diagnosis conditions shall be named, pure, graph-only predicate functions in internal/diagnose/finding.go composed by AllFindings in a fixed registry order, and consumed by the what-now harness via internal/diagnose/signal.go -- never inlined in tool code.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_reflection_predicates_first_class` (t.Log only)
+
+### R-rejected-preserved-not-deleted {#r-rejected-preserved-not-deleted}
+
+Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_rejected_preserved_not_deleted` (t.Log only)
+
+### R-requirement-claim-is-atomic {#r-requirement-claim-is-atomic}
+
+Each Requirement.claim shall assert exactly one concern, with conjunctions of distinct concerns decomposed into separate requirements.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_requirement_claim_is_atomic` (t.Log only)
+
+### R-requirement-enforced {#r-requirement-enforced}
+
+A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_requirement_enforced` (t.Log only)
+
+### R-requirement-freshness-fields {#r-requirement-freshness-fields}
+
+A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_requirement_freshness_fields` (t.Log only)
+
+### R-review-mark-carries-evidence {#r-review-mark-carries-evidence}
+
+A ProposedReviewMark proposal shall fail validation unless it carries at least one non-whitespace evidence entry.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_review_mark_carries_evidence` (t.Log only)
+
+### R-review-mark-requires-substantive-review {#r-review-mark-requires-substantive-review}
+
+A SETTLED requirement's last_reviewed_at shall be updated only after its claim/why/evidence/source_refs have actually been read and checked against current code/graph reality; a blanket date backfill with no substantive check is not a review and must not set last_reviewed_at.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_review_mark_requires_substantive_review` (t.Log only)
+
+### R-revisit-markers-evaluated {#r-revisit-markers-evaluated}
+
+The what-now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_revisit_markers_evaluated` (t.Log only)
+
+### R-root-claude-md-is-sentinel-only {#r-root-claude-md-is-sentinel-only}
+
+The root CLAUDE.md (and its AGENTS.md/GEMINI.md siblings) shall be rendered by gen-spec from a template whose body is a minimal framework-identity header plus sentinel-bounded generated blocks, with no hand-written prose between sentinels.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_root_claude_md_is_sentinel_only` (t.Log only)
+
+### R-rules-as-data {#r-rules-as-data}
+
+Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data distinct from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic) -- with derivation of check_* function bodies from any such table explicitly deferred.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_rules_as_data` (t.Log only)
+
+### R-run-speed-guarded {#r-run-speed-guarded}
+
+Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_run_speed_guarded` (t.Log only)
+
+### R-scope-is-projection {#r-scope-is-projection}
+
+An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared graph), never a copy of any node.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_scope_is_projection` (t.Log only)
+
+### R-scope-overlap-generated {#r-scope-overlap-generated}
+
+When two operators' scope projections share a node, the overlap shall be computed (never hidden or silently merged); the rendering of that overlap into a per-operator crystal is deferred until a real second operator exists.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_scope_overlap_generated` (t.Log only)
+
+### R-sensorium-committed {#r-sensorium-committed}
+
+The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-guard, Stop context_producer) shall live in a committed project settings.json generated by a setup tool with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_sensorium_committed` (t.Log only)
+
+### R-shared-thinking-doc-from-canon-sections {#r-shared-thinking-doc-from-canon-sections}
+
+Each spec/docs/thinking/<topic-slug>.md shall be generated as the union of all framework docstrings carrying Canon: §<Topic> markers, never hand-written.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_shared_thinking_doc_from_canon_sections` (t.Log only)
+
+### R-shared-tool-doc-from-docstring-and-help {#r-shared-tool-doc-from-docstring-and-help}
+
+Each docs/gen/tools/<command>.md shall be a pure function of that tool's methodology.Tool registry entry (Command/Canon/Purpose/Status), generated wholesale by BuildToolDocs with no hand-written content.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_shared_tool_doc_from_docstring_and_help` (t.Log only)
+
+### R-shared-tools-in-spec-tools {#r-shared-tools-in-spec-tools}
+
+Tools available to all operators shall be the single shared hotam CLI toolset -- Go subcommands wired in cmd/hotam/main.go and declared once in the methodology.Tools registry -- with no per-agent private tool namespace.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_shared_tools_in_spec_tools` (t.Log only)
+
+### R-signoff-preserved-in-substrate {#r-signoff-preserved-in-substrate}
+
+A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_signoff_preserved_in_substrate` (t.Log only)
+
+### R-smoke-test {#r-smoke-test}
+
+The test suite shall provide a fast end-to-end signal that the framework is healthy on the real domain graph -- load the graph, run every generator template, and regenerate docs without panicking or empty output.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_smoke_test` (t.Log only)
+
+### R-spawn-log-carries-isolation {#r-spawn-log-carries-isolation}
+
+Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_spawn_log_carries_isolation` (t.Log only)
+
+### R-speak-by-reference {#r-speak-by-reference}
+
+An operator shall communicate by reference, ensuring every assertion cites at least one concrete anchor in the info-space.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_speak_by_reference` (t.Log only)
+
+### R-speculative-aspects-frozen {#r-speculative-aspects-frozen}
+
+The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_speculative_aspects_frozen` (t.Log only)
+
+### R-stable-conflict-identity {#r-stable-conflict-identity}
+
+A Conflict's id shall equal conflict_identity(axis, context) — the deterministic hash of its tension, not its members.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_stable_conflict_identity` (t.Log only)
+
+### R-stale-substrate {#r-stale-substrate}
+
+Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_stale_substrate` (t.Log only)
+
+### R-statemachine-deterministic {#r-statemachine-deterministic}
+
+A Lifecycle's transitions shall be deterministic — no two transitions with the same (src, event) and overlapping guards.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_statemachine_deterministic` (t.Log only)
+
+### R-statemachine-guard-on-assumption {#r-statemachine-guard-on-assumption}
+
+A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_statemachine_guard_on_assumption` (t.Log only)
+
+### R-statemachine-reachable {#r-statemachine-reachable}
+
+Every state in a canonical Lifecycle shall be reachable from the initial state.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_statemachine_reachable` (t.Log only)
+
+### R-statemachine-terminal-or-cyclic {#r-statemachine-terminal-or-cyclic}
+
+Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_statemachine_terminal_or_cyclic` (t.Log only)
+
+### R-status-single-command-summary {#r-status-single-command-summary}
+
+The hotam CLI shall provide a `status` command (`hotam status [--domain <path>] [--today YYYY-MM-DD] [--json]`) that composes what-now's top action + debt counts (internal/diagnose), due's freshness counts (internal/freshness), and all-violations' violation count (internal/invariants) into a single compact summary, so an agent does not need to run those three commands separately to reconstruct the same picture. It reuses the same underlying functions those commands call rather than reimplementing their logic, never gates (exit code always 0), and its --json output uses flat, explicitly named fields (top_action, settled_count, enforced_count, closeable_debt_count, overdue_count, never_reviewed_count, violation_count, node_count) parseable in one shot.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_status_single_command_summary` (t.Log only)
+
+### R-step-invokes-known-transition {#r-step-invokes-known-transition}
+
+Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_step_invokes_known_transition` (t.Log only)
+
+### R-steward-distinct-from-owners {#r-steward-distinct-from-owners}
+
+Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_steward_distinct_from_owners` (t.Log only)
+
+### R-sub-agent-crystal-triad {#r-sub-agent-crystal-triad}
+
+Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_sub_agent_crystal_triad` (t.Log only)
+
+### R-subagent-gets-its-claude-md {#r-subagent-gets-its-claude-md}
+
+A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_subagent_gets_its_claude_md` (t.Log only)
+
+### R-task-spawn-is-a-hand {#r-task-spawn-is-a-hand}
+
+A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_task_spawn_is_a_hand` (t.Log only)
+
+### R-task-spawn-log-runtime {#r-task-spawn-log-runtime}
+
+The spawn_agent tool shall append a spawn-log entry to .runtime/spawn-log.jsonl -- with parent, child kind, task subject, and stamp -- on every invocation.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_task_spawn_log_runtime` (t.Log only)
+
+### R-task-vs-action-distinct-altitudes {#r-task-vs-action-distinct-altitudes}
+
+The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_task_vs_action_distinct_altitudes` (t.Log only)
+
+### R-tension-audit-presents-only {#r-tension-audit-presents-only}
+
+The deterministic tension-shortlist tool shall never mutate any domain graph.json: its only outputs are a printed shortlist and an advisory recommendation, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_tension_audit_presents_only` (t.Log only)
+
+### R-tension-audit-shortlist-tool {#r-tension-audit-shortlist-tool}
+
+A tool shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_tension_audit_shortlist_tool` (t.Log only)
+
+### R-tension-audit-staleness-visible {#r-tension-audit-staleness-visible}
+
+The what_now harness shall surface a CLI-only action on the 'generative-audit' meter when the tension audit has never run or the live SETTLED graph has grown by more than GENERATIVE_AUDIT_STALE_DELTA atoms since the last recorded sweep.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_tension_audit_staleness_visible` (t.Log only)
+
+### R-three-cipher-pulse-structurally-injected {#r-three-cipher-pulse-structurally-injected}
+
+The three-cipher pulse (top action / debt / context) shall be structurally present in the LIVE-STATE block of the root CLAUDE.md, regenerated on every gen-spec / land, so the operator's per-turn ORIENT step reads it by reference rather than re-deriving it.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_three_cipher_pulse_structurally_injected` (t.Log only)
+
+### R-ticket-carries-history {#r-ticket-carries-history}
+
+Every ticket shall carry an append-only ## History section in which each mutation (create, status move, comment, text change) records one machine-recognisable entry, with a text change snapshotting the prior text.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_ticket_carries_history` (t.Log only)
+
+### R-ticket-engine-on-disk {#r-ticket-engine-on-disk}
+
+Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_ticket_engine_on_disk` (t.Log only)
+
+### R-ticket-mutation-via-tools-only {#r-ticket-mutation-via-tools-only}
+
+A ticket's frontmatter header and History shall be changed only through the ticket_* tools, never by hand-editing the file.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_ticket_mutation_via_tools_only` (t.Log only)
+
+### R-tiered-gate-not-a-commit-gate {#r-tiered-gate-not-a-commit-gate}
+
+The full go test ./... suite shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier (hotam gate / internal/gate.SelectTier1) is a standalone advisory selection tool, never a substitute for the full-suite run a steward or wave-closing agent performs before committing.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_tiered_gate_not_a_commit_gate` (t.Log only)
+
+### R-tool-is-its-own-requirement {#r-tool-is-its-own-requirement}
+
+Every tool registered in the methodology.Tools registry whose entry opens with a Canon: §<topic> marker shall be projected into a STRUCTURAL tool-derived requirement R-tool-<basename> with that tool's claim text, enforced by its named enforcer test when one exists.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_tool_is_its_own_requirement` (t.Log only)
+
+### R-tools-registry-generated {#r-tools-registry-generated}
+
+The list of available tools shall be generated from a single methodology.Tools registry (internal/methodology), never hand-maintained in prose -- each tool carries its Canon section, purpose, and Implemented/Planned status, and the EMBEDDED-TOOLS block of CLAUDE.md is rendered from it.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_tools_registry_generated` (t.Log only)
+
+### R-trust-anchor-delegation-explicit-only {#r-trust-anchor-delegation-explicit-only}
+
+Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_trust_anchor_delegation_explicit_only` (t.Log only)
+
+### R-trust-anchor-mechanism {#r-trust-anchor-mechanism}
+
+Every decision shall be personally signed by the human steward -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_trust_anchor_mechanism` (t.Log only)
+
+### R-two-altitude-ontology {#r-two-altitude-ontology}
+
+The methodology shall use ONE ontology at two altitudes: operator is to the methodology as actor is to the business (the methodology plane is the business plane applied reflexively).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_two_altitude_ontology` (t.Log only)
+
+### R-uncertain-assumptions-surface {#r-uncertain-assumptions-surface}
+
+The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_uncertain_assumptions_surface` (t.Log only)
+
+### R-uncrystallizable-automated {#r-uncrystallizable-automated}
+
+Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_uncrystallizable_automated` (t.Log only)
+
+### R-uncrystallizable-is-missing-type {#r-uncrystallizable-is-missing-type}
+
+Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted).
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_uncrystallizable_is_missing_type` (t.Log only)
+
+### R-unmeasured-cipher-names-host-boundary {#r-unmeasured-cipher-names-host-boundary}
+
+While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_unmeasured_cipher_names_host_boundary` (t.Log only)
+
+### R-unresolvable-classified-by-human {#r-unresolvable-classified-by-human}
+
+Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_unresolvable_classified_by_human` (t.Log only)
+
+### R-user-request-decomposed-to-tickets {#r-user-request-decomposed-to-tickets}
+
+The operator shall, immediately on receiving a user request, decompose it into tickets in the dialogue and ask the addressee -- session tasks or the ticket engine -- before beginning any work.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_user_request_decomposed_to_tickets` (t.Log only)
+
+### R-variant-choice-is-decision {#r-variant-choice-is-decision}
+
+A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_variant_choice_is_decision` (t.Log only)
+
+### R-verify-closure-per-action {#r-verify-closure-per-action}
+
+After an applied proposal lands (write + regen), the system shall verify the action that triggered the proposal is no longer present in the post-apply what-now diagnosis.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_verify_closure_per_action` (t.Log only)
+
+### R-wheel-build-atomic-verified {#r-wheel-build-atomic-verified}
+
+A release artifact shall be produced by a single atomic build command that fuses population + build + a self-check refusing to emit an artifact whose shipped tool-member names do not match the source-of-truth tool set on disk.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_wheel_build_atomic_verified` (t.Log only)
+
+### R-work-within-launch-dir {#r-work-within-launch-dir}
+
+A live operator, executing at runtime through shell commands or tool calls, shall confine all file mutations to its launch working directory -- never touching the host harness or global configuration unless the user explicitly requests otherwise; this live-conduct discipline is not statically checkable (no committed-code test can observe a runtime shell-out) and is enforced as honest PROSE.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_work_within_launch_dir` (t.Log only)
+
+### R-working-vs-substrate-budget {#r-working-vs-substrate-budget}
+
+The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_working_vs_substrate_budget` (t.Log only)
+

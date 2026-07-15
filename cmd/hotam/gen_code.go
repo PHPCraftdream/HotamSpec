@@ -41,69 +41,38 @@ func cmdGenCode(args []string) error {
 // pipeline_test.go) into <domainDir>/gen/go/, returning the sorted list of
 // absolute paths written.
 //
-// The four Generate*FromGraph functions (gocode package, stages 2-5) each
-// return their own map[string][]byte keyed by filename; several of them
-// independently render requirements_audit.md (lifecycle/requirements/
-// pipeline each contribute their own section — see RenderAuditFile's models/
-// reqModels/gates parameters). Contract §1 names exactly one
-// requirements_audit.md in the final output, so later stages' renders
-// intentionally OVERWRITE earlier ones in the merged map below — the
-// merge order (models, lifecycle, requirements, pipeline) mirrors the
-// generation stage order, and only the pipeline stage's render (built from
-// the fullest set of inputs: models AND gates) is not literally "more
-// complete" than requirements' own render for the requirements section, so
-// this is revisited if the two audit renders ever diverge in coverage; today
-// each stage's RenderAuditFile call is passed nil for the artifacts it does
-// not own (see gocode.go), so whichever stage runs last simply re-renders
-// the same audit content contributed by the earlier stages plus its own new
-// section skipping nothing — safe to take the last writer as final.
+// This calls gocode.GenerateAllFromGraph, the single function that builds
+// every []*entityModel/[]*requirementModel/[]*pipelineGateModel exactly ONCE
+// and renders requirements_audit.md exactly ONCE, from all three fully
+// populated (contract §0: one source of truth). Previously this function
+// called the four stage-scoped Generate*FromGraph functions separately and
+// merged their four file maps by filename; each of those functions renders
+// its OWN partial requirements_audit.md (lifecycle passes reqModels=nil,
+// requirements passes gates=nil, pipeline passes reqModels=nil — see
+// gocode.go/audit.go), so merging by last-write-wins silently discarded the
+// "## Requirements" section entirely (pipeline, the last stage to run, has
+// no reqModels to contribute) — every "// Atom: ... - see
+// requirements_audit.md#<anchor>" comment tied to a requirement then pointed
+// at a heading that did not exist in the file actually written to disk.
+// GenerateAllFromGraph is the fix: one render, all three inputs real.
 //
 // A domain whose EntityTypes/Requirements legitimately produce zero content
 // for a given generator stage (e.g. zero pipeline gates because no
-// reference-typed fields exist) is not an error — the corresponding
-// Generate*FromGraph call still succeeds and returns whatever real files it
-// has (per GEN-CODE-CONTRACT.md §2's "generator obligated to explicitly
-// refuse [only on genuinely unknown graph elements]" principle); this
-// function never synthesizes an empty placeholder file for content that
-// generation legitimately decided not to produce.
+// reference-typed fields exist) is not an error — GenerateAllFromGraph still
+// succeeds and returns whatever real files it has (per
+// GEN-CODE-CONTRACT.md §2's "generator obligated to explicitly refuse [only
+// on genuinely unknown graph elements]" principle); this function never
+// synthesizes an empty placeholder file for content that generation
+// legitimately decided not to produce.
 func genCode(domainDir string) ([]string, error) {
 	g, err := loadGraphOrEmpty(domainDir)
 	if err != nil {
 		return nil, err
 	}
 
-	files := make(map[string][]byte)
-
-	modelFiles, err := gocode.GenerateModelsFromGraph(domainDir, g.EntityTypes)
+	files, err := gocode.GenerateAllFromGraph(g.EntityTypes, g.Requirements, domainDir)
 	if err != nil {
-		return nil, fmt.Errorf("gen-code: models: %w", err)
-	}
-	for name, content := range modelFiles {
-		files[name] = content
-	}
-
-	lifecycleFiles, err := gocode.GenerateLifecycleFromGraph(g.EntityTypes)
-	if err != nil {
-		return nil, fmt.Errorf("gen-code: lifecycle: %w", err)
-	}
-	for name, content := range lifecycleFiles {
-		files[name] = content
-	}
-
-	requirementFiles, err := gocode.GenerateRequirementsFromGraph(g.EntityTypes, g.Requirements)
-	if err != nil {
-		return nil, fmt.Errorf("gen-code: requirements: %w", err)
-	}
-	for name, content := range requirementFiles {
-		files[name] = content
-	}
-
-	pipelineFiles, err := gocode.GeneratePipelineFromGraph(g.EntityTypes)
-	if err != nil {
-		return nil, fmt.Errorf("gen-code: pipeline: %w", err)
-	}
-	for name, content := range pipelineFiles {
-		files[name] = content
+		return nil, fmt.Errorf("gen-code: %w", err)
 	}
 
 	genGoDir := filepath.Join(domainDir, "gen", "go")

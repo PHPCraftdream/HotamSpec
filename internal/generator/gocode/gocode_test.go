@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
@@ -149,4 +151,96 @@ func TestGenerateModels_RealPratDomain_FrRecord(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generated fr-record module failed to build: %v\n%s", err, out)
 	}
+}
+
+// seeAuditAnchorPattern matches every "see requirements_audit.md#<anchor>"
+// occurrence a generated .go file may carry (both "// Atom: ... - see
+// requirements_audit.md#<anchor>" comments and
+// `t.Log("no structural atom - see requirements_audit.md#<anchor>")` calls),
+// capturing just the anchor. Anchors are always ASCII kebab-case identifiers
+// (contract §1.1's zero-Cyrillic rule + BuildEntityModel/BuildRequirementModel's
+// own ToKebabCase-derived slugs), so a plain `[\w-]+` capture is sufficient —
+// this is the same anchor shape RenderAuditFile's own "{#<anchor>}" headings
+// use.
+var seeAuditAnchorPattern = regexp.MustCompile(`see requirements_audit\.md#([\w-]+)`)
+
+// extractAuditHeadingAnchors scans requirements_audit.md's own rendered
+// markdown for every "{#<anchor>}" heading id RenderAuditFile emits (##/###
+// headings across the EntityType, Requirements, and Pipeline Gates
+// sections), returning the set of anchors that actually resolve.
+func extractAuditHeadingAnchors(audit string) map[string]bool {
+	headingPattern := regexp.MustCompile(`\{#([\w-]+)\}`)
+	out := make(map[string]bool)
+	for _, m := range headingPattern.FindAllStringSubmatch(audit, -1) {
+		out[m[1]] = true
+	}
+	return out
+}
+
+// TestGenerateAllFromGraph_RealPratDomain_AuditAnchorsResolve is the
+// regression proof for the requirements_audit.md merge-order bug: previously
+// cmd/hotam's genCode merged four independently-generated file maps by
+// filename, and GeneratePipelineFromGraph's own requirements_audit.md render
+// (built with reqModels=nil, since pipeline stage never had SETTLED
+// requirements in scope) always ran last and clobbered the fuller
+// GenerateRequirementsFromGraph render — so every "// Atom: <id> - see
+// requirements_audit.md#<anchor>" comment tied to a requirement pointed at a
+// heading that plainly did not exist in the file actually written to disk.
+// GenerateAllFromGraph is the fix (single call site, all three of
+// models/reqModels/gates real): this test proves EVERY anchor any generated
+// .go file references via "see requirements_audit.md#<anchor>" has a
+// matching "{#<anchor>}" heading in the SAME generation run's
+// requirements_audit.md — zero dangling anchors, all four generated .go
+// files considered (entities.go/lifecycle.go/requirements_test.go/
+// pipeline_test.go), not just requirements_test.go.
+func TestGenerateAllFromGraph_RealPratDomain_AuditAnchorsResolve(t *testing.T) {
+	domainDir := pratDomainDir(t)
+
+	g, err := loader.LoadGraph(filepath.Join(domainDir, "graph.json"))
+	if err != nil {
+		t.Fatalf("LoadGraph(prat): %v", err)
+	}
+
+	files, err := GenerateAllFromGraph(g.EntityTypes, g.Requirements, domainDir)
+	if err != nil {
+		t.Fatalf("GenerateAllFromGraph: %v", err)
+	}
+
+	audit, ok := files["requirements_audit.md"]
+	if !ok {
+		t.Fatal("GenerateAllFromGraph did not produce requirements_audit.md")
+	}
+	auditText := string(audit)
+
+	if !strings.Contains(auditText, "\n## Requirements\n") {
+		t.Fatal("requirements_audit.md is missing the '## Requirements' section — the merge-order bug is back")
+	}
+	if !strings.Contains(auditText, "\n## Pipeline Gates\n") {
+		t.Fatal("requirements_audit.md is missing the '## Pipeline Gates' section")
+	}
+
+	headings := extractAuditHeadingAnchors(auditText)
+
+	var checked int
+	var missing []string
+	for name, content := range files {
+		if !strings.HasSuffix(name, ".go") {
+			continue
+		}
+		for _, m := range seeAuditAnchorPattern.FindAllStringSubmatch(string(content), -1) {
+			anchor := m[1]
+			checked++
+			if !headings[anchor] {
+				missing = append(missing, name+"#"+anchor)
+			}
+		}
+	}
+
+	if checked == 0 {
+		t.Fatal("found zero 'see requirements_audit.md#...' anchors across generated .go files — test fixture assumption broken")
+	}
+	if len(missing) > 0 {
+		t.Fatalf("%d/%d anchors referenced from generated .go files do not resolve to a requirements_audit.md heading: %v", len(missing), checked, missing)
+	}
+	t.Logf("verified %d/%d anchors resolve", checked, checked)
 }

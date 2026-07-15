@@ -4,4 +4,3 @@ package gen
 
 // No EntityType in this domain has a required field, so no generated
 // Validate() body calls fmt.Errorf - nothing here needs "fmt".
-

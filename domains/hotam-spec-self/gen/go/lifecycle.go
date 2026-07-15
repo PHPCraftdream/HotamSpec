@@ -10,13 +10,12 @@ import "fmt"
 // type on a state mismatch, so callers/tests can distinguish "illegal
 // transition attempted" from other errors via errors.As.
 type WrongStateError struct {
-	Entity  string
-	Event   string
-	Want    string
-	Got     string
+	Entity string
+	Event  string
+	Want   string
+	Got    string
 }
 
 func (e *WrongStateError) Error() string {
 	return fmt.Sprintf("%s.%s: expected state %q, got %q", e.Entity, e.Event, e.Want, e.Got)
 }
-

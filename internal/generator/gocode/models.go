@@ -414,7 +414,16 @@ func RenderEntitiesFile(packageName string, entityTypes []ontology.EntityType) (
 		// generated Validate() body calls fmt.Errorf - an unconditional
 		// import would be unused.
 		b.WriteString("// No EntityType in this domain has a required field, so no generated\n")
-		b.WriteString("// Validate() body calls fmt.Errorf - nothing here needs \"fmt\".\n\n")
+		b.WriteString("// Validate() body calls fmt.Errorf - nothing here needs \"fmt\".\n")
+		// No trailing blank line here when rendered is empty (zero
+		// EntityTypes): the loop below contributes nothing in that case, so
+		// an unconditional second "\n" would leave a dangling blank line at
+		// EOF - gofmt strips exactly that, so entities.go would fail
+		// `gofmt -l` on a 0-EntityType domain (e.g. hotam-spec-self) despite
+		// being otherwise valid Go.
+		if len(rendered) > 0 {
+			b.WriteString("\n")
+		}
 	}
 
 	for i, src := range rendered {
