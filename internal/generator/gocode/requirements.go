@@ -210,13 +210,21 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 	// entityModels are already sorted by slug (GenerateLifecycleFromGraph),
 	// and each entity's own field order is graph-declaration order — the
 	// walk below preserves both, so no extra sort is needed.
-	for _, em := range entityModels {
-		for _, f := range em.fields {
-			if termMatch(req.Claim, f.src.Name) || termMatch(req.Claim, f.fieldName) {
-				m.fields = append(m.fields, fieldAtom{entity: em, field: f})
-			}
-		}
-	}
+	//
+	// A match found ONLY via the translated identifier (f.fieldName), never
+	// via the raw graph name (f.src.Name), AND whose translated identifier is
+	// a SINGLE word (e.g. "Forecast") is a riskier, more coincidental hit
+	// than a raw-name match or a multi-word translated phrase (e.g.
+	// "FeatureLead" - contract §3.1's actual gap, deliberately left alone):
+	// a short single translated word can legitimately belong to more than one
+	// EntityType in the domain (prat: both brd-package and sdr-package have a
+	// "прогноз" field that translates to "Forecast") and then matches a claim
+	// substring (e.g. "forecast_v3") regardless of which of those EntityTypes
+	// the claim is actually about. resolveScopedFieldMatches applies
+	// referencer-scoping to exactly that ambiguous case (contract §2.1's
+	// resolvePreciseGateState idea, reused here) — every other match
+	// (raw-name hit, or multi-word translated phrase) is kept unconditionally.
+	m.fields = resolveScopedFieldMatches(req.Claim, entityModels)
 	if len(m.fields) > 0 {
 		m.kind = atomKindField
 		return m
@@ -314,6 +322,214 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 	// Row 5 (contract §3): no structural carrier found — honest gap.
 	m.kind = atomKindNone
 	return m
+}
+
+// fieldMatchCandidate is one entity/field pair whose claim match was found
+// during resolveScopedFieldMatches' first pass, plus enough detail to decide
+// whether it needs referencer-scoping (rawHit) before it is accepted.
+type fieldMatchCandidate struct {
+	entity *entityModel
+	field  fieldModel
+	// rawHit is true when termMatch(claim, field.src.Name) itself matched
+	// (the raw, un-translated graph name) — a raw-name hit is never
+	// ambiguous the way a translated-only hit can be (the raw graph name is
+	// this EntityType's own authored spelling, not a derived English word
+	// that another EntityType's own different raw name can coincidentally
+	// translate to as well), so it is always kept unconditionally.
+	rawHit bool
+	// translatedWord is the single lowercased word f.fieldName reduces to
+	// when it is exactly one word (both by the space/underscore/hyphen split
+	// and by the camelCase split — see termMatch), or "" when fieldName is
+	// multi-word (e.g. "FeatureLead") or the match was a rawHit. Only
+	// single-word translated identifiers are short/coincidental enough to
+	// need cross-entity ambiguity detection (contract task brief: multi-word
+	// phrases like "Feature Lead" are deliberately left untouched).
+	translatedWord string
+}
+
+// resolveScopedFieldMatches implements contract §3 row 1's field-atom match
+// PLUS a referencer-scoping guard for the one case found to over-match on
+// the real prat domain: a claim matched an EntityType.field ONLY via that
+// field's translated single-word Go identifier (never via the field's raw
+// graph name), and that SAME translated word is also the translation of a
+// DIFFERENT EntityType's OWN field elsewhere in the domain (prat:
+// brd-package.прогноз and sdr-package.прогноз both translate to "Forecast").
+// In that situation a claim substring like "forecast_v3" matches both
+// EntityTypes' Forecast field identically, even though the claim (contract
+// §2.1's precise-state idea: P-G4/SDR names forecast_v3, P-G3/BRD names
+// forecast_v2) is really only about ONE of them.
+//
+// Resolution mirrors resolvePreciseGateState's (pipeline.go) referencer-
+// binding idea, applied to field atoms instead of pipeline gates: for each
+// ambiguous EntityType candidate, an extra signal independently ties the
+// claim to THAT SPECIFIC EntityType, not just to the coincidentally-shared
+// translated word:
+//
+//  1. entity-slug signal: the claim also whole-word-matches this EntityType's
+//     own graph slug (e.g. a claim naming "sdr-package" or "brd-package"
+//     directly) - the same slug-hit rule row 4's inter-entity atom already
+//     uses.
+//  2. sibling-field signal: the claim also termMatch-hits a DIFFERENT
+//     required field of this SAME EntityType (raw name or translated name) -
+//     evidence the claim is describing this EntityType's own artifact as a
+//     whole, not just borrowing one coincidentally-shared word.
+//  3. why-token signal: this EntityType's own why text contains a token that
+//     the claim ALSO contains, immediately adjacent to the ambiguous
+//     translated word's lowercase form in the claim (e.g. why says
+//     "forecast_v3" and the claim also says "forecast_v3", but a sibling
+//     EntityType's why says "forecast_v2" instead) - the same
+//     "referencer.src.Why quotes the concrete token" idea
+//     resolvePreciseGateState (pipeline.go, contract §2.1) already applies
+//     to pipeline gates, reused here for field atoms.
+//
+// If exactly one ambiguous candidate resolves via any of these signals, only
+// that candidate's field atom is kept. If zero or more than one resolve
+// (genuine ambiguity, or no candidate has any binding signal at all), NONE
+// of the ambiguous candidates for that translated word are kept - an honest
+// gap is preferred over a false-positive cross-entity atom (contract §0
+// "явно и громко отказать", never silently guess). Non-ambiguous words
+// (raw-name hits, and translated words unique to one EntityType in the
+// domain) are entirely unaffected.
+func resolveScopedFieldMatches(claim string, entityModels []*entityModel) []fieldAtom {
+	var candidates []fieldMatchCandidate
+	for _, em := range entityModels {
+		for _, f := range em.fields {
+			rawHit := termMatch(claim, f.src.Name)
+			translatedHit := termMatch(claim, f.fieldName)
+			if !rawHit && !translatedHit {
+				continue
+			}
+			cand := fieldMatchCandidate{entity: em, field: f, rawHit: rawHit}
+			if !rawHit && translatedHit {
+				if w, ok := singleTranslatedWord(f.fieldName); ok {
+					cand.translatedWord = w
+				}
+			}
+			candidates = append(candidates, cand)
+		}
+	}
+
+	// Group every single-word-translated-only candidate by its translated
+	// word, scanning ALL entityModels' fields (not just candidates) so a
+	// word's ambiguity is judged against the WHOLE domain — the same
+	// "search the whole graph, not just this claim's own hits" discipline
+	// resolveGateAnchorCorrelate already applies.
+	wordOwners := make(map[string]map[string]struct{}) // translatedWord -> set of entity struct names that HAVE such a field anywhere in the domain
+	for _, em := range entityModels {
+		for _, f := range em.fields {
+			if w, ok := singleTranslatedWord(f.fieldName); ok {
+				if wordOwners[w] == nil {
+					wordOwners[w] = make(map[string]struct{})
+				}
+				wordOwners[w][em.structName] = struct{}{}
+			}
+		}
+	}
+
+	var out []fieldAtom
+	for _, cand := range candidates {
+		if cand.translatedWord == "" {
+			// rawHit, or a multi-word (or non-word-shaped) translated
+			// identifier — never subject to this scoping guard.
+			out = append(out, fieldAtom{entity: cand.entity, field: cand.field})
+			continue
+		}
+		if len(wordOwners[cand.translatedWord]) < 2 {
+			// This translated word is not shared by any other EntityType in
+			// the domain — unambiguous, kept as before.
+			out = append(out, fieldAtom{entity: cand.entity, field: cand.field})
+			continue
+		}
+		if entityHasClaimBindingSignal(claim, cand.entity, cand.translatedWord) {
+			out = append(out, fieldAtom{entity: cand.entity, field: cand.field})
+		}
+		// No binding signal for this ambiguous candidate: dropped silently
+		// here: if NO candidate for this word resolves, the word simply
+		// contributes zero field atoms (honest gap), exactly the intended
+		// outcome — never partially kept without a real signal.
+	}
+	return out
+}
+
+// singleTranslatedWord reports whether term (a translated Go identifier,
+// e.g. fieldModel.fieldName) reduces to exactly one word under BOTH
+// termMatch's separator split and its camelCase split (or is already a bare
+// single token with no camelCase split at all) — the same "single word,
+// short and more coincidence-prone" shape termMatch's own doc comment
+// distinguishes from a multi-word phrase like "FeatureLead". Returns the
+// lowercased word and true when so; ("", false) for multi-word identifiers.
+func singleTranslatedWord(term string) (string, bool) {
+	words := splitTermWords(term)
+	if len(words) != 1 {
+		return "", false
+	}
+	camelWords := splitCamelWords(term)
+	if len(camelWords) >= 2 && !sameWords(camelWords, words) {
+		// e.g. "FeatureLead" splits by separator into one token
+		// ("featurelead") but by camelCase into two ("feature","lead") —
+		// that is contract §3.1's actual multi-word gap, not this
+		// single-word ambiguity guard's target.
+		return "", false
+	}
+	return words[0], true
+}
+
+// entityHasClaimBindingSignal reports whether claim independently ties
+// itself to entity specifically, beyond the coincidentally-shared
+// translatedWord match alone — see resolveScopedFieldMatches' doc comment
+// for the three signals tried (entity slug, sibling required field, why-
+// token adjacency).
+func entityHasClaimBindingSignal(claim string, entity *entityModel, translatedWord string) bool {
+	// Signal 1: claim names this EntityType's own graph slug directly.
+	if wholeWordMatch(claim, entity.src.Slug) {
+		return true
+	}
+
+	// Signal 2: claim also matches a DIFFERENT field of this SAME EntityType
+	// (raw name or translated name) - evidence the claim is about this
+	// EntityType's own artifact, not just the one shared word.
+	for _, f := range entity.fields {
+		if strings.EqualFold(f.fieldName, translatedWord) {
+			continue // the ambiguous field itself, not a sibling
+		}
+		if termMatch(claim, f.src.Name) || termMatch(claim, f.fieldName) {
+			return true
+		}
+	}
+
+	// Signal 3: this EntityType's own why text contains a token that the
+	// claim ALSO contains, immediately adjacent (joined by a separator, no
+	// intervening word) to translatedWord's own occurrence in the claim -
+	// e.g. why quotes "forecast_v3" and the claim also says "forecast_v3",
+	// but a sibling EntityType's why quotes "forecast_v2" instead. This
+	// mirrors resolvePreciseGateState's (pipeline.go, contract §2.1) "token
+	// survives in referencer.src.Why" discipline, applied to field atoms.
+	if entity.src.Why == "" {
+		return false
+	}
+	claimTokens := adjacentTokens(claim, translatedWord)
+	whyLower := strings.ToLower(entity.src.Why)
+	for _, tok := range claimTokens {
+		if strings.Contains(whyLower, strings.ToLower(tok)) {
+			return true
+		}
+	}
+	return false
+}
+
+// adjacentTokensPattern captures translatedWord immediately joined (no
+// space) by '_'/'-' plus a following alphanumeric run, e.g. "forecast_v3"
+// or "forecast-v2" — the same shape resolvePreciseGateState's own
+// "<slug>_<state>"/"<slug>-<state>" token construction produces, found here
+// in the other direction (extracted FROM the claim, not built and searched
+// for).
+func adjacentTokens(claim, translatedWord string) []string {
+	pattern := `(?i)\b` + regexp.QuoteMeta(translatedWord) + `[_\-][\p{L}\p{N}]+\b`
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil
+	}
+	return re.FindAllString(claim, -1)
 }
 
 // resolveGateAnchorCorrelate searches the WHOLE domain (not just the

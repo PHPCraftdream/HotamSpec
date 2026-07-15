@@ -328,6 +328,131 @@ func TestBuildRequirementModel_InterEntityAtom_ResolvesBothEntities(t *testing.T
 	}
 }
 
+// twoForecastEntityTypes builds a minimal synthetic domain with two
+// DIFFERENT EntityTypes ("plan-package" and "design-package") that each
+// declare their own "прогноз" (forecast) field — the exact ambiguity shape
+// found on the real prat domain (brd-package.прогноз and
+// sdr-package.прогноз both translate to the single word "Forecast"). Each
+// EntityType's why text quotes a DIFFERENT concrete forecast version token
+// ("forecast_v2" for plan-package, "forecast_v3" for design-package), giving
+// resolveScopedFieldMatches' why-token signal something to disambiguate
+// against when a claim quotes one of those tokens specifically.
+func twoForecastEntityTypes() []ontology.EntityType {
+	return []ontology.EntityType{
+		{
+			Slug:        "plan-package",
+			Description: "first synthetic entity with a forecast field",
+			Why:         "plan-package carries forecast_v2 as its own concrete forecast token.",
+			Fields: []ontology.EntityField{
+				{Name: "прогноз", Kind: "string", Required: true},
+			},
+			Lifecycle: ontology.Lifecycle{
+				Slug: "plan-package-lifecycle",
+				States: []ontology.State{
+					{Name: "черновик", Kind: ontology.StateKindInitial},
+					{Name: "утверждён", Kind: ontology.StateKindTerminal},
+				},
+			},
+		},
+		{
+			Slug:        "design-package",
+			Description: "second synthetic entity with a forecast field",
+			Why:         "design-package carries forecast_v3 as its own concrete forecast token.",
+			Fields: []ontology.EntityField{
+				{Name: "прогноз", Kind: "string", Required: true},
+			},
+			Lifecycle: ontology.Lifecycle{
+				Slug: "design-package-lifecycle",
+				States: []ontology.State{
+					{Name: "черновик", Kind: ontology.StateKindInitial},
+					{Name: "утверждён", Kind: ontology.StateKindTerminal},
+				},
+			},
+		},
+	}
+}
+
+// TestResolveScopedFieldMatches_AmbiguousSingleWord_WhyTokenDisambiguates
+// asserts that when a claim quotes a concrete forecast-version token that
+// only ONE of the two ambiguous EntityTypes' why text also quotes
+// (forecast_v3 - design-package's own token, not plan-package's
+// forecast_v2), only THAT EntityType's field atom is kept — the exact fix
+// for the real prat over-match bug (R-gate-pg4-solution-ready wrongly
+// getting BrdPackage.Forecast alongside the correct SdrPackage.Forecast).
+func TestResolveScopedFieldMatches_AmbiguousSingleWord_WhyTokenDisambiguates(t *testing.T) {
+	ets := twoForecastEntityTypes()
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "Design sign-off MUST require forecast_v3 to be locked before dev starts."
+	fields := resolveScopedFieldMatches(claim, models)
+
+	if len(fields) != 1 {
+		t.Fatalf("expected exactly 1 disambiguated field atom, got %d: %+v", len(fields), fields)
+	}
+	if fields[0].entity.structName != "DesignPackage" {
+		t.Errorf("field atom entity = %s, want DesignPackage (the one whose why quotes forecast_v3)", fields[0].entity.structName)
+	}
+}
+
+// TestResolveScopedFieldMatches_AmbiguousSingleWord_NoSignalDropsAll asserts
+// that when a claim mentions the ambiguous single-word translated term but
+// quotes NO concrete token tying it to either EntityType's why text (and
+// names neither entity's own slug, nor any sibling field of either entity),
+// NO field atom is produced for either EntityType — an honest gap is
+// preferred over a false-positive cross-entity atom (GEN-CODE-CONTRACT.md §0
+// "explicit refusal over silent guessing"), mirroring the real
+// R-gate-pg1-planning-approved case (claim names "forecast_v1", which
+// neither brd-package's nor sdr-package's why text quotes).
+func TestResolveScopedFieldMatches_AmbiguousSingleWord_NoSignalDropsAll(t *testing.T) {
+	ets := twoForecastEntityTypes()
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "Pilot planning MUST produce an early forecast before Planning Approved."
+	fields := resolveScopedFieldMatches(claim, models)
+
+	if len(fields) != 0 {
+		t.Fatalf("expected zero field atoms for a genuinely ambiguous, unresolvable match, got %d: %+v", len(fields), fields)
+	}
+}
+
+// TestResolveScopedFieldMatches_AmbiguousSingleWord_SlugSignalDisambiguates
+// asserts the entity-slug signal alone (claim names the EntityType's own
+// graph slug directly, with no forecast-version token at all) is enough to
+// keep that one EntityType's field atom while still excluding the sibling.
+func TestResolveScopedFieldMatches_AmbiguousSingleWord_SlugSignalDisambiguates(t *testing.T) {
+	ets := twoForecastEntityTypes()
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "The plan-package forecast MUST be reviewed before sign-off."
+	fields := resolveScopedFieldMatches(claim, models)
+
+	if len(fields) != 1 {
+		t.Fatalf("expected exactly 1 disambiguated field atom, got %d: %+v", len(fields), fields)
+	}
+	if fields[0].entity.structName != "PlanPackage" {
+		t.Errorf("field atom entity = %s, want PlanPackage (the one whose slug the claim names)", fields[0].entity.structName)
+	}
+}
+
+// TestResolveScopedFieldMatches_UnambiguousSingleWord_Unaffected asserts a
+// single-word translated field name that only ONE EntityType in the domain
+// has at all is entirely unaffected by the scoping guard — the guard only
+// engages when 2+ EntityTypes share the same translated word.
+func TestResolveScopedFieldMatches_UnambiguousSingleWord_Unaffected(t *testing.T) {
+	ets := []ontology.EntityType{syntheticEntityType()}
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "Поле текст test-card MUST быть заполнено содержательно."
+	fields := resolveScopedFieldMatches(claim, models)
+
+	if len(fields) != 1 {
+		t.Fatalf("expected exactly 1 field atom (unambiguous, unique translated word), got %d: %+v", len(fields), fields)
+	}
+	if fields[0].entity.structName != "TestCard" || fields[0].field.fieldName != "Text" {
+		t.Errorf("field atom = %s.%s, want TestCard.Text", fields[0].entity.structName, fields[0].field.fieldName)
+	}
+}
+
 // TestBuildRequirementModels_ExcludesNonSettled asserts DRAFT/REJECTED
 // requirements never reach requirements_test.go — only SETTLED ones (contract
 // §1 task scope: "для каждого SETTLED-требования домена").
