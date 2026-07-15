@@ -162,8 +162,12 @@ func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requiremen
 // GenerateLifecycleFromGraph/GenerateRequirementsFromGraph) keeps every gate
 // function's referencer/referenced/field identifiers guaranteed consistent
 // with entities.go/lifecycle.go's own identifiers — no independent
-// re-derivation (contract §0).
-func GeneratePipelineFromGraph(entityTypes []ontology.EntityType) (map[string][]byte, error) {
+// re-derivation (contract §0). requirements is the domain's full requirement
+// corpus (contract §2.1's precise-state gate search needs the SETTLED
+// claims); pass nil for a domain with no requirements loaded, which simply
+// disables precise-gate detection and falls back to RequiresTerminal for
+// every gate, unchanged from pre-§2.1 behavior.
+func GeneratePipelineFromGraph(entityTypes []ontology.EntityType, requirements []ontology.Requirement) (map[string][]byte, error) {
 	sorted := make([]ontology.EntityType, len(entityTypes))
 	copy(sorted, entityTypes)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
@@ -177,7 +181,7 @@ func GeneratePipelineFromGraph(entityTypes []ontology.EntityType) (map[string][]
 		models = append(models, m)
 	}
 
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, requirements)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
 	}
@@ -248,7 +252,7 @@ func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []onto
 		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
 	}
 
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, requirements)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
 	}

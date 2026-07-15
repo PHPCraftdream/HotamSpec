@@ -213,18 +213,41 @@ func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel) {
 // entry: heading anchored on the gate function name (matching
 // pipeline_test.go's own "// Atom: ... - see requirements_audit.md" comment,
 // pipeline_test_gen.go's renderPipelineGateTest), the referencer field, the
-// referenced EntityType, its accepted terminal state(s), and where the gate
-// function + its test live.
+// referenced EntityType, and where the gate function + its test live.
+//
+// Contract §2.1: when gm.preciseState is set, the entry names the EXACT
+// state the gate requires (never "terminal") and the referencer's own why
+// text is the anchor's cited justification (the referencer-binding signal
+// resolvePreciseGateState uses, GEN-CODE-CONTRACT.md §2.1) - a human/LLM
+// auditor reading this entry can see WHY this gate is precise, not merely
+// THAT it is. Otherwise (preciseState nil) the entry documents the general
+// RequiresTerminal gate exactly as before this stage.
 func renderPipelineGateAuditEntry(b *strings.Builder, gm *pipelineGateModel) {
 	anchor := strings.ToLower(gm.funcName)
 	fmt.Fprintf(b, "### %s {#%s}\n\n", gm.funcName, anchor)
 	fmt.Fprintf(b, "`%s.%s` references `%s` (kind:reference, ref_target=%q).\n\n",
 		gm.referencer.structName, gm.field.fieldName, gm.referenced.structName, gm.referenced.src.Slug)
-	names := make([]string, len(gm.terminalStates))
-	for i, s := range gm.terminalStates {
-		names[i] = s.constant
+
+	if gm.preciseState != nil {
+		fmt.Fprintf(b, "**Precise gate** (GEN-CODE-CONTRACT.md section 2.1): requires `%s` to be in EXACTLY state `%s` (%s) -\n",
+			gm.referenced.structName, gm.preciseState.constant, gm.preciseState.src.Name)
+		fmt.Fprintf(b, "a later terminal state of `%s` does NOT satisfy this gate.\n\n", gm.referenced.structName)
+		fmt.Fprintf(b, "Basis: the SETTLED requirement corpus names `%s_%s` (or the `-`-separated spelling) in a\n",
+			strings.ToLower(gm.referenced.src.Slug), strings.ToLower(gm.preciseState.src.Name))
+		fmt.Fprintf(b, "claim, AND `%s`'s own `why` text quotes that same token - the referencer-bound correlate\n", gm.referencer.structName)
+		b.WriteString("resolvePreciseGateState (pipeline.go) requires before preferring a precise gate over the general\n")
+		b.WriteString("RequiresTerminal one. See this domain's EntityType why-text section above for the verbatim quote.\n\n")
+	} else {
+		names := make([]string, len(gm.terminalStates))
+		for i, s := range gm.terminalStates {
+			names[i] = s.constant
+		}
+		fmt.Fprintf(b, "**General gate**: accepts any of `%s`'s own terminal (or quiescent) state(s): %s.\n", gm.referenced.structName, strings.Join(names, ", "))
+		b.WriteString("No SETTLED requirement in this domain names one specific state of this referenced EntityType\n")
+		b.WriteString("tied to this specific referencer (GEN-CODE-CONTRACT.md section 2.1), so terminal-ness remains\n")
+		b.WriteString("the only available structural signal.\n\n")
 	}
-	fmt.Fprintf(b, "Accepted terminal state(s) of `%s`: %s.\n\n", gm.referenced.structName, strings.Join(names, ", "))
+
 	fmt.Fprintf(b, "- gate function: `pipeline_test.go:%s`\n", gm.funcName)
 	fmt.Fprintf(b, "- gate test: `pipeline_test.go:Test%s`\n\n", gm.funcName)
 }

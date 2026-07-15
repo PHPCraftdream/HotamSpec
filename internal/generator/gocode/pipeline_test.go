@@ -80,7 +80,7 @@ func buildSyntheticModels(t *testing.T, ets []ontology.EntityType) []*entityMode
 // sdr-package.feature_lead field must also get.
 func TestBuildPipelineGateModels_Synthetic(t *testing.T) {
 	models := buildSyntheticModels(t, twoEntitySyntheticGraph())
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, nil)
 	if err != nil {
 		t.Fatalf("BuildPipelineGateModels: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestShortestPathToTerminal_Synthetic(t *testing.T) {
 // signature.
 func TestRenderPipelineFile_Synthetic_ParsesAsGo(t *testing.T) {
 	models := buildSyntheticModels(t, twoEntitySyntheticGraph())
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, nil)
 	if err != nil {
 		t.Fatalf("BuildPipelineGateModels: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestRenderPipelineFile_Synthetic_ParsesAsGo(t *testing.T) {
 // not-yet-terminal and reaches-terminal sub-tests.
 func TestRenderPipelineTestFile_Synthetic_ParsesAsGo(t *testing.T) {
 	models := buildSyntheticModels(t, twoEntitySyntheticGraph())
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, nil)
 	if err != nil {
 		t.Fatalf("BuildPipelineGateModels: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestRenderPipelineTestFile_Synthetic_ParsesAsGo(t *testing.T) {
 // synthetic source graph above is entirely Cyrillic-named.
 func TestPipelineFiles_Synthetic_NonASCII(t *testing.T) {
 	models := buildSyntheticModels(t, twoEntitySyntheticGraph())
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, nil)
 	if err != nil {
 		t.Fatalf("BuildPipelineGateModels: %v", err)
 	}
@@ -249,7 +249,7 @@ func TestGeneratePipelineFromGraph_ZeroGates_CompilesAndVets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GenerateLifecycleFromGraph: %v", err)
 	}
-	pipelineFiles, err := GeneratePipelineFromGraph(ets)
+	pipelineFiles, err := GeneratePipelineFromGraph(ets, nil)
 	if err != nil {
 		t.Fatalf("GeneratePipelineFromGraph: %v", err)
 	}
@@ -303,7 +303,7 @@ func TestGeneratePipelineFromGraph_Synthetic_CompilesAndRuns(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GenerateLifecycleFromGraph: %v", err)
 	}
-	pipelineFiles, err := GeneratePipelineFromGraph(ets)
+	pipelineFiles, err := GeneratePipelineFromGraph(ets, nil)
 	if err != nil {
 		t.Fatalf("GeneratePipelineFromGraph: %v", err)
 	}
@@ -356,7 +356,7 @@ func TestGeneratePipelineFromGraph_Synthetic_MutationCatchesRegression(t *testin
 	if err != nil {
 		t.Fatalf("GenerateLifecycleFromGraph: %v", err)
 	}
-	pipelineFiles, err := GeneratePipelineFromGraph(ets)
+	pipelineFiles, err := GeneratePipelineFromGraph(ets, nil)
 	if err != nil {
 		t.Fatalf("GeneratePipelineFromGraph: %v", err)
 	}
@@ -468,8 +468,18 @@ func mutateGateAlwaysNil(t *testing.T, src string) string {
 //
 //	fr-graph.входной_реестр          -> fr-registry           (field: InputRegistry)
 //	implementation-order.граф_зависимостей -> fr-graph         (field: GraphDependencies)
-//	brd-package.прогноз              -> forecast               (field: Forecast)
-//	sdr-package.прогноз              -> forecast               (field: Forecast)
+//	brd-package.прогноз              -> forecast               (field: Forecast) - precise v2 (contract §2.1)
+//	sdr-package.прогноз              -> forecast               (field: Forecast) - precise v3 (contract §2.1)
+//
+// The brd-package/sdr-package gates are contract §2.1's precise-state proof:
+// both reference the SAME "forecast" EntityType, but R-gate-pg3-brd-approved
+// names "forecast_v2" (quoted verbatim in brd-package.why) while
+// R-gate-pg4-solution-ready names "forecast_v3" (quoted verbatim in
+// sdr-package.why) - two DIFFERENT precise states for two DIFFERENT
+// referencers of the same referenced EntityType. Before this stage both
+// rendered the same general "GateXForecastRequiresForecastTerminal", which
+// let a forecast at v3 wrongly satisfy brd-package's real P-G3 requirement
+// (v2, not merely "some terminal state").
 //
 // sdr-package.feature_lead (ref_target "Stakeholder", field: FeatureLead)
 // must NOT produce a 5th gate — "Stakeholder" resolves to no EntityType slug
@@ -482,12 +492,16 @@ func TestGeneratePipelineFromGraph_RealPratDomain(t *testing.T) {
 	}
 
 	models := buildSyntheticModels(t, g.EntityTypes)
-	gates, err := BuildPipelineGateModels(models)
+	gates, err := BuildPipelineGateModels(models, g.Requirements)
 	if err != nil {
 		t.Fatalf("BuildPipelineGateModels: %v", err)
 	}
 	for _, gt := range gates {
-		t.Logf("gate: %s (%s.%s -> %s)", gt.funcName, gt.referencer.structName, gt.field.fieldName, gt.referenced.structName)
+		precise := "none (general RequiresTerminal)"
+		if gt.preciseState != nil {
+			precise = gt.preciseState.src.Name
+		}
+		t.Logf("gate: %s (%s.%s -> %s) precise=%s", gt.funcName, gt.referencer.structName, gt.field.fieldName, gt.referenced.structName, precise)
 	}
 	if len(gates) != 4 {
 		t.Fatalf("expected exactly 4 pipeline gates on the real prat domain, got %d: %v", len(gates), gateFuncNames(gates))
@@ -495,12 +509,13 @@ func TestGeneratePipelineFromGraph_RealPratDomain(t *testing.T) {
 
 	type triple struct {
 		referencer, field, referenced string
+		preciseState                  string // "" means general RequiresTerminal is expected
 	}
 	wantFuncs := map[string]triple{
-		"GateFrGraphInputRegistryRequiresFrRegistryTerminal":              {"FrGraph", "InputRegistry", "FrRegistry"},
-		"GateImplementationOrderGraphDependenciesRequiresFrGraphTerminal": {"ImplementationOrder", "GraphDependencies", "FrGraph"},
-		"GateBrdPackageForecastRequiresForecastTerminal":                  {"BrdPackage", "Forecast", "Forecast"},
-		"GateSdrPackageForecastRequiresForecastTerminal":                  {"SdrPackage", "Forecast", "Forecast"},
+		"GateFrGraphInputRegistryRequiresFrRegistryTerminal":              {"FrGraph", "InputRegistry", "FrRegistry", ""},
+		"GateImplementationOrderGraphDependenciesRequiresFrGraphTerminal": {"ImplementationOrder", "GraphDependencies", "FrGraph", ""},
+		"GateBrdPackageForecastRequiresForecast_ForecastStateV2":          {"BrdPackage", "Forecast", "Forecast", "v2"},
+		"GateSdrPackageForecastRequiresForecast_ForecastStateV3":          {"SdrPackage", "Forecast", "Forecast", "v3"},
 	}
 
 	byFunc := make(map[string]*pipelineGateModel, len(gates))
@@ -518,6 +533,33 @@ func TestGeneratePipelineFromGraph_RealPratDomain(t *testing.T) {
 				funcName, gt.referencer.structName, gt.field.fieldName, gt.referenced.structName,
 				want.referencer, want.field, want.referenced)
 		}
+		if want.preciseState == "" {
+			if gt.preciseState != nil {
+				t.Errorf("gate %q: expected general RequiresTerminal (no precise state), got precise state %q", funcName, gt.preciseState.src.Name)
+			}
+		} else {
+			if gt.preciseState == nil {
+				t.Errorf("gate %q: expected precise state %q, got general RequiresTerminal", funcName, want.preciseState)
+			} else if gt.preciseState.src.Name != want.preciseState {
+				t.Errorf("gate %q: preciseState = %q, want %q", funcName, gt.preciseState.src.Name, want.preciseState)
+			}
+		}
+	}
+
+	// The two forecast-referencing gates must resolve to DIFFERENT precise
+	// states (v2 vs v3) despite sharing the same referenced EntityType -
+	// contract §2.1's core claim: different referencers of the same
+	// referenced entity may require different concrete states.
+	brd := byFunc["GateBrdPackageForecastRequiresForecast_ForecastStateV2"]
+	sdr := byFunc["GateSdrPackageForecastRequiresForecast_ForecastStateV3"]
+	if brd == nil || sdr == nil {
+		t.Fatal("expected both brd-package and sdr-package precise forecast gates to be present")
+	}
+	if brd.preciseState == nil || sdr.preciseState == nil {
+		t.Fatal("expected both brd-package and sdr-package forecast gates to be precise-state gates")
+	}
+	if brd.preciseState.value == sdr.preciseState.value {
+		t.Fatalf("expected brd-package and sdr-package forecast gates to require DIFFERENT states, both resolved to %q", brd.preciseState.value)
 	}
 
 	// sdr-package.feature_lead (ref_target "Stakeholder") must not resolve.
@@ -564,7 +606,7 @@ func TestGeneratePipelineFromGraph_RealPratDomain_CompilesAndRuns(t *testing.T) 
 	if err != nil {
 		t.Fatalf("GenerateRequirementsFromGraph: %v", err)
 	}
-	pipelineFiles, err := GeneratePipelineFromGraph(g.EntityTypes)
+	pipelineFiles, err := GeneratePipelineFromGraph(g.EntityTypes, g.Requirements)
 	if err != nil {
 		t.Fatalf("GeneratePipelineFromGraph: %v", err)
 	}
