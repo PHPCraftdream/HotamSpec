@@ -100,7 +100,7 @@ func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
-	auditSrc, err := RenderAuditFile(models, nil)
+	auditSrc, err := RenderAuditFile(models, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
@@ -143,7 +143,7 @@ func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requiremen
 		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
 	}
 
-	auditSrc, err := RenderAuditFile(entityModels, reqModels)
+	auditSrc, err := RenderAuditFile(entityModels, reqModels, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
 	}
@@ -152,6 +152,139 @@ func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requiremen
 		"requirements_test.go":  requirementsTestSrc,
 		"requirements_audit.md": auditSrc,
 	}, nil
+}
+
+// GeneratePipelineFromGraph renders stage-5 output (contract §1:
+// pipeline_test.go — both the gate-function half, pipeline.go, and the
+// table-driven test half, pipeline_test_gen.go, concatenated into the single
+// file the contract's §1 layout names) directly from a slice of EntityType.
+// Building every EntityType's *entityModel once (mirroring
+// GenerateLifecycleFromGraph/GenerateRequirementsFromGraph) keeps every gate
+// function's referencer/referenced/field identifiers guaranteed consistent
+// with entities.go/lifecycle.go's own identifiers — no independent
+// re-derivation (contract §0).
+func GeneratePipelineFromGraph(entityTypes []ontology.EntityType) (map[string][]byte, error) {
+	sorted := make([]ontology.EntityType, len(entityTypes))
+	copy(sorted, entityTypes)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
+
+	models := make([]*entityModel, 0, len(sorted))
+	for _, et := range sorted {
+		m, err := BuildEntityModel(et)
+		if err != nil {
+			return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
+		}
+		models = append(models, m)
+	}
+
+	gates, err := BuildPipelineGateModels(models)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
+	}
+
+	gateFuncsSrc, err := RenderPipelineFile("gen", gates)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
+	}
+	gateTestsSrc, err := RenderPipelineTestFile("gen", gates)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
+	}
+
+	pipelineTestSrc := mergePipelineFile(gateFuncsSrc, gateTestsSrc)
+
+	auditSrc, err := RenderAuditFile(models, nil, gates)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
+	}
+
+	return map[string][]byte{
+		"pipeline_test.go":      pipelineTestSrc,
+		"requirements_audit.md": auditSrc,
+	}, nil
+}
+
+// mergePipelineFile combines the gate-function half (RenderPipelineFile) and
+// the table-driven-test half (RenderPipelineTestFile) — each a
+// self-contained, independently ownership-marked/package-clause'd Go source
+// string — into the single pipeline_test.go contract §1 names: one ownership
+// marker, one package clause, the union of both halves' imports (each half
+// omits its own import when it has nothing to import - RenderPipelineFile/
+// RenderPipelineTestFile's zero-gates branch - so this merge only imports
+// "fmt"/"testing" when the corresponding half actually needs it, never
+// leaving an unused import that would fail `go build`/`go vet` on an empty
+// domain), then the gate functions followed by the test functions. Both
+// halves declare `package gen` with no other top-level declarations sharing
+// a name (gate funcs are Gate*, tests are Test<Gate*>), so simple textual
+// splicing after each half's own header is safe and never produces a naming
+// collision.
+func mergePipelineFile(gateFuncsSrc, gateTestsSrc []byte) []byte {
+	hasGates := strings.Contains(string(gateFuncsSrc), "import \"fmt\"")
+	hasTests := strings.Contains(string(gateTestsSrc), "import \"testing\"")
+	gateBody := stripGoFileHeader(string(gateFuncsSrc))
+	testBody := stripGoFileHeader(string(gateTestsSrc))
+
+	var b strings.Builder
+	b.WriteString(OwnershipMarker)
+	b.WriteString("\n\n")
+	b.WriteString("package gen\n\n")
+	switch {
+	case hasGates && hasTests:
+		b.WriteString("import (\n\t\"fmt\"\n\t\"testing\"\n)\n\n")
+	case hasGates:
+		b.WriteString("import \"fmt\"\n\n")
+	case hasTests:
+		b.WriteString("import \"testing\"\n\n")
+	}
+	b.WriteString(gateBody)
+	if gateBody != "" && testBody != "" {
+		b.WriteString("\n")
+	}
+	b.WriteString(testBody)
+
+	return []byte(b.String())
+}
+
+// stripGoFileHeader removes a rendered file's leading ownership-marker
+// comment and package clause — plus its single-line import statement, when
+// present — returning only the declarations (or, for the zero-gates case,
+// the placeholder comment) that follow. Used by mergePipelineFile to splice
+// two independently-rendered halves into one file with a single shared
+// header. RenderPipelineFile/RenderPipelineTestFile emit one of two fixed
+// shapes: OwnershipMarker, blank line, "package …", blank line, EITHER a
+// single `import "…"` line + blank line (when there is at least one
+// gate/test to render) OR nothing (the zero-gates branch, which goes
+// straight from the package clause's blank line into a placeholder comment)
+// — so this looks for an "import " line and, if found, skips through the
+// blank line that follows it; if absent, it skips only the fixed
+// marker+package prefix instead (not a general-purpose Go source parser: it
+// depends on this package's own renderers never emitting a multi-line
+// `import (...)` block or reordering this header, both true today).
+func stripGoFileHeader(src string) string {
+	lines := strings.Split(src, "\n")
+	importIdx := -1
+	for i, l := range lines {
+		if strings.HasPrefix(l, "import ") {
+			importIdx = i
+			break
+		}
+	}
+	if importIdx == -1 {
+		// No import line (zero-gates branch): the fixed prefix is exactly
+		// OwnershipMarker, blank line, "package …", blank line - 4 lines.
+		if len(lines) < 5 {
+			return ""
+		}
+		return strings.Join(lines[4:], "\n")
+	}
+	if importIdx+1 >= len(lines) {
+		return ""
+	}
+	bodyLines := lines[importIdx+1:]
+	if len(bodyLines) > 0 && bodyLines[0] == "" {
+		bodyLines = bodyLines[1:]
+	}
+	return strings.Join(bodyLines, "\n")
 }
 
 func renderGoMod(moduleName string) string {

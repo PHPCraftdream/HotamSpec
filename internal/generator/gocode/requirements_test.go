@@ -447,7 +447,7 @@ func TestRenderAuditFile_RequirementsSection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
-	audit, err := RenderAuditFile(models, reqModels)
+	audit, err := RenderAuditFile(models, reqModels, nil)
 	if err != nil {
 		t.Fatalf("RenderAuditFile: %v", err)
 	}
@@ -652,7 +652,7 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 		t.Fatalf("generated source does not parse as Go: %v\n---\n%s", err, text)
 	}
 
-	audit, err := RenderAuditFile(models, reqModels)
+	audit, err := RenderAuditFile(models, reqModels, nil)
 	if err != nil {
 		t.Fatalf("RenderAuditFile: %v", err)
 	}

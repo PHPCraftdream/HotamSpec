@@ -45,8 +45,15 @@ import (
 // one) — requirements_test.go unconditionally emits a Test_<id> function
 // with an "// Atom: ..." comment for every SETTLED requirement, so every
 // requirement has a live anchor pointing here, unlike the EntityType why-only
-// gating above.
-func RenderAuditFile(models []*entityModel, reqModels []*requirementModel) ([]byte, error) {
+// gating above. A final "## Pipeline Gates" section (stage 5) lists every
+// pipelineGateModel passed in — one entry per generated Gate<...>Terminal
+// function, naming the referencer field, the referenced EntityType, and the
+// referenced entity's terminal state(s) the gate accepts — mirroring
+// pipeline_test.go's own "// Atom: ..." comments (pipeline_test_gen.go).
+// gates may be nil (callers that have not yet built pipeline gates, e.g.
+// GenerateAuditFromGraph/GenerateLifecycleFromGraph/GenerateRequirementsFromGraph),
+// in which case the section is simply omitted.
+func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates []*pipelineGateModel) ([]byte, error) {
 	sorted := make([]*entityModel, len(models))
 	copy(sorted, models)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].src.Slug < sorted[j].src.Slug })
@@ -54,6 +61,10 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel) ([]by
 	sortedReqs := make([]*requirementModel, len(reqModels))
 	copy(sortedReqs, reqModels)
 	sort.Slice(sortedReqs, func(i, j int) bool { return sortedReqs[i].src.ID < sortedReqs[j].src.ID })
+
+	sortedGates := make([]*pipelineGateModel, len(gates))
+	copy(sortedGates, gates)
+	sort.Slice(sortedGates, func(i, j int) bool { return sortedGates[i].funcName < sortedGates[j].funcName })
 
 	var b strings.Builder
 	b.WriteString("# requirements_audit.md\n\n")
@@ -106,6 +117,17 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel) ([]by
 		b.WriteString("## Requirements\n\n")
 		for _, rm := range sortedReqs {
 			renderRequirementAuditEntry(&b, rm)
+		}
+	}
+
+	if len(sortedGates) > 0 {
+		b.WriteString("## Pipeline Gates\n\n")
+		b.WriteString("Stage 5: one gate per `kind:reference` field whose `ref_target` resolves to another\n")
+		b.WriteString("EntityType of this domain (GEN-CODE-CONTRACT.md §0 - \"artifact not accepted until\n")
+		b.WriteString("predecessor terminal\"). See `pipeline_test.go` for the generated `Gate<...>Terminal`\n")
+		b.WriteString("function and its `Test<...>` table-driven proof.\n\n")
+		for _, gm := range sortedGates {
+			renderPipelineGateAuditEntry(&b, gm)
 		}
 	}
 
@@ -187,6 +209,26 @@ func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel) {
 	b.WriteString("\n")
 }
 
+// renderPipelineGateAuditEntry renders one stage-5 pipeline gate's audit
+// entry: heading anchored on the gate function name (matching
+// pipeline_test.go's own "// Atom: ... - see requirements_audit.md" comment,
+// pipeline_test_gen.go's renderPipelineGateTest), the referencer field, the
+// referenced EntityType, its accepted terminal state(s), and where the gate
+// function + its test live.
+func renderPipelineGateAuditEntry(b *strings.Builder, gm *pipelineGateModel) {
+	anchor := strings.ToLower(gm.funcName)
+	fmt.Fprintf(b, "### %s {#%s}\n\n", gm.funcName, anchor)
+	fmt.Fprintf(b, "`%s.%s` references `%s` (kind:reference, ref_target=%q).\n\n",
+		gm.referencer.structName, gm.field.fieldName, gm.referenced.structName, gm.referenced.src.Slug)
+	names := make([]string, len(gm.terminalStates))
+	for i, s := range gm.terminalStates {
+		names[i] = s.constant
+	}
+	fmt.Fprintf(b, "Accepted terminal state(s) of `%s`: %s.\n\n", gm.referenced.structName, strings.Join(names, ", "))
+	fmt.Fprintf(b, "- gate function: `pipeline_test.go:%s`\n", gm.funcName)
+	fmt.Fprintf(b, "- gate test: `pipeline_test.go:Test%s`\n\n", gm.funcName)
+}
+
 // GenerateAuditFromGraph builds the []*entityModel for entityTypes and
 // renders requirements_audit.md from it (with an empty Requirements
 // section), in the same map[filename][]byte shape
@@ -208,7 +250,7 @@ func GenerateAuditFromGraph(entityTypes []ontology.EntityType) (map[string][]byt
 		models = append(models, m)
 	}
 
-	auditSrc, err := RenderAuditFile(models, nil)
+	auditSrc, err := RenderAuditFile(models, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAuditFromGraph: %w", err)
 	}

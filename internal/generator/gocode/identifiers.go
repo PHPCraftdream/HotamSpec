@@ -86,6 +86,11 @@ var glossary = map[string]string{
 	"составить":       "compile",
 	"уточнить":        "clarify",
 	"и":               "and",
+	"прогноз":         "forecast",
+	"входной":         "input",
+	"реестр":          "registry",
+	"граф":            "graph",
+	"зависимостей":    "dependencies",
 }
 
 // UnknownTermError is returned when a name part cannot be resolved via the
