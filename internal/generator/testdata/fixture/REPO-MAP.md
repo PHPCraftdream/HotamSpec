@@ -63,6 +63,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/fixture-domain/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
 - `domains/fixture-domain/docs/gen/HISTORY.md` — Methodology decision history
 - `domains/fixture-domain/docs/gen/OPEN.md` — Open registry
+- `domains/fixture-domain/docs/gen/PIPELINE.md` — Domain overview: how this is put together, stage by stage
 - `domains/fixture-domain/docs/gen/REPO-MAP.md` — Repository file index
 - `domains/fixture-domain/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
 - `domains/fixture-domain/docs/gen/TENSIONS.md` — The tension map

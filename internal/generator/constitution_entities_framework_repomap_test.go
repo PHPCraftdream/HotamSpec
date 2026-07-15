@@ -22,6 +22,7 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
 		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
+		title("PIPELINE.md", "PIPELINE.md — Domain overview: how this is put together, stage by stage (Hotam-Spec)"),
 		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
 		title("REQUIREMENTS.md", "REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)"),
 		title("TENSIONS.md", "TENSIONS.md — The tension map (Hotam-Spec)"),
@@ -47,6 +48,7 @@ func fixtureGenDocs() []GenDocEntry {
 		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
 		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
+		title("PIPELINE.md", "PIPELINE.md — Domain overview: how this is put together, stage by stage (Hotam-Spec)"),
 		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
 		title("REQUIREMENTS.md", "REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)"),
 		title("TENSIONS.md", "TENSIONS.md — The tension map (Hotam-Spec)"),
@@ -96,4 +98,15 @@ func TestBuildEntities_ByteIdenticalToFixture(t *testing.T) {
 		t.Fatalf("read reference: %v", err)
 	}
 	diffReport(t, "ENTITIES.md", got, string(want))
+}
+
+func TestBuildPipeline_ByteIdenticalToFixture(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildPipeline(g, "fixture-domain")
+	want, err := os.ReadFile("testdata/fixture/PIPELINE.md")
+	if err != nil {
+		t.Fatalf("read reference: %v", err)
+	}
+	diffReport(t, "PIPELINE.md", got, string(want))
 }

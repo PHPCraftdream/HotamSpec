@@ -18,6 +18,7 @@ func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
 		{"Decisions", BuildDecisions(g), BuildDecisions(g)},
 		{"Constitution", BuildConstitution(g, "hotam-spec-self", false), BuildConstitution(g, "hotam-spec-self", false)},
 		{"Entities", BuildEntities(g, "hotam-spec-self"), BuildEntities(g, "hotam-spec-self")},
+		{"Pipeline", BuildPipeline(g, "hotam-spec-self"), BuildPipeline(g, "hotam-spec-self")},
 		{"RepoMap", BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false), BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)},
 		{"FrameworkInvariants", BuildFrameworkInvariants(g, "hotam-spec-self"), BuildFrameworkInvariants(g, "hotam-spec-self")},
 		{"LiveState", BuildLiveState(g, 1000, "2026-07-12"), BuildLiveState(g, 1000, "2026-07-12")},
