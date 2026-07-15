@@ -190,7 +190,7 @@ func TestCrystalLinks_EveryReferencedPathExistsOnDisk(t *testing.T) {
 			t.Parallel()
 			repoRoot := t.TempDir()
 			domainDir := filepath.Join(repoRoot, "domains", "test-linkcheck")
-			if _, err := initDomain(domainDir, "test-linkcheck"); err != nil {
+			if _, err := initDomain(domainDir, "test-linkcheck", "2026-07-14"); err != nil {
 				t.Fatalf("initDomain: %v", err)
 			}
 			claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
@@ -212,7 +212,7 @@ func TestCrystalLinks_ConsumerNeverReferencesThinkingDir(t *testing.T) {
 	t.Parallel()
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-linkcheck-consumer")
-	if _, err := initDomain(domainDir, "test-linkcheck-consumer"); err != nil {
+	if _, err := initDomain(domainDir, "test-linkcheck-consumer", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
@@ -241,7 +241,7 @@ func TestCrystalLinks_FullProfileStillReferencesThinkingDir(t *testing.T) {
 	t.Parallel()
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-linkcheck-full")
-	if _, err := initDomain(domainDir, "test-linkcheck-full"); err != nil {
+	if _, err := initDomain(domainDir, "test-linkcheck-full", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
@@ -350,7 +350,7 @@ func TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk(t *testing.T) {
 
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-toolindex-linkcheck")
-	if _, err := initDomain(domainDir, "test-toolindex-linkcheck"); err != nil {
+	if _, err := initDomain(domainDir, "test-toolindex-linkcheck", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
@@ -400,7 +400,7 @@ func TestConsumerProfile_NoFrameworkSourceReferences(t *testing.T) {
 	t.Parallel()
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-consumer-clean")
-	if _, err := initDomain(domainDir, "test-consumer-clean"); err != nil {
+	if _, err := initDomain(domainDir, "test-consumer-clean", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
@@ -460,7 +460,7 @@ func TestConsumerProfile_DocsGenNoFrameworkSourceReferences(t *testing.T) {
 	t.Parallel()
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-consumer-docsgen")
-	if _, err := initDomain(domainDir, "test-consumer-docsgen"); err != nil {
+	if _, err := initDomain(domainDir, "test-consumer-docsgen", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
@@ -530,7 +530,7 @@ func TestFullProfile_NoGoRunPrefix(t *testing.T) {
 	t.Parallel()
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-full-clean")
-	if _, err := initDomain(domainDir, "test-full-clean"); err != nil {
+	if _, err := initDomain(domainDir, "test-full-clean", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")

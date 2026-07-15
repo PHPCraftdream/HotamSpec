@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -57,10 +58,11 @@ func cmdInit(args []string) error {
 	fs := newFlagSet("init")
 	name := fs.String("name", "", "domain name (default: the last path segment of <dir>)")
 	profile := fs.String("profile", "", "gen-spec profile: consumer|full (default: consumer, matching init-project; full produces the heavier framework-self-hosting doc set)")
+	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — used as the seed requirement's last_reviewed_at/review_after basis; pin this for reproducible/byte-identical scaffolding")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full]")
+		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full] [--today YYYY-MM-DD]")
 	}
 	rawDir := fs.Arg(0)
 
@@ -81,7 +83,12 @@ func cmdInit(args []string) error {
 		domainName = filepath.Base(domainDir)
 	}
 
-	written, err := initDomain(domainDir, domainName)
+	today := *todayFlag
+	if today == "" {
+		today = time.Now().Format("2006-01-02")
+	}
+
+	written, err := initDomain(domainDir, domainName, today)
 	if err != nil {
 		return err
 	}
@@ -106,12 +113,30 @@ func cmdInit(args []string) error {
 	return nil
 }
 
+// seedReviewCadenceDays is the review interval applied to the seed
+// requirement's review_after, measured from `today` (the domain's
+// scaffold date). 180 days (~6 months) is a reasonable default review
+// cadence — long enough that a freshly-scaffolded domain doesn't
+// immediately trip freshness/what-now's DUE-SOON lookahead
+// (internal/freshness.DueSoonWindowDays == 30 days), short enough that a
+// domain left completely untouched for a long time still eventually
+// surfaces its seed requirement for review.
+const seedReviewCadenceDays = 180
+
 // initDomain performs the actual scaffold and returns every path it wrote,
 // in write order, so cmdInit and external_e2e_test.go can both assert on
 // exactly what landed on disk. It refuses to overwrite an existing
 // graph.json (initializing on top of a real domain would silently discard
 // it), but tolerates (and creates) an otherwise-empty target directory.
-func initDomain(domainDir, domainName string) ([]string, error) {
+//
+// today (YYYY-MM-DD) seeds the scaffolded requirement's freshness fields
+// (last_reviewed_at/review_after) so the seed is born FRESH rather than
+// NEVER-REVIEWED — see internal/freshness.Classify. Without this, a fresh
+// `hotam init`/`hotam init-project` immediately reports `hotam status`'s
+// top action as an ADVISORY about the tool's own bootstrap artifact never
+// having been reviewed, which is a false signal about a business adopter's
+// first interaction with the tool, not a real content gap.
+func initDomain(domainDir, domainName, today string) ([]string, error) {
 	graphPath := graphPathForDomain(domainDir)
 	if _, err := os.Stat(graphPath); err == nil {
 		return nil, fmt.Errorf("refusing to init: %s already exists", graphPath)
@@ -139,6 +164,8 @@ func initDomain(domainDir, domainName string) ([]string, error) {
 				Why:            "Seed requirement created by `hotam init` as a worked example — replace it (via a Rejection + a real proposal) with your domain's first actual requirement.",
 				Enforcement:    ontology.EnforcementPROSE,
 				Enforceability: ontology.EnforceabilityINHERENTLY_PROSE,
+				LastReviewedAt: today,
+				ReviewAfter:    addDaysLocal(today, seedReviewCadenceDays),
 			},
 		},
 	}
@@ -167,6 +194,19 @@ func initDomain(domainDir, domainName string) ([]string, error) {
 	written = append(written, readmePath)
 
 	return written, nil
+}
+
+// addDaysLocal returns the YYYY-MM-DD date `days` days after date. On parse
+// failure it returns date unchanged. This mirrors internal/freshness's own
+// unexported addDays helper — that one is package-private to
+// internal/freshness, so cmd/hotam carries this small local equivalent
+// rather than exporting cross-package date arithmetic for a single use.
+func addDaysLocal(date string, days int) string {
+	t, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return date
+	}
+	return t.AddDate(0, 0, days).Format("2006-01-02")
 }
 
 const readmeTemplate = `# %[1]s — a Hotam-Spec domain

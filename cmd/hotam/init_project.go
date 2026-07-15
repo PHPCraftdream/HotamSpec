@@ -116,7 +116,7 @@ func initProject(dir, domainName, today string) ([]string, error) {
 	// (2) Scaffold the base domain at <dir>/domains/<name> via the EXISTING
 	// initDomain — do not reimplement domain scaffolding.
 	domainDir := filepath.Join(dir, "domains", domainName)
-	written, err := initDomain(domainDir, domainName)
+	written, err := initDomain(domainDir, domainName, today)
 	if err != nil {
 		return nil, err
 	}

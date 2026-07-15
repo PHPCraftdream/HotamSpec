@@ -145,7 +145,7 @@ func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 
 	// (1) initDomain (bare `hotam init`).
 	initDir := t.TempDir()
-	if _, err := initDomain(initDir, "bare"); err != nil {
+	if _, err := initDomain(initDir, "bare", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	bareProfile := readManifestGenProfile(t, filepath.Join(initDir, "manifest.json"))

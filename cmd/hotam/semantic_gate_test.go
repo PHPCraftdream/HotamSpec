@@ -20,7 +20,7 @@ func setupGateTestDomain(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	domainDir := filepath.Join(root, "domains", "gate-test")
-	if _, err := initDomain(domainDir, "gate-test"); err != nil {
+	if _, err := initDomain(domainDir, "gate-test", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	return domainDir

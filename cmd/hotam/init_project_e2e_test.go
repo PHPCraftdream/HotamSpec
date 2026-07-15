@@ -230,4 +230,17 @@ func TestExternal_InitProject(t *testing.T) {
 	if !strings.Contains(dupOut, "already exists") {
 		t.Errorf("second init-project should refuse with 'already exists', got:\n%s", dupOut)
 	}
+
+	// (9) R11-a: the seed requirement (R-domain-exists) must NOT trip a
+	// false "never-reviewed" freshness signal on the very first `hotam
+	// status` after a fresh init-project. Before the fix, initDomain left
+	// LastReviewedAt/ReviewAfter at their zero value, so this line read
+	// "0 overdue . 1 never-reviewed" and what-now's top action was an
+	// ADVISORY about the tool's own bootstrap artifact, not a real content
+	// gap. relOut was captured in step (6) via `status --domain
+	// domains/main`, run with the same --today (2026-07-13) init-project
+	// itself used to scaffold the seed, so this is the exact adopter path.
+	if !strings.Contains(relOut, "freshness:   0 overdue · 0 never-reviewed") {
+		t.Errorf("fresh init-project's seed requirement trips a freshness signal on `hotam status` — want \"freshness:   0 overdue · 0 never-reviewed\", got:\n%s", relOut)
+	}
 }

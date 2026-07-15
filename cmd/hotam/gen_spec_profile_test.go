@@ -83,7 +83,7 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 	// Scaffold a fresh external domain — no framework-internal requirements,
 	// so all four atoms docs are genuinely empty.
 	domainDir := t.TempDir()
-	if _, err := initDomain(domainDir, "test-external"); err != nil {
+	if _, err := initDomain(domainDir, "test-external", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	// initDomain writes {"self_hosting": false, "gen_profile": "consumer"}
@@ -147,7 +147,7 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	t.Parallel()
 
 	domainDir := t.TempDir()
-	if _, err := initDomain(domainDir, "test-external"); err != nil {
+	if _, err := initDomain(domainDir, "test-external", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 
@@ -223,7 +223,7 @@ func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 
 	// Two identical fresh domains, one consumer, one full.
 	dirConsumer := t.TempDir()
-	if _, err := initDomain(dirConsumer, "ext"); err != nil {
+	if _, err := initDomain(dirConsumer, "ext", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain consumer: %v", err)
 	}
 	if _, _, err := genSpec(dirConsumer, "", "2026-07-13", "consumer"); err != nil {
@@ -232,7 +232,7 @@ func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 	consumerTotal, _ := countFilesUnder(t, filepath.Join(dirConsumer, "docs", "gen"))
 
 	dirFull := t.TempDir()
-	if _, err := initDomain(dirFull, "ext"); err != nil {
+	if _, err := initDomain(dirFull, "ext", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain full: %v", err)
 	}
 	if _, _, err := genSpec(dirFull, "", "2026-07-13", "full"); err != nil {
@@ -284,7 +284,7 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 	plannedToolPage := filepath.Join("docs", "gen", "tools", plannedCmd+".md")
 
 	domainDir := t.TempDir()
-	if _, err := initDomain(domainDir, "test-external"); err != nil {
+	if _, err := initDomain(domainDir, "test-external", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	genDir := filepath.Join(domainDir, "docs", "gen")
@@ -394,7 +394,7 @@ func TestGenSpec_ConsumerRequirementsToolsIndexReferenceExistsOnDisk(t *testing.
 
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-linkcheck-requirements")
-	if _, err := initDomain(domainDir, "test-linkcheck-requirements"); err != nil {
+	if _, err := initDomain(domainDir, "test-linkcheck-requirements", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
