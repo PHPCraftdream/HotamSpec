@@ -16,12 +16,13 @@ type EntityField struct {
 }
 
 type EntityType struct {
-	Slug        string        `json:"slug"`
-	Description string        `json:"description"`
-	Lifecycle   Lifecycle     `json:"lifecycle"`
-	Fields      []EntityField `json:"fields"`
-	Why         string        `json:"why"`
-	DeclOrder   int           `json:"decl_order"`
+	Slug        string         `json:"slug"`
+	Description string         `json:"description"`
+	Lifecycle   Lifecycle      `json:"lifecycle"`
+	Fields      []EntityField  `json:"fields"`
+	Why         string         `json:"why"`
+	DeclOrder   int            `json:"decl_order"`
+	History     []HistoryEntry `json:"history"`
 }
 
 type EntityInstance struct {

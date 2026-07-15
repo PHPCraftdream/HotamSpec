@@ -121,6 +121,15 @@ func findOperatorIndex(g *ontology.Graph, id string) int {
 	return -1
 }
 
+func findEntityTypeIndex(g *ontology.Graph, slug string) int {
+	for i, et := range g.EntityTypes {
+		if et.Slug == slug {
+			return i
+		}
+	}
+	return -1
+}
+
 func containsRelation(rels []ontology.Relation, target ontology.Relation) bool {
 	for _, r := range rels {
 		if r.Kind == target.Kind && r.Target == target.Target {
@@ -551,10 +560,58 @@ func (p ProposedReviewMark) mutate(g *ontology.Graph, today string) error {
 	return nil
 }
 
+// mutate implements CREATE for a new EntityType (p.Slug not yet in g) and a
+// minimal, deliberately narrow UPDATE for an already-existing one.
+//
+// UPDATE (p.Slug already names an EntityType in g): p.Fields are APPENDED to
+// the existing EntityType.Fields -- never replacing or redefining an
+// existing field (errFieldAlreadyExists if a name collides). States,
+// Transitions, Description and Why must all be empty on an UPDATE
+// (errEntityTypeUpdateShape otherwise) -- this first iteration intentionally
+// does not support editing lifecycle/description/why of an already-landed
+// EntityType, only adding new fields to it (e.g. a new reference field
+// pointing at another EntityType). A HistoryEntry is appended recording the
+// appended field names, mirroring the History-on-mutation pattern
+// ProposedRequirement/ProposedReviewMark already use.
+//
+// CREATE (p.Slug not yet in g): unchanged from before this UPDATE path
+// existed -- byte-identical behavior.
 func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 	slug := strings.TrimSpace(p.Slug)
-	if _, ok := ontology.EntityTypeSlugs(g)[slug]; ok {
-		return errDuplicate("EntityType", slug)
+	if idx := findEntityTypeIndex(g, slug); idx >= 0 {
+		if len(p.States) != 0 || len(p.Transitions) != 0 ||
+			strings.TrimSpace(p.Description) != "" || strings.TrimSpace(p.Why) != "" {
+			return errEntityTypeUpdateShape(slug)
+		}
+		existing := g.EntityTypes[idx]
+		existingNames := make(map[string]struct{}, len(existing.Fields))
+		for _, f := range existing.Fields {
+			existingNames[f.Name] = struct{}{}
+		}
+		newFields := make([]ontology.EntityField, 0, len(p.Fields))
+		addedNames := make([]string, 0, len(p.Fields))
+		for _, f := range p.Fields {
+			if _, dup := existingNames[f.Name]; dup {
+				return errFieldAlreadyExists(slug, f.Name)
+			}
+			newFields = append(newFields, ontology.EntityField{
+				Name:      f.Name,
+				Kind:      f.Kind,
+				Required:  f.Required,
+				RefTarget: f.RefTarget,
+			})
+			addedNames = append(addedNames, f.Name)
+			existingNames[f.Name] = struct{}{}
+		}
+		existing.Fields = append(existing.Fields, newFields...)
+		if len(addedNames) > 0 {
+			existing.History = append(existing.History, ontology.HistoryEntry{
+				At:      today,
+				Summary: "fields added: [" + strings.Join(addedNames, ", ") + "]",
+			})
+		}
+		g.EntityTypes[idx] = existing
+		return nil
 	}
 	states := make([]ontology.State, 0, len(p.States))
 	for _, s := range p.States {

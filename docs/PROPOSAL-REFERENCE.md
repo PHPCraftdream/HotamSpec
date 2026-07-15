@@ -469,3 +469,35 @@ each name a declared state)
   ]
 }
 ```
+
+### UPDATE mode (append new fields to an existing EntityType)
+
+When `slug` already names an EntityType in the graph, the proposal is an
+UPDATE instead of a duplicate-rejected CREATE. UPDATE mode is deliberately
+narrow (first-iteration scope): it can ONLY append brand-new fields to the
+existing EntityType's `fields` list — it cannot redefine an existing field,
+and it cannot change `states`/`transitions`/`description`/`why`.
+
+**Required (UPDATE shape):** `slug` (must match an existing EntityType),
+`fields` (non-empty list of `{"name", "kind", "required", "ref_target"}`
+objects to APPEND — a `name` that already exists on the target EntityType is
+rejected, not silently redefined)
+**Must be empty/omitted on UPDATE:** `states`, `transitions`, `description`,
+`why` — any of these non-empty on a proposal whose `slug` already exists is
+rejected (`... UPDATE currently supports ONLY appending new 'fields' ...`).
+This is a scope limit, not a bug: editing an already-landed EntityType's
+lifecycle/description/why is not yet supported by any proposal kind.
+
+A successful UPDATE appends one `HistoryEntry` to the EntityType (mirroring
+`ProposedRequirement`'s History-on-mutation pattern) recording the field
+names that were added.
+
+```json
+{
+  "kind": "EntityType",
+  "slug": "release",
+  "fields": [
+    {"name": "linked_feature_flag", "kind": "reference", "required": false, "ref_target": "feature-flag"}
+  ]
+}
+```

@@ -257,6 +257,26 @@ func (p ProposedAssumptionTransition) validate() error {
 	return nil
 }
 
+// isEntityTypeCreateAttempt reports whether p carries EITHER a description
+// OR states -- the two fields that are REQUIRED for a CREATE (a new
+// EntityType with no description or no states is never valid) and that an
+// UPDATE proposal (see ProposedEntityType.mutate) MUST leave empty. It
+// governs which validate() branch runs below:
+//   - true  -> full CREATE-shape validation (unchanged from before UPDATE
+//     existed), so a genuine create with a missing/malformed description or
+//     states list is still rejected here, byte-identically to before.
+//   - false -> validate() defers the create-vs-update call to mutate(),
+//     which has graph access. This is a SHAPE check only: validate() cannot
+//     know whether p.Slug actually names an existing EntityType. If it does,
+//     mutate()'s UPDATE path runs (fields-only append). If it does not,
+//     mutate()'s CREATE path runs anyway and produces an EntityType with no
+//     states/description -- which the 'states must be non-empty' invariant
+//     (internal/invariants) rejects downstream, so this branch can never
+//     silently create a malformed EntityType.
+func isEntityTypeCreateAttempt(p ProposedEntityType) bool {
+	return strings.TrimSpace(p.Description) != "" || len(p.States) != 0
+}
+
 func (p ProposedEntityType) validate() error {
 	slug := strings.TrimSpace(p.Slug)
 	if slug == "" {
@@ -265,6 +285,24 @@ func (p ProposedEntityType) validate() error {
 	if !slugPattern.MatchString(slug) {
 		return validationError(
 			"'slug' must be kebab-case; got %q.", slug)
+	}
+	if !isEntityTypeCreateAttempt(p) {
+		// Not attempting to CREATE (no description, no states): either a
+		// fields-only UPDATE, or a malformed proposal with neither shape --
+		// mutate() makes the authoritative call once it has graph access
+		// (see isEntityTypeCreateAttempt doc comment above).
+		if len(p.Fields) == 0 {
+			return validationError(
+				"an EntityType proposal must supply either 'description'+'states' " +
+					"(to create a new EntityType) or 'fields' (to append fields to an " +
+					"existing one) -- got neither.")
+		}
+		for _, f := range p.Fields {
+			if _, ok := ontology.EntityFieldKinds[f.Kind]; !ok {
+				return validationError("field kind %q is not valid.", f.Kind)
+			}
+		}
+		return nil
 	}
 	if strings.TrimSpace(p.Description) == "" {
 		return validationError("'description' is required and must be non-empty.")

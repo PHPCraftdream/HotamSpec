@@ -932,6 +932,177 @@ func TestApply_EntityType_NoInitialStateFails(t *testing.T) {
 	assertApplyFails(t, path, p, "initial")
 }
 
+// entityTypeBaseGraph returns baseGraph() plus one pre-landed EntityType
+// ("feature-flag", one existing field "owner") so UPDATE-mode tests have an
+// already-existing slug to target.
+func entityTypeBaseGraph() *ontology.Graph {
+	g := baseGraph()
+	g.EntityTypes = append(g.EntityTypes, ontology.EntityType{
+		Slug:        "feature-flag",
+		Description: "a deployable feature toggle",
+		Why:         "needed to model lifecycle-bearing entities",
+		Lifecycle: ontology.Lifecycle{
+			Slug: "feature-flag-lifecycle",
+			States: []ontology.State{
+				{Name: "INIT", Kind: ontology.StateKindInitial},
+				{Name: "ON", Kind: ontology.StateKindNormal},
+				{Name: "OFF", Kind: ontology.StateKindQuiescent},
+			},
+			Transitions: []ontology.Transition{
+				{Src: "INIT", Dst: "ON", Event: "enable"},
+				{Src: "ON", Dst: "OFF", Event: "disable"},
+			},
+		},
+		Fields: []ontology.EntityField{
+			{Name: "owner", Kind: "reference", Required: true, RefTarget: "Stakeholder"},
+		},
+	})
+	return g
+}
+
+func findEntityType(g *ontology.Graph, slug string) (ontology.EntityType, bool) {
+	for _, et := range g.EntityTypes {
+		if et.Slug == slug {
+			return et, true
+		}
+	}
+	return ontology.EntityType{}, false
+}
+
+// TestApply_EntityType_UpdateAppendsNewField covers acceptance case (a):
+// an UPDATE proposal (existing slug, fields-only shape) successfully appends
+// a new field to an existing EntityType -- the graph after mutate contains
+// the EntityType with BOTH the old field ("owner") and the new one
+// ("linked_release").
+func TestApply_EntityType_UpdateAppendsNewField(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug: "feature-flag",
+		Fields: []EntityTypeField{
+			{Name: "linked_release", Kind: "reference", Required: false, RefTarget: "release"},
+		},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	et, ok := findEntityType(g, "feature-flag")
+	if !ok {
+		t.Fatalf("feature-flag missing after update")
+	}
+	if len(et.Fields) != 2 {
+		t.Fatalf("Fields len = %d, want 2 (owner + linked_release); got %+v", len(et.Fields), et.Fields)
+	}
+	names := map[string]ontology.EntityField{}
+	for _, f := range et.Fields {
+		names[f.Name] = f
+	}
+	if _, ok := names["owner"]; !ok {
+		t.Errorf("old field %q lost after update", "owner")
+	}
+	added, ok := names["linked_release"]
+	if !ok {
+		t.Fatalf("new field %q not appended", "linked_release")
+	}
+	if added.Kind != "reference" || added.RefTarget != "release" {
+		t.Errorf("linked_release field = %+v, want kind=reference ref_target=release", added)
+	}
+	// Lifecycle/description/why must be untouched by the update.
+	if len(et.Lifecycle.States) != 3 {
+		t.Errorf("States len = %d, want 3 (unchanged by update)", len(et.Lifecycle.States))
+	}
+	if et.Description != "a deployable feature toggle" {
+		t.Errorf("Description = %q, changed by update", et.Description)
+	}
+	if len(et.History) != 1 {
+		t.Fatalf("History len = %d, want 1 entry recording the update", len(et.History))
+	}
+	if !strings.Contains(et.History[0].Summary, "linked_release") {
+		t.Errorf("History[0].Summary = %q, want it to mention linked_release", et.History[0].Summary)
+	}
+}
+
+// TestApply_EntityType_UpdateDuplicateFieldNameFails covers acceptance case
+// (b): an UPDATE proposal naming a field that already exists on the target
+// EntityType is rejected, and the graph on disk is unchanged.
+func TestApply_EntityType_UpdateDuplicateFieldNameFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug: "feature-flag",
+		Fields: []EntityTypeField{
+			{Name: "owner", Kind: "string"},
+		},
+	}
+	assertApplyFails(t, path, p, "already has a field named")
+}
+
+// TestApply_EntityType_UpdateWithNonEmptyStatesFails covers acceptance case
+// (c): an UPDATE proposal (existing slug) that also carries non-empty
+// states/transitions/description/why is rejected as an out-of-scope shape,
+// and the graph on disk is unchanged. This subtest only exercises 'states'
+// non-empty; the sibling subtests exercise transitions/description/why.
+func TestApply_EntityType_UpdateWithNonEmptyStatesFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug:        "feature-flag",
+		Description: "a full create-shaped payload so validate() lets this reach mutate()",
+		Fields: []EntityTypeField{
+			{Name: "linked_release", Kind: "reference", RefTarget: "release"},
+		},
+		States: []EntityTypeState{
+			{Name: "INIT", Kind: ontology.StateKindInitial},
+		},
+	}
+	assertApplyFails(t, path, p, "UPDATE currently supports ONLY appending new 'fields'")
+}
+
+func TestApply_EntityType_UpdateWithNonEmptyTransitionsFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug: "feature-flag",
+		Fields: []EntityTypeField{
+			{Name: "linked_release", Kind: "reference", RefTarget: "release"},
+		},
+		Transitions: []EntityTypeTransition{
+			{Src: "INIT", Dst: "ON", Event: "enable"},
+		},
+	}
+	assertApplyFails(t, path, p, "UPDATE currently supports ONLY appending new 'fields'")
+}
+
+func TestApply_EntityType_UpdateWithNonEmptyDescriptionFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug:        "feature-flag",
+		Description: "a changed description",
+		States: []EntityTypeState{
+			{Name: "INIT", Kind: ontology.StateKindInitial},
+		},
+		Fields: []EntityTypeField{
+			{Name: "linked_release", Kind: "reference", RefTarget: "release"},
+		},
+	}
+	assertApplyFails(t, path, p, "UPDATE currently supports ONLY appending new 'fields'")
+}
+
+func TestApply_EntityType_UpdateWithNonEmptyWhyFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug: "feature-flag",
+		Why:  "a changed why",
+		Fields: []EntityTypeField{
+			{Name: "linked_release", Kind: "reference", RefTarget: "release"},
+		},
+	}
+	assertApplyFails(t, path, p, "UPDATE currently supports ONLY appending new 'fields'")
+}
+
 func TestApply_Requirement_AddInvariantGuardFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())

@@ -55,6 +55,37 @@ func errTooFewMembers(conflictID string, count int) error {
 			"requires >= 2. Refusing to write.", conflictID, count)
 }
 
+// errFieldAlreadyExists is returned by ProposedEntityType.mutate's UPDATE
+// path (an EntityType proposal whose slug already exists in the graph) when
+// one of the incoming p.Fields names a field the target EntityType already
+// has. UPDATE mode only APPENDS new fields -- it never redefines or silently
+// overwrites an existing one; a proposal author who wants to change an
+// existing field's kind/required/ref_target must do so through a separate,
+// explicit path (not yet implemented), not by resubmitting the same name.
+func errFieldAlreadyExists(slug, fieldName string) error {
+	return fmt.Errorf(
+		"EntityType %q already has a field named %q -- an EntityType UPDATE "+
+			"proposal may only APPEND new fields, never redefine an existing "+
+			"one. Rename the new field or drop it from 'fields'.", slug, fieldName)
+}
+
+// errEntityTypeUpdateShape is returned by ProposedEntityType.mutate's UPDATE
+// path when the incoming proposal (targeting an already-existing slug) also
+// carries a non-empty states/transitions/description/why -- fields that only
+// make sense for CREATE. This is a deliberate first-iteration scope limit
+// (see ProposedEntityType.mutate doc comment), not a bug: UPDATE currently
+// supports ONLY appending new fields, not editing lifecycle/description/why
+// of an already-landed EntityType.
+func errEntityTypeUpdateShape(slug string) error {
+	return fmt.Errorf(
+		"EntityType %q already exists, so this proposal is an UPDATE -- but "+
+			"UPDATE currently supports ONLY appending new 'fields'. "+
+			"'states'/'transitions'/'description'/'why' must be empty on an "+
+			"UPDATE proposal (this is a first-iteration scope limit, not a "+
+			"bug); drop them, or omit 'fields' entirely if you meant to "+
+			"re-create %q (which will fail as a duplicate).", slug, slug)
+}
+
 // applyToGraph validates and mutates g in place, then verifies the proposal
 // introduces no new invariant violations relative to the graph's pre-mutation
 // state. It performs no disk I/O — Apply and ApplyBatch own load/write so a
