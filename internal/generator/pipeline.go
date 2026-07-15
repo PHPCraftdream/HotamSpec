@@ -78,6 +78,19 @@ func resolvePipelineRefEdges(entityTypes []ontology.EntityType) []pipelineRefEdg
 // use surfaces as a citation, not just the framework's own R-/C-/A- family.
 var pipelineAnchorPattern = regexp.MustCompile(`\b[A-Z][A-Za-z0-9]*(-[A-Za-z0-9]+)+\b`)
 
+// docURLFragmentPattern matches a markdown/doc-link URL FRAGMENT — a `#`
+// followed by its heading-slug body (letters, digits, hyphens; markdown
+// heading-range slugs commonly double the hyphen for an en-dash separator,
+// e.g. "#Planning-gates-P-G0--P-G4"). This is a reference to a SECTION of an
+// external document, not a standalone requirement/gate anchor citation — even
+// though its slug body happens to be built from real anchor-shaped
+// substrings (e.g. "P-G0", "P-G4"), those substrings name the ENDPOINTS of a
+// doc-heading range, not a claim that THIS step is gated by each one
+// individually. Stripped out before pipelineAnchorPattern runs (see
+// renderGateCitations) so no fragment fallout — truncated or otherwise —
+// gets cited as if it were its own gate.
+var docURLFragmentPattern = regexp.MustCompile(`#[A-Za-z0-9-]+`)
+
 // BuildPipeline renders docs/gen/PIPELINE.md: a stage table (Стадия | Вход |
 // Выход | Gate | Кто утверждает) plus a Mermaid flowchart, built from every
 // ontology.Process node's Steps. Step names are rendered VERBATIM in the
@@ -308,8 +321,22 @@ func entityAnchorCell(slug string, entityBySlug map[string]ontology.EntityType) 
 // R-gate-pg1-* Requirement.ID, or an external doc anchor) are still cited
 // verbatim — the citation is honest either way, never fabricated, never
 // silently dropped.
+//
+// Doc-link URL fragments (docURLFragmentPattern, e.g. the
+// "#Planning-gates-P-G0--P-G4" in
+// "(docs/gates-and-agent-modes.md#Planning-gates-P-G0--P-G4)") are stripped
+// BEFORE the anchor scan runs: a fragment names a SECTION of an external
+// document, not a per-step gate citation, even though its slug body is built
+// from real anchor-shaped substrings — without this strip, pipelineAnchorPattern
+// would match "Planning-gates-P-G0" (a truncated doc-heading fragment, not any
+// requirement's ID) and "P-G4" (the far endpoint of the heading's OWN range,
+// not a gate this specific step is bound by) as if they were independent
+// citations. A real anchor that happens to appear inside a step's why text
+// OUTSIDE any "#..." fragment (the normal case — "Якорь: R-gate-pg0-source-ready."
+// is prose, not a URL) is completely unaffected.
 func renderGateCitations(why string, reqBySlug map[string]ontology.Requirement) string {
-	matches := pipelineAnchorPattern.FindAllString(why, -1)
+	stripped := docURLFragmentPattern.ReplaceAllString(why, "")
+	matches := pipelineAnchorPattern.FindAllString(stripped, -1)
 	if len(matches) == 0 {
 		return "—"
 	}
