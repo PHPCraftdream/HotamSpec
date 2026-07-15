@@ -226,6 +226,65 @@ func TestRenderLifecycleTestFile_Synthetic_ParsesAsGo(t *testing.T) {
 	}
 }
 
+// TestRenderLifecycleTestFile_ZeroEntityTypes_CompilesAndVets asserts a
+// domain with NO EntityType at all (so zero *entityModel, so zero
+// Test<Entity>_LifecycleTransitions functions) still renders a
+// lifecycle_test.go that passes `go vet`/`go test`, not merely `go build` —
+// an earlier version of this generator unconditionally emitted `import
+// "testing"` even when nothing below used it, which parses as valid Go
+// (go/parser does not type-check) but fails `go vet`/`go test` with
+// "imported and not used". Mirrors
+// TestGeneratePipelineFromGraph_ZeroGates_CompilesAndVets in
+// pipeline_test.go, the established pattern for this class of bug.
+func TestRenderLifecycleTestFile_ZeroEntityTypes_CompilesAndVets(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("go toolchain not on PATH")
+	}
+
+	src, err := RenderLifecycleTestFile("gen", nil)
+	if err != nil {
+		t.Fatalf("RenderLifecycleTestFile: %v", err)
+	}
+	if strings.Contains(string(src), "import") {
+		t.Errorf("expected zero-EntityType lifecycle_test.go to have NO import statement at all, got:\n%s", src)
+	}
+
+	entitiesSrc, err := RenderEntitiesFile("gen", nil)
+	if err != nil {
+		t.Fatalf("RenderEntitiesFile: %v", err)
+	}
+	lifecycleSrc, err := RenderLifecycleFile("gen", nil)
+	if err != nil {
+		t.Fatalf("RenderLifecycleFile: %v", err)
+	}
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "entities.go"), entitiesSrc, 0o644); err != nil {
+		t.Fatalf("write entities.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "lifecycle.go"), lifecycleSrc, 0o644); err != nil {
+		t.Fatalf("write lifecycle.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "lifecycle_test.go"), src, 0o644); err != nil {
+		t.Fatalf("write lifecycle_test.go: %v", err)
+	}
+	goMod := "module gocode-zero-entitytypes-lifecycle-test\n\ngo " + EngineGoVersion + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+
+	vetCmd := exec.Command("go", "vet", "./...")
+	vetCmd.Dir = dir
+	if out, err := vetCmd.CombinedOutput(); err != nil {
+		t.Fatalf("go vet failed on zero-EntityType lifecycle_test.go: %v\n%s", err, out)
+	}
+	testCmd := exec.Command("go", "test", "./...")
+	testCmd.Dir = dir
+	if out, err := testCmd.CombinedOutput(); err != nil {
+		t.Fatalf("go test failed on zero-EntityType lifecycle_test.go: %v\n%s", err, out)
+	}
+}
+
 // TestGeneratedLifecycle_CompilesAndCatchesWrongState actually compiles the
 // generated entities.go + lifecycle.go + lifecycle_test.go for the synthetic
 // entity in a fresh temp module and runs `go test`, then imports the

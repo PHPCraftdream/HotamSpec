@@ -321,3 +321,47 @@ func TestRenderEntitiesFile_Deterministic(t *testing.T) {
 		t.Errorf("generated file does not start with the ownership marker; got prefix: %q", string(a)[:n])
 	}
 }
+
+// TestRenderEntitiesFile_ZeroEntityTypes_CompilesAndVets asserts a domain
+// with NO EntityType at all still renders an entities.go that passes `go
+// vet`/`go test`, not merely `go build` — an earlier version of this
+// generator unconditionally emitted `import "fmt"` even when zero
+// EntityTypes (so zero Validate() bodies, so no caller of fmt.Errorf) were
+// rendered, which parses as valid Go (go/parser does not type-check) but
+// fails `go vet`/`go test` with "imported and not used", a regression `go
+// build ./...` alone would not catch as clearly as `go vet`/`go test` do.
+// Mirrors TestGeneratePipelineFromGraph_ZeroGates_CompilesAndVets in
+// pipeline_test.go, the established pattern for this class of bug.
+func TestRenderEntitiesFile_ZeroEntityTypes_CompilesAndVets(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("go toolchain not on PATH")
+	}
+
+	src, err := RenderEntitiesFile("gen", nil)
+	if err != nil {
+		t.Fatalf("RenderEntitiesFile: %v", err)
+	}
+	if strings.Contains(string(src), "import") {
+		t.Errorf("expected zero-EntityType entities.go to have NO import statement at all, got:\n%s", src)
+	}
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "entities.go"), src, 0o644); err != nil {
+		t.Fatalf("write entities.go: %v", err)
+	}
+	goMod := "module gocode-zero-entitytypes-test\n\ngo " + EngineGoVersion + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+
+	vetCmd := exec.Command("go", "vet", "./...")
+	vetCmd.Dir = dir
+	if out, err := vetCmd.CombinedOutput(); err != nil {
+		t.Fatalf("go vet failed on zero-EntityType entities.go: %v\n%s", err, out)
+	}
+	testCmd := exec.Command("go", "build", "./...")
+	testCmd.Dir = dir
+	if out, err := testCmd.CombinedOutput(); err != nil {
+		t.Fatalf("go build failed on zero-EntityType entities.go: %v\n%s", err, out)
+	}
+}

@@ -368,28 +368,58 @@ func RenderEntityType(m *entityModel) (string, error) {
 // RenderEntitiesFile renders the full entities.go body for a domain: the
 // ownership marker, package clause, imports, then one rendered EntityType
 // per graph entity type, sorted by slug for determinism (contract §5).
+//
+// The "fmt" import is only emitted when at least one rendered EntityType
+// actually uses it: RenderEntityType's Validate() body calls fmt.Errorf only
+// when the EntityType has at least one required field (§0 "any" branch in
+// RenderEntityType writes `_ = <recv>` instead when there is none, using
+// nothing from "fmt"). With zero EntityTypes (or EntityTypes with no
+// required fields at all), an unconditional import would leave "fmt" unused,
+// which fails `go build`/`go vet` despite still parsing as syntactically
+// valid Go (contract §5's compile/test requirement) — same reasoning as
+// RenderPipelineFile/RenderPipelineTestFile's zero-gates branches.
 func RenderEntitiesFile(packageName string, entityTypes []ontology.EntityType) ([]byte, error) {
 	sorted := make([]ontology.EntityType, len(entityTypes))
 	copy(sorted, entityTypes)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
 
-	var b strings.Builder
-	b.WriteString(OwnershipMarker)
-	b.WriteString("\n\n")
-	fmt.Fprintf(&b, "package %s\n\n", packageName)
-	b.WriteString("import \"fmt\"\n\n")
-
-	for i, et := range sorted {
+	rendered := make([]string, 0, len(sorted))
+	needsFmt := false
+	for _, et := range sorted {
 		m, err := BuildEntityModel(et)
 		if err != nil {
 			return nil, err
 		}
-		rendered, err := RenderEntityType(m)
+		src, err := RenderEntityType(m)
 		if err != nil {
 			return nil, err
 		}
-		b.WriteString(rendered)
-		if i != len(sorted)-1 {
+		rendered = append(rendered, src)
+		for _, f := range m.fields {
+			if f.src.Required {
+				needsFmt = true
+				break
+			}
+		}
+	}
+
+	var b strings.Builder
+	b.WriteString(OwnershipMarker)
+	b.WriteString("\n\n")
+	fmt.Fprintf(&b, "package %s\n\n", packageName)
+	if needsFmt {
+		b.WriteString("import \"fmt\"\n\n")
+	} else {
+		// No EntityType in this domain has a required field, so no
+		// generated Validate() body calls fmt.Errorf - an unconditional
+		// import would be unused.
+		b.WriteString("// No EntityType in this domain has a required field, so no generated\n")
+		b.WriteString("// Validate() body calls fmt.Errorf - nothing here needs \"fmt\".\n\n")
+	}
+
+	for i, src := range rendered {
+		b.WriteString(src)
+		if i != len(rendered)-1 {
 			b.WriteString("\n")
 		}
 	}

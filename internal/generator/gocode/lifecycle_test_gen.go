@@ -101,27 +101,48 @@ func buildIllegalCases(m *entityModel) []illegalCase {
 // declared transitions (legal cases) and the negative space (illegal
 // cases). EntityTypes with zero transitions are skipped, matching
 // RenderLifecycleFile.
+//
+// The "testing" import is only emitted when at least one Test<Entity>_
+// LifecycleTransitions function is actually rendered below (i.e. at least
+// one EntityType has a lifecycle transition). With zero EntityTypes, or
+// EntityTypes that all have zero transitions, no *testing.T-typed function
+// is rendered, so an unconditional import would leave "testing" unused,
+// which fails `go build`/`go vet` despite still parsing as syntactically
+// valid Go (contract §5's compile/test requirement) — same reasoning as
+// RenderPipelineFile/RenderPipelineTestFile's zero-gates branches.
 func RenderLifecycleTestFile(packageName string, models []*entityModel) ([]byte, error) {
 	sorted := make([]*entityModel, len(models))
 	copy(sorted, models)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].src.Slug < sorted[j].src.Slug })
 
-	var b strings.Builder
-	b.WriteString(OwnershipMarker)
-	b.WriteString("\n\n")
-	fmt.Fprintf(&b, "package %s\n\n", packageName)
-	b.WriteString("import \"testing\"\n\n")
-
-	any := false
+	var rendered []string
 	for _, m := range sorted {
 		if len(m.transitions) == 0 {
 			continue
 		}
-		if any {
+		rendered = append(rendered, renderEntityTransitionTests(m))
+	}
+
+	var b strings.Builder
+	b.WriteString(OwnershipMarker)
+	b.WriteString("\n\n")
+	fmt.Fprintf(&b, "package %s\n\n", packageName)
+
+	if len(rendered) == 0 {
+		// No EntityType in this domain has a lifecycle transition, so no
+		// Test<Entity>_LifecycleTransitions function is rendered below -
+		// nothing here needs "testing".
+		b.WriteString("// No EntityType in this domain has a lifecycle transition, so no\n")
+		b.WriteString("// Test<Entity>_LifecycleTransitions function is generated here.\n")
+		return []byte(b.String()), nil
+	}
+
+	b.WriteString("import \"testing\"\n\n")
+	for i, src := range rendered {
+		if i != 0 {
 			b.WriteString("\n")
 		}
-		any = true
-		b.WriteString(renderEntityTransitionTests(m))
+		b.WriteString(src)
 	}
 
 	return []byte(b.String()), nil
