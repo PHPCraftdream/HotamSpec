@@ -22,7 +22,8 @@ type legalCase struct {
 
 // illegalCase is one (state, event) pair that is NOT declared as a
 // transition on the entity — rendered as a "should fail, state unchanged"
-// table row.
+// table row. event is the already-kebab-cased event value (contract §1.1):
+// the only form allowed into a generated string literal/test name.
 type illegalCase struct {
 	entity     *entityModel
 	state      stateModel
@@ -57,7 +58,11 @@ func buildIllegalCases(m *entityModel) []illegalCase {
 			return
 		}
 		seen[key] = true
-		out = append(out, illegalCase{entity: m, state: state, methodName: tr.methodName, event: tr.src.Event})
+		// Reuses tr.eventValue, already computed once in BuildEntityModel —
+		// no independent re-derivation of the same translated event text
+		// (contract §1.1/§4.3: one ToKebabCase call per transition event,
+		// its result threaded through, not recomputed).
+		out = append(out, illegalCase{entity: m, state: state, methodName: tr.methodName, event: tr.eventValue})
 	}
 
 	// Minimum coverage: for every declared event, one src state it is NOT
@@ -136,8 +141,12 @@ func renderEntityTransitionTests(m *entityModel) string {
 	fmt.Fprintf(&b, "\t\t\twant  %s\n", m.stateType)
 	b.WriteString("\t\t}{\n")
 	for _, tr := range m.transitions {
-		fmt.Fprintf(&b, "\t\t\t{name: %q, from: %s, call: (*%s).%s, want: %s},\n",
-			tr.src.Event, tr.srcState.constant, m.structName, tr.methodName, tr.dstState.constant)
+		// name: references the same eventConst lifecycle.go's WrongStateError
+		// construction uses (not a re-literal-ized copy of the kebab string)
+		// — one named Go constant is the sole source of truth for this
+		// transition's translated event text across both generated files.
+		fmt.Fprintf(&b, "\t\t\t{name: %s, from: %s, call: (*%s).%s, want: %s},\n",
+			tr.eventConst, tr.srcState.constant, m.structName, tr.methodName, tr.dstState.constant)
 	}
 	b.WriteString("\t\t}\n")
 	b.WriteString("\t\tfor _, tc := range cases {\n")

@@ -56,6 +56,7 @@ var glossary = map[string]string{
 	"кластер":         "cluster",
 	"критический":     "critical",
 	"путь":            "path",
+	"ссылка":          "reference",
 	"область":         "area",
 	"ограничения":     "constraints",
 	"резюме":          "summary",
@@ -246,4 +247,30 @@ func ToCamelCase(name string) (string, error) {
 		return "", fmt.Errorf("gocode: empty identifier from graph name %q", name)
 	}
 	return joinParts(parts, false), nil
+}
+
+// ToKebabCase converts a graph name into a lower-case, hyphen-joined string
+// VALUE (not a Go identifier), per GEN-CODE-CONTRACT.md §4.3 and §1.1: used
+// for enum-constant string values (lifecycle state names) and event strings
+// in errors/tests, so no raw Cyrillic graph name ever reaches a generated
+// .go file's string literals. Shares resolveParts with ToPascalCase/
+// ToCamelCase — the same glossary/abbreviation lookup, so a change to either
+// table moves the identifier and the value in lockstep, and identifier/value
+// can never disagree. Unlike identifier casing, ALL parts (including
+// abbreviations) are lower-cased here: for a string value, an abbreviation's
+// upper-case convention doesn't carry the identifier-recognizability
+// rationale steps 2/5 give it.
+func ToKebabCase(name string) (string, error) {
+	parts, err := resolveParts(name)
+	if err != nil {
+		return "", err
+	}
+	if len(parts) == 0 {
+		return "", fmt.Errorf("gocode: empty identifier from graph name %q", name)
+	}
+	words := make([]string, len(parts))
+	for i, p := range parts {
+		words[i] = strings.ToLower(p.text)
+	}
+	return strings.Join(words, "-"), nil
 }

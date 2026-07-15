@@ -126,9 +126,77 @@ func TestRenderLifecycleFile_Synthetic_ParsesAsGo(t *testing.T) {
 		"func (t *TestCard) ApprovePM() error {",
 		"if t.State != TestCardStateAtGate {",
 		"t.State = TestCardStateApproved",
+		// WrongStateError.Event references the named event constant
+		// (declared in entities.go), not a re-literal-ized copy of the
+		// kebab-cased event string.
+		"Event: TestCardPresentAtGateEvent",
+		"Event: TestCardApprovePMEvent",
 	} {
 		if !strings.Contains(string(src), want) {
 			t.Errorf("generated lifecycle.go missing %q\n---\n%s", want, src)
+		}
+	}
+
+	// Negative check: the raw event string literal must never appear
+	// standalone in lifecycle.go — only as part of the const declaration in
+	// entities.go (not rendered here), never re-literal-ized inside a
+	// transition method body.
+	if strings.Contains(string(src), `Event: "approve-pm"`) || strings.Contains(string(src), `Event: "present-at-gate"`) {
+		t.Errorf("generated lifecycle.go re-literal-izes the event string instead of referencing the named constant\n---\n%s", src)
+	}
+}
+
+// TestGeneratedLifecycle_EventConstant_SingleSourceOfTruth asserts the
+// named per-transition event constant (declared once in entities.go) is the
+// SAME identifier lifecycle.go's WrongStateError construction and
+// lifecycle_test.go's generated table-driven test cases both reference —
+// never an independently re-derived or re-literal-ized copy of the
+// translated event text. This is the generator-level guard for the
+// "one named Go constant per translated value" rule (GEN-CODE-CONTRACT.md
+// §1.1/§4.3): entities.go, lifecycle.go, and lifecycle_test.go must all
+// name-check the identical constant identifier for a given transition.
+func TestGeneratedLifecycle_EventConstant_SingleSourceOfTruth(t *testing.T) {
+	et := syntheticEntityType()
+	m, err := BuildEntityModel(et)
+	if err != nil {
+		t.Fatalf("BuildEntityModel: %v", err)
+	}
+	entitiesSrc, err := RenderEntityType(m)
+	if err != nil {
+		t.Fatalf("RenderEntityType: %v", err)
+	}
+	lifecycleSrc, err := RenderLifecycleFile("gen", []*entityModel{m})
+	if err != nil {
+		t.Fatalf("RenderLifecycleFile: %v", err)
+	}
+	lifecycleTestSrc, err := RenderLifecycleTestFile("gen", []*entityModel{m})
+	if err != nil {
+		t.Fatalf("RenderLifecycleTestFile: %v", err)
+	}
+
+	for _, tr := range m.transitions {
+		constDecl := tr.eventConst + " = " + `"` + tr.eventValue + `"`
+		if !strings.Contains(entitiesSrc, constDecl) {
+			t.Errorf("entities.go missing event const declaration %q\n---\n%s", constDecl, entitiesSrc)
+		}
+		wrongStateUse := "Event: " + tr.eventConst
+		if !strings.Contains(string(lifecycleSrc), wrongStateUse) {
+			t.Errorf("lifecycle.go does not reference event const %q in WrongStateError\n---\n%s", tr.eventConst, lifecycleSrc)
+		}
+		testCaseUse := "name: " + tr.eventConst
+		if !strings.Contains(string(lifecycleTestSrc), testCaseUse) {
+			t.Errorf("lifecycle_test.go does not reference event const %q in legal-case table\n---\n%s", tr.eventConst, lifecycleTestSrc)
+		}
+		// The raw translated string must not appear as an independent
+		// quoted literal anywhere in lifecycle.go or lifecycle_test.go
+		// (entities.go's own const declaration is the sole place the value
+		// is spelled out as a literal).
+		rawLiteral := `"` + tr.eventValue + `"`
+		if strings.Contains(string(lifecycleSrc), rawLiteral) {
+			t.Errorf("lifecycle.go re-literal-izes event value %q instead of referencing %s\n---\n%s", tr.eventValue, tr.eventConst, lifecycleSrc)
+		}
+		if strings.Contains(string(lifecycleTestSrc), rawLiteral) {
+			t.Errorf("lifecycle_test.go re-literal-izes event value %q as a standalone quoted string instead of referencing %s\n---\n%s", tr.eventValue, tr.eventConst, lifecycleTestSrc)
 		}
 	}
 }

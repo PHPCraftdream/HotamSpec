@@ -108,14 +108,14 @@ func TestBuildEntityModel_ReferenceFieldKind_MapsToString(t *testing.T) {
 	// during stage-3 acceptance (a domain-wide generation would otherwise
 	// abort entirely on this one field).
 	et := syntheticEntityType()
-	et.Fields = append(et.Fields, ontology.EntityField{Name: "вопрос", Kind: "reference", Required: false, RefTarget: "OtherType"})
+	et.Fields = append(et.Fields, ontology.EntityField{Name: "ссылка", Kind: "reference", Required: false, RefTarget: "OtherType"})
 	m, err := BuildEntityModel(et)
 	if err != nil {
 		t.Fatalf("BuildEntityModel: %v", err)
 	}
 	var found bool
 	for _, f := range m.fields {
-		if f.src.Name != "вопрос" {
+		if f.src.Name != "ссылка" {
 			continue
 		}
 		found = true
@@ -162,14 +162,67 @@ func TestRenderEntityType_Synthetic_ParsesAsGo(t *testing.T) {
 		"Constraints string",
 		"Complexity TestCardComplexityKind",
 		"type TestCardState string",
-		"TestCardStateDraft TestCardState = \"черновик\"",
-		"TestCardStateAtGate TestCardState = \"на-gate\"",
-		"TestCardStateApproved TestCardState = \"утверждён\"",
+		// State values are kebab-cased translations (contract §1.1/§4.3), not
+		// the raw Cyrillic graph names — "черновик"/"на-gate"/"утверждён" ->
+		// "draft"/"at-gate"/"approved".
+		"TestCardStateDraft TestCardState = \"draft\"",
+		"TestCardStateAtGate TestCardState = \"at-gate\"",
+		"TestCardStateApproved TestCardState = \"approved\"",
+		// Event constants: one named Go const per transition, holding the
+		// kebab-cased event value, referenced (not re-literal-ized) by
+		// lifecycle.go's WrongStateError and lifecycle_test.go's cases.
+		"TestCardPresentAtGateEvent = \"present-at-gate\"",
+		"TestCardApprovePMEvent = \"approve-pm\"",
 		"func NewTestCard() *TestCard",
 		"func (t *TestCard) Validate() error",
 	} {
 		if !strings.Contains(src, want) {
 			t.Errorf("generated source missing %q\n---\n%s", want, src)
+		}
+	}
+}
+
+// TestRenderEntityType_Synthetic_DocCommentIsEnglishAnchor asserts contract
+// §1.1's third leak-closure: EntityType.why/state.why are no longer copied
+// verbatim (Cyrillic) into the generated .go comment. The struct doc-comment
+// and each state constant's comment must instead be an English
+// requirements_audit.md anchor keyed on the translated entity-slug/state
+// value — never the raw why text.
+func TestRenderEntityType_Synthetic_DocCommentIsEnglishAnchor(t *testing.T) {
+	et := syntheticEntityType()
+	m, err := BuildEntityModel(et)
+	if err != nil {
+		t.Fatalf("BuildEntityModel: %v", err)
+	}
+	src, err := RenderEntityType(m)
+	if err != nil {
+		t.Fatalf("RenderEntityType: %v", err)
+	}
+
+	for _, want := range []string{
+		"// TestCard: see requirements_audit.md#test-card",
+		// Plain ASCII hyphen, not an em-dash: contract §1.1's zero-Cyrillic
+		// rule is enforced via a full non-ASCII grep on generated .go files,
+		// so anchor comments must be pure ASCII too, not just Cyrillic-free.
+		"// Atom: test-card.lifecycle.state.draft - see requirements_audit.md",
+		"// Atom: test-card.lifecycle.state.at-gate - see requirements_audit.md",
+		"// Atom: test-card.lifecycle.state.approved - see requirements_audit.md",
+	} {
+		if !strings.Contains(src, want) {
+			t.Errorf("generated source missing English anchor comment %q\n---\n%s", want, src)
+		}
+	}
+
+	// The verbatim why text (et.Why and each state's why, all Cyrillic in
+	// the synthetic fixture) must NOT appear in the .go source at all.
+	for _, forbidden := range []string{
+		et.Why,
+		"created, not yet reviewed",
+		"submitted for review",
+		"approved, terminal",
+	} {
+		if strings.Contains(src, forbidden) {
+			t.Errorf("generated source leaked verbatim why text %q into .go comment (contract §1.1 forbids this)\n---\n%s", forbidden, src)
 		}
 	}
 }

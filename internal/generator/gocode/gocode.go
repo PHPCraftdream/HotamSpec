@@ -69,12 +69,15 @@ func GenerateModelsFromGraph(domainDir string, entityTypes []ontology.EntityType
 }
 
 // GenerateLifecycleFromGraph renders stage-3 output (contract §1:
-// lifecycle.go + lifecycle_test.go) directly from a slice of EntityType.
-// Building every EntityType's *entityModel once and sharing it between the
-// two renderers keeps method-name/state-constant identifiers guaranteed
-// consistent between the transition methods and the tests that exercise
-// them (the same reasoning BuildEntityModel's doc comment gives for
-// entities.go's struct/enum/Validate trio).
+// lifecycle.go + lifecycle_test.go) plus the stage-3.5 audit artifact
+// (requirements_audit.md, contract §1.1) directly from a slice of
+// EntityType. Building every EntityType's *entityModel once and sharing it
+// between all three renderers keeps method-name/state-constant/entity-slug
+// identifiers guaranteed consistent across the transition methods, the
+// tests that exercise them, and the audit headings that anchor back to them
+// (the same reasoning BuildEntityModel's doc comment gives for entities.go's
+// struct/enum/Validate trio) — no renderer here re-derives an identifier or
+// translated value BuildEntityModel already computed.
 func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][]byte, error) {
 	sorted := make([]ontology.EntityType, len(entityTypes))
 	copy(sorted, entityTypes)
@@ -97,10 +100,15 @@ func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
+	auditSrc, err := RenderAuditFile(models)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
+	}
 
 	return map[string][]byte{
-		"lifecycle.go":      lifecycleSrc,
-		"lifecycle_test.go": lifecycleTestSrc,
+		"lifecycle.go":          lifecycleSrc,
+		"lifecycle_test.go":     lifecycleTestSrc,
+		"requirements_audit.md": auditSrc,
 	}, nil
 }
 
