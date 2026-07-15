@@ -1114,3 +1114,199 @@ func TestApply_Requirement_AddInvariantGuardFails(t *testing.T) {
 	}
 	assertApplyFails(t, path, p, "invariant violation")
 }
+
+// processBaseGraph returns baseGraph() plus one pre-landed EntityType
+// ("feature-flag") so ProposedProcess.drives_entities tests have a real,
+// declared EntityType slug to resolve against.
+func processBaseGraph() *ontology.Graph {
+	g := baseGraph()
+	g.EntityTypes = append(g.EntityTypes, ontology.EntityType{
+		Slug:        "feature-flag",
+		Description: "a deployable feature toggle",
+		Lifecycle: ontology.Lifecycle{
+			Slug: "feature-flag-lifecycle",
+			States: []ontology.State{
+				{Name: "INIT", Kind: ontology.StateKindInitial},
+				{Name: "ON", Kind: ontology.StateKindNormal},
+			},
+			Transitions: []ontology.Transition{
+				{Src: "INIT", Dst: "ON", Event: "enable"},
+			},
+		},
+	})
+	return g
+}
+
+func findProcess(g *ontology.Graph, id string) (ontology.Process, bool) {
+	for _, p := range g.Processes {
+		if p.ID == id {
+			return p, true
+		}
+	}
+	return ontology.Process{}, false
+}
+
+func validProcessProposal() ProposedProcess {
+	return ProposedProcess{
+		ID: "PR-test-loop",
+		Steps: []ProposedStep{
+			{Name: "diagnose", RequiresRole: "operator", Why: "find the top action"},
+			{Name: "approve", RequiresRole: "steward", Why: "steward reviews and signs off"},
+		},
+		RolesRequired:  []string{"operator", "steward"},
+		DrivesEntities: []string{"feature-flag"},
+		Why:            "a worked example process for testing",
+	}
+}
+
+// TestApply_Process_Create covers acceptance case (a): a valid Process lands
+// in graph.json and is loadable back with all fields intact, including the
+// stamped shared ontology.ProcessLifecycle.
+func TestApply_Process_Create(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	proc, ok := findProcess(g, "PR-test-loop")
+	if !ok {
+		t.Fatalf("PR-test-loop not present after Apply")
+	}
+	if len(proc.Steps) != 2 {
+		t.Fatalf("Steps len = %d, want 2", len(proc.Steps))
+	}
+	if proc.Steps[0].Name != "diagnose" || proc.Steps[0].RequiresRole != "operator" {
+		t.Errorf("Steps[0] = %+v, want diagnose/operator", proc.Steps[0])
+	}
+	if len(proc.RolesRequired) != 2 {
+		t.Errorf("RolesRequired = %v, want 2 entries", proc.RolesRequired)
+	}
+	if len(proc.DrivesEntities) != 1 || proc.DrivesEntities[0] != "feature-flag" {
+		t.Errorf("DrivesEntities = %v, want [feature-flag]", proc.DrivesEntities)
+	}
+	if proc.Lifecycle.Slug != ontology.ProcessLifecycle.Slug {
+		t.Errorf("Lifecycle.Slug = %q, want %q (shared ProcessLifecycle)", proc.Lifecycle.Slug, ontology.ProcessLifecycle.Slug)
+	}
+	if len(proc.Lifecycle.States) != len(ontology.ProcessLifecycle.States) {
+		t.Errorf("Lifecycle.States len = %d, want %d", len(proc.Lifecycle.States), len(ontology.ProcessLifecycle.States))
+	}
+}
+
+// TestApply_Process_DuplicateIDFails covers acceptance case (b): landing a
+// Process whose id already exists in the graph is a clear error, not a
+// silent overwrite.
+func TestApply_Process_DuplicateIDFails(t *testing.T) {
+	t.Parallel()
+	g := processBaseGraph()
+	g.Processes = append(g.Processes, ontology.Process{
+		ID:            "PR-test-loop",
+		Lifecycle:     ontology.ProcessLifecycle,
+		Steps:         []ontology.Step{{Name: "x", RequiresRole: "operator", Why: "y"}},
+		RolesRequired: []string{"operator"},
+	})
+	path := writeTempGraph(t, g)
+	p := validProcessProposal()
+	assertApplyFails(t, path, p, "already exists")
+}
+
+// TestApply_Process_UnknownDrivesEntitiesFails covers acceptance case (c): a
+// drives_entities slug that does not resolve to a declared EntityType is
+// rejected with a clear, name-carrying error.
+func TestApply_Process_UnknownDrivesEntitiesFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.DrivesEntities = []string{"no-such-entity-type"}
+	assertApplyFails(t, path, p, "no-such-entity-type")
+}
+
+// TestApply_Process_EmptyStepsFails covers acceptance case (d): a Process
+// with an empty steps list is rejected.
+func TestApply_Process_EmptyStepsFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.Steps = nil
+	assertApplyFails(t, path, p, "'steps' must be a non-empty list")
+}
+
+// TestApply_Process_StepMissingRequiresRoleFails covers acceptance case (e):
+// a step with an empty requires_role is rejected.
+func TestApply_Process_StepMissingRequiresRoleFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.Steps = []ProposedStep{
+		{Name: "diagnose", RequiresRole: "", Why: "find the top action"},
+	}
+	p.RolesRequired = nil
+	assertApplyFails(t, path, p, "'requires_role' is required")
+}
+
+// TestApply_Process_StepMissingWhyFails covers acceptance case (e): a step
+// with an empty why is rejected.
+func TestApply_Process_StepMissingWhyFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.Steps = []ProposedStep{
+		{Name: "diagnose", RequiresRole: "operator", Why: ""},
+	}
+	p.RolesRequired = []string{"operator"}
+	assertApplyFails(t, path, p, "'why' is required")
+}
+
+func TestApply_Process_StepMissingNameFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.Steps = []ProposedStep{
+		{Name: "  ", RequiresRole: "operator", Why: "find the top action"},
+	}
+	p.RolesRequired = []string{"operator"}
+	assertApplyFails(t, path, p, "'name' is required")
+}
+
+func TestApply_Process_IDWithoutPRPrefixFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.ID = "not-pr-prefixed"
+	assertApplyFails(t, path, p, "must start with 'PR-'")
+}
+
+func TestApply_Process_StepRoleNotInRolesRequiredFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.RolesRequired = []string{"operator"} // "steward" (used by second step) omitted
+	assertApplyFails(t, path, p, "not listed in 'roles_required'")
+}
+
+func TestApply_Process_UndemandedRoleInRolesRequiredFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.RolesRequired = append(p.RolesRequired, "reviewer") // no step demands "reviewer"
+	assertApplyFails(t, path, p, "no step requires it")
+}
+
+func TestApply_Process_NoDrivesEntitiesOK(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraph())
+	p := validProcessProposal()
+	p.DrivesEntities = nil
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	proc, ok := findProcess(g, "PR-test-loop")
+	if !ok {
+		t.Fatalf("PR-test-loop not present after Apply")
+	}
+	if len(proc.DrivesEntities) != 0 {
+		t.Errorf("DrivesEntities = %v, want empty", proc.DrivesEntities)
+	}
+}

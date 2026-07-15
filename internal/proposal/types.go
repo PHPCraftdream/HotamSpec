@@ -15,6 +15,7 @@ const (
 	KindConflictMemberUpdate = "ConflictMemberUpdate"
 	KindEntityType           = "EntityType"
 	KindReviewMark           = "ReviewMark"
+	KindProcess              = "Process"
 )
 
 type Proposal interface {
@@ -210,3 +211,38 @@ type ProposedReviewMark struct {
 
 func (p ProposedReviewMark) Kind() string         { return KindReviewMark }
 func (p ProposedReviewMark) TargetAnchor() string { return p.RequirementID }
+
+// ProposedStep mirrors ontology.Step's shape for the wire format (the same
+// pattern EntityTypeState/EntityTypeTransition already use to decouple the
+// proposal JSON shape from the landed ontology type).
+type ProposedStep struct {
+	Name         string `json:"name"`
+	RequiresRole string `json:"requires_role"`
+	Invokes      string `json:"invokes"`
+	Why          string `json:"why"`
+}
+
+// ProposedProcess is a CREATE-only proposal for a new Process node (the
+// §Process opt-in behavioral aspect: a Lifecycle + ordered Steps +
+// roles_required + drives_entities, internal/ontology/process.go). There is
+// currently no UPDATE path for an existing Process (mirrors ProposedEntityType
+// before its UPDATE mode existed) -- a duplicate ID is rejected, not merged.
+//
+// Lifecycle is NOT author-supplied: every Process in this codebase (the one
+// worked example, PR-closed-loop, in domains/hotam-spec-self/graph.json) uses
+// the single shared ontology.ProcessLifecycle (READY/RUNNING/BLOCKED/DONE/
+// ABANDONED) -- there is no second Process lifecycle shape anywhere in the
+// graph or the ontology package to choose between, so mutate() always stamps
+// ontology.ProcessLifecycle rather than accepting an author-supplied one
+// (avoids inventing a second, untested lifecycle-authoring wire format for a
+// aspect that has exactly one instance in the wild).
+type ProposedProcess struct {
+	ID             string         `json:"id"`
+	Steps          []ProposedStep `json:"steps"`
+	RolesRequired  []string       `json:"roles_required"`
+	DrivesEntities []string       `json:"drives_entities"`
+	Why            string         `json:"why"`
+}
+
+func (p ProposedProcess) Kind() string         { return KindProcess }
+func (p ProposedProcess) TargetAnchor() string { return p.ID }

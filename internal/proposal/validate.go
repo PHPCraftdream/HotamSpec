@@ -3,6 +3,7 @@ package proposal
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -341,6 +342,62 @@ func (p ProposedEntityType) validate() error {
 		}
 	}
 	return nil
+}
+
+func (p ProposedProcess) validate() error {
+	id := strings.TrimSpace(p.ID)
+	if id == "" {
+		return validationError("'id' is required for a Process proposal.")
+	}
+	if !strings.HasPrefix(id, "PR-") {
+		return validationError("'id' must start with 'PR-'; got %q.", id)
+	}
+	if len(p.Steps) == 0 {
+		return validationError("'steps' must be a non-empty list of steps.")
+	}
+	declaredRoles := map[string]struct{}{}
+	for _, r := range trimNonEmpty(p.RolesRequired) {
+		declaredRoles[r] = struct{}{}
+	}
+	usedRoles := map[string]struct{}{}
+	for i, s := range p.Steps {
+		name := strings.TrimSpace(s.Name)
+		if name == "" {
+			return validationError("step %d: 'name' is required and must be non-empty.", i)
+		}
+		role := strings.TrimSpace(s.RequiresRole)
+		if role == "" {
+			return validationError("step %q: 'requires_role' is required and must be non-empty.", name)
+		}
+		if strings.TrimSpace(s.Why) == "" {
+			return validationError("step %q: 'why' is required and must be non-empty.", name)
+		}
+		if _, ok := declaredRoles[role]; !ok {
+			return validationError(
+				"step %q requires role %q which is not listed in 'roles_required' %v -- "+
+					"every step's requires_role must be declared explicitly in roles_required "+
+					"(no implicit roles, R-process-roles-declared).", name, role, sortedRoleList(declaredRoles))
+		}
+		usedRoles[role] = struct{}{}
+	}
+	for r := range declaredRoles {
+		if _, ok := usedRoles[r]; !ok {
+			return validationError(
+				"'roles_required' lists role %q but no step requires it -- "+
+					"roles_required must match exactly the set of roles used by steps "+
+					"(no undemanded roles).", r)
+		}
+	}
+	return nil
+}
+
+func sortedRoleList(m map[string]struct{}) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func (p ProposedReviewMark) validate() error {

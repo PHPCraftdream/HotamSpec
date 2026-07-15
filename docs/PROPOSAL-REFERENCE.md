@@ -501,3 +501,43 @@ names that were added.
   ]
 }
 ```
+
+## Process
+
+Adds a new §Process node (the opt-in behavioral aspect: a Lifecycle +
+ordered Steps + `roles_required` + `drives_entities` — see
+`internal/ontology/process.go`, and `PR-closed-loop` in
+`domains/hotam-spec-self/graph.json` for the one worked example). **CREATE
+only** — there is currently no UPDATE path for an already-landed Process; a
+proposal whose `id` already exists is rejected as a duplicate, not merged.
+
+The Process's `lifecycle` is NOT author-supplied: every landed Process is
+stamped with the single shared `ontology.ProcessLifecycle`
+(`READY → RUNNING → BLOCKED → DONE → ABANDONED`) — there is no field to
+override it.
+
+**Required:** `id` (must start with `PR-`), `steps` (non-empty list of
+`{"name", "requires_role", "invokes", "why"}` objects — each step's `name`,
+`requires_role`, and `why` must be non-empty; `invokes`, when non-empty, must
+be `"<entity-slug>.<event>"` naming a real transition of a declared
+EntityType), `roles_required` (list of role names — must equal EXACTLY the
+set of `requires_role` values used across `steps`: every step's role must be
+declared here, and every declared role must be used by at least one step; no
+implicit and no undemanded roles)
+**Optional:** `drives_entities` (list of EntityType slugs; each MUST resolve
+to a declared EntityType in the target domain's graph — an unresolvable slug
+is rejected with a clear error naming it), `why` (default `""`)
+
+```json
+{
+  "kind": "Process",
+  "id": "PR-release-review",
+  "steps": [
+    {"name": "propose", "requires_role": "operator", "invokes": "", "why": "draft the release for review"},
+    {"name": "approve", "requires_role": "steward", "invokes": "", "why": "steward signs off before ship"}
+  ],
+  "roles_required": ["operator", "steward"],
+  "drives_entities": ["release"],
+  "why": "models the release-review behavioral flow as a first-class Process"
+}
+```

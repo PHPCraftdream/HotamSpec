@@ -130,6 +130,15 @@ func findEntityTypeIndex(g *ontology.Graph, slug string) int {
 	return -1
 }
 
+func findProcessIndex(g *ontology.Graph, id string) int {
+	for i, p := range g.Processes {
+		if p.ID == id {
+			return i
+		}
+	}
+	return -1
+}
+
 func containsRelation(rels []ontology.Relation, target ontology.Relation) bool {
 	for _, r := range rels {
 		if r.Kind == target.Kind && r.Target == target.Target {
@@ -641,6 +650,54 @@ func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 		},
 		Fields: fields,
 		Why:    p.Why,
+	})
+	return nil
+}
+
+// mutate implements CREATE-only landing for a new Process node (there is no
+// UPDATE path yet -- a duplicate p.ID is rejected via errDuplicate, mirroring
+// ProposedEntityType's CREATE branch before its UPDATE mode existed).
+//
+// drives_entities referential integrity is checked HERE (not in validate()):
+// validate() has no graph access, so it cannot know which EntityType slugs
+// are declared in the target domain -- the same split ProposedConflict.mutate
+// already uses for its member/steward lookups. Each slug in p.DrivesEntities
+// MUST resolve to a declared EntityType.slug in g.entity_types (mirrors
+// check_process_drives_existing_entities, internal/invariants/scope_process.go)
+// so a bad slug is rejected here with a clear message instead of landing and
+// only being caught later by the invariant sweep applyToGraph runs after
+// mutate.
+//
+// The Process always carries the single shared ontology.ProcessLifecycle --
+// see ProposedProcess's doc comment in types.go for why no author-supplied
+// lifecycle is accepted.
+func (p ProposedProcess) mutate(g *ontology.Graph, today string) error {
+	id := strings.TrimSpace(p.ID)
+	if findProcessIndex(g, id) >= 0 {
+		return errDuplicate("Process", id)
+	}
+	declaredEntityTypes := ontology.EntityTypeSlugs(g)
+	for _, slug := range trimNonEmpty(p.DrivesEntities) {
+		if _, ok := declaredEntityTypes[slug]; !ok {
+			return errNotDeclared("drives_entities EntityType", slug)
+		}
+	}
+	steps := make([]ontology.Step, 0, len(p.Steps))
+	for _, s := range p.Steps {
+		steps = append(steps, ontology.Step{
+			Name:         strings.TrimSpace(s.Name),
+			RequiresRole: strings.TrimSpace(s.RequiresRole),
+			Invokes:      s.Invokes,
+			Why:          s.Why,
+		})
+	}
+	g.Processes = append(g.Processes, ontology.Process{
+		ID:             id,
+		Lifecycle:      ontology.ProcessLifecycle,
+		Steps:          steps,
+		RolesRequired:  trimNonEmpty(p.RolesRequired),
+		DrivesEntities: trimNonEmpty(p.DrivesEntities),
+		Why:            p.Why,
 	})
 	return nil
 }
