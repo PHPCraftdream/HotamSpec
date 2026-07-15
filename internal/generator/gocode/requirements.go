@@ -55,9 +55,25 @@ const (
 // 1): the field's already-resolved fieldModel (via the owning entityModel),
 // so the rendered assertion reuses BuildEntityModel's identifiers rather
 // than re-deriving them.
+//
+// pipelineGate is set (task #209, contract §0's mirror principle applied
+// across field atoms and pipeline gates) when field is a kind:reference
+// field for which pipeline.go's BuildPipelineGateModels already built a
+// gate function (precise-state, contract §2.1, or the general
+// RequiresTerminal fallback) — the SAME structural edge, found once by
+// BuildPipelineGateModels and reused here rather than re-resolved. When set,
+// renderFieldAtomBody (requirements_test_gen.go) renders an ADDITIONAL
+// sub-test, beyond the plain "field is not empty" Validate() check, that
+// builds the referenced entity in (and out of) the gate's required state and
+// asserts the gate function accepts/rejects accordingly — closing the gap
+// where a field-atom requirement whose claim names a concrete referenced
+// state (e.g. "forecast_v2") was previously mirrored only at the
+// presence-check level, never at the state-precision level the pipeline
+// gate already enforces.
 type fieldAtom struct {
-	entity *entityModel
-	field  fieldModel
+	entity       *entityModel
+	field        fieldModel
+	pipelineGate *pipelineGateModel
 }
 
 // statePairAtom is one "claim mentions a pair of lifecycle.states of one
@@ -189,7 +205,16 @@ func requirementFuncNameBody(id string) string {
 // own claim text. Pass nil (or an empty slice) when no cross-requirement
 // corpus is available (e.g. isolated unit fixtures) — the requirement-id
 // correlate is then simply never found, same as any other missing correlate.
-func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel, otherSettled []ontology.Requirement) *requirementModel {
+//
+// gates is the domain's already-built pipeline gate models (pipeline.go's
+// BuildPipelineGateModels), threaded through so a row-1 field-atom match on
+// a kind:reference field can find and reuse its own already-built pipeline
+// gate (task #209) rather than re-deriving the referencer/ref_target
+// resolution a second time. Pass nil when no pipeline gates are available
+// (e.g. isolated unit fixtures, or a caller that only needs stage-4 output)
+// — every reference-field match then simply carries no pipelineGate, exactly
+// the pre-task-#209 behavior.
+func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel, otherSettled []ontology.Requirement, gates []*pipelineGateModel) *requirementModel {
 	m := &requirementModel{
 		src:        req,
 		funcName:   "Test_" + requirementFuncNameBody(req.ID),
@@ -224,7 +249,7 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 	// referencer-scoping to exactly that ambiguous case (contract §2.1's
 	// resolvePreciseGateState idea, reused here) — every other match
 	// (raw-name hit, or multi-word translated phrase) is kept unconditionally.
-	m.fields = resolveScopedFieldMatches(req.Claim, entityModels)
+	m.fields = resolveScopedFieldMatches(req.Claim, entityModels, gates)
 	if len(m.fields) > 0 {
 		m.kind = atomKindField
 		return m
@@ -390,7 +415,13 @@ type fieldMatchCandidate struct {
 // "явно и громко отказать", never silently guess). Non-ambiguous words
 // (raw-name hits, and translated words unique to one EntityType in the
 // domain) are entirely unaffected.
-func resolveScopedFieldMatches(claim string, entityModels []*entityModel) []fieldAtom {
+//
+// gates (task #209) is the domain's already-built pipeline gate models,
+// passed through unchanged to newFieldAtom so every produced fieldAtom
+// carries its own already-built pipeline gate (if any) without re-deriving
+// the referencer/ref_target resolution BuildPipelineGateModels already
+// performed.
+func resolveScopedFieldMatches(claim string, entityModels []*entityModel, gates []*pipelineGateModel) []fieldAtom {
 	var candidates []fieldMatchCandidate
 	for _, em := range entityModels {
 		for _, f := range em.fields {
@@ -431,17 +462,17 @@ func resolveScopedFieldMatches(claim string, entityModels []*entityModel) []fiel
 		if cand.translatedWord == "" {
 			// rawHit, or a multi-word (or non-word-shaped) translated
 			// identifier — never subject to this scoping guard.
-			out = append(out, fieldAtom{entity: cand.entity, field: cand.field})
+			out = append(out, newFieldAtom(cand.entity, cand.field, gates))
 			continue
 		}
 		if len(wordOwners[cand.translatedWord]) < 2 {
 			// This translated word is not shared by any other EntityType in
 			// the domain — unambiguous, kept as before.
-			out = append(out, fieldAtom{entity: cand.entity, field: cand.field})
+			out = append(out, newFieldAtom(cand.entity, cand.field, gates))
 			continue
 		}
 		if entityHasClaimBindingSignal(claim, cand.entity, cand.translatedWord) {
-			out = append(out, fieldAtom{entity: cand.entity, field: cand.field})
+			out = append(out, newFieldAtom(cand.entity, cand.field, gates))
 		}
 		// No binding signal for this ambiguous candidate: dropped silently
 		// here: if NO candidate for this word resolves, the word simply
@@ -449,6 +480,21 @@ func resolveScopedFieldMatches(claim string, entityModels []*entityModel) []fiel
 		// outcome — never partially kept without a real signal.
 	}
 	return out
+}
+
+// newFieldAtom builds one fieldAtom for entity/field, looking up (task #209)
+// whether pipeline.go's BuildPipelineGateModels already built a pipeline
+// gate for this exact referencer+field pair — set only when field is a
+// kind:reference field whose ref_target resolves to another EntityType of
+// this domain (findPipelineGate, pipeline.go). Non-reference fields (and
+// reference fields with no resolvable ref_target) simply carry a nil
+// pipelineGate, unchanged from pre-task-#209 behavior.
+func newFieldAtom(entity *entityModel, field fieldModel, gates []*pipelineGateModel) fieldAtom {
+	return fieldAtom{
+		entity:       entity,
+		field:        field,
+		pipelineGate: findPipelineGate(gates, entity, field.fieldName),
+	}
 }
 
 // singleTranslatedWord reports whether term (a translated Go identifier,
@@ -625,7 +671,14 @@ func (e *DuplicateRequirementFuncNameError) Error() string {
 // entityModels (see BuildRequirementModel), sorted by requirement id for
 // determinism (contract §5), and refuses if two requirements collide on the
 // same generated Go function name.
-func BuildRequirementModels(reqs []ontology.Requirement, entityModels []*entityModel) ([]*requirementModel, error) {
+//
+// gates (task #209) is the domain's already-built pipeline gate models
+// (pipeline.go's BuildPipelineGateModels) — threaded into every
+// BuildRequirementModel call so field atoms on kind:reference fields can
+// find and reuse their own already-built pipeline gate. Pass nil when no
+// pipeline gates are available (isolated unit fixtures, or a caller that
+// only needs stage-4 output on its own).
+func BuildRequirementModels(reqs []ontology.Requirement, entityModels []*entityModel, gates []*pipelineGateModel) ([]*requirementModel, error) {
 	var settled []ontology.Requirement
 	for _, r := range reqs {
 		if r.Status == ontology.StatusSETTLED {
@@ -642,7 +695,7 @@ func BuildRequirementModels(reqs []ontology.Requirement, entityModels []*entityM
 		// a per-requirement filtered copy — avoids an O(n^2) slice-build
 		// here while still correctly excluding self-matches inside the
 		// correlate resolver).
-		m := BuildRequirementModel(r, entityModels, settled)
+		m := BuildRequirementModel(r, entityModels, settled, gates)
 		if prior, dup := byFuncName[m.funcName]; dup {
 			return nil, &DuplicateRequirementFuncNameError{FuncName: m.funcName, First: prior, Second: r.ID}
 		}

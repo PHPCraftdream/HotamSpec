@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"unicode"
@@ -162,7 +163,7 @@ func TestBuildRequirementModel_AtomClassification(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.id, func(t *testing.T) {
-			rm := BuildRequirementModel(byID[tc.id], models, settledOnly(reqs))
+			rm := BuildRequirementModel(byID[tc.id], models, settledOnly(reqs), nil)
 			if rm.kind != tc.kind {
 				t.Errorf("BuildRequirementModel(%s).kind = %v, want %v", tc.id, rm.kind, tc.kind)
 			}
@@ -183,7 +184,7 @@ func TestBuildRequirementModel_FieldAtom_ResolvesRealField(t *testing.T) {
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models, settledOnly(reqs))
+	rm := BuildRequirementModel(req, models, settledOnly(reqs), nil)
 	if rm.kind != atomKindField {
 		t.Fatalf("expected atomKindField, got %v", rm.kind)
 	}
@@ -207,7 +208,7 @@ func TestBuildRequirementModel_StatePairAtom_ResolvesBothStates(t *testing.T) {
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models, settledOnly(reqs))
+	rm := BuildRequirementModel(req, models, settledOnly(reqs), nil)
 	if rm.kind != atomKindStatePair {
 		t.Fatalf("expected atomKindStatePair, got %v", rm.kind)
 	}
@@ -243,7 +244,7 @@ func TestBuildRequirementModel_GateAtom_CapturesAnchors(t *testing.T) {
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models, settledOnly(reqs))
+	rm := BuildRequirementModel(req, models, settledOnly(reqs), nil)
 	if rm.kind != atomKindGate {
 		t.Fatalf("expected atomKindGate, got %v", rm.kind)
 	}
@@ -294,7 +295,7 @@ func TestBuildRequirementModel_GateAtom_NoCorrelateReclassifiesToHonestGap(t *te
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models, settledOnly(reqs))
+	rm := BuildRequirementModel(req, models, settledOnly(reqs), nil)
 	if rm.kind != atomKindNone {
 		t.Fatalf("expected atomKindNone (honest gap) for an anchor with no graph correlate, got %v", rm.kind)
 	}
@@ -312,7 +313,7 @@ func TestBuildRequirementModel_InterEntityAtom_ResolvesBothEntities(t *testing.T
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models, settledOnly(reqs))
+	rm := BuildRequirementModel(req, models, settledOnly(reqs), nil)
 	if rm.kind != atomKindInterEntity {
 		t.Fatalf("expected atomKindInterEntity, got %v", rm.kind)
 	}
@@ -384,7 +385,7 @@ func TestResolveScopedFieldMatches_AmbiguousSingleWord_WhyTokenDisambiguates(t *
 	models := buildSyntheticEntityModels(t, ets)
 
 	claim := "Design sign-off MUST require forecast_v3 to be locked before dev starts."
-	fields := resolveScopedFieldMatches(claim, models)
+	fields := resolveScopedFieldMatches(claim, models, nil)
 
 	if len(fields) != 1 {
 		t.Fatalf("expected exactly 1 disambiguated field atom, got %d: %+v", len(fields), fields)
@@ -408,7 +409,7 @@ func TestResolveScopedFieldMatches_AmbiguousSingleWord_NoSignalDropsAll(t *testi
 	models := buildSyntheticEntityModels(t, ets)
 
 	claim := "Pilot planning MUST produce an early forecast before Planning Approved."
-	fields := resolveScopedFieldMatches(claim, models)
+	fields := resolveScopedFieldMatches(claim, models, nil)
 
 	if len(fields) != 0 {
 		t.Fatalf("expected zero field atoms for a genuinely ambiguous, unresolvable match, got %d: %+v", len(fields), fields)
@@ -424,7 +425,7 @@ func TestResolveScopedFieldMatches_AmbiguousSingleWord_SlugSignalDisambiguates(t
 	models := buildSyntheticEntityModels(t, ets)
 
 	claim := "The plan-package forecast MUST be reviewed before sign-off."
-	fields := resolveScopedFieldMatches(claim, models)
+	fields := resolveScopedFieldMatches(claim, models, nil)
 
 	if len(fields) != 1 {
 		t.Fatalf("expected exactly 1 disambiguated field atom, got %d: %+v", len(fields), fields)
@@ -443,7 +444,7 @@ func TestResolveScopedFieldMatches_UnambiguousSingleWord_Unaffected(t *testing.T
 	models := buildSyntheticEntityModels(t, ets)
 
 	claim := "Поле текст test-card MUST быть заполнено содержательно."
-	fields := resolveScopedFieldMatches(claim, models)
+	fields := resolveScopedFieldMatches(claim, models, nil)
 
 	if len(fields) != 1 {
 		t.Fatalf("expected exactly 1 field atom (unambiguous, unique translated word), got %d: %+v", len(fields), fields)
@@ -459,7 +460,7 @@ func TestResolveScopedFieldMatches_UnambiguousSingleWord_Unaffected(t *testing.T
 func TestBuildRequirementModels_ExcludesNonSettled(t *testing.T) {
 	ets, reqs := syntheticRequirementFixtures()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -482,7 +483,7 @@ func TestBuildRequirementModels_ExcludesNonSettled(t *testing.T) {
 func TestRenderRequirementsTestFile_Synthetic_ParsesAndIsASCII(t *testing.T) {
 	ets, reqs := syntheticRequirementFixtures()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -541,7 +542,7 @@ func TestRenderRequirementsTestFile_Synthetic_ParsesAndIsASCII(t *testing.T) {
 func TestRenderRequirementsTestFile_Deterministic(t *testing.T) {
 	ets, reqs := syntheticRequirementFixtures()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -568,7 +569,7 @@ func TestRenderRequirementsTestFile_Deterministic(t *testing.T) {
 func TestRenderAuditFile_RequirementsSection(t *testing.T) {
 	ets, reqs := syntheticRequirementFixtures()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -673,7 +674,7 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 	ets, reqs := pratRequirements(t)
 
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -786,11 +787,126 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 	}
 }
 
+// TestBuildRequirementModel_RealPratDomain_FieldAtomCarriesPipelineGate is
+// task #209's focused unit-level proof (Coverage-audit #192 finding): a
+// field atom on a kind:reference field whose claim names a concrete
+// referenced state must carry that field's already-built precise-state
+// pipeline gate, not just the plain "field is not empty" presence check.
+// Exercises the real prat domain's three documented cases
+// (R-gate-pg1-planning-approved's general-terminal gate,
+// R-gate-pg3-brd-approved's precise v2 gate, R-gate-pg4-solution-ready's
+// precise v3 gate) end to end: BuildPipelineGateModels -> BuildRequirementModels
+// (gates threaded through, unlike the nil-gates call in
+// TestGenerateRequirementsFromGraph_RealPratDomain above) -> asserts each
+// field atom's fa.pipelineGate is the SAME *pipelineGateModel
+// BuildPipelineGateModels built (identity, not merely equal fields) -> AND
+// the rendered requirements_test.go source contains the expected
+// "<Entity>_<Field>_pipeline_gate" sub-test name for each.
+func TestBuildRequirementModel_RealPratDomain_FieldAtomCarriesPipelineGate(t *testing.T) {
+	ets, reqs := pratRequirements(t)
+	models := buildSyntheticEntityModels(t, ets)
+
+	gates, err := BuildPipelineGateModels(models, reqs)
+	if err != nil {
+		t.Fatalf("BuildPipelineGateModels: %v", err)
+	}
+	byFuncName := make(map[string]*pipelineGateModel, len(gates))
+	for _, g := range gates {
+		byFuncName[g.funcName] = g
+	}
+
+	reqModels, err := BuildRequirementModels(reqs, models, gates)
+	if err != nil {
+		t.Fatalf("BuildRequirementModels: %v", err)
+	}
+	byID := make(map[string]*requirementModel, len(reqModels))
+	for _, rm := range reqModels {
+		byID[rm.src.ID] = rm
+	}
+
+	cases := []struct {
+		reqID       string
+		entityField string // "<EntityStructName>.<FieldName>"
+		gateFunc    string
+	}{
+		{"R-gate-pg1-planning-approved", "ImplementationOrder.GraphDependencies", "GateImplementationOrderGraphDependenciesRequiresFrGraphTerminal"},
+		{"R-gate-pg3-brd-approved", "BrdPackage.Forecast", "GateBrdPackageForecastRequiresForecast_ForecastStateV2"},
+		{"R-gate-pg4-solution-ready", "SdrPackage.Forecast", "GateSdrPackageForecastRequiresForecast_ForecastStateV3"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.reqID, func(t *testing.T) {
+			rm, ok := byID[tc.reqID]
+			if !ok {
+				t.Fatalf("expected requirement %q to be present", tc.reqID)
+			}
+			wantGate, ok := byFuncName[tc.gateFunc]
+			if !ok {
+				t.Fatalf("expected pipeline gate function %q to be present among: %v", tc.gateFunc, gateFuncNames(gates))
+			}
+			var found *fieldAtom
+			for i := range rm.fields {
+				key := rm.fields[i].entity.structName + "." + rm.fields[i].field.fieldName
+				if key == tc.entityField {
+					found = &rm.fields[i]
+					break
+				}
+			}
+			if found == nil {
+				t.Fatalf("%s: expected a field atom for %s, got %v", tc.reqID, tc.entityField, rm.fields)
+			}
+			if found.pipelineGate != wantGate {
+				t.Fatalf("%s: field atom %s.pipelineGate = %p (funcName %s), want the SAME *pipelineGateModel BuildPipelineGateModels built for %q (%p)",
+					tc.reqID, tc.entityField, found.pipelineGate, gateFuncNameOrNil(found.pipelineGate), tc.gateFunc, wantGate)
+			}
+		})
+	}
+
+	src, err := RenderRequirementsTestFile("gen", reqModels)
+	if err != nil {
+		t.Fatalf("RenderRequirementsTestFile: %v", err)
+	}
+	text := string(src)
+
+	fset := token.NewFileSet()
+	if _, err := parser.ParseFile(fset, "requirements_test.go", text, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse as Go: %v\n---\n%s", err, text)
+	}
+
+	for _, subName := range []string{
+		"ImplementationOrder_GraphDependencies_pipeline_gate",
+		"BrdPackage_Forecast_pipeline_gate",
+		"SdrPackage_Forecast_pipeline_gate",
+	} {
+		if !strings.Contains(text, strconv.Quote(subName)) {
+			t.Errorf("expected rendered requirements_test.go to contain sub-test %s", strconv.Quote(subName))
+		}
+	}
+}
+
+// gateFuncNameOrNil is a small t.Fatalf formatting helper: g.funcName when g
+// is non-nil, "<nil>" otherwise (avoids a nil-pointer panic inside the
+// failure message itself).
+func gateFuncNameOrNil(g *pipelineGateModel) string {
+	if g == nil {
+		return "<nil>"
+	}
+	return g.funcName
+}
+
 // TestGenerateRequirementsFromGraph_RealPratDomain_CompilesAndRuns is the
 // исполнимый-слой check on the real domain: entities.go + lifecycle.go +
-// lifecycle_test.go + requirements_test.go, generated together from the
-// real prat graph, compile and `go test` green in a fresh temp module —
-// idempotency is checked separately below (two renders, byte-identical).
+// lifecycle_test.go + requirements_test.go + pipeline_test.go, generated
+// together from the real prat graph, compile and `go test` green in a fresh
+// temp module — idempotency is checked separately below (two renders,
+// byte-identical). pipeline_test.go (GeneratePipelineFromGraph) is included
+// here (task #209) because requirements_test.go's own field-atom sub-tests
+// now legitimately call pipeline.go's generated Gate<...> functions for
+// kind:reference fields with a pipeline gate (see
+// renderFieldAtomPipelineGateSubTest, requirements_test_gen.go) — omitting
+// pipeline_test.go would leave those calls undefined, exactly the kind of
+// cross-stage compile dependency this исполнимый-слой check exists to catch
+// (contract §0, "код реально запускается").
 func TestGenerateRequirementsFromGraph_RealPratDomain_CompilesAndRuns(t *testing.T) {
 	if _, err := exec.LookPath("go"); err != nil {
 		t.Skip("go toolchain not on PATH")
@@ -813,6 +929,10 @@ func TestGenerateRequirementsFromGraph_RealPratDomain_CompilesAndRuns(t *testing
 	if err != nil {
 		t.Fatalf("GenerateRequirementsFromGraph: %v", err)
 	}
+	pipelineFiles, err := GeneratePipelineFromGraph(ets, reqs)
+	if err != nil {
+		t.Fatalf("GeneratePipelineFromGraph: %v", err)
+	}
 
 	dir := t.TempDir()
 	all := map[string][]byte{}
@@ -823,6 +943,9 @@ func TestGenerateRequirementsFromGraph_RealPratDomain_CompilesAndRuns(t *testing
 		all[k] = v
 	}
 	for k, v := range reqFiles {
+		all[k] = v
+	}
+	for k, v := range pipelineFiles {
 		all[k] = v
 	}
 	for name, content := range all {

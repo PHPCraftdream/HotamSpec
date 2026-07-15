@@ -118,7 +118,13 @@ func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][
 // *entityModel once (mirroring GenerateLifecycleFromGraph) and threading it
 // into BuildRequirementModels keeps the requirement atoms' field/state
 // identifiers guaranteed consistent with entities.go/lifecycle.go's own
-// identifiers — no independent re-derivation.
+// identifiers — no independent re-derivation. Pipeline gate models
+// (BuildPipelineGateModels) are also built here and threaded into
+// BuildRequirementModels (task #209) so a field atom on a kind:reference
+// field can mirror its own already-built precise-state pipeline gate,
+// exactly as GenerateAllFromGraph does — this standalone stage-4 entry point
+// must not silently skip that wiring just because it does not itself return
+// pipeline_test.go.
 func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requirements []ontology.Requirement) (map[string][]byte, error) {
 	sorted := make([]ontology.EntityType, len(entityTypes))
 	copy(sorted, entityTypes)
@@ -133,7 +139,12 @@ func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requiremen
 		entityModels = append(entityModels, m)
 	}
 
-	reqModels, err := BuildRequirementModels(requirements, entityModels)
+	gates, err := BuildPipelineGateModels(entityModels, requirements)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
+	}
+
+	reqModels, err := BuildRequirementModels(requirements, entityModels, gates)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
 	}
@@ -247,12 +258,17 @@ func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []onto
 		models = append(models, m)
 	}
 
-	reqModels, err := BuildRequirementModels(requirements, models)
+	// gates is built BEFORE reqModels (task #209): a field atom on a
+	// kind:reference field needs to look up its own already-built pipeline
+	// gate (findPipelineGate, pipeline.go) while BuildRequirementModels
+	// classifies that same field's claim match — the dependency runs gates ->
+	// reqModels, not the other way around.
+	gates, err := BuildPipelineGateModels(models, requirements)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
 	}
 
-	gates, err := BuildPipelineGateModels(models, requirements)
+	reqModels, err := BuildRequirementModels(requirements, models, gates)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
 	}

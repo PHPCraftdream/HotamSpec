@@ -77,6 +77,22 @@ func renderRequirementTest(m *requirementModel) string {
 // real assertion on generated behavior (contract §5 mutational: a
 // generator regression that drops the field's Required branch from
 // Validate() flips this sub-test red).
+//
+// Task #209 (contract §0's mirror principle, applied across the field-atom
+// and pipeline-gate layers): when fa.pipelineGate is set — this field is a
+// kind:reference field for which pipeline.go's BuildPipelineGateModels
+// already built a gate function — an ADDITIONAL sub-test is rendered
+// (renderFieldAtomPipelineGateSubTest) that builds the REFERENCED entity via
+// its own real generated transition methods and calls the REAL generated
+// Gate<...> function, asserting it rejects the referenced entity before it
+// reaches the required state and accepts it once there. Without this, a
+// requirement whose claim names a concrete referenced state (e.g.
+// "forecast_v2") was mirrored only at the "reference field is not empty"
+// level — never at the state-precision level the pipeline gate (contract
+// §2.1) already enforces elsewhere in generated code; this closes exactly
+// that gap, reusing the SAME gate function and the SAME transition-path
+// walk pipeline_test_gen.go's own table-driven gate tests already use
+// (never a re-implementation of either).
 func renderFieldAtomBody(b *strings.Builder, m *requirementModel) {
 	for _, fa := range m.fields {
 		subName := fa.entity.structName + "_" + fa.field.fieldName
@@ -108,7 +124,86 @@ func renderFieldAtomBody(b *strings.Builder, m *requirementModel) {
 			b.WriteString("\t\t}\n")
 		}
 		b.WriteString("\t})\n")
+
+		if fa.pipelineGate != nil {
+			if err := renderFieldAtomPipelineGateSubTest(b, fa); err != nil {
+				// BuildPipelineGateModels already validated that every
+				// referenced entityModel has a reachable terminal/precise
+				// state (pipeline.go) before a fieldAtom could ever carry a
+				// non-nil pipelineGate here, so shortestPathToTerminal/
+				// shortestPathToState failing at THIS point would mean the
+				// two generator stages disagree about the same referenced
+				// entity's own transition graph - contract §0's "refuse
+				// loudly, never guess", not a value this renderer can
+				// recover from by falling back to silently skipping the
+				// sub-test.
+				panic(fmt.Sprintf("gocode: renderFieldAtomBody: %v", err))
+			}
+		}
 	}
+}
+
+// renderFieldAtomPipelineGateSubTest renders task #209's additional
+// precise-state (or general-terminal) pipeline-gate sub-test for one
+// reference-kind fieldAtom whose fa.pipelineGate is set. Mirrors
+// pipeline_test_gen.go's own writePreciseGateSubTests/
+// writeGeneralGateSubTests shape (a fresh referenced entity must be
+// rejected; the entity walked to the gate's required state via its own real
+// transition methods must be accepted) but keyed under THIS requirement's
+// own Test_<ID> function/sub-test name, instead of pipeline_test.go's
+// separate Test<Gate> function — the same underlying Gate<...> function and
+// the same shortestPathTo*/writeTransitionWalk helpers are reused unchanged
+// (contract §0: one source of truth for both the gate function itself and
+// the transition-walk rendering), only the calling sub-test's name and
+// enclosing requirement differ.
+func renderFieldAtomPipelineGateSubTest(b *strings.Builder, fa fieldAtom) error {
+	g := fa.pipelineGate
+	subName := fa.entity.structName + "_" + fa.field.fieldName + "_pipeline_gate"
+
+	if g.preciseState != nil {
+		precisePath, err := shortestPathToState(g.referenced, *g.preciseState)
+		if err != nil {
+			return err
+		}
+		stateName := g.preciseState.src.Name
+
+		fmt.Fprintf(b, "\tt.Run(%s, func(t *testing.T) {\n", strconv.Quote(subName))
+		b.WriteString("\t\t// Task #209: this reference field's claim names a concrete referenced\n")
+		fmt.Fprintf(b, "\t\t// state (%s) - mirrors %s beyond the plain presence check above.\n", stateName, g.funcName)
+		fmt.Fprintf(b, "\t\treferenced := New%s()\n", g.referenced.structName)
+		fmt.Fprintf(b, "\t\tif err := %s(referenced); err == nil {\n", g.funcName)
+		fmt.Fprintf(b, "\t\t\tt.Fatalf(%s, referenced.State)\n",
+			strconv.Quote(fmt.Sprintf("%s: expected an error while %s is not in state %s, got nil (state %%q)", g.funcName, g.referenced.structName, stateName)))
+		b.WriteString("\t\t}\n")
+		writeTransitionWalk(b, g.referenced.structName, precisePath.methods)
+		fmt.Fprintf(b, "\t\tif err := %s(referenced); err != nil {\n", g.funcName)
+		fmt.Fprintf(b, "\t\t\tt.Fatalf(%s, err)\n",
+			strconv.Quote(fmt.Sprintf("%s: expected nil once %s reaches state %s, got %%v", g.funcName, g.referenced.structName, stateName)))
+		b.WriteString("\t\t}\n")
+		b.WriteString("\t})\n")
+		return nil
+	}
+
+	path, err := shortestPathToTerminal(g.referenced)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(b, "\tt.Run(%s, func(t *testing.T) {\n", strconv.Quote(subName))
+	fmt.Fprintf(b, "\t\t// Task #209: this reference field has a pipeline gate (%s) -\n", g.funcName)
+	b.WriteString("\t\t// mirrors it beyond the plain presence check above.\n")
+	fmt.Fprintf(b, "\t\treferenced := New%s()\n", g.referenced.structName)
+	fmt.Fprintf(b, "\t\tif err := %s(referenced); err == nil {\n", g.funcName)
+	fmt.Fprintf(b, "\t\t\tt.Fatalf(%s, referenced.State)\n",
+		strconv.Quote(fmt.Sprintf("%s: expected an error while %s is not terminal, got nil (state %%q)", g.funcName, g.referenced.structName)))
+	b.WriteString("\t\t}\n")
+	writeTransitionWalk(b, g.referenced.structName, path.methods)
+	fmt.Fprintf(b, "\t\tif err := %s(referenced); err != nil {\n", g.funcName)
+	fmt.Fprintf(b, "\t\t\tt.Fatalf(%s, err)\n",
+		strconv.Quote(fmt.Sprintf("%s: expected nil once %s is terminal, got %%v", g.funcName, g.referenced.structName)))
+	b.WriteString("\t\t}\n")
+	b.WriteString("\t})\n")
+	return nil
 }
 
 // renderStatePairAtomBody renders one t.Run per matched lifecycle-state pair

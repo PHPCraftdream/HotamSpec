@@ -16,7 +16,7 @@ import (
 func TestBuildCoverageReport_Deterministic(t *testing.T) {
 	ets, reqs := syntheticRequirementFixtures()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestBuildCoverageReport_Deterministic(t *testing.T) {
 func TestBuildCoverageReport_Deterministic_RealPratDomain(t *testing.T) {
 	ets, reqs := pratRequirements(t)
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -153,7 +153,7 @@ func partialCoverageFixture() ([]ontology.EntityType, []ontology.Requirement) {
 func TestBuildCoverageReport_PartialCoverageGap(t *testing.T) {
 	ets, reqs := partialCoverageFixture()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestExtractQuotedCandidates_ExtractsBothQuoteStyles(t *testing.T) {
 func TestRenderAuditFile_CoverageSection(t *testing.T) {
 	ets, reqs := partialCoverageFixture()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
@@ -325,7 +325,7 @@ func TestRenderAuditFile_CoverageSection(t *testing.T) {
 func TestRenderAuditFile_CoverageSection_Deterministic(t *testing.T) {
 	ets, reqs := partialCoverageFixture()
 	models := buildSyntheticEntityModels(t, ets)
-	reqModels, err := BuildRequirementModels(reqs, models)
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}

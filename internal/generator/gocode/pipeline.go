@@ -142,6 +142,28 @@ func BuildPipelineGateModels(models []*entityModel, requirements []ontology.Requ
 	return out, nil
 }
 
+// findPipelineGate looks up the one pipelineGateModel (if any) rendered for
+// referencer's field named fieldName — the same referencer/field pair
+// BuildPipelineGateModels above resolved (kind:reference, ref_target
+// resolving to another EntityType of this domain). Used by
+// resolveScopedFieldMatches/requirements.go (contract §2.1 field-atom
+// integration, task #209) to find whether a claim-matched reference field
+// already has a precise-state (or general-terminal) pipeline gate to mirror
+// in its own field-atom sub-test, without requiring requirements.go to
+// re-derive or re-scan the referencer/ref_target resolution
+// BuildPipelineGateModels already performs (contract §0 one source of
+// truth). Returns nil when no gate was built for this exact referencer+field
+// pair (e.g. the field is not kind:reference, or its ref_target does not
+// resolve in this domain).
+func findPipelineGate(gates []*pipelineGateModel, referencer *entityModel, fieldName string) *pipelineGateModel {
+	for _, g := range gates {
+		if g.referencer.structName == referencer.structName && g.field.fieldName == fieldName {
+			return g
+		}
+	}
+	return nil
+}
+
 // resolvePreciseGateState implements GEN-CODE-CONTRACT.md §2.1: it looks for
 // a SINGLE unambiguous "this referencer's claim names this exact state of
 // referenced" signal, deterministically, without LLM-guessing — the same

@@ -182,6 +182,22 @@ func (m *requirementModel) atomEntityStateKeys() map[string]struct{} {
 			out[c.stateEntity.structName+"."+c.state.constant] = struct{}{}
 		}
 	}
+	// Task #209: a field atom whose reference field carries a precise-state
+	// pipeline gate (fa.pipelineGate.preciseState != nil) now ALSO mirrors
+	// that referenced entity's specific state (renderFieldAtomBody's
+	// additional sub-test, requirements_test_gen.go) - the SAME key shape
+	// extractGraphNameCandidates/resolveGraphNameCandidate already use for a
+	// state candidate (referenced-struct-name + "." + state-constant), so a
+	// claim's "forecast_v2"-shaped candidate that resolves to that exact
+	// referenced state is correctly reported as candidateResolvedAtom
+	// (fully covered) instead of §3.1's partial-coverage-gap
+	// candidateResolvedElsewhere - this requirement's atoms genuinely now
+	// cover that state, not just the field's presence.
+	for _, fa := range m.fields {
+		if fa.pipelineGate != nil && fa.pipelineGate.preciseState != nil {
+			out[fa.pipelineGate.referenced.structName+"."+fa.pipelineGate.preciseState.constant] = struct{}{}
+		}
+	}
 	return out
 }
 
