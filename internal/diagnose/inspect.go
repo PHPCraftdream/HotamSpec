@@ -2,6 +2,7 @@ package diagnose
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"sort"
 	"strings"
@@ -197,16 +198,6 @@ var stopWords = map[string]struct{}{
 // additive: no existing English-only claim's token set changes.
 var tokenRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
 
-// MinCorpusSizeForFrequencyFilter is the minimum number of SETTLED claims a
-// graph must carry before corpus-frequency exclusion (corpusCommonTokens)
-// activates. Below this size, "frequency" is not a meaningful signal — a
-// 2-3-requirement test fixture would have every shared token look
-// "common" (document frequency 50-100%) purely from small-sample noise, which
-// would silently zero out the token sets the existing table-driven tests
-// depend on. Below the guard, callers fall back to plain stop-word-only
-// filtering (claimTokens' original, still-correct behavior).
-const MinCorpusSizeForFrequencyFilter = 8
-
 // CorpusCommonTokenFraction is the document-frequency ceiling above which a
 // token is treated as "corpus-common" and excluded from lexical-overlap
 // scoring, exactly like a stop word. A token appearing in more than this
@@ -248,6 +239,38 @@ const MinCorpusSizeForFrequencyFilter = 8
 // inspect_test.go, which fails loud if a NEW Conflict pair silently joins the
 // miss set beyond this manually-verified allow-list.
 const CorpusCommonTokenFraction = 0.05
+
+// MinCorpusSizeForFrequencyFilter is the minimum number of SETTLED claims a
+// graph must carry before corpus-frequency exclusion (corpusCommonTokens)
+// activates. Below this size, callers fall back to plain stop-word-only
+// filtering (claimTokens' original, still-correct behavior).
+//
+// This is NOT an arbitrary "smaller sample = noisier" round number — it is
+// derived from CorpusCommonTokenFraction because the exclusion test itself
+// (float64(n) > ceiling, where ceiling = CorpusCommonTokenFraction *
+// len(settled)) is mathematically incapable of leaving even a single token
+// un-excluded until len(settled) is large enough for ceiling to reach 1.0.
+// Below that point, ANY token occurring in just ONE SETTLED requirement
+// (n=1) already satisfies n > ceiling and gets excluded as "corpus-common" —
+// which, since every content token appears in at least one claim by
+// definition, means the filter wipes out 100% of the corpus vocabulary, not
+// occasionally but as a guaranteed consequence of the formula. Concretely,
+// with CorpusCommonTokenFraction=0.05, any corpus with 8-19 SETTLED
+// requirements had ceiling < 1.0 (e.g. N=13 -> ceiling=0.65), so n=1 > 0.65
+// excluded EVERY token — silently defeating both InspectLexicalClaimOverlap
+// and, more seriously, the semantic-conflict land-time gate
+// (IsBlockingHit's topical-shared-token requirement in blocking_hit.go),
+// which could never find a surviving topical token to block on. Bug found
+// while pilot-testing against an external domain with exactly 13 SETTLED
+// requirements (squarely in the hole); hotam-dev (this repo's own
+// self-hosted secondary domain, 9 SETTLED) sat in the same hole.
+//
+// ceiling first reaches >= 1.0 (so a single-occurrence token, n=1, no longer
+// automatically clears n > ceiling) at len(settled) =
+// ceil(1/CorpusCommonTokenFraction) = 20. Deriving the guard from the
+// fraction (rather than a bare literal 20) keeps the two constants from
+// silently desyncing if CorpusCommonTokenFraction is ever retuned.
+var MinCorpusSizeForFrequencyFilter = int(math.Ceil(1.0 / CorpusCommonTokenFraction))
 
 // corpusCommonTokens computes, from the SETTLED requirements of g, the set of
 // tokens whose document frequency (fraction of SETTLED claims that contain

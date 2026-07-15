@@ -234,6 +234,133 @@ func TestCorpusCommonTokens_ExcludesHighFrequencyTokens(t *testing.T) {
 	}
 }
 
+// gateCorpusClaims returns 13 claim strings shaped like the real pilot
+// scenario that surfaced this bug: several requirements share common
+// requirement-prose vocabulary ("gate", "approve") at genuinely high
+// in-corpus frequency (10/13 and 8/13), alongside narrow topical tokens
+// ("budget", "audit", "export") that occur only once each — exactly the
+// shape IsBlockingHit (blocking_hit.go) needs a surviving topical anchor
+// from. n must be 13 (len of this slice); callers needing a different N pad
+// or trim independently.
+func gateCorpusClaims() []string {
+	return []string{
+		"the gate must be approved by P-G before release",
+		"the gate must record who approved it",
+		"the gate must never be skipped for production",
+		"the gate must log every approve decision",
+		"the gate must escalate to P-G on rejection",
+		"the gate must be reviewed before P-G signs off",
+		"the gate must block on missing approve evidence",
+		"the gate must be re-run after P-G requests changes",
+		"the gate must never approve without P-G present",
+		"the gate must archive its approve history",
+		"the budget report is generated monthly",
+		"the audit log is retained for one year",
+		"the export pipeline runs nightly",
+	}
+}
+
+func settledClaimsFrom(idPrefix string, claims []string) []ontology.Requirement {
+	out := make([]ontology.Requirement, 0, len(claims))
+	for i, c := range claims {
+		out = append(out, settledClaim(fmt.Sprintf("%s-%02d", idPrefix, i), "team-a", c))
+	}
+	return out
+}
+
+// TestCorpusCommonTokens_SmallCorpusHoleClosed is the regression pin for the
+// real bug found while pilot-testing HotamSpec: for any corpus size N with
+// CorpusCommonTokenFraction*N < 1 (with CorpusCommonTokenFraction=0.05, that
+// is N in [8,19] under the OLD MinCorpusSizeForFrequencyFilter=8 guard, which
+// let the filter engage at those sizes), ceiling < 1.0 means ANY token
+// occurring in just one SETTLED requirement (n=1) already satisfies n >
+// ceiling and gets excluded — wiping out 100% of the corpus vocabulary as a
+// mathematical certainty, not an occasional false positive. Discovered via a
+// real 13-SETTLED external pilot domain and confirmed live in this repo's OWN
+// hotam-dev domain (9 SETTLED) — both squarely in the hole.
+//
+// The fix raises MinCorpusSizeForFrequencyFilter to
+// ceil(1/CorpusCommonTokenFraction)=20, so N=13 now falls BELOW the guard and
+// the frequency filter does not engage at all (falls back to the safe
+// stop-word-only path) — proving the bug is closed: a narrow,
+// single-occurrence topical token ("budget") must SURVIVE, and the
+// vocabulary must NOT be wiped out wholesale, exactly the property that was
+// violated before the fix.
+func TestCorpusCommonTokens_SmallCorpusHoleClosed(t *testing.T) {
+	t.Parallel()
+
+	claims := gateCorpusClaims()
+	n := len(claims)
+	if n < 8 || n > 19 {
+		t.Fatalf("test setup: n=%d must stay in the historical [8,19] hole this test guards against", n)
+	}
+	if ceiling := CorpusCommonTokenFraction * float64(n); ceiling >= 1.0 {
+		t.Fatalf("test setup: n=%d no longer produces ceiling<1.0 (ceiling=%.2f) — CorpusCommonTokenFraction changed, adjust n", n, ceiling)
+	}
+	if n >= MinCorpusSizeForFrequencyFilter {
+		t.Fatalf("test setup: n=%d must stay BELOW the current MinCorpusSizeForFrequencyFilter=%d guard — that is the exact fix being pinned (this size no longer engages frequency-based exclusion at all)", n, MinCorpusSizeForFrequencyFilter)
+	}
+
+	reqs := settledClaimsFrom("R-hole", claims)
+	g := &ontology.Graph{Requirements: reqs}
+	common := corpusCommonTokens(g)
+
+	allTokens := claimTokens(strings.Join(claims, " "), nil)
+	if len(common) >= len(allTokens) {
+		t.Fatalf("corpusCommonTokens wiped out the entire corpus vocabulary (excluded=%d, total=%d) — the bug this test guards against: %v", len(common), len(allTokens), common)
+	}
+	if len(common) != 0 {
+		t.Errorf("corpusCommonTokens = %v, want empty — n=%d is below the fixed MinCorpusSizeForFrequencyFilter=%d guard, so frequency exclusion must be a no-op (stop-words-only fallback)", common, n, MinCorpusSizeForFrequencyFilter)
+	}
+
+	for _, narrow := range []string{"budget", "audit", "export"} {
+		if _, excluded := common[narrow]; excluded {
+			t.Errorf("corpusCommonTokens incorrectly excluded narrow single-occurrence token %q (document frequency 1/%d) — bug reproduced: %v", narrow, n, common)
+		}
+	}
+}
+
+// TestCorpusCommonTokens_GenuinelyCommonTokenStillExcludedAboveGuard proves
+// the fix does not simply disable frequency-based exclusion — it only raises
+// the corpus-size threshold at which the exclusion math becomes meaningful.
+// At N=MinCorpusSizeForFrequencyFilter (the new guard, 20 by construction —
+// ceiling reaches exactly 1.0 there), a token appearing in most of the corpus
+// ("gate", padded to 15 of 20 claims) must still be excluded as
+// corpus-common, while a narrow single-occurrence token ("budget") must still
+// survive — the same shape as the hole-closed test above, just at a size
+// where the filter is legitimately active rather than a no-op.
+func TestCorpusCommonTokens_GenuinelyCommonTokenStillExcludedAboveGuard(t *testing.T) {
+	t.Parallel()
+
+	n := MinCorpusSizeForFrequencyFilter
+	if ceiling := CorpusCommonTokenFraction * float64(n); ceiling < 1.0 {
+		t.Fatalf("test setup: MinCorpusSizeForFrequencyFilter=%d still produces ceiling<1.0 (ceiling=%.2f) — the derivation itself is broken", n, ceiling)
+	}
+
+	claims := gateCorpusClaims()
+	// Pad with extra "gate"-carrying claims so "gate"'s document frequency
+	// stays well over the ceiling at the larger N, while budget/audit/export
+	// remain single-occurrence.
+	for len(claims) < n {
+		claims = append(claims, fmt.Sprintf("the gate must satisfy extra condition number %d", len(claims)))
+	}
+	claims = claims[:n]
+
+	reqs := settledClaimsFrom("R-guard", claims)
+	g := &ontology.Graph{Requirements: reqs}
+	common := corpusCommonTokens(g)
+
+	if _, excluded := common["gate"]; !excluded {
+		t.Errorf(`corpusCommonTokens did not exclude "gate" at N=%d (well over the %.0f%% ceiling) — fix must not disable frequency filtering once the corpus is large enough, only correct the small-corpus threshold: %v`,
+			n, CorpusCommonTokenFraction*100, common)
+	}
+	for _, narrow := range []string{"budget", "audit", "export"} {
+		if _, excluded := common[narrow]; excluded {
+			t.Errorf("corpusCommonTokens incorrectly excluded narrow single-occurrence token %q at N=%d: %v", narrow, n, common)
+		}
+	}
+}
+
 // TestInspectLexicalClaimOverlap_CorpusCommonSuppressesGenericOnlyOverlap is
 // the non-vacuous, both-directions proof that frequency-based exclusion
 // changes InspectLexicalClaimOverlap's real firing behavior on a corpus
