@@ -139,16 +139,48 @@ func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel) {
 		fmt.Fprintf(b, "- state/transition: `%s` states {%s} -> `requirements_test.go:%s/%s_state_pair`\n",
 			sp.entity.structName, strings.Join(names, ", "), rm.funcName, sp.entity.structName)
 	case atomKindGate:
-		fmt.Fprintf(b, "- gate/order: anchors {%s} -> `requirements_test.go:%s/gate_order_anchors`\n",
-			strings.Join(rm.gate.anchors, ", "), rm.funcName)
+		for _, c := range rm.gate.correlates {
+			switch c.kind {
+			case gateAnchorCorrelateState:
+				subName := "gate_order_anchor_" + c.stateEntity.structName + "_" + c.state.constant
+				fmt.Fprintf(b, "- gate/order: anchor `%s` -> lifecycle state `%s.%s` (%s) -> `requirements_test.go:%s/%s`\n",
+					c.anchor, c.stateEntity.structName, c.state.constant, c.state.src.Name, rm.funcName, subName)
+			case gateAnchorCorrelateRequirement:
+				subName := "gate_order_anchor_" + requirementFuncNameBody(c.requirementID)
+				fmt.Fprintf(b, "- gate/order: anchor `%s` -> requirement `%s` -> `requirements_test.go:%s/%s`\n",
+					c.anchor, c.requirementID, rm.funcName, subName)
+			case gateAnchorCorrelateWhy:
+				fmt.Fprintf(b, "- gate/order: anchor `%s` -> found only in an EntityType `why` text (textual, not structural) -> no .go assertion rendered (see this requirement's own why/claim text above)\n", c.anchor)
+			default:
+				fmt.Fprintf(b, "- gate/order: anchor `%s` -> no correlate found anywhere in the domain graph -> no .go assertion rendered\n", c.anchor)
+			}
+		}
 	case atomKindInterEntity:
 		names := make([]string, len(rm.interEntity))
 		for i, em := range rm.interEntity {
 			names[i] = em.structName
 		}
-		fmt.Fprintf(b, "- inter-entity invariant: {%s} -> `requirements_test.go:%s/inter_entity_%s`\n",
+		fmt.Fprintf(b, "- inter-entity invariant: {%s} -> `requirements_test.go:%s/inter_entity_%s` (compile-time link only - both constructors must resolve to build; New<Entity>() can never return nil, so no runtime nil-check is rendered)\n",
 			strings.Join(names, ", "), rm.funcName, strings.Join(names, "_"))
 	default:
+		if len(rm.gate.anchors) > 0 {
+			// This requirement matched row 3's meta-token + anchor shape,
+			// but every anchor's correlate search (resolveGateAnchorCorrelate,
+			// requirements.go) came back empty or why-text-only - contract §3
+			// row 3 does not apply, and it honestly fell through to the
+			// closing row instead of being classified as a vacuous gate/order
+			// check (see the anchor-by-anchor detail this loop prints).
+			fmt.Fprintf(b, "- gate/order anchors {%s} found in claim text, but none resolve to a runtime-comparable graph correlate (lifecycle.state.name or another requirement id) -> reclassified as no structural atom, per-anchor detail:\n",
+				strings.Join(rm.gate.anchors, ", "))
+			for _, c := range rm.gate.correlates {
+				switch c.kind {
+				case gateAnchorCorrelateWhy:
+					fmt.Fprintf(b, "  - anchor `%s`: found only in an EntityType `why` text (textual, not structural)\n", c.anchor)
+				default:
+					fmt.Fprintf(b, "  - anchor `%s`: no correlate found anywhere in the domain graph\n", c.anchor)
+				}
+			}
+		}
 		fmt.Fprintf(b, "- no structural atom -> `requirements_test.go:%s` (t.Log only)\n", rm.funcName)
 	}
 

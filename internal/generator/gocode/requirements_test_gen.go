@@ -132,40 +132,94 @@ func renderStatePairAtomBody(b *strings.Builder, m *requirementModel) {
 	b.WriteString("\t})\n")
 }
 
-// renderGateAtomBody renders the gate/order atom (contract §3 row 3): the
-// anchor tokens BuildRequirementModel already found (meta-token + typed
-// anchor) are baked in as a Go string literal slice — computed once at
-// generation time, not re-derived from claim text in the .go layer (which
-// would require Cyrillic) — and the sub-test asserts the anchor set is
-// non-empty and every anchor is non-blank, the structural minimum the §3
-// row 3 classification itself depends on.
+// renderGateAtomBody renders the gate/order atom (contract §3 row 3). By the
+// time BuildRequirementModel classifies a requirement into atomKindGate, at
+// least one of its anchors has already been independently verified
+// (resolveGateAnchorCorrelate, requirements.go) to correlate with a REAL
+// runtime-comparable graph fact — either a lifecycle.state.name or another
+// SETTLED requirement's id (why-only correlates are Cyrillic-text-only and
+// never promote a requirement to atomKindGate, contract §1.1). One t.Run
+// sub-test is rendered per anchor that has such a correlate:
+//
+//   - state correlate: asserts the entity's already-generated state constant
+//     still carries the exact kebab value found at generation time — a
+//     compile-time link (the constant must still exist to reference it: a
+//     renamed/removed state fails the build) PLUS a runtime content check
+//     (a glossary/translation change that alters the value without
+//     renaming the raw graph name would still be caught here).
+//   - requirement correlate: calls the OTHER requirement's own generated
+//     Test_<id> function as a sub-test — a compile-time link (that function
+//     must still exist: renaming/removing the cross-referenced requirement
+//     fails the build) PLUS a runtime check (that requirement's own atom
+//     must still actually pass).
+//
+// Anchors with no correlate at all are skipped here (never reached in
+// practice — a requirement with zero real correlates does not classify as
+// atomKindGate at all, see BuildRequirementModel row 3's
+// hasStructuralCorrelate gate) and anchors with a why-only correlate are
+// skipped too (documented in requirements_audit.md instead, contract §1.1 —
+// why text may be Cyrillic and cannot be embedded in a .go runtime check).
 func renderGateAtomBody(b *strings.Builder, m *requirementModel) {
-	subName := "gate_order_anchors"
-	fmt.Fprintf(b, "\tt.Run(%q, func(t *testing.T) {\n", subName)
-	b.WriteString("\t\tanchors := []string{")
-	for i, a := range m.gate.anchors {
-		if i != 0 {
-			b.WriteString(", ")
+	for _, c := range m.gate.correlates {
+		switch c.kind {
+		case gateAnchorCorrelateState:
+			renderGateStateCorrelateSubTest(b, c)
+		case gateAnchorCorrelateRequirement:
+			renderGateRequirementCorrelateSubTest(b, c)
+		default:
+			// gateAnchorCorrelateNone / gateAnchorCorrelateWhy: no runtime-
+			// comparable correlate for this particular anchor - nothing to
+			// render (see doc comment above).
 		}
-		b.WriteString(strconv.Quote(a))
 	}
-	b.WriteString("}\n")
-	b.WriteString("\t\tif len(anchors) == 0 {\n")
-	b.WriteString("\t\t\tt.Fatal(\"expected at least one typed gate/order anchor\")\n")
-	b.WriteString("\t\t}\n")
-	b.WriteString("\t\tfor _, a := range anchors {\n")
-	b.WriteString("\t\t\tif a == \"\" {\n")
-	b.WriteString("\t\t\t\tt.Fatal(\"gate/order anchor must not be blank\")\n")
-	b.WriteString("\t\t\t}\n")
+}
+
+// renderGateStateCorrelateSubTest renders one sub-test for a gate/order
+// anchor that correlates with a real lifecycle.state.name (contract §3 row
+// 3, sub-clause a).
+func renderGateStateCorrelateSubTest(b *strings.Builder, c gateAnchorCorrelate) {
+	subName := "gate_order_anchor_" + c.stateEntity.structName + "_" + c.state.constant
+	fmt.Fprintf(b, "\tt.Run(%s, func(t *testing.T) {\n", strconv.Quote(subName))
+	fmt.Fprintf(b, "\t\t// Anchor %s resolves to %s.lifecycle.state %s (see requirements_audit.md).\n",
+		strconv.Quote(c.anchor), c.stateEntity.structName, c.state.constant)
+	fmt.Fprintf(b, "\t\tif string(%s) != %s {\n", c.state.constant, strconv.Quote(c.state.value))
+	fmt.Fprintf(b, "\t\t\tt.Fatalf(%s, string(%s))\n",
+		strconv.Quote(c.state.constant+" drifted from the value gate/order anchor "+c.anchor+" was resolved against: got %q"),
+		c.state.constant)
 	b.WriteString("\t\t}\n")
 	b.WriteString("\t})\n")
 }
 
+// renderGateRequirementCorrelateSubTest renders one sub-test for a gate/
+// order anchor that correlates with another SETTLED requirement's id
+// (contract §3 row 3, sub-clause c): it calls that requirement's own
+// generated Test_<id> function, so a rename/removal of the cross-referenced
+// requirement fails the build (compile-time link), and that requirement's
+// own atom must still actually pass (runtime link).
+func renderGateRequirementCorrelateSubTest(b *strings.Builder, c gateAnchorCorrelate) {
+	otherFuncName := "Test_" + requirementFuncNameBody(c.requirementID)
+	subName := "gate_order_anchor_" + requirementFuncNameBody(c.requirementID)
+	fmt.Fprintf(b, "\tt.Run(%s, func(t *testing.T) {\n", strconv.Quote(subName))
+	fmt.Fprintf(b, "\t\t// Anchor %s resolves to requirement %s (see requirements_audit.md).\n",
+		strconv.Quote(c.anchor), c.requirementID)
+	fmt.Fprintf(b, "\t\t%s(t)\n", otherFuncName)
+	b.WriteString("\t})\n")
+}
+
 // renderInterEntityAtomBody renders the inter-entity invariant atom
-// (contract §3 row 4): asserts both named EntityTypes actually construct
-// (their generated constructors exist and return a non-nil value in their
-// declared initial state) - the structural minimum "both ends resolve in
-// the graph" requires.
+// (contract §3 row 4): "both ends resolve in the graph" is a COMPILE-TIME
+// guarantee, not a runtime one — New<Entity>() has signature `func() *T` and
+// can never return nil (models.go's RenderEntityType always emits `return
+// &T{State: ...}`), so a nil-check here would be a tautology that can never
+// fail (the bug this rendering replaces). The real regression protection a
+// renamed/removed EntityType gives is that this generated .go file fails to
+// COMPILE — which the plain reference to New<Entity>() below already
+// provides, with no runtime assertion pretending to be more than that. Each
+// constructed value's Validate() is also called (result discarded, not
+// asserted) purely so the reference is a genuine two-hop link (constructor
+// + method), not merely a bare identifier a linter could dead-code-eliminate
+// — still a compile-time-only guarantee, documented as such rather than
+// dressed up as a runtime check.
 func renderInterEntityAtomBody(b *strings.Builder, m *requirementModel) {
 	names := make([]string, len(m.interEntity))
 	for i, em := range m.interEntity {
@@ -173,10 +227,14 @@ func renderInterEntityAtomBody(b *strings.Builder, m *requirementModel) {
 	}
 	subName := "inter_entity_" + strings.Join(names, "_")
 	fmt.Fprintf(b, "\tt.Run(%s, func(t *testing.T) {\n", strconv.Quote(subName))
+	b.WriteString("\t\t// Compile-time-only guard: both ends of this invariant must resolve to a\n")
+	b.WriteString("\t\t// generated EntityType, or this file fails to build. New<Entity>() can never\n")
+	b.WriteString("\t\t// return nil by construction, so there is no meaningful runtime assertion\n")
+	b.WriteString("\t\t// beyond referencing both constructors (see doc comment above).\n")
 	for _, em := range m.interEntity {
-		fmt.Fprintf(b, "\t\tif x := New%s(); x == nil {\n", em.structName)
-		fmt.Fprintf(b, "\t\t\tt.Fatal(%s)\n", strconv.Quote("New"+em.structName+"() returned nil - both ends of this invariant must resolve to a generated EntityType"))
-		b.WriteString("\t\t}\n")
+		varName := "x" + em.structName
+		fmt.Fprintf(b, "\t\t%s := New%s()\n", varName, em.structName)
+		fmt.Fprintf(b, "\t\t_ = %s.Validate()\n", varName)
 	}
 	b.WriteString("\t})\n")
 }

@@ -67,12 +67,84 @@ type statePairAtom struct {
 	states []stateModel
 }
 
+// gateAnchorCorrelateKind classifies WHERE an anchor token (contract §3 row
+// 3) was independently found elsewhere in the domain graph, so the rendered
+// assertion in requirements_test.go can compare against that SAME real
+// correlate at runtime, instead of re-asserting the literal the claim-text
+// regex itself produced (the bug this type exists to fix: a self-authored
+// literal is not a graph check).
+type gateAnchorCorrelateKind int
+
+const (
+	// gateAnchorCorrelateNone means this anchor token was not found anywhere
+	// else in the domain graph (neither a lifecycle.state.name, nor an
+	// EntityType.why, nor another SETTLED requirement's id). It carries no
+	// verifiable runtime correlate.
+	gateAnchorCorrelateNone gateAnchorCorrelateKind = iota
+	// gateAnchorCorrelateState means the anchor is a substring of some
+	// EntityType's lifecycle.state.name (contract §3 row 3, sub-clause a).
+	// The match is ASCII-safe: stateModel.value is a 1:1 ToKebabCase
+	// translation of that same raw state name (identifiers.go), so an
+	// anchor-substring hit against the raw name transfers directly to a hit
+	// against the already-ASCII Go constant's string value — comparable at
+	// runtime with no Cyrillic involved.
+	gateAnchorCorrelateState
+	// gateAnchorCorrelateWhy means the anchor is a substring of some
+	// EntityType's why text (contract §3 row 3, sub-clause b). This
+	// correlate is real but textual-only: why is legitimately Cyrillic
+	// (contract §1.1), so it cannot be mirrored as a runtime .go assertion
+	// — it is documented in requirements_audit.md, never embedded in a
+	// string literal in the .go layer.
+	gateAnchorCorrelateWhy
+	// gateAnchorCorrelateRequirement means the anchor is a substring of
+	// another SETTLED requirement's id (contract §3 row 3, sub-clause c).
+	// Requirement ids are ASCII by the framework's own id convention, so
+	// this is directly comparable at runtime.
+	gateAnchorCorrelateRequirement
+)
+
+// gateAnchorCorrelate is one anchor token's resolved correlate: the anchor
+// text itself, which kind of graph element it was found in, and enough
+// already-resolved identifier data to render a concrete runtime assertion
+// (never a re-derived or re-translated literal).
+type gateAnchorCorrelate struct {
+	anchor string
+	kind   gateAnchorCorrelateKind
+	// state is set when kind == gateAnchorCorrelateState: the entity whose
+	// lifecycle.state.name matched, and the matched stateModel itself
+	// (state.value is the ASCII runtime-comparable string).
+	stateEntity *entityModel
+	state       stateModel
+	// requirementID is set when kind == gateAnchorCorrelateRequirement: the
+	// other SETTLED requirement's id (already ASCII) the anchor matched.
+	requirementID string
+}
+
 // gateAtom is one "meta-token + typed anchor" hit (contract §3 row 3): the
 // literal anchor tokens found (already ASCII by construction — the pattern
-// only matches Latin-letter/digit/hyphen shapes), used to name the
-// generated sub-test without embedding the (possibly Cyrillic) claim text.
+// only matches Latin-letter/digit/hyphen shapes) plus, for every anchor,
+// where (if anywhere) it independently correlates elsewhere in the domain
+// graph (see gateAnchorCorrelate) — the rendered assertion mirrors that real
+// correlate, never the anchor list alone (the vacuous-test bug this type
+// replaces).
 type gateAtom struct {
-	anchors []string
+	anchors    []string
+	correlates []gateAnchorCorrelate
+}
+
+// hasStructuralCorrelate reports whether at least one of this gate atom's
+// anchors resolved to a runtime-comparable correlate (state or requirement
+// id — NOT why-only, since why is Cyrillic and cannot be mirrored into a
+// .go runtime assertion per contract §1.1). A gate/order requirement with no
+// structural correlate at all is honest-gap, not a vacuous self-check
+// (contract §3's closing row, §0 mirror principle).
+func (g gateAtom) hasStructuralCorrelate() bool {
+	for _, c := range g.correlates {
+		if c.kind == gateAnchorCorrelateState || c.kind == gateAnchorCorrelateRequirement {
+			return true
+		}
+	}
+	return false
 }
 
 // requirementModel is the resolved, Go-identifier-shaped view of one
@@ -107,7 +179,16 @@ func requirementFuncNameBody(id string) string {
 // the same slice (or an equivalent rebuild) BuildEntityModel already
 // produced for entities.go/lifecycle.go, so field/state identifiers here are
 // never independently re-derived.
-func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel) *requirementModel {
+//
+// otherSettled is every OTHER SETTLED requirement in the domain (req itself
+// excluded by the caller or skipped internally) — needed by row 3's gate/
+// order classification (contract §3), which must verify each anchor token
+// against a real graph correlate (lifecycle.state.name, EntityType.why, or
+// another requirement's id), not just record the literal it found in req's
+// own claim text. Pass nil (or an empty slice) when no cross-requirement
+// corpus is available (e.g. isolated unit fixtures) — the requirement-id
+// correlate is then simply never found, same as any other missing correlate.
+func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel, otherSettled []ontology.Requirement) *requirementModel {
 	m := &requirementModel{
 		src:        req,
 		funcName:   "Test_" + requirementFuncNameBody(req.ID),
@@ -158,7 +239,13 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 
 	// Row 3 (contract §3): a literal meta-token (MUST/ALWAYS/NEVER/ONLY/ANY/
 	// MUST NOT) AND a typed anchor (an id-shaped token, or a literal
-	// EntityType.slug) both present in the claim.
+	// EntityType.slug) both present in the claim. An id-shaped anchor alone
+	// is not enough to call this "gate/order" honestly (GEN-CODE-CONTRACT.md
+	// §0 mirror principle) — the generator independently re-finds where
+	// (if anywhere) each anchor correlates elsewhere in the domain graph
+	// (resolveGateAnchorCorrelate below) BEFORE deciding the classification,
+	// so the eventual rendered assertion checks a real graph fact, never a
+	// self-authored literal the regex itself produced.
 	hasMeta := metaTokenPattern.MatchString(req.Claim)
 	var anchors []string
 	for _, tok := range idAnchorPattern.FindAllString(req.Claim, -1) {
@@ -171,9 +258,29 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 	}
 	anchors = dedupeSorted(anchors)
 	if hasMeta && len(anchors) > 0 {
-		m.kind = atomKindGate
-		m.gate = gateAtom{anchors: anchors}
-		return m
+		var correlates []gateAnchorCorrelate
+		for _, a := range anchors {
+			correlates = append(correlates, resolveGateAnchorCorrelate(a, req.ID, entityModels, otherSettled))
+		}
+		gate := gateAtom{anchors: anchors, correlates: correlates}
+		if gate.hasStructuralCorrelate() {
+			// At least one anchor independently resolves to a runtime-
+			// comparable graph correlate (a lifecycle.state.name or another
+			// requirement's id) — classification stands, and the rendered
+			// assertion (requirements_test_gen.go) mirrors THAT correlate,
+			// not the anchor list alone.
+			m.kind = atomKindGate
+			m.gate = gate
+			return m
+		}
+		// Every anchor either found nothing anywhere else in the graph, or
+		// found only a why-text (Cyrillic, non-runtime-comparable) hit.
+		// Imitating a structural check here would be exactly the vacuous
+		// self-check this classification exists to avoid — fall through to
+		// row 5's honest gap instead (contract §3 closing row). The why-only
+		// correlate (if any) is still worth recording for the audit file, so
+		// it is kept on m.gate even though m.kind will not be atomKindGate.
+		m.gate = gate
 	}
 
 	// Row 4 (contract §3): claim literally names 2+ distinct EntityType
@@ -200,6 +307,79 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 	// Row 5 (contract §3): no structural carrier found — honest gap.
 	m.kind = atomKindNone
 	return m
+}
+
+// resolveGateAnchorCorrelate searches the WHOLE domain (not just the
+// EntityTypes/requirement this one claim happens to mention) for a real
+// correlate of one gate/order anchor token, per GEN-CODE-CONTRACT.md §3 row
+// 3's sub-clauses:
+//
+//	(a) any EntityType's lifecycle.state.name, anywhere in the domain
+//	(b) any EntityType's why text, anywhere in the domain
+//	(c) any OTHER SETTLED requirement's id
+//
+// Matching is case-insensitive substring containment (not whole-word): gate/
+// order anchors are short structured tokens (e.g. "P-G3", "P-G1-R") that
+// legitimately appear as a PREFIX of a longer state name ("P-G1-R-pass") or
+// requirement id ("R-gate-pg1r-risk-registry-mandatory", where "P-G1-R"
+// matches after hyphens are stripped) — a whole-word match would miss both
+// of those real, independently-verified hits found while diagnosing this
+// bug on the real prat domain. Sub-clause (a) is checked first because a
+// state-name correlate is preferred (it is the more specific, more
+// "structural" of the two runtime-comparable kinds); (b) is checked next
+// only to record a textual (non-runtime-comparable) correlate for the audit
+// file; (c) last.
+func resolveGateAnchorCorrelate(anchor, reqID string, entityModels []*entityModel, otherSettled []ontology.Requirement) gateAnchorCorrelate {
+	normAnchor := normalizeAnchorForCorrelation(anchor)
+
+	// (a) lifecycle.state.name of ANY EntityType in the domain.
+	for _, em := range entityModels {
+		for _, s := range em.states {
+			if strings.Contains(normalizeAnchorForCorrelation(s.src.Name), normAnchor) {
+				return gateAnchorCorrelate{
+					anchor:      anchor,
+					kind:        gateAnchorCorrelateState,
+					stateEntity: em,
+					state:       s,
+				}
+			}
+		}
+	}
+
+	// (b) EntityType.why of ANY EntityType in the domain (textual-only —
+	// why is legitimately Cyrillic, contract §1.1, so this correlate is
+	// real but cannot itself justify a runtime .go assertion).
+	for _, em := range entityModels {
+		if em.src.Why != "" && strings.Contains(em.src.Why, anchor) {
+			return gateAnchorCorrelate{anchor: anchor, kind: gateAnchorCorrelateWhy}
+		}
+	}
+
+	// (c) id of any OTHER SETTLED requirement in the domain.
+	for _, other := range otherSettled {
+		if other.ID == reqID {
+			continue
+		}
+		if strings.Contains(normalizeAnchorForCorrelation(other.ID), normAnchor) {
+			return gateAnchorCorrelate{
+				anchor:        anchor,
+				kind:          gateAnchorCorrelateRequirement,
+				requirementID: other.ID,
+			}
+		}
+	}
+
+	return gateAnchorCorrelate{anchor: anchor, kind: gateAnchorCorrelateNone}
+}
+
+// normalizeAnchorForCorrelation lowercases and strips hyphens, so an anchor
+// like "P-G1-R" matches both a hyphen-preserving state name ("P-G1-R-pass")
+// and a fully hyphenated-then-lowercased requirement id fragment
+// ("...-pg1r-..." inside "R-gate-pg1r-risk-registry-mandatory") — the same
+// token spelled with or without its internal hyphens in different graph
+// authoring conventions is still the same anchor.
+func normalizeAnchorForCorrelation(s string) string {
+	return strings.ToLower(strings.ReplaceAll(s, "-", ""))
 }
 
 // DuplicateRequirementFuncNameError is returned when two SETTLED
@@ -234,7 +414,12 @@ func BuildRequirementModels(reqs []ontology.Requirement, entityModels []*entityM
 	byFuncName := make(map[string]string, len(settled))
 	models := make([]*requirementModel, 0, len(settled))
 	for _, r := range settled {
-		m := BuildRequirementModel(r, entityModels)
+		// otherSettled is the full SETTLED corpus (resolveGateAnchorCorrelate
+		// skips r.ID itself when matching, so passing the whole slice — not
+		// a per-requirement filtered copy — avoids an O(n^2) slice-build
+		// here while still correctly excluding self-matches inside the
+		// correlate resolver).
+		m := BuildRequirementModel(r, entityModels, settled)
 		if prior, dup := byFuncName[m.funcName]; dup {
 			return nil, &DuplicateRequirementFuncNameError{FuncName: m.funcName, First: prior, Second: r.ID}
 		}

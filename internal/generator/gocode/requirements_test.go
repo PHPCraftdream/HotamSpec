@@ -19,9 +19,15 @@ import (
 // models_test.go) alongside a small set of SETTLED requirements engineered
 // to exercise every GEN-CODE-CONTRACT.md §3 atom row at least once: a field
 // atom (references "текст"), a state-pair atom (mentions both "черновик"
-// and "на-gate"), a gate/order atom (MUST + an id-shaped anchor "R-gate-x"),
-// an inter-entity invariant atom (needs a second EntityType so two slugs can
-// be named), and a requirement with no structural carrier at all.
+// and "на-gate"), a gate/order atom with a REAL structural correlate (MUST +
+// an id-shaped anchor "P-G1-R" that is a genuine substring of gate-card's
+// "P-G1-R-pass" lifecycle state — the same shape of correlate found on the
+// real prat domain while diagnosing the vacuous-assertion bug this fixture
+// now guards against), a SECOND gate/order-shaped claim whose anchor has NO
+// correlate anywhere in the graph (must be reclassified to honest-gap, not
+// rendered as a vacuous self-check), an inter-entity invariant atom (needs a
+// second EntityType so two slugs can be named), and a requirement with no
+// structural carrier at all.
 func syntheticRequirementFixtures() ([]ontology.EntityType, []ontology.Requirement) {
 	card := syntheticEntityType()
 	other := ontology.EntityType{
@@ -35,6 +41,18 @@ func syntheticRequirementFixtures() ([]ontology.EntityType, []ontology.Requireme
 			States: []ontology.State{
 				{Name: "черновик", Kind: ontology.StateKindInitial},
 				{Name: "утверждён", Kind: ontology.StateKindTerminal},
+			},
+		},
+	}
+	gateCard := ontology.EntityType{
+		Slug:        "gate-card",
+		Description: "third synthetic entity, carries an ASCII-named lifecycle state so the gate/order atom has a real structural correlate to find",
+		Lifecycle: ontology.Lifecycle{
+			Slug: "gate-card-lifecycle",
+			States: []ontology.State{
+				{Name: "draft", Kind: ontology.StateKindInitial},
+				{Name: "P-G1-R-pass", Kind: ontology.StateKindNormal, Why: "passed sub-gate P-G1-R"},
+				{Name: "done", Kind: ontology.StateKindTerminal},
 			},
 		},
 	}
@@ -54,6 +72,12 @@ func syntheticRequirementFixtures() ([]ontology.EntityType, []ontology.Requireme
 		},
 		{
 			ID:     "R-gate-order-atom",
+			Claim:  "Sub-gate P-G1-R MUST быть пройден до перехода gate-card в следующее состояние pipeline.",
+			Status: ontology.StatusSETTLED,
+			Owner:  "test-owner",
+		},
+		{
+			ID:     "R-gate-order-no-correlate",
 			Claim:  "Переход R-gate-x MUST быть подтверждён human review до продолжения pipeline.",
 			Status: ontology.StatusSETTLED,
 			Owner:  "test-owner",
@@ -78,7 +102,7 @@ func syntheticRequirementFixtures() ([]ontology.EntityType, []ontology.Requireme
 		},
 	}
 
-	return []ontology.EntityType{card, other}, reqs
+	return []ontology.EntityType{card, other, gateCard}, reqs
 }
 
 func buildSyntheticEntityModels(t *testing.T, ets []ontology.EntityType) []*entityModel {
@@ -92,6 +116,22 @@ func buildSyntheticEntityModels(t *testing.T, ets []ontology.EntityType) []*enti
 		models = append(models, m)
 	}
 	return models
+}
+
+// settledOnly filters reqs down to SETTLED ones, mirroring exactly what
+// BuildRequirementModels passes as otherSettled in production — direct
+// BuildRequirementModel test call sites below use this (not the raw fixture
+// slice) so a DRAFT fixture requirement can never accidentally participate
+// as a gate/order cross-reference correlate in a test, which production
+// code path never allows either.
+func settledOnly(reqs []ontology.Requirement) []ontology.Requirement {
+	var out []ontology.Requirement
+	for _, r := range reqs {
+		if r.Status == ontology.StatusSETTLED {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 // TestBuildRequirementModel_AtomClassification exercises GEN-CODE-CONTRACT.md
@@ -115,13 +155,14 @@ func TestBuildRequirementModel_AtomClassification(t *testing.T) {
 		{"R-field-atom", atomKindField},
 		{"R-state-pair-atom", atomKindStatePair},
 		{"R-gate-order-atom", atomKindGate},
+		{"R-gate-order-no-correlate", atomKindNone},
 		{"R-inter-entity-atom", atomKindInterEntity},
 		{"R-no-atom", atomKindNone},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.id, func(t *testing.T) {
-			rm := BuildRequirementModel(byID[tc.id], models)
+			rm := BuildRequirementModel(byID[tc.id], models, settledOnly(reqs))
 			if rm.kind != tc.kind {
 				t.Errorf("BuildRequirementModel(%s).kind = %v, want %v", tc.id, rm.kind, tc.kind)
 			}
@@ -142,7 +183,7 @@ func TestBuildRequirementModel_FieldAtom_ResolvesRealField(t *testing.T) {
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models)
+	rm := BuildRequirementModel(req, models, settledOnly(reqs))
 	if rm.kind != atomKindField {
 		t.Fatalf("expected atomKindField, got %v", rm.kind)
 	}
@@ -166,7 +207,7 @@ func TestBuildRequirementModel_StatePairAtom_ResolvesBothStates(t *testing.T) {
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models)
+	rm := BuildRequirementModel(req, models, settledOnly(reqs))
 	if rm.kind != atomKindStatePair {
 		t.Fatalf("expected atomKindStatePair, got %v", rm.kind)
 	}
@@ -186,9 +227,13 @@ func TestBuildRequirementModel_StatePairAtom_ResolvesBothStates(t *testing.T) {
 }
 
 // TestBuildRequirementModel_GateAtom_CapturesAnchors asserts the gate/order
-// atom for R-gate-order-atom captures the id-shaped anchor "R-gate-x" the
+// atom for R-gate-order-atom captures the id-shaped anchor "P-G1-R" the
 // claim names, driven purely by the domain-agnostic idAnchorPattern (no
-// hardcoded "P-G" convention).
+// hardcoded "P-G" convention), AND that it resolved to the real structural
+// correlate (gate-card's "P-G1-R-pass" lifecycle state) — not merely
+// recorded the literal the regex found in the claim's own text (the bug
+// this test guards against: the classification and the rendered assertion
+// must point at an independently-verified graph fact).
 func TestBuildRequirementModel_GateAtom_CapturesAnchors(t *testing.T) {
 	ets, reqs := syntheticRequirementFixtures()
 	models := buildSyntheticEntityModels(t, ets)
@@ -198,18 +243,60 @@ func TestBuildRequirementModel_GateAtom_CapturesAnchors(t *testing.T) {
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models)
+	rm := BuildRequirementModel(req, models, settledOnly(reqs))
 	if rm.kind != atomKindGate {
 		t.Fatalf("expected atomKindGate, got %v", rm.kind)
 	}
 	found := false
 	for _, a := range rm.gate.anchors {
-		if a == "R-gate-x" {
+		if a == "P-G1-R" {
 			found = true
 		}
 	}
 	if !found {
-		t.Errorf("expected gate anchors to include %q, got %v", "R-gate-x", rm.gate.anchors)
+		t.Errorf("expected gate anchors to include %q, got %v", "P-G1-R", rm.gate.anchors)
+	}
+	if !rm.gate.hasStructuralCorrelate() {
+		t.Fatal("expected at least one anchor to resolve to a real structural correlate")
+	}
+	var correlate *gateAnchorCorrelate
+	for i := range rm.gate.correlates {
+		if rm.gate.correlates[i].anchor == "P-G1-R" && rm.gate.correlates[i].kind == gateAnchorCorrelateState {
+			correlate = &rm.gate.correlates[i]
+		}
+	}
+	if correlate == nil {
+		t.Fatalf("expected a state correlate for anchor %q, got %+v", "P-G1-R", rm.gate.correlates)
+	}
+	if correlate.stateEntity.structName != "GateCard" {
+		t.Errorf("correlate entity = %s, want GateCard", correlate.stateEntity.structName)
+	}
+	if correlate.state.src.Name != "P-G1-R-pass" {
+		t.Errorf("correlate state = %s, want P-G1-R-pass", correlate.state.src.Name)
+	}
+}
+
+// TestBuildRequirementModel_GateAtom_NoCorrelateReclassifiesToHonestGap
+// asserts a claim that LOOKS like a gate/order atom (meta-token + an
+// id-shaped anchor, "R-gate-x") but whose anchor does not independently
+// correlate anywhere else in the domain graph (no lifecycle.state.name, no
+// EntityType.why, no other requirement id) is reclassified to the honest-gap
+// row (contract §3's closing row) rather than kept as atomKindGate with a
+// vacuous self-check — this is the core fix for the bug found on the real
+// prat domain's R-brd-integrity-zero-blockers ("P-G3-CQA" anchor, no
+// correlate anywhere in that domain either).
+func TestBuildRequirementModel_GateAtom_NoCorrelateReclassifiesToHonestGap(t *testing.T) {
+	ets, reqs := syntheticRequirementFixtures()
+	models := buildSyntheticEntityModels(t, ets)
+	var req ontology.Requirement
+	for _, r := range reqs {
+		if r.ID == "R-gate-order-no-correlate" {
+			req = r
+		}
+	}
+	rm := BuildRequirementModel(req, models, settledOnly(reqs))
+	if rm.kind != atomKindNone {
+		t.Fatalf("expected atomKindNone (honest gap) for an anchor with no graph correlate, got %v", rm.kind)
 	}
 }
 
@@ -225,7 +312,7 @@ func TestBuildRequirementModel_InterEntityAtom_ResolvesBothEntities(t *testing.T
 			req = r
 		}
 	}
-	rm := BuildRequirementModel(req, models)
+	rm := BuildRequirementModel(req, models, settledOnly(reqs))
 	if rm.kind != atomKindInterEntity {
 		t.Fatalf("expected atomKindInterEntity, got %v", rm.kind)
 	}
@@ -256,8 +343,8 @@ func TestBuildRequirementModels_ExcludesNonSettled(t *testing.T) {
 			t.Errorf("DRAFT requirement %q must not appear in the built models", rm.src.ID)
 		}
 	}
-	if len(reqModels) != 5 {
-		t.Fatalf("expected 5 SETTLED requirement models, got %d", len(reqModels))
+	if len(reqModels) != 6 {
+		t.Fatalf("expected 6 SETTLED requirement models, got %d", len(reqModels))
 	}
 }
 
@@ -285,6 +372,7 @@ func TestRenderRequirementsTestFile_Synthetic_ParsesAndIsASCII(t *testing.T) {
 		"func Test_R_field_atom(t *testing.T) {",
 		"func Test_R_state_pair_atom(t *testing.T) {",
 		"func Test_R_gate_order_atom(t *testing.T) {",
+		"func Test_R_gate_order_no_correlate(t *testing.T) {",
 		"func Test_R_inter_entity_atom(t *testing.T) {",
 		"func Test_R_no_atom(t *testing.T) {",
 	} {
@@ -302,6 +390,13 @@ func TestRenderRequirementsTestFile_Synthetic_ParsesAndIsASCII(t *testing.T) {
 	}
 	if strings.Contains(text, "t.Skip") {
 		t.Error("requirements_test.go must never use t.Skip for a no-atom requirement (contract §3)")
+	}
+
+	// The gate/order claim with no real graph correlate must ALSO render as
+	// an honest t.Log, not a vacuous "anchors := []string{...}" self-check
+	// (the bug this fix closes).
+	if !strings.Contains(text, `t.Log("no structural atom - see requirements_audit.md#r-gate-order-no-correlate")`) {
+		t.Errorf("expected honest t.Log for R-gate-order-no-correlate (anchor found, but no graph correlate), got:\n%s", text)
 	}
 
 	for i, r := range []rune(text) {
@@ -486,16 +581,48 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 		t.Error("expected R-gate-pg3-brd-approved to be present")
 	}
 
-	// Known gate/order atom: R-brd-integrity-zero-blockers has MUST plus
-	// id-shaped anchors (P-G3, P-G3-CQA).
+	// R-brd-integrity-zero-blockers has MUST plus id-shaped anchors (P-G3,
+	// P-G3-CQA), but NEITHER anchor resolves to a runtime-comparable
+	// structural correlate anywhere in the prat domain: "P-G3" is only
+	// found inside brd-package's Cyrillic `why` text (textual, not a
+	// lifecycle.state.name or another requirement id), and "P-G3-CQA" is
+	// not found anywhere at all. This is the exact case the fix in this
+	// package closes: previously the generator classified this as
+	// atomKindGate and rendered a vacuous self-check of the literal
+	// "P-G3"/"P-G3-CQA" anchors it had just found in the claim; now it
+	// honestly reclassifies to atomKindNone (contract §3 closing row) rather
+	// than imitate a structural check that does not exist.
 	if rm, ok := byID["R-brd-integrity-zero-blockers"]; ok {
-		if rm.kind != atomKindGate {
-			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindGate", rm.kind)
-		} else {
-			t.Logf("R-brd-integrity-zero-blockers gate anchors: %v", rm.gate.anchors)
+		if rm.kind != atomKindNone {
+			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindNone (no anchor resolves to a runtime-comparable graph correlate)", rm.kind)
+		}
+		foundWhyOnly := false
+		for _, c := range rm.gate.correlates {
+			if c.anchor == "P-G3" && c.kind == gateAnchorCorrelateWhy {
+				foundWhyOnly = true
+			}
+		}
+		if !foundWhyOnly {
+			t.Errorf("R-brd-integrity-zero-blockers: expected anchor %q to resolve to a why-text-only correlate, got %+v", "P-G3", rm.gate.correlates)
 		}
 	} else {
 		t.Error("expected R-brd-integrity-zero-blockers to be present")
+	}
+
+	// Known REAL gate/order atom on the prat domain: R-gate-pg1r-risk-
+	// registry-mandatory's "P-G1-R" anchor is a genuine substring of
+	// risk-registry's "P-G1-R-pass" lifecycle state name — a real
+	// structural correlate, found independently of the claim text.
+	if rm, ok := byID["R-gate-pg1r-risk-registry-mandatory"]; ok {
+		if rm.kind != atomKindGate {
+			t.Errorf("R-gate-pg1r-risk-registry-mandatory: kind = %v, want atomKindGate", rm.kind)
+		} else if !rm.gate.hasStructuralCorrelate() {
+			t.Error("R-gate-pg1r-risk-registry-mandatory: expected a real structural correlate")
+		} else {
+			t.Logf("R-gate-pg1r-risk-registry-mandatory gate anchors: %v, correlates: %+v", rm.gate.anchors, rm.gate.correlates)
+		}
+	} else {
+		t.Error("expected R-gate-pg1r-risk-registry-mandatory to be present")
 	}
 
 	// Known honest gap: R-prat-substrate has MUST but no id-shaped anchor
