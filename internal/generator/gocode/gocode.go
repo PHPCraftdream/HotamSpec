@@ -100,7 +100,7 @@ func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
-	auditSrc, err := RenderAuditFile(models)
+	auditSrc, err := RenderAuditFile(models, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
@@ -108,6 +108,48 @@ func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][
 	return map[string][]byte{
 		"lifecycle.go":          lifecycleSrc,
 		"lifecycle_test.go":     lifecycleTestSrc,
+		"requirements_audit.md": auditSrc,
+	}, nil
+}
+
+// GenerateRequirementsFromGraph renders stage-4 output (contract §1:
+// requirements_test.go) plus its section of requirements_audit.md, directly
+// from a slice of EntityType and Requirement. Building every EntityType's
+// *entityModel once (mirroring GenerateLifecycleFromGraph) and threading it
+// into BuildRequirementModels keeps the requirement atoms' field/state
+// identifiers guaranteed consistent with entities.go/lifecycle.go's own
+// identifiers — no independent re-derivation.
+func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requirements []ontology.Requirement) (map[string][]byte, error) {
+	sorted := make([]ontology.EntityType, len(entityTypes))
+	copy(sorted, entityTypes)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
+
+	entityModels := make([]*entityModel, 0, len(sorted))
+	for _, et := range sorted {
+		m, err := BuildEntityModel(et)
+		if err != nil {
+			return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
+		}
+		entityModels = append(entityModels, m)
+	}
+
+	reqModels, err := BuildRequirementModels(requirements, entityModels)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
+	}
+
+	requirementsTestSrc, err := RenderRequirementsTestFile("gen", reqModels)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
+	}
+
+	auditSrc, err := RenderAuditFile(entityModels, reqModels)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
+	}
+
+	return map[string][]byte{
+		"requirements_test.go":  requirementsTestSrc,
 		"requirements_audit.md": auditSrc,
 	}, nil
 }

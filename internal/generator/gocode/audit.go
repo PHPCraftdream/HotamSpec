@@ -31,14 +31,29 @@ import (
 // anchored on the same translated entity-slug the .go layer's "// Atom:
 // ..." comments reference, followed by the EntityType's own verbatim `why`
 // (if any) and one sub-entry per lifecycle state/transition that carries a
-// non-empty `why`. EntityTypes with no `why` anywhere (struct, states, or
-// transitions) are skipped entirely — an empty section would be a
-// dangling anchor target nothing points at, since the .go layer only emits
-// an "// Atom: ..." comment when `why` is non-empty (models.go/lifecycle.go).
-func RenderAuditFile(models []*entityModel) ([]byte, error) {
+// non-empty `why`, followed by a "## Requirements" section (stage 4) with
+// one entry per SETTLED requirement — heading anchored on the same
+// lowercased requirement id requirements_test.go's "// Atom: ..." comments
+// reference, the requirement's full verbatim claim (Cyrillic-legal here,
+// markdown, not .go — contract §1.1/§3), and a line naming which atoms were
+// found and where they mirror to. EntityTypes with no `why` anywhere
+// (struct, states, or transitions) are skipped entirely — an empty section
+// would be a dangling anchor target nothing points at, since the .go layer
+// only emits an "// Atom: ..." comment when `why` is non-empty
+// (models.go/lifecycle.go). The Requirements section, by contrast, always
+// renders one entry per requirement passed in (even a "no structural atom"
+// one) — requirements_test.go unconditionally emits a Test_<id> function
+// with an "// Atom: ..." comment for every SETTLED requirement, so every
+// requirement has a live anchor pointing here, unlike the EntityType why-only
+// gating above.
+func RenderAuditFile(models []*entityModel, reqModels []*requirementModel) ([]byte, error) {
 	sorted := make([]*entityModel, len(models))
 	copy(sorted, models)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].src.Slug < sorted[j].src.Slug })
+
+	sortedReqs := make([]*requirementModel, len(reqModels))
+	copy(sortedReqs, reqModels)
+	sort.Slice(sortedReqs, func(i, j int) bool { return sortedReqs[i].src.ID < sortedReqs[j].src.ID })
 
 	var b strings.Builder
 	b.WriteString("# requirements_audit.md\n\n")
@@ -87,13 +102,70 @@ func RenderAuditFile(models []*entityModel) ([]byte, error) {
 		}
 	}
 
+	if len(sortedReqs) > 0 {
+		b.WriteString("## Requirements\n\n")
+		for _, rm := range sortedReqs {
+			renderRequirementAuditEntry(&b, rm)
+		}
+	}
+
 	return []byte(b.String()), nil
 }
 
+// renderRequirementAuditEntry renders one SETTLED requirement's stage-4
+// audit entry: heading anchored on the requirement id (matching
+// requirements_test.go's "// Atom: <id> - see requirements_audit.md#<anchor>"
+// comment), the full verbatim claim, and a line per found atom naming where
+// it mirrors to in requirements_test.go (file:function/sub-test) — or, for a
+// requirement with no structural atom, an explicit statement of that fact.
+func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel) {
+	fmt.Fprintf(b, "### %s {#%s}\n\n", rm.src.ID, rm.anchorSlug)
+	fmt.Fprintf(b, "%s\n\n", rm.src.Claim)
+	b.WriteString("Atoms:\n\n")
+
+	switch rm.kind {
+	case atomKindField:
+		for _, fa := range rm.fields {
+			subName := fa.entity.structName + "_" + fa.field.fieldName
+			fmt.Fprintf(b, "- entity/field: `%s.%s` -> `requirements_test.go:%s/%s`\n",
+				fa.entity.structName, fa.field.fieldName, rm.funcName, subName)
+		}
+	case atomKindStatePair:
+		sp := rm.statePair
+		names := make([]string, len(sp.states))
+		for i, s := range sp.states {
+			names[i] = s.constant
+		}
+		fmt.Fprintf(b, "- state/transition: `%s` states {%s} -> `requirements_test.go:%s/%s_state_pair`\n",
+			sp.entity.structName, strings.Join(names, ", "), rm.funcName, sp.entity.structName)
+	case atomKindGate:
+		fmt.Fprintf(b, "- gate/order: anchors {%s} -> `requirements_test.go:%s/gate_order_anchors`\n",
+			strings.Join(rm.gate.anchors, ", "), rm.funcName)
+	case atomKindInterEntity:
+		names := make([]string, len(rm.interEntity))
+		for i, em := range rm.interEntity {
+			names[i] = em.structName
+		}
+		fmt.Fprintf(b, "- inter-entity invariant: {%s} -> `requirements_test.go:%s/inter_entity_%s`\n",
+			strings.Join(names, ", "), rm.funcName, strings.Join(names, "_"))
+	default:
+		fmt.Fprintf(b, "- no structural atom -> `requirements_test.go:%s` (t.Log only)\n", rm.funcName)
+	}
+
+	b.WriteString("\n")
+}
+
 // GenerateAuditFromGraph builds the []*entityModel for entityTypes and
-// renders requirements_audit.md from it, in the same map[filename][]byte
-// shape GenerateModelsFromGraph/GenerateLifecycleFromGraph use, so callers
-// (the future CLI stage) can merge all three into one file set.
+// renders requirements_audit.md from it (with an empty Requirements
+// section), in the same map[filename][]byte shape
+// GenerateModelsFromGraph/GenerateLifecycleFromGraph use, so callers (the
+// future CLI stage) can merge all three into one file set. Callers that also
+// have SETTLED requirements to atomize should use
+// GenerateRequirementsFromGraph instead, which renders the same file with
+// the Requirements section populated (contract §0: this package renders
+// requirements_audit.md in exactly one place, RenderAuditFile — this
+// function and GenerateRequirementsFromGraph are two callers of it, not two
+// independent renderers).
 func GenerateAuditFromGraph(entityTypes []ontology.EntityType) (map[string][]byte, error) {
 	models := make([]*entityModel, 0, len(entityTypes))
 	for _, et := range entityTypes {
@@ -104,7 +176,7 @@ func GenerateAuditFromGraph(entityTypes []ontology.EntityType) (map[string][]byt
 		models = append(models, m)
 	}
 
-	auditSrc, err := RenderAuditFile(models)
+	auditSrc, err := RenderAuditFile(models, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAuditFromGraph: %w", err)
 	}
