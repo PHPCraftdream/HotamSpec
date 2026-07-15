@@ -37,10 +37,11 @@ func cmdInitProject(args []string) error {
 	fs := newFlagSet("init-project")
 	domainName := fs.String("domain", "", "name of the base domain to scaffold under <dir>/domains/ (default: "+defaultInitProjectDomain+")")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
+	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into the base domain (writes require_provenance: true into its manifest.json; see internal/loader.ResolveRequireProvenance)")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD]")
+		return fmt.Errorf("usage: hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD] [--require-provenance]")
 	}
 	rawDir := fs.Arg(0)
 
@@ -59,7 +60,7 @@ func cmdInitProject(args []string) error {
 		today = time.Now().Format("2006-01-02")
 	}
 
-	written, err := initProject(dir, domainNameResolved, today)
+	written, err := initProject(dir, domainNameResolved, today, *requireProvenance)
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func cmdInitProject(args []string) error {
 // Both checks mirror initDomain's own "refusing to init: %s already exists"
 // discipline for graph.json — same spirit (never silently destroy existing
 // work), new guard points appropriate to a project-root scaffold.
-func initProject(dir, domainName, today string) ([]string, error) {
+func initProject(dir, domainName, today string, requireProvenance bool) ([]string, error) {
 	// (1) Refuse to overwrite an existing project. Check both guard points
 	// BEFORE writing anything, so a refusal leaves the target untouched.
 	markerPath := filepath.Join(dir, paths.MarkerFilename)
@@ -123,10 +124,22 @@ func initProject(dir, domainName, today string) ([]string, error) {
 
 	// (2b) initDomain already writes gen_profile: consumer into the
 	// manifest (R8-e: unified with init-project's own historical default), so
-	// no second manifest write is needed here. genSpec's profile parameter is
-	// passed "" below so it resolves from that manifest, making the
-	// consumer-file-count reduction visible immediately on the very first
-	// gen-spec inside init-project's own pipeline.
+	// no second manifest write is needed here UNLESS --require-provenance was
+	// passed, in which case a single follow-up write adds
+	// "require_provenance": true while preserving initDomain's own
+	// self_hosting/gen_profile fields verbatim — never a second independent
+	// blind overwrite (R12-b; see cmdInit's own composition comment for the
+	// landmine this avoids when a future --profile flag lands here too).
+	// genSpec's profile parameter is passed "" below so it resolves from that
+	// manifest, making the consumer-file-count reduction visible immediately
+	// on the very first gen-spec inside init-project's own pipeline.
+	if requireProvenance {
+		manifestPath := filepath.Join(domainDir, "manifest.json")
+		manifest := "{\"self_hosting\": false, \"gen_profile\": \"consumer\", \"require_provenance\": true}\n"
+		if err := writeFileMkdir(manifestPath, []byte(manifest)); err != nil {
+			return written, fmt.Errorf("write %s: %w", manifestPath, err)
+		}
+	}
 
 	// (3) Write the project-root marker, recording the scaffolded domain as the
 	// active-domain preference. paths.WriteActiveDomain writes

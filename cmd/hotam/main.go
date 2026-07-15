@@ -100,21 +100,25 @@ Usage:
   hotam <command> [flags] [args]
 
 Commands:
-  init <dir> [--name <domain-name>] [--profile consumer|full]
+  init <dir> [--name <domain-name>] [--profile consumer|full] [--require-provenance]
         Scaffold a new domain: minimal graph.json (seed Stakeholder + seed
         SETTLED Requirement, all-violations=0 immediately), manifest.json
         (defaults to the consumer gen-spec profile, matching init-project),
         docs/gen/, and a README.md pointing at the next commands to run.
         --profile full overrides to the heavier framework-self-hosting doc
-        set. <dir> may be anywhere on disk — it does not need to live under
-        this repository or contain a domains/ ancestor.
-  init-project <dir> [--domain <name>] [--today YYYY-MM-DD]
+        set. --require-provenance sets require_provenance: true in
+        manifest.json, requiring source_refs/last_reviewed_at/review_after on
+        every SETTLED requirement landed into this domain. <dir> may be
+        anywhere on disk — it does not need to live under this repository or
+        contain a domains/ ancestor.
+  init-project <dir> [--domain <name>] [--today YYYY-MM-DD] [--require-provenance]
         Bootstrap an external business project's full Hotam-Spec layout in one
         call: scaffold a base domain under <dir>/domains/<name> (default
         <name>=main), write the project-root marker (.hotam-spec-project), and
         render the root crystal (CLAUDE.md/AGENTS.md/GEMINI.md) + all docs/gen/*
-        via gen-spec. Refuses to overwrite an existing project marker or
-        CLAUDE.md. <dir> may be anywhere on disk.
+        via gen-spec. --require-provenance sets require_provenance: true in
+        the base domain's manifest.json. Refuses to overwrite an existing
+        project marker or CLAUDE.md. <dir> may be anywhere on disk.
   use <domain-name>
         Set the active-domain preference for the current project: records
         {"active_domain": "<name>"} in the project-root marker so a bare
@@ -211,8 +215,9 @@ Commands:
 // KEEP THIS LIST IN SYNC with every fs.Bool(...) call in cmd/hotam/*.go: adding
 // a new boolean flag to a subcommand's FlagSet without adding its name here
 // reintroduces the exact bug this map fixes (the new bool flag would eat the
-// next positional token as its "value"). Today the real fs.Bool(...)-backed
-// flags are --json and --land.
+// next positional token as its "value"). internal/selfcheck's
+// TestBoolFlagNames_SyncedWithRegistrations enforces this statically — it
+// scans every fs.Bool(...) call site and fails the build if this map drifts.
 //
 // "h" and "help" are a SPECIAL case: they are NOT registered via any
 // fs.Bool(...) call anywhere in this codebase — they are Go's stdlib flag
@@ -227,10 +232,11 @@ Commands:
 // "value", and the kind is never found, so the per-flag help synthesized by
 // the subcommand's own FlagSet.Parse(["-h"]) is never reached.
 var boolFlagNames = map[string]bool{
-	"json": true,
-	"land": true,
-	"h":    true,
-	"help": true,
+	"json":               true,
+	"land":               true,
+	"require-provenance": true,
+	"h":                  true,
+	"help":               true,
 }
 
 // reorderFlagsFirst moves every token starting with "-" (and its value, if it

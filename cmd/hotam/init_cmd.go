@@ -11,8 +11,9 @@ import (
 )
 
 // cmdInit implements `hotam init <dir> [--name <domain-name>] [--profile
-// consumer|full]` — the scaffold command that closes the "applicability to
-// external projects" gap (TaskList P1-7 / applicability score 3/10): before
+// consumer|full] [--require-provenance]` — the scaffold command that closes
+// the "applicability to external projects" gap (TaskList P1-7 / applicability
+// score 3/10): before
 // this command existed, a team wanting to adopt Hotam-Spec in ITS OWN
 // repository had to hand-write a graph.json from scratch (see
 // docs/QUICKSTART-CONSUMER.md step 2's `cat > graph.json <<'EOF' ... EOF`
@@ -43,6 +44,13 @@ import (
 //     init-project's own default so both onboarding paths are consistent
 //     (R8-e: --profile full overrides this to the heavier full-profile
 //     output set for a domain that needs framework-self-hosting-style docs).
+//     --require-provenance additionally sets "require_provenance": true in
+//     this same manifest, so internal/loader.ResolveRequireProvenance (task
+//     #158) reports true from the very first `hotam land` in this domain —
+//     no hand-editing manifest.json after scaffolding required (R12-b).
+//     Both overrides are composed into ONE manifest write when either is
+//     set, so combining --profile full with --require-provenance never lets
+//     one flag's write silently discard the other's.
 //   - <dir>/README.md — a short pointer back at the graph + the `hotam`
 //     commands to run next, so a directory listing alone orients a human.
 //
@@ -59,10 +67,11 @@ func cmdInit(args []string) error {
 	name := fs.String("name", "", "domain name (default: the last path segment of <dir>)")
 	profile := fs.String("profile", "", "gen-spec profile: consumer|full (default: consumer, matching init-project; full produces the heavier framework-self-hosting doc set)")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — used as the seed requirement's last_reviewed_at/review_after basis; pin this for reproducible/byte-identical scaffolding")
+	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into this domain (writes require_provenance: true into manifest.json; see internal/loader.ResolveRequireProvenance)")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full] [--today YYYY-MM-DD]")
+		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full] [--today YYYY-MM-DD] [--require-provenance]")
 	}
 	rawDir := fs.Arg(0)
 
@@ -94,13 +103,27 @@ func cmdInit(args []string) error {
 	}
 
 	// initDomain defaults to the consumer gen-spec profile (matching
-	// init-project). An explicit --profile full overrides that by rewriting
-	// the manifest initDomain just wrote — mirroring init-project's own
-	// historical manifest-rewrite pattern. An explicit --profile consumer (or
-	// empty) is a no-op: initDomain already wrote consumer.
-	if *profile == loader.GenProfileFull {
+	// init-project) and require_provenance omitted (false). --profile full
+	// and/or --require-provenance override that default. Both flags are
+	// resolved together into ONE final manifest write, rather than two
+	// independent blind overwrites layered on top of each other — a prior
+	// version of this code rewrote the WHOLE manifest.json for --profile
+	// full alone, which would have silently discarded --require-provenance
+	// if it wrote independently. Composing here means the two flags can
+	// never clobber each other, however they're combined.
+	if *profile == loader.GenProfileFull || *requireProvenance {
+		manifestProfile := loader.GenProfileConsumer
+		if *profile == loader.GenProfileFull {
+			manifestProfile = loader.GenProfileFull
+		}
+		manifest := fmt.Sprintf("{\"self_hosting\": false, \"gen_profile\": %q", manifestProfile)
+		if *requireProvenance {
+			manifest += ", \"require_provenance\": true"
+		}
+		manifest += "}\n"
+
 		manifestPath := filepath.Join(domainDir, "manifest.json")
-		if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false, \"gen_profile\": \"full\"}\n")); err != nil {
+		if err := writeFileMkdir(manifestPath, []byte(manifest)); err != nil {
 			return err
 		}
 	}

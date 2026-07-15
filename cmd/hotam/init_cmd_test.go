@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 )
 
 // TestInitDomain_SeedRequirementIsFresh proves the R11-a fix directly at the
@@ -152,5 +155,106 @@ func TestCmdInit_TodayFlagDefaultsToSystemDate(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("seed requirement R-domain-exists not found after cmdInit")
+	}
+}
+
+// readManifestRequireProvenance reads a domain's manifest.json and returns
+// its raw require_provenance value directly (independent of
+// loader.ResolveRequireProvenance) so tests can assert on the literal
+// on-disk JSON shape, not just the loader's resolved reading of it.
+func readManifestRequireProvenance(t *testing.T, manifestPath string) (value bool, present bool) {
+	t.Helper()
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("read manifest %s: %v", manifestPath, err)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal manifest %s: %v", manifestPath, err)
+	}
+	rv, ok := raw["require_provenance"]
+	if !ok {
+		return false, false
+	}
+	var b bool
+	if err := json.Unmarshal(rv, &b); err != nil {
+		t.Fatalf("unmarshal require_provenance in %s: %v", manifestPath, err)
+	}
+	return b, true
+}
+
+// TestCmdInit_RequireProvenanceFlag proves R12-b: `hotam init
+// --require-provenance` writes "require_provenance": true into manifest.json
+// (closing the onboarding gap where a business adopter would otherwise have
+// to hand-edit the manifest right after scaffolding), and that
+// loader.ResolveRequireProvenance reads that value back as true — the same
+// function cmd/hotam/provenance_gate.go consults at land time.
+func TestCmdInit_RequireProvenanceFlag(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	domainDir := filepath.Join(dir, "provenance-domain")
+	if err := cmdInit([]string{"--require-provenance", domainDir}); err != nil {
+		t.Fatalf("cmdInit --require-provenance: %v", err)
+	}
+
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	got, present := readManifestRequireProvenance(t, manifestPath)
+	if !present {
+		t.Fatalf("manifest.json has no require_provenance field after --require-provenance")
+	}
+	if !got {
+		t.Errorf("manifest.json require_provenance = false, want true")
+	}
+
+	if resolved := loader.ResolveRequireProvenance(graphPathForDomain(domainDir)); !resolved {
+		t.Errorf("loader.ResolveRequireProvenance = false after --require-provenance, want true")
+	}
+}
+
+// TestCmdInit_ProfileFullAndRequireProvenanceCombine is the regression test
+// for the exact landmine named in R12-b: `hotam init --profile full
+// --require-provenance` must produce a manifest with BOTH gen_profile=full
+// AND require_provenance=true. Before this fix, --profile full's manifest
+// write was a blind full-file overwrite that would have silently discarded
+// require_provenance if the two flags' writes were layered independently.
+func TestCmdInit_ProfileFullAndRequireProvenanceCombine(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	domainDir := filepath.Join(dir, "combo-domain")
+	if err := cmdInit([]string{"--profile", "full", "--require-provenance", domainDir}); err != nil {
+		t.Fatalf("cmdInit --profile full --require-provenance: %v", err)
+	}
+
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	if gotProfile := readManifestGenProfile(t, manifestPath); gotProfile != "full" {
+		t.Errorf("combined flags: manifest gen_profile = %q, want \"full\" (--profile full must survive --require-provenance's write)", gotProfile)
+	}
+	gotProvenance, present := readManifestRequireProvenance(t, manifestPath)
+	if !present || !gotProvenance {
+		t.Errorf("combined flags: manifest require_provenance present=%v value=%v, want present=true value=true (--require-provenance must survive --profile full's write)", present, gotProvenance)
+	}
+}
+
+// TestCmdInit_RequireProvenanceDefaultOff confirms omitting --require-provenance
+// leaves the manifest exactly as before this task: no require_provenance
+// field at all — zero behavior change for the existing default onboarding
+// path (matching --profile's own backward-compatibility bar, task #148).
+func TestCmdInit_RequireProvenanceDefaultOff(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	domainDir := filepath.Join(dir, "default-domain")
+	if err := cmdInit([]string{domainDir}); err != nil {
+		t.Fatalf("cmdInit (default): %v", err)
+	}
+
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	if _, present := readManifestRequireProvenance(t, manifestPath); present {
+		t.Errorf("default cmdInit (no --require-provenance) wrote a require_provenance field; want it absent")
+	}
+	if resolved := loader.ResolveRequireProvenance(graphPathForDomain(domainDir)); resolved {
+		t.Errorf("loader.ResolveRequireProvenance = true without --require-provenance, want false")
 	}
 }

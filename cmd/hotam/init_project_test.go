@@ -19,7 +19,7 @@ func TestInitProject_ScaffoldFromCleanDir(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 
-	written, err := initProject(dir, "main", "2026-07-13")
+	written, err := initProject(dir, "main", "2026-07-13", false)
 	if err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestInitProject_RefusesWhenMarkerExists(t *testing.T) {
 		t.Fatalf("seed marker: %v", err)
 	}
 
-	_, err := initProject(dir, "main", "2026-07-13")
+	_, err := initProject(dir, "main", "2026-07-13", false)
 	if err == nil {
 		t.Fatal("expected a refusal error when the marker exists, got nil")
 	}
@@ -106,7 +106,7 @@ func TestInitProject_RefusesWhenClaudeMDExists(t *testing.T) {
 		t.Fatalf("seed CLAUDE.md: %v", err)
 	}
 
-	_, err := initProject(dir, "main", "2026-07-13")
+	_, err := initProject(dir, "main", "2026-07-13", false)
 	if err == nil {
 		t.Fatal("expected a refusal error when CLAUDE.md exists, got nil")
 	}
@@ -152,7 +152,7 @@ func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 
 	// (2) initProject (`hotam init-project`).
 	projDir := t.TempDir()
-	if _, err := initProject(projDir, "main", "2026-07-14"); err != nil {
+	if _, err := initProject(projDir, "main", "2026-07-14", false); err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
 	projProfile := readManifestGenProfile(t, filepath.Join(projDir, "domains", "main", "manifest.json"))
@@ -215,5 +215,53 @@ func TestCmdInit_ProfileFlagOverridesDefault(t *testing.T) {
 	dirBad := t.TempDir()
 	if err := cmdInit([]string{"--profile", "bogus", filepath.Join(dirBad, "x")}); err == nil {
 		t.Fatal("cmdInit --profile bogus should return an error, got nil")
+	}
+}
+
+// TestCmdInitProject_RequireProvenanceFlag proves R12-b's init-project half:
+// `hotam init-project <dir> --require-provenance` writes
+// "require_provenance": true into the SCAFFOLDED BASE DOMAIN's manifest.json
+// (domains/<name>/manifest.json), not just some project-root file — matching
+// where internal/loader.ResolveRequireProvenance actually looks (next to
+// graph.json).
+func TestCmdInitProject_RequireProvenanceFlag(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{"--require-provenance", dir}); err != nil {
+		t.Fatalf("cmdInitProject --require-provenance: %v", err)
+	}
+
+	manifestPath := filepath.Join(dir, "domains", defaultInitProjectDomain, "manifest.json")
+	got, present := readManifestRequireProvenance(t, manifestPath)
+	if !present {
+		t.Fatalf("base domain manifest.json has no require_provenance field after --require-provenance")
+	}
+	if !got {
+		t.Errorf("base domain manifest.json require_provenance = false, want true")
+	}
+
+	// gen_profile must survive unchanged (consumer), proving the
+	// require_provenance write did not clobber initDomain's own default.
+	if gotProfile := readManifestGenProfile(t, manifestPath); gotProfile != "consumer" {
+		t.Errorf("base domain manifest gen_profile = %q after --require-provenance, want \"consumer\" (must not be clobbered)", gotProfile)
+	}
+}
+
+// TestCmdInitProject_RequireProvenanceDefaultOff confirms omitting
+// --require-provenance on init-project leaves the base domain's manifest
+// exactly as before this task: no require_provenance field — zero behavior
+// change for the existing default onboarding path.
+func TestCmdInitProject_RequireProvenanceDefaultOff(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{dir}); err != nil {
+		t.Fatalf("cmdInitProject (default): %v", err)
+	}
+
+	manifestPath := filepath.Join(dir, "domains", defaultInitProjectDomain, "manifest.json")
+	if _, present := readManifestRequireProvenance(t, manifestPath); present {
+		t.Errorf("default cmdInitProject (no --require-provenance) wrote a require_provenance field; want it absent")
 	}
 }
