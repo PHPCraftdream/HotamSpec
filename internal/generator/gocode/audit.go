@@ -114,9 +114,23 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates
 	}
 
 	if len(sortedReqs) > 0 {
+		// otherSettled (contract §3.1's coverage report needs the same
+		// "search the whole SETTLED corpus" access resolveGateAnchorCorrelate
+		// already uses for gate/order atoms) is every requirement's own src,
+		// unfiltered by SETTLED status here: sortedReqs is already the
+		// SETTLED-only requirementModel set BuildRequirementModels produced
+		// (non-SETTLED requirements never reach requirementModel at all), so
+		// this is exactly the otherSettled slice BuildRequirementModel itself
+		// was given.
+		otherSettled := make([]ontology.Requirement, len(sortedReqs))
+		for i, rm := range sortedReqs {
+			otherSettled[i] = rm.src
+		}
+
 		b.WriteString("## Requirements\n\n")
 		for _, rm := range sortedReqs {
-			renderRequirementAuditEntry(&b, rm)
+			cov := BuildCoverageReport(rm, sorted, otherSettled)
+			renderRequirementAuditEntry(&b, rm, cov)
 		}
 	}
 
@@ -137,10 +151,16 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates
 // renderRequirementAuditEntry renders one SETTLED requirement's stage-4
 // audit entry: heading anchored on the requirement id (matching
 // requirements_test.go's "// Atom: <id> - see requirements_audit.md#<anchor>"
-// comment), the full verbatim claim, and a line per found atom naming where
+// comment), the full verbatim claim, a line per found atom naming where
 // it mirrors to in requirements_test.go (file:function/sub-test) — or, for a
-// requirement with no structural atom, an explicit statement of that fact.
-func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel) {
+// requirement with no structural atom, an explicit statement of that fact —
+// and finally the contract §3.1 coverage-completeness line: "Coverage: N/M
+// candidate terms resolved", plus an explicit per-gap listing of every
+// candidate term that did NOT resolve to one of this requirement's own atoms
+// (either unresolved anywhere in the graph, or resolved to a DIFFERENT graph
+// element — the "partial coverage gap" case §3.1 requires never be silently
+// invisible behind an "atom found" appearance of completeness).
+func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel, cov coverageReport) {
 	fmt.Fprintf(b, "### %s {#%s}\n\n", rm.src.ID, rm.anchorSlug)
 	fmt.Fprintf(b, "%s\n\n", rm.src.Claim)
 	b.WriteString("Atoms:\n\n")
@@ -207,6 +227,72 @@ func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel) {
 	}
 
 	b.WriteString("\n")
+	renderCoverageSection(b, cov)
+}
+
+// renderCoverageSection renders GEN-CODE-CONTRACT.md §3.1's mandatory
+// "Coverage: N/M candidate terms resolved" line for one requirement, plus an
+// explicit listing of every unresolved/partial-coverage-gap candidate term,
+// each tagged with WHERE (if anywhere) it looks like a graph concept — so a
+// steward reading requirements_audit.md never sees bare "atom found"
+// completeness without also seeing what the claim mentions that the atoms
+// above did not capture.
+func renderCoverageSection(b *strings.Builder, cov coverageReport) {
+	total := len(cov.candidates)
+	resolved := cov.resolvedCount()
+	fmt.Fprintf(b, "Coverage: %d/%d candidate terms resolved\n\n", resolved, total)
+
+	gaps := cov.gaps()
+	if len(gaps) == 0 {
+		if total > 0 {
+			b.WriteString("All candidate terms resolved into this requirement's own atoms above.\n\n")
+		}
+		return
+	}
+
+	b.WriteString("Unresolved / partial-coverage-gap candidate terms:\n\n")
+	for _, g := range gaps {
+		fmt.Fprintf(b, "- `%s` (%s): %s\n", g.text, candidateKindLabel(g.kind), candidateGapDetail(g))
+	}
+	b.WriteString("\n")
+}
+
+// candidateKindLabel names the contract §3.1 extraction rule that produced
+// one candidate term, for the audit line's "(...)" tag.
+func candidateKindLabel(k candidateTermKind) string {
+	switch k {
+	case candidateKindCapitalized:
+		return "capitalized token/abbreviation"
+	case candidateKindGraphName:
+		return "graph field/state name"
+	case candidateKindQuoted:
+		return "quoted term"
+	default:
+		return "unknown"
+	}
+}
+
+// candidateGapDetail renders the "-> resembles graph concept X, not used by
+// this requirement's atoms (candidate for graph/heuristic follow-up)" OR
+// "-> no graph correlate found (out of model)" detail contract §3.1 requires
+// for every unresolved candidate: a candidate that resembles an existing
+// graph element (field/state/entity/requirement id) but was not captured by
+// this requirement's own atoms is a follow-up candidate (graph enrichment or
+// matching-heuristic gap); a candidate with no correlate anywhere is
+// honestly out of the current model.
+func candidateGapDetail(g candidateTerm) string {
+	switch {
+	case g.resolvedField != nil && g.resolvedEntity != nil:
+		return fmt.Sprintf("resembles graph field `%s.%s`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)", g.resolvedEntity.structName, g.resolvedField.fieldName)
+	case g.resolvedState != nil && g.resolvedEntity != nil:
+		return fmt.Sprintf("resembles graph state `%s.%s` (%s), not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)", g.resolvedEntity.structName, g.resolvedState.constant, g.resolvedState.src.Name)
+	case g.resolvedRequirementID != "":
+		return fmt.Sprintf("resembles requirement id `%s`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)", g.resolvedRequirementID)
+	case g.resolvedEntity != nil:
+		return fmt.Sprintf("resembles EntityType `%s`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)", g.resolvedEntity.structName)
+	default:
+		return "no graph correlate found anywhere in the domain (out of model, or genuinely ambiguous between multiple EntityTypes with no binding signal)"
+	}
 }
 
 // renderPipelineGateAuditEntry renders one stage-5 pipeline gate's audit
