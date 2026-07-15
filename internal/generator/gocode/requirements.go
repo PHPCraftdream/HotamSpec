@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -196,16 +197,22 @@ func BuildRequirementModel(req ontology.Requirement, entityModels []*entityModel
 	}
 
 	// Row 1 (contract §3): claim references an EntityType.field by its
-	// original graph name, checked as a Unicode-aware whole-word match
-	// (works for both Cyrillic field names and ASCII ones like "dor",
-	// "cosmic" — the same field names entities.go's struct already carries).
+	// original graph name OR its translated Go identifier, checked via
+	// termMatch — a Unicode-aware whole-word/whole-phrase match (works for
+	// both Cyrillic field names and ASCII ones like "dor", "cosmic" — the
+	// same field names entities.go's struct already carries). termMatch also
+	// covers a claim phrase spelled with spaces against a graph name spelled
+	// with underscores/hyphens (e.g. claim "Feature Lead" against graph field
+	// name "feature_lead") and against the field's PascalCase translation
+	// (e.g. "FeatureLead") — see termMatch's doc comment for the exact
+	// matching rule (contract §3.1, the "feature_lead" gap found on prat).
 	// Sorted (entity slug, field name) for determinism: the source domain's
 	// entityModels are already sorted by slug (GenerateLifecycleFromGraph),
 	// and each entity's own field order is graph-declaration order — the
 	// walk below preserves both, so no extra sort is needed.
 	for _, em := range entityModels {
 		for _, f := range em.fields {
-			if wholeWordMatch(req.Claim, f.src.Name) {
+			if termMatch(req.Claim, f.src.Name) || termMatch(req.Claim, f.fieldName) {
 				m.fields = append(m.fields, fieldAtom{entity: em, field: f})
 			}
 		}
@@ -445,6 +452,145 @@ func wholeWordMatch(claim, term string) bool {
 		return false
 	}
 	return re.MatchString(claim)
+}
+
+// termWordSplitPattern splits a graph name or claim phrase into "words" on
+// the three separator kinds contract §3.1's field-atom gap crosses: space,
+// underscore, hyphen. A run of one or more of these separators is a single
+// boundary (so "feature__lead" and "feature - lead" both split the same as
+// "feature_lead"). Used only by termMatch below — wholeWordMatch above is
+// deliberately left untouched (rows 2-4 of BuildRequirementModel keep the
+// narrower single-token match; broadening THEIR matching was not the bug
+// found on prat and risks new false positives on short state/anchor tokens).
+var termWordSplitPattern = regexp.MustCompile(`[ _\-]+`)
+
+// splitTermWords lowercases and splits s into its non-empty word parts on
+// space/underscore/hyphen, for termMatch's word-sequence comparison.
+func splitTermWords(s string) []string {
+	fields := termWordSplitPattern.Split(strings.ToLower(strings.TrimSpace(s)), -1)
+	out := fields[:0]
+	for _, f := range fields {
+		if f != "" {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// termMatch reports whether term (a graph-name spelling — raw underscore/
+// hyphen-joined field/state name, or a translated PascalCase identifier)
+// appears in claim as the SAME sequence of words, in the same order,
+// regardless of which separator (space, underscore, hyphen) either side
+// uses, and regardless of case. This generalizes wholeWordMatch's
+// single-token whole-word match to multi-word phrases:
+//
+//   - single-word term: behaves exactly like wholeWordMatch (same
+//     word-boundary semantics — no broadening of the short-token case
+//     wholeWordMatch already covers, e.g. "us"/"ac"/"dor").
+//   - multi-word term (2+ words, contract §3.1's actual gap): every word
+//     must appear in claim, consecutively, in the declared order, each
+//     itself bounded by a non-letter/non-digit rune — so a claim phrase
+//     spelled "Feature Lead" (space-joined) matches a graph field name
+//     spelled "feature_lead" (underscore-joined), and a PascalCase
+//     translation "FeatureLead" is split into ["feature","lead"] by
+//     splitCamelWords below before the same word-sequence comparison runs.
+//
+// This is deliberately NOT "all words present anywhere in the claim in any
+// order" — that would match unrelated two-word coincidences (contract §3.1
+// warns explicitly about false-positive risk); requiring the SAME order,
+// consecutively, keeps the match tied to an actual phrase, not a bag of
+// words.
+func termMatch(claim, term string) bool {
+	if term == "" {
+		return false
+	}
+	words := splitTermWords(term)
+	if len(words) == 0 {
+		return false
+	}
+
+	// term's PascalCase/camelCase word-split (e.g. "FeatureLead" ->
+	// ["feature","lead"]), tried IN ADDITION to the space/underscore/hyphen
+	// split above, in case the caller passed a translated Go identifier
+	// (fieldModel.fieldName) rather than the raw graph name — a single
+	// "word" by the separator split can still carry multiple words once its
+	// internal casing is considered.
+	camelWords := splitCamelWords(term)
+
+	if len(words) == 1 && (len(camelWords) < 2 || sameWords(camelWords, words)) {
+		// No separator-based split AND no distinct camelCase split: the
+		// pre-existing single-token whole-word rule, unchanged (the case
+		// wholeWordMatch already handles correctly, e.g. short ASCII tokens
+		// like "dor"/"us"/"ac" — no broadening here).
+		return wholeWordMatch(claim, term)
+	}
+
+	if wordSequenceMatch(claim, words) {
+		return true
+	}
+	if len(camelWords) >= 2 && !sameWords(camelWords, words) {
+		return wordSequenceMatch(claim, camelWords)
+	}
+	return false
+}
+
+// wordSequenceMatch reports whether claim contains words (already
+// lowercased) as a consecutive, in-order sequence, joined by any run of
+// space/underscore/hyphen, each end bounded by a non-letter/non-digit rune
+// (or a string edge) — the core multi-word rule termMatch applies to both
+// the separator-based split and the camelCase-based split of term.
+func wordSequenceMatch(claim string, words []string) bool {
+	quoted := make([]string, len(words))
+	for i, w := range words {
+		quoted[i] = regexp.QuoteMeta(w)
+	}
+	pattern := `(?i)(^|[^\p{L}\p{N}])` + strings.Join(quoted, `[ _\-]+`) + `($|[^\p{L}\p{N}])`
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
+	return re.MatchString(claim)
+}
+
+// splitCamelWords splits a PascalCase/camelCase Go identifier (e.g.
+// "FeatureLead") into lowercased words (["feature","lead"]) by breaking
+// before each uppercase rune that follows a lowercase/digit rune. Runs of
+// uppercase letters (e.g. an acronym like "SA" or "DoR" already embedded in
+// an identifier) are kept together as one word rather than split
+// letter-by-letter.
+func splitCamelWords(s string) []string {
+	var words []string
+	var cur []rune
+	runes := []rune(s)
+	for i, r := range runes {
+		if i > 0 && unicode.IsUpper(r) && (unicode.IsLower(runes[i-1]) || unicode.IsDigit(runes[i-1])) {
+			if len(cur) > 0 {
+				words = append(words, strings.ToLower(string(cur)))
+			}
+			cur = nil
+		}
+		cur = append(cur, r)
+	}
+	if len(cur) > 0 {
+		words = append(words, strings.ToLower(string(cur)))
+	}
+	return words
+}
+
+// sameWords reports whether a and b contain the same words in the same
+// order (used by termMatch to skip a redundant second regex pass when the
+// PascalCase split produced the identical word sequence as the raw-name
+// split).
+func sameWords(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // dedupeEntityModels removes duplicate *entityModel entries (by struct
