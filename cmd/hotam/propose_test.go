@@ -97,6 +97,65 @@ func TestCmdPropose_Requirement_ConstructsValidJSON(t *testing.T) {
 	}
 }
 
+// TestCmdPropose_Requirement_LastReviewedAtReviewAfter proves --last-reviewed-at
+// and --review-after (task #159 / R12-a) are wired from flags into the
+// written proposal JSON, mirroring --source-refs/--evidence's existing
+// coverage above. Evidence must also be supplied here: validate.go's
+// R-review-mark-carries-evidence rule requires non-empty Evidence whenever
+// either date field is set on the proposal.
+func TestCmdPropose_Requirement_LastReviewedAtReviewAfter(t *testing.T) {
+	t.Parallel()
+	domainDir := copySelfDomain(t)
+	outPath := filepath.Join(t.TempDir(), "req-provenance.json")
+
+	err := cmdPropose([]string{
+		"requirement",
+		"--id", "R-propose-provenance",
+		"--claim", "the propose command wires last-reviewed-at and review-after from flags",
+		"--owner", "framework-author",
+		"--status", "DRAFT",
+		"--why", "unit coverage for --last-reviewed-at/--review-after",
+		"--evidence", "steward review",
+		"--source-refs", "doc.md",
+		"--last-reviewed-at", "2026-07-15",
+		"--review-after", "2027-07-15",
+		"--domain", domainDir,
+		"--out", outPath,
+	})
+	if err != nil {
+		t.Fatalf("cmdPropose requirement: %v", err)
+	}
+
+	data, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read output file: %v", err)
+	}
+	p, err := parseProposal(data)
+	if err != nil {
+		t.Fatalf("parseProposal on the written file: %v\nraw:\n%s", err, data)
+	}
+	pr, ok := p.(proposal.ProposedRequirement)
+	if !ok {
+		t.Fatalf("parsed proposal has wrong type: %T", p)
+	}
+	if pr.LastReviewedAt != "2026-07-15" {
+		t.Errorf("LastReviewedAt = %q, want 2026-07-15", pr.LastReviewedAt)
+	}
+	if pr.ReviewAfter != "2027-07-15" {
+		t.Errorf("ReviewAfter = %q, want 2027-07-15", pr.ReviewAfter)
+	}
+
+	bodyStr := string(data)
+	for _, want := range []string{
+		`"last_reviewed_at": "2026-07-15"`,
+		`"review_after": "2027-07-15"`,
+	} {
+		if !strings.Contains(bodyStr, want) {
+			t.Errorf("written JSON missing %q\nraw:\n%s", want, bodyStr)
+		}
+	}
+}
+
 // TestCmdPropose_Requirement_MissingRequiredFlags proves that omitting a
 // required flag produces a clear error message (not a panic, not a silently
 // empty proposal).
@@ -1036,5 +1095,97 @@ func TestCmdPropose_Axis_DefaultOutPath_WrittenWithoutColon(t *testing.T) {
 	}
 	if !strings.HasPrefix(base, "draft-"+slug) {
 		t.Errorf("default out filename = %q, want prefix draft-%s", base, slug)
+	}
+}
+
+// TestCmdPropose_Requirement_Land_RequireProvenance_WithFlags_Succeeds is the
+// end-to-end scenario task #159 (R12-a) exists to fix: on a scratch domain
+// with "require_provenance": true in manifest.json (task #158's opt-in gate),
+// `hotam propose requirement --land` must be able to supply
+// --last-reviewed-at/--review-after (previously there was no flag for either
+// field at all, so this exact command would have been refused by
+// provenanceGate with no way to fix it short of falling back to
+// hand-authored JSON). Mirrors setupProvenanceTestDomain's scaffolding
+// (provenance_gate_test.go) directly via initDomain, since propose_test.go
+// doesn't import that helper.
+func TestCmdPropose_Requirement_Land_RequireProvenance_WithFlags_Succeeds(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	domainDir := filepath.Join(root, "domains", "prov-propose-test")
+	if _, err := initDomain(domainDir, "prov-propose-test", "2026-07-15"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true}\n"), 0o644); err != nil {
+		t.Fatalf("write require_provenance manifest: %v", err)
+	}
+
+	outPath := filepath.Join(t.TempDir(), "req-prov-land.json")
+	err := cmdPropose([]string{
+		"requirement",
+		"--id", "R-propose-provenance-land",
+		"--claim", "a settled requirement landed via propose with complete provenance",
+		"--owner", "owner",
+		"--status", "SETTLED",
+		"--source-refs", "https://example.com/source",
+		"--evidence", "steward review",
+		"--last-reviewed-at", "2026-07-15",
+		"--review-after", "2027-07-15",
+		"--domain", domainDir,
+		"--out", outPath,
+		"--today", "2026-07-15",
+		"--land",
+	})
+	if err != nil {
+		t.Fatalf("propose requirement --land with complete provenance should succeed under require_provenance:true, got: %v", err)
+	}
+	graphData, err := os.ReadFile(graphPathForDomain(domainDir))
+	if err != nil {
+		t.Fatalf("read graph.json: %v", err)
+	}
+	if !strings.Contains(string(graphData), "R-propose-provenance-land") {
+		t.Error("graph.json does not contain R-propose-provenance-land after propose --land")
+	}
+}
+
+// TestCmdPropose_Requirement_Land_RequireProvenance_MissingFlags_Refused is
+// the negative counterpart: omitting --last-reviewed-at/--review-after on the
+// same require_provenance:true domain must still be refused by the gate —
+// proving this task only adds a way to SUPPLY the fields, the gate's own
+// requirements (task #158) are untouched.
+func TestCmdPropose_Requirement_Land_RequireProvenance_MissingFlags_Refused(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	domainDir := filepath.Join(root, "domains", "prov-propose-test-neg")
+	if _, err := initDomain(domainDir, "prov-propose-test-neg", "2026-07-15"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true}\n"), 0o644); err != nil {
+		t.Fatalf("write require_provenance manifest: %v", err)
+	}
+
+	outPath := filepath.Join(t.TempDir(), "req-prov-land-bare.json")
+	err := cmdPropose([]string{
+		"requirement",
+		"--id", "R-propose-provenance-bare",
+		"--claim", "a settled requirement landed via propose with no provenance",
+		"--owner", "owner",
+		"--status", "SETTLED",
+		"--domain", domainDir,
+		"--out", outPath,
+		"--today", "2026-07-15",
+		"--land",
+	})
+	if err == nil {
+		t.Fatal("expected propose requirement --land to be refused under require_provenance:true when last-reviewed-at/review-after are omitted")
+	}
+	for _, field := range []string{"source_refs", "last_reviewed_at", "review_after"} {
+		if !strings.Contains(err.Error(), field) {
+			t.Errorf("error must name missing field %q, got: %v", field, err)
+		}
+	}
+	if !strings.Contains(err.Error(), "require_provenance") {
+		t.Errorf("error must point at the require_provenance manifest flag, got: %v", err)
 	}
 }

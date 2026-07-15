@@ -132,6 +132,8 @@ func cmdProposeRequirement(args []string) error {
 	assumptions := fs.String("assumptions", "", "comma-separated assumption ids (A-...)")
 	evidence := fs.String("evidence", "", "comma-separated evidence references")
 	sourceRefs := fs.String("source-refs", "", "comma-separated source references")
+	lastReviewedAt := fs.String("last-reviewed-at", "", "ISO date (YYYY-MM-DD) this claim was last reviewed and held")
+	reviewAfter := fs.String("review-after", "", "ISO date (YYYY-MM-DD) after which re-confrontation is due")
 	blockedOn := fs.String("blocked-on", "", "free-text label describing what blocks closure (e.g. feature:missing-cli)")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
@@ -164,6 +166,8 @@ func cmdProposeRequirement(args []string) error {
 		Enforceability: *enforceability,
 		Evidence:       splitCSV(*evidence),
 		SourceRefs:     splitCSV(*sourceRefs),
+		LastReviewedAt: *lastReviewedAt,
+		ReviewAfter:    *reviewAfter,
 		BlockedOn:      *blockedOn,
 	}
 
