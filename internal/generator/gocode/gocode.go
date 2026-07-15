@@ -3,6 +3,7 @@ package gocode
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
@@ -64,6 +65,42 @@ func GenerateModelsFromGraph(domainDir string, entityTypes []ontology.EntityType
 	return map[string][]byte{
 		"entities.go": entitiesSrc,
 		"go.mod":      []byte(goMod),
+	}, nil
+}
+
+// GenerateLifecycleFromGraph renders stage-3 output (contract §1:
+// lifecycle.go + lifecycle_test.go) directly from a slice of EntityType.
+// Building every EntityType's *entityModel once and sharing it between the
+// two renderers keeps method-name/state-constant identifiers guaranteed
+// consistent between the transition methods and the tests that exercise
+// them (the same reasoning BuildEntityModel's doc comment gives for
+// entities.go's struct/enum/Validate trio).
+func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][]byte, error) {
+	sorted := make([]ontology.EntityType, len(entityTypes))
+	copy(sorted, entityTypes)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
+
+	models := make([]*entityModel, 0, len(sorted))
+	for _, et := range sorted {
+		m, err := BuildEntityModel(et)
+		if err != nil {
+			return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
+		}
+		models = append(models, m)
+	}
+
+	lifecycleSrc, err := RenderLifecycleFile("gen", models)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
+	}
+	lifecycleTestSrc, err := RenderLifecycleTestFile("gen", models)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
+	}
+
+	return map[string][]byte{
+		"lifecycle.go":      lifecycleSrc,
+		"lifecycle_test.go": lifecycleTestSrc,
 	}, nil
 }
 

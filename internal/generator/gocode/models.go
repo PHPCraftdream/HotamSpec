@@ -52,21 +52,65 @@ func (e *UnknownStateKindError) Error() string {
 	return fmt.Sprintf("gocode: EntityType %q state %q has kind %q, which has no §2 Go mapping in GEN-CODE-CONTRACT.md", e.EntityType, e.State, e.Kind)
 }
 
+// UnknownTransitionStateError is returned when a lifecycle transition's
+// `src` or `dst` names a state that is not declared in the same
+// EntityType's `lifecycle.states[]` — the graph would be internally
+// inconsistent, so the generator refuses rather than emit a Go constant
+// reference that does not exist (contract §0: refuse loudly, never guess).
+type UnknownTransitionStateError struct {
+	EntityType string
+	Event      string
+	State      string
+	Which      string // "src" or "dst"
+}
+
+func (e *UnknownTransitionStateError) Error() string {
+	return fmt.Sprintf("gocode: EntityType %q transition %q: %s state %q is not declared in lifecycle.states[]", e.EntityType, e.Event, e.Which, e.State)
+}
+
+// DuplicateTransitionEventError is returned when two transitions on the same
+// EntityType share the same `event` name. Contract §2 maps one Go method per
+// `event` ("по одному методу ... на event"); two transitions with the same
+// event would collide on the same Go method name, which is exactly the kind
+// of unresolvable ambiguity §0 requires the generator to refuse loudly on,
+// rather than silently emit one method that only reflects one of the two
+// transitions (or invalid duplicate-method Go source).
+type DuplicateTransitionEventError struct {
+	EntityType string
+	Event      string
+}
+
+func (e *DuplicateTransitionEventError) Error() string {
+	return fmt.Sprintf("gocode: EntityType %q has more than one lifecycle transition with event %q — cannot map to a single Go method (GEN-CODE-CONTRACT.md §2)", e.EntityType, e.Event)
+}
+
 // entityModel is the resolved, Go-identifier-shaped view of one
 // ontology.EntityType, built once so struct/enum/Validate rendering never
 // re-derives identifiers (and thus can never disagree with each other).
 type entityModel struct {
-	src        ontology.EntityType
-	structName string
-	stateType  string
-	states     []stateModel
-	fields     []fieldModel
+	src         ontology.EntityType
+	structName  string
+	stateType   string
+	states      []stateModel
+	fields      []fieldModel
+	transitions []transitionModel
 }
 
 type stateModel struct {
 	src      ontology.State
 	constant string // e.g. StateNameDraft
 	value    string // original graph state name, used as the string value
+}
+
+// transitionModel is the resolved, Go-identifier-shaped view of one
+// ontology.Transition: the event's Go method name plus the already-resolved
+// src/dst state constants it references (contract §2: "lifecycle.transitions[]
+// -> по одному методу ... на event").
+type transitionModel struct {
+	src        ontology.Transition
+	methodName string     // e.g. ApprovePM (event, PascalCase)
+	srcState   stateModel // resolved lifecycle.states[] entry for src
+	dstState   stateModel // resolved lifecycle.states[] entry for dst
 }
 
 type fieldModel struct {
@@ -130,6 +174,38 @@ func BuildEntityModel(et ontology.EntityType) (*entityModel, error) {
 			fm.goType = "string"
 		}
 		m.fields = append(m.fields, fm)
+	}
+
+	statesByName := make(map[string]stateModel, len(m.states))
+	for _, s := range m.states {
+		statesByName[s.value] = s
+	}
+
+	seenEvents := make(map[string]struct{}, len(et.Lifecycle.Transitions))
+	for _, tr := range et.Lifecycle.Transitions {
+		if _, dup := seenEvents[tr.Event]; dup {
+			return nil, &DuplicateTransitionEventError{EntityType: et.Slug, Event: tr.Event}
+		}
+		seenEvents[tr.Event] = struct{}{}
+
+		srcState, ok := statesByName[tr.Src]
+		if !ok {
+			return nil, &UnknownTransitionStateError{EntityType: et.Slug, Event: tr.Event, State: tr.Src, Which: "src"}
+		}
+		dstState, ok := statesByName[tr.Dst]
+		if !ok {
+			return nil, &UnknownTransitionStateError{EntityType: et.Slug, Event: tr.Event, State: tr.Dst, Which: "dst"}
+		}
+		methodName, err := ToPascalCase(tr.Event)
+		if err != nil {
+			return nil, fmt.Errorf("EntityType %q: lifecycle transition event %q: %w", et.Slug, tr.Event, err)
+		}
+		m.transitions = append(m.transitions, transitionModel{
+			src:        tr,
+			methodName: methodName,
+			srcState:   srcState,
+			dstState:   dstState,
+		})
 	}
 
 	return m, nil
