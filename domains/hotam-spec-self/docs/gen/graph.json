@@ -350,6 +350,7 @@
     "R-framework-shared-docs-generated",
     "R-framework-suite-domain-independent",
     "R-framework-suite-tiered",
+    "R-generations-inherit-doc-test-code",
     "R-glossary-drift-stable",
     "R-glossary-generated",
     "R-glossary-sync-fails-dead",
@@ -558,6 +559,33 @@
       "source_refs": [],
       "status": "SETTLED",
       "why": "SPLIT from R-work-within-launch-dir 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): the original 'operator shall confine all file mutations to its launch directory' claim bundled two genuinely different things -- (1) committed framework CODE that writes into the host home (statically, mechanically checkable: an AST scanner over committed source), and (2) a live agent shelling out at RUNTIME through bash/tool-calls to touch the home dir (not statically checkable -- discipline of prose). This atom is the structural/mechanically-checkable half (1); the residual live-conduct half (2) stays at R-work-within-launch-dir (now INHERENTLY_PROSE, same category as R-agent-conduct-is-rules-not-tests). The original enforcement was a Python AST scanner (tests/test_launch_dir_write_scope.py, ENFORCED 2026-07-10) that was NOT carried forward into the Go port (reverted to PROSE 2026-07-12); this atom re-ports that scanner to Go. Steward verdict 2026-07-05 stands verbatim (from the original why): the framework is a guest in the host's home -- it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. Trigger for the original rule: the operator once proposed setup_context_hook.py --patch-global --apply, which patched the global host configuration (a host-sovereignty violation that a host update overwrites anyway). EXACT MECHANICAL RULE (enforced by TestLaunchDirWriteScope_NoHomeWriteColocation in internal/selfcheck/launch_dir_scope_test.go): for every NON-TEST, NON-TESTDATA .go file under internal/ and cmd/hotam/, no function body may contain BOTH a home-directory reference (os.UserHomeDir(), os.Getenv(\"HOME\"), os.Getenv(\"USERPROFILE\"), or a string literal starting with \"~/\") AND a filesystem-write sink (os.WriteFile/Create/Mkdir/MkdirAll/Remove/RemoveAll/Rename/Symlink/Chmod); the conjunction within one *ast.FuncDecl body is the hit (same-function co-location, the scope within which a computed home path can flow into a write -- matches the spirit of the original Python scanner). os.OpenFile is deliberately excluded (read-or-write; the explicit write primitives cover the unambiguous case); os/user.Current().HomeDir is out of scope today (this repo imports neither, and would only matter under the same conjunction). The framework tree currently has ZERO home-directory references (verified 2026-07-13), so the scan is green today and fails RED the moment a committed function computes a home path next to a write sink. Refines R-work-within-launch-dir (the broad launch-dir principle, whose live-conduct residual carries the genuinely-unobservable half)."
+    },
+    {
+      "assumptions": [],
+      "claim": "Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [
+        "PLAN-gen-code.md stage 0 mediation loop",
+        "confront run 2026-07-15 (no real semantic conflict; strongest hit R-agent-conduct-is-rules-not-tests score 4 is a distinct claim about ENFORCED/PROSE separation for agent conduct",
+        "not generation-artifact form)"
+      ],
+      "history": [
+        {
+          "at": "2026-07-15",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (steward), 2026-07-15, PLAN-gen-code.md stage 0: opposite-marker hit vs R-review-mark-requires-substantive-review is a lexical false positive -- that requirement governs when last_reviewed_at may be stamped (must not backfill without substantive review), this requirement governs the form of generated artifacts (must inherit doc-test-code shape); topics are disjoint, reserved MUST tokens collided only textually. Confirmed via confront: no real semantic overlap."
+        }
+      ],
+      "id": "R-generations-inherit-doc-test-code",
+      "last_reviewed_at": "2026-07-15",
+      "owner": "framework-author",
+      "review_after": "2026-11-15",
+      "source_refs": [
+        "PLAN-gen-code.md"
+      ],
+      "status": "SETTLED",
+      "why": "Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code."
     },
     {
       "assumptions": [],

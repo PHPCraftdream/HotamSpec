@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 165 / SETTLED 237; closeable-now 4; feature-blocked 33; inherent discipline 35; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 165 / SETTLED 238; closeable-now 5; feature-blocked 33; inherent discipline 35; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -22,6 +22,7 @@ judgment calls no check_* could ever verify.
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
+| `R-generations-inherit-doc-test-code` | PROSE | `framework-author` | Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise). |
 | `R-domain-owns-tools-and-agents` | PROSE | `framework-author` | Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or sub-agent is actually created — not eagerly scaffolded; a domain with no sub-tools/sub-agents yet correctly carries neither directory. |
 | `R-project-name-hotam-spec` | PROSE | `framework-author` | The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam-spec-self`, the `hotam` CLI binary name, and repository slug conventions), while the Go module path shall match the real git remote and is deliberately `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, per commit 4325ac8), closing M1. |
 | `R-speculative-aspects-frozen` | PROSE | `framework-author` | The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need. |

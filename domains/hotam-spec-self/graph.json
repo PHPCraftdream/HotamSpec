@@ -6517,6 +6517,40 @@
       "blocked_on": "blocked on test-tiering infrastructure (build tags / package layout, absent)"
     },
     {
+      "id": "R-generations-inherit-doc-test-code",
+      "claim": "Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code.",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "PROSE",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-15",
+      "settled_at": "2026-07-15",
+      "last_reviewed_at": "2026-07-15",
+      "review_after": "2026-11-15",
+      "evidence": [
+        "PLAN-gen-code.md stage 0 mediation loop",
+        "confront run 2026-07-15 (no real semantic conflict; strongest hit R-agent-conduct-is-rules-not-tests score 4 is a distinct claim about ENFORCED/PROSE separation for agent conduct",
+        "not generation-artifact form)"
+      ],
+      "source_refs": [
+        "PLAN-gen-code.md"
+      ],
+      "history": [
+        {
+          "at": "2026-07-15",
+          "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (steward), 2026-07-15, PLAN-gen-code.md stage 0: opposite-marker hit vs R-review-mark-requires-substantive-review is a lexical false positive -- that requirement governs when last_reviewed_at may be stamped (must not backfill without substantive review), this requirement governs the form of generated artifacts (must inherit doc-test-code shape); topics are disjoint, reserved MUST tokens collided only textually. Confirmed via confront: no real semantic overlap.",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-glossary-drift-stable",
       "claim": "The committed docs/gen/GLOSSARY.md shall equal the regeneration of the current graph byte-for-byte.",
       "owner": "framework-author",
