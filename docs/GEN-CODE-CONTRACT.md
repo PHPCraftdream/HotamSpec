@@ -49,7 +49,7 @@ domains/<d>/gen/go/
 | Элемент графа | Go-конструкция |
 |---|---|
 | `EntityType.slug` | имя struct (PascalCase от переведённого/транслитерированного slug, §4) |
-| `EntityType.fields[]` | поля struct; `kind: string` → `string`; `kind: enum` → отдельный `type <Field>Kind string` с константами |
+| `EntityType.fields[]` | поля struct; `kind: string` → `string`; `kind: enum` → отдельный `type <Field>Kind string` с константами; `kind: reference` → `string` (хранит id цели, как `string`), обязан нести непустой `ref_target` — тот же TODO-комментарий инвариант, что и у `ref_target` ниже, реальная проверка резолва не входит в эту итерацию |
 | `field.required: true` | ветка в `Validate() error` — `if x.<Field> == "" { return fmt.Errorf(...) }` |
 | `field.ref_target` (не пусто) | комментарий-ссылка + место для будущей inter-entity проверки (реальная проверка — если `ref_target` резолвится к другому EntityType домена, иначе честная TODO-пометка, не имитация) |
 | `lifecycle.states[]` | `type <Entity>State string` + константы; `kind: initial` → значение по умолчанию конструктора; `kind: terminal` → состояние без исходящих переходов в transition-таблице |

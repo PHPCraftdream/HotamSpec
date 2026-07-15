@@ -83,18 +83,58 @@ func TestBuildEntityModel_Synthetic(t *testing.T) {
 }
 
 func TestBuildEntityModel_UnknownFieldKind(t *testing.T) {
+	// "number" is a real ontology.EntityFieldKinds value with no GEN-CODE-CONTRACT.md
+	// §2 Go mapping yet (unlike "reference", which §2 maps to string as of the
+	// gen-code plan stage-3 follow-up fix — see models.go's knownFieldKinds).
 	et := syntheticEntityType()
-	et.Fields = append(et.Fields, ontology.EntityField{Name: "ссылка", Kind: "reference", Required: false, RefTarget: "OtherType"})
+	et.Fields = append(et.Fields, ontology.EntityField{Name: "счётчик", Kind: "number", Required: false})
 	_, err := BuildEntityModel(et)
 	if err == nil {
-		t.Fatal("expected error for unmapped field kind 'reference', got nil")
+		t.Fatal("expected error for unmapped field kind 'number', got nil")
 	}
 	var kindErr *UnknownFieldKindError
 	if !errors.As(err, &kindErr) {
 		t.Fatalf("expected *UnknownFieldKindError, got %T: %v", err, err)
 	}
-	if kindErr.Kind != "reference" {
-		t.Errorf("Kind = %q, want %q", kindErr.Kind, "reference")
+	if kindErr.Kind != "number" {
+		t.Errorf("Kind = %q, want %q", kindErr.Kind, "number")
+	}
+}
+
+func TestBuildEntityModel_ReferenceFieldKind_MapsToString(t *testing.T) {
+	// GEN-CODE-CONTRACT.md §2: kind:reference -> string (holds the target
+	// id), same TODO-comment treatment as a non-empty ref_target on a
+	// string-kind field. Found for real on prat's sdr-package.feature_lead
+	// during stage-3 acceptance (a domain-wide generation would otherwise
+	// abort entirely on this one field).
+	et := syntheticEntityType()
+	et.Fields = append(et.Fields, ontology.EntityField{Name: "вопрос", Kind: "reference", Required: false, RefTarget: "OtherType"})
+	m, err := BuildEntityModel(et)
+	if err != nil {
+		t.Fatalf("BuildEntityModel: %v", err)
+	}
+	var found bool
+	for _, f := range m.fields {
+		if f.src.Name != "вопрос" {
+			continue
+		}
+		found = true
+		if f.goType != "string" {
+			t.Errorf("reference field goType = %q, want %q", f.goType, "string")
+		}
+		if f.isEnum {
+			t.Errorf("reference field must not be treated as enum")
+		}
+	}
+	if !found {
+		t.Fatal("reference field not present in resolved model")
+	}
+	src, err := RenderEntityType(m)
+	if err != nil {
+		t.Fatalf("RenderEntityType: %v", err)
+	}
+	if !strings.Contains(src, "references OtherType") {
+		t.Errorf("expected ref_target TODO-comment to fire for reference-kind field, got:\n%s", src)
 	}
 }
 
