@@ -29,6 +29,38 @@ func testConflictChecker(g *ontology.Graph, claim string) error {
 	return nil
 }
 
+// testProvenanceChecker is a test-local ProvenanceChecker, functionally
+// equivalent to cmd/hotam's batchProvenanceChecker's core check (it always
+// enforces the gate — no manifest.json opt-in flag to resolve here, since
+// this package cannot import internal/loader for it without a needless
+// dependency for a test double). It simulates the post-merge result via
+// SimulateRequirementResult and requires non-empty SourceRefs,
+// LastReviewedAt, and ReviewAfter for a SETTLED result, matching
+// cmd/hotam/provenance_gate.go's provenanceCheck field-by-field.
+func testProvenanceChecker(g *ontology.Graph, today string, p ProposedRequirement) error {
+	if p.Status != ontology.StatusSETTLED {
+		return nil
+	}
+	result, err := SimulateRequirementResult(g, today, p)
+	if err != nil {
+		return err
+	}
+	var missing []string
+	if len(result.SourceRefs) == 0 {
+		missing = append(missing, "source_refs")
+	}
+	if result.LastReviewedAt == "" {
+		missing = append(missing, "last_reviewed_at")
+	}
+	if result.ReviewAfter == "" {
+		missing = append(missing, "review_after")
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return fmt.Errorf("missing provenance on %s: %s", p.ID, strings.Join(missing, ", "))
+}
+
 // TestApplyBatch_ThreeValid_AppliesAll proves a batch of 3+ valid proposals
 // of different kinds lands in a single atomic write: all nodes appear after
 // ApplyBatch returns.
@@ -40,7 +72,7 @@ func TestApplyBatch_ThreeValid_AppliesAll(t *testing.T) {
 		ProposedRequirement{ID: "R-b2", Claim: "batch two", Owner: "sb", Status: ontology.StatusDRAFT},
 		ProposedAxis{Slug: "speed-vs-quality", Description: "d"},
 	}
-	if err := ApplyBatch(path, today, batch, nil); err != nil {
+	if err := ApplyBatch(path, today, batch, nil, nil); err != nil {
 		t.Fatalf("ApplyBatch: %v", err)
 	}
 	g := reload(t, path)
@@ -73,7 +105,7 @@ func TestApplyBatch_SecondDependsOnFirst(t *testing.T) {
 		ProposedRequirement{ID: "R-batch-dep", Claim: "created then rejected", Owner: "sa", Status: ontology.StatusDRAFT},
 		ProposedRejection{RequirementID: "R-batch-dep", Reason: "rejected in same batch"},
 	}
-	if err := ApplyBatch(path, today, batch, nil); err != nil {
+	if err := ApplyBatch(path, today, batch, nil, nil); err != nil {
 		t.Fatalf("ApplyBatch: %v", err)
 	}
 	g := reload(t, path)
@@ -99,7 +131,7 @@ func TestApplyBatch_NthInvalid_GraphUnchanged(t *testing.T) {
 		ProposedRequirement{ID: "R-ok", Claim: "valid first", Owner: "sa", Status: ontology.StatusDRAFT},
 		ProposedRejection{RequirementID: "R-does-not-exist", Reason: "ghost anchor"},
 	}
-	err := ApplyBatch(path, today, batch, nil)
+	err := ApplyBatch(path, today, batch, nil, nil)
 	if err == nil {
 		t.Fatal("expected error for nonexistent requirement_id in proposal 2")
 	}
@@ -131,7 +163,7 @@ func TestApplyBatch_InvariantViolation_GraphUnchanged(t *testing.T) {
 		ProposedRequirement{ID: "R-ok", Claim: "valid", Owner: "sa", Status: ontology.StatusDRAFT},
 		ProposedRequirement{ID: "not-r-prefixed", Claim: "bad", Owner: "sa", Status: ontology.StatusDRAFT},
 	}
-	err := ApplyBatch(path, today, batch, nil)
+	err := ApplyBatch(path, today, batch, nil, nil)
 	if err == nil {
 		t.Fatal("expected invariant-violation error for proposal 2")
 	}
@@ -147,7 +179,7 @@ func TestApplyBatch_InvariantViolation_GraphUnchanged(t *testing.T) {
 func TestApplyBatch_EmptyBatchFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
-	if err := ApplyBatch(path, today, nil, nil); err == nil {
+	if err := ApplyBatch(path, today, nil, nil, nil); err == nil {
 		t.Fatal("expected error for empty batch")
 	}
 }
@@ -179,7 +211,7 @@ func TestApplyBatch_SemanticConflict_PreExistingRefusesWholeBatch(t *testing.T) 
 		// Contradicts R-enc-always (opposite marker always/never + topical "encrypt").
 		ProposedRequirement{ID: "R-enc-never", Claim: "export service must never encrypt records", Owner: "sb", Status: ontology.StatusSETTLED},
 	}
-	err := ApplyBatch(path, today, batch, testConflictChecker)
+	err := ApplyBatch(path, today, batch, testConflictChecker, nil)
 	if err == nil {
 		t.Fatal("expected ApplyBatch to refuse the contradicting batch item")
 	}
@@ -219,7 +251,7 @@ func TestApplyBatch_SemanticConflict_WithinBatchRefusesWholeBatch(t *testing.T) 
 		// Second item: "never encrypt" — contradicts the FIRST item, now in the rolling graph.
 		ProposedRequirement{ID: "R-bat-never", Claim: "export service must never encrypt records", Owner: "sb", Status: ontology.StatusSETTLED},
 	}
-	err := ApplyBatch(path, today, batch, testConflictChecker)
+	err := ApplyBatch(path, today, batch, testConflictChecker, nil)
 	if err == nil {
 		t.Fatal("expected ApplyBatch to refuse the within-batch contradiction")
 	}
@@ -254,7 +286,7 @@ func TestApplyBatch_NoConflict_StillSucceeds(t *testing.T) {
 		ProposedRequirement{ID: "R-encrypt-rules-a", Claim: "export service must encrypt records at rest", Owner: "sa", Status: ontology.StatusDRAFT},
 		ProposedRequirement{ID: "R-encrypt-rules-b", Claim: "export service must encrypt records in transit", Owner: "sb", Status: ontology.StatusDRAFT},
 	}
-	if err := ApplyBatch(path, today, batch, testConflictChecker); err != nil {
+	if err := ApplyBatch(path, today, batch, testConflictChecker, nil); err != nil {
 		t.Fatalf("non-conflicting batch must succeed (gate too aggressive?): %v", err)
 	}
 	g := reload(t, path)
@@ -262,5 +294,106 @@ func TestApplyBatch_NoConflict_StillSucceeds(t *testing.T) {
 		if _, ok := findReq(g, id); !ok {
 			t.Errorf("%s missing after non-conflicting batch", id)
 		}
+	}
+}
+
+// TestApplyBatch_ProvenanceChecker_RefusesIncompleteProvenance proves batch
+// parity for the provenance gate (task #158): a batch item with a SETTLED
+// status but zero provenance fields, checked via an injected
+// ProvenanceChecker, aborts the ENTIRE batch atomically — including the
+// benign first item — same shape as the semantic-conflict batch tests above.
+func TestApplyBatch_ProvenanceChecker_RefusesIncompleteProvenance(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	before := readFile(t, path)
+
+	batch := []Proposal{
+		ProposedRequirement{ID: "R-prov-benign", Claim: "a benign draft requirement", Owner: "sa", Status: ontology.StatusDRAFT},
+		ProposedRequirement{ID: "R-prov-bare", Claim: "a bare settled requirement with no provenance", Owner: "sb", Status: ontology.StatusSETTLED},
+	}
+	err := ApplyBatch(path, today, batch, nil, testProvenanceChecker)
+	if err == nil {
+		t.Fatal("expected ApplyBatch to refuse the bare SETTLED batch item")
+	}
+	if !containsString(err.Error(), "source_refs") {
+		t.Errorf("error must name missing source_refs:\n%s", err.Error())
+	}
+	if !containsString(err.Error(), "batch proposal 2 of 2") {
+		t.Errorf("error must identify batch proposal 2 as the failure:\n%s", err.Error())
+	}
+
+	after := readFile(t, path)
+	if before != after {
+		t.Fatal("graph on disk changed despite batch provenance refusal — batch must be all-or-nothing")
+	}
+	rg := reload(t, path)
+	if _, ok := findReq(rg, "R-prov-benign"); ok {
+		t.Error("R-prov-benign landed despite batch refusal — the benign first item must be rolled back")
+	}
+}
+
+// TestApplyBatch_ProvenanceChecker_CompleteProvenanceSucceeds is the
+// regression guard: a SETTLED batch item WITH complete provenance must still
+// land via the injected ProvenanceChecker.
+func TestApplyBatch_ProvenanceChecker_CompleteProvenanceSucceeds(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+
+	batch := []Proposal{
+		ProposedRequirement{
+			ID: "R-prov-complete", Claim: "a settled requirement with full provenance",
+			Owner: "sa", Status: ontology.StatusSETTLED,
+			SourceRefs:     []string{"https://example.com/source"},
+			LastReviewedAt: today,
+			ReviewAfter:    "2027-01-01",
+			Evidence:       []string{"steward review"},
+		},
+	}
+	if err := ApplyBatch(path, today, batch, nil, testProvenanceChecker); err != nil {
+		t.Fatalf("complete-provenance batch must succeed: %v", err)
+	}
+	g := reload(t, path)
+	if _, ok := findReq(g, "R-prov-complete"); !ok {
+		t.Error("R-prov-complete missing after complete-provenance batch")
+	}
+}
+
+// TestApplyBatch_ProvenanceChecker_UpdatePreservingProvenanceSucceeds is the
+// CREATE-vs-UPDATE batch proof: land a complete-provenance requirement first,
+// then an UPDATE-only-claim proposal (within the SAME batch, via the rolling
+// graph) that omits provenance fields must still succeed because the
+// simulated post-merge result still carries the earlier provenance.
+func TestApplyBatch_ProvenanceChecker_UpdatePreservingProvenanceSucceeds(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+
+	batch := []Proposal{
+		ProposedRequirement{
+			ID: "R-prov-rolling", Claim: "original claim with provenance",
+			Owner: "sa", Status: ontology.StatusSETTLED,
+			SourceRefs:     []string{"https://example.com/rolling"},
+			LastReviewedAt: today,
+			ReviewAfter:    "2027-01-01",
+			Evidence:       []string{"steward review"},
+		},
+		// UPDATE within the same batch: only claim changes, provenance omitted.
+		ProposedRequirement{
+			ID: "R-prov-rolling", Claim: "updated claim, provenance omitted",
+			Owner: "sa", Status: ontology.StatusSETTLED,
+		},
+	}
+	if err := ApplyBatch(path, today, batch, nil, testProvenanceChecker); err != nil {
+		t.Fatalf("UPDATE preserving provenance via rolling graph must succeed: %v", err)
+	}
+	g := reload(t, path)
+	r, ok := findReq(g, "R-prov-rolling")
+	if !ok {
+		t.Fatal("R-prov-rolling missing after batch")
+	}
+	if r.Claim != "updated claim, provenance omitted" {
+		t.Errorf("Claim = %q, want the update to have applied", r.Claim)
+	}
+	if len(r.SourceRefs) != 1 || r.SourceRefs[0] != "https://example.com/rolling" {
+		t.Errorf("SourceRefs = %v, want preserved from the earlier batch item", r.SourceRefs)
 	}
 }

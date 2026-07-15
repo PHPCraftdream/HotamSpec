@@ -64,7 +64,7 @@ func cmdApplyProposal(args []string) error {
 			return err
 		}
 		gp := graphPathForDomain(domainDir)
-		if err := proposal.ApplyBatch(gp, *today, proposals, batchConflictChecker); err != nil {
+		if err := proposal.ApplyBatch(gp, *today, proposals, batchConflictChecker, batchProvenanceChecker(domainDir)); err != nil {
 			return err
 		}
 		fmt.Printf("applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
@@ -98,6 +98,13 @@ func cmdApplyProposal(args []string) error {
 	ackOpts := landAckOptions{AckConflict: *ackConflict, DecisionRef: *decisionRef}
 	hadConflict, err := semanticConflictGate(domainDir, p, ackOpts)
 	if err != nil {
+		return err
+	}
+	// Provenance gate (opt-in, task #158): same placement/rationale as
+	// landProposalValue's — refuses BEFORE applyProposalValue mutates the
+	// graph, no-op unless this domain's manifest.json sets
+	// require_provenance: true.
+	if err := provenanceGate(domainDir, p); err != nil {
 		return err
 	}
 	gp, err := applyProposalValue(p, domainDir, *today)

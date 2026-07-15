@@ -226,6 +226,32 @@ func ResolveGenProfile(graphPath string) string {
 	}
 }
 
+// ResolveRequireProvenance reads the optional "require_provenance" field from
+// the manifest.json sitting next to graph.json, mirroring resolveSelfHosting's
+// exact pattern (read manifest, tolerate a missing file, tolerate malformed
+// JSON, default when absent/malformed). Returns false ("provenance NOT
+// required") for every absent/missing-field/malformed case — preserving 100%
+// backward compatibility with every manifest.json in this repo and in the
+// wild that predates the provenance-gate feature (they carry no
+// require_provenance field, so they keep landing requirements exactly as
+// before, with no gate applied). Opting in is an explicit, per-domain choice
+// (`"require_provenance": true` in manifest.json) — see
+// cmd/hotam/provenance_gate.go for what the flag then enforces.
+func ResolveRequireProvenance(graphPath string) bool {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return false
+	}
+	var m struct {
+		RequireProvenance bool `json:"require_provenance"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return false
+	}
+	return m.RequireProvenance
+}
+
 func validateGraph(g *ontology.Graph) error {
 	var errs []string
 	add := func(format string, args ...any) {

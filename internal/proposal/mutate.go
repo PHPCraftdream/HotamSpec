@@ -1,6 +1,8 @@
 package proposal
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -229,6 +231,57 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 	}
 	g.Requirements = append(g.Requirements, newReq)
 	return nil
+}
+
+// cloneGraph returns a deep copy of g via a JSON marshal/unmarshal round-trip.
+// This is a simple, correct-by-construction clone (every ontology type here
+// is a plain data struct that already round-trips through graph.json) — no
+// hand-written deep-copy code to keep in sync as fields are added. It is
+// used ONLY for in-memory simulation (SimulateRequirementResult); it never
+// touches disk. DomainDir (json:"-") does not round-trip, but
+// SimulateRequirementResult's caller (provenanceGate) never reads it off the
+// simulated copy, so that is not a concern here.
+func cloneGraph(g *ontology.Graph) (*ontology.Graph, error) {
+	data, err := json.Marshal(g)
+	if err != nil {
+		return nil, fmt.Errorf("clone graph: marshal: %w", err)
+	}
+	var out ontology.Graph
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil, fmt.Errorf("clone graph: unmarshal: %w", err)
+	}
+	return &out, nil
+}
+
+// SimulateRequirementResult predicts what a ProposedRequirement's target
+// requirement will look like AFTER mutate() applies it, WITHOUT touching g or
+// disk. It exists so a gate can inspect the POST-MERGE field values (what
+// will actually land) rather than the raw incoming proposal — which matters
+// because mutate()'s coalesce* helpers treat an empty field on an UPDATE as
+// "leave the existing value unchanged", not "clear it": naively checking p's
+// raw fields for emptiness would misjudge an UPDATE that omits an
+// already-set field on purpose.
+//
+// It deep-copies g (cloneGraph), applies the SAME mutate() logic this file
+// already uses for a real apply to the copy, and returns the resulting
+// ontology.Requirement looked up by p.ID. It deliberately skips the
+// invariant-diff/violation-checking machinery applyToGraph wraps around
+// mutate() — callers that need SimulateRequirementResult only need the
+// post-merge field values, not a validity verdict, so running the heavier
+// invariant sweep here would be wasted work.
+func SimulateRequirementResult(g *ontology.Graph, today string, p ProposedRequirement) (ontology.Requirement, error) {
+	cp, err := cloneGraph(g)
+	if err != nil {
+		return ontology.Requirement{}, err
+	}
+	if err := p.mutate(cp, today); err != nil {
+		return ontology.Requirement{}, fmt.Errorf("simulate requirement result: %w", err)
+	}
+	idx := findRequirementIndex(cp, p.ID)
+	if idx < 0 {
+		return ontology.Requirement{}, fmt.Errorf("simulate requirement result: %q not found in simulated graph after mutate", p.ID)
+	}
+	return cp.Requirements[idx], nil
 }
 
 func (p ProposedConflictTransition) mutate(g *ontology.Graph, today string) error {

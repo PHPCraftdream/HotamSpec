@@ -17,6 +17,22 @@ import (
 // conflicts with SETTLED content in g, or nil if clear.
 type ConflictChecker func(g *ontology.Graph, claim string) error
 
+// ProvenanceChecker is injected by the caller (cmd/hotam) so ApplyBatch can
+// enforce the opt-in provenance gate (require_provenance in manifest.json —
+// see internal/loader.ResolveRequireProvenance and
+// cmd/hotam/provenance_gate.go) on the batch path with the SAME logic the
+// single-file path (cmd/hotam's provenanceGate) runs, closing the class of
+// "single-file protected, batch bypassed" gap task #155 closed for
+// ConflictChecker. It is called for each ProposedRequirement BEFORE
+// applyToGraph mutates g, against the ROLLING in-memory graph (so it reflects
+// proposals already applied earlier in the same batch), and returns a
+// non-nil, ready-to-surface error naming the missing provenance field(s), or
+// nil if the requirement's simulated post-merge result satisfies the gate (or
+// the gate is not opted into for this domain). checkProvenance may be nil, in
+// which case no provenance checking is performed (used by
+// callers/tests that don't need the gate).
+type ProvenanceChecker func(g *ontology.Graph, today string, p ProposedRequirement) error
+
 func errNotFound(label, id string) error {
 	return fmt.Errorf("%s %q not found in the graph. No changes made.", label, id)
 }
@@ -119,7 +135,16 @@ func Apply(graphPath string, today string, p Proposal) error {
 // via `hotam land` / `hotam apply-proposal` (single-file) with an explicit
 // ack. checkConflict may be nil, in which case no semantic-conflict checking
 // is performed (used by callers/tests that don't need the gate).
-func ApplyBatch(graphPath string, today string, ps []Proposal, checkConflict ConflictChecker) error {
+//
+// PROVENANCE GATE (batch path): mirrors the semantic-conflict gate's shape
+// and placement. For each ProposedRequirement, BEFORE applyToGraph mutates g,
+// ApplyBatch invokes the injected checkProvenance (a ProvenanceChecker)
+// against the ROLLING in-memory graph and refuses the ENTIRE batch if it
+// reports a missing-provenance error — same rolling-graph semantics as
+// checkConflict (catches proposals against pre-existing state AND against an
+// earlier item of the same batch). checkProvenance may be nil, in which case
+// no provenance checking is performed.
+func ApplyBatch(graphPath string, today string, ps []Proposal, checkConflict ConflictChecker, checkProvenance ProvenanceChecker) error {
 	if len(ps) == 0 {
 		return fmt.Errorf("batch is empty — supply at least one proposal")
 	}
@@ -139,6 +164,17 @@ func ApplyBatch(graphPath string, today string, ps []Proposal, checkConflict Con
 		if checkConflict != nil {
 			if pr, ok := p.(ProposedRequirement); ok {
 				if err := checkConflict(g, pr.Claim); err != nil {
+					return fmt.Errorf("batch proposal %d of %d (%s %s): %w",
+						i+1, len(ps), p.Kind(), p.TargetAnchor(), err)
+				}
+			}
+		}
+		// Batch provenance gate: same rolling-graph placement as the
+		// semantic-conflict gate above — checked BEFORE applyToGraph so a
+		// refusal leaves g unmutated and disk untouched.
+		if checkProvenance != nil {
+			if pr, ok := p.(ProposedRequirement); ok {
+				if err := checkProvenance(g, today, pr); err != nil {
 					return fmt.Errorf("batch proposal %d of %d (%s %s): %w",
 						i+1, len(ps), p.Kind(), p.TargetAnchor(), err)
 				}

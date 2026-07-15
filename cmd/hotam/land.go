@@ -156,7 +156,7 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 		return nil, err
 	}
 	gp := graphPathForDomain(domainDir)
-	if err := proposal.ApplyBatch(gp, today, proposals, batchConflictChecker); err != nil {
+	if err := proposal.ApplyBatch(gp, today, proposals, batchConflictChecker, batchProvenanceChecker(domainDir)); err != nil {
 		return nil, fmt.Errorf("apply step failed, nothing landed: %w", err)
 	}
 	fmt.Fprintf(landOut(asJSON), "applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
@@ -327,6 +327,17 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	// non-conflicting land with --decision-ref).
 	hadConflict, err := semanticConflictGate(domainDir, p, ackOpts)
 	if err != nil {
+		return nil, err
+	}
+
+	// Provenance gate (opt-in, task #158): refuse to land a SETTLED
+	// ProposedRequirement with incomplete provenance (source_refs,
+	// last_reviewed_at, review_after) when this domain's manifest.json sets
+	// require_provenance: true. A no-op for every domain that does not opt
+	// in — see provenanceGate's doc comment. Runs BEFORE the snapshot so a
+	// refusal leaves the graph untouched, same placement as the
+	// semantic-conflict gate above.
+	if err := provenanceGate(domainDir, p); err != nil {
 		return nil, err
 	}
 
