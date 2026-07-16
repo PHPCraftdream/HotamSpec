@@ -42,16 +42,107 @@ func (r SpecSymbolResult) Found() bool { return r.Kind != SpecSymbolNone }
 type SpecTestResult struct {
 	Found bool
 	// HasTeeth is true when the test body contains at least one real
-	// assertion or exercising construct (t.Error/t.Fatal/t.Errorf/t.Fatalf/
-	// require.*/assert.*/an if-statement), as opposed to a body that is
-	// empty or contains only t.Log/t.Logf calls.
+	// assertion call, anywhere in the body (t.Error/t.Fatal/t.Errorf/
+	// t.Fatalf/t.Fail/t.FailNow/require.*/assert.*, whether at the top level
+	// or nested inside an if/for/switch/range/t.Run branch), as opposed to a
+	// body that is empty, contains only t.Log/t.Logf calls, or contains only
+	// control-flow with no assertion call inside it.
 	HasTeeth bool
-	// HasSkip is true when the test body contains a top-level call to
-	// t.Skip/t.Skipf (unconditionally reachable at the top level of the
-	// function body -- not nested inside an if, which would make it
-	// conditional and therefore not a blanket "this test proves nothing"
-	// escape hatch).
+	// HasSkip is true when the test body contains an UNCONDITIONAL call to
+	// t.Skip/t.Skipf -- either a direct top-level statement, or nested
+	// inside an `if` whose condition is a constant-true expression (so the
+	// branch always runs). Not set for a skip nested inside a REAL runtime
+	// condition (e.g. `if testing.Short() { t.Skip(...) }`), which is a
+	// normal Go idiom and not a blanket "this test proves nothing" escape
+	// hatch.
 	HasSkip bool
+}
+
+// EntryWithinSpecScope enforces the STRUCTURAL FLOOR half of the
+// implemented_by/verified_by discipline that resolution alone cannot: the
+// referenced file path must stay INSIDE the domain's own authored scope, not
+// merely "somewhere parseable on disk". Without this gate, a non-self-hosting
+// domain could cite an arbitrary file anywhere in the repository (including
+// another domain's spec/, or the engine's own internal/) via a "../" escape,
+// and ResolveSpecSymbol/ResolveSpecTest would happily parse and resolve it --
+// the mechanical check would report 0 violations for a reference that lies
+// about "this is embodied in MY spec/".
+//
+// The rule (PLAN-authored-spec-discipline.md §6, hardened per adversarial
+// review Probe D):
+//
+//   - non-self-hosting domain: file, once cleaned, MUST be a relative path
+//     (no leading "/" or drive letter) that starts with "spec/" (forward-
+//     slash form, as every implemented_by/verified_by entry is documented
+//     and authored) and MUST NOT climb above specRoot (domainDir) via "..".
+//     Concretely: filepath.Clean(file) must not equal ".." and must not
+//     start with "../" (or the OS equivalent), AND filepath.Join(specRoot,
+//     file) must remain lexically within specRoot.
+//   - self-hosting domain: file MUST resolve (after filepath.Join(specRoot,
+//     file) + Clean) to a path still inside specRoot (the engine repository
+//     root found by SpecRoot/engineRoot) -- "..".-escapes out of the engine
+//     repo are rejected the same way, but there is no required "spec/"
+//     prefix since self-hosting entries name real engine paths like
+//     "internal/ontology/lifecycle.go" (PLAN-authored-spec-discipline.md
+//     §9).
+//
+// This is deliberately a pure path-shape check (no filesystem I/O) so it can
+// run before ResolveSpecSymbol/ResolveSpecTest even attempts to parse --
+// callers should treat a false return as an immediate violation, not attempt
+// resolution at all.
+func EntryWithinSpecScope(specRoot, file string, selfHosting bool) (ok bool, reason string) {
+	if file == "" {
+		return false, "empty file path"
+	}
+	slashFile := filepath.ToSlash(file)
+	if strings.HasPrefix(slashFile, "/") || hasVolumePrefix(slashFile) {
+		return false, "must be a relative path, not absolute"
+	}
+	cleaned := filepath.Clean(filepath.FromSlash(slashFile))
+	cleanedSlash := filepath.ToSlash(cleaned)
+	if cleanedSlash == ".." || strings.HasPrefix(cleanedSlash, "../") {
+		return false, "must not traverse above the domain's spec root via \"..\""
+	}
+	if !selfHosting {
+		if !strings.HasPrefix(cleanedSlash, "spec/") {
+			return false, "must be a path under \"spec/\" (non-self-hosting domains authored code lives under domainDir/spec/)"
+		}
+	}
+	// Belt-and-braces: even if the prefix/traversal checks above somehow
+	// missed a shape, confirm the joined, cleaned, absolute path is still
+	// lexically inside specRoot before allowing resolution to proceed.
+	absRoot, err := filepath.Abs(specRoot)
+	if err != nil {
+		return false, fmt.Sprintf("could not resolve spec root: %v", err)
+	}
+	joined := filepath.Join(absRoot, cleaned)
+	absJoined, err := filepath.Abs(joined)
+	if err != nil {
+		return false, fmt.Sprintf("could not resolve joined path: %v", err)
+	}
+	rel, err := filepath.Rel(absRoot, absJoined)
+	if err != nil {
+		return false, fmt.Sprintf("could not compute relative path: %v", err)
+	}
+	relSlash := filepath.ToSlash(rel)
+	if relSlash == ".." || strings.HasPrefix(relSlash, "../") {
+		return false, "resolved path escapes the domain's spec root"
+	}
+	return true, ""
+}
+
+// hasVolumePrefix reports whether a forward-slash-normalized path starts
+// with a Windows drive-letter volume ("C:/...") -- filepath.VolumeName only
+// recognizes the OS-native separator form, so on a non-Windows build it
+// would miss a "C:/" reference smuggled in with forward slashes; this check
+// is separator-agnostic so the scope gate rejects it on every platform.
+func hasVolumePrefix(slashPath string) bool {
+	if len(slashPath) < 2 {
+		return false
+	}
+	c := slashPath[0]
+	isLetter := (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+	return isLetter && slashPath[1] == ':'
 }
 
 // ResolveSpecSymbol parses the domain-relative file (joined onto specRoot,
@@ -213,17 +304,25 @@ func isRealTestSignature(fn *ast.FuncDecl) bool {
 	return pkgIdent.Name == "testing" && sel.Sel.Name == "T"
 }
 
-// testBodyHasTeeth reports whether fn's body contains at least one
-// meaningful assertion or exercising construct: a call to t.Error/t.Errorf/
-// t.Fatal/t.Fatalf/t.FailNow/t.Fail, a call whose selector name matches a
-// common assertion-library pattern (require.*/assert.*), or a control-flow
-// construct (if/for/switch) -- anything beyond a flat sequence of t.Log
-// calls (or an empty body). This is the anti-vacuousness detector: the
-// mechanical successor to the old honest no-op checkEnforcedByTestHasTeeth,
-// now applied to verified_by as a structural PROHIBITION for ENFORCED
-// (not an advisory no-op). It does not and cannot judge whether the
-// assertions are ABOUT the right thing -- only that the test body is not
-// hollow.
+// testBodyHasTeeth reports whether fn's body contains at least one REAL
+// assertion call, anywhere in the body (including nested inside if/for/
+// switch/range/t.Run branches): a call to t.Error/t.Errorf/t.Fatal/
+// t.Fatalf/t.FailNow/t.Fail, or a call whose selector name matches a common
+// assertion-library pattern (require.*/assert.*). This is the anti-
+// vacuousness detector: the mechanical successor to the old honest no-op
+// checkEnforcedByTestHasTeeth, now applied to verified_by as a structural
+// PROHIBITION for ENFORCED (not an advisory no-op). It does not and cannot
+// judge whether the assertions are ABOUT the right thing -- only that the
+// test body is not hollow.
+//
+// Hardened per adversarial review (@fh Probe A): a bare control-flow
+// construct (if/for/switch/range) with NO assert call anywhere inside it is
+// NOT teeth -- `for i := 0; i < 0; i++ {}` or `if someCondition {}` used to
+// satisfy this check by shape alone, letting an always-green test through
+// with zero real assertions. The rule is narrowed to "does a real
+// assertion-shaped call exist anywhere in the body" -- control-flow no
+// longer counts on its own, it is only a container an assertion may (or may
+// not) be nested inside.
 func testBodyHasTeeth(body *ast.BlockStmt) bool {
 	if body == nil {
 		return false
@@ -233,15 +332,9 @@ func testBodyHasTeeth(body *ast.BlockStmt) bool {
 		if found {
 			return false
 		}
-		switch stmt := n.(type) {
-		case *ast.IfStmt, *ast.ForStmt, *ast.SwitchStmt, *ast.TypeSwitchStmt, *ast.RangeStmt:
+		if call, ok := n.(*ast.CallExpr); ok && isTeethCall(call) {
 			found = true
 			return false
-		case *ast.CallExpr:
-			if isTeethCall(stmt) {
-				found = true
-				return false
-			}
 		}
 		return true
 	})
@@ -273,35 +366,86 @@ func isTeethCall(call *ast.CallExpr) bool {
 }
 
 // testBodyHasTopLevelSkip reports whether fn's body contains a call to
-// t.Skip/t.Skipf reachable unconditionally at the TOP LEVEL of the function
-// body (a direct statement of the body's *ast.BlockStmt, not nested inside
-// an if/for/switch/etc). A skip guarded by a runtime condition (e.g.
+// t.Skip/t.Skipf reachable UNCONDITIONALLY: either a direct top-level
+// statement of the body's *ast.BlockStmt, or nested inside an `if` whose
+// condition is a constant-true expression (so the branch is unconditionally
+// taken every time the test runs, the same as if it were not wrapped in an
+// `if` at all). A skip guarded by a REAL runtime condition (e.g.
 // `if testing.Short() { t.Skip(...) }`) is a normal Go idiom and is NOT
-// flagged -- only an unconditional top-level skip, which makes the "test"
-// unconditionally prove nothing, is treated as the escape hatch this check
-// prohibits.
+// flagged -- only an unconditional skip (bare, or dressed up behind a
+// constant-true condition), which makes the "test" unconditionally prove
+// nothing, is treated as the escape hatch this check prohibits.
+//
+// Hardened per adversarial review (@fh Probe A): `if true { t.Skip(...) }`
+// used to slip past detection because the skip call was not a direct
+// top-level statement -- it was nested one level inside an `if`. Since the
+// condition is a literal `true` (or an equivalent always-true expression,
+// see isConstantTrueCond), the branch is unconditionally reached and the
+// skip is exactly as unconditional as a bare top-level `t.Skip(...)`.
 func testBodyHasTopLevelSkip(body *ast.BlockStmt) bool {
 	if body == nil {
 		return false
 	}
-	for _, stmt := range body.List {
-		exprStmt, ok := stmt.(*ast.ExprStmt)
-		if !ok {
-			continue
-		}
-		call, ok := exprStmt.X.(*ast.CallExpr)
-		if !ok {
-			continue
-		}
-		sel, ok := call.Fun.(*ast.SelectorExpr)
-		if !ok {
-			continue
-		}
-		if sel.Sel.Name == "Skip" || sel.Sel.Name == "Skipf" {
-			return true
+	return blockHasUnconditionalSkip(body.List)
+}
+
+// blockHasUnconditionalSkip scans a flat statement list (the top level of a
+// function body, or the body of an `if` branch known to be unconditionally
+// taken) for a Skip/Skipf call reachable without any REAL runtime
+// condition -- either a direct ExprStmt call, or nested inside a further
+// `if true { ... }` (recursing so `if true { if true { t.Skip() } }` is
+// still caught).
+func blockHasUnconditionalSkip(stmts []ast.Stmt) bool {
+	for _, stmt := range stmts {
+		switch s := stmt.(type) {
+		case *ast.ExprStmt:
+			call, ok := s.X.(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+			sel, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok {
+				continue
+			}
+			if sel.Sel.Name == "Skip" || sel.Sel.Name == "Skipf" {
+				return true
+			}
+		case *ast.IfStmt:
+			// Only descend into an `if` whose condition is constant-true AND
+			// which has no Init statement that could make the condition's
+			// truth depend on something evaluated at runtime alongside it --
+			// the branch is then unconditionally taken every run, so a skip
+			// inside it is exactly as unconditional as a bare top-level
+			// skip. Any other condition (a real runtime check, however
+			// trivial-looking) is left alone: that is the
+			// `testing.Short()`-style idiom this check must NOT flag.
+			if s.Init == nil && isConstantTrueCond(s.Cond) {
+				if blockHasUnconditionalSkip(s.Body.List) {
+					return true
+				}
+			}
 		}
 	}
 	return false
+}
+
+// isConstantTrueCond reports whether cond is a compile-time-constant-true
+// boolean expression: the literal identifier `true`, or a parenthesized
+// form of it. Deliberately narrow -- this is an anti-evasion check for the
+// obvious `if true { t.Skip(...) }` shape, not a general constant-folding
+// evaluator; anything that requires actual evaluation (even trivially
+// foldable, e.g. `1 == 1`) is left as a real runtime condition and is NOT
+// treated as unconditional, keeping the false-positive rate at zero for
+// genuine conditional logic.
+func isConstantTrueCond(cond ast.Expr) bool {
+	switch c := cond.(type) {
+	case *ast.Ident:
+		return c.Name == "true"
+	case *ast.ParenExpr:
+		return isConstantTrueCond(c.X)
+	default:
+		return false
+	}
 }
 
 // ParseFileColonSymbol splits a "file:symbol" or "file:test" entry (as used

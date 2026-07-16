@@ -76,7 +76,18 @@ func checkImplementedBySymbolResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecSymbol(gate.SpecRootForGraph(g), e.file, e.symbol)
+			specRoot := gate.SpecRootForGraph(g)
+			if ok, reason := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
+				out = append(out, Violation{
+					Check: "check_implemented_by_symbol_resolvable",
+					ID:    r.ID,
+					Message: fmt.Sprintf(
+						"implemented_by entry %q: %s -- references must stay inside the domain's own authored scope",
+						e.raw, reason),
+				})
+				continue
+			}
+			result, err := gate.ResolveSpecSymbol(specRoot, e.file, e.symbol)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_implemented_by_symbol_resolvable",
@@ -151,7 +162,18 @@ func checkVerifiedByTestResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecTest(gate.SpecRootForGraph(g), e.file, e.symbol)
+			specRoot := gate.SpecRootForGraph(g)
+			if ok, reason := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
+				out = append(out, Violation{
+					Check: "check_verified_by_test_resolvable",
+					ID:    r.ID,
+					Message: fmt.Sprintf(
+						"verified_by entry %q: %s -- references must stay inside the domain's own authored scope",
+						e.raw, reason),
+				})
+				continue
+			}
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_verified_by_test_resolvable",
@@ -204,11 +226,19 @@ func checkVerifiedByTestHasTeeth(g *ontology.Graph) []Violation {
 		if len(r.VerifiedBy) == 0 {
 			continue
 		}
+		specRoot := gate.SpecRootForGraph(g)
 		for _, e := range parseSpecEntries(r.VerifiedBy) {
 			if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
 				continue
 			}
-			result, err := gate.ResolveSpecTest(gate.SpecRootForGraph(g), e.file, e.symbol)
+			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
+				// Out-of-scope entries are checkVerifiedByTestResolvable's
+				// violation to report -- this check does not resolve (let
+				// alone judge the teeth of) a file outside the domain's own
+				// authored scope.
+				continue
+			}
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
 			if err != nil || !result.Found {
 				continue
 			}
@@ -230,11 +260,13 @@ func checkVerifiedByTestHasTeeth(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_verified_by_test_has_teeth", Invariant{
 	Name:  "check_verified_by_test_has_teeth",
 	Canon: methodology.Requirement,
-	Claim: "every resolvable verified_by test has a real assertion or exercising branch -- not t.Log-only, not empty.",
+	Claim: "every resolvable verified_by test contains at least one real assertion call, anywhere in its body -- not t.Log-only, not empty, and not a bare control-flow construct with no assertion inside it.",
 	Rule: "for each Requirement.verified_by entry that resolves to a real Test* function (checkVerifiedByTestResolvable), the test body MUST " +
-		"contain at least one real assertion or exercising construct: a call to t.Error/t.Errorf/t.Fatal/t.Fatalf/t.Fail/t.FailNow, a call on " +
-		"an identifier conventionally used by assertion libraries (require.*/assert.*), or a control-flow construct (if/for/switch/range). A " +
-		"body that is empty or contains ONLY t.Log/t.Logf calls fails this check.",
+		"contain at least one real assertion call, ANYWHERE in the body (top-level or nested inside if/for/switch/range/t.Run branches): a " +
+		"call to t.Error/t.Errorf/t.Fatal/t.Fatalf/t.Fail/t.FailNow, or a call on an identifier conventionally used by assertion libraries " +
+		"(require.*/assert.*). A body that is empty, contains ONLY t.Log/t.Logf calls, or contains only control-flow (if/for/switch/range) " +
+		"with no assertion call anywhere inside it, fails this check -- a bare `for i := 0; i < 0; i++ {}` or an `if` with an empty/assert-free " +
+		"body no longer counts as \"teeth\" merely by shape.",
 	Why: "this is the authored-spec ENFORCEMENT successor to enforcement.go's checkEnforcedByTestHasTeeth, which was an honest no-op because " +
 		"engine-side Test* enforcers are repo-wide and running under `go test` anyway -- vacuous failure there shows up at CI time regardless. " +
 		"Authored verified_by tests are different: PLAN-authored-spec-discipline.md §1 documents that under the OLD generator, " +
@@ -258,11 +290,18 @@ func checkVerifiedByTestNoSkip(g *ontology.Graph) []Violation {
 		if len(r.VerifiedBy) == 0 {
 			continue
 		}
+		specRoot := gate.SpecRootForGraph(g)
 		for _, e := range parseSpecEntries(r.VerifiedBy) {
 			if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
 				continue
 			}
-			result, err := gate.ResolveSpecTest(gate.SpecRootForGraph(g), e.file, e.symbol)
+			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
+				// Out-of-scope entries are checkVerifiedByTestResolvable's
+				// violation to report -- this check does not resolve a file
+				// outside the domain's own authored scope.
+				continue
+			}
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
 			if err != nil || !result.Found {
 				continue
 			}

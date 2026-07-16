@@ -567,3 +567,311 @@ func TestParseFileColonSymbol_MalformedEntries(t *testing.T) {
 		}
 	}
 }
+
+// --- EntryWithinSpecScope (F2: @fh Probe D remediation) --------------------
+
+// TestEntryWithinSpecScope_NonSelfHosting_LegitimateSpecPath_OK proves the
+// legitimate case is NOT broken by the scope gate: an ordinary domain-
+// relative "spec/..." path (the pilot prat domain's real shape) is accepted.
+func TestEntryWithinSpecScope_NonSelfHosting_LegitimateSpecPath_OK(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
+	ok, reason := EntryWithinSpecScope(SpecRoot(domainDir, false), "spec/model/risk.go", false)
+	if !ok {
+		t.Fatalf("expected legitimate spec/ path to be within scope, got reason=%q", reason)
+	}
+}
+
+// TestEntryWithinSpecScope_NonSelfHosting_ParentTraversal_Rejected is the
+// direct reproduction of @fh Probe D: a non-self-hosting domain citing
+// "../HotamSpec/internal/ontology/lifecycle.go:Lifecycle" (or any "../"
+// escape) must be rejected BEFORE resolution is even attempted.
+func TestEntryWithinSpecScope_NonSelfHosting_ParentTraversal_Rejected(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
+	root := SpecRoot(domainDir, false)
+	for _, bad := range []string{
+		"../HotamSpec/internal/ontology/lifecycle.go",
+		"../../etc/passwd",
+		"..",
+		"spec/../../../internal/ontology/lifecycle.go",
+	} {
+		ok, reason := EntryWithinSpecScope(root, bad, false)
+		if ok {
+			t.Fatalf("expected traversal path %q to be rejected, got ok=true", bad)
+		}
+		if reason == "" {
+			t.Fatalf("expected a non-empty reason for rejecting %q", bad)
+		}
+	}
+}
+
+// TestEntryWithinSpecScope_NonSelfHosting_OutsideSpecPrefix_Rejected proves a
+// non-self-hosting domain cannot cite a path that never traverses via ".."
+// but also never sits under "spec/" -- e.g. a sibling domain's own spec/
+// tree reached by a relative path that does not start with "spec/", or an
+// absolute path. Neither shape is a legitimate authored-spec reference for
+// an ordinary domain.
+func TestEntryWithinSpecScope_NonSelfHosting_OutsideSpecPrefix_Rejected(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
+	root := SpecRoot(domainDir, false)
+	for _, bad := range []string{
+		"internal/ontology/lifecycle.go",
+		"cmd/hotam/main.go",
+		"README.md",
+	} {
+		ok, reason := EntryWithinSpecScope(root, bad, false)
+		if ok {
+			t.Fatalf("expected non-spec/-prefixed path %q to be rejected, got ok=true", bad)
+		}
+		if reason == "" {
+			t.Fatalf("expected a non-empty reason for rejecting %q", bad)
+		}
+	}
+}
+
+// TestEntryWithinSpecScope_SelfHosting_LegitimateEnginePath_OK proves the
+// self-hosting legitimate case is not broken: an "internal/..." path (the
+// real hotam-spec-self recursion shape, PLAN-authored-spec-discipline.md
+// §9) is accepted when selfHosting=true, even though it does NOT start with
+// "spec/" -- the spec/ prefix requirement is only for non-self-hosting
+// domains.
+func TestEntryWithinSpecScope_SelfHosting_LegitimateEnginePath_OK(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingEngineFixture(t, "hotam-spec-self")
+	root := SpecRoot(domainDir, true)
+	ok, reason := EntryWithinSpecScope(root, "internal/foo.go", true)
+	if !ok {
+		t.Fatalf("expected legitimate internal/ engine path to be within scope, got reason=%q", reason)
+	}
+}
+
+// TestEntryWithinSpecScope_SelfHosting_ParentTraversal_Rejected proves the
+// self-hosting path is equally hardened: a "../" escape out of the engine
+// repository root is rejected even though self-hosting has no required
+// "spec/" prefix.
+func TestEntryWithinSpecScope_SelfHosting_ParentTraversal_Rejected(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingEngineFixture(t, "hotam-spec-self")
+	root := SpecRoot(domainDir, true)
+	for _, bad := range []string{
+		"../outside-the-engine-repo/evil.go",
+		"internal/../../outside/evil.go",
+	} {
+		ok, reason := EntryWithinSpecScope(root, bad, true)
+		if ok {
+			t.Fatalf("expected self-hosting traversal path %q to be rejected, got ok=true", bad)
+		}
+		if reason == "" {
+			t.Fatalf("expected a non-empty reason for rejecting %q", bad)
+		}
+	}
+}
+
+// TestEntryWithinSpecScope_AbsolutePath_Rejected proves an absolute path
+// (which would bypass the domain root entirely) is rejected for both
+// self-hosting and non-self-hosting domains.
+func TestEntryWithinSpecScope_AbsolutePath_Rejected(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
+	root := SpecRoot(domainDir, false)
+	abs := filepath.ToSlash(filepath.Join(root, "..", "..", "etc", "passwd"))
+	if ok, _ := EntryWithinSpecScope(root, "/"+abs, false); ok {
+		t.Fatalf("expected absolute path to be rejected")
+	}
+	if ok, _ := EntryWithinSpecScope(root, "C:/Windows/system32", false); ok {
+		t.Fatalf("expected drive-letter absolute path to be rejected")
+	}
+}
+
+// --- testBodyHasTeeth / testBodyHasTopLevelSkip hardening (F3: @fh Probe A) -
+
+// TestResolveSpecTest_EmptyLoopIsNotTeeth is the direct reproduction of @fh
+// Probe A: a test body containing ONLY an empty loop (`for i := 0; i < 0;
+// i++ {}`) with no real assertion call inside it must NOT count as teeth --
+// the old detector treated any bare for/if/switch as "teeth" by shape alone,
+// letting an always-green, always-vacuous test through.
+func TestResolveSpecTest_EmptyLoopIsNotTeeth(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	for i := 0; i < 0; i++ {
+	}
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if res.HasTeeth {
+		t.Fatalf("BROKEN CASE: expected HasTeeth=false for an empty loop with no assertion, got %+v", res)
+	}
+}
+
+// TestResolveSpecTest_BareIfWithNoAssertIsNotTeeth proves the same hardening
+// for a bare `if` branch: a condition with an empty (or assert-free) body is
+// not teeth merely because it is an `if` statement.
+func TestResolveSpecTest_BareIfWithNoAssertIsNotTeeth(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	x := 1
+	if x == 1 {
+		x = 2
+	}
+	_ = x
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if res.HasTeeth {
+		t.Fatalf("BROKEN CASE: expected HasTeeth=false for an if-branch with no assertion, got %+v", res)
+	}
+}
+
+// TestResolveSpecTest_MUTATION_EmptyLoopToRealAssertFlipsTeeth is the
+// break->fix mutation proof: start from the Probe A shape (empty loop, no
+// teeth), then add a real t.Fatalf inside the loop body -- teeth must flip
+// to true.
+func TestResolveSpecTest_MUTATION_EmptyLoopToRealAssertFlipsTeeth(t *testing.T) {
+	t.Parallel()
+	const vacuous = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	for i := 0; i < 0; i++ {
+	}
+}
+`
+	const withAssert = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	for i := 0; i < 1; i++ {
+		if i != 0 {
+			t.Fatalf("unexpected i=%d", i)
+		}
+	}
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", vacuous)
+	path := filepath.Join(domainDir, "spec", "model", "risk_test.go")
+
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if res.HasTeeth {
+		t.Fatalf("BROKEN CASE: expected HasTeeth=false before fix, got %+v", res)
+	}
+
+	if err := os.WriteFile(path, []byte(withAssert), 0o644); err != nil {
+		t.Fatalf("WriteFile fix: %v", err)
+	}
+	res2, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest after fix: %v", err)
+	}
+	if !res2.HasTeeth {
+		t.Fatalf("FIXED CASE: expected HasTeeth=true once a real assertion is nested inside the loop, got %+v", res2)
+	}
+}
+
+// TestResolveSpecTest_IfTrueSkip_IsUnconditional is the direct reproduction
+// of @fh Probe A's second half: `if true { t.Skip(...) }` must be treated as
+// an unconditional skip, exactly like a bare top-level t.Skip -- the old
+// detector only looked at direct top-level statements and missed a skip
+// dressed up behind a constant-true condition.
+func TestResolveSpecTest_IfTrueSkip_IsUnconditional(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	if true {
+		t.Skip("dressed-up unconditional skip")
+	}
+	r, err := NewRisk("")
+	if err == nil {
+		t.Fatalf("expected error, got %v", r)
+	}
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !res.HasSkip {
+		t.Fatalf("BROKEN CASE: expected HasSkip=true for `if true { t.Skip(...) }`, got %+v", res)
+	}
+}
+
+// TestResolveSpecTest_ConditionalTestingShortSkip_RemainsIdiomExempt is the
+// non-regression proof: the genuine Go idiom `if testing.Short() {
+// t.Skip(...) }` must NOT be flagged -- only a CONSTANT-true condition is
+// treated as unconditional, a real runtime check is left alone.
+func TestResolveSpecTest_ConditionalTestingShortSkip_RemainsIdiomExempt(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", riskTestConditionalSkipSrc)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if res.HasSkip {
+		t.Fatalf("REGRESSION: expected HasSkip=false for the testing.Short() idiom, got %+v", res)
+	}
+}
+
+// TestResolveSpecTest_MUTATION_IfTrueSkipToRealConditionFlipsHasSkip is the
+// break->fix mutation proof: start from `if true { t.Skip(...) }`
+// (HasSkip=true), then replace the constant-true condition with a real
+// runtime condition (testing.Short()) -- HasSkip must flip to false.
+func TestResolveSpecTest_MUTATION_IfTrueSkipToRealConditionFlipsHasSkip(t *testing.T) {
+	t.Parallel()
+	const ifTrueSkip = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	if true {
+		t.Skip("dressed-up unconditional skip")
+	}
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", ifTrueSkip)
+	path := filepath.Join(domainDir, "spec", "model", "risk_test.go")
+
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !res.HasSkip {
+		t.Fatalf("BROKEN CASE: expected HasSkip=true before fix, got %+v", res)
+	}
+
+	if err := os.WriteFile(path, []byte(riskTestConditionalSkipSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile fix: %v", err)
+	}
+	res2, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest after fix: %v", err)
+	}
+	if res2.HasSkip {
+		t.Fatalf("FIXED CASE: expected HasSkip=false after replacing with a real runtime condition, got %+v", res2)
+	}
+}

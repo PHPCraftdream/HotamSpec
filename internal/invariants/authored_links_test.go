@@ -797,3 +797,262 @@ func TestNonSelfHostingLinks_StillResolveAgainstDomainDir(t *testing.T) {
 		t.Fatalf("expected a non-self-hosting domain to still resolve implemented_by against domainDir, got %v", vs)
 	}
 }
+
+// --- F2 remediation (@fh Probe D): scope-escape reproduction at the check
+// level ------------------------------------------------------------------
+
+// TestCheckImplementedBySymbolResolvable_ParentTraversal_Fires is the direct
+// check-level reproduction of @fh Probe D: a non-self-hosting domain (prat-
+// shaped: DomainDir with a spec/ tree, SelfHosting=false) declaring
+// implemented_by "../HotamSpec/internal/ontology/lifecycle.go:Lifecycle"
+// used to resolve cleanly (0 violations) because the resolver just joined
+// the path onto domainDir with no scope check. It must now fire.
+func TestCheckImplementedBySymbolResolvable_ParentTraversal_Fires(t *testing.T) {
+	t.Parallel()
+	// domainDir/spec/model/risk.go exists (a normal pilot-shaped domain);
+	// the escape reference is deliberately a sibling of domainDir, mimicking
+	// "../HotamSpec/internal/..." reaching outside the domain root.
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	outsideDir := filepath.Dir(domainDir)
+	if err := os.MkdirAll(filepath.Join(outsideDir, "internal", "ontology"), 0o755); err != nil {
+		t.Fatalf("MkdirAll outside engine dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(outsideDir, "internal", "ontology", "lifecycle.go"), []byte(`package ontology
+
+type Lifecycle struct{}
+`), 0o644); err != nil {
+		t.Fatalf("WriteFile outside lifecycle.go: %v", err)
+	}
+
+	escapeRel := "../" + filepath.Base(outsideDir) + "/internal/ontology/lifecycle.go:Lifecycle"
+	// Simpler, and matching the review's literal probe text more closely:
+	// climb straight out of domainDir via "..".
+	escapeRel = "../internal/ontology/lifecycle.go:Lifecycle"
+
+	r := reqWithLinks("R-probe-d", "sa", []string{escapeRel}, nil)
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+
+	vs := runCheck(t, "check_implemented_by_symbol_resolvable", g)
+	if !hasViolationFor(vs, "R-probe-d") {
+		t.Fatalf("BROKEN CASE (Probe D): expected a violation for a \"..\"-escaping implemented_by entry, got %v", vs)
+	}
+}
+
+// TestCheckImplementedBySymbolResolvable_LegitimateSpecReference_StillOK is
+// the companion proof that the F2 scope gate does NOT break the legitimate
+// pilot shape: a normal "spec/model/risk.go:NewRisk" entry keeps resolving
+// to zero violations.
+func TestCheckImplementedBySymbolResolvable_LegitimateSpecReference_StillOK(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	r := reqWithLinks("R-legit", "sa", []string{"spec/model/risk.go:NewRisk"}, nil)
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
+		t.Fatalf("expected legitimate spec/ implemented_by entry to still resolve with 0 violations, got %v", vs)
+	}
+}
+
+// TestCheckVerifiedByTestResolvable_ParentTraversal_Fires is the verified_by
+// counterpart of the Probe D reproduction.
+func TestCheckVerifiedByTestResolvable_ParentTraversal_Fires(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	outsideDir := filepath.Dir(domainDir)
+	if err := os.MkdirAll(filepath.Join(outsideDir, "internal", "ontology"), 0o755); err != nil {
+		t.Fatalf("MkdirAll outside engine dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(outsideDir, "internal", "ontology", "lifecycle_test.go"), []byte(`package ontology
+
+import "testing"
+
+func TestLifecycle(t *testing.T) {
+	t.Fatalf("should never resolve from outside the domain scope")
+}
+`), 0o644); err != nil {
+		t.Fatalf("WriteFile outside lifecycle_test.go: %v", err)
+	}
+
+	r := reqWithLinks("R-probe-d-verified", "sa", nil, []string{"../internal/ontology/lifecycle_test.go:TestLifecycle"})
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+
+	vs := runCheck(t, "check_verified_by_test_resolvable", g)
+	if !hasViolationFor(vs, "R-probe-d-verified") {
+		t.Fatalf("BROKEN CASE (Probe D): expected a violation for a \"..\"-escaping verified_by entry, got %v", vs)
+	}
+}
+
+// TestCheckImplementedBySymbolResolvable_SelfHosting_ParentTraversal_Fires
+// proves the self-hosting path is equally hardened: an implemented_by entry
+// that climbs out of the engine repository root via ".." must fire even
+// though self-hosting has no required "spec/" prefix.
+func TestCheckImplementedBySymbolResolvable_SelfHosting_ParentTraversal_Fires(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingFixture(t, "hotam-spec-self")
+	engineRoot := filepath.Dir(filepath.Dir(domainDir))
+	outsideDir := filepath.Dir(engineRoot)
+	if err := os.MkdirAll(outsideDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll outside engine root: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(outsideDir, "evil.go"), []byte(`package evil
+
+func Evil() {}
+`), 0o644); err != nil {
+		t.Fatalf("WriteFile evil.go: %v", err)
+	}
+
+	r := reqWithLinks("R-self-hosting-escape", "sa", []string{"../evil.go:Evil"}, nil)
+	g := &ontology.Graph{DomainDir: domainDir, SelfHosting: true, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+
+	vs := runCheck(t, "check_implemented_by_symbol_resolvable", g)
+	if !hasViolationFor(vs, "R-self-hosting-escape") {
+		t.Fatalf("BROKEN CASE: expected a violation for a self-hosting \"..\"-escaping implemented_by entry, got %v", vs)
+	}
+}
+
+// TestAuthoredLinkChecks_RealPratDomain_ZeroViolations_WithLegitimateLinks is
+// the acceptance-level proof that the F2 scope gate does not regress the
+// real pilot domain: loading ../PRAT-hotam/domains/prat's actual graph.json
+// (which carries real "spec/model/*.go" implemented_by/verified_by entries)
+// through the resolvable checks still yields zero violations from those two
+// checks. Skips (does not fail) if the sibling repository checkout is not
+// present in this environment.
+func TestAuthoredLinkChecks_RealPratDomain_ZeroViolations_WithLegitimateLinks(t *testing.T) {
+	t.Parallel()
+	domainDir := findSiblingDomainDir(t, "PRAT-hotam", "prat")
+	if domainDir == "" {
+		t.Skip("sibling ../PRAT-hotam/domains/prat checkout not present in this environment")
+	}
+	graphPath := filepath.Join(domainDir, "graph.json")
+	g, err := loader.LoadGraph(graphPath)
+	if err != nil {
+		t.Fatalf("loader.LoadGraph(%s): %v", graphPath, err)
+	}
+	for _, name := range []string{"check_implemented_by_symbol_resolvable", "check_verified_by_test_resolvable"} {
+		if vs := runCheck(t, name, g); len(vs) != 0 {
+			t.Fatalf("expected 0 violations from %s on the real prat domain (legitimate spec/ links), got %v", name, vs)
+		}
+	}
+}
+
+// findSiblingDomainDir looks for <repoRoot>/../<siblingRepo>/domains/<domain>
+// relative to the HotamSpec module root (found by walking up from the
+// current test file's working directory to go.mod), returning "" if it does
+// not exist -- lets acceptance tests against the real sibling checkouts
+// degrade to a skip rather than a hard failure in an environment that does
+// not have the sibling repository checked out alongside HotamSpec.
+func findSiblingDomainDir(t *testing.T, siblingRepo, domain string) string {
+	t.Helper()
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("os.Getwd: %v", err)
+	}
+	dir := wd
+	for {
+		if info, statErr := os.Stat(filepath.Join(dir, "go.mod")); statErr == nil && !info.IsDir() {
+			candidate := filepath.Join(dir, "..", siblingRepo, "domains", domain)
+			if info, statErr := os.Stat(candidate); statErr == nil && info.IsDir() {
+				return candidate
+			}
+			return ""
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
+	}
+}
+
+// --- F3 remediation (@fh Probe A) at the check level -----------------------
+
+// TestCheckVerifiedByTestHasTeeth_EmptyLoop_Fires is the check-level
+// reproduction of @fh Probe A: a verified_by test whose body is only an
+// empty loop (no real assertion) used to pass check_verified_by_test_has_teeth
+// because any bare for/if/switch counted as "teeth" by shape. It must now
+// fire.
+func TestCheckVerifiedByTestHasTeeth_EmptyLoop_Fires(t *testing.T) {
+	t.Parallel()
+	const emptyLoopSrc = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	for i := 0; i < 0; i++ {
+	}
+}
+`
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk_test.go", emptyLoopSrc)
+	r := reqWithLinks("R-probe-a-loop", "sa", nil, []string{"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"})
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+
+	vs := runCheck(t, "check_verified_by_test_has_teeth", g)
+	if !hasViolationFor(vs, "R-probe-a-loop") {
+		t.Fatalf("BROKEN CASE (Probe A): expected a violation for an empty-loop verified_by test with no assertion, got %v", vs)
+	}
+}
+
+// TestCheckVerifiedByTestHasTeeth_RealAssertion_StillOK is the companion
+// proof that the F3 hardening does not break a real, honestly-asserting
+// verified_by test.
+func TestCheckVerifiedByTestHasTeeth_RealAssertion_StillOK(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk_test.go", authoredRiskTestGoodSrc)
+	r := reqWithLinks("R-real-assert", "sa", nil, []string{"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"})
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+	if vs := runCheck(t, "check_verified_by_test_has_teeth", g); len(vs) != 0 {
+		t.Fatalf("expected a real-assertion verified_by test to keep passing check_verified_by_test_has_teeth, got %v", vs)
+	}
+}
+
+// TestCheckVerifiedByTestNoSkip_IfTrueSkip_Fires is the check-level
+// reproduction of @fh Probe A's second half: `if true { t.Skip(...) }` used
+// to slip past check_verified_by_test_no_skip because the skip was not a
+// direct top-level statement. It must now fire.
+func TestCheckVerifiedByTestNoSkip_IfTrueSkip_Fires(t *testing.T) {
+	t.Parallel()
+	const ifTrueSkipSrc = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	if true {
+		t.Skip("dressed-up unconditional skip")
+	}
+}
+`
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk_test.go", ifTrueSkipSrc)
+	r := reqWithLinks("R-probe-a-iftrueskip", "sa", nil, []string{"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"})
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+
+	vs := runCheck(t, "check_verified_by_test_no_skip", g)
+	if !hasViolationFor(vs, "R-probe-a-iftrueskip") {
+		t.Fatalf("BROKEN CASE (Probe A): expected a violation for `if true { t.Skip(...) }`, got %v", vs)
+	}
+}
+
+// TestCheckVerifiedByTestNoSkip_ConditionalTestingShortSkip_StillOK is the
+// companion non-regression proof: the genuine testing.Short() idiom must
+// still pass check_verified_by_test_no_skip after the F3 hardening.
+func TestCheckVerifiedByTestNoSkip_ConditionalTestingShortSkip_StillOK(t *testing.T) {
+	t.Parallel()
+	const conditionalSkipSrc = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	if testing.Short() {
+		t.Skip("slow test")
+	}
+	r, err := NewRisk("")
+	if err == nil {
+		t.Fatalf("expected error, got %v", r)
+	}
+}
+`
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk_test.go", conditionalSkipSrc)
+	r := reqWithLinks("R-conditional-skip-ok", "sa", nil, []string{"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"})
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+	if vs := runCheck(t, "check_verified_by_test_no_skip", g); len(vs) != 0 {
+		t.Fatalf("REGRESSION: expected the testing.Short() idiom to still pass check_verified_by_test_no_skip, got %v", vs)
+	}
+}
