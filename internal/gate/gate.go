@@ -33,7 +33,7 @@ type testScan struct {
 func SelectTier1(targetAnchor string, g *ontology.Graph) GateResult {
 	for _, r := range g.Requirements {
 		if r.ID == targetAnchor {
-			return selectFromRequirement(targetAnchor, r.EnforcedBy)
+			return selectFromRequirement(targetAnchor, r.EnforcedBy, g.DomainDir)
 		}
 	}
 	for _, c := range g.Conflicts {
@@ -54,7 +54,7 @@ func SelectTier1(targetAnchor string, g *ontology.Graph) GateResult {
 	}
 }
 
-func selectFromRequirement(targetAnchor string, enforcedBy []string) GateResult {
+func selectFromRequirement(targetAnchor string, enforcedBy []string, domainDir string) GateResult {
 	if len(enforcedBy) == 0 {
 		return GateResult{
 			Confident: false,
@@ -64,7 +64,7 @@ func selectFromRequirement(targetAnchor string, enforcedBy []string) GateResult 
 		}
 	}
 
-	scan, err := buildScan()
+	scan, err := buildScan(domainDir)
 	if err != nil {
 		return GateResult{
 			Confident: false,
@@ -250,26 +250,68 @@ func defaultCmdRoot() string {
 	return filepath.Join(filepath.Dir(file), "..", "..", "cmd")
 }
 
+// genGoRoot returns the domain's gen-code Go output directory
+// (<domainDir>/gen/go — the fixed convention documented in
+// docs/GEN-CODE-CONTRACT.md §1) and whether it actually exists on disk.
+// domainDir is the same --domain path every caller already resolves (see
+// ontology.Graph.DomainDir, populated by the loader); no new manifest field
+// or CLI flag is needed since the subpath is deterministic. A domain that
+// never ran `hotam gen-code` simply has nothing to scan here — that is not
+// an error, just an empty (false) result, so buildScan/TestFuncNames treat a
+// missing gen/go the same as a domain with zero generated tests.
+func genGoRoot(domainDir string) (string, bool) {
+	if domainDir == "" {
+		return "", false
+	}
+	root := filepath.Join(domainDir, "gen", "go")
+	info, err := os.Stat(root)
+	if err != nil || !info.IsDir() {
+		return "", false
+	}
+	return root, true
+}
+
 // testFuncRoots returns every root directory mechanism #1 (Test*-name
-// resolution) walks: internal/ and cmd/. Both buildScan and TestFuncNames
-// call this so the two consumers can never drift on which roots count.
-func testFuncRoots() []string {
-	return []string{defaultInternalRoot(), defaultCmdRoot()}
+// resolution) walks: internal/ and cmd/ (HotamSpec's own tree, always
+// scanned) plus, when domainDir is non-empty and its gen/go output exists,
+// <domainDir>/gen/go (a consumer domain's generated test tree — see
+// genGoRoot). Both buildScan and TestFuncNames call this so the two
+// consumers can never drift on which roots count.
+//
+// Widening mechanism #1 to a consumer domain's gen/go is a deliberate,
+// steward-accepted trust shift (task #214, following the finding in task
+// #197): the engine can no longer independently verify from its OWN tree
+// alone that an ENFORCED requirement in a consumer domain has a real
+// enforcer — it now also trusts that whatever *_test.go files live under
+// gen/go were produced by the deterministic `hotam gen-code` generator, not
+// hand-written by an agent. That trust is the same one already placed in
+// gen-code itself (tests are generated from the graph, not authored by
+// hand), so widening the SCAN here does not introduce a new trust boundary,
+// only extends the existing one to cover resolution. Mechanism #2 (the
+// check_* literal -> tests map) is deliberately NOT widened this way — see
+// defaultInternalRoot's doc comment for why that risk model differs.
+func testFuncRoots(domainDir string) []string {
+	roots := []string{defaultInternalRoot(), defaultCmdRoot()}
+	if genGo, ok := genGoRoot(domainDir); ok {
+		roots = append(roots, genGo)
+	}
+	return roots
 }
 
 // buildScan constructs the resolver's combined view: the check_ literal map
 // comes from internal/invariants only (scanTestDir), and the Test* function
-// name set comes from ALL internal/**/*_test.go and cmd/**/*_test.go
-// (walkTestFuncs over testFuncRoots). This split is what makes mechanism #1
-// repo-wide while keeping mechanism #2 free of fixture pollution — see
-// defaultInternalRoot and defaultCmdRoot.
-func buildScan() (*testScan, error) {
+// name set comes from ALL internal/**/*_test.go, cmd/**/*_test.go, and (when
+// present) <domainDir>/gen/go/**/*_test.go (walkTestFuncs over
+// testFuncRoots). This split is what makes mechanism #1 repo-wide (and now
+// consumer-domain-wide) while keeping mechanism #2 free of fixture
+// pollution — see defaultInternalRoot, defaultCmdRoot, and genGoRoot.
+func buildScan(domainDir string) (*testScan, error) {
 	invScan, err := scanTestDir(defaultInvariantsDir())
 	if err != nil {
 		return nil, err
 	}
 	funcSet := make(map[string]struct{})
-	for _, root := range testFuncRoots() {
+	for _, root := range testFuncRoots(domainDir) {
 		if err := walkTestFuncs(root, funcSet); err != nil {
 			return nil, err
 		}
@@ -278,7 +320,9 @@ func buildScan() (*testScan, error) {
 }
 
 // TestFuncNames returns the set of every top-level Test* function name found
-// under internal/**/*_test.go and cmd/**/*_test.go — the Test*-name half
+// under internal/**/*_test.go, cmd/**/*_test.go, and — when domainDir is
+// non-empty and has a gen/go output directory — that domain's
+// gen/go/**/*_test.go (see genGoRoot). This is the Test*-name half
 // (mechanism #1) of the enforced_by resolver that selectFromRequirement /
 // resolveOne use. It is the shared resolution primitive that
 // check_enforced_by_resolvable reuses, so the two consumers (gate's targeted
@@ -287,9 +331,14 @@ func buildScan() (*testScan, error) {
 // here: each consumer answers it differently (gate via the literal map from
 // internal/invariants, the invariant via its own All registry), so only the
 // genuinely shared Test* name set is exposed.
-func TestFuncNames() (map[string]struct{}, error) {
+//
+// domainDir is the resolved --domain path (ontology.Graph.DomainDir); pass
+// "" to scan only HotamSpec's own internal/ and cmd/ trees (e.g. when no
+// domain context is available), which preserves the pre-task-#214 behavior
+// byte-for-byte.
+func TestFuncNames(domainDir string) (map[string]struct{}, error) {
 	funcSet := make(map[string]struct{})
-	for _, root := range testFuncRoots() {
+	for _, root := range testFuncRoots(domainDir) {
 		if err := walkTestFuncs(root, funcSet); err != nil {
 			return nil, err
 		}
