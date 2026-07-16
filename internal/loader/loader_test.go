@@ -431,19 +431,20 @@ func TestLoadGraph_UnknownFieldOnCurrentVersion_StillCaught(t *testing.T) {
 	}
 }
 
-// TestLoadGraph_V1SchemaVersion_LoadsUnderV2 is the migration regression guard
-// for the schema_version 1→2 bump: a graph.json written in the v1 format (the
-// shape before Requirement.blocked_on existed — the field is simply absent)
-// must load losslessly under a v2 binary. Because blocked_on is a purely
-// additive OPTIONAL field (omitempty), a v1 file that lacks it decodes into the
-// v2 Requirement struct as the Go zero-value "" with no data transformation and
-// nothing for DisallowUnknownFields to reject. The loader's case-1 arm
-// documents this; this test proves it on a minimal real v1-shaped payload.
-func TestLoadGraph_V1SchemaVersion_LoadsUnderV2(t *testing.T) {
+// TestLoadGraph_V1SchemaVersion_LoadsUnderCurrent is the migration regression
+// guard for the loader's case-1 arm: a graph.json written in the v1 format
+// (the shape before Requirement.blocked_on existed — the field is simply
+// absent) must load losslessly under the CURRENT binary, whatever
+// CurrentSchemaVersion has been bumped to since (v2, v3, ...). Because
+// blocked_on is a purely additive OPTIONAL field (omitempty), a v1 file that
+// lacks it decodes into the current Requirement struct as the Go zero-value
+// "" with no data transformation and nothing for DisallowUnknownFields to
+// reject. The loader's case-1 arm documents this; this test proves it on a
+// minimal real v1-shaped payload and is deliberately version-agnostic (no
+// CurrentSchemaVersion guard) so it keeps exercising case 1 across future
+// schema bumps instead of silently skipping itself.
+func TestLoadGraph_V1SchemaVersion_LoadsUnderCurrent(t *testing.T) {
 	t.Parallel()
-	if ontology.CurrentSchemaVersion != 2 {
-		t.Skipf("this test asserts the v1→v2 additive migration; current schema is %d", ontology.CurrentSchemaVersion)
-	}
 	dir := t.TempDir()
 	out := filepath.Join(dir, "graph.json")
 	// A true v1 shape: schema_version 1, a closeable-debt requirement with NO
@@ -454,7 +455,7 @@ func TestLoadGraph_V1SchemaVersion_LoadsUnderV2(t *testing.T) {
 	}
 	g, err := LoadGraph(out)
 	if err != nil {
-		t.Fatalf("a v1 graph (schema_version:1) must load losslessly under the v2 binary: %v", err)
+		t.Fatalf("a v1 graph (schema_version:1) must load losslessly under the current binary: %v", err)
 	}
 	if g.SchemaVersion != ontology.CurrentSchemaVersion {
 		t.Errorf("loaded SchemaVersion: got %d, want %d (CurrentSchemaVersion, normalized on load)", g.SchemaVersion, ontology.CurrentSchemaVersion)
@@ -473,5 +474,47 @@ func TestLoadGraph_V1SchemaVersion_LoadsUnderV2(t *testing.T) {
 	}
 	if r.IsFeatureBlockedDebt() {
 		t.Error("a v1 closeable-debt requirement with empty BlockedOn must NOT be feature-blocked")
+	}
+}
+
+// TestLoadGraph_V2SchemaVersion_LoadsUnderCurrent is the mirror regression
+// guard for the loader's case-2 arm: a graph.json written in the v2 format
+// (the shape before Requirement.implemented_by/verified_by existed — both
+// fields are simply absent) must load losslessly under the CURRENT binary.
+// Because implemented_by/verified_by are purely additive OPTIONAL fields
+// (omitempty []string), a v2 file that lacks them decodes into the current
+// Requirement struct as nil slices with no data transformation and nothing
+// for DisallowUnknownFields to reject. The loader's case-2 arm documents
+// this; this test proves it on a minimal real v2-shaped payload and is
+// deliberately version-agnostic (no CurrentSchemaVersion guard), mirroring
+// TestLoadGraph_V1SchemaVersion_LoadsUnderCurrent.
+func TestLoadGraph_V2SchemaVersion_LoadsUnderCurrent(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	out := filepath.Join(dir, "graph.json")
+	// A true v2 shape: schema_version 2, a requirement with NO implemented_by
+	// or verified_by fields at all (neither field existed in v2).
+	v2 := `{"schema_version": 2, "requirements": [{"id": "R-tracked", "claim": "c", "owner": "S-o", "status": "SETTLED", "enforcement": "PROSE", "enforceability": "ENFORCEABLE", "decl_order": 0}]}` + "\n"
+	if err := os.WriteFile(out, []byte(v2), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	g, err := LoadGraph(out)
+	if err != nil {
+		t.Fatalf("a v2 graph (schema_version:2) must load losslessly under the current binary: %v", err)
+	}
+	if g.SchemaVersion != ontology.CurrentSchemaVersion {
+		t.Errorf("loaded SchemaVersion: got %d, want %d (CurrentSchemaVersion, normalized on load)", g.SchemaVersion, ontology.CurrentSchemaVersion)
+	}
+	if len(g.Requirements) != 1 || g.Requirements[0].ID != "R-tracked" {
+		t.Fatalf("requirement did not round-trip: %+v", g.Requirements)
+	}
+	// The additive-migration contract: a v2 requirement lacking
+	// implemented_by/verified_by decodes as nil slices.
+	r := g.Requirements[0]
+	if r.ImplementedBy != nil {
+		t.Errorf("a v2 requirement with no implemented_by must decode as nil, got %#v", r.ImplementedBy)
+	}
+	if r.VerifiedBy != nil {
+		t.Errorf("a v2 requirement with no verified_by must decode as nil, got %#v", r.VerifiedBy)
 	}
 }

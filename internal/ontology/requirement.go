@@ -77,6 +77,23 @@ type Requirement struct {
 	// (see docs/reviews/2026-07-13-c1-roadmap-debt-triage.md, the analytical
 	// source for this field's initial backfill).
 	BlockedOn string `json:"blocked_on,omitempty"`
+	// ImplementedBy names WHERE this requirement is embodied in authored
+	// domain code, as path-qualified `file:symbol` entries (e.g.
+	// "spec/model/risk.go:NewRisk"). Orthogonal to EnforcedBy (which names
+	// engine-side check_*/Test* enforcers by bare identifier): ImplementedBy
+	// points into the domain's own authored spec/ layer. Purely additive and
+	// optional (omitempty) — the same zero-migration pattern BlockedOn used —
+	// resolution/verification of these entries is a separate concern (see
+	// PLAN-authored-spec-discipline.md §4/§12).
+	ImplementedBy []string `json:"implemented_by,omitempty"`
+	// VerifiedBy names WHERE this requirement is PROVEN, as path-qualified
+	// `file:test` entries (e.g. "spec/tests/risk_test.go:TestNewRisk_RejectsMissingOwner").
+	// The authored-era counterpart of EnforcedBy: EnforcedBy stays for
+	// engine-mechanism enforcers (registry check_* names, repo-wide Test*
+	// scan); VerifiedBy carries explicit file-qualified authored tests.
+	// Purely additive and optional (omitempty) — see
+	// PLAN-authored-spec-discipline.md §4/§12.
+	VerifiedBy []string `json:"verified_by,omitempty"`
 }
 
 func (r Requirement) IsCloseableDebt() bool {

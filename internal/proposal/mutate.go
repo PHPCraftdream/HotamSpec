@@ -62,6 +62,31 @@ func resolveEnforcedBy(newVal, oldVal []string) []string {
 	return coalesceSlice(newVal, oldVal)
 }
 
+// resolveImplementedBy is the implemented_by-specific coalesce, mirroring
+// resolveEnforcedBy exactly: a single-element ["<clear>"] clears to an empty
+// slice; any other non-empty value replaces; empty preserves the old value
+// (patch semantics). implemented_by carries path-qualified `file:symbol`
+// entries pointing into the domain's authored spec/ layer (see
+// internal/ontology/requirement.go).
+func resolveImplementedBy(newVal, oldVal []string) []string {
+	if len(newVal) == 1 && newVal[0] == clearSentinel {
+		return []string{}
+	}
+	return coalesceSlice(newVal, oldVal)
+}
+
+// resolveVerifiedBy is the verified_by-specific coalesce, mirroring
+// resolveEnforcedBy exactly: a single-element ["<clear>"] clears to an empty
+// slice; any other non-empty value replaces; empty preserves the old value
+// (patch semantics). verified_by carries path-qualified `file:test` entries
+// (see internal/ontology/requirement.go).
+func resolveVerifiedBy(newVal, oldVal []string) []string {
+	if len(newVal) == 1 && newVal[0] == clearSentinel {
+		return []string{}
+	}
+	return coalesceSlice(newVal, oldVal)
+}
+
 // resolveBlockedOn is the blocked_on-specific coalesce, mirroring
 // resolveEnforcedBy's shape for a scalar string field: the sentinel
 // "<clear>" clears to ""; any other non-empty value replaces; empty
@@ -171,6 +196,8 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		// PROSE/STRUCTURAL/ENFORCED take effect.
 		applied.Enforcement = coalesceStr(p.Enforcement, "", existing.Enforcement)
 		applied.EnforcedBy = resolveEnforcedBy(p.EnforcedBy, existing.EnforcedBy)
+		applied.ImplementedBy = resolveImplementedBy(p.ImplementedBy, existing.ImplementedBy)
+		applied.VerifiedBy = resolveVerifiedBy(p.VerifiedBy, existing.VerifiedBy)
 		applied.Relations = coalesceRelations(p.Relations, existing.Relations)
 		applied.Enforceability = coalesceStr(defaultStr(p.Enforceability, ontology.EnforceabilityENFORCEABLE), ontology.EnforceabilityENFORCEABLE, existing.Enforceability)
 		applied.MTag = coalesceStr(p.MTag, "", existing.MTag)
@@ -236,6 +263,8 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		Relations:      append([]ontology.Relation(nil), p.Relations...),
 		Enforcement:    defaultStr(p.Enforcement, ontology.EnforcementPROSE),
 		EnforcedBy:     append([]string(nil), p.EnforcedBy...),
+		ImplementedBy:  append([]string(nil), p.ImplementedBy...),
+		VerifiedBy:     append([]string(nil), p.VerifiedBy...),
 		MTag:           p.MTag,
 		Enforceability: defaultStr(p.Enforceability, ontology.EnforceabilityENFORCEABLE),
 		Summary:        p.Summary,

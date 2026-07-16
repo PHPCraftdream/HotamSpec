@@ -29,6 +29,12 @@ func FormatRequirementCard(c RequirementCard) string {
 	fmt.Fprintf(&b, "owner: %s\n", c.Owner)
 	fmt.Fprintf(&b, "enforcement: %s (%s)\n", c.Enforcement, c.Enforceability)
 	fmt.Fprintf(&b, "enforced_by: %s\n", joinOrDash(c.EnforcedBy))
+	if len(c.ImplementedBy) > 0 {
+		fmt.Fprintf(&b, "implemented_by: %s\n", joinOrDash(c.ImplementedBy))
+	}
+	if len(c.VerifiedBy) > 0 {
+		fmt.Fprintf(&b, "verified_by: %s\n", joinOrDash(c.VerifiedBy))
+	}
 	fmt.Fprintf(&b, "assumptions: %s\n", joinOrDash(c.Assumptions))
 	if len(c.Relations) > 0 {
 		var rels []string

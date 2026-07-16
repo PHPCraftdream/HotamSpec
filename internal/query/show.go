@@ -20,6 +20,8 @@ type RequirementCard struct {
 	Enforcement    string                  `json:"enforcement"`
 	Enforceability string                  `json:"enforceability"`
 	EnforcedBy     []string                `json:"enforced_by"`
+	ImplementedBy  []string                `json:"implemented_by"`
+	VerifiedBy     []string                `json:"verified_by"`
 	Assumptions    []string                `json:"assumptions"`
 	Relations      []ontology.Relation     `json:"relations"`
 	Summary        string                  `json:"summary"`
@@ -94,6 +96,8 @@ func requirementToCard(r ontology.Requirement) RequirementCard {
 		Enforcement:    r.Enforcement,
 		Enforceability: r.Enforceability,
 		EnforcedBy:     nonNilStrings(r.EnforcedBy),
+		ImplementedBy:  nonNilStrings(r.ImplementedBy),
+		VerifiedBy:     nonNilStrings(r.VerifiedBy),
 		Assumptions:    nonNilStrings(r.Assumptions),
 		Relations:      nonNilRelations(r.Relations),
 		Summary:        r.Summary,

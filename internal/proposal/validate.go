@@ -31,6 +31,12 @@ func (p ProposedRequirement) validate() error {
 	if err := validateEnforcedByClearSentinel(p.EnforcedBy); err != nil {
 		return err
 	}
+	if err := validateClearSentinelOnly("implemented_by", p.ImplementedBy); err != nil {
+		return err
+	}
+	if err := validateClearSentinelOnly("verified_by", p.VerifiedBy); err != nil {
+		return err
+	}
 	if (strings.TrimSpace(p.LastReviewedAt) != "" || strings.TrimSpace(p.ReviewAfter) != "") &&
 		len(trimNonEmpty(p.Evidence)) == 0 {
 		return validationError(
@@ -59,6 +65,29 @@ func validateEnforcedByClearSentinel(enforcedBy []string) error {
 				"enforced_by contains the %q clear-sentinel alongside other entries; "+
 					"use exactly [\"%s\"] to clear, or list real enforcers — not both.",
 				clearSentinel, clearSentinel)
+		}
+	}
+	return nil
+}
+
+// validateClearSentinelOnly is validateEnforcedByClearSentinel generalized by
+// field name for the authored-spec link fields (implemented_by /
+// verified_by): the "<clear>" sentinel, when used, must be the ONLY entry —
+// it cannot be combined with real entries and cannot be repeated. See
+// clearSentinel / mutate.go.
+func validateClearSentinelOnly(fieldName string, entries []string) error {
+	seen := 0
+	for _, e := range entries {
+		if e == clearSentinel {
+			seen++
+		}
+	}
+	if seen > 0 {
+		if len(entries) != 1 {
+			return validationError(
+				"%s contains the %q clear-sentinel alongside other entries; "+
+					"use exactly [\"%s\"] to clear, or list real entries — not both.",
+				fieldName, clearSentinel, clearSentinel)
 		}
 	}
 	return nil

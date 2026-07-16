@@ -62,6 +62,18 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		// the same strict decode below. A genuine data-SHAPE change in a future
 		// version (a renamed/removed field, a changed shape) would need real
 		// transformation code inserted here before the strict decode.
+	case 2:
+		// v2 is a real prior version (the graph.json format before the additive
+		// Requirement.implemented_by and Requirement.verified_by fields landed).
+		// It requires NO data transformation: implemented_by/verified_by are
+		// purely additive OPTIONAL fields (`json:"implemented_by,omitempty"` /
+		// `json:"verified_by,omitempty"`), so a v2 file that simply lacks them
+		// decodes losslessly into the v3 Requirement struct as nil slices —
+		// there is nothing for DisallowUnknownFields to reject (v2 data has no
+		// field the v3 struct does not recognize). Proceed to the same strict
+		// decode below. A genuine data-SHAPE change in a future version (a
+		// renamed/removed field, a changed shape) would need real
+		// transformation code inserted here before the strict decode.
 	default:
 		if sv > ontology.CurrentSchemaVersion {
 			return nil, fmt.Errorf(

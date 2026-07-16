@@ -127,6 +127,8 @@ func cmdProposeRequirement(args []string) error {
 	why := fs.String("why", "", "rationale / why this requirement exists")
 	enforcement := fs.String("enforcement", "", "ENFORCED | STRUCTURAL | PROSE")
 	enforcedBy := fs.String("enforced-by", "", "comma-separated enforcer ids (use \"<clear>\" to empty)")
+	implementedBy := fs.String("implemented-by", "", "comma-separated file:symbol refs into authored spec code (use \"<clear>\" to empty)")
+	verifiedBy := fs.String("verified-by", "", "comma-separated file:test refs into authored spec tests (use \"<clear>\" to empty)")
 	enforceability := fs.String("enforceability", "", "ENFORCEABLE | UNENFORCEABLE")
 	mTag := fs.String("m-tag", "", "milestone tag, e.g. M20")
 	assumptions := fs.String("assumptions", "", "comma-separated assumption ids (A-...)")
@@ -162,6 +164,8 @@ func cmdProposeRequirement(args []string) error {
 		Assumptions:    splitCSV(*assumptions),
 		Enforcement:    *enforcement,
 		EnforcedBy:     splitCSV(*enforcedBy),
+		ImplementedBy:  splitCSV(*implementedBy),
+		VerifiedBy:     splitCSV(*verifiedBy),
 		MTag:           *mTag,
 		Enforceability: *enforceability,
 		Evidence:       splitCSV(*evidence),

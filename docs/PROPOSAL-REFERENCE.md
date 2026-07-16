@@ -177,7 +177,15 @@ claim, default `[]`), `source_refs` (list of pointers to where the claim
 originated — doc paths, URLs, review ids, commit hashes — default `[]`),
 `blocked_on` (names a Planned tool or absent package that blocks enforcement of
 this claim — marks it feature-blocked debt; default `""`; on an UPDATE, the
-sentinel `"<clear>"` clears an existing value once the blocking feature ships)
+sentinel `"<clear>"` clears an existing value once the blocking feature ships),
+`implemented_by` (list of path-qualified `file:symbol` refs into the domain's
+authored spec code where this claim is EMBODIED, e.g.
+`"spec/model/risk.go:NewRisk"`; default `[]`; on an UPDATE, the single-element
+`["<clear>"]` sentinel empties an existing list), `verified_by` (list of
+path-qualified `file:test` refs where this claim is PROVEN, e.g.
+`"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"`; default `[]`;
+same `["<clear>"]` sentinel on UPDATE — the authored-era counterpart of
+`enforced_by`, which keeps naming engine-side `check_*`/`Test*` enforcers)
 
 ```json
 {
