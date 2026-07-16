@@ -1,0 +1,12 @@
+{
+  "kind": "Requirement",
+  "id": "R-conflict-is-connector-node",
+  "claim": "A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "implemented_by": ["internal/ontology/conflict.go:Conflict"],
+  "verified_by": ["internal/ontology/graph_smoke_test.go:TestConflictPredicates"],
+  "evidence": ["cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestConflictPredicates -v : PASS (task #226 recursion, 2026-07-16); Conflict struct (internal/ontology/conflict.go) carries Axis/Context/SharedAssumption/Steward fields as a node, no conflicts_with edge type exists in the ontology package"],
+  "source_refs": ["internal/ontology/conflict.go", "internal/ontology/graph_smoke_test.go"]
+}

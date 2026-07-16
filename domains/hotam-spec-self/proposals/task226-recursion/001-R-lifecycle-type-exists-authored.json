@@ -1,0 +1,12 @@
+{
+  "kind": "Requirement",
+  "id": "R-lifecycle-type-exists",
+  "claim": "A generic lifecycle module shall define State, Transition, and Lifecycle types.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "implemented_by": ["internal/ontology/lifecycle.go:Lifecycle"],
+  "verified_by": ["internal/ontology/graph_smoke_test.go:TestCanonicalLifecyclesSanity"],
+  "evidence": ["cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestCanonicalLifecyclesSanity -v : PASS (task #226 recursion, 2026-07-16); self-hosting resolver (domains/hotam-spec-self/manifest.json self_hosting:true) resolves internal/ontology/lifecycle.go relative to the engine repo root, not domainDir"],
+  "source_refs": ["internal/ontology/lifecycle.go", "internal/ontology/graph_smoke_test.go"]
+}

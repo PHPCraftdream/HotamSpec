@@ -219,7 +219,9 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Review after.** 2027-01-12
 
-**Sources.** internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go
+**Evidence.** cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-07-16); HistoryEntry (internal/ontology/requirement.go) is appended by ProposedRequirement.mutate (internal/proposal/mutate.go) via summarizeFieldDiff on UPDATE only, exercised end-to-end by TestApply_Requirement_UpdateAppendsHistory
+
+**Sources.** internal/ontology/requirement.go, internal/proposal/mutate.go, internal/proposal/proposal_test.go
 
 **Change history.**
 
@@ -227,3 +229,5 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 - 2026-07-12 — claim: A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change hi…→A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change hi…; why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…; settled_at: 2026-07-10→2026-07-12; last_reviewed_at: 2026-07-10→2026-07-12; review_after: 2027-01-10→2027-01-12; source_refs: []→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]
 - 2026-07-13 — why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…; last_reviewed_at: 2026-07-12→2026-07-13
 - 2026-07-13 — why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…
+- 2026-07-16 — evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-…; source_refs: [internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/proposal/proposal_test.go]; implemented_by: []→[internal/ontology/requirement.go:HistoryEntry]; verified_by: []→[internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory]
+- 2026-07-16 — semantic conflict acknowledged — human decision recorded: task #226 recursion: claim text unchanged (byte-identical to current SETTLED graph value); confront hit is a false positive against unrelated requirements sharing opposite-marker tokens in long prose (R-domain-overview-projection etc); only implemented_by/verified_by are added — no semantic claim change

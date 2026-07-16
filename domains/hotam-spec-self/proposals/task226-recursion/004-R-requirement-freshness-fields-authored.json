@@ -1,0 +1,12 @@
+{
+  "kind": "Requirement",
+  "id": "R-requirement-freshness-fields",
+  "claim": "A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "implemented_by": ["internal/ontology/requirement.go:HistoryEntry"],
+  "verified_by": ["internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory"],
+  "evidence": ["cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-07-16); HistoryEntry (internal/ontology/requirement.go) is appended by ProposedRequirement.mutate (internal/proposal/mutate.go) via summarizeFieldDiff on UPDATE only, exercised end-to-end by TestApply_Requirement_UpdateAppendsHistory"],
+  "source_refs": ["internal/ontology/requirement.go", "internal/proposal/mutate.go", "internal/proposal/proposal_test.go"]
+}

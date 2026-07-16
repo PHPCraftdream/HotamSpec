@@ -907,7 +907,9 @@
         "check_conflict_has_steward"
       ],
       "enforcement": "ENFORCED",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestConflictPredicates -v : PASS (task #226 recursion, 2026-07-16); Conflict struct (internal/ontology/conflict.go) carries Axis/Context/SharedAssumption/Steward fields as a node, no conflicts_with edge type exists in the ontology package"
+      ],
       "history": [
         {
           "at": "2026-07-12",
@@ -918,13 +920,26 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward, test_invariants.py::test_conflicts_with_is_not_a_relation_kind]→[check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward]; settled_at: 2026-06-30→2026-07-12"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestConflictPredicates -v : PASS (task #226 recursion, 2026-07-16); Conflict str…; source_refs: []→[internal/ontology/conflict.go, internal/ontology/graph_smoke_test.go]; implemented_by: []→[internal/ontology/conflict.go:Conflict]; verified_by: []→[internal/ontology/graph_smoke_test.go:TestConflictPredicates]"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #226 recursion: claim text unchanged (byte-identical to current SETTLED graph value); confront hit is a false positive against unrelated requirements sharing opposite-marker tokens in long prose (R-domain-overview-projection etc); only implemented_by/verified_by are added — no semantic claim change"
         }
       ],
       "id": "R-conflict-is-connector-node",
       "last_reviewed_at": "2026-06-30",
       "owner": "framework-author",
       "review_after": "2026-12-30",
-      "source_refs": [],
+      "source_refs": [
+        "internal/ontology/conflict.go",
+        "internal/ontology/graph_smoke_test.go"
+      ],
       "status": "SETTLED",
       "why": "The central ontological insight. An edge holds nothing; a node holds knowledge belonging to neither party (the axis, the context, the shared root) -- that is what makes contradictions first-class and clusterable. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-conflict-is-a-node-not-an-edge, which names this requirement's actual premise."
     },
@@ -4611,7 +4626,9 @@
         "TestCanonicalLifecyclesSanity"
       ],
       "enforcement": "ENFORCED",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestCanonicalLifecyclesSanity -v : PASS (task #226 recursion, 2026-07-16); self-hosting resolver (domains/hotam-spec-self/manifest.json self_hosting:true) resolves internal/ontology/lifecycle.go relative to the engine repo root, not domainDir"
+      ],
       "history": [
         {
           "at": "2026-07-12",
@@ -4637,6 +4654,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate …→Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestCanonicalLifecyclesSanity -v : PASS (task #226 recursion, 2026-07-16); self-…; source_refs: [internal/ontology/lifecycle.go]→[internal/ontology/lifecycle.go, internal/ontology/graph_smoke_test.go]; implemented_by: []→[internal/ontology/lifecycle.go:Lifecycle]; verified_by: []→[internal/ontology/graph_smoke_test.go:TestCanonicalLifecyclesSanity]"
         }
       ],
       "id": "R-lifecycle-type-exists",
@@ -4644,7 +4666,8 @@
       "owner": "framework-author",
       "review_after": "2026-11-12",
       "source_refs": [
-        "internal/ontology/lifecycle.go"
+        "internal/ontology/lifecycle.go",
+        "internal/ontology/graph_smoke_test.go"
       ],
       "status": "SETTLED",
       "why": "Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate against. State (Name, Kind, Why), Transition (Src, Dst, Event, Guard, GuardAssumption, Why), and Lifecycle (Slug, States, Transitions, Cyclic) are defined as structs in internal/ontology/lifecycle.go. Canonical lifecycles (RequirementLifecycle, ConflictLifecycle, GoalLifecycle, ProcessLifecycle, OperatorLifecycle) are defined in their respective ontology files and validated by TestCanonicalLifecyclesSanity (internal/ontology/graph_smoke_test.go). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
@@ -6430,7 +6453,9 @@
         "TestNoHandEditGraph_RealDomainLocksPinCurrentGraph"
       ],
       "enforcement": "ENFORCED",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion, 2026-07-16); Apply (internal/proposal/apply.go) is the sanctioned write path (load -> mutate -> WriteGraph -> WriteLock); TestNoHandEditGraph_RealDomainLocksPinCurrentGraph mechanically verifies every real domain's graph.lock sha256 pin matches its current graph.json, catching any hand-edit that bypassed Apply"
+      ],
       "history": [
         {
           "at": "2026-07-12",
@@ -6461,6 +6486,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json…→The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json…; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion,…; source_refs: [cmd/hotam/apply_proposal.go, cmd/hotam/land.go, internal/proposal/apply.go]→[internal/proposal/apply.go, internal/loader/lock_real_domains_test.go]; implemented_by: []→[internal/proposal/apply.go:Apply]; verified_by: []→[internal/loader/lock_real_domains_test.go:TestNoHandEditGraph_RealDomainLocksPinCurrentGraph]"
         }
       ],
       "id": "R-no-hand-edit-graph",
@@ -6468,9 +6498,8 @@
       "owner": "framework-author",
       "review_after": "2026-12-12",
       "source_refs": [
-        "cmd/hotam/apply_proposal.go",
-        "cmd/hotam/land.go",
-        "internal/proposal/apply.go"
+        "internal/proposal/apply.go",
+        "internal/loader/lock_real_domains_test.go"
       ],
       "status": "SETTLED",
       "why": "The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json>` or `hotam land` (cmd/hotam/apply_proposal.go, cmd/hotam/land.go), which load a Proposed* JSON, validate it, mutate the in-memory graph, check for new invariant violations, and only then write graph.json + graph.lock (internal/proposal/apply.go). Not yet implemented as a deterministic host-hook guard: the CLI is a pure command-line tool with no PreToolUse / host-hook integration, so there is no mechanism that mechanically blocks direct Edit/Write on graph.json. (Historically the Python _graph_guard.py PreToolUse hook provided that mechanical block.) Without a guard on graph.json, a hand-edit can bypass the proposal protocol's validation+invariant-check gate -- the same self-judging-the-judge problem (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists. ENFORCED 2026-07-13: TestNoHandEditGraph_RealDomainLocksPinCurrentGraph in internal/loader/lock_real_domains_test.go mechanically verifies this claim. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
@@ -10459,7 +10488,9 @@
         "check_requirement_history_wellformed"
       ],
       "enforcement": "ENFORCED",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-07-16); HistoryEntry (internal/ontology/requirement.go) is appended by ProposedRequirement.mutate (internal/proposal/mutate.go) via summarizeFieldDiff on UPDATE only, exercised end-to-end by TestApply_Requirement_UpdateAppendsHistory"
+      ],
       "history": [
         {
           "at": "2026-07-12",
@@ -10480,6 +10511,16 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-…; source_refs: [internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/proposal/proposal_test.go]; implemented_by: []→[internal/ontology/requirement.go:HistoryEntry]; verified_by: []→[internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory]"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #226 recursion: claim text unchanged (byte-identical to current SETTLED graph value); confront hit is a false positive against unrelated requirements sharing opposite-marker tokens in long prose (R-domain-overview-projection etc); only implemented_by/verified_by are added — no semantic claim change"
         }
       ],
       "id": "R-requirement-freshness-fields",
@@ -10489,7 +10530,7 @@
       "source_refs": [
         "internal/ontology/requirement.go",
         "internal/proposal/mutate.go",
-        "internal/invariants/lifecycle_checks.go"
+        "internal/proposal/proposal_test.go"
       ],
       "status": "SETTLED",
       "why": "External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.json -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. The freshness fields live on ontology.Requirement (internal/ontology/requirement.go) and its History []HistoryEntry; the proposal writer (ProposedRequirement.mutate in internal/proposal/mutate.go) computes the old->new field diff via summarizeFieldDiff and, on UPDATE of an existing node only (never at CREATE), appends an ontology.HistoryEntry{At: today, Summary: diff} -- mirroring the append-only ticket History form so the two change-trails do not diverge. The syntactic enforcer is check_requirement_history_wellformed (internal/invariants/lifecycle_checks.go): three sub-rules over each Requirement's history -- non-empty `at`, non-empty `summary`, monotonically non-decreasing `at` (ISO-8601 sorts lexicographically == chronologically). The check is deliberately SYNTACTIC ONLY: measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). CLOSED LOOPHOLE (2026-07-13, task #101): this requirement's own last_reviewed_at had been stamped via a routine ProposedRequirement content-editing UPDATE with evidence:[] -- the UPDATE path (internal/proposal/mutate.go, ProposedRequirement.mutate) coalesced last_reviewed_at/review_after with zero evidence gate, letting a freshness stamp ride silently alongside an unrelated content edit in one history entry, defeating the whole point of R-review-mark-carries-evidence. Fixed in ProposedRequirement.validate() (internal/proposal/validate.go): setting last_reviewed_at or review_after via ANY ProposedRequirement (CREATE or UPDATE) now requires non-empty evidence, the identical rule ProposedReviewMark already enforced -- freshness fields are evidence-gated regardless of entry point. Content-only edits that never touch either freshness field are unaffected (coalesceStr's empty-preserves-existing default still applies with zero evidence required)."

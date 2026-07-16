@@ -2633,8 +2633,13 @@
       "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-06-30",
       "review_after": "2026-12-30",
-      "evidence": [],
-      "source_refs": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestConflictPredicates -v : PASS (task #226 recursion, 2026-07-16); Conflict struct (internal/ontology/conflict.go) carries Axis/Context/SharedAssumption/Steward fields as a node, no conflicts_with edge type exists in the ontology package"
+      ],
+      "source_refs": [
+        "internal/ontology/conflict.go",
+        "internal/ontology/graph_smoke_test.go"
+      ],
       "history": [
         {
           "at": "2026-07-12",
@@ -2645,9 +2650,25 @@
           "at": "2026-07-12",
           "summary": "enforced_by: [check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward, test_invariants.py::test_conflicts_with_is_not_a_relation_kind]→[check_conflict_has_axis, check_conflict_has_context, check_conflict_has_steward]; settled_at: 2026-06-30→2026-07-12",
           "decided_by": ""
+        },
+        {
+          "at": "2026-07-16",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestConflictPredicates -v : PASS (task #226 recursion, 2026-07-16); Conflict str…; source_refs: []→[internal/ontology/conflict.go, internal/ontology/graph_smoke_test.go]; implemented_by: []→[internal/ontology/conflict.go:Conflict]; verified_by: []→[internal/ontology/graph_smoke_test.go:TestConflictPredicates]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-16",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #226 recursion: claim text unchanged (byte-identical to current SETTLED graph value); confront hit is a false positive against unrelated requirements sharing opposite-marker tokens in long prose (R-domain-overview-projection etc); only implemented_by/verified_by are added — no semantic claim change",
+          "decided_by": ""
         }
       ],
-      "decl_order": 2
+      "decl_order": 2,
+      "implemented_by": [
+        "internal/ontology/conflict.go:Conflict"
+      ],
+      "verified_by": [
+        "internal/ontology/graph_smoke_test.go:TestConflictPredicates"
+      ]
     },
     {
       "id": "R-conflict-min-two-members",
@@ -7793,9 +7814,12 @@
       "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-13",
       "review_after": "2026-11-12",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestCanonicalLifecyclesSanity -v : PASS (task #226 recursion, 2026-07-16); self-hosting resolver (domains/hotam-spec-self/manifest.json self_hosting:true) resolves internal/ontology/lifecycle.go relative to the engine repo root, not domainDir"
+      ],
       "source_refs": [
-        "internal/ontology/lifecycle.go"
+        "internal/ontology/lifecycle.go",
+        "internal/ontology/graph_smoke_test.go"
       ],
       "history": [
         {
@@ -7822,9 +7846,20 @@
           "at": "2026-07-13",
           "summary": "why: Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate …→Atom of R-lifecycle-abstraction (type-existence concern). The Lifecycle type is the keystone that Requirement.status and Conflict.lifecycle validate …; settled_at: 2026-07-13→2026-07-12",
           "decided_by": ""
+        },
+        {
+          "at": "2026-07-16",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/ontology/... -run TestCanonicalLifecyclesSanity -v : PASS (task #226 recursion, 2026-07-16); self-…; source_refs: [internal/ontology/lifecycle.go]→[internal/ontology/lifecycle.go, internal/ontology/graph_smoke_test.go]; implemented_by: []→[internal/ontology/lifecycle.go:Lifecycle]; verified_by: []→[internal/ontology/graph_smoke_test.go:TestCanonicalLifecyclesSanity]",
+          "decided_by": ""
         }
       ],
-      "decl_order": 118
+      "decl_order": 118,
+      "implemented_by": [
+        "internal/ontology/lifecycle.go:Lifecycle"
+      ],
+      "verified_by": [
+        "internal/ontology/graph_smoke_test.go:TestCanonicalLifecyclesSanity"
+      ]
     },
     {
       "id": "R-lifecycle-validates-conflict",
@@ -8135,11 +8170,12 @@
       "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-13",
       "review_after": "2026-12-12",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion, 2026-07-16); Apply (internal/proposal/apply.go) is the sanctioned write path (load -> mutate -> WriteGraph -> WriteLock); TestNoHandEditGraph_RealDomainLocksPinCurrentGraph mechanically verifies every real domain's graph.lock sha256 pin matches its current graph.json, catching any hand-edit that bypassed Apply"
+      ],
       "source_refs": [
-        "cmd/hotam/apply_proposal.go",
-        "cmd/hotam/land.go",
-        "internal/proposal/apply.go"
+        "internal/proposal/apply.go",
+        "internal/loader/lock_real_domains_test.go"
       ],
       "history": [
         {
@@ -8171,9 +8207,20 @@
           "at": "2026-07-13",
           "summary": "why: The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json…→The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json…; settled_at: 2026-07-13→2026-07-12",
           "decided_by": ""
+        },
+        {
+          "at": "2026-07-16",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion,…; source_refs: [cmd/hotam/apply_proposal.go, cmd/hotam/land.go, internal/proposal/apply.go]→[internal/proposal/apply.go, internal/loader/lock_real_domains_test.go]; implemented_by: []→[internal/proposal/apply.go:Apply]; verified_by: []→[internal/loader/lock_real_domains_test.go:TestNoHandEditGraph_RealDomainLocksPinCurrentGraph]",
+          "decided_by": ""
         }
       ],
-      "decl_order": 171
+      "decl_order": 171,
+      "implemented_by": [
+        "internal/proposal/apply.go:Apply"
+      ],
+      "verified_by": [
+        "internal/loader/lock_real_domains_test.go:TestNoHandEditGraph_RealDomainLocksPinCurrentGraph"
+      ]
     },
     {
       "id": "R-no-observation-type",
@@ -10206,11 +10253,13 @@
       "settled_at": "2026-07-12",
       "last_reviewed_at": "2026-07-13",
       "review_after": "2027-01-12",
-      "evidence": [],
+      "evidence": [
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-07-16); HistoryEntry (internal/ontology/requirement.go) is appended by ProposedRequirement.mutate (internal/proposal/mutate.go) via summarizeFieldDiff on UPDATE only, exercised end-to-end by TestApply_Requirement_UpdateAppendsHistory"
+      ],
       "source_refs": [
         "internal/ontology/requirement.go",
         "internal/proposal/mutate.go",
-        "internal/invariants/lifecycle_checks.go"
+        "internal/proposal/proposal_test.go"
       ],
       "history": [
         {
@@ -10232,9 +10281,25 @@
           "at": "2026-07-13",
           "summary": "why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…",
           "decided_by": ""
+        },
+        {
+          "at": "2026-07-16",
+          "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-…; source_refs: [internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/proposal/proposal_test.go]; implemented_by: []→[internal/ontology/requirement.go:HistoryEntry]; verified_by: []→[internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-16",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #226 recursion: claim text unchanged (byte-identical to current SETTLED graph value); confront hit is a false positive against unrelated requirements sharing opposite-marker tokens in long prose (R-domain-overview-projection etc); only implemented_by/verified_by are added — no semantic claim change",
+          "decided_by": ""
         }
       ],
-      "decl_order": 271
+      "decl_order": 271,
+      "implemented_by": [
+        "internal/ontology/requirement.go:HistoryEntry"
+      ],
+      "verified_by": [
+        "internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory"
+      ]
     },
     {
       "id": "R-review-mark-carries-evidence",
