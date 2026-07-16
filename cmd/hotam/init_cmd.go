@@ -254,6 +254,17 @@ hotam what-now --domain .
 hotam req show %[2]s --domain .
 ` + "```" + `
 
+## Founding order (skeleton first)
+
+Grow the domain in waves, never bottom-up from requirements
+(R-domain-founded-in-wave-order): wave 0 skeleton (the domain's
+purpose/goals plus a Process node naming its stages and roles, plus Axes)
+→ wave 1 artifacts (EntityTypes, each wired via Process.drives_entities)
+→ wave 2 rules (Requirements) → wave 3 tensions (Assumptions/Conflicts)
+→ wave 4 data (EntityInstances). Close every wave with ` + "`hotam gen-spec`" + `
+and read ` + "`docs/gen/PIPELINE.md`" + ` — the generated domain overview
+(R-domain-overview-projection), your second document after the Domain Map.
+
 ## Making changes
 
 The graph is never hand-edited. Every change goes through
