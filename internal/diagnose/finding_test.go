@@ -678,3 +678,134 @@ func TestPyListRepr_Empty(t *testing.T) {
 		t.Errorf("pyListRepr(empty): got %q, want %q", got, want)
 	}
 }
+
+// === ReflectOrphanEntityType (task #203: advisory "orphan detail") ===
+
+func orphanTestProcess(id string, drivesEntities ...string) ontology.Process {
+	return ontology.Process{
+		ID:             id,
+		Lifecycle:      ontology.ProcessLifecycle,
+		DrivesEntities: drivesEntities,
+	}
+}
+
+func orphanTestEntityType(slug string) ontology.EntityType {
+	return ontology.EntityType{Slug: slug}
+}
+
+func TestReflectOrphanEntityType_NoProcessNodesStaysSilent(t *testing.T) {
+	t.Parallel()
+	// Zero Process nodes at all: the Process aspect was never opted into, so
+	// "orphaned from a Process" is not a meaningful question for this domain
+	// — the signal must not fire, no matter how many undriven EntityTypes
+	// exist (this is exactly hotam-dev's real shape: 1 EntityType, 0
+	// Process nodes).
+	g := &ontology.Graph{
+		EntityTypes: []ontology.EntityType{orphanTestEntityType("wave")},
+	}
+	if fs := ReflectOrphanEntityType(g); len(fs) != 0 {
+		t.Fatalf("expected silence when g.processes is empty, got %v", fs)
+	}
+}
+
+func TestReflectOrphanEntityType_NoEntityTypesStaysSilent(t *testing.T) {
+	t.Parallel()
+	// A Process aspect with zero EntityTypes declared (this is
+	// hotam-spec-self's real shape: PR-closed-loop exists, but the domain
+	// declares no EntityType at all) — vacuously nothing can be orphaned.
+	g := &ontology.Graph{
+		Processes: []ontology.Process{orphanTestProcess("PR-1")},
+	}
+	if fs := ReflectOrphanEntityType(g); len(fs) != 0 {
+		t.Fatalf("expected silence when g.entity_types is empty, got %v", fs)
+	}
+}
+
+func TestReflectOrphanEntityType_AllDrivenStaysSilent(t *testing.T) {
+	t.Parallel()
+	// A consistent domain: every EntityType is named in SOME Process's
+	// drives_entities — the honest "no orphan" case must not fire.
+	g := &ontology.Graph{
+		Processes: []ontology.Process{
+			orphanTestProcess("PR-1", "thing-a"),
+			orphanTestProcess("PR-2", "thing-b"),
+		},
+		EntityTypes: []ontology.EntityType{
+			orphanTestEntityType("thing-a"),
+			orphanTestEntityType("thing-b"),
+		},
+	}
+	if fs := ReflectOrphanEntityType(g); len(fs) != 0 {
+		t.Fatalf("expected silence when every EntityType is driven, got %v", fs)
+	}
+}
+
+func TestReflectOrphanEntityType_FiresOnUndrivenEntityType(t *testing.T) {
+	t.Parallel()
+	// A synthetic domain with a real orphan: >=1 Process node exists, but
+	// one EntityType is not named by any Process.drives_entities.
+	g := &ontology.Graph{
+		Processes: []ontology.Process{
+			orphanTestProcess("PR-1", "thing-a"),
+		},
+		EntityTypes: []ontology.EntityType{
+			orphanTestEntityType("thing-a"),
+			orphanTestEntityType("thing-orphan"),
+		},
+	}
+	fs := ReflectOrphanEntityType(g)
+	if len(fs) != 1 {
+		t.Fatalf("expected exactly 1 orphan finding, got %d: %v", len(fs), fs)
+	}
+	if fs[0].Condition != "reflect_orphan_entity_type" {
+		t.Errorf("condition: got %q, want reflect_orphan_entity_type", fs[0].Condition)
+	}
+	if fs[0].Target != "thing-orphan" {
+		t.Errorf("target: got %q, want thing-orphan", fs[0].Target)
+	}
+	if !fs[0].Advisory {
+		t.Error("orphan-entity-type finding must be Advisory (never a blocking gate)")
+	}
+	if !strings.Contains(fs[0].Imperative, "thing-orphan") {
+		t.Errorf("imperative should name the orphan slug, got: %q", fs[0].Imperative)
+	}
+}
+
+func TestReflectOrphanEntityType_MultipleOrphansSortedDeterministic(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Processes: []ontology.Process{orphanTestProcess("PR-1")},
+		EntityTypes: []ontology.EntityType{
+			orphanTestEntityType("zzz-orphan"),
+			orphanTestEntityType("aaa-orphan"),
+		},
+	}
+	fs := ReflectOrphanEntityType(g)
+	if len(fs) != 2 {
+		t.Fatalf("expected 2 orphan findings, got %d: %v", len(fs), fs)
+	}
+	if fs[0].Target != "aaa-orphan" || fs[1].Target != "zzz-orphan" {
+		t.Fatalf("expected deterministic sorted order aaa-orphan, zzz-orphan; got %s, %s", fs[0].Target, fs[1].Target)
+	}
+}
+
+func TestReflectOrphanEntityType_RoutesToPAdvisoryInDiagnoseSignals(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Processes:   []ontology.Process{orphanTestProcess("PR-1")},
+		EntityTypes: []ontology.EntityType{orphanTestEntityType("thing-orphan")},
+	}
+	signals := DiagnoseSignals(g, "2026-07-16")
+	found := false
+	for _, s := range signals {
+		if s.Check == "reflect_orphan_entity_type" {
+			found = true
+			if s.Priority != PAdvisory {
+				t.Errorf("orphan-entity-type signal priority = %d, want PAdvisory (%d)", s.Priority, PAdvisory)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("expected DiagnoseSignals to surface the orphan-entity-type advisory signal")
+	}
+}

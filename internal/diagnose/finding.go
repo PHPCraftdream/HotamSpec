@@ -3,6 +3,7 @@ package diagnose
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -292,6 +293,63 @@ func ReflectAllMembersRejected(g *ontology.Graph) []Finding {
 	return out
 }
 
+// ReflectOrphanEntityType surfaces an advisory (never blocking) signal for
+// each EntityType that no Process in the domain drives (i.e. its slug never
+// appears in any Process.DrivesEntities). It fires ONLY when the domain has
+// declared at least one Process node — a domain with zero Process nodes has
+// not opted into the behavioral aspect at all (§Process, M12), so "which
+// EntityType is orphaned from a Process" is not a meaningful question there
+// and the signal stays silent (no Process aspect => no drives_entities
+// wiring to be orphaned from, by construction). This mirrors the existing
+// no-ops-when-aspect-absent convention already used across the Process/Goal
+// invariants (e.g. check_process_drives_existing_entities,
+// check_goal_target_kind_known): silence on an absent aspect is honest, not
+// a gap.
+//
+// This is deliberately a diagnose-layer Finding, NOT an invariants.Violation:
+// invariants.AllViolations gates apply-proposal (internal/proposal/apply.go
+// refuses to land a proposal that introduces a NEW violation) and hotam
+// all-violations' exit code. An EntityType landed before the Process step
+// that wires it in (a normal, sequential multi-proposal land) must not be
+// treated as a hard error — it is a "not wired in yet" signal for the
+// steward's attention, not a structural break. Advisory: true routes it to
+// PAdvisory in DiagnoseSignals (what-now's lowest-priority band), never to
+// PStructure.
+func ReflectOrphanEntityType(g *ontology.Graph) []Finding {
+	if len(g.Processes) == 0 {
+		return nil
+	}
+	driven := map[string]struct{}{}
+	for _, p := range g.Processes {
+		for _, slug := range p.DrivesEntities {
+			driven[slug] = struct{}{}
+		}
+	}
+	var orphanSlugs []string
+	for _, et := range g.EntityTypes {
+		if _, ok := driven[et.Slug]; !ok {
+			orphanSlugs = append(orphanSlugs, et.Slug)
+		}
+	}
+	if len(orphanSlugs) == 0 {
+		return nil
+	}
+	sort.Strings(orphanSlugs)
+	out := make([]Finding, 0, len(orphanSlugs))
+	for _, slug := range orphanSlugs {
+		out = append(out, Finding{
+			Condition: "reflect_orphan_entity_type",
+			Target:    slug,
+			Advisory:  true,
+			Imperative: fmt.Sprintf(
+				"orphan detail: EntityType '%s' is not driven by any Process.drives_entities in this domain — wire it into a Process (or confirm it is deliberately free-standing). Advisory; never a gate (skeleton-first: artifacts should follow the Process wave that drives them).",
+				slug,
+			),
+		})
+	}
+	return out
+}
+
 func AllFindings(g *ontology.Graph) []Finding {
 	var out []Finding
 	out = append(out, ReflectDraftOverhang(g)...)
@@ -303,5 +361,6 @@ func AllFindings(g *ontology.Graph) []Finding {
 	out = append(out, ReflectImplementsDecay(g)...)
 	out = append(out, ReflectReplacesEdgeMigration(g)...)
 	out = append(out, ReflectAllMembersRejected(g)...)
+	out = append(out, ReflectOrphanEntityType(g)...)
 	return out
 }

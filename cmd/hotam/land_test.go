@@ -185,12 +185,17 @@ func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
 		t.Fatalf("precondition: graph.lock should be absent before land, stat=%v", err)
 	}
 
-	// A valid proposal that would land cleanly on the happy path.
+	// A valid proposal that would land cleanly on the happy path. The claim
+	// text deliberately avoids the MUST/MUST-NOT/NEVER/ALWAYS/ONLY reserved
+	// tokens (R-...'s TRANSLATE-step embedding convention) so this fixture's
+	// throwaway prose never collides with the semantic opposite-marker gate
+	// against real SETTLED requirements that happen to use those tokens —
+	// this test exercises rollback plumbing, not the semantic gate.
 	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
 	proposalJSON := `{
 		"kind": "Requirement",
 		"id": "R-land-rollback-target",
-		"claim": "must NOT survive a rolled-back land",
+		"claim": "should disappear after a rolled-back land",
 		"owner": "framework-author",
 		"status": "DRAFT",
 		"why": "rollback coverage"
