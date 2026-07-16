@@ -344,6 +344,29 @@ func (p ProposedEntityType) validate() error {
 	return nil
 }
 
+// isProcessStepsShapePresent reports whether p carries any steps. It governs
+// which validate() branch runs for the steps/roles_required shape below:
+//   - true  -> full steps/roles_required shape validation runs (unchanged
+//     from before UPDATE existed) -- required for a CREATE (a new Process
+//     with no steps is never valid), and also applies unmodified to an
+//     UPDATE that appends new steps (see ProposedProcess.mutate's doc
+//     comment): p.Steps/p.RolesRequired describe only the NEW steps being
+//     appended, so "roles_required matches exactly the roles used by steps"
+//     is the same rule whether validate() is looking at a whole new Process
+//     or a batch of steps being appended to an existing one.
+//   - false -> p carries no steps. This is invalid for a CREATE (mutate()'s
+//     CREATE branch requires len(Steps)>0 downstream via the graph's
+//     Process-lifecycle invariants), but valid for an UPDATE that ONLY
+//     appends drives_entities and/or replaces Why (no new steps this round)
+//     -- validate() cannot know here whether p.ID names an existing
+//     Process, so it only checks the shape is internally consistent (no
+//     roles_required with zero steps to justify them, and at least ONE of
+//     drives_entities/why present so there is something to do) and defers
+//     the create-vs-update call to mutate(), which has graph access.
+func isProcessStepsShapePresent(p ProposedProcess) bool {
+	return len(p.Steps) != 0
+}
+
 func (p ProposedProcess) validate() error {
 	id := strings.TrimSpace(p.ID)
 	if id == "" {
@@ -352,8 +375,26 @@ func (p ProposedProcess) validate() error {
 	if !strings.HasPrefix(id, "PR-") {
 		return validationError("'id' must start with 'PR-'; got %q.", id)
 	}
-	if len(p.Steps) == 0 {
-		return validationError("'steps' must be a non-empty list of steps.")
+	if !isProcessStepsShapePresent(p) {
+		// No steps in this proposal: either an UPDATE that appends
+		// drives_entities and/or replaces why, or a malformed proposal with
+		// nothing to do -- mutate() makes the authoritative create-vs-update
+		// call once it has graph access (see isProcessStepsShapePresent doc
+		// comment above).
+		if len(trimNonEmpty(p.DrivesEntities)) == 0 && strings.TrimSpace(p.Why) == "" {
+			return validationError(
+				"a Process proposal must supply either 'steps' (to create a new " +
+					"Process or append steps to an existing one), 'drives_entities' " +
+					"(to append drives_entities to an existing one), or 'why' (to " +
+					"replace an existing Process's why) -- got none of these.")
+		}
+		if len(trimNonEmpty(p.RolesRequired)) != 0 {
+			return validationError(
+				"'roles_required' must be empty when 'steps' is empty -- roles_required " +
+					"declares roles used by THIS proposal's steps; with no steps in this " +
+					"proposal there is nothing for it to declare.")
+		}
+		return nil
 	}
 	declaredRoles := map[string]struct{}{}
 	for _, r := range trimNonEmpty(p.RolesRequired) {

@@ -654,33 +654,145 @@ func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 	return nil
 }
 
-// mutate implements CREATE-only landing for a new Process node (there is no
-// UPDATE path yet -- a duplicate p.ID is rejected via errDuplicate, mirroring
-// ProposedEntityType's CREATE branch before its UPDATE mode existed).
+// mutate implements CREATE for a new Process (p.ID not yet in g) and a
+// minimal, deliberately narrow UPDATE for an already-existing one (mirrors
+// ProposedEntityType's UPDATE mode, ffa4977).
 //
-// drives_entities referential integrity is checked HERE (not in validate()):
-// validate() has no graph access, so it cannot know which EntityType slugs
-// are declared in the target domain -- the same split ProposedConflict.mutate
-// already uses for its member/steward lookups. Each slug in p.DrivesEntities
-// MUST resolve to a declared EntityType.slug in g.entity_types (mirrors
-// check_process_drives_existing_entities, internal/invariants/scope_process.go)
-// so a bad slug is rejected here with a clear message instead of landing and
-// only being caught later by the invariant sweep applyToGraph runs after
-// mutate.
+// UPDATE (p.ID already names a Process in g):
+//   - p.Steps are APPENDED to the end of the existing Process.Steps --
+//     never redefining, removing, or reordering an existing step
+//     (errStepAlreadyExists if a Name collides with an existing step). Each
+//     appended step is validated the same way validate() already validates
+//     a CREATE's steps (non-empty name/requires_role/why, and
+//     requires_role declared in THIS proposal's roles_required) --
+//     validate() already runs that check uniformly for both CREATE and
+//     UPDATE (see isProcessStepsShapePresent's doc comment in validate.go).
+//   - p.RolesRequired (the roles used by the NEWLY appended steps) are
+//     UNIONED into the existing Process.RolesRequired, not replaced --
+//     check_process_roles_declared (internal/invariants/scope_process.go)
+//     checks the FULL post-mutation Process.RolesRequired against the FULL
+//     post-mutation Process.Steps (old + new), so a role a pre-existing
+//     step already declared must stay declared, and a role a newly
+//     appended step declares must become newly declared too. A role
+//     already present in the existing list is left as-is (no duplicate).
+//   - p.DrivesEntities are APPENDED to the existing Process.DrivesEntities
+//     -- never removing or reordering the existing list
+//     (errDrivesEntityAlreadyExists if a slug is already present).
+//   - p.Why, if non-empty, REPLACES the existing Process.Why (a correction
+//     of the process's own rationale, not an append -- coalesceStr's
+//     established "empty preserves, non-empty replaces" idiom, the same
+//     one ProposedRequirement.mutate already uses for its own Why field).
+//     An empty p.Why leaves the existing Why untouched.
+//   - A HistoryEntry is appended recording what changed (step names added,
+//     drives_entities slugs added, and/or "why updated"), mirroring the
+//     History-on-mutation pattern ProposedEntityType's UPDATE mode uses.
+//
+// drives_entities referential integrity is checked HERE (not in validate()),
+// on BOTH CREATE and UPDATE: validate() has no graph access, so it cannot
+// know which EntityType slugs are declared in the target domain -- the same
+// split ProposedConflict.mutate already uses for its member/steward lookups.
+// Each slug in p.DrivesEntities MUST resolve to a declared EntityType.slug in
+// g.entity_types (mirrors check_process_drives_existing_entities,
+// internal/invariants/scope_process.go) so a bad slug is rejected here with a
+// clear message instead of landing and only being caught later by the
+// invariant sweep applyToGraph runs after mutate.
 //
 // The Process always carries the single shared ontology.ProcessLifecycle --
 // see ProposedProcess's doc comment in types.go for why no author-supplied
-// lifecycle is accepted.
+// lifecycle is accepted (CREATE only; UPDATE never touches Lifecycle).
+//
+// CREATE (p.ID not yet in g): unchanged from before this UPDATE path
+// existed -- byte-identical behavior.
 func (p ProposedProcess) mutate(g *ontology.Graph, today string) error {
 	id := strings.TrimSpace(p.ID)
-	if findProcessIndex(g, id) >= 0 {
-		return errDuplicate("Process", id)
-	}
 	declaredEntityTypes := ontology.EntityTypeSlugs(g)
 	for _, slug := range trimNonEmpty(p.DrivesEntities) {
 		if _, ok := declaredEntityTypes[slug]; !ok {
 			return errNotDeclared("drives_entities EntityType", slug)
 		}
+	}
+	if idx := findProcessIndex(g, id); idx >= 0 {
+		existing := g.Processes[idx]
+
+		existingStepNames := make(map[string]struct{}, len(existing.Steps))
+		for _, s := range existing.Steps {
+			existingStepNames[s.Name] = struct{}{}
+		}
+		newSteps := make([]ontology.Step, 0, len(p.Steps))
+		addedStepNames := make([]string, 0, len(p.Steps))
+		for _, s := range p.Steps {
+			name := strings.TrimSpace(s.Name)
+			if _, dup := existingStepNames[name]; dup {
+				return errStepAlreadyExists(id, name)
+			}
+			newSteps = append(newSteps, ontology.Step{
+				Name:         name,
+				RequiresRole: strings.TrimSpace(s.RequiresRole),
+				Invokes:      s.Invokes,
+				Why:          s.Why,
+			})
+			addedStepNames = append(addedStepNames, name)
+			existingStepNames[name] = struct{}{}
+		}
+
+		existingEntitySlugs := make(map[string]struct{}, len(existing.DrivesEntities))
+		for _, slug := range existing.DrivesEntities {
+			existingEntitySlugs[slug] = struct{}{}
+		}
+		newEntitySlugs := make([]string, 0, len(p.DrivesEntities))
+		for _, slug := range trimNonEmpty(p.DrivesEntities) {
+			if _, dup := existingEntitySlugs[slug]; dup {
+				return errDrivesEntityAlreadyExists(id, slug)
+			}
+			newEntitySlugs = append(newEntitySlugs, slug)
+			existingEntitySlugs[slug] = struct{}{}
+		}
+
+		existingRoles := make(map[string]struct{}, len(existing.RolesRequired))
+		for _, r := range existing.RolesRequired {
+			existingRoles[r] = struct{}{}
+		}
+		mergedRoles := append([]string{}, existing.RolesRequired...)
+		for _, r := range trimNonEmpty(p.RolesRequired) {
+			if _, dup := existingRoles[r]; !dup {
+				mergedRoles = append(mergedRoles, r)
+				existingRoles[r] = struct{}{}
+			}
+		}
+
+		existing.Steps = append(existing.Steps, newSteps...)
+		existing.DrivesEntities = append(existing.DrivesEntities, newEntitySlugs...)
+		existing.RolesRequired = mergedRoles
+
+		var changes []string
+		if len(addedStepNames) > 0 {
+			changes = append(changes, "steps added: ["+strings.Join(addedStepNames, ", ")+"]")
+		}
+		if len(newEntitySlugs) > 0 {
+			changes = append(changes, "drives_entities added: ["+strings.Join(newEntitySlugs, ", ")+"]")
+		}
+		if strings.TrimSpace(p.Why) != "" && strings.TrimSpace(p.Why) != existing.Why {
+			changes = append(changes, "why updated")
+		}
+		existing.Why = coalesceStr(p.Why, "", existing.Why)
+		if len(changes) > 0 {
+			existing.History = append(existing.History, ontology.HistoryEntry{
+				At:      today,
+				Summary: strings.Join(changes, "; "),
+			})
+		}
+		g.Processes[idx] = existing
+		return nil
+	}
+	// CREATE (id not found above): a brand-new Process must have at least
+	// one step. validate() cannot enforce this by itself any more -- an
+	// empty p.Steps is also the valid shape for an UPDATE that appends only
+	// drives_entities (see isProcessStepsShapePresent's doc comment in
+	// validate.go) -- so the "steps required" check for a genuine CREATE
+	// has to live here, where mutate() already knows (via findProcessIndex
+	// above) that id does NOT name an existing Process.
+	if len(p.Steps) == 0 {
+		return validationError("'steps' must be a non-empty list of steps.")
 	}
 	steps := make([]ontology.Step, 0, len(p.Steps))
 	for _, s := range p.Steps {

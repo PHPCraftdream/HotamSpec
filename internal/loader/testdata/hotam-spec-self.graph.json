@@ -8329,7 +8329,8 @@
       ],
       "drives_entities": [],
       "why": "The methodology's own process modeled as a Process node — eating its own dog food at the behavioral altitude (R-process-aspect-first).",
-      "decl_order": 0
+      "decl_order": 0,
+      "history": null
     }
   ],
   "goals": [

@@ -86,6 +86,37 @@ func errEntityTypeUpdateShape(slug string) error {
 			"re-create %q (which will fail as a duplicate).", slug, slug)
 }
 
+// errStepAlreadyExists is returned by ProposedProcess.mutate's UPDATE path
+// (a Process proposal whose id already exists in the graph) when one of the
+// incoming p.Steps names a step (by Name) the target Process already has.
+// UPDATE mode only APPENDS new steps to the end of the existing list -- it
+// never redefines, removes, or reorders an existing one; resubmitting an
+// existing step's name (whether to edit it or to try to reorder it earlier
+// in the list) is rejected here rather than silently accepted, mirroring
+// errFieldAlreadyExists's EntityType precedent.
+func errStepAlreadyExists(id, stepName string) error {
+	return fmt.Errorf(
+		"Process %q already has a step named %q -- a Process UPDATE proposal "+
+			"may only APPEND new steps to the end of the existing list, never "+
+			"redefine, remove, or reorder an existing one. Rename the new step "+
+			"or drop it from 'steps'.", id, stepName)
+}
+
+// errDrivesEntityAlreadyExists is returned by ProposedProcess.mutate's
+// UPDATE path when one of the incoming p.DrivesEntities slugs is already
+// present in the target Process's existing drives_entities. UPDATE mode only
+// APPENDS new entries -- it never removes or reorders the existing list, so
+// resubmitting an already-present slug is rejected rather than silently
+// deduplicated (silent dedup would hide a proposal author's mistaken belief
+// that this slug is new).
+func errDrivesEntityAlreadyExists(id, slug string) error {
+	return fmt.Errorf(
+		"Process %q already drives entity %q -- a Process UPDATE proposal "+
+			"may only APPEND new 'drives_entities' slugs, never redefine, "+
+			"remove, or reorder the existing list. Drop %q from "+
+			"'drives_entities'.", id, slug, slug)
+}
+
 // applyToGraph validates and mutates g in place, then verifies the proposal
 // introduces no new invariant violations relative to the graph's pre-mutation
 // state. It performs no disk I/O — Apply and ApplyBatch own load/write so a

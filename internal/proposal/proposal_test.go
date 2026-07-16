@@ -1115,25 +1115,43 @@ func TestApply_Requirement_AddInvariantGuardFails(t *testing.T) {
 	assertApplyFails(t, path, p, "invariant violation")
 }
 
-// processBaseGraph returns baseGraph() plus one pre-landed EntityType
-// ("feature-flag") so ProposedProcess.drives_entities tests have a real,
-// declared EntityType slug to resolve against.
+// processBaseGraph returns baseGraph() plus two pre-landed EntityTypes
+// ("feature-flag", "release") so ProposedProcess.drives_entities tests have
+// real, declared EntityType slugs to resolve against -- two so UPDATE-mode
+// append tests can prove a NEW slug (distinct from whatever a pre-landed
+// Process already drives) is accepted.
 func processBaseGraph() *ontology.Graph {
 	g := baseGraph()
-	g.EntityTypes = append(g.EntityTypes, ontology.EntityType{
-		Slug:        "feature-flag",
-		Description: "a deployable feature toggle",
-		Lifecycle: ontology.Lifecycle{
-			Slug: "feature-flag-lifecycle",
-			States: []ontology.State{
-				{Name: "INIT", Kind: ontology.StateKindInitial},
-				{Name: "ON", Kind: ontology.StateKindNormal},
-			},
-			Transitions: []ontology.Transition{
-				{Src: "INIT", Dst: "ON", Event: "enable"},
+	g.EntityTypes = append(g.EntityTypes,
+		ontology.EntityType{
+			Slug:        "feature-flag",
+			Description: "a deployable feature toggle",
+			Lifecycle: ontology.Lifecycle{
+				Slug: "feature-flag-lifecycle",
+				States: []ontology.State{
+					{Name: "INIT", Kind: ontology.StateKindInitial},
+					{Name: "ON", Kind: ontology.StateKindNormal},
+				},
+				Transitions: []ontology.Transition{
+					{Src: "INIT", Dst: "ON", Event: "enable"},
+				},
 			},
 		},
-	})
+		ontology.EntityType{
+			Slug:        "release",
+			Description: "a shipped release",
+			Lifecycle: ontology.Lifecycle{
+				Slug: "release-lifecycle",
+				States: []ontology.State{
+					{Name: "PLANNED", Kind: ontology.StateKindInitial},
+					{Name: "SHIPPED", Kind: ontology.StateKindNormal},
+				},
+				Transitions: []ontology.Transition{
+					{Src: "PLANNED", Dst: "SHIPPED", Event: "ship"},
+				},
+			},
+		},
+	)
 	return g
 }
 
@@ -1194,21 +1212,26 @@ func TestApply_Process_Create(t *testing.T) {
 	}
 }
 
-// TestApply_Process_DuplicateIDFails covers acceptance case (b): landing a
-// Process whose id already exists in the graph is a clear error, not a
-// silent overwrite.
-func TestApply_Process_DuplicateIDFails(t *testing.T) {
+// TestApply_Process_DuplicateStepNameOnUpdateFails covers acceptance case
+// (b), restated for task #212's UPDATE mode: landing a Process proposal
+// whose id already exists in the graph is now a valid UPDATE (see
+// TestApply_Process_UpdateAppendsStep below) rather than an inherent
+// duplicate error -- but resubmitting a step Name that already exists on
+// the target Process (attempting to redefine, not append) is still a clear
+// error, not a silent overwrite, mirroring
+// TestApply_EntityType_UpdateDuplicateFieldNameFails's precedent.
+func TestApply_Process_DuplicateStepNameOnUpdateFails(t *testing.T) {
 	t.Parallel()
 	g := processBaseGraph()
 	g.Processes = append(g.Processes, ontology.Process{
 		ID:            "PR-test-loop",
 		Lifecycle:     ontology.ProcessLifecycle,
-		Steps:         []ontology.Step{{Name: "x", RequiresRole: "operator", Why: "y"}},
+		Steps:         []ontology.Step{{Name: "diagnose", RequiresRole: "operator", Why: "y"}},
 		RolesRequired: []string{"operator"},
 	})
 	path := writeTempGraph(t, g)
-	p := validProcessProposal()
-	assertApplyFails(t, path, p, "already exists")
+	p := validProcessProposal() // steps include "diagnose", which already exists above
+	assertApplyFails(t, path, p, "already has a step named")
 }
 
 // TestApply_Process_UnknownDrivesEntitiesFails covers acceptance case (c): a
@@ -1222,13 +1245,21 @@ func TestApply_Process_UnknownDrivesEntitiesFails(t *testing.T) {
 	assertApplyFails(t, path, p, "no-such-entity-type")
 }
 
-// TestApply_Process_EmptyStepsFails covers acceptance case (d): a Process
-// with an empty steps list is rejected.
+// TestApply_Process_EmptyStepsFails covers acceptance case (d): a brand-new
+// (CREATE-shaped, id not yet in the graph) Process with an empty steps list
+// is rejected. RolesRequired is also cleared here -- with p.Steps empty, a
+// non-empty RolesRequired hits a different, more specific validate() error
+// ("roles_required must be empty when steps is empty", exercised by
+// TestApply_Process_UpdateRolesRequiredWithoutStepsFails) since it is
+// deliberately ambiguous with an UPDATE-appends-only-drives_entities shape;
+// clearing it here isolates the "CREATE needs >=1 step" failure mode this
+// test targets.
 func TestApply_Process_EmptyStepsFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, processBaseGraph())
 	p := validProcessProposal()
 	p.Steps = nil
+	p.RolesRequired = nil
 	assertApplyFails(t, path, p, "'steps' must be a non-empty list")
 }
 
@@ -1309,4 +1340,262 @@ func TestApply_Process_NoDrivesEntitiesOK(t *testing.T) {
 	if len(proc.DrivesEntities) != 0 {
 		t.Errorf("DrivesEntities = %v, want empty", proc.DrivesEntities)
 	}
+}
+
+// processBaseGraphWithLandedProcess returns processBaseGraph() plus one
+// pre-landed Process ("PR-test-loop", one step "diagnose"/"operator", one
+// drives_entities entry "feature-flag") so UPDATE-mode tests (task #212)
+// have an already-existing id to target.
+func processBaseGraphWithLandedProcess() *ontology.Graph {
+	g := processBaseGraph()
+	g.Processes = append(g.Processes, ontology.Process{
+		ID:             "PR-test-loop",
+		Lifecycle:      ontology.ProcessLifecycle,
+		Steps:          []ontology.Step{{Name: "diagnose", RequiresRole: "operator", Why: "find the top action"}},
+		RolesRequired:  []string{"operator"},
+		DrivesEntities: []string{"feature-flag"},
+		Why:            "the original rationale",
+	})
+	return g
+}
+
+// TestApply_Process_UpdateAppendsStep covers acceptance case (a): an UPDATE
+// proposal (existing id, new step) successfully appends a step to the end of
+// an existing Process's Steps -- the graph after mutate contains BOTH the
+// old step ("diagnose") and the new one ("approve"), in order, and the new
+// step's role is unioned into RolesRequired.
+func TestApply_Process_UpdateAppendsStep(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID: "PR-test-loop",
+		Steps: []ProposedStep{
+			{Name: "approve", RequiresRole: "steward", Why: "steward reviews and signs off"},
+		},
+		RolesRequired: []string{"steward"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	proc, ok := findProcess(g, "PR-test-loop")
+	if !ok {
+		t.Fatalf("PR-test-loop missing after update")
+	}
+	if len(proc.Steps) != 2 {
+		t.Fatalf("Steps len = %d, want 2 (diagnose + approve); got %+v", len(proc.Steps), proc.Steps)
+	}
+	if proc.Steps[0].Name != "diagnose" {
+		t.Errorf("Steps[0].Name = %q, want %q (original order preserved)", proc.Steps[0].Name, "diagnose")
+	}
+	if proc.Steps[1].Name != "approve" || proc.Steps[1].RequiresRole != "steward" {
+		t.Errorf("Steps[1] = %+v, want approve/steward", proc.Steps[1])
+	}
+	wantRoles := map[string]bool{"operator": true, "steward": true}
+	if len(proc.RolesRequired) != 2 {
+		t.Fatalf("RolesRequired = %v, want [operator steward]", proc.RolesRequired)
+	}
+	for _, r := range proc.RolesRequired {
+		if !wantRoles[r] {
+			t.Errorf("RolesRequired contains unexpected role %q", r)
+		}
+	}
+	if len(proc.History) != 1 {
+		t.Fatalf("History len = %d, want 1 entry recording the update", len(proc.History))
+	}
+	if !strings.Contains(proc.History[0].Summary, "approve") {
+		t.Errorf("History[0].Summary = %q, want it to mention approve", proc.History[0].Summary)
+	}
+	// why/lifecycle/drives_entities untouched by a steps-only update.
+	if proc.Why != "the original rationale" {
+		t.Errorf("Why = %q, changed by a steps-only update", proc.Why)
+	}
+	if len(proc.DrivesEntities) != 1 || proc.DrivesEntities[0] != "feature-flag" {
+		t.Errorf("DrivesEntities = %v, changed by a steps-only update", proc.DrivesEntities)
+	}
+}
+
+// TestApply_Process_UpdateAppendsDrivesEntities covers acceptance case (b):
+// an UPDATE proposal (existing id, no new steps, new drives_entities)
+// successfully appends a NEW EntityType slug ("release") to the existing
+// Process's DrivesEntities, resolving it against the domain's declared
+// EntityTypes exactly like the create-path does.
+func TestApply_Process_UpdateAppendsDrivesEntities(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID:             "PR-test-loop",
+		DrivesEntities: []string{"release"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	proc, ok := findProcess(g, "PR-test-loop")
+	if !ok {
+		t.Fatalf("PR-test-loop missing after update")
+	}
+	want := map[string]bool{"feature-flag": true, "release": true}
+	if len(proc.DrivesEntities) != 2 {
+		t.Fatalf("DrivesEntities = %v, want [feature-flag release]", proc.DrivesEntities)
+	}
+	for _, slug := range proc.DrivesEntities {
+		if !want[slug] {
+			t.Errorf("DrivesEntities contains unexpected slug %q", slug)
+		}
+	}
+	// steps untouched by a drives_entities-only update.
+	if len(proc.Steps) != 1 || proc.Steps[0].Name != "diagnose" {
+		t.Errorf("Steps = %+v, changed by a drives_entities-only update", proc.Steps)
+	}
+}
+
+// TestApply_Process_UpdateInvalidAppendStepFails covers acceptance case (c):
+// an UPDATE proposal appending a step with an empty name/requires_role/why
+// is rejected by the SAME validate() rules a CREATE's steps are checked
+// against (isProcessStepsShapePresent routes both CREATE and UPDATE through
+// the same per-step shape checks in validate.go).
+func TestApply_Process_UpdateInvalidAppendStepFails(t *testing.T) {
+	t.Parallel()
+	t.Run("empty name", func(t *testing.T) {
+		t.Parallel()
+		path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+		p := ProposedProcess{
+			ID:            "PR-test-loop",
+			Steps:         []ProposedStep{{Name: "  ", RequiresRole: "steward", Why: "y"}},
+			RolesRequired: []string{"steward"},
+		}
+		assertApplyFails(t, path, p, "'name' is required")
+	})
+	t.Run("empty requires_role", func(t *testing.T) {
+		t.Parallel()
+		path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+		p := ProposedProcess{
+			ID:    "PR-test-loop",
+			Steps: []ProposedStep{{Name: "approve", RequiresRole: "", Why: "y"}},
+		}
+		assertApplyFails(t, path, p, "'requires_role' is required")
+	})
+	t.Run("empty why", func(t *testing.T) {
+		t.Parallel()
+		path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+		p := ProposedProcess{
+			ID:            "PR-test-loop",
+			Steps:         []ProposedStep{{Name: "approve", RequiresRole: "steward", Why: ""}},
+			RolesRequired: []string{"steward"},
+		}
+		assertApplyFails(t, path, p, "'why' is required")
+	})
+}
+
+// TestApply_Process_UpdateUnknownDrivesEntitiesFails covers acceptance case
+// (d): an UPDATE proposal appending a drives_entities slug that does not
+// resolve to a declared EntityType is rejected with a clear, name-carrying
+// error, same as the create-path (TestApply_Process_UnknownDrivesEntitiesFails).
+func TestApply_Process_UpdateUnknownDrivesEntitiesFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID:             "PR-test-loop",
+		DrivesEntities: []string{"no-such-entity-type"},
+	}
+	assertApplyFails(t, path, p, "no-such-entity-type")
+}
+
+// TestApply_Process_UpdateDuplicateDrivesEntityFails is the drives_entities
+// analog of TestApply_Process_DuplicateStepNameOnUpdateFails: an UPDATE
+// proposal that resubmits a drives_entities slug already present on the
+// target Process is rejected (attempting to re-append an existing entry is
+// treated the same as attempting to reorder/redefine it), not silently
+// deduplicated.
+func TestApply_Process_UpdateDuplicateDrivesEntityFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID:             "PR-test-loop",
+		DrivesEntities: []string{"feature-flag"}, // already present
+	}
+	assertApplyFails(t, path, p, "already drives entity")
+}
+
+// TestApply_Process_UpdateReplacesWhy covers the chosen behavior for Why on
+// UPDATE: a non-empty p.Why REPLACES (not appends to) the existing Why --
+// the reverse of steps/drives_entities, which only ever append. This mirrors
+// ProposedRequirement.mutate's coalesceStr(p.Why, "", existing.Why) idiom.
+func TestApply_Process_UpdateReplacesWhy(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID:  "PR-test-loop",
+		Why: "a corrected rationale",
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	proc, ok := findProcess(g, "PR-test-loop")
+	if !ok {
+		t.Fatalf("PR-test-loop missing after update")
+	}
+	if proc.Why != "a corrected rationale" {
+		t.Errorf("Why = %q, want replaced value", proc.Why)
+	}
+	if len(proc.History) != 1 || !strings.Contains(proc.History[0].Summary, "why updated") {
+		t.Errorf("History = %+v, want one entry mentioning 'why updated'", proc.History)
+	}
+}
+
+// TestApply_Process_UpdateEmptyWhyPreservesExisting asserts the OTHER half
+// of the coalesceStr contract: an omitted (empty) p.Why on an UPDATE that
+// only appends a step leaves the existing Why untouched -- "empty means
+// preserve", not "empty means clear" (a proposal author who wants to clear
+// Why to empty has no sentinel for that yet, mirroring
+// ProposedEntityType's UPDATE mode, which does not support editing Why at
+// all; this is a milder version -- REPLACE is supported, CLEAR is not).
+func TestApply_Process_UpdateEmptyWhyPreservesExisting(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID:             "PR-test-loop",
+		DrivesEntities: []string{"release"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	proc, ok := findProcess(g, "PR-test-loop")
+	if !ok {
+		t.Fatalf("PR-test-loop missing after update")
+	}
+	if proc.Why != "the original rationale" {
+		t.Errorf("Why = %q, want unchanged original value", proc.Why)
+	}
+}
+
+// TestApply_Process_UpdateRolesRequiredWithoutStepsFails covers the
+// validate()-level shape guard: an UPDATE-shaped proposal (no steps) that
+// still carries a non-empty roles_required is rejected -- roles_required
+// declares roles used by THIS proposal's steps, and with zero steps in the
+// proposal there is nothing for it to declare (a stray roles_required here
+// is very likely a copy-paste mistake from a steps-bearing proposal).
+func TestApply_Process_UpdateRolesRequiredWithoutStepsFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{
+		ID:             "PR-test-loop",
+		DrivesEntities: []string{"release"},
+		RolesRequired:  []string{"reviewer"},
+	}
+	assertApplyFails(t, path, p, "'roles_required' must be empty when 'steps' is empty")
+}
+
+// TestApply_Process_UpdateNoStepsNoDrivesEntitiesFails covers the remaining
+// validate()-level shape guard: an UPDATE-shaped proposal (existing id, no
+// steps) that ALSO carries no drives_entities has nothing to do and is
+// rejected rather than silently accepted as a no-op.
+func TestApply_Process_UpdateNoStepsNoDrivesEntitiesFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
+	p := ProposedProcess{ID: "PR-test-loop"}
+	assertApplyFails(t, path, p, "must supply either 'steps'")
 }

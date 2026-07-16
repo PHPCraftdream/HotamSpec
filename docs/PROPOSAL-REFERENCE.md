@@ -507,14 +507,16 @@ names that were added.
 Adds a new §Process node (the opt-in behavioral aspect: a Lifecycle +
 ordered Steps + `roles_required` + `drives_entities` — see
 `internal/ontology/process.go`, and `PR-closed-loop` in
-`domains/hotam-spec-self/graph.json` for the one worked example). **CREATE
-only** — there is currently no UPDATE path for an already-landed Process; a
-proposal whose `id` already exists is rejected as a duplicate, not merged.
+`domains/hotam-spec-self/graph.json` for the one worked example). Supports
+both CREATE (below) and a narrow UPDATE mode for an already-landed Process
+(see "UPDATE mode" subsection further down) — this mirrors EntityType's
+CREATE/UPDATE split (ffa4977).
 
-The Process's `lifecycle` is NOT author-supplied: every landed Process is
-stamped with the single shared `ontology.ProcessLifecycle`
-(`READY → RUNNING → BLOCKED → DONE → ABANDONED`) — there is no field to
-override it.
+The Process's `lifecycle` is NOT author-supplied on either CREATE or UPDATE:
+every landed Process is stamped with the single shared
+`ontology.ProcessLifecycle` (`READY → RUNNING → BLOCKED → DONE → ABANDONED`)
+— there is no field to override it, and UPDATE never touches an
+already-landed Process's `lifecycle`.
 
 **Required:** `id` (must start with `PR-`), `steps` (non-empty list of
 `{"name", "requires_role", "invokes", "why"}` objects — each step's `name`,
@@ -539,5 +541,50 @@ is rejected with a clear error naming it), `why` (default `""`)
   "roles_required": ["operator", "steward"],
   "drives_entities": ["release"],
   "why": "models the release-review behavioral flow as a first-class Process"
+}
+```
+
+### UPDATE mode (append steps/drives_entities, replace why, on an existing Process)
+
+When `id` already names a Process in the graph, the proposal is an UPDATE
+instead of a duplicate-rejected CREATE. UPDATE mode is deliberately narrow
+(mirrors EntityType's UPDATE-mode scope limit, ffa4977): it can APPEND new
+entries to `steps` and `drives_entities`, and REPLACE `why` — but it can
+never redefine, remove, or reorder an existing step or `drives_entities`
+entry, and it never touches `lifecycle`.
+
+**Required (UPDATE shape):** `id` (must match an existing Process); at least
+ONE of `steps` (non-empty list of NEW steps to APPEND to the end of the
+existing list — validated with the exact same per-step rules as CREATE:
+non-empty `name`/`requires_role`/`why`; a `name` that already exists on the
+target Process is rejected, not silently redefined or reordered),
+`drives_entities` (list of NEW EntityType slugs to APPEND — each MUST
+resolve to a declared EntityType, and a slug already present on the target
+Process is rejected, not silently deduplicated), or `why` (non-empty —
+REPLACES, not appends, the existing Process's `why`; this is the one field
+UPDATE treats as a correction rather than an addition, matching
+`ProposedRequirement`'s `why` semantics rather than EntityType's
+UPDATE-mode ban on touching `why` at all)
+**Conditionally required:** `roles_required` — when `steps` is non-empty, it
+must equal EXACTLY the set of `requires_role` values used by the NEW steps
+in THIS proposal (same "no implicit, no undemanded" rule as CREATE; roles
+already declared by pre-existing steps do not need to be restated — they are
+carried over automatically). When `steps` is empty, `roles_required` MUST
+also be empty (there is nothing in this proposal for it to declare).
+
+A successful UPDATE appends one `HistoryEntry` to the Process (mirroring
+`ProposedEntityType`'s UPDATE-mode History-on-mutation pattern) recording
+which step names and/or drives_entities slugs were added, and/or that `why`
+was updated.
+
+```json
+{
+  "kind": "Process",
+  "id": "PR-release-review",
+  "steps": [
+    {"name": "notify", "requires_role": "operator", "invokes": "", "why": "tell stakeholders the release shipped"}
+  ],
+  "roles_required": ["operator"],
+  "drives_entities": ["feature-flag"]
 }
 ```

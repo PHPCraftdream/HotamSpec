@@ -222,20 +222,31 @@ type ProposedStep struct {
 	Why          string `json:"why"`
 }
 
-// ProposedProcess is a CREATE-only proposal for a new Process node (the
+// ProposedProcess is a CREATE-or-UPDATE proposal for a Process node (the
 // §Process opt-in behavioral aspect: a Lifecycle + ordered Steps +
-// roles_required + drives_entities, internal/ontology/process.go). There is
-// currently no UPDATE path for an existing Process (mirrors ProposedEntityType
-// before its UPDATE mode existed) -- a duplicate ID is rejected, not merged.
+// roles_required + drives_entities, internal/ontology/process.go).
 //
-// Lifecycle is NOT author-supplied: every Process in this codebase (the one
-// worked example, PR-closed-loop, in domains/hotam-spec-self/graph.json) uses
-// the single shared ontology.ProcessLifecycle (READY/RUNNING/BLOCKED/DONE/
-// ABANDONED) -- there is no second Process lifecycle shape anywhere in the
-// graph or the ontology package to choose between, so mutate() always stamps
+// CREATE (p.ID not yet in the graph): unchanged since task #199 -- a
+// duplicate ID is rejected via errDuplicate, not merged.
+//
+// UPDATE (p.ID already names a Process in the graph, since task #212):
+// mirrors ProposedEntityType's UPDATE mode (ffa4977) -- deliberately narrow.
+// p.Steps and p.DrivesEntities are APPENDED to the existing lists (never
+// redefining, removing, or reordering an existing step/slug); p.RolesRequired
+// is UNIONED into the existing list; p.Why, if non-empty, REPLACES the
+// existing Why (a correction, not an append). See ProposedProcess.mutate's
+// doc comment in mutate.go for the full UPDATE contract.
+//
+// Lifecycle is NOT author-supplied on either CREATE or UPDATE: every Process
+// in this codebase (the one worked example, PR-closed-loop, in
+// domains/hotam-spec-self/graph.json) uses the single shared
+// ontology.ProcessLifecycle (READY/RUNNING/BLOCKED/DONE/ABANDONED) -- there is
+// no second Process lifecycle shape anywhere in the graph or the ontology
+// package to choose between, so mutate() always stamps
 // ontology.ProcessLifecycle rather than accepting an author-supplied one
 // (avoids inventing a second, untested lifecycle-authoring wire format for a
-// aspect that has exactly one instance in the wild).
+// aspect that has exactly one instance in the wild); an UPDATE never touches
+// an already-landed Process's Lifecycle at all.
 type ProposedProcess struct {
 	ID             string         `json:"id"`
 	Steps          []ProposedStep `json:"steps"`

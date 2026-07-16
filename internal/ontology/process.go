@@ -20,13 +20,14 @@ type Step struct {
 }
 
 type Process struct {
-	ID             string    `json:"id"`
-	Lifecycle      Lifecycle `json:"lifecycle"`
-	Steps          []Step    `json:"steps"`
-	RolesRequired  []string  `json:"roles_required"`
-	DrivesEntities []string  `json:"drives_entities"`
-	Why            string    `json:"why"`
-	DeclOrder      int       `json:"decl_order"`
+	ID             string         `json:"id"`
+	Lifecycle      Lifecycle      `json:"lifecycle"`
+	Steps          []Step         `json:"steps"`
+	RolesRequired  []string       `json:"roles_required"`
+	DrivesEntities []string       `json:"drives_entities"`
+	Why            string         `json:"why"`
+	DeclOrder      int            `json:"decl_order"`
+	History        []HistoryEntry `json:"history"`
 }
 
 type TargetState struct {
