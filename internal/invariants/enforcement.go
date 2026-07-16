@@ -53,18 +53,19 @@ var _ = All.MustRegister("check_enforced_names_invariant", Invariant{
 func checkEnforcedByResolvable(g *ontology.Graph) []Violation {
 	var out []Violation
 	// The Test*-name half of resolution needs the filesystem (a scan of
-	// internal/**/*_test.go, cmd/**/*_test.go, and — when g.DomainDir has a
-	// gen/go output — that domain's gen/go/**/*_test.go). It is resolved ONCE
+	// internal/**/*_test.go and cmd/**/*_test.go — HotamSpec's own engine
+	// tree only, never a domain-local or generated tree). It is resolved ONCE
 	// here and reused for every requirement, so a single all-violations run
 	// walks the test tree exactly once — never per requirement. This is the
 	// SAME resolution logic internal/gate uses for targeted test selection
-	// (walkTestFuncs / defaultInternalRoot / genGoRoot), reused via
+	// (walkTestFuncs / defaultInternalRoot / defaultCmdRoot), reused via
 	// gate.TestFuncNames so the two consumers cannot drift on what counts as a
-	// real Go test enforcer. g.DomainDir (populated by the loader from the
-	// resolved --domain path) is what lets a consumer domain's own generated
-	// tests resolve here, not just HotamSpec's own tree (task #214). The
-	// check_* half is answered graph-locally by the All registry below,
-	// without the filesystem.
+	// real Go test enforcer. The gen-code generator and its resolver trust
+	// shift (task #214: widening this scan to a consumer domain's own
+	// gen/go output) have been removed entirely — the engine only trusts Go
+	// test functions it can verify live under its own tree. The check_* half
+	// is answered graph-locally by the All registry below, without the
+	// filesystem.
 	testFuncs, scanErr := gate.TestFuncNames(g.DomainDir)
 	for _, r := range g.Requirements {
 		if r.Status != ontology.StatusSETTLED || r.Enforcement != ontology.EnforcementENFORCED {
@@ -122,15 +123,15 @@ var _ = All.MustRegister("check_enforced_by_resolvable", Invariant{
 	Canon: methodology.Requirement,
 	Claim: "every ENFORCED requirement's enforced_by entry resolves -- a check_* to a registered invariant, a Test* to a real Go test function.",
 	Rule: "for each SETTLED+ENFORCED Requirement, every enforced_by entry MUST resolve to a real enforcer: a check_* name MUST be a registered " +
-		"invariant (the All registry), and any other entry MUST be a real top-level Test* function name found under internal/**/*_test.go, " +
-		"cmd/**/*_test.go, or (when the domain has run `hotam gen-code`) that domain's own gen/go/**/*_test.go " +
+		"invariant (the All registry), and any other entry MUST be a real top-level Test* function name found under internal/**/*_test.go or " +
+		"cmd/**/*_test.go " +
 		"(the SAME scan internal/gate uses for targeted test selection). A typo, a stale/renamed check_*, a leftover pytest-style node-id " +
 		"(test_x.py, test_x.py::test_y), a bare lowercase test_* name, or any other unresolvable string fires a Violation naming the entry.",
 	Why: "this is the regression guard for the wave-2 rebound that replaced 157 broken pytest-style enforced_by references (test_x.py::test_y) " +
 		"with real Test*/check_* names. Before this, the invariant resolved ONLY the check_* half via the registry and silently no-op'd every " +
 		"other entry (test_*, file paths) on the assumption that runtime verification covered them -- an assumption that let the very regression it " +
-		"was meant to catch survive undetected in domains wave 2 did not touch. Reusing gate.TestFuncNames (walkTestFuncs over internal/, cmd/, and " +
-		"the domain's own gen/go when present -- task #214) keeps a " +
+		"was meant to catch survive undetected in domains wave 2 did not touch. Reusing gate.TestFuncNames (walkTestFuncs over internal/ and cmd/ " +
+		"only -- the gen-code generator and its gen/go resolver trust shift from task #214 have been removed entirely) keeps a " +
 		"single source of truth for 'what is a real test enforcer' across targeted selection and this audit, so the two can never disagree. " +
 		"check_enforced_names_invariant only verifies enforced_by is NON-EMPTY; a real typo or a stale .py ref passes it silently, and this invariant " +
 		"makes that debt visible directly.",

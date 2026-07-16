@@ -55,8 +55,6 @@ func main() {
 		err = cmdUse(args)
 	case "gen-spec":
 		err = cmdGenSpec(args)
-	case "gen-code":
-		err = cmdGenCode(args)
 	case "what-now":
 		err = cmdWhatNow(args)
 	case "apply-proposal":
@@ -133,14 +131,6 @@ Commands:
         tool docs; "consumer" skips framework-self-documentation noise
         (thinking/*.md, Planned tool docs, empty atoms docs) for external
         business projects.
-  gen-code [--domain <path>]
-        Generate the Go model/lifecycle/requirements/pipeline layer
-        (entities.go, go.mod, lifecycle.go, lifecycle_test.go,
-        requirements_test.go, requirements_audit.md, pipeline_test.go) from
-        a domain graph into <domain>/gen/go/ — a separate Go module, per
-        GEN-CODE-CONTRACT.md. Deterministic/idempotent: reruns on an
-        unchanged graph produce byte-identical files. Opt-in and additive to
-        gen-spec's docs/gen/*.md output.
   what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
         Print top-N diagnosed signals (default 20). With --json, emit the
         underlying signal slice as machine-readable JSON.
