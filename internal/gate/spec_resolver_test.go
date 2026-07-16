@@ -7,7 +7,7 @@ import (
 )
 
 // writeSpecFixture writes a single Go source file under tmp/spec/<rel> and
-// returns tmp (the domain root -- SpecRoot(domainDir) convention: entries
+// returns tmp (the domain root -- SpecRoot(domainDir, false) convention: entries
 // are domain-relative paths already prefixed with "spec/").
 func writeSpecFixture(t *testing.T, rel, content string) string {
 	t.Helper()
@@ -46,7 +46,7 @@ func (r Risk) Owner2() string {
 func TestResolveSpecSymbol_TopLevelFunc_Found(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
-	res, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "NewRisk")
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "NewRisk")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestResolveSpecSymbol_TopLevelFunc_Found(t *testing.T) {
 func TestResolveSpecSymbol_Method_BareNameMatchesAnyReceiver(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
-	res, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "Validate")
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "Validate")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestResolveSpecSymbol_Method_BareNameMatchesAnyReceiver(t *testing.T) {
 func TestResolveSpecSymbol_Method_QualifiedNameMatchesReceiverType(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
-	res, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "Risk.Validate")
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "Risk.Validate")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol: %v", err)
 	}
@@ -86,7 +86,7 @@ func TestResolveSpecSymbol_Method_QualifiedNameMatchesReceiverType(t *testing.T)
 		t.Fatalf("expected Found method via qualified name, got %+v", res)
 	}
 	// Value-receiver method also qualifies under its base type name.
-	res2, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "Risk.Owner2")
+	res2, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "Risk.Owner2")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestResolveSpecSymbol_Method_QualifiedNameMatchesReceiverType(t *testing.T)
 func TestResolveSpecSymbol_Method_QualifiedNameWrongTypeNotFound(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
-	res, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "Wrong.Validate")
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "Wrong.Validate")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestResolveSpecSymbol_Method_QualifiedNameWrongTypeNotFound(t *testing.T) {
 func TestResolveSpecSymbol_Type_Found(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
-	res, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "Risk")
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "Risk")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestResolveSpecSymbol_MUTATION_RemoveSymbolFlipsToNotFound(t *testing.T) {
 	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
 
 	// Intact: found.
-	res, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "NewRisk")
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "NewRisk")
 	if err != nil || !res.Found() {
 		t.Fatalf("expected Found before mutation, got %+v err=%v", res, err)
 	}
@@ -150,7 +150,7 @@ func (r *Risk) Validate() error {
 	if err := os.WriteFile(path, []byte(mutated), 0o644); err != nil {
 		t.Fatalf("WriteFile mutation: %v", err)
 	}
-	res2, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "NewRisk")
+	res2, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "NewRisk")
 	if err != nil {
 		t.Fatalf("ResolveSpecSymbol after mutation: %v", err)
 	}
@@ -162,7 +162,7 @@ func (r *Risk) Validate() error {
 	if err := os.WriteFile(path, []byte(riskModelSrc), 0o644); err != nil {
 		t.Fatalf("WriteFile restore: %v", err)
 	}
-	res3, err := ResolveSpecSymbol(SpecRoot(domainDir), "spec/model/risk.go", "NewRisk")
+	res3, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "NewRisk")
 	if err != nil || !res3.Found() {
 		t.Fatalf("expected Found after restoring symbol, got %+v err=%v", res3, err)
 	}
@@ -229,7 +229,7 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 func TestResolveSpecTest_Found_HasTeeth_NoSkip(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", riskTestGoodSrc)
-	res, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest: %v", err)
 	}
@@ -247,7 +247,7 @@ func TestResolveSpecTest_Found_HasTeeth_NoSkip(t *testing.T) {
 func TestResolveSpecTest_NotFound_WrongName(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", riskTestGoodSrc)
-	res, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestDoesNotExist")
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestDoesNotExist")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest: %v", err)
 	}
@@ -264,7 +264,7 @@ func TestResolveSpecTest_MUTATION_VacuousBodyFlipsTeeth(t *testing.T) {
 	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", riskTestVacuousSrc)
 	path := filepath.Join(domainDir, "spec", "model", "risk_test.go")
 
-	res, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest: %v", err)
 	}
@@ -279,7 +279,7 @@ func TestResolveSpecTest_MUTATION_VacuousBodyFlipsTeeth(t *testing.T) {
 	if err := os.WriteFile(path, []byte(riskTestGoodSrc), 0o644); err != nil {
 		t.Fatalf("WriteFile fix: %v", err)
 	}
-	res2, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	res2, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest after fix: %v", err)
 	}
@@ -291,7 +291,7 @@ func TestResolveSpecTest_MUTATION_VacuousBodyFlipsTeeth(t *testing.T) {
 func TestResolveSpecTest_EmptyBodyHasNoTeeth(t *testing.T) {
 	t.Parallel()
 	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", riskTestEmptySrc)
-	res, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest: %v", err)
 	}
@@ -309,7 +309,7 @@ func TestResolveSpecTest_MUTATION_TopLevelSkipFlipsHasSkip(t *testing.T) {
 	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", riskTestSkipSrc)
 	path := filepath.Join(domainDir, "spec", "model", "risk_test.go")
 
-	res, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest: %v", err)
 	}
@@ -324,7 +324,7 @@ func TestResolveSpecTest_MUTATION_TopLevelSkipFlipsHasSkip(t *testing.T) {
 	if err := os.WriteFile(path, []byte(riskTestConditionalSkipSrc), 0o644); err != nil {
 		t.Fatalf("WriteFile fix: %v", err)
 	}
-	res2, err := ResolveSpecTest(SpecRoot(domainDir), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	res2, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
 	if err != nil {
 		t.Fatalf("ResolveSpecTest after fix: %v", err)
 	}
@@ -333,6 +333,158 @@ func TestResolveSpecTest_MUTATION_TopLevelSkipFlipsHasSkip(t *testing.T) {
 	}
 	if !res2.HasTeeth {
 		t.Fatalf("FIXED CASE: expected HasTeeth=true (real assertion present), got %+v", res2)
+	}
+}
+
+// --- SpecRoot / self-hosting -------------------------------------------
+
+// writeSelfHostingEngineFixture builds a temp "engine repo": go.mod at the
+// root, an engine source file + engine test file directly under internal/
+// (mirroring how the REAL engine's internal/ontology/lifecycle.go +
+// lifecycle_test.go sit relative to HotamSpec's own go.mod), and a domain
+// directory nested at domains/<domainName>/ two levels below the root --
+// matching domains/hotam-spec-self's real layout, though SpecRoot's engine
+// walk does not hardcode that distance. Returns the domain directory (what
+// g.DomainDir would be for that domain).
+func writeSelfHostingEngineFixture(t *testing.T, domainName string) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/engine\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
+	internalDir := filepath.Join(root, "internal")
+	if err := os.MkdirAll(internalDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll internal: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(internalDir, "foo.go"), []byte(engineFooSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile foo.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(internalDir, "foo_test.go"), []byte(engineFooTestSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile foo_test.go: %v", err)
+	}
+	domainDir := filepath.Join(root, "domains", domainName)
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll domainDir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(`{"self_hosting": true}`), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "graph.json"), []byte(`{"schema_version":3}`), 0o644); err != nil {
+		t.Fatalf("WriteFile graph.json: %v", err)
+	}
+	return domainDir
+}
+
+const engineFooSrc = `package internal
+
+func Bar() int {
+	return 42
+}
+`
+
+const engineFooTestSrc = `package internal
+
+import "testing"
+
+func TestBar(t *testing.T) {
+	if Bar() != 42 {
+		t.Fatalf("expected 42")
+	}
+}
+`
+
+// TestSpecRoot_SelfHosting_ResolvesAgainstEngineRoot proves the self-hosting
+// recursion (PLAN-authored-spec-discipline.md §9): implemented_by
+// "internal/foo.go:Bar" and verified_by "internal/foo_test.go:TestBar"
+// resolve when SpecRoot is given selfHosting=true and a domainDir nested
+// under the engine root, because SpecRoot walks UP from domainDir to the
+// nearest go.mod rather than joining onto domainDir directly.
+func TestSpecRoot_SelfHosting_ResolvesAgainstEngineRoot(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingEngineFixture(t, "hotam-spec-self")
+
+	root := SpecRoot(domainDir, true)
+
+	symRes, err := ResolveSpecSymbol(root, "internal/foo.go", "Bar")
+	if err != nil {
+		t.Fatalf("ResolveSpecSymbol: %v", err)
+	}
+	if !symRes.Found() {
+		t.Fatalf("expected implemented_by internal/foo.go:Bar to resolve against the engine root, got %+v", symRes)
+	}
+
+	testRes, err := ResolveSpecTest(root, "internal/foo_test.go", "TestBar")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !testRes.Found {
+		t.Fatalf("expected verified_by internal/foo_test.go:TestBar to resolve against the engine root, got %+v", testRes)
+	}
+}
+
+// TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound is the
+// break->fix mutation proof for the self-hosting path: remove Bar from the
+// engine source file (simulating a rename/deletion of the real engine
+// symbol an implemented_by entry names) and confirm resolution flips from
+// Found to NOT-found, then restore and confirm it flips back. Proves the
+// self-hosting resolver is not accidentally succeeding for an unrelated
+// reason (e.g. resolving to some other file by chance).
+func TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingEngineFixture(t, "hotam-spec-self")
+	root := SpecRoot(domainDir, true)
+	fooPath := filepath.Join(root, "internal", "foo.go")
+
+	res, err := ResolveSpecSymbol(root, "internal/foo.go", "Bar")
+	if err != nil || !res.Found() {
+		t.Fatalf("expected Found before mutation, got %+v err=%v", res, err)
+	}
+
+	mutated := `package internal
+
+func Baz() int {
+	return 0
+}
+`
+	if err := os.WriteFile(fooPath, []byte(mutated), 0o644); err != nil {
+		t.Fatalf("WriteFile mutation: %v", err)
+	}
+	res2, err := ResolveSpecSymbol(root, "internal/foo.go", "Bar")
+	if err != nil {
+		t.Fatalf("ResolveSpecSymbol after mutation: %v", err)
+	}
+	if res2.Found() {
+		t.Fatalf("expected NOT found after removing Bar, got %+v", res2)
+	}
+
+	if err := os.WriteFile(fooPath, []byte(engineFooSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile restore: %v", err)
+	}
+	res3, err := ResolveSpecSymbol(root, "internal/foo.go", "Bar")
+	if err != nil || !res3.Found() {
+		t.Fatalf("expected Found after restoring symbol, got %+v err=%v", res3, err)
+	}
+}
+
+// TestSpecRoot_NonSelfHosting_StillResolvesAgainstDomainDir is the
+// regression proof: an ordinary (non-self-hosting) domain's SpecRoot MUST
+// still return domainDir itself, unaffected by the self-hosting engine-root
+// walk added above -- i.e. the pilot domain (prat, spec/model/risk.go)
+// keeps resolving exactly as before.
+func TestSpecRoot_NonSelfHosting_StillResolvesAgainstDomainDir(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSpecFixture(t, "spec/model/risk.go", riskModelSrc)
+
+	if got := SpecRoot(domainDir, false); got != domainDir {
+		t.Fatalf("expected SpecRoot(domainDir, false) == domainDir, got %q want %q", got, domainDir)
+	}
+
+	res, err := ResolveSpecSymbol(SpecRoot(domainDir, false), "spec/model/risk.go", "NewRisk")
+	if err != nil {
+		t.Fatalf("ResolveSpecSymbol: %v", err)
+	}
+	if !res.Found() {
+		t.Fatalf("expected non-self-hosting resolution against domainDir to still succeed, got %+v", res)
 	}
 }
 

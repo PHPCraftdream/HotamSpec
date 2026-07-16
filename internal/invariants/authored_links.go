@@ -76,7 +76,7 @@ func checkImplementedBySymbolResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecSymbol(gate.SpecRoot(g.DomainDir), e.file, e.symbol)
+			result, err := gate.ResolveSpecSymbol(gate.SpecRootForGraph(g), e.file, e.symbol)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_implemented_by_symbol_resolvable",
@@ -107,9 +107,12 @@ var _ = All.MustRegister("check_implemented_by_symbol_resolvable", Invariant{
 	Claim: "every non-empty implemented_by entry resolves to a real function, method, or type declaration in the named authored spec/ file.",
 	Rule: "each Requirement.implemented_by entry MUST be shaped \"file:symbol\" and the symbol MUST be a real declaration -- a top-level " +
 		"function, a method (bare name matches any receiver; \"Type.Method\" qualifies the receiver's base type), or a type -- found by " +
-		"parsing exactly the named file under the domain's own directory (g.DomainDir joined with the entry's file path, which is already " +
-		"spec/-prefixed per PLAN-authored-spec-discipline.md §4). Applies to EVERY requirement with a non-empty implemented_by, independent " +
-		"of enforcement or status: a stale symbol reference is false the moment it is written.",
+		"parsing exactly the named file under the domain's spec root (gate.SpecRootForGraph(g): g.DomainDir joined with the entry's " +
+		"file path, which is already spec/-prefixed per PLAN-authored-spec-discipline.md §4 -- OR, for a self-hosting domain " +
+		"(g.SelfHosting, e.g. domains/hotam-spec-self), the engine repository root found by walking up from g.DomainDir to the nearest " +
+		"go.mod, per PLAN-authored-spec-discipline.md §9's recursion: engine-facing requirements name paths like " +
+		"\"internal/ontology/lifecycle.go:Lifecycle\" relative to the engine root, not to domainDir). Applies to EVERY requirement with a " +
+		"non-empty implemented_by, independent of enforcement or status: a stale symbol reference is false the moment it is written.",
 	Why: "implemented_by claims \"this requirement is embodied HERE\"; if the named symbol does not exist the claim is unverifiable -- " +
 		"either a typo, a symbol that was renamed/deleted after the reference was written (staleness), or a reference that was never real. " +
 		"This is the authored-spec counterpart of check_enforced_by_resolvable, using a single targeted file parse (gate.ResolveSpecSymbol) " +
@@ -148,7 +151,7 @@ func checkVerifiedByTestResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecTest(gate.SpecRoot(g.DomainDir), e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(gate.SpecRootForGraph(g), e.file, e.symbol)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_verified_by_test_resolvable",
@@ -178,8 +181,9 @@ var _ = All.MustRegister("check_verified_by_test_resolvable", Invariant{
 	Canon: methodology.Requirement,
 	Claim: "every non-empty verified_by entry resolves to a real, runnable Test* function in the named authored spec/ file.",
 	Rule: "each Requirement.verified_by entry MUST be shaped \"file:test\", the test name MUST be Test*-prefixed, and it MUST be a real top-level " +
-		"declaration `func TestXxx(t *testing.T)` found by parsing exactly the named file under the domain's own directory. Applies to EVERY " +
-		"requirement with a non-empty verified_by, independent of enforcement or status.",
+		"declaration `func TestXxx(t *testing.T)` found by parsing exactly the named file under the domain's spec root " +
+		"(gate.SpecRootForGraph(g) -- domainDir for an ordinary domain, or the engine repository root for a self-hosting domain per " +
+		"PLAN-authored-spec-discipline.md §9). Applies to EVERY requirement with a non-empty verified_by, independent of enforcement or status.",
 	Why: "verified_by claims \"this requirement is PROVEN here\"; if the named test does not exist, is not Test*-shaped, or does not have the " +
 		"real go-test signature, the claim is unverifiable -- go test would never even run it. This is the authored-spec counterpart of " +
 		"check_enforced_by_resolvable's Test*-name half, scoped to a single named file via gate.ResolveSpecTest instead of a repo-wide scan.",
@@ -204,7 +208,7 @@ func checkVerifiedByTestHasTeeth(g *ontology.Graph) []Violation {
 			if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
 				continue
 			}
-			result, err := gate.ResolveSpecTest(gate.SpecRoot(g.DomainDir), e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(gate.SpecRootForGraph(g), e.file, e.symbol)
 			if err != nil || !result.Found {
 				continue
 			}
@@ -258,7 +262,7 @@ func checkVerifiedByTestNoSkip(g *ontology.Graph) []Violation {
 			if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
 				continue
 			}
-			result, err := gate.ResolveSpecTest(gate.SpecRoot(g.DomainDir), e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(gate.SpecRootForGraph(g), e.file, e.symbol)
 			if err != nil || !result.Found {
 				continue
 			}

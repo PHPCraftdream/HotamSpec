@@ -606,3 +606,194 @@ func TestAuthoredOnlyEnforcedRequirement_PassesFullAllViolations(t *testing.T) {
 			len(vs), vs)
 	}
 }
+
+// --- self-hosting recursion (PLAN-authored-spec-discipline.md §9) ---------
+
+const selfHostingEngineFooSrc = `package internal
+
+func Bar() int {
+	return 42
+}
+`
+
+const selfHostingEngineFooTestSrc = `package internal
+
+import "testing"
+
+func TestBar(t *testing.T) {
+	if Bar() != 42 {
+		t.Fatalf("expected 42")
+	}
+}
+`
+
+// writeSelfHostingFixture builds a temp "engine repo" -- go.mod at the root,
+// internal/foo.go + internal/foo_test.go directly under it (mirroring the
+// real engine's internal/ontology/lifecycle.go + lifecycle_test.go relative
+// to HotamSpec's own go.mod), and a domain directory at
+// domains/<domainName>/ with manifest.json{self_hosting:true} + graph.json
+// -- matching domains/hotam-spec-self's real on-disk shape. Returns the
+// domain directory (g.DomainDir).
+func writeSelfHostingFixture(t *testing.T, domainName string) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/engine\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
+	internalDir := filepath.Join(root, "internal")
+	if err := os.MkdirAll(internalDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll internal: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(internalDir, "foo.go"), []byte(selfHostingEngineFooSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile foo.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(internalDir, "foo_test.go"), []byte(selfHostingEngineFooTestSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile foo_test.go: %v", err)
+	}
+	domainDir := filepath.Join(root, "domains", domainName)
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll domainDir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(`{"self_hosting": true}`), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "graph.json"), []byte(`{"schema_version":3}`), 0o644); err != nil {
+		t.Fatalf("WriteFile graph.json: %v", err)
+	}
+	return domainDir
+}
+
+// TestSelfHostingLinks_ImplementedByAndVerifiedBy_Resolve proves the
+// self-hosting recursion at the CHECK level (not just gate.SpecRoot in
+// isolation): a requirement on a graph with SelfHosting=true whose
+// implemented_by/verified_by name engine-relative paths ("internal/foo.go:
+// Bar", "internal/foo_test.go:TestBar") resolves cleanly through both
+// check_implemented_by_symbol_resolvable and check_verified_by_test_resolvable
+// -- zero violations -- because the checks now call
+// gate.SpecRootForGraph(g), which walks up from g.DomainDir to the engine's
+// go.mod for a self-hosting graph instead of joining onto domainDir.
+func TestSelfHostingLinks_ImplementedByAndVerifiedBy_Resolve(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingFixture(t, "hotam-spec-self")
+
+	r := reqWithLinks(
+		"R-self-hosting-fixture", "sa",
+		[]string{"internal/foo.go:Bar"},
+		[]string{"internal/foo_test.go:TestBar"},
+	)
+	g := &ontology.Graph{
+		DomainDir:    domainDir,
+		SelfHosting:  true,
+		Stakeholders: []ontology.Stakeholder{sA},
+		Requirements: []ontology.Requirement{r},
+	}
+
+	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
+		t.Fatalf("expected implemented_by internal/foo.go:Bar to resolve against the engine root for a "+
+			"self-hosting domain, got violations: %v", vs)
+	}
+	if vs := runCheck(t, "check_verified_by_test_resolvable", g); len(vs) != 0 {
+		t.Fatalf("expected verified_by internal/foo_test.go:TestBar to resolve against the engine root for a "+
+			"self-hosting domain, got violations: %v", vs)
+	}
+}
+
+// TestSelfHostingLinks_MUTATION_RemoveSymbolAndTestFlipsToViolations is the
+// break->fix mutation proof at the check level: remove Bar from
+// internal/foo.go and TestBar from internal/foo_test.go (simulating engine
+// code being renamed/deleted out from under a self-hosting implemented_by/
+// verified_by reference) and confirm BOTH checks flip from zero violations
+// to firing; restoring the engine files makes them pass again.
+func TestSelfHostingLinks_MUTATION_RemoveSymbolAndTestFlipsToViolations(t *testing.T) {
+	t.Parallel()
+	domainDir := writeSelfHostingFixture(t, "hotam-spec-self")
+	// domainDir is <root>/domains/hotam-spec-self -- the engine root is two
+	// levels up, exactly as gate.SpecRoot's go.mod walk finds it.
+	engineRoot := filepath.Dir(filepath.Dir(domainDir))
+	fooPath := filepath.Join(engineRoot, "internal", "foo.go")
+	fooTestPath := filepath.Join(engineRoot, "internal", "foo_test.go")
+
+	r := reqWithLinks(
+		"R-self-hosting-mutation", "sa",
+		[]string{"internal/foo.go:Bar"},
+		[]string{"internal/foo_test.go:TestBar"},
+	)
+	g := &ontology.Graph{
+		DomainDir:    domainDir,
+		SelfHosting:  true,
+		Stakeholders: []ontology.Stakeholder{sA},
+		Requirements: []ontology.Requirement{r},
+	}
+
+	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
+		t.Fatalf("INTACT: expected no implemented_by violations, got %v", vs)
+	}
+	if vs := runCheck(t, "check_verified_by_test_resolvable", g); len(vs) != 0 {
+		t.Fatalf("INTACT: expected no verified_by violations, got %v", vs)
+	}
+
+	// Mutate: rename the symbol and the test away.
+	mutatedFoo := `package internal
+
+func Baz() int {
+	return 0
+}
+`
+	if err := os.WriteFile(fooPath, []byte(mutatedFoo), 0o644); err != nil {
+		t.Fatalf("WriteFile mutate foo.go: %v", err)
+	}
+	mutatedFooTest := `package internal
+
+import "testing"
+
+func TestBaz(t *testing.T) {
+	if Baz() != 0 {
+		t.Fatalf("expected 0")
+	}
+}
+`
+	if err := os.WriteFile(fooTestPath, []byte(mutatedFooTest), 0o644); err != nil {
+		t.Fatalf("WriteFile mutate foo_test.go: %v", err)
+	}
+
+	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); !hasViolationFor(vs, "R-self-hosting-mutation") {
+		t.Fatalf("BROKEN CASE: expected a violation after removing Bar from the engine file, got %v", vs)
+	}
+	if vs := runCheck(t, "check_verified_by_test_resolvable", g); !hasViolationFor(vs, "R-self-hosting-mutation") {
+		t.Fatalf("BROKEN CASE: expected a violation after removing TestBar from the engine test file, got %v", vs)
+	}
+
+	// Fix: restore both engine files.
+	if err := os.WriteFile(fooPath, []byte(selfHostingEngineFooSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile restore foo.go: %v", err)
+	}
+	if err := os.WriteFile(fooTestPath, []byte(selfHostingEngineFooTestSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile restore foo_test.go: %v", err)
+	}
+	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
+		t.Fatalf("FIXED CASE: expected no implemented_by violations after restoring the engine file, got %v", vs)
+	}
+	if vs := runCheck(t, "check_verified_by_test_resolvable", g); len(vs) != 0 {
+		t.Fatalf("FIXED CASE: expected no verified_by violations after restoring the engine test file, got %v", vs)
+	}
+}
+
+// TestNonSelfHostingLinks_StillResolveAgainstDomainDir is the regression
+// proof at the check level: an ordinary (non-self-hosting, SelfHosting
+// false/zero-value) domain's implemented_by/verified_by entries keep
+// resolving against g.DomainDir exactly as before -- the pilot domain (prat,
+// spec/model/risk.go) is not affected by the self-hosting engine-root walk.
+func TestNonSelfHostingLinks_StillResolveAgainstDomainDir(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	r := reqWithLinks("R-non-self-hosting", "sa", []string{"spec/model/risk.go:NewRisk"}, nil)
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		// SelfHosting deliberately left at its zero value (false).
+		Stakeholders: []ontology.Stakeholder{sA},
+		Requirements: []ontology.Requirement{r},
+	}
+	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
+		t.Fatalf("expected a non-self-hosting domain to still resolve implemented_by against domainDir, got %v", vs)
+	}
+}

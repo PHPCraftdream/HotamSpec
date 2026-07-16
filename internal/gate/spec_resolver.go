@@ -5,8 +5,11 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // SpecSymbolKind classifies what an implemented_by entry resolved to.
@@ -316,14 +319,79 @@ func ParseFileColonSymbol(entry string) (file, symbol string, ok bool) {
 	return entry[:idx], entry[idx+1:], true
 }
 
-// SpecRoot returns the authored spec/ root for a domain directory
-// (domainDir/spec). Entries in implemented_by/verified_by are documented
+// SpecRoot returns the root that implemented_by/verified_by file paths are
+// joined onto, for a domain directory.
+//
+// For an ordinary (non-self-hosting) domain, entries are documented
 // (PLAN-authored-spec-discipline.md §4) as domain-relative paths already
 // prefixed with "spec/" (e.g. "spec/model/risk.go:NewRisk"), so this helper
 // returns domainDir itself -- callers join the full entry path (which
-// already starts with "spec/") onto domainDir, not onto domainDir/spec. It
-// exists as a named seam so the convention is documented in one place and
+// already starts with "spec/") onto domainDir, not onto domainDir/spec.
+//
+// For a SELF-HOSTING domain (manifest.json's self_hosting: true, e.g.
+// domains/hotam-spec-self) the domain's "code" is not an authored spec/ tree
+// under domainDir at all -- it IS the engine itself (internal/, cmd/ at the
+// repository root). PLAN-authored-spec-discipline.md §9 documents the
+// recursion: an engine-facing requirement's implemented_by/verified_by name
+// paths like "internal/ontology/lifecycle.go:Lifecycle", relative to the
+// engine repository root, not to domainDir. So when selfHosting is true this
+// returns engineRoot(domainDir) instead of domainDir.
+//
+// It exists as a named seam so the convention is documented in one place and
 // callers do not have to re-derive it.
-func SpecRoot(domainDir string) string {
+func SpecRoot(domainDir string, selfHosting bool) string {
+	if !selfHosting {
+		return domainDir
+	}
+	if root, ok := engineRoot(domainDir); ok {
+		return root
+	}
+	// No go.mod found walking up from domainDir -- fall back to domainDir so
+	// resolution still fails cleanly (file not found) rather than panicking
+	// or silently resolving somewhere unexpected.
 	return domainDir
+}
+
+// SpecRootForGraph is SpecRoot applied to a loaded graph's own DomainDir and
+// SelfHosting fields -- the convenience form every authored-link check
+// (internal/invariants/authored_links.go) actually calls, so each call site
+// does not have to repeat `SpecRoot(g.DomainDir, g.SelfHosting)`.
+func SpecRootForGraph(g *ontology.Graph) string {
+	if g == nil {
+		return ""
+	}
+	return SpecRoot(g.DomainDir, g.SelfHosting)
+}
+
+// engineRoot finds the engine repository root by walking UP from domainDir
+// looking for the directory that contains go.mod. This is deliberately
+// robust rather than a hardcoded "two levels up" from domainDir: today
+// domains/hotam-spec-self happens to sit exactly two directories below the
+// repository root, but hardcoding that distance would silently break the
+// moment the domain moved, got nested deeper, or the engine's own layout
+// changed. Walking to go.mod is self-documenting (the marker IS "the
+// directory that owns this Go module") and matches the existing precedent in
+// internal/paths/project_root.go's unexported repoRoot() -- duplicated here
+// (rather than imported) to keep internal/gate free of a dependency on
+// internal/paths, which resolves the CWD-based project root for the running
+// hotam process, a different question from "where is the engine root
+// relative to THIS domain directory" that self-hosting resolution needs.
+func engineRoot(domainDir string) (string, bool) {
+	if domainDir == "" {
+		return "", false
+	}
+	dir, err := filepath.Abs(domainDir)
+	if err != nil {
+		return "", false
+	}
+	for {
+		if info, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil && !info.IsDir() {
+			return dir, true
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", false
+		}
+		dir = parent
+	}
 }
