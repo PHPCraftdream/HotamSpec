@@ -215,42 +215,6 @@ func RenderMindContent(g *ontology.Graph, domainName string, consumer bool) stri
 	return strings.Join(parts, "\n")
 }
 
-// domainManifest carries the DOMAIN-MAP presentation fields. The on-disk
-// manifest.json schema (internal/loader) carries only self_hosting; the
-// ID/DESCRIPTION/GOALS/DIRECTOR fields are not yet represented on disk for
-// any domain, so they are looked up here by domain directory name. Domains
-// absent from this table (a new domain scaffolded without CLAUDE.md-generator
-// awareness) fall back to em-dash placeholders.
-type domainManifest struct {
-	ID          string
-	Description string
-	Goals       []string
-	Director    string
-}
-
-var knownDomainManifests = map[string]domainManifest{
-	"hotam-spec-self": {
-		ID:          "hotam-spec-self",
-		Description: "The methodology modeling itself — Hotam-Spec about itself as a tension graph.",
-		Goals: []string{
-			"burn down SETTLED-unenforced to zero",
-			"atomize all compound check_*",
-			"every CLAUDE.md section auto-generated from substrate",
-		},
-		Director: "director",
-	},
-	"hotam-dev": {
-		ID:          "hotam-dev",
-		Description: "a model of developing the Hotam-Spec repository itself: waves, commits, spawns, verification gates",
-		Goals: []string{
-			"waves land atomically with a green T2 at the boundary",
-			"every spawn and every apply leaves a trace in the .runtime logs",
-			"push only on the steward's explicit word",
-		},
-		Director: "director",
-	},
-}
-
 // shortForm renders a meaningful short form of text per
 // R-crystal-carries-short-form: it prefers an explicit summary when one is
 // provided, otherwise falls back to the first whole sentence of text. It NEVER
@@ -367,19 +331,20 @@ func RenderDomainMapBlock(repoRoot string, domainGraphs map[string]*ontology.Gra
 	}
 
 	for _, name := range domainDirs {
-		m, known := knownDomainManifests[name]
+		// Presentation fields come from the domain's OWN manifest.json
+		// (purpose/goals/director — task #210): a domain is a self-contained
+		// directory, so its Domain Map identity lives on disk with it, never
+		// in an engine-side table. A manifest without these fields (or a
+		// missing/malformed manifest) yields empty values → em-dash
+		// placeholders below, same rendering as before the fields existed.
+		m := loader.ResolveDomainPresentation(filepath.Join(domainsRoot, name, "graph.json"))
 		domainID := name
-		description := ""
+		description := m.Purpose
 		goalsText := ""
-		director := ""
-		if known {
-			domainID = m.ID
-			description = m.Description
-			if len(m.Goals) > 0 {
-				goalsText = strings.Join(m.Goals, ", ")
-			}
-			director = m.Director
+		if len(m.Goals) > 0 {
+			goalsText = strings.Join(m.Goals, ", ")
 		}
+		director := m.Director
 		if description == "" {
 			description = "—"
 		}

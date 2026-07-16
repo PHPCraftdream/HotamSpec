@@ -1,1 +1,10 @@
-{"self_hosting": true}
+{
+  "self_hosting": true,
+  "purpose": "The methodology modeling itself — Hotam-Spec about itself as a tension graph.",
+  "goals": [
+    "burn down SETTLED-unenforced to zero",
+    "atomize all compound check_*",
+    "every CLAUDE.md section auto-generated from substrate"
+  ],
+  "director": "director"
+}

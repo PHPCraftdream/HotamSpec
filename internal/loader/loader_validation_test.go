@@ -117,6 +117,70 @@ func TestResolveSelfHosting_MalformedManifest(t *testing.T) {
 	}
 }
 
+// TestResolveDomainPresentation covers every manifest-state branch of the
+// presentation resolver (task #210): fields present → parsed; old-format
+// manifest without the fields → zero value (backward compatibility); missing
+// manifest → zero value; malformed JSON → zero value.
+func TestResolveDomainPresentation(t *testing.T) {
+	t.Parallel()
+
+	t.Run("fields present are parsed", func(t *testing.T) {
+		t.Parallel()
+		dir := t.TempDir()
+		manifest := `{
+  "self_hosting": true,
+  "purpose": "The methodology modeling itself.",
+  "goals": ["goal one", "goal two"],
+  "director": "director"
+}`
+		if err := os.WriteFile(filepath.Join(dir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+			t.Fatalf("write manifest: %v", err)
+		}
+		got := ResolveDomainPresentation(filepath.Join(dir, "graph.json"))
+		if got.Purpose != "The methodology modeling itself." {
+			t.Errorf("Purpose: want parsed value, got %q", got.Purpose)
+		}
+		if len(got.Goals) != 2 || got.Goals[0] != "goal one" || got.Goals[1] != "goal two" {
+			t.Errorf("Goals: want [goal one, goal two], got %v", got.Goals)
+		}
+		if got.Director != "director" {
+			t.Errorf("Director: want \"director\", got %q", got.Director)
+		}
+	})
+
+	t.Run("old-format manifest without fields yields zero value", func(t *testing.T) {
+		t.Parallel()
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "manifest.json"), []byte(`{"self_hosting": false}`), 0o644); err != nil {
+			t.Fatalf("write manifest: %v", err)
+		}
+		got := ResolveDomainPresentation(filepath.Join(dir, "graph.json"))
+		if got.Purpose != "" || len(got.Goals) != 0 || got.Director != "" {
+			t.Errorf("old-format manifest must yield the zero DomainPresentation, got %+v", got)
+		}
+	})
+
+	t.Run("missing manifest yields zero value", func(t *testing.T) {
+		t.Parallel()
+		got := ResolveDomainPresentation(filepath.Join(t.TempDir(), "graph.json"))
+		if got.Purpose != "" || len(got.Goals) != 0 || got.Director != "" {
+			t.Errorf("missing manifest must yield the zero DomainPresentation, got %+v", got)
+		}
+	})
+
+	t.Run("malformed manifest yields zero value", func(t *testing.T) {
+		t.Parallel()
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "manifest.json"), []byte(`{not valid json`), 0o644); err != nil {
+			t.Fatalf("write manifest: %v", err)
+		}
+		got := ResolveDomainPresentation(filepath.Join(dir, "graph.json"))
+		if got.Purpose != "" || len(got.Goals) != 0 || got.Director != "" {
+			t.Errorf("malformed manifest must yield the zero DomainPresentation, got %+v", got)
+		}
+	})
+}
+
 func TestWriteGraph_NilGraph(t *testing.T) {
 	t.Parallel()
 	err := WriteGraph(filepath.Join(t.TempDir(), "graph.json"), nil)

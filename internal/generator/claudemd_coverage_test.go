@@ -257,12 +257,24 @@ func TestRenderDomainMapBlock_EmptyDomainsDir(t *testing.T) {
 }
 
 // TestRenderDomainMapBlock_PopulatedKnown exercises: real domain directory
-// enumeration, the "_"-prefix skip, a KNOWN manifest (hotam-dev), a
-// pre-supplied graph (avoids disk load), and the atoms/open-actions rendering.
+// enumeration, the "_"-prefix skip, an on-disk manifest.json carrying the
+// purpose/goals/director presentation fields (task #210 — these used to live
+// in an engine-side knownDomainManifests table, now read from the domain's
+// own manifest), a pre-supplied graph (avoids disk load), and the
+// atoms/open-actions rendering.
 func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "domains", "hotam-dev"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	manifest := `{
+  "self_hosting": false,
+  "purpose": "a model of developing the Hotam-Spec repository itself: waves, commits, spawns, verification gates",
+  "goals": ["waves land atomically with a green T2 at the boundary", "push only on the steward's explicit word"],
+  "director": "director"
+}`
+	if err := os.WriteFile(filepath.Join(root, "domains", "hotam-dev", "manifest.json"), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	// underscore-prefixed dir must be skipped by the enumeration
@@ -278,11 +290,15 @@ func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 	if strings.Contains(out, "_archive") {
 		t.Errorf("underscore-prefixed dir must be skipped, but appeared in output")
 	}
-	// known manifest for hotam-dev carries a purpose string (English since
-	// the deportify/English-only wave translated knownDomainManifests's
-	// hotam-dev entry -- this used to assert the Russian original was present).
+	// the on-disk manifest carries the purpose string
 	if !strings.Contains(out, "developing the Hotam-Spec repository itself") {
-		t.Errorf("known manifest description not embedded for hotam-dev")
+		t.Errorf("manifest purpose not embedded for hotam-dev, got: %s", out)
+	}
+	if !strings.Contains(out, "- **goals** — waves land atomically with a green T2 at the boundary, push only on the steward's explicit word") {
+		t.Errorf("manifest goals not embedded for hotam-dev, got: %s", out)
+	}
+	if !strings.Contains(out, "- **director** — director") {
+		t.Errorf("manifest director not embedded for hotam-dev, got: %s", out)
 	}
 	// the fixture has 3 SETTLED requirements → atoms-count line
 	if !strings.Contains(out, "3 SETTLED") {

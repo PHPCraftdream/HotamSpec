@@ -1,1 +1,10 @@
-{"self_hosting": false}
+{
+  "self_hosting": false,
+  "purpose": "a model of developing the Hotam-Spec repository itself: waves, commits, spawns, verification gates",
+  "goals": [
+    "waves land atomically with a green T2 at the boundary",
+    "every spawn and every apply leaves a trace in the .runtime logs",
+    "push only on the steward's explicit word"
+  ],
+  "director": "director"
+}

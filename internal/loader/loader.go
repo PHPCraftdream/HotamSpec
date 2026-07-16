@@ -252,6 +252,40 @@ func ResolveRequireProvenance(graphPath string) bool {
 	return m.RequireProvenance
 }
 
+// DomainPresentation carries the optional DOMAIN-MAP presentation fields of a
+// domain's manifest.json: purpose (one-line description), goals (bullet list),
+// and director (the accountable steward role/name). All three are optional —
+// a manifest without them (every manifest predating task #210) yields the
+// zero value, and the DOMAIN-MAP renderer falls back to em-dash placeholders,
+// exactly as before.
+type DomainPresentation struct {
+	Purpose  string   `json:"purpose"`
+	Goals    []string `json:"goals"`
+	Director string   `json:"director"`
+}
+
+// ResolveDomainPresentation reads the optional "purpose"/"goals"/"director"
+// fields from the manifest.json sitting next to graph.json, mirroring
+// resolveSelfHosting's exact pattern (read manifest, tolerate a missing file,
+// tolerate malformed JSON, default when absent). Returns the zero
+// DomainPresentation for every absent/missing-field/malformed case —
+// preserving 100% backward compatibility with every manifest.json in this
+// repo and in the wild that predates these fields (task #210: the DOMAIN-MAP
+// purpose/goals/director now live on disk in the domain's own manifest, not
+// in a hardcoded engine-side table).
+func ResolveDomainPresentation(graphPath string) DomainPresentation {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return DomainPresentation{}
+	}
+	var m DomainPresentation
+	if err := json.Unmarshal(data, &m); err != nil {
+		return DomainPresentation{}
+	}
+	return m
+}
+
 func validateGraph(g *ontology.Graph) error {
 	var errs []string
 	add := func(format string, args ...any) {
