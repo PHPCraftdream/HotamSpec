@@ -202,7 +202,10 @@ SETTLED-требование домена прогоняется через сл
 части имён 4 типизированных reference-полей, обогащённых в `prat`-графе стюардом
 (`fr-graph.входной_реестр`, `implementation-order.граф_зависимостей`, `brd-package.прогноз`,
 `sdr-package.прогноз`), без которых `BuildEntityModel` отказывал бы с `UnknownTermError` на этих
-4 EntityType и pipeline-gate для них в принципе не мог бы быть построен.
+4 EntityType и pipeline-gate для них в принципе не мог бы быть построен. Дополнение (2026-07-16):
+`блокеры`→`blockers`, `счётчик`→`counter` добавлены при обогащении `prat`-графа полем
+`brd-package.блокеры_счётчик` (R-brd-integrity-zero-blockers coverage) — реально встреченный
+термин, без которого `BuildEntityModel` отказывал бы с `UnknownTermError` на этом поле.
 
 | Русский | English |
 |---|---|
@@ -254,6 +257,8 @@ SETTLED-требование домена прогоняется через сл
 | реестр | registry |
 | граф | graph |
 | зависимостей | dependencies |
+| блокеры | blockers |
+| счётчик | counter |
 
 ### 4.2 Таблица аббревиатур (транслитерация буква-в-букву, НЕ перевод)
 

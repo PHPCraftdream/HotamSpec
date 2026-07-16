@@ -708,28 +708,37 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 	}
 
 	// R-brd-integrity-zero-blockers has MUST plus id-shaped anchors (P-G3,
-	// P-G3-CQA), but NEITHER anchor resolves to a runtime-comparable
-	// structural correlate anywhere in the prat domain: "P-G3" is only
-	// found inside brd-package's Cyrillic `why` text (textual, not a
-	// lifecycle.state.name or another requirement id), and "P-G3-CQA" is
-	// not found anywhere at all. This is the exact case the fix in this
-	// package closes: previously the generator classified this as
-	// atomKindGate and rendered a vacuous self-check of the literal
-	// "P-G3"/"P-G3-CQA" anchors it had just found in the claim; now it
-	// honestly reclassifies to atomKindNone (contract §3 closing row) rather
-	// than imitate a structural check that does not exist.
+	// P-G3-CQA). "P-G3" still resolves only to brd-package's Cyrillic `why`
+	// text (textual, not a lifecycle.state.name or another requirement id).
+	// "P-G3-CQA", however, now resolves to a REAL structural correlate: the
+	// prat domain landed R-gate-pg3-cqa-mandatory (PRAT-hotam commit
+	// fdd7de3, task #202, after this test was first pinned) whose id
+	// contains "pg3cqa" once normalized — a genuine other-requirement-id
+	// correlate (gateAnchorCorrelateRequirement), not an imitation. Per
+	// gateAtom.hasStructuralCorrelate, one real correlate is enough to
+	// classify the whole requirement as atomKindGate; the P-G3 why-only hit
+	// is still recorded on rm.gate.correlates for the audit file but no
+	// longer drives the requirement's own kind since P-G3-CQA now stands on
+	// its own two feet.
 	if rm, ok := byID["R-brd-integrity-zero-blockers"]; ok {
-		if rm.kind != atomKindNone {
-			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindNone (no anchor resolves to a runtime-comparable graph correlate)", rm.kind)
+		if rm.kind != atomKindGate {
+			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindGate (P-G3-CQA resolves to R-gate-pg3-cqa-mandatory)", rm.kind)
 		}
 		foundWhyOnly := false
+		foundReqCorrelate := false
 		for _, c := range rm.gate.correlates {
 			if c.anchor == "P-G3" && c.kind == gateAnchorCorrelateWhy {
 				foundWhyOnly = true
 			}
+			if c.anchor == "P-G3-CQA" && c.kind == gateAnchorCorrelateRequirement && c.requirementID == "R-gate-pg3-cqa-mandatory" {
+				foundReqCorrelate = true
+			}
 		}
 		if !foundWhyOnly {
 			t.Errorf("R-brd-integrity-zero-blockers: expected anchor %q to resolve to a why-text-only correlate, got %+v", "P-G3", rm.gate.correlates)
+		}
+		if !foundReqCorrelate {
+			t.Errorf("R-brd-integrity-zero-blockers: expected anchor %q to resolve to requirement %q, got %+v", "P-G3-CQA", "R-gate-pg3-cqa-mandatory", rm.gate.correlates)
 		}
 	} else {
 		t.Error("expected R-brd-integrity-zero-blockers to be present")
