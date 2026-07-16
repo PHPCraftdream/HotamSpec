@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-structural-floor-vs-mirror-audit",
+  "claim": "Two DIFFERENT parties hold two DIFFERENT guarantees over an authored SpecLink, and the boundary between them shall NEVER be blurred: the ENGINE holds the STRUCTURAL floor -- a cited symbol or test really exists, resolves by name against the domain's own authored spec/ tree, is not t.Log-only or otherwise empty (has teeth), is not an unconditional t.Skip, is not formally reused across unrelated requirements, and is not orphaned by a later code change -- while a MIRROR AUDIT, performed by a human or an LLM reading the pair (requirement claim text, authored code+test) without domain-specific heuristics baked into the engine, certifies that the cited test SEMANTICALLY proves the requirement's claim. The engine's structural checks shall NEVER be represented, documented, or relied upon as a substitute for the mirror audit's semantic certification, and the mirror audit's semantic judgment shall NEVER be encoded as a lexical or keyword heuristic inside the graph invariant layer.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "evidence": ["task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth, verified_by internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"]
+}

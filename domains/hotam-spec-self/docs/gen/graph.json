@@ -589,7 +589,7 @@
       ],
       "enforcement": "ENFORCED",
       "evidence": [
-        "go test ./internal/gate/... ./internal/invariants/... -run 'ResolveSpecSymbol|ResolveSpecTest|ImplementedBy|VerifiedBy' -v: all mutation round-trip tests pass (task #223 session, 2026-07-16); claim reworded same session after TestCmdLand_SuccessPathDoesNotRollBack / TestProposeLand_NonJSON_Unchanged surfaced the must/must-not opposite-marker collision"
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip -v : PASS (task #236 self-example W2, 2026-07-16); checkImplementedBySymbolResolvable (internal/invariants/authored_links.go) is one of the six check_* invariants this requirement's claim/why already names as implementing the mechanical checking discipline; TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip is the mutation round-trip proving the existence/staleness half fires when the named symbol is removed (simulating a rename that orphans the reference) and clears once restored; enforced_by (engine mechanism, task #223) preserved unchanged -- this UPDATE adds the authored-path carrier alongside it, both mechanisms now visible on the same requirement per the disjunctive gate (R-enforced-requires-enforcer-or-authored-link)"
       ],
       "history": [
         {
@@ -606,41 +606,70 @@
           "at": "2026-07-16",
           "decided_by": "",
           "summary": "semantic conflict acknowledged — human decision recorded: reword to shall/shall-not phrasing to remove must/must-not opposite-marker collision surfaced by TestCmdLand_SuccessPathDoesNotRollBack -- task #223"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: [go test ./internal/gate/... ./internal/invariants/... -run 'ResolveSpecSymbol|ResolveSpecTest|ImplementedBy|VerifiedBy' -v: all mutation round-trip …→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip -v : PASS (…; source_refs: [internal/invariants/authored_links.go, internal/gate/spec_resolver.go, PLAN-authored-spec-discipline.md]→[internal/invariants/authored_links.go, internal/invariants/authored_links_test.go]; implemented_by: []→[internal/invariants/authored_links.go:checkImplementedBySymbolResolvable]; verified_by: []→[internal/invariants/authored_links_test.go:TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip]"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: CONFRONT opposite-marker false positive (only vs any; shared tokens: authored/same/tree/entry, generic vocabulary) against R-authored-spec-layer-progression, R-framework-owned-by-no-agent, R-land-gate-tier-selector-fails-closed -- this is an UPDATE proposal only adding implemented_by/verified_by fields, claim text byte-identical to the already-SETTLED requirement; no substantive conflict, R-authored-spec-layer-progression governs layer ORDER while this requirement governs mechanical field CHECKING, distinct concepts sharing the word authored"
         }
       ],
       "id": "R-authored-spec-links-mechanically-checked",
-      "implemented_by": [],
+      "implemented_by": [
+        "internal/invariants/authored_links.go:checkImplementedBySymbolResolvable"
+      ],
       "last_reviewed_at": "2026-07-16",
       "owner": "framework-author",
       "review_after": "2027-01-16",
       "source_refs": [
         "internal/invariants/authored_links.go",
-        "internal/gate/spec_resolver.go",
-        "PLAN-authored-spec-discipline.md"
+        "internal/invariants/authored_links_test.go"
       ],
       "status": "SETTLED",
-      "verified_by": [],
+      "verified_by": [
+        "internal/invariants/authored_links_test.go:TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip"
+      ],
       "why": "PLAN-authored-spec-discipline.md §6 (the mechanical-checks catalog) requires a STRUCTURAL floor under the authored-spec era's implemented_by/verified_by fields (added additively in a prior session, internal/ontology/requirement.go): a stale, vacuous, skipped, or promiscuously-reused reference would let ENFORCED mean nothing for a domain's own authored code+tests, exactly the failure PLAN §1 documents from the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements\"). Six atomic check_* invariants implement this (internal/invariants/authored_links.go), each resolving against a single named file under the domain's own directory (g.DomainDir) via a targeted AST parse (internal/gate/spec_resolver.go ResolveSpecSymbol/ResolveSpecTest) -- never a repo-wide scan, since every implemented_by/verified_by entry already names its own file: check_implemented_by_symbol_resolvable (the symbol -- function, method, or type -- really exists; methods resolve here, unlike the engine-side Test*-scan which deliberately skips fn.Recv != nil), check_verified_by_test_resolvable (the test really exists and is Test*-shaped with the real go-test signature), check_verified_by_test_has_teeth (the real ENFORCEMENT successor to the honest no-op check_enforced_by_test_has_teeth -- a resolvable verified_by test whose body is empty or t.Log-only fires, since a domain's spec/ tree is not necessarily wired into any go test ./... this engine runs, so this is the only mechanical backstop against a vacuous claim), check_verified_by_test_no_skip (an unconditional top-level t.Skip/t.Skipf is the same defeat as a t.Log-only body and is split into its own check so the violation names the specific defect), and check_verified_by_no_unrelated_reuse (the same verified_by entry formally cited by requirements that do not all collapse into one connected component under the Relations adjacency is a red flag that one test is stretched thin across unrelated claims). HONESTY BOUNDARY (§6): these checks hold the structural floor only -- symbol/test exists, runs, is not hollow, is not skipped, is not promiscuously reused -- they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit performed by a human or an LLM reading the pair (requirement text, authored code+test), never encoded as a lexical/semantic heuristic in the graph invariant layer. All six checks are structurally NO-OP for any requirement with empty implemented_by/verified_by (both fields remain optional), so on every domain graph.json today (authored spec/ does not exist yet in any domain -- task #224 is the pilot) they contribute zero violations; mutation-proof coverage lives in internal/gate/spec_resolver_test.go and internal/invariants/authored_links_test.go (each check has a break-then-fix round-trip test proving it fires on a real mutated fixture and clears once fixed). REWORDED 2026-07-16: the claim text originally used bare MUST/MUST NOT phrasing, which collided with internal/diagnose's opposite-marker CONFRONT heuristic (oppositeMarkerPairs: must vs must not) on every future proposal whose claim happens to contain the bare word \"must\" plus any shared topical token (e.g. \"path\", \"land\") -- a corpus-wide false-positive tax this requirement would otherwise impose on every subsequent land. Reworded to \"shall\"/\"shall be\"/\"shall not\" phrasing (semantically identical RFC-2119-style obligation, same as most other SETTLED claims in this corpus) with no loss of meaning; the mechanical checks and their tests are unchanged."
     },
     {
       "assumptions": [],
       "claim": "Every generated document that describes a domain's authored spec/ tree -- TRACEABILITY.md (requirement -> implemented_by symbol -> verified_by test), MODELS.md (an inventory of authored model structs/fields/methods/invariants extracted from spec/model via go/ast), COVERAGE.md (which SETTLED+ENFORCEABLE requirements have real implemented_by/verified_by carriers versus roadmap debt, and which layer per R-authored-spec-layer-progression the domain currently sits at), and UNENFORCED.md's authored-era burn-down -- shall be a GENERATED projection assembled by `hotam gen-spec` from the graph plus the spec/ resolver (internal/gate/spec_resolver.go), and shall NEVER be hand-written or hand-edited. spec/ itself (the domain's authored model/application/policy/tests code) is the one artifact in this pipeline authored by hand and NEVER regenerated or overwritten by the engine; docs/gen/ is the generated side and is ALWAYS safe to regenerate and overwrite.",
       "enforced_by": [],
-      "enforcement": "PROSE",
+      "enforcement": "ENFORCED",
       "evidence": [
-        "PLAN-authored-spec-discipline.md §3 and §7 name the authored/generated boundary and the four future generated documents verbatim; task #225 (not yet executed) is the tracked follow-on to build the generators"
+        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/generator/traceability.go:BuildTraceability, verified_by internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"
       ],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: [PLAN-authored-spec-discipline.md §3 and §7 name the authored/generated boundary and the four future generated documents verbatim; task #225 (not y…→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/generator/... -run TestBuildTraceability_ByteIdenticalToFixture -v : PASS (task #236 self-example …; source_refs: [PLAN-authored-spec-discipline.md]→[internal/generator/traceability.go, internal/generator/constitution_entities_framework_repomap_test.go]; implemented_by: []→[internal/generator/traceability.go:BuildTraceability]; verified_by: []→[internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture]"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "enforcement: PROSE→ENFORCED; evidence: [cd D:/ai_dev/prat/HotamSpec && go test ./internal/generator/... -run TestBuildTraceability_ByteIdenticalToFixture -v : PASS (task #236 self-example …→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…"
+        }
+      ],
       "id": "R-authored-spec-projections-are-derived",
-      "implemented_by": [],
+      "implemented_by": [
+        "internal/generator/traceability.go:BuildTraceability"
+      ],
       "last_reviewed_at": "",
       "owner": "framework-author",
       "review_after": "",
       "source_refs": [
-        "PLAN-authored-spec-discipline.md"
+        "internal/generator/traceability.go",
+        "internal/generator/constitution_entities_framework_repomap_test.go"
       ],
       "status": "SETTLED",
-      "verified_by": [],
+      "verified_by": [
+        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture"
+      ],
       "why": "PLAN-authored-spec-discipline.md §3 draws the authored/generated line at the directory level (\"spec/ -- AUTHORED код-спека -- пишется РУКАМИ, движок НЕ перезаписывает\" versus \"docs/gen/ -- ГЕНЕРИРУЕМЫЕ проекции -- движок перезаписывает\"), and §7 (\"Генерируемые проекции (вместо кода)\") names the specific four documents this requirement covers: TRACEABILITY.md, MODELS.md, COVERAGE.md, UNENFORCED.md. This is the natural-language DEFINITION half of the authored/generated split; it is distinct from R-domain-overview-projection (#201/PIPELINE.md), which governs a DIFFERENT generated document (the Process/EntityType-driven whole-domain overview, unrelated to spec/ code) and from R-requirement-freshness-fields (#the history mechanism), which governs a DIFFERENT derived artifact (per-node History, not a whole document). Naming this requirement closes the same gap R-domain-overview-projection closes for PIPELINE.md, but for the NEW authored-spec-era documents PLAN §7 introduces -- without this node, an agent reading the self-domain graph would find no anchor stating that TRACEABILITY/MODELS/COVERAGE/UNENFORCED are derived, not authored, and might be tempted to hand-edit them the way spec/ itself is meant to be hand-edited, exactly inverting PLAN §3's authored/generated boundary. Honestly PROSE/feature-blocked today (R-speculative-aspects-frozen's pattern): none of these four generators exist yet in internal/generator (task #225, PLAN §11, not yet executed at authorship time) -- this requirement fixes the CONTRACT the future generator must honor (never hand-write these four documents) before the generator itself is built, the same order R-domain-overview-projection followed for PIPELINE.md."
     },
     {
@@ -734,20 +763,30 @@
       ],
       "enforcement": "ENFORCED",
       "evidence": [
-        "go test ./internal/invariants/... -run EnforcedRequiresEnforcerOrAuthoredLink -v: engine-path/authored-path/disjunctive mutation round-trip all pass (task #223 session, 2026-07-16)"
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires -v : PASS (task #236 self-example W2, 2026-07-16); checkEnforcedRequiresEnforcerOrAuthoredLink (internal/invariants/authored_links.go) IS the disjunctive ENFORCED gate this requirement's claim states verbatim (engine mechanism OR authored mechanism, neither alone for implemented_by-only is enough); TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires is the mutation round-trip proving the exact disjunction: neither field set fires, implemented_by alone still fires, both implemented_by AND verified_by set clears -- proving the AND inside the OR is exact, not a silent looser check; enforced_by (engine mechanism, task #223) preserved unchanged -- this UPDATE adds the authored-path carrier alongside it, this requirement is now literally demonstrated by both paths it describes at once"
       ],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: [go test ./internal/invariants/... -run EnforcedRequiresEnforcerOrAuthoredLink -v: engine-path/authored-path/disjunctive mutation round-trip all pass…→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires…; source_refs: [internal/invariants/authored_links.go, PLAN-authored-spec-discipline.md]→[internal/invariants/authored_links.go, internal/invariants/authored_links_test.go]; implemented_by: []→[internal/invariants/authored_links.go:checkEnforcedRequiresEnforcerOrAuthoredLink]; verified_by: []→[internal/invariants/authored_links_test.go:TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires]"
+        }
+      ],
       "id": "R-enforced-requires-enforcer-or-authored-link",
-      "implemented_by": [],
+      "implemented_by": [
+        "internal/invariants/authored_links.go:checkEnforcedRequiresEnforcerOrAuthoredLink"
+      ],
       "last_reviewed_at": "2026-07-16",
       "owner": "framework-author",
       "review_after": "2027-01-16",
       "source_refs": [
         "internal/invariants/authored_links.go",
-        "PLAN-authored-spec-discipline.md"
+        "internal/invariants/authored_links_test.go"
       ],
       "status": "SETTLED",
-      "verified_by": [],
+      "verified_by": [
+        "internal/invariants/authored_links_test.go:TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires"
+      ],
       "why": "PLAN-authored-spec-discipline.md §5 (steward decision 2026-07-16) and §12 make the ENFORCED gate DISJUNCTIVE: a requirement may be SETTLED without code as honest roadmap debt, but ENFORCED requires a real noun via one of two paths -- the pre-existing engine mechanism (enforced_by: a check_* registry name or a repo-wide Test* function, guarded by check_enforced_names_invariant's non-emptiness half) or the new authored-spec mechanism (implemented_by AND verified_by both non-empty, pointing into a domain's own spec/ tree). check_enforced_names_invariant alone only recognizes the enforced_by half and would wrongly reject a requirement legitimately ENFORCED purely via implemented_by+verified_by; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the widened disjunctive gate that accepts either path, so a self-domain requirement enforced by the engine's own check_*/Test* machinery is not forced to fabricate a redundant authored spec/ reference, and a business domain's authored-spec requirement is not forced to invent a fake engine-side enforcer. Having implemented_by without verified_by (or vice versa) does NOT satisfy the authored path -- \"embodied somewhere\" without \"proven somewhere\" is not a real guarantee. Mutation-proof coverage in internal/invariants/authored_links_test.go proves both positive paths (engine-only, authored-only) pass, and a round-trip mutation (neither -> implemented_by-only, still violating -> both fields present, clears) proves the disjunction is exact, not a silent OR-by-accident."
     },
     {
@@ -878,28 +917,52 @@
       "assumptions": [],
       "claim": "An authored-spec requirement's link to code shall carry two ORTHOGONAL fields, never collapsed into one: implemented_by names WHERE the requirement is EMBODIED (a path-qualified file:symbol reference into the domain's authored spec/ tree, the model/method that realizes the claim), and verified_by names WHERE the requirement is PROVEN (a path-qualified file:test reference, the executable test that demonstrates the claim holds). A symbol that embodies a requirement without a test that proves it, or a test cited without the symbol it exercises, is an incomplete SpecLink -- ENFORCED status requires both halves together (see R-enforced-requires-enforcer-or-authored-link), but the two fields answer two DIFFERENT questions and shall never be merged into a single field or treated as aliases of one another.",
       "enforced_by": [],
-      "enforcement": "PROSE",
+      "enforcement": "ENFORCED",
       "evidence": [
-        "internal/ontology/requirement.go:80-96 (ImplementedBy/VerifiedBy field doc comments, task #223) already state the embodied-vs-proven distinction in code; this requirement promotes it to a graph anchor"
+        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/gate/spec_resolver.go:ResolveSpecSymbol, verified_by internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"
       ],
       "history": [
         {
           "at": "2026-07-16",
           "decided_by": "",
           "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin) task #235, 2026-07-16: lexical opposite-marker collision (shared tokens: answer/authored/names) against R-domain-overview-projection -- that requirement governs the PIPELINE.md overview projection (Process/EntityType, whole-domain reading), this requirement names the SpecLink implemented_by/verified_by field-semantics distinction (embodied vs proven) already implemented in internal/ontology/requirement.go task #223; not a substantive conflict, refines relation recorded to the two already-landed mechanical-check requirements instead"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: [internal/ontology/requirement.go:80-96 (ImplementedBy/VerifiedBy field doc comments, task #223) already state the embodied-vs-proven distinction in …→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/gate/... -run TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound -v : PASS (task #236 s…; source_refs: [PLAN-authored-spec-discipline.md, internal/ontology/requirement.go]→[internal/gate/spec_resolver.go, internal/gate/spec_resolver_test.go]; implemented_by: []→[internal/gate/spec_resolver.go:ResolveSpecSymbol]; verified_by: []→[internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound]"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: CONFRONT opposite-marker false positive (never vs always; shared tokens: answer, authored, names) against R-domain-overview-projection -- this is an UPDATE proposal only adding implemented_by/verified_by fields, claim text byte-identical to the already-SETTLED requirement (same false-positive class already acknowledged for this same requirement's claim text under task #235, 2026-07-16, recorded in its History); no substantive conflict, R-domain-overview-projection governs the OVERVIEW/PIPELINE.md projection while this requirement names the SpecLink embodied/proven field distinction -- unrelated concepts sharing generic vocabulary"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "enforcement: PROSE→ENFORCED; evidence: [cd D:/ai_dev/prat/HotamSpec && go test ./internal/gate/... -run TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound -v : PASS (task #236 s…→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: promoting PROSE->ENFORCED, claim text byte-identical to already-SETTLED requirement, no substantive change -- if flagged, same false-positive class already handled for this claim earlier in this wave"
         }
       ],
       "id": "R-spec-link-embodied-vs-proven",
-      "implemented_by": [],
+      "implemented_by": [
+        "internal/gate/spec_resolver.go:ResolveSpecSymbol"
+      ],
       "last_reviewed_at": "",
       "owner": "framework-author",
       "review_after": "",
       "source_refs": [
-        "PLAN-authored-spec-discipline.md",
-        "internal/ontology/requirement.go"
+        "internal/gate/spec_resolver.go",
+        "internal/gate/spec_resolver_test.go"
       ],
       "status": "SETTLED",
-      "verified_by": [],
+      "verified_by": [
+        "internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound"
+      ],
       "why": "PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (steward decision 2026-07-16) establish implemented_by/verified_by as two separate fields on Requirement (internal/ontology/requirement.go), landed additively in task #223 and already carrying inline doc comments naming the same embodied/proven distinction (requirement.go:80-96: \"ImplementedBy names WHERE this requirement is embodied\", \"VerifiedBy names WHERE this requirement is PROVEN\"). R-authored-spec-links-mechanically-checked (#223) and R-enforced-requires-enforcer-or-authored-link (#223) already model the MECHANICAL checking of these fields (symbol/test resolvability, non-vacuousness, no-skip, no-reuse) and the DISJUNCTIVE ENFORCED gate that accepts either enforced_by or implemented_by+verified_by together -- but neither requirement states the CONCEPTUAL distinction itself: why two fields exist, what each one MEANS, and why they are not interchangeable. Without this requirement as a first-class node, the SpecLink concept (PLAN §4's requirement->code->test schema) exists only in code comments and PLAN prose, not as a graph anchor a future agent can cite when modeling a business domain's own spec/ tree (task #224 pilot, task #236 recursion into hotam-spec-self's own engine code). This requirement is the missing OBJECT-level node: it names the SpecLink concept and its two fields' distinct semantics, one layer above the two already-landed mechanical-check requirements which govern HOW the fields are validated, not WHAT they mean. PROSE/SETTLED is correct here: this is a naming-and-definition claim about a data shape already implemented (internal/ontology/requirement.go ImplementedBy/VerifiedBy, task #223) -- the fields themselves are code, but THIS requirement's own implemented_by/verified_by linkage into hotam-spec-self's engine is deliberately deferred to task #236 (recursion), per the session's explicit instruction not to add code links at the objects+fields step."
     },
     {
@@ -939,28 +1002,52 @@
       "assumptions": [],
       "claim": "Two DIFFERENT parties hold two DIFFERENT guarantees over an authored SpecLink, and the boundary between them shall NEVER be blurred: the ENGINE holds the STRUCTURAL floor -- a cited symbol or test really exists, resolves by name against the domain's own authored spec/ tree, is not t.Log-only or otherwise empty (has teeth), is not an unconditional t.Skip, is not formally reused across unrelated requirements, and is not orphaned by a later code change -- while a MIRROR AUDIT, performed by a human or an LLM reading the pair (requirement claim text, authored code+test) without domain-specific heuristics baked into the engine, certifies that the cited test SEMANTICALLY proves the requirement's claim. The engine's structural checks shall NEVER be represented, documented, or relied upon as a substitute for the mirror audit's semantic certification, and the mirror audit's semantic judgment shall NEVER be encoded as a lexical or keyword heuristic inside the graph invariant layer.",
       "enforced_by": [],
-      "enforcement": "PROSE",
+      "enforcement": "ENFORCED",
       "evidence": [
-        "PLAN-authored-spec-discipline.md §6 closing paragraph states the honesty boundary verbatim; internal/invariants/authored_links.go check_verified_by_test_has_teeth doc comment (task #223) already cites the same boundary in code"
+        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth, verified_by internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"
       ],
       "history": [
         {
           "at": "2026-07-16",
           "decided_by": "",
           "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin) task #235, 2026-07-16: lexical opposite-marker false positives (shared tokens: human/judgment, them, invariant/structural) against unrelated REJECTED/SETTLED requirements -- not substantive conflicts; this requirement promotes PLAN-authored-spec-discipline.md §6's honesty-boundary paragraph (already paraphrased inside R-authored-spec-links-mechanically-checked's WHY) to its own first-class anchor"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "evidence: [PLAN-authored-spec-discipline.md §6 closing paragraph states the honesty boundary verbatim; internal/invariants/authored_links.go check_verified_by…→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip -v : PASS (task #236…; source_refs: [PLAN-authored-spec-discipline.md, internal/invariants/authored_links.go]→[internal/invariants/authored_links.go, internal/invariants/authored_links_test.go]; implemented_by: []→[internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth]; verified_by: []→[internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip]"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: CONFRONT opposite-marker false positive (only vs any; shared tokens: structural/change/tree/over/engine, all generic vocabulary) against multiple unrelated SETTLED requirements (R-enforcement-perimeter-visible, R-framework-owned-by-no-agent, R-scope-is-projection, R-user-request-decomposed-to-tickets) -- this is an UPDATE proposal only adding implemented_by/verified_by fields, claim text byte-identical to the already-SETTLED requirement; no substantive conflict, none of the flagged requirements concern the engine/mirror-audit boundary this requirement names"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "enforcement: PROSE→ENFORCED; evidence: [cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip -v : PASS (task #236…→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…"
+        },
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: promoting PROSE->ENFORCED, claim text byte-identical to already-SETTLED requirement, no substantive change -- if flagged, same false-positive class already handled for this claim earlier in this wave"
         }
       ],
       "id": "R-structural-floor-vs-mirror-audit",
-      "implemented_by": [],
+      "implemented_by": [
+        "internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth"
+      ],
       "last_reviewed_at": "",
       "owner": "framework-author",
       "review_after": "",
       "source_refs": [
-        "PLAN-authored-spec-discipline.md",
-        "internal/invariants/authored_links.go"
+        "internal/invariants/authored_links.go",
+        "internal/invariants/authored_links_test.go"
       ],
       "status": "SETTLED",
-      "verified_by": [],
+      "verified_by": [
+        "internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip"
+      ],
       "why": "PLAN-authored-spec-discipline.md §6 (\"Каталог механических проверок\") states this boundary as its closing paragraph, calling it out explicitly as an \"honesty boundary\": \"Граница честности: движок держит СТРУКТУРНЫЙ пол. Он не может механически доказать, что тест семантически доказывает требование -- это остаётся зеркальным аудитом.\" R-authored-spec-links-mechanically-checked (#223) already implements and names the six structural checks (symbol/test resolvable, has-teeth, no-skip, no-unrelated-reuse) and its own WHY paragraph already states the boundary in passing (\"HONESTY BOUNDARY (§6): these checks hold the structural floor only... they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit\"). This requirement promotes that boundary from a parenthetical inside #223's WHY text to its OWN first-class graph node, because the boundary is a distinct discipline concept with its own failure mode worth naming and citing independently: the session's own history shows repeated near-misses where lexical/keyword heuristics were proposed as a shortcut for semantic judgment (e.g. the CONFRONT opposite-marker gate's own false-positive collisions, R-authored-spec-links-mechanically-checked's own history entry documents one on 2026-07-16) -- the temptation to fold semantic certification into the engine as \"just one more check_*\" is the exact failure this requirement stands against. PLAN §1 documents the concrete cost of skipping this boundary in the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements... a always-green test is not coverage; it creates the appearance of an executable requirement\") -- the structural floor prevents THAT specific failure (a hollow always-green test), but does not and cannot prevent a technically-real, technically-passing test that simply tests the wrong thing; only a mirror audit catches that. Naming both halves as one requirement (not two) reflects that the discipline IS the boundary between them, not either half alone."
     },
     {

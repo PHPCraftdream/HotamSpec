@@ -1,0 +1,20 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforced-requires-enforcer-or-authored-link",
+  "implemented_by": [
+    "internal/invariants/authored_links.go:checkEnforcedRequiresEnforcerOrAuthoredLink"
+  ],
+  "verified_by": [
+    "internal/invariants/authored_links_test.go:TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires"
+  ],
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires -v : PASS (task #236 self-example W2, 2026-07-16); checkEnforcedRequiresEnforcerOrAuthoredLink (internal/invariants/authored_links.go) IS the disjunctive ENFORCED gate this requirement's claim states verbatim (engine mechanism OR authored mechanism, neither alone for implemented_by-only is enough); TestCheckEnforcedRequiresEnforcerOrAuthoredLink_MUTATION_NeitherMechanismFires is the mutation round-trip proving the exact disjunction: neither field set fires, implemented_by alone still fires, both implemented_by AND verified_by set clears -- proving the AND inside the OR is exact, not a silent looser check; enforced_by (engine mechanism, task #223) preserved unchanged -- this UPDATE adds the authored-path carrier alongside it, this requirement is now literally demonstrated by both paths it describes at once"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_links.go",
+    "internal/invariants/authored_links_test.go"
+  ],
+  "claim": "A SETTLED requirement with enforcement ENFORCED shall be valid iff EITHER the engine mechanism (enforced_by non-empty) OR the authored mechanism (implemented_by AND verified_by both non-empty) names a real enforcer; neither present is a violation.",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

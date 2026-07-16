@@ -1,0 +1,20 @@
+{
+  "kind": "Requirement",
+  "id": "R-structural-floor-vs-mirror-audit",
+  "implemented_by": [
+    "internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth"
+  ],
+  "verified_by": [
+    "internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip"
+  ],
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip -v : PASS (task #236 self-example W2, 2026-07-16); checkVerifiedByTestHasTeeth (internal/invariants/authored_links.go) is the concrete embodiment of the structural floor this requirement names: it mechanically detects a HOLLOW verified_by test (t.Log-only/empty body) but its own doc comment states explicitly it 'does NOT and CANNOT verify that a test SEMANTICALLY proves the requirement's claim -- that remains a mirror audit'; TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip is the mutation round-trip proving the structural-floor half fires on a t.Log-only body and clears once a real assertion is added, demonstrating exactly what the mechanical floor can and cannot catch"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_links.go",
+    "internal/invariants/authored_links_test.go"
+  ],
+  "claim": "Two DIFFERENT parties hold two DIFFERENT guarantees over an authored SpecLink, and the boundary between them shall NEVER be blurred: the ENGINE holds the STRUCTURAL floor -- a cited symbol or test really exists, resolves by name against the domain's own authored spec/ tree, is not t.Log-only or otherwise empty (has teeth), is not an unconditional t.Skip, is not formally reused across unrelated requirements, and is not orphaned by a later code change -- while a MIRROR AUDIT, performed by a human or an LLM reading the pair (requirement claim text, authored code+test) without domain-specific heuristics baked into the engine, certifies that the cited test SEMANTICALLY proves the requirement's claim. The engine's structural checks shall NEVER be represented, documented, or relied upon as a substitute for the mirror audit's semantic certification, and the mirror audit's semantic judgment shall NEVER be encoded as a lexical or keyword heuristic inside the graph invariant layer.",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

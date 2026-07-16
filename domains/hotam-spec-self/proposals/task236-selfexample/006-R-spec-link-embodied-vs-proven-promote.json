@@ -1,0 +1,9 @@
+{
+  "kind": "Requirement",
+  "id": "R-spec-link-embodied-vs-proven",
+  "claim": "An authored-spec requirement's link to code shall carry two ORTHOGONAL fields, never collapsed into one: implemented_by names WHERE the requirement is EMBODIED (a path-qualified file:symbol reference into the domain's authored spec/ tree, the model/method that realizes the claim), and verified_by names WHERE the requirement is PROVEN (a path-qualified file:test reference, the executable test that demonstrates the claim holds). A symbol that embodies a requirement without a test that proves it, or a test cited without the symbol it exercises, is an incomplete SpecLink -- ENFORCED status requires both halves together (see R-enforced-requires-enforcer-or-authored-link), but the two fields answer two DIFFERENT questions and shall never be merged into a single field or treated as aliases of one another.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "evidence": ["task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/gate/spec_resolver.go:ResolveSpecSymbol, verified_by internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"]
+}

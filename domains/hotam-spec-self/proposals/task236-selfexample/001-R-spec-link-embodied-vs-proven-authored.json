@@ -1,0 +1,20 @@
+{
+  "kind": "Requirement",
+  "id": "R-spec-link-embodied-vs-proven",
+  "implemented_by": [
+    "internal/gate/spec_resolver.go:ResolveSpecSymbol"
+  ],
+  "verified_by": [
+    "internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound"
+  ],
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/gate/... -run TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound -v : PASS (task #236 self-example W2, 2026-07-16); ResolveSpecSymbol (internal/gate/spec_resolver.go) is the method that resolves an implemented_by file:symbol entry into a real function/method/type declaration -- the embodied half of the SpecLink concept this requirement names; TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound is the mutation round-trip proving that resolution genuinely tracks the named symbol's real existence (remove Bar from the engine fixture -> Found flips to false; restore -> flips back to true), resolved via the self-hosting resolver (domains/hotam-spec-self/manifest.json self_hosting:true) against the engine repo root per PLAN-authored-spec-discipline.md §9"
+  ],
+  "source_refs": [
+    "internal/gate/spec_resolver.go",
+    "internal/gate/spec_resolver_test.go"
+  ],
+  "claim": "An authored-spec requirement's link to code shall carry two ORTHOGONAL fields, never collapsed into one: implemented_by names WHERE the requirement is EMBODIED (a path-qualified file:symbol reference into the domain's authored spec/ tree, the model/method that realizes the claim), and verified_by names WHERE the requirement is PROVEN (a path-qualified file:test reference, the executable test that demonstrates the claim holds). A symbol that embodies a requirement without a test that proves it, or a test cited without the symbol it exercises, is an incomplete SpecLink -- ENFORCED status requires both halves together (see R-enforced-requires-enforcer-or-authored-link), but the two fields answer two DIFFERENT questions and shall never be merged into a single field or treated as aliases of one another.",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

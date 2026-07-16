@@ -1,0 +1,20 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-spec-links-mechanically-checked",
+  "implemented_by": [
+    "internal/invariants/authored_links.go:checkImplementedBySymbolResolvable"
+  ],
+  "verified_by": [
+    "internal/invariants/authored_links_test.go:TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip"
+  ],
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip -v : PASS (task #236 self-example W2, 2026-07-16); checkImplementedBySymbolResolvable (internal/invariants/authored_links.go) is one of the six check_* invariants this requirement's claim/why already names as implementing the mechanical checking discipline; TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip is the mutation round-trip proving the existence/staleness half fires when the named symbol is removed (simulating a rename that orphans the reference) and clears once restored; enforced_by (engine mechanism, task #223) preserved unchanged -- this UPDATE adds the authored-path carrier alongside it, both mechanisms now visible on the same requirement per the disjunctive gate (R-enforced-requires-enforcer-or-authored-link)"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_links.go",
+    "internal/invariants/authored_links_test.go"
+  ],
+  "claim": "Every requirement's implemented_by/verified_by entries (path-qualified file:symbol / file:test references into a domain's authored spec/ tree) shall be mechanically checked: the named symbol/test shall exist; a verified_by test shall be non-vacuous (a real assertion or exercising branch, not t.Log-only or empty) and free of an unconditional top-level t.Skip; and the same verified_by entry shall not be formally cited by two or more requirements that are not all mutually related via Relations.",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}

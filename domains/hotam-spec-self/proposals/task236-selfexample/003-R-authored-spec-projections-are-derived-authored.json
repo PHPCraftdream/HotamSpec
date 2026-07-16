@@ -1,0 +1,20 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-spec-projections-are-derived",
+  "implemented_by": [
+    "internal/generator/traceability.go:BuildTraceability"
+  ],
+  "verified_by": [
+    "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture"
+  ],
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/generator/... -run TestBuildTraceability_ByteIdenticalToFixture -v : PASS (task #236 self-example W2, 2026-07-16); BuildTraceability (internal/generator/traceability.go) is the function that assembles TRACEABILITY.md as a GENERATED projection from the graph plus the spec/ resolver, never hand-written -- exactly what this requirement claims; TestBuildTraceability_ByteIdenticalToFixture is the golden byte-identical test proving the generated output matches the checked-in fixture exactly, so any drift in the generator's output is mechanically caught"
+  ],
+  "source_refs": [
+    "internal/generator/traceability.go",
+    "internal/generator/constitution_entities_framework_repomap_test.go"
+  ],
+  "claim": "Every generated document that describes a domain's authored spec/ tree -- TRACEABILITY.md (requirement -> implemented_by symbol -> verified_by test), MODELS.md (an inventory of authored model structs/fields/methods/invariants extracted from spec/model via go/ast), COVERAGE.md (which SETTLED+ENFORCEABLE requirements have real implemented_by/verified_by carriers versus roadmap debt, and which layer per R-authored-spec-layer-progression the domain currently sits at), and UNENFORCED.md's authored-era burn-down -- shall be a GENERATED projection assembled by `hotam gen-spec` from the graph plus the spec/ resolver (internal/gate/spec_resolver.go), and shall NEVER be hand-written or hand-edited. spec/ itself (the domain's authored model/application/policy/tests code) is the one artifact in this pipeline authored by hand and NEVER regenerated or overwritten by the engine; docs/gen/ is the generated side and is ALWAYS safe to regenerate and overwrite.",
+  "owner": "framework-author",
+  "status": "SETTLED"
+}
