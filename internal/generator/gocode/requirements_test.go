@@ -454,6 +454,111 @@ func TestResolveScopedFieldMatches_UnambiguousSingleWord_Unaffected(t *testing.T
 	}
 }
 
+// gateTokenFieldEntityType builds a synthetic EntityType ("review-log")
+// whose "p_g7" field is NAMED like a gate/stage token — the exact shape of
+// the real prat over-match the gate-token guard exists for (task #218:
+// risk-registry.p_g3, a kind:reference gate-pointer field, raw-name-matched
+// the literal gate mention "P-G3" in every claim about that gate). Its
+// lifecycle carries a distinctive state name ("пересмотрен") and a sibling
+// field ("записи") so each binding signal can be exercised independently.
+func gateTokenFieldEntityType() ontology.EntityType {
+	return ontology.EntityType{
+		Slug:        "review-log",
+		Description: "synthetic entity with a gate-token-shaped field name",
+		Why:         "review-log keeps one review row per pipeline gate.",
+		Fields: []ontology.EntityField{
+			{Name: "записи", Kind: "string", Required: true},
+			{Name: "p_g7", Kind: "string", Required: false},
+		},
+		Lifecycle: ontology.Lifecycle{
+			Slug: "review-log-lifecycle",
+			States: []ontology.State{
+				{Name: "черновик", Kind: ontology.StateKindInitial},
+				{Name: "пересмотрен", Kind: ontology.StateKindTerminal},
+			},
+		},
+	}
+}
+
+// TestResolveScopedFieldMatches_GateTokenOnly_NoSignalDrops asserts the
+// task #218 core fix: a claim that mentions the gate token "P-G7" (and
+// nothing else tying it to review-log) must NOT produce a field atom on
+// review-log.p_g7 — the claim references the GATE, not the field, and the
+// requirement must fall through to row 3's gate-correlate path (the real
+// prat regression: R-brd-integrity-zero-blockers, a claim about a different
+// EntityType's audit, was enforced as "RiskRegistry.PG3 is not empty").
+func TestResolveScopedFieldMatches_GateTokenOnly_NoSignalDrops(t *testing.T) {
+	ets := []ontology.EntityType{gateTokenFieldEntityType()}
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "The audit MUST show 0 blockers before sign-off P-G7 is granted."
+	fields := resolveScopedFieldMatches(claim, models, nil)
+
+	if len(fields) != 0 {
+		t.Fatalf("expected zero field atoms for a gate-token-only match with no binding signal, got %d: %+v", len(fields), fields)
+	}
+}
+
+// TestResolveScopedFieldMatches_GateTokenOnly_StateSignalKeeps asserts the
+// lifecycle-state binding signal: a claim that mentions the gate token AND
+// names review-log's own state "пересмотрен" IS about review-log's own
+// gate-row field, so the atom is kept (the real prat legitimate case:
+// R-risk-review-cadence's "Реестр рисков MUST быть пересмотрен ... на
+// P-G3 и на P-G4" keeps risk-registry.p_g3/p_g4).
+func TestResolveScopedFieldMatches_GateTokenOnly_StateSignalKeeps(t *testing.T) {
+	ets := []ontology.EntityType{gateTokenFieldEntityType()}
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "Реестр MUST быть пересмотрен повторно на P-G7 до финального sign-off."
+	fields := resolveScopedFieldMatches(claim, models, nil)
+
+	if len(fields) != 1 {
+		t.Fatalf("expected exactly 1 field atom (state-name binding signal), got %d: %+v", len(fields), fields)
+	}
+	if fields[0].entity.structName != "ReviewLog" || fields[0].field.src.Name != "p_g7" {
+		t.Errorf("field atom = %s.%s, want ReviewLog.p_g7", fields[0].entity.structName, fields[0].field.src.Name)
+	}
+}
+
+// TestResolveScopedFieldMatches_GateTokenOnly_SlugSignalKeeps asserts the
+// entity-slug binding signal: a claim naming review-log's own graph slug
+// alongside the gate token keeps the atom.
+func TestResolveScopedFieldMatches_GateTokenOnly_SlugSignalKeeps(t *testing.T) {
+	ets := []ontology.EntityType{gateTokenFieldEntityType()}
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "The review-log MUST carry a row for gate P-G7."
+	fields := resolveScopedFieldMatches(claim, models, nil)
+
+	if len(fields) != 1 {
+		t.Fatalf("expected exactly 1 field atom (entity-slug binding signal), got %d: %+v", len(fields), fields)
+	}
+	if fields[0].field.src.Name != "p_g7" {
+		t.Errorf("field atom field = %s, want p_g7", fields[0].field.src.Name)
+	}
+}
+
+// TestResolveScopedFieldMatches_GateTokenOnly_SiblingSignalKeeps asserts the
+// sibling-field binding signal: a claim that also matches a DIFFERENT field
+// of the same EntityType OUTSIDE gate-token anchors ("записи") keeps the
+// gate-shaped field's atom (both fields' atoms, in fact — the sibling is a
+// plain row-1 match of its own).
+func TestResolveScopedFieldMatches_GateTokenOnly_SiblingSignalKeeps(t *testing.T) {
+	ets := []ontology.EntityType{gateTokenFieldEntityType()}
+	models := buildSyntheticEntityModels(t, ets)
+
+	claim := "Записи MUST ссылаться на решение gate P-G7."
+	fields := resolveScopedFieldMatches(claim, models, nil)
+
+	byName := map[string]bool{}
+	for _, fa := range fields {
+		byName[fa.field.src.Name] = true
+	}
+	if !byName["p_g7"] || !byName["записи"] {
+		t.Fatalf("expected field atoms for both p_g7 (sibling-bound) and записи (plain raw hit), got %+v", fields)
+	}
+}
+
 // TestBuildRequirementModels_ExcludesNonSettled asserts DRAFT/REJECTED
 // requirements never reach requirements_test.go — only SETTLED ones (contract
 // §1 task scope: "для каждого SETTLED-требования домена").
@@ -708,36 +813,67 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 	}
 
 	// R-brd-integrity-zero-blockers (synced with live prat as of 2026-07-16;
-	// will drift as prat grows). This block has re-drifted twice as the
-	// live domain grew, each time to a HIGHER-priority contract §3 row:
+	// will drift as prat grows). This block has re-drifted several times:
 	//  - originally: P-G3/P-G3-CQA anchors were why-only -> atomKindNone;
 	//  - task #202 landed R-gate-pg3-cqa-mandatory -> the P-G3-CQA anchor
 	//    became a real requirement-id correlate -> atomKindGate;
 	//  - tasks #193-#217 landed risk-registry's kind:reference fields p_g3
 	//    and p_g4. termMatch splits "p_g3" into the word sequence [p g3],
 	//    which the claim's literal "P-G3" (hyphen-joined, boundary-bounded)
-	//    now hits as a RAW field-name match — contract §3 row 1 (field atom)
-	//    outranks row 3 (gate atom) by the table's explicit top-to-bottom
-	//    priority, so the requirement now classifies as atomKindField and
-	//    rm.gate is never populated (row 1 returns before row 3 runs).
-	// Semantically sound, not a generator bug: risk-registry.p_g3 IS the
-	// domain's structural carrier of the P-G3 gate this claim is about (it
-	// references brd-package, whose approval P-G3 gates on).
+	//    hit as a RAW field-name match — row 1's priority over row 3 then
+	//    misclassified this requirement as atomKindField on RiskRegistry.PG3,
+	//    a foreign EntityType's gate-pointer field, and the generated
+	//    enforcer checked "RiskRegistry.PG3 is not empty" instead of
+	//    anything about brd-package's integrity audit (the #216 zero-trust
+	//    finding);
+	//  - task #218 added resolveScopedFieldMatches' gate-token guard: a
+	//    field matching the claim ONLY inside gate-token-shaped anchors
+	//    ("P-G3") with no independent binding signal to its own EntityType
+	//    is dropped, so this requirement is BACK to atomKindGate — its
+	//    P-G3-CQA anchor correlates with R-gate-pg3-cqa-mandatory's id, the
+	//    real structural carrier of the gate this claim is about.
 	if rm, ok := byID["R-brd-integrity-zero-blockers"]; ok {
-		if rm.kind != atomKindField {
-			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindField (claim's literal P-G3 raw-name-matches risk-registry.p_g3; contract §3 row 1 outranks row 3)", rm.kind)
+		if rm.kind != atomKindGate {
+			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindGate (gate-token guard drops the risk-registry.p_g3 false field match; P-G3-CQA anchor correlates with R-gate-pg3-cqa-mandatory)", rm.kind)
 		}
-		foundPG3Field := false
-		for _, fa := range rm.fields {
-			if fa.entity.src.Slug == "risk-registry" && fa.field.src.Name == "p_g3" {
-				foundPG3Field = true
+		if len(rm.fields) != 0 {
+			t.Errorf("R-brd-integrity-zero-blockers: expected 0 field atoms (risk-registry.p_g3 matched only via the gate token P-G3, no binding signal), got %d: %+v", len(rm.fields), rm.fields)
+		}
+		foundCqaCorrelate := false
+		for _, c := range rm.gate.correlates {
+			if c.anchor == "P-G3-CQA" && c.kind == gateAnchorCorrelateRequirement && c.requirementID == "R-gate-pg3-cqa-mandatory" {
+				foundCqaCorrelate = true
 			}
 		}
-		if !foundPG3Field {
-			t.Errorf("R-brd-integrity-zero-blockers: expected a field atom on risk-registry.p_g3 (the claim's P-G3 carrier), got %d field atoms", len(rm.fields))
+		if !foundCqaCorrelate {
+			t.Errorf("R-brd-integrity-zero-blockers: expected the P-G3-CQA anchor to correlate with requirement R-gate-pg3-cqa-mandatory, got correlates: %+v", rm.gate.correlates)
 		}
 	} else {
 		t.Error("expected R-brd-integrity-zero-blockers to be present")
+	}
+
+	// R-risk-review-cadence is the gate-token guard's LEGITIMATE-keep proof
+	// (task #218): its claim ("Реестр рисков MUST быть пересмотрен ... на
+	// P-G3 ... и на P-G4") is genuinely ABOUT risk-registry's own p_g3/p_g4
+	// review-row fields (added by task #196 for exactly this requirement),
+	// and the claim names risk-registry's own lifecycle state "пересмотрен"
+	// — the binding signal that keeps both fields where
+	// R-brd-integrity-zero-blockers (no such signal) loses its false one.
+	if rm, ok := byID["R-risk-review-cadence"]; ok {
+		if rm.kind != atomKindField {
+			t.Errorf("R-risk-review-cadence: kind = %v, want atomKindField", rm.kind)
+		}
+		foundPG := map[string]bool{}
+		for _, fa := range rm.fields {
+			if fa.entity.src.Slug == "risk-registry" {
+				foundPG[fa.field.src.Name] = true
+			}
+		}
+		if !foundPG["p_g3"] || !foundPG["p_g4"] {
+			t.Errorf("R-risk-review-cadence: expected field atoms on risk-registry.p_g3 AND p_g4 (bound by the claim naming risk-registry's own state 'пересмотрен'), got %+v", rm.fields)
+		}
+	} else {
+		t.Error("expected R-risk-review-cadence to be present")
 	}
 
 	// Known REAL gate/order atom on the prat domain: R-gate-pg1r-risk-

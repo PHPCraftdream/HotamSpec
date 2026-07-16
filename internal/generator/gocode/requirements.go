@@ -37,6 +37,23 @@ var metaTokenPattern = regexp.MustCompile(`\bMUST NOT\b|\bMUST\b|\bALWAYS\b|\bNE
 // not any one domain's specific gate-naming convention.
 var idAnchorPattern = regexp.MustCompile(`\b[A-Z][A-Za-z0-9]*(-[A-Za-z0-9]+)+\b`)
 
+// gateAnchorTokenPattern matches the narrower "gate/stage token" SHAPE
+// inside a claim: a single capital letter, a hyphen, a capital letter
+// immediately followed by digits, then optional further hyphen-joined
+// segments — e.g. "P-G3", "P-G4", "P-G1-R", "P-G3-CQA", "E-G1". This is a
+// strict subset of idAnchorPattern (row 3's generic id-shaped anchor): it
+// deliberately does NOT match multi-letter-word ids like
+// "R-gate-pg3-brd-approved" or phrase-shaped tokens like "Feature-Lead",
+// only the short stage/gate-marker shape. Used by resolveScopedFieldMatches'
+// gate-token guard (task #218): a FIELD whose name happens to spell such a
+// token (prat: risk-registry.p_g3 — termMatch splits it into [p g3], which
+// word-sequence-matches the literal gate mention "P-G3" in ANY claim that
+// talks about that gate) must not become a row-1 field atom for a
+// requirement whose only tie to the field is that shared gate token — the
+// claim is referencing the GATE, and the gate/order path (row 3) is the
+// honest carrier for that reference.
+var gateAnchorTokenPattern = regexp.MustCompile(`\b[A-Z]-[A-Z][0-9]+(-[A-Za-z0-9]+)*\b`)
+
 // atomKind is the GEN-CODE-CONTRACT.md §3 atom classification for one
 // requirement. Exactly one kind is assigned per requirement (first matching
 // row in the contract's table wins), mirroring the table's explicit
@@ -422,6 +439,40 @@ type fieldMatchCandidate struct {
 // the referencer/ref_target resolution BuildPipelineGateModels already
 // performed.
 func resolveScopedFieldMatches(claim string, entityModels []*entityModel, gates []*pipelineGateModel) []fieldAtom {
+	// Gate-token guard (task #218, the second real over-match found on prat
+	// after #208's translated-single-word one): a field NAMED like a gate/
+	// stage token (risk-registry.p_g3 — kind:reference "which brd-package
+	// this registry's P-G3 review row points at") raw-name-matches the
+	// literal gate mention "P-G3" in EVERY claim that talks about gate P-G3
+	// at all (termMatch splits "p_g3" -> [p g3] and the claim's hyphen-joined
+	// "P-G3" is the same word sequence). Row 1's priority over row 3 then
+	// hijacks such requirements into a field atom on a foreign EntityType
+	// (prat: R-brd-integrity-zero-blockers, a claim about brd-package's
+	// integrity audit, was enforced as "RiskRegistry.PG3 is not empty").
+	//
+	// Detection (approach (a) of the task brief): blank every gate-token-
+	// SHAPED anchor (gateAnchorTokenPattern — the narrow "P-G3"/"E-G1" shape,
+	// not the generic idAnchorPattern) out of the claim; a candidate whose
+	// raw AND translated matches both disappear on the blanked claim matched
+	// ONLY inside gate mentions. Resolution (approach (b), mirroring #208's
+	// referencer-scoping): such a candidate is kept only when an independent
+	// binding signal ties the claim to this candidate's OWN EntityType
+	// (gateTokenOnlyFieldBindingSignal below); with no signal it is dropped,
+	// so the requirement falls through to row 3's gate-correlate path — the
+	// honest carrier for a claim that references the GATE, not the field.
+	// Both halves are combined because neither alone is safe: dropping every
+	// gate-shaped match (pure (a)) would strip risk-registry.p_g3/p_g4 from
+	// R-risk-review-cadence, whose claim ("Реестр рисков MUST быть
+	// пересмотрен ... на P-G3 ... и на P-G4") IS about those exact registry
+	// review-row fields (it also names the registry's own lifecycle state
+	// "пересмотрен" — the binding signal that keeps them); keeping them by
+	// referencer-scoping alone (pure (b)) would leave non-gate-shaped raw
+	// hits subject to a guard they never needed.
+	blankedClaim := claim
+	if gateAnchorTokenPattern.MatchString(claim) {
+		blankedClaim = gateAnchorTokenPattern.ReplaceAllString(claim, " ")
+	}
+
 	var candidates []fieldMatchCandidate
 	for _, em := range entityModels {
 		for _, f := range em.fields {
@@ -429,6 +480,14 @@ func resolveScopedFieldMatches(claim string, entityModels []*entityModel, gates 
 			translatedHit := termMatch(claim, f.fieldName)
 			if !rawHit && !translatedHit {
 				continue
+			}
+			if blankedClaim != claim && !termMatch(blankedClaim, f.src.Name) && !termMatch(blankedClaim, f.fieldName) {
+				// Every hit for this field lies INSIDE a gate-token-shaped
+				// anchor of the claim (see guard comment above) — keep it only
+				// with an independent binding signal to this EntityType.
+				if !gateTokenOnlyFieldBindingSignal(claim, blankedClaim, em, f) {
+					continue
+				}
 			}
 			cand := fieldMatchCandidate{entity: em, field: f, rawHit: rawHit}
 			if !rawHit && translatedHit {
@@ -557,6 +616,56 @@ func entityHasClaimBindingSignal(claim string, entity *entityModel, translatedWo
 	whyLower := strings.ToLower(entity.src.Why)
 	for _, tok := range claimTokens {
 		if strings.Contains(whyLower, strings.ToLower(tok)) {
+			return true
+		}
+	}
+	return false
+}
+
+// gateTokenOnlyFieldBindingSignal reports whether claim independently ties
+// itself to entity — the owner of a field whose ONLY claim match sits inside
+// gate-token-shaped anchors (see resolveScopedFieldMatches' gate-token
+// guard, task #218) — beyond that shared gate token itself. Three signals,
+// the same referencer-binding discipline entityHasClaimBindingSignal (#208)
+// and resolvePreciseGateState (pipeline.go, contract §2.1) already apply:
+//
+//  1. entity-slug signal: the claim whole-word-names this EntityType's own
+//     graph slug (checked on the ORIGINAL claim — slugs are lowercase kebab
+//     and never gate-token-shaped, so blanking cannot have eaten them).
+//  2. sibling-field signal: the claim ALSO matches a different field of this
+//     SAME EntityType — checked on the BLANKED claim, so a sibling that
+//     itself only matches via another gate token (prat: p_g4 next to p_g3)
+//     is not circular "evidence" that the claim is about this EntityType.
+//  3. lifecycle-state signal: the claim whole-word-names one of this
+//     EntityType's own lifecycle.state names (original claim — a state name
+//     is this EntityType's own authored vocabulary, the same "claim speaks
+//     this entity's language" evidence a sibling field gives; prat:
+//     R-risk-review-cadence's "пересмотрен" is risk-registry's own state,
+//     binding its p_g3/p_g4 review-row fields legitimately).
+//
+// No signal -> false -> the candidate is dropped and the requirement falls
+// through to row 3's gate-correlate path (an honest gate atom or an honest
+// gap — contract §0 "явно и громко отказать", never a cross-entity guess).
+func gateTokenOnlyFieldBindingSignal(claim, blankedClaim string, entity *entityModel, field fieldModel) bool {
+	// Signal 1: claim names this EntityType's own graph slug directly.
+	if wholeWordMatch(claim, entity.src.Slug) {
+		return true
+	}
+
+	// Signal 2: a sibling field of this SAME EntityType matches the claim
+	// OUTSIDE gate-token anchors (blanked claim).
+	for _, sib := range entity.fields {
+		if sib.fieldName == field.fieldName {
+			continue // the gate-shaped field itself, not a sibling
+		}
+		if termMatch(blankedClaim, sib.src.Name) || termMatch(blankedClaim, sib.fieldName) {
+			return true
+		}
+	}
+
+	// Signal 3: claim names one of this EntityType's own lifecycle states.
+	for _, s := range entity.states {
+		if wholeWordMatch(claim, s.src.Name) {
 			return true
 		}
 	}
