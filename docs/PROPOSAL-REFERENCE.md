@@ -96,8 +96,14 @@ The intended direction of progress is `PROSE` → `STRUCTURAL` → `ENFORCED`.
 
 ### Requirement `relations` — relation kinds
 
-Each entry in `relations` is a `[kind, target]` pair, where `target` is the id
-of another Requirement already in the graph.
+Each entry in `relations` is a JSON **object** of the shape
+`{"kind": "<kind>", "target": "<id>"}`, where `target` is the id of another
+Requirement already in the graph — e.g.
+`{"kind": "refines", "target": "R-parent"}`. (A compact `[kind, target]`
+array pair is the historical Python prototype's wire format; the Go decoder
+has no custom `UnmarshalJSON` to accept it, so an array here is a hard parse
+error: `cannot unmarshal array into Go struct field
+ProposedRequirement.relations`.)
 
 | Kind | Meaning | Direction |
 |------|---------|-----------|
@@ -153,8 +159,9 @@ resolves to a node in the graph).
 `SETTLED` | `OPEN(<question>)` — see [Enum reference](#enum-reference) above;
 `REJECTED` is set only via the `Rejection` kind below, never directly)
 **Optional:** `why` (default `""`), `assumptions` (list of Assumption ids, default `[]`),
-`relations` (list of `[kind, target]` pairs — kind is `refines` | `depends_on` |
-`replaces`, see [Enum reference](#enum-reference); default `[]`), `enforcement`
+`relations` (list of `{"kind": "<kind>", "target": "<id>"}` objects — kind is
+`refines` | `depends_on` | `replaces`, see [Enum reference](#enum-reference);
+default `[]`), `enforcement`
 (`PROSE` | `STRUCTURAL` | `ENFORCED`, default `"PROSE"` — see
 [Enum reference](#enum-reference) for what each means), `enforced_by` (list
 of strings, default `[]`), `m_tag` (default `""`), `enforceability`
@@ -180,6 +187,10 @@ sentinel `"<clear>"` clears an existing value once the blocking feature ships)
   "owner": "alice",
   "status": "SETTLED",
   "why": "customers expect weekly releases",
+  "relations": [
+    {"kind": "refines", "target": "R-release-cadence"},
+    {"kind": "depends_on", "target": "R-ci-pipeline-green"}
+  ],
   "enforcement": "PROSE",
   "last_reviewed_at": "2026-07-10",
   "review_after": "2026-12-01",
