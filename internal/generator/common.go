@@ -48,6 +48,7 @@ var DocReaderRoles = map[string]string{
 	"AUDIT":                RoleFrameworkMaintainer,
 	"REPO_MAP":             RoleOperator,
 	"MODELS":               RoleDomainSteward,
+	"COVERAGE":             RoleDomainSteward,
 }
 
 var DomainDocReaders = map[string]string{

@@ -654,7 +654,8 @@
       "enforced_by": [],
       "enforcement": "ENFORCED",
       "evidence": [
-        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/generator/traceability.go:BuildTraceability, verified_by internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"
+        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/generator/traceability.go:BuildTraceability, verified_by internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path",
+        "F4 remediation (2026-07-17, finding @fh): the claim named FOUR generated documents (TRACEABILITY/MODELS/COVERAGE/UNENFORCED.md) but implemented_by/verified_by cited only TRACEABILITY.md's builder+test -- a narrower evidence base than the claim's own text, even though MODELS.md (task #237, commit 098a4a0) already existed uncited. This UPDATE broadens implemented_by/verified_by to name all THREE builder+test pairs that exist as of this wave (TRACEABILITY.md, MODELS.md, and the newly-built COVERAGE.md, internal/generator/coverage.go/BuildCoverage, golden-fixture-tested by TestBuildCoverage_ByteIdenticalToFixture) so the claim's evidence base matches its own scope. UNENFORCED.md is not cited here because it predates the implemented_by/verified_by schema and is enforced via a different, older path (R-enforcement-gradient/UNENFORCED.md's own long-standing coverage), not because it is unbuilt."
       ],
       "history": [
         {
@@ -666,22 +667,33 @@
           "at": "2026-07-16",
           "decided_by": "",
           "summary": "enforcement: PROSE→ENFORCED; evidence: [cd D:/ai_dev/prat/HotamSpec && go test ./internal/generator/... -run TestBuildTraceability_ByteIdenticalToFixture -v : PASS (task #236 self-example …→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…"
+        },
+        {
+          "at": "2026-07-17",
+          "decided_by": "",
+          "summary": "evidence: [task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…; source_refs: [internal/generator/traceability.go, internal/generator/constitution_entities_framework_repomap_test.go]→[internal/generator/traceability.go, internal/generator/models.go, internal/generator/coverage.go, internal/generator/constitution_entities_framework…; implemented_by: [internal/generator/traceability.go:BuildTraceability]→[internal/generator/traceability.go:BuildTraceability, internal/generator/models.go:BuildModels, internal/generator/coverage.go:BuildCoverage]; verified_by: [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture]→[internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture, internal/generator/constitution_ent…"
         }
       ],
       "id": "R-authored-spec-projections-are-derived",
       "implemented_by": [
-        "internal/generator/traceability.go:BuildTraceability"
+        "internal/generator/traceability.go:BuildTraceability",
+        "internal/generator/models.go:BuildModels",
+        "internal/generator/coverage.go:BuildCoverage"
       ],
       "last_reviewed_at": "",
       "owner": "framework-author",
       "review_after": "",
       "source_refs": [
         "internal/generator/traceability.go",
+        "internal/generator/models.go",
+        "internal/generator/coverage.go",
         "internal/generator/constitution_entities_framework_repomap_test.go"
       ],
       "status": "SETTLED",
       "verified_by": [
-        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture"
+        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture",
+        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture",
+        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildCoverage_ByteIdenticalToFixture"
       ],
       "why": "PLAN-authored-spec-discipline.md §3 draws the authored/generated line at the directory level (\"spec/ -- AUTHORED код-спека -- пишется РУКАМИ, движок НЕ перезаписывает\" versus \"docs/gen/ -- ГЕНЕРИРУЕМЫЕ проекции -- движок перезаписывает\"), and §7 (\"Генерируемые проекции (вместо кода)\") names the specific four documents this requirement covers: TRACEABILITY.md, MODELS.md, COVERAGE.md, UNENFORCED.md. This is the natural-language DEFINITION half of the authored/generated split; it is distinct from R-domain-overview-projection (#201/PIPELINE.md), which governs a DIFFERENT generated document (the Process/EntityType-driven whole-domain overview, unrelated to spec/ code) and from R-requirement-freshness-fields (#the history mechanism), which governs a DIFFERENT derived artifact (per-node History, not a whole document). Naming this requirement closes the same gap R-domain-overview-projection closes for PIPELINE.md, but for the NEW authored-spec-era documents PLAN §7 introduces -- without this node, an agent reading the self-domain graph would find no anchor stating that TRACEABILITY/MODELS/COVERAGE/UNENFORCED are derived, not authored, and might be tempted to hand-edit them the way spec/ itself is meant to be hand-edited, exactly inverting PLAN §3's authored/generated boundary. Honestly PROSE/feature-blocked today (R-speculative-aspects-frozen's pattern): none of these four generators exist yet in internal/generator (task #225, PLAN §11, not yet executed at authorship time) -- this requirement fixes the CONTRACT the future generator must honor (never hand-write these four documents) before the generator itself is built, the same order R-domain-overview-projection followed for PIPELINE.md."
     },

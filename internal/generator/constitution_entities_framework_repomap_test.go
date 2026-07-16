@@ -18,6 +18,7 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 	}
 	return []GenDocEntry{
 		title("CONSTITUTION.md", "CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)"),
+		title("COVERAGE.md", "COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)"),
 		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
 		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
@@ -44,6 +45,7 @@ func fixtureGenDocs() []GenDocEntry {
 	}
 	return []GenDocEntry{
 		title("CONSTITUTION.md", "CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)"),
+		title("COVERAGE.md", "COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)"),
 		title("DECISIONS.md", "DECISIONS.md — Open methodology decisions (Hotam-Spec)"),
 		title("ENTITIES.md", "Entities"),
 		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
@@ -135,4 +137,15 @@ func TestBuildModels_ByteIdenticalToFixture(t *testing.T) {
 		t.Fatalf("read reference: %v", err)
 	}
 	diffReport(t, "MODELS.md", got, string(want))
+}
+
+func TestBuildCoverage_ByteIdenticalToFixture(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildCoverage(g)
+	want, err := os.ReadFile("testdata/fixture/COVERAGE.md")
+	if err != nil {
+		t.Fatalf("read reference: %v", err)
+	}
+	diffReport(t, "COVERAGE.md", got, string(want))
 }

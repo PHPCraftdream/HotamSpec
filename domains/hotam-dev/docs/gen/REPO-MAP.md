@@ -57,6 +57,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 **Generated docs** (`domains/hotam-dev/docs/gen/`)
 
 - `domains/hotam-dev/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/hotam-dev/docs/gen/COVERAGE.md` — authored-spec discipline coverage
 - `domains/hotam-dev/docs/gen/ENTITIES.md` — Entities
 - `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
 - `domains/hotam-dev/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary

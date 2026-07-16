@@ -203,6 +203,51 @@ func BuildModels(g *ontology.Graph) string {
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 }
 
+// ModelLayerCounts is the structural inventory COVERAGE.md (§4's layer
+// progression: models -> fields -> methods -> tests) reads from the SAME
+// go/ast scan BuildModels performs, so the two projections never disagree
+// about how many objects/fields/methods a domain's authored spec/ tree
+// declares. Purely a count -- no rendering concern lives here.
+type ModelLayerCounts struct {
+	Files   int
+	Objects int
+	Fields  int
+	Methods int
+	Errors  int
+}
+
+// ScanModelLayerCounts runs the same source selection BuildModels uses
+// (ordinary domain: spec/ on disk; self-hosting domain: the focused
+// implemented_by/verified_by-named engine file slice) and reduces it to
+// counts only. Returns the zero value, not an error, when spec/ does not
+// exist yet or no authored links name engine files yet -- mirroring
+// BuildModels' own "nothing to show" branches (a calm, expected state, not a
+// scan failure).
+func ScanModelLayerCounts(g *ontology.Graph) (ModelLayerCounts, error) {
+	var files []modelFile
+	var err error
+	if g.SelfHosting {
+		files, err = scanSelfHostingModelFiles(g)
+	} else {
+		files, err = scanDomainModelFiles(g)
+	}
+	if err != nil {
+		return ModelLayerCounts{}, err
+	}
+
+	var c ModelLayerCounts
+	c.Files = len(files)
+	for _, f := range files {
+		c.Errors += len(f.errors)
+		for _, obj := range f.objects {
+			c.Objects++
+			c.Fields += len(obj.fields)
+			c.Methods += len(obj.methods)
+		}
+	}
+	return c, nil
+}
+
 // itoa is a tiny local wrapper so this file does not need to import
 // strconv solely for one-off int-to-string conversions in the summary line.
 func itoa(n int) string {

@@ -159,6 +159,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"PIPELINE.md", func(g *ontology.Graph) string { return BuildPipeline(g, "hotam-spec-self") }},
 		{"TRACEABILITY.md", BuildTraceability},
 		{"MODELS.md", BuildModels},
+		{"COVERAGE.md", BuildCoverage},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},
@@ -210,6 +211,7 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"PIPELINE.md", func(g *ontology.Graph) string { return BuildPipeline(g, "hotam-spec-self") }},
 		{"TRACEABILITY.md", BuildTraceability},
 		{"MODELS.md", BuildModels},
+		{"COVERAGE.md", BuildCoverage},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},

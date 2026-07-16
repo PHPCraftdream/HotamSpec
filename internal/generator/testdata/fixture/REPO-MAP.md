@@ -57,6 +57,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 **Generated docs** (`domains/fixture-domain/docs/gen/`)
 
 - `domains/fixture-domain/docs/gen/CONSTITUTION.md` — The operator's boot sequence
+- `domains/fixture-domain/docs/gen/COVERAGE.md` — authored-spec discipline coverage
 - `domains/fixture-domain/docs/gen/DECISIONS.md` — Open methodology decisions
 - `domains/fixture-domain/docs/gen/ENTITIES.md` — Entities
 - `domains/fixture-domain/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index

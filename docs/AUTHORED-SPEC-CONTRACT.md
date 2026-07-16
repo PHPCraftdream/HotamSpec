@@ -179,10 +179,12 @@ authored `spec/`-дереве домена, не пуст (has teeth), не со
   `spec/model` через `go/ast` (`internal/generator/models.go`, `BuildModels`). Построена.
 - **`TRACEABILITY.md`** — requirement → `implemented_by` (file:symbol) → `verified_by` (file:test)
   (`internal/generator/traceability.go`, `BuildTraceability`). Построена.
-- **`COVERAGE.md`** — какие `SETTLED`+`ENFORCEABLE` требования имеют реальные носители, какие —
-  roadmap-долг; на каком слое (модели/поля/методы/тесты, §4) домен находится сейчас. **НЕ построена**
-  — честный roadmap-долг (нет генератора в `internal/generator` на момент написания), не молчаливый
-  пробел.
+- **`COVERAGE.md`** — какие `SETTLED` требования имеют реальные носители (authored
+  `implemented_by`+`verified_by`, ре-резолвится тем же резолвером, что и `TRACEABILITY.md`; либо
+  движковый `enforced_by`) против честного roadmap-долга против постоянной дисциплины
+  (`INHERENTLY_PROSE`), и на каком слое (модели/поля/методы/тесты, §4) домен находится сейчас — слой
+  читается тем же `go/ast`-сканом, что и `MODELS.md` (`internal/generator/coverage.go`,
+  `BuildCoverage`). Построена (task #239/F4 remediation, 2026-07-17).
 - **`UNENFORCED.md`** — burn-down; сейчас покрывает движковый `enforced_by`-долг, authored-эпохи
   burn-down (по `implemented_by`/`verified_by`) — часть того же roadmap-долга, что и `COVERAGE.md`.
 
@@ -225,7 +227,7 @@ authored `spec/`-дереве домена, не пуст (has teeth), не со
 | **confront** — «что это нарушает / с чем конфликтует» | «конфликтует ли эта идея с уже принятым» | `REQUIREMENTS.md` (+ `hotam confront`) | построена |
 | **trace** — «почему было отклонено раньше» | «мы уже пробовали так делать?» | `HISTORY.md` (anti-relitigation) | построена |
 | **status** — «что сейчас в долге» | «что заявлено, но не гарантировано кодом» | `what-now` / `UNENFORCED.md` | построена |
-| **authored coverage** — «на каком слое домен, что реально доказано» | «сколько требований имеют настоящий implemented_by+verified_by» | `TRACEABILITY.md`/`MODELS.md` (§7, построены) отвечают частично; полное покрытие по слоям — `COVERAGE.md` | `COVERAGE.md` **НЕ построена** — roadmap-долг |
+| **authored coverage** — «на каком слое домен, что реально доказано» | «сколько требований имеют настоящий implemented_by+verified_by» | `COVERAGE.md` (§7) — carrier-разбивка + слой; `TRACEABILITY.md`/`MODELS.md` дают детальную навигацию по отдельным требованиям/объектам | построена |
 
 Явное правило: **если субстрат отвечает на класс вопроса ХУЖЕ, чем чтение исходного prose-документа
 руками — это обнаружимый дефект покрытия проекций, а не приемлемая деградация.** Появление нового

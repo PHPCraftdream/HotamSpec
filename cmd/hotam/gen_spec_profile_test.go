@@ -122,13 +122,13 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 		t.Errorf("consumer profile must still write tools/INDEX.md: %v", err)
 	}
 
-	// (5) Pin the exact total: root (14 non-atoms .md) + graph.json (1) +
+	// (5) Pin the exact total: root (15 non-atoms .md) + graph.json (1) +
 	//     tools (Implemented + INDEX). This catches a regression that silently
 	//     stops skipping any category.
-	//     root = 12 fixed docs (incl. PIPELINE.md, TRACEABILITY.md, MODELS.md) +
-	//     live-state.md + AGENT-CONTEXT.md = 14
+	//     root = 13 fixed docs (incl. PIPELINE.md, TRACEABILITY.md, MODELS.md,
+	//     COVERAGE.md) + live-state.md + AGENT-CONTEXT.md = 15
 	//     (DECISIONS/ENTITIES not written for this minimal graph)
-	wantRoot := 14
+	wantRoot := 15
 	wantTotal := wantRoot + 1 + wantToolCount
 	if total != wantTotal {
 		t.Errorf("consumer total docs/gen file count = %d, want %d (root=%d + graph.json=1 + tools=%d)", total, wantTotal, wantRoot, wantToolCount)
@@ -180,7 +180,7 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	}
 
 	// (4) Pin the exact total for full (regression guard).
-	wantRootFull := 18 // 14 non-atoms (incl. PIPELINE.md, TRACEABILITY.md, MODELS.md) + 4 atoms
+	wantRootFull := 19 // 15 non-atoms (incl. PIPELINE.md, TRACEABILITY.md, MODELS.md, COVERAGE.md) + 4 atoms
 	wantTotalFull := wantRootFull + 1 + wantToolFull + wantThinking
 	if fullTotal != wantTotalFull {
 		t.Errorf("full total docs/gen file count = %d, want %d (root=%d + graph.json=1 + tools=%d + thinking=%d)", fullTotal, wantTotalFull, wantRootFull, wantToolFull, wantThinking)
