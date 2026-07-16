@@ -3,6 +3,7 @@ package invariants
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
@@ -333,6 +334,213 @@ var _ = All.MustRegister("check_verified_by_test_no_skip", Invariant{
 		"\"no teeth\" message, and so a test with real assertions AFTER a top-level unconditional skip (dead code, still never runs) is still " +
 		"caught -- teeth-detection alone would miss that shape since ast.Inspect walks the whole body regardless of reachability.",
 	Check: checkVerifiedByTestNoSkip,
+})
+
+// checkVerifiedByTestPasses is the EXECUTION half of the verified_by
+// discipline (@fh finding F1, Probe C; PLAN-authored-spec-discipline.md §6's
+// "verified_by тест существует и РЕАЛЬНО ЗАПУСКАЕТСЯ"): every other
+// verified_by check above (resolvable / has-teeth / no-skip) is AST-only --
+// none of them ever actually COMPILES or RUNS the named test. That let a
+// requirement stay ENFORCED with a verified_by test that fails, or does not
+// even compile, as long as the test function's SHAPE looked right: real
+// Test*(t *testing.T) signature, a real assertion call somewhere in the
+// body, no unconditional skip. Probe C demonstrated this concretely: gutting
+// a requirement's implementation (e.g. replacing a validation method's body
+// with `return nil`) turns `go test` red for that package while every
+// AST-only check above stays green, because they inspect the TEST's source
+// text, never the compiled, executed behavior of the package under test.
+//
+// This check closes that gap: for every verified_by entry that already
+// resolved AND has teeth AND has no unconditional skip (the three checks
+// above; an entry that already fails one of those is THEIR violation to
+// report, not this check's -- no point compiling/running a test already
+// known to be structurally hollow), gate.RunVerifiedByTest actually invokes
+// `go test -run '^<name>$'` against the owning Go module (the domain's own
+// spec/ module for an ordinary domain, or the engine's own module for a
+// self-hosting domain -- gate.ModuleRoot resolves which, by walking up from
+// the test file to the nearest go.mod) and requires PASS. A non-zero exit,
+// a "FAIL" in the output, or a compile failure all fire a violation naming
+// the test, the requirement, and a bounded tail of the actual go-test
+// output, so the failure is diagnosable from the violation message alone
+// without re-running anything by hand.
+//
+// PERFORMANCE (design decision A, PLAN-authored-spec-discipline.md §6):
+// gate.RunVerifiedByTest memoizes results in a process-lifetime cache keyed
+// by (package directory, test name) with content-hash invalidation over
+// go.mod/go.sum plus every *.go file in the test's own package directory
+// (gate.hashPackageInputs) -- so a repeat all-violations call against an
+// UNCHANGED spec skips the go test invocation entirely (cache hit), while
+// ANY edit to the test file, the implementation file(s) sharing its
+// package, or the module's go.mod/go.sum invalidates the cache and forces a
+// real re-run. This is what makes Probe C's mutation (an impl-file edit,
+// never a test-file edit) actually caught: the impl file lives in the same
+// package directory the hash covers, so the very next all-violations call
+// after the mutation sees a changed hash and re-executes, even though
+// nothing about the verified_by ENTRY ITSELF (file:test string) changed.
+//
+// A cache MISS is still relatively expensive (a real `go test` subprocess,
+// observed 1-10s per distinct package on this repo's own hardware -- see
+// internal/gate/test_exec.go's RunVerifiedByTest doc comment), and a single
+// domain graph can legitimately name several DIFFERENT packages across its
+// verified_by entries (the real domains/hotam-spec-self graph names nine,
+// spanning internal/ontology, internal/proposal, internal/loader, etc --
+// nine cold, sequential `go test` invocations measured ~90s on this
+// machine, which blew past `go test`'s own default 30s per-package
+// timeout for a caller like TestRegistryComplete_AllViolationsOnRealGraphDoesNotPanic
+// that calls AllViolations once against the real graph). Since each
+// RunVerifiedByTest call is independent I/O-bound work (a subprocess, not
+// CPU-bound computation), this check fans the runnable entries out across a
+// small bounded worker pool (runExecWorkers) rather than running them
+// sequentially -- bounded, not unbounded, so a domain with many verified_by
+// entries cannot spawn dozens of simultaneous `go test` processes and
+// thrash the machine the way N-way unbounded parallelism would.
+func checkVerifiedByTestPasses(g *ontology.Graph) []Violation {
+	specRoot := gate.SpecRootForGraph(g)
+	type job struct {
+		reqID string
+		entry specFileEntry
+	}
+	var jobs []job
+	for _, r := range g.Requirements {
+		if len(r.VerifiedBy) == 0 {
+			continue
+		}
+		for _, e := range parseSpecEntries(r.VerifiedBy) {
+			if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
+				continue
+			}
+			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
+				// Out-of-scope entries are checkVerifiedByTestResolvable's
+				// violation to report.
+				continue
+			}
+			resolved, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+			if err != nil || !resolved.Found {
+				// checkVerifiedByTestResolvable's violation to report.
+				continue
+			}
+			if !resolved.HasTeeth || resolved.HasSkip {
+				// checkVerifiedByTestHasTeeth / checkVerifiedByTestNoSkip's
+				// violation to report -- do not also compile/run a test
+				// already known to be structurally hollow or skipped.
+				continue
+			}
+			jobs = append(jobs, job{reqID: r.ID, entry: e})
+		}
+	}
+	if len(jobs) == 0 {
+		return nil
+	}
+
+	results := make([]*Violation, len(jobs))
+	sem := make(chan struct{}, runExecWorkers)
+	var wg sync.WaitGroup
+	for i, j := range jobs {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(idx int, j job) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			results[idx] = verifiedByTestPassesViolation(specRoot, j.reqID, j.entry)
+		}(i, j)
+	}
+	wg.Wait()
+
+	var out []Violation
+	for _, v := range results {
+		if v != nil {
+			out = append(out, *v)
+		}
+	}
+	return out
+}
+
+// runExecWorkers bounds how many RunVerifiedByTest subprocess calls
+// checkVerifiedByTestPasses runs concurrently. A small fixed cap (not
+// unbounded, not runtime.NumCPU()-scaled) is deliberate: this is I/O-bound
+// subprocess fan-out (each `go test` invocation is its own OS process with
+// its own compile step), not CPU-bound work, so tying it to core count would
+// both under-use idle cores waiting on I/O and over-subscribe a
+// small-core-count CI runner with too many simultaneous `go` toolchain
+// invocations (which themselves spawn further child processes). Kept at 2
+// (not the original 4) and aligned with gate.globalExecSlots' own cap: this
+// process almost never has just ONE checkVerifiedByTestPasses call in
+// flight -- cmd/hotam's own e2e test suite runs many t.Parallel() tests that
+// EACH independently call AllViolations (directly or via a spawned `hotam`
+// subprocess), so the REALISTIC peak concurrency is (number of simultaneous
+// callers) x runExecWorkers; observed on a heavily-loaded shared dev machine
+// that 4 was enough to starve unrelated goroutines (e.g. the pre-existing
+// check_enforced_by_resolvable's repo-wide filepath.WalkDir) of scheduling
+// time under go test -race, occasionally pushing a whole package past its
+// -timeout budget. 2 trades a little wall-clock time within one
+// checkVerifiedByTestPasses call for materially less system-wide thrash.
+const runExecWorkers = 2
+
+// verifiedByTestPassesViolation runs one job (a single verified_by entry
+// already known to resolve, have teeth, and not be skipped) and returns the
+// Violation to report, or nil if it passes. Split out from
+// checkVerifiedByTestPasses so the worker goroutine body is a plain
+// function call, not an inline closure duplicating this logic per call site.
+func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) *Violation {
+	run := gate.RunVerifiedByTest(specRoot, e.file, e.symbol)
+	if run.Skipped {
+		// RunVerifiedByTest's recursion guard fired: this process is already
+		// nested inside a `go test` subprocess RunVerifiedByTest itself
+		// spawned (structural for self-hosting domains -- see
+		// gate.recursionGuardEnv's doc comment). Not provable at THIS
+		// nesting level; the outer, non-nested invocation is the one that
+		// actually runs and proves it, so this level reports no violation
+		// rather than a false pass or a false failure.
+		return nil
+	}
+	if run.Err != nil {
+		return &Violation{
+			Check: "check_verified_by_test_passes",
+			ID:    reqID,
+			Message: fmt.Sprintf(
+				"verified_by entry %q could not be executed: %v",
+				e.raw, run.Err),
+		}
+	}
+	if run.Passed {
+		return nil
+	}
+	if run.CompileFailed {
+		return &Violation{
+			Check: "check_verified_by_test_passes",
+			ID:    reqID,
+			Message: fmt.Sprintf(
+				"verified_by entry %q: package does not compile -- `go test` build failed for %s, so %s could never run. Output:\n%s",
+				e.raw, e.file, e.symbol, run.Output),
+		}
+	}
+	return &Violation{
+		Check: "check_verified_by_test_passes",
+		ID:    reqID,
+		Message: fmt.Sprintf(
+			"verified_by entry %q: test %s FAILS when actually run (`go test -run '^%s$'`) -- a red or non-compiling proof does not satisfy verified_by. Output:\n%s",
+			e.raw, e.symbol, e.symbol, run.Output),
+	}
+}
+
+var _ = All.MustRegister("check_verified_by_test_passes", Invariant{
+	Name:  "check_verified_by_test_passes",
+	Canon: methodology.Requirement,
+	Claim: "every resolvable, non-vacuous, non-skipped verified_by test actually PASSES when compiled and executed via `go test`.",
+	Rule: "for each Requirement.verified_by entry that resolves to a real Test* function (check_verified_by_test_resolvable), has a real " +
+		"assertion (check_verified_by_test_has_teeth), and is not unconditionally skipped (check_verified_by_test_no_skip), the engine MUST " +
+		"actually compile and run it: `go test -run '^<name>$'` against the owning Go module (gate.ModuleRoot: the domain's own spec/ module for " +
+		"an ordinary domain, or the engine's own module for a self-hosting domain), and it MUST exit 0 with no FAIL in its output. A non-zero " +
+		"exit, a FAIL line, or a build/compile failure is a violation naming the test, the requirement, and the actual go-test output.",
+	Why: "@fh finding F1 (Probe C): every verified_by check before this one is AST-only -- it inspects the TEST's source text (does the symbol " +
+		"exist, does it look like a test, does it call an assertion, is it skipped) but never actually RUNS the test, so a requirement could stay " +
+		"ENFORCED with a verified_by test that fails or does not even compile, as long as the test's SHAPE looked right. Probe C demonstrated this " +
+		"concretely: gutting an implementation (e.g. a validation method rewritten to unconditionally return nil) turns `go test` red for that " +
+		"package while every AST-only check stays green. This check closes that gap by actually executing the test and requiring PASS, memoized " +
+		"via gate.RunVerifiedByTest's content-hash cache (design decision A) so an unchanged spec is not re-run on every all-violations call, while " +
+		"any edit to the test file, a sibling implementation file in the same package, or the module's go.mod/go.sum invalidates the cache and " +
+		"forces a real re-run -- so 'graph clean' now HONESTLY means 'the proofs execute and pass', not merely 'the proofs are shaped like proofs'.",
+	Check: checkVerifiedByTestPasses,
 })
 
 // checkVerifiedByNoUnrelatedReuse is the reuse-detector (§6): the same

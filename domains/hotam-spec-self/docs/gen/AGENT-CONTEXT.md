@@ -16,11 +16,11 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - [P7] ADVISORY on `feature-blocked-roadmap` — 35 SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.
-- [P7] ADVISORY on `review-freshness` — 4 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-16` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
+- [P7] ADVISORY on `review-freshness` — 4 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-17` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
 
 ## Status counters
 
-SETTLED 246 · DRAFT 2 · REJECTED 42 · OVERDUE 0 (as of 2026-07-16)
+SETTLED 246 · DRAFT 2 · REJECTED 42 · OVERDUE 0 (as of 2026-07-17)
 
 ## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)
 

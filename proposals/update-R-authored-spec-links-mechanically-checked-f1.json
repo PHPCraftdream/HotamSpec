@@ -1,0 +1,46 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-spec-links-mechanically-checked",
+  "claim": "Every requirement's implemented_by/verified_by entries (path-qualified file:symbol / file:test references into a domain's authored spec/ tree) shall be mechanically checked: the named symbol/test shall exist; a verified_by test shall be non-vacuous (a real assertion or exercising branch, not t.Log-only or empty) and free of an unconditional top-level t.Skip; the same verified_by entry shall not be formally cited by two or more requirements that are not all mutually related via Relations; and a resolvable, non-vacuous, non-skipped verified_by test shall actually PASS when compiled and executed via `go test`, not merely be shaped like a proof.",
+  "why": "PLAN-authored-spec-discipline.md §6 (the mechanical-checks catalog) requires a STRUCTURAL floor under the authored-spec era's implemented_by/verified_by fields (added additively in a prior session, internal/ontology/requirement.go): a stale, vacuous, skipped, promiscuously-reused, or NEVER-ACTUALLY-RUN reference would let ENFORCED mean nothing for a domain's own authored code+tests, exactly the failure PLAN §1 documents from the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements\"). Seven atomic check_* invariants implement this (internal/invariants/authored_links.go): check_implemented_by_symbol_resolvable (the symbol -- function, method, or type -- really exists), check_verified_by_test_resolvable (the test really exists and is Test*-shaped with the real go-test signature), check_verified_by_test_has_teeth (a resolvable verified_by test whose body is empty or t.Log-only fires), check_verified_by_test_no_skip (an unconditional top-level t.Skip/t.Skipf fires), check_verified_by_no_unrelated_reuse (the same verified_by entry formally cited by requirements that do not all collapse into one connected component under the Relations adjacency is a red flag), and check_verified_by_test_passes (@fh finding F1, Probe C, added this session: every check before it is AST-only -- it inspects the TEST's source text but never actually COMPILES or RUNS it, so a requirement could stay ENFORCED with a verified_by test that fails or does not even compile as long as the test's SHAPE looked right; Probe C demonstrated this concretely by gutting an implementation, e.g. a validation method rewritten to unconditionally return nil, which turned `go test` red for that package while every AST-only check stayed green. check_verified_by_test_passes closes that gap: for every verified_by entry that already resolved, has teeth, and is not skipped, it actually invokes `go test -run` via internal/gate.RunVerifiedByTest against the owning Go module -- the domain's own spec/ module for an ordinary domain, or the engine's own module for a self-hosting domain, resolved by gate.ModuleRoot walking up to the nearest go.mod -- and requires PASS; a non-zero exit, a FAIL in the output, or a compile failure fires a violation naming the test and a bounded tail of the actual go-test output. PERFORMANCE (design decision A): results are memoized in a process-lifetime cache (gate.RunVerifiedByTest) keyed by (package directory, test name) with content-hash invalidation over go.mod/go.sum plus every *.go file in the test's own package directory (gate.hashPackageInputs) -- not just the two named files, since `go test` compiles the WHOLE package and Probe C's mutation shape is exactly an impl-file edit in a file the test does not itself name -- so an unchanged spec is not re-run on every all-violations call, while any relevant edit forces a real re-run. RECURSION: a self-hosting domain's own graph names its own engine test files as verified_by targets, and several of the engine's own package test suites (internal/invariants, internal/generator, cmd/hotam) themselves call AllViolations against that same real graph -- gate.RunVerifiedByTest carries a recursion guard (HOTAM_VERIFIED_BY_EXEC_GUARD env var set on every spawned `go test` child) so a nested invocation reports Skipped (no violation either way) instead of spawning an unbounded further generation; the outer, non-nested invocation is the one that actually proves it. CONCURRENCY: checkVerifiedByTestPasses fans independent RunVerifiedByTest calls out across a small bounded worker pool (4 workers) rather than running them sequentially, since each is I/O-bound subprocess work, not CPU-bound.) HONESTY BOUNDARY (§6): these checks hold the structural floor only -- symbol/test exists, runs, is not hollow, is not skipped, is not promiscuously reused, and (as of check_verified_by_test_passes) actually PASSES -- they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit performed by a human or an LLM reading the pair (requirement text, authored code+test), never encoded as a lexical/semantic heuristic in the graph invariant layer. All seven checks are structurally NO-OP for any requirement with empty implemented_by/verified_by (both fields remain optional); mutation-proof coverage lives in internal/gate/spec_resolver_test.go, internal/gate/test_exec_test.go, and internal/invariants/authored_links_test.go (each check has a break-then-fix round-trip test proving it fires on a real mutated fixture and clears once fixed; check_verified_by_test_passes additionally has TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange, an impl-only mutation round-trip proving the cache is invalidated by a sibling file edit, never just a test-file edit).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforceability": "ENFORCEABLE",
+  "enforced_by": [
+    "check_implemented_by_symbol_resolvable",
+    "check_verified_by_test_resolvable",
+    "check_verified_by_test_has_teeth",
+    "check_verified_by_test_no_skip",
+    "check_verified_by_no_unrelated_reuse",
+    "check_verified_by_test_passes"
+  ],
+  "implemented_by": [
+    "internal/invariants/authored_links.go:checkImplementedBySymbolResolvable"
+  ],
+  "verified_by": [
+    "internal/invariants/authored_links_test.go:TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip"
+  ],
+  "assumptions": [],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-enforced-by-resolvable"
+    }
+  ],
+  "summary": "",
+  "m_tag": "",
+  "created_at": "2026-07-16",
+  "settled_at": "2026-07-16",
+  "last_reviewed_at": "2026-07-16",
+  "review_after": "2027-01-16",
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/gate/... ./internal/invariants/... -run 'RunVerifiedByTest|CheckVerifiedByTestPasses|CheckImplementedBySymbolResolvable_MUTATION' -v : PASS (F1 remediation, 2026-07-16); check_verified_by_test_passes (internal/invariants/authored_links.go) is the 7th check_* invariant this requirement's claim/why now names, closing @fh finding F1 (Probe C: AST-only checks stayed green against a gutted implementation because none of them ever ran the test); TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange (internal/gate/test_exec_test.go) is the mutation round-trip proving RunVerifiedByTest actually executes the test and that the content-hash cache invalidates on an impl-file-only edit; enforced_by extended with check_verified_by_test_passes alongside the five pre-existing checks -- all six were already SETTLED/ENFORCED via this same requirement, this UPDATE only adds the 7th"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_links.go",
+    "internal/invariants/authored_links_test.go",
+    "internal/gate/test_exec.go",
+    "internal/gate/test_exec_test.go"
+  ]
+}

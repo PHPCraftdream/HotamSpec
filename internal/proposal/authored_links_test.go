@@ -25,10 +25,20 @@ import (
 // resolve entries against g.DomainDir (== filepath.Dir(graphPath), i.e. the
 // same temp dir writeTempGraph uses), so a graph carrying these entries must
 // have real files at that path for Apply to accept it, exactly as a real
-// authored spec/ tree would.
+// authored spec/ tree would. NewRisk genuinely rejects a missing owner (not
+// merely AST-shaped to look like it does) so TestNewRisk_RejectsMissingOwner
+// is a REAL passing proof once check_verified_by_test_passes (@fh finding
+// F1) actually compiles and runs it, not just an AST-only-verified stub --
+// and the fixture carries a real go.mod (module "authored-fixture-spec")
+// so RunVerifiedByTest can find a module to `go test` against at all.
 const authoredRiskModelSrc = `package model
 
+import "errors"
+
 func NewRisk(owner string) (*Risk, error) {
+	if owner == "" {
+		return nil, errors.New("owner is required")
+	}
 	return &Risk{Owner: owner}, nil
 }
 
@@ -49,11 +59,14 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 }
 `
 
-// writeAuthoredSpecFixtures writes the risk.go/risk_test.go pair under
-// <domainDir>/spec/model/, matching every implemented_by/verified_by entry
-// this test file uses.
+// writeAuthoredSpecFixtures writes go.mod + the risk.go/risk_test.go pair
+// under <domainDir>/(go.mod, spec/model/), matching every
+// implemented_by/verified_by entry this test file uses.
 func writeAuthoredSpecFixtures(t *testing.T, domainDir string) {
 	t.Helper()
+	if err := os.WriteFile(filepath.Join(domainDir, "go.mod"), []byte("module authored-fixture-spec\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
 	dir := filepath.Join(domainDir, "spec", "model")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("MkdirAll spec/model: %v", err)

@@ -26,13 +26,32 @@ func writeAuthoredSpecFixture(t *testing.T, rel, content string) string {
 	return tmp
 }
 
+// authoredRiskModelSrc is a genuinely-passing fixture: NewRisk actually
+// rejects a missing owner (not just AST-shaped to look like it does), so
+// authoredRiskTestGoodSrc below is a REAL passing proof once
+// check_verified_by_test_passes (internal/gate.RunVerifiedByTest, @fh
+// finding F1) actually compiles and runs it -- not merely a test whose body
+// LOOKS like it asserts something, which is all the AST-only checks above
+// this check in the pipeline (resolvable/has-teeth/no-skip) can verify. An
+// earlier revision of this fixture had NewRisk unconditionally succeed
+// (`return &Risk{Owner: owner}, nil` with no validation at all) while
+// authoredRiskTestGoodSrc asserted the opposite -- exactly the F1 failure
+// shape (a red proof coexisting with every AST-only check reporting green)
+// -- and check_verified_by_test_passes correctly flagged it the first time
+// this fixture was ever actually executed instead of just AST-inspected,
+// which is the bug this whole remediation exists to catch.
 const authoredRiskModelSrc = `package model
+
+import "errors"
 
 type Risk struct {
 	Owner string
 }
 
 func NewRisk(owner string) (*Risk, error) {
+	if owner == "" {
+		return nil, errors.New("owner is required")
+	}
 	return &Risk{Owner: owner}, nil
 }
 
@@ -567,13 +586,23 @@ func TestCheckEnforcedNamesInvariant_FiresWhenAuthoredPathAlsoEmpty(t *testing.T
 // check_enforced_names_invariant in isolation, but every registered
 // invariant. This proves an authored-only ENFORCED requirement is not
 // merely tolerated by the disjunctive gate in isolation, but survives the
-// entire mechanical checking pipeline (all 94 registered invariants) with
+// entire mechanical checking pipeline (every registered invariant) with
 // zero violations, which is exactly the guarantee the authored-spec pilot
 // (#224) needs before it can land its first authored-only ENFORCED
-// requirement.
+// requirement. The fixture carries a real go.mod at domainDir (mirroring
+// PLAN-authored-spec-discipline.md's "prat-spec" module convention for an
+// ordinary domain's spec/ tree) so check_verified_by_test_passes
+// (internal/gate's RunVerifiedByTest, @fh finding F1) can actually compile
+// and run TestNewRisk_RejectsMissingOwner via `go test`, not just resolve it
+// by AST shape -- without a real module this check would report an
+// infrastructure violation ("no go.mod found"), which would defeat the
+// point of this being the FULL-sweep zero-violations acceptance test.
 func TestAuthoredOnlyEnforcedRequirement_PassesFullAllViolations(t *testing.T) {
 	t.Parallel()
 	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	if err := os.WriteFile(filepath.Join(domainDir, "go.mod"), []byte("module prat-spec\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
 	// writeAuthoredSpecFixture already created domainDir/spec/model/risk.go;
 	// add the sibling test file to the same directory.
 	testPath := filepath.Join(domainDir, "spec", "model", "risk_test.go")
