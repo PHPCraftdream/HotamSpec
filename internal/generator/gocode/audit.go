@@ -52,8 +52,10 @@ import (
 // pipeline_test.go's own "// Atom: ..." comments (pipeline_test_gen.go).
 // gates may be nil (callers that have not yet built pipeline gates, e.g.
 // GenerateAuditFromGraph/GenerateLifecycleFromGraph/GenerateRequirementsFromGraph),
-// in which case the section is simply omitted.
-func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates []*pipelineGateModel) ([]byte, error) {
+// in which case the section is simply omitted. processGates (stage 6, task
+// #212's composite per-Process-Step gates) may likewise be nil; a final
+// "## Process Gates" section is only rendered when non-empty.
+func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates []*pipelineGateModel, processGates []*processStepGateModel) ([]byte, error) {
 	sorted := make([]*entityModel, len(models))
 	copy(sorted, models)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].src.Slug < sorted[j].src.Slug })
@@ -129,8 +131,9 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates
 
 		b.WriteString("## Requirements\n\n")
 		for _, rm := range sortedReqs {
-			cov := BuildCoverageReport(rm, sorted, otherSettled)
-			renderRequirementAuditEntry(&b, rm, cov)
+			pg := findProcessGateForRequirement(rm.src.ID, processGates)
+			cov := BuildCoverageReport(rm, sorted, otherSettled, pg)
+			renderRequirementAuditEntry(&b, rm, cov, pg)
 		}
 	}
 
@@ -142,6 +145,24 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates
 		b.WriteString("function and its `Test<...>` table-driven proof.\n\n")
 		for _, gm := range sortedGates {
 			renderPipelineGateAuditEntry(&b, gm)
+		}
+	}
+
+	sortedProcessGates := make([]*processStepGateModel, len(processGates))
+	copy(sortedProcessGates, processGates)
+	sort.Slice(sortedProcessGates, func(i, j int) bool { return sortedProcessGates[i].funcName < sortedProcessGates[j].funcName })
+	if len(sortedProcessGates) > 0 {
+		b.WriteString("## Process Gates\n\n")
+		b.WriteString("Stage 6: one COMPOSITE gate per gated `Process.Step` (a step whose own `why` cites at\n")
+		b.WriteString("least one `R-`-prefixed requirement id) - requires EVERY entity resolved as relevant to\n")
+		b.WriteString("that step (see each entry's own resolution-signal detail below) to be in its own\n")
+		b.WriteString("required state SIMULTANEOUSLY, mirroring a composite requirement's AND-of-N shape that\n")
+		b.WriteString("no single pairwise Pipeline Gate (stage 5, above) can express alone. See\n")
+		b.WriteString("`process_gates_test.go` for the generated `Gate<Process><Step>Complete` function and its\n")
+		b.WriteString("`Test<...>` table-driven proof (one \"<entity> not ready\" sub-test per required entity,\n")
+		b.WriteString("plus one \"all entities ready\" sub-test).\n\n")
+		for _, pg := range sortedProcessGates {
+			renderProcessGateAuditEntry(&b, pg)
 		}
 	}
 
@@ -160,10 +181,37 @@ func RenderAuditFile(models []*entityModel, reqModels []*requirementModel, gates
 // (either unresolved anywhere in the graph, or resolved to a DIFFERENT graph
 // element — the "partial coverage gap" case §3.1 requires never be silently
 // invisible behind an "atom found" appearance of completeness).
-func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel, cov coverageReport) {
+//
+// pg (task #212, stage 6) is the composite process-step gate this exact
+// requirement mirrors, if any (findProcessGateForRequirement's exact
+// "R-gate-pg<n>-<step-name>" suffix match) — when non-nil, an ADDITIONAL
+// atom line is rendered ahead of the classification-driven ones below,
+// naming the real composite gate function and citing every entity/state it
+// requires, so a requirement like R-gate-pg1-planning-approved (whose claim
+// is a conjunction of seven artifacts, not one field) is no longer honestly
+// describable as "one field-presence atom" — see process_gates.go's package
+// doc comment for the full resolution rule this atom mirrors.
+func renderRequirementAuditEntry(b *strings.Builder, rm *requirementModel, cov coverageReport, pg *processStepGateModel) {
 	fmt.Fprintf(b, "### %s {#%s}\n\n", rm.src.ID, rm.anchorSlug)
 	fmt.Fprintf(b, "%s\n\n", rm.src.Claim)
 	b.WriteString("Atoms:\n\n")
+
+	if pg != nil {
+		names := make([]string, len(pg.entities))
+		for i, e := range pg.entities {
+			pname, _ := e.paramName()
+			if e.preciseState != nil {
+				names[i] = fmt.Sprintf("%s(%s=%s)", e.entity.structName, pname, e.preciseState.constant)
+			} else {
+				names[i] = fmt.Sprintf("%s(%s=terminal)", e.entity.structName, pname)
+			}
+		}
+		fmt.Fprintf(b, "- composite process gate: `%s` requires {%s} -> `process_gates_test.go:Test%s`\n",
+			pg.funcName, strings.Join(names, ", "), pg.funcName)
+		if pg.wholeProcessFallback {
+			b.WriteString("  - LIMITATION: no per-step entity-binding signal resolved for this step; every one of the process's own `drives_entities` is required (whole-process fallback, not a step-scoped subset) - see process_gates.go's package doc comment\n")
+		}
+	}
 
 	switch rm.kind {
 	case atomKindField:
@@ -338,6 +386,79 @@ func renderPipelineGateAuditEntry(b *strings.Builder, gm *pipelineGateModel) {
 	fmt.Fprintf(b, "- gate test: `pipeline_test.go:Test%s`\n\n", gm.funcName)
 }
 
+// findProcessGateForRequirement looks up the one processStepGateModel (if
+// any) whose own requirementID field (findStepRequirementID's exact
+// "R-gate-pg<n>-<step-name>" suffix match, process_gates.go) equals reqID —
+// used by renderRequirementAuditEntry so a requirement's own "## Requirements"
+// entry can cite its composite process gate directly, without requiring a
+// reader to separately cross-reference the "## Process Gates" section by hand.
+func findProcessGateForRequirement(reqID string, processGates []*processStepGateModel) *processStepGateModel {
+	for _, pg := range processGates {
+		if pg.requirementID == reqID {
+			return pg
+		}
+	}
+	return nil
+}
+
+// renderProcessGateAuditEntry renders one stage-6 composite process-step
+// gate's audit entry: heading anchored on the gate function name (matching
+// process_gates_test.go's own "// Atom: ..." comment,
+// process_gates_test_gen.go's renderProcessStepGateTest), the Process/Step it
+// gates, the requirement it mirrors (if findStepRequirementID resolved one),
+// and — critically, since this is the composite gate's whole reason to
+// exist — every required entity with its own resolution signal (contract
+// mirror principle: WHY each entity is here, not just THAT it is) and its
+// own required state (precise, or "any terminal").
+func renderProcessGateAuditEntry(b *strings.Builder, pg *processStepGateModel) {
+	anchor := strings.ToLower(pg.funcName)
+	fmt.Fprintf(b, "### %s {#%s}\n\n", pg.funcName, anchor)
+	fmt.Fprintf(b, "Process `%s`, step `%s`", pg.process.ID, pg.step.Name)
+	if pg.requirementID != "" {
+		fmt.Fprintf(b, " (mirrors requirement `%s`)", pg.requirementID)
+	}
+	b.WriteString(".\n\n")
+
+	if pg.wholeProcessFallback {
+		b.WriteString("**LIMITATION** (honest, not silently narrowed): neither resolution signal (R-anchor\n")
+		b.WriteString("citation, nor short gate-token citation - see process_gates.go's package doc comment)\n")
+		b.WriteString("found any entity tied specifically to this step, so this gate falls back to the\n")
+		b.WriteString("process's ENTIRE `drives_entities` set - every artifact of the whole process is\n")
+		b.WriteString("required here, not a step-scoped subset.\n\n")
+	}
+
+	b.WriteString("Required entities:\n\n")
+	for _, e := range pg.entities {
+		pname, _ := e.paramName()
+		var reqState string
+		if e.preciseState != nil {
+			reqState = fmt.Sprintf("exactly state `%s` (%s)", e.preciseState.constant, e.preciseState.src.Name)
+		} else {
+			names := make([]string, len(e.terminal))
+			for i, s := range e.terminal {
+				names[i] = s.constant
+			}
+			reqState = fmt.Sprintf("any terminal state: %s", strings.Join(names, ", "))
+		}
+		var signal string
+		switch e.signal {
+		case processGateSignalAnchor:
+			signal = "R-anchor citation: this entity's own `why` cites the same requirement id the step's `why` cites"
+		case processGateSignalToken:
+			signal = "short gate-token citation: the step's own `P-G<n>` token appears in this entity's `why`"
+		case processGateSignalState:
+			signal = "short gate-token citation (state-level, precise): the step's own `P-G<n>` token appears in exactly one of this entity's own lifecycle state `why` texts"
+		default:
+			signal = "whole-process fallback (see LIMITATION above)"
+		}
+		fmt.Fprintf(b, "- `%s` (param `%s`): requires %s - resolution: %s\n", e.entity.structName, pname, reqState, signal)
+	}
+	b.WriteString("\n")
+
+	fmt.Fprintf(b, "- gate function: `process_gates_test.go:%s`\n", pg.funcName)
+	fmt.Fprintf(b, "- gate test: `process_gates_test.go:Test%s`\n\n", pg.funcName)
+}
+
 // GenerateAuditFromGraph builds the []*entityModel for entityTypes and
 // renders requirements_audit.md from it (with an empty Requirements
 // section), in the same map[filename][]byte shape
@@ -359,7 +480,7 @@ func GenerateAuditFromGraph(entityTypes []ontology.EntityType) (map[string][]byt
 		models = append(models, m)
 	}
 
-	auditSrc, err := RenderAuditFile(models, nil, nil)
+	auditSrc, err := RenderAuditFile(models, nil, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAuditFromGraph: %w", err)
 	}

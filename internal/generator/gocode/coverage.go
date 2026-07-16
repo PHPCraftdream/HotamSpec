@@ -375,12 +375,34 @@ func extractGraphNameCandidates(claim string, entityModels []*entityModel) []gra
 // identifier or re-implements matching, it only re-applies termMatch/
 // wholeWordMatch (already used by requirements.go) more broadly across the
 // WHOLE domain graph instead of stopping at the first structural hit.
-func BuildCoverageReport(m *requirementModel, entityModels []*entityModel, otherSettled []ontology.Requirement) coverageReport {
+//
+// pg (task #212, stage 6) is the composite process-step gate m's own
+// requirement mirrors, if any (findProcessGateForRequirement) — when
+// non-nil, every one of its required entities/states is folded into the
+// atomSlugs/atomStates sets BEFORE candidate resolution runs, so a claim
+// term like "forecast_v1" that the composite gate's own
+// Forecast(forecast=ForecastStateV1) requirement already covers is reported
+// candidateResolvedAtom (fully covered), not left as a stale partial-
+// coverage-gap the composite atom line above it already answers. Pass nil
+// for callers with no process gate for this requirement (the common case).
+func BuildCoverageReport(m *requirementModel, entityModels []*entityModel, otherSettled []ontology.Requirement, pg *processStepGateModel) coverageReport {
 	claim := m.src.Claim
 	atomFields := m.atomEntityFieldKeys()
 	atomStates := m.atomEntityStateKeys()
 	atomSlugs := m.atomEntitySlugKeys()
 	atomReqIDs := m.atomRequirementIDKeys()
+
+	if pg != nil {
+		for _, e := range pg.entities {
+			atomSlugs[e.entity.structName] = struct{}{}
+			if e.preciseState != nil {
+				atomStates[e.entity.structName+"."+e.preciseState.constant] = struct{}{}
+			}
+			for _, s := range e.terminal {
+				atomStates[e.entity.structName+"."+s.constant] = struct{}{}
+			}
+		}
+	}
 
 	var candidates []candidateTerm
 

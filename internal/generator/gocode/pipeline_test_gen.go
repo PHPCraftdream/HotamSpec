@@ -271,10 +271,25 @@ func writePreciseGateSubTests(b *strings.Builder, g *pipelineGateModel, preciseP
 // general and precise sub-test renderers never diverge on how a transition
 // walk is checked (contract §0).
 func writeTransitionWalk(b *strings.Builder, referencedStructName string, methods []string) {
+	writeTransitionWalkVar(b, "referenced", referencedStructName, methods)
+}
+
+// writeTransitionWalkVar is writeTransitionWalk generalized to an arbitrary
+// local variable name: process_gates_test_gen.go's composite gate tests
+// declare one local per required entity (named after that entity's own
+// camelCase slug, e.g. "frRegistry", "forecast" — never the fixed
+// "referenced" pipeline_test_gen.go's single-entity gate tests use), so the
+// variable name driving each generated `<varName>.<Method>()` call and its
+// `t.Fatalf` message must be a parameter, not a hardcoded literal. Both
+// callers render IDENTICAL per-call shape (contract §0: one source of truth
+// for "how is a transition walk checked", not two independently-maintained
+// copies) — writeTransitionWalk is now a thin varName="referenced" wrapper
+// over this function, not a second implementation.
+func writeTransitionWalkVar(b *strings.Builder, varName, structName string, methods []string) {
 	for _, methodName := range methods {
-		fmt.Fprintf(b, "\t\tif err := referenced.%s(); err != nil {\n", methodName)
+		fmt.Fprintf(b, "\t\tif err := %s.%s(); err != nil {\n", varName, methodName)
 		fmt.Fprintf(b, "\t\t\tt.Fatalf(%s, err)\n",
-			strconv.Quote(fmt.Sprintf("%s: %s(): %%v", referencedStructName, methodName)))
+			strconv.Quote(fmt.Sprintf("%s: %s(): %%v", structName, methodName)))
 		b.WriteString("\t\t}\n")
 	}
 }

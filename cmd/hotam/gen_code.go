@@ -70,7 +70,7 @@ func genCode(domainDir string) ([]string, error) {
 		return nil, err
 	}
 
-	files, err := gocode.GenerateAllFromGraph(g.EntityTypes, g.Requirements, domainDir)
+	files, err := gocode.GenerateAllFromGraph(g.EntityTypes, g.Requirements, g.Processes, domainDir)
 	if err != nil {
 		return nil, fmt.Errorf("gen-code: %w", err)
 	}

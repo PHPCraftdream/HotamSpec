@@ -201,7 +201,7 @@ func TestGenerateAllFromGraph_RealPratDomain_AuditAnchorsResolve(t *testing.T) {
 		t.Fatalf("LoadGraph(prat): %v", err)
 	}
 
-	files, err := GenerateAllFromGraph(g.EntityTypes, g.Requirements, domainDir)
+	files, err := GenerateAllFromGraph(g.EntityTypes, g.Requirements, g.Processes, domainDir)
 	if err != nil {
 		t.Fatalf("GenerateAllFromGraph: %v", err)
 	}

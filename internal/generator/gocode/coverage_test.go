@@ -23,8 +23,8 @@ func TestBuildCoverageReport_Deterministic(t *testing.T) {
 	settled := settledOnly(reqs)
 
 	for _, rm := range reqModels {
-		first := BuildCoverageReport(rm, models, settled)
-		second := BuildCoverageReport(rm, models, settled)
+		first := BuildCoverageReport(rm, models, settled, nil)
+		second := BuildCoverageReport(rm, models, settled, nil)
 
 		if len(first.candidates) != len(second.candidates) {
 			t.Fatalf("%s: candidate count differs across repeated calls: %d vs %d", rm.src.ID, len(first.candidates), len(second.candidates))
@@ -52,8 +52,8 @@ func TestBuildCoverageReport_Deterministic_RealPratDomain(t *testing.T) {
 	settled := settledOnly(reqs)
 
 	for _, rm := range reqModels {
-		first := BuildCoverageReport(rm, models, settled)
-		second := BuildCoverageReport(rm, models, settled)
+		first := BuildCoverageReport(rm, models, settled, nil)
+		second := BuildCoverageReport(rm, models, settled, nil)
 		if len(first.candidates) != len(second.candidates) {
 			t.Fatalf("%s: candidate count differs across repeated calls: %d vs %d", rm.src.ID, len(first.candidates), len(second.candidates))
 		}
@@ -165,7 +165,7 @@ func TestBuildCoverageReport_PartialCoverageGap(t *testing.T) {
 		t.Fatalf("expected atomKindField (the widget.текст atom), got %v", rm.kind)
 	}
 
-	cov := BuildCoverageReport(rm, models, settledOnly(reqs))
+	cov := BuildCoverageReport(rm, models, settledOnly(reqs), nil)
 
 	gaps := cov.gaps()
 	var found *candidateTerm
@@ -299,7 +299,7 @@ func TestRenderAuditFile_CoverageSection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
-	audit, err := RenderAuditFile(models, reqModels, nil)
+	audit, err := RenderAuditFile(models, reqModels, nil, nil)
 	if err != nil {
 		t.Fatalf("RenderAuditFile: %v", err)
 	}
@@ -329,11 +329,11 @@ func TestRenderAuditFile_CoverageSection_Deterministic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildRequirementModels: %v", err)
 	}
-	a, err := RenderAuditFile(models, reqModels, nil)
+	a, err := RenderAuditFile(models, reqModels, nil, nil)
 	if err != nil {
 		t.Fatalf("RenderAuditFile (first): %v", err)
 	}
-	b, err := RenderAuditFile(models, reqModels, nil)
+	b, err := RenderAuditFile(models, reqModels, nil, nil)
 	if err != nil {
 		t.Fatalf("RenderAuditFile (second): %v", err)
 	}

@@ -100,7 +100,7 @@ func GenerateLifecycleFromGraph(entityTypes []ontology.EntityType) (map[string][
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
-	auditSrc, err := RenderAuditFile(models, nil, nil)
+	auditSrc, err := RenderAuditFile(models, nil, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateLifecycleFromGraph: %w", err)
 	}
@@ -154,7 +154,7 @@ func GenerateRequirementsFromGraph(entityTypes []ontology.EntityType, requiremen
 		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
 	}
 
-	auditSrc, err := RenderAuditFile(entityModels, reqModels, nil)
+	auditSrc, err := RenderAuditFile(entityModels, reqModels, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateRequirementsFromGraph: %w", err)
 	}
@@ -208,7 +208,7 @@ func GeneratePipelineFromGraph(entityTypes []ontology.EntityType, requirements [
 
 	pipelineTestSrc := mergePipelineFile(gateFuncsSrc, gateTestsSrc)
 
-	auditSrc, err := RenderAuditFile(models, nil, gates)
+	auditSrc, err := RenderAuditFile(models, nil, gates, nil)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GeneratePipelineFromGraph: %w", err)
 	}
@@ -221,30 +221,30 @@ func GeneratePipelineFromGraph(entityTypes []ontology.EntityType, requirements [
 
 // GenerateAllFromGraph renders the complete gen-code output set (contract
 // §1: go.mod, entities.go, lifecycle.go, lifecycle_test.go,
-// requirements_test.go, pipeline_test.go, and requirements_audit.md) from a
-// single already-loaded graph, in one map[filename][]byte the caller can
-// write out directly.
+// requirements_test.go, pipeline_test.go, process_gates_test.go (stage 6),
+// and requirements_audit.md) from a single already-loaded graph, in one
+// map[filename][]byte the caller can write out directly.
 //
 // Unlike calling GenerateModelsFromGraph/GenerateLifecycleFromGraph/
 // GenerateRequirementsFromGraph/GeneratePipelineFromGraph separately and
 // merging their four returned maps (cmd/hotam/gen_code.go's genCode used to
 // do exactly that), this function builds every []*entityModel/
-// []*requirementModel/[]*pipelineGateModel exactly ONCE and threads them into
-// a single RenderAuditFile call at the very end, with all three parameters
-// fully populated. That is the point of this function: each of the four
-// Generate*FromGraph functions above independently calls RenderAuditFile
-// with only the subset of models/reqModels/gates it happens to own (lifecycle
-// passes reqModels=nil,gates=nil; requirements passes gates=nil; pipeline
-// passes reqModels=nil) — every one of those calls is individually correct
-// for what that stage owns, but genCode was merging the four stages' file
-// maps by filename, so requirements_audit.md kept getting overwritten by
-// whichever stage rendered last (pipeline), discarding the "## Requirements"
-// section requirements-stage's own render had. Contract §0 requires exactly
-// one source of truth for requirements_audit.md; this function is now that
-// one place with the full picture, called once, after everything else has
-// already been computed — not two (or four) competing renders merged by
-// last-write-wins file-map semantics.
-func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []ontology.Requirement, domainDir string) (map[string][]byte, error) {
+// []*requirementModel/[]*pipelineGateModel/[]*processStepGateModel exactly
+// ONCE and threads them into a single RenderAuditFile call at the very end,
+// with all parameters fully populated. That is the point of this function:
+// each of the four Generate*FromGraph functions above independently calls
+// RenderAuditFile with only the subset of models/reqModels/gates it happens
+// to own (lifecycle passes reqModels=nil,gates=nil; requirements passes
+// gates=nil; pipeline passes reqModels=nil) — every one of those calls is
+// individually correct for what that stage owns, but genCode was merging the
+// four stages' file maps by filename, so requirements_audit.md kept getting
+// overwritten by whichever stage rendered last (pipeline), discarding the
+// "## Requirements" section requirements-stage's own render had. Contract §0
+// requires exactly one source of truth for requirements_audit.md; this
+// function is now that one place with the full picture, called once, after
+// everything else has already been computed — not two (or more) competing
+// renders merged by last-write-wins file-map semantics.
+func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []ontology.Requirement, processes []ontology.Process, domainDir string) (map[string][]byte, error) {
 	sorted := make([]ontology.EntityType, len(entityTypes))
 	copy(sorted, entityTypes)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
@@ -269,6 +269,17 @@ func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []onto
 	}
 
 	reqModels, err := BuildRequirementModels(requirements, models, gates)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
+	}
+
+	var settled []ontology.Requirement
+	for _, r := range requirements {
+		if r.Status == ontology.StatusSETTLED {
+			settled = append(settled, r)
+		}
+	}
+	processGates, err := BuildProcessStepGateModels(processes, models, settled)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
 	}
@@ -299,19 +310,30 @@ func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []onto
 	}
 	pipelineTestSrc := mergePipelineFile(gateFuncsSrc, gateTestsSrc)
 
-	// The one authoritative RenderAuditFile call: models, reqModels, AND
-	// gates are all real and fully populated here, so requirements_audit.md
-	// carries every EntityType/state/transition-why section, the full
-	// "## Requirements" section, and the full "## Pipeline Gates" section in
-	// a single render — nothing to overwrite afterward.
-	auditSrc, err := RenderAuditFile(models, reqModels, gates)
+	processGateFuncsSrc, err := RenderProcessGatesFile("gen", processGates)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
+	}
+	processGateTestsSrc, err := RenderProcessGatesTestFile("gen", processGates)
+	if err != nil {
+		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
+	}
+	processGatesTestSrc := mergePipelineFile(processGateFuncsSrc, processGateTestsSrc)
+
+	// The one authoritative RenderAuditFile call: models, reqModels, gates,
+	// AND processGates are all real and fully populated here, so
+	// requirements_audit.md carries every EntityType/state/transition-why
+	// section, the full "## Requirements" section, the full "## Pipeline
+	// Gates" section, and the full "## Process Gates" section in a single
+	// render — nothing to overwrite afterward.
+	auditSrc, err := RenderAuditFile(models, reqModels, gates, processGates)
 	if err != nil {
 		return nil, fmt.Errorf("gocode: GenerateAllFromGraph: %w", err)
 	}
 
 	goMod := renderGoMod(ModuleName(domainDir))
 
-	return map[string][]byte{
+	out := map[string][]byte{
 		"go.mod":                []byte(goMod),
 		"entities.go":           entitiesSrc,
 		"lifecycle.go":          lifecycleSrc,
@@ -319,7 +341,11 @@ func GenerateAllFromGraph(entityTypes []ontology.EntityType, requirements []onto
 		"requirements_test.go":  requirementsTestSrc,
 		"pipeline_test.go":      pipelineTestSrc,
 		"requirements_audit.md": auditSrc,
-	}, nil
+	}
+	if len(processGates) > 0 {
+		out["process_gates_test.go"] = processGatesTestSrc
+	}
+	return out, nil
 }
 
 // mergePipelineFile combines the gate-function half (RenderPipelineFile) and
