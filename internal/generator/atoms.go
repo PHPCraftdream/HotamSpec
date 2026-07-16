@@ -73,6 +73,20 @@ func renderAtoms(title, intro string, reqs []ontology.Requirement, reader string
 				}
 				lines = append(lines, "**Enforced by:** "+strings.Join(parts, ", "), "")
 			}
+			if len(r.ImplementedBy) > 0 {
+				parts := make([]string, len(r.ImplementedBy))
+				for i, e := range r.ImplementedBy {
+					parts[i] = "`" + e + "`"
+				}
+				lines = append(lines, "**Implemented by:** "+strings.Join(parts, ", "), "")
+			}
+			if len(r.VerifiedBy) > 0 {
+				parts := make([]string, len(r.VerifiedBy))
+				for i, e := range r.VerifiedBy {
+					parts[i] = "`" + e + "`"
+				}
+				lines = append(lines, "**Verified by:** "+strings.Join(parts, ", "), "")
+			}
 			lines = append(lines, renderFreshnessLines(r)...)
 		}
 	}

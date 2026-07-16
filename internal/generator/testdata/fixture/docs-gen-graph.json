@@ -107,6 +107,7 @@
         }
       ],
       "id": "R-fixture-settled-enforced",
+      "implemented_by": [],
       "last_reviewed_at": "2026-06-01",
       "owner": "S-ai-agent",
       "review_after": "2027-01-01",
@@ -114,6 +115,7 @@
         "docs/fixture-notes.md#enforced"
       ],
       "status": "SETTLED",
+      "verified_by": [],
       "why": "Coverage needs at least one ENFORCED/SETTLED row in UNENFORCED.md's enforced section."
     },
     {
@@ -133,11 +135,13 @@
         }
       ],
       "id": "R-fixture-settled-prose",
+      "implemented_by": [],
       "last_reviewed_at": "",
       "owner": "S-ai-agent",
       "review_after": "",
       "source_refs": [],
       "status": "SETTLED",
+      "verified_by": [],
       "why": "Coverage needs a closeable-debt row (ENFORCEABLE, still PROSE) in UNENFORCED.md."
     },
     {
@@ -152,11 +156,13 @@
       ],
       "history": [],
       "id": "R-fixture-settled-inherent-prose",
+      "implemented_by": [],
       "last_reviewed_at": "2025-01-01",
       "owner": "S-domain-user",
       "review_after": "2025-07-01",
       "source_refs": [],
       "status": "SETTLED",
+      "verified_by": [],
       "why": "Coverage needs the inherent-discipline table (INHERENTLY_PROSE, never counted as debt)."
     },
     {
@@ -175,11 +181,13 @@
         }
       ],
       "id": "R-fixture-draft",
+      "implemented_by": [],
       "last_reviewed_at": "",
       "owner": "S-ai-agent",
       "review_after": "",
       "source_refs": [],
       "status": "DRAFT",
+      "verified_by": [],
       "why": "Coverage needs a DRAFT branch across REQUIREMENTS.md and UNENFORCED.md."
     },
     {
@@ -198,11 +206,13 @@
         }
       ],
       "id": "R-fixture-open-question",
+      "implemented_by": [],
       "last_reviewed_at": "",
       "owner": "S-domain-user",
       "review_after": "",
       "source_refs": [],
       "status": "OPEN(should the fixture graph grow past 25 nodes?)",
+      "verified_by": [],
       "why": "Coverage needs the OPEN status branch, including M-tag decisions rendering."
     },
     {
@@ -226,11 +236,13 @@
         }
       ],
       "id": "R-fixture-rejected",
+      "implemented_by": [],
       "last_reviewed_at": "",
       "owner": "S-ai-agent",
       "review_after": "",
       "source_refs": [],
       "status": "REJECTED",
+      "verified_by": [],
       "why": "Coverage needs the REJECTED branch — replaced by R-fixture-settled-prose (anti-relitigation)."
     }
   ],

@@ -138,8 +138,17 @@ func BuildUnenforced(g *ontology.Graph) string {
 		lines = append(lines, "|---|---|---|")
 		for _, r := range settledEnforced {
 			by := "—"
-			if len(r.EnforcedBy) > 0 {
+			switch {
+			case len(r.EnforcedBy) > 0:
 				by = strings.Join(r.EnforcedBy, ", ")
+			case len(r.ImplementedBy) > 0 || len(r.VerifiedBy) > 0:
+				// Authored path (PLAN-authored-spec-discipline.md §5/§12): no
+				// enforced_by, but the disjunctive ENFORCED gate
+				// (check_enforced_requires_enforcer_or_authored_link) accepts
+				// implemented_by + verified_by instead -- show that carrier
+				// rather than an honest-looking "—" that would misreport this
+				// row as having no enforcer at all.
+				by = strings.Join(r.ImplementedBy, ", ") + " / " + strings.Join(r.VerifiedBy, ", ")
 			}
 			lines = append(lines, "| `"+r.ID+"` | "+Cell(by)+" | "+Cell(r.Claim)+" |")
 		}

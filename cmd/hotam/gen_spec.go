@@ -138,6 +138,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName, consumer)},
 		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
 		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName)},
+		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
 	}
 	// REPO-MAP.md lists itself too (the repo-map scan globs docs/gen/*.md
 	// including the file it is about to (re)write); its own title is fixed by
@@ -187,6 +188,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{"CONSTITUTION.md", repoMapDocs[6].Content},
 		{"FRAMEWORK-INVARIANTS.md", repoMapDocs[7].Content},
 		{"PIPELINE.md", repoMapDocs[8].Content},
+		{"TRACEABILITY.md", repoMapDocs[9].Content},
 		{"REPO-MAP.md", repoMapMD},
 	}
 	if shouldWriteAtoms(atomsOperator) {
@@ -379,7 +381,7 @@ func cleanupStaleGenFiles(genDir string, written []string) ([]string, error) {
 	topLevelFiles := []string{
 		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
 		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
-		"PIPELINE.md",
+		"PIPELINE.md", "TRACEABILITY.md",
 		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
 		"atoms-discipline.md", "atoms-check.md", "live-state.md",
 		"AGENT-CONTEXT.md", "DECISIONS.md", "ENTITIES.md", "graph.json",

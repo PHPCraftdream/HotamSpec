@@ -39,11 +39,13 @@ func BuildGraphJSON(g *ontology.Graph) (string, error) {
 			"evidence":         copyStrings(r.Evidence),
 			"history":          history,
 			"id":               r.ID,
+			"implemented_by":   copyStrings(r.ImplementedBy),
 			"last_reviewed_at": r.LastReviewedAt,
 			"owner":            r.Owner,
 			"review_after":     r.ReviewAfter,
 			"source_refs":      copyStrings(r.SourceRefs),
 			"status":           r.Status,
+			"verified_by":      copyStrings(r.VerifiedBy),
 			"why":              r.Why,
 		})
 	}

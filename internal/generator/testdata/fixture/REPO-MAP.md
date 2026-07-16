@@ -67,4 +67,5 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/fixture-domain/docs/gen/REPO-MAP.md` — Repository file index
 - `domains/fixture-domain/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
 - `domains/fixture-domain/docs/gen/TENSIONS.md` — The tension map
+- `domains/fixture-domain/docs/gen/TRACEABILITY.md` — requirement -> implemented_by -> verified_by
 - `domains/fixture-domain/docs/gen/UNENFORCED.md` — Burn-down meter

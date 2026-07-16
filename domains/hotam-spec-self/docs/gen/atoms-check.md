@@ -215,6 +215,10 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 
 **Enforced by:** `check_requirement_history_wellformed`
 
+**Implemented by:** `internal/ontology/requirement.go:HistoryEntry`
+
+**Verified by:** `internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory`
+
 **Last reviewed.** 2026-07-13
 
 **Review after.** 2027-01-12

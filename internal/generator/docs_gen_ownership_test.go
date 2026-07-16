@@ -27,7 +27,7 @@ var realDomainsDocsGen = []struct {
 var genTopLevelOwned = []string{
 	"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
 	"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
-	"PIPELINE.md",
+	"PIPELINE.md", "TRACEABILITY.md",
 	"REPO-MAP.md",
 	"atoms-operator.md", "atoms-substrate.md", "atoms-discipline.md", "atoms-check.md",
 	"live-state.md",

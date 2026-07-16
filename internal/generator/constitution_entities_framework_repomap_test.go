@@ -26,6 +26,7 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
 		title("REQUIREMENTS.md", "REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)"),
 		title("TENSIONS.md", "TENSIONS.md — The tension map (Hotam-Spec)"),
+		title("TRACEABILITY.md", "TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)"),
 		title("UNENFORCED.md", "UNENFORCED.md — Burn-down meter (Hotam-Spec)"),
 	}
 }
@@ -52,6 +53,7 @@ func fixtureGenDocs() []GenDocEntry {
 		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
 		title("REQUIREMENTS.md", "REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)"),
 		title("TENSIONS.md", "TENSIONS.md — The tension map (Hotam-Spec)"),
+		title("TRACEABILITY.md", "TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)"),
 		title("UNENFORCED.md", "UNENFORCED.md — Burn-down meter (Hotam-Spec)"),
 	}
 }
@@ -109,4 +111,15 @@ func TestBuildPipeline_ByteIdenticalToFixture(t *testing.T) {
 		t.Fatalf("read reference: %v", err)
 	}
 	diffReport(t, "PIPELINE.md", got, string(want))
+}
+
+func TestBuildTraceability_ByteIdenticalToFixture(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildTraceability(g)
+	want, err := os.ReadFile("testdata/fixture/TRACEABILITY.md")
+	if err != nil {
+		t.Fatalf("read reference: %v", err)
+	}
+	diffReport(t, "TRACEABILITY.md", got, string(want))
 }
