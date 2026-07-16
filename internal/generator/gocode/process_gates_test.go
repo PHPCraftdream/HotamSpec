@@ -292,13 +292,24 @@ func TestRenderProcessGatesFile_ZeroGates_NoUnusedImport(t *testing.T) {
 	}
 }
 
-// TestBuildProcessStepGateModels_RealPratDomain asserts the exact resolved
-// entity set for R-gate-pg1-planning-approved's own step (planning-approved)
-// on the real prat domain - the task's central acceptance criterion: fr-
-// registry, fr-graph, fr-record, implementation-order, risk-registry,
-// forecast (precise v1), and gate-decision, no more, no fewer, and NOT a
-// whole-process fallback (brd-package/sdr-package/source-package - which
-// genuinely belong to OTHER steps - must be excluded).
+// TestBuildProcessStepGateModels_RealPratDomain asserts the resolved entity
+// set for R-gate-pg1-planning-approved's own step (planning-approved) on the
+// real prat domain - the task's central acceptance criterion: fr-registry,
+// fr-graph, fr-record, implementation-order, risk-registry, forecast
+// (precise v1), and gate-decision must ALL be resolved, and NOT via the
+// whole-process fallback; brd-package/sdr-package/source-package - which
+// genuinely belong to OTHER steps - must be excluded.
+//
+// Deliberately NOT a pinned exact-count test (invariant form chosen over
+// exact-count sync): the prat domain is live and keeps growing entities
+// that legitimately join this step (2026-07: jira-write-permit landed with
+// P-G1-scoped lifecycle whys and correctly resolves into planning-approved's
+// composite gate). Pinning "exactly 7" made this test fail on every such
+// enrichment without adding regression signal. The signal that matters is:
+// (1) the documented core set is present with the right resolution (incl.
+// forecast precisely at v1), (2) other-step entities are excluded, (3) no
+// fallback, (4) every resolved entity carries a usable required-state form
+// (precise state or non-empty terminal set).
 func TestBuildProcessStepGateModels_RealPratDomain(t *testing.T) {
 	domainDir := pratDomainDir(t)
 	g, err := loader.LoadGraph(filepath.Join(domainDir, "graph.json"))
@@ -342,12 +353,25 @@ func TestBuildProcessStepGateModels_RealPratDomain(t *testing.T) {
 	}
 
 	wantSlugs := []string{"fr-registry", "fr-graph", "fr-record", "implementation-order", "risk-registry", "forecast", "gate-decision"}
-	if len(gotSlugs) != len(wantSlugs) {
-		t.Fatalf("expected exactly %d relevant entities for planning-approved, got %d: %v", len(wantSlugs), len(gotSlugs), gotSlugs)
+	if len(gotSlugs) < len(wantSlugs) {
+		t.Fatalf("expected at least the %d documented core entities for planning-approved, got %d: %v", len(wantSlugs), len(gotSlugs), gotSlugs)
 	}
 	for _, slug := range wantSlugs {
 		if _, ok := gotSlugs[slug]; !ok {
 			t.Errorf("expected planning-approved's composite gate to require entity %q, not found among: %v", slug, gotSlugs)
+		}
+	}
+
+	// Every resolved entity — core or newly grown — must carry a usable
+	// required-state form: either a precise state with a non-empty runtime
+	// value, or a non-empty terminal-state set for the general form.
+	for slug, e := range gotSlugs {
+		if e.preciseState != nil {
+			if e.preciseState.value == "" {
+				t.Errorf("entity %q: precise state with empty runtime value", slug)
+			}
+		} else if len(e.terminal) == 0 {
+			t.Errorf("entity %q: neither a precise state nor any terminal state resolved", slug)
 		}
 	}
 

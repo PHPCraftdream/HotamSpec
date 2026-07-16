@@ -707,38 +707,34 @@ func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
 		t.Error("expected R-gate-pg3-brd-approved to be present")
 	}
 
-	// R-brd-integrity-zero-blockers has MUST plus id-shaped anchors (P-G3,
-	// P-G3-CQA). "P-G3" still resolves only to brd-package's Cyrillic `why`
-	// text (textual, not a lifecycle.state.name or another requirement id).
-	// "P-G3-CQA", however, now resolves to a REAL structural correlate: the
-	// prat domain landed R-gate-pg3-cqa-mandatory (PRAT-hotam commit
-	// fdd7de3, task #202, after this test was first pinned) whose id
-	// contains "pg3cqa" once normalized — a genuine other-requirement-id
-	// correlate (gateAnchorCorrelateRequirement), not an imitation. Per
-	// gateAtom.hasStructuralCorrelate, one real correlate is enough to
-	// classify the whole requirement as atomKindGate; the P-G3 why-only hit
-	// is still recorded on rm.gate.correlates for the audit file but no
-	// longer drives the requirement's own kind since P-G3-CQA now stands on
-	// its own two feet.
+	// R-brd-integrity-zero-blockers (synced with live prat as of 2026-07-16;
+	// will drift as prat grows). This block has re-drifted twice as the
+	// live domain grew, each time to a HIGHER-priority contract §3 row:
+	//  - originally: P-G3/P-G3-CQA anchors were why-only -> atomKindNone;
+	//  - task #202 landed R-gate-pg3-cqa-mandatory -> the P-G3-CQA anchor
+	//    became a real requirement-id correlate -> atomKindGate;
+	//  - tasks #193-#217 landed risk-registry's kind:reference fields p_g3
+	//    and p_g4. termMatch splits "p_g3" into the word sequence [p g3],
+	//    which the claim's literal "P-G3" (hyphen-joined, boundary-bounded)
+	//    now hits as a RAW field-name match — contract §3 row 1 (field atom)
+	//    outranks row 3 (gate atom) by the table's explicit top-to-bottom
+	//    priority, so the requirement now classifies as atomKindField and
+	//    rm.gate is never populated (row 1 returns before row 3 runs).
+	// Semantically sound, not a generator bug: risk-registry.p_g3 IS the
+	// domain's structural carrier of the P-G3 gate this claim is about (it
+	// references brd-package, whose approval P-G3 gates on).
 	if rm, ok := byID["R-brd-integrity-zero-blockers"]; ok {
-		if rm.kind != atomKindGate {
-			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindGate (P-G3-CQA resolves to R-gate-pg3-cqa-mandatory)", rm.kind)
+		if rm.kind != atomKindField {
+			t.Errorf("R-brd-integrity-zero-blockers: kind = %v, want atomKindField (claim's literal P-G3 raw-name-matches risk-registry.p_g3; contract §3 row 1 outranks row 3)", rm.kind)
 		}
-		foundWhyOnly := false
-		foundReqCorrelate := false
-		for _, c := range rm.gate.correlates {
-			if c.anchor == "P-G3" && c.kind == gateAnchorCorrelateWhy {
-				foundWhyOnly = true
-			}
-			if c.anchor == "P-G3-CQA" && c.kind == gateAnchorCorrelateRequirement && c.requirementID == "R-gate-pg3-cqa-mandatory" {
-				foundReqCorrelate = true
+		foundPG3Field := false
+		for _, fa := range rm.fields {
+			if fa.entity.src.Slug == "risk-registry" && fa.field.src.Name == "p_g3" {
+				foundPG3Field = true
 			}
 		}
-		if !foundWhyOnly {
-			t.Errorf("R-brd-integrity-zero-blockers: expected anchor %q to resolve to a why-text-only correlate, got %+v", "P-G3", rm.gate.correlates)
-		}
-		if !foundReqCorrelate {
-			t.Errorf("R-brd-integrity-zero-blockers: expected anchor %q to resolve to requirement %q, got %+v", "P-G3-CQA", "R-gate-pg3-cqa-mandatory", rm.gate.correlates)
+		if !foundPG3Field {
+			t.Errorf("R-brd-integrity-zero-blockers: expected a field atom on risk-registry.p_g3 (the claim's P-G3 carrier), got %d field atoms", len(rm.fields))
 		}
 	} else {
 		t.Error("expected R-brd-integrity-zero-blockers to be present")

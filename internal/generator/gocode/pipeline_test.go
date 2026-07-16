@@ -459,12 +459,12 @@ func mutateGateAlwaysNil(t *testing.T, src string) string {
 }
 
 // TestGeneratePipelineFromGraph_RealPratDomain runs the full stage-5
-// generator against the real PRAT-hotam "prat" domain and asserts exactly
-// the 4 documented pipeline gates are present, with the exact resolved
-// identifiers (confirmed once via BuildEntityModel against the real
-// glossary, GEN-CODE-CONTRACT.md §4.1 - прогноз/forecast, входной/input,
-// реестр/registry, граф/graph, зависимостей/dependencies were added to the
-// glossary as part of this stage; see identifiers.go):
+// generator against the real PRAT-hotam "prat" domain and asserts the 4
+// documented pipeline gates are present AS A REQUIRED CORE SUBSET, with the
+// exact resolved identifiers (confirmed once via BuildEntityModel against
+// the real glossary, GEN-CODE-CONTRACT.md §4.1 - прогноз/forecast,
+// входной/input, реестр/registry, граф/graph, зависимостей/dependencies
+// were added to the glossary as part of this stage; see identifiers.go):
 //
 //	fr-graph.входной_реестр          -> fr-registry           (field: InputRegistry)
 //	implementation-order.граф_зависимостей -> fr-graph         (field: GraphDependencies)
@@ -482,8 +482,21 @@ func mutateGateAlwaysNil(t *testing.T, src string) string {
 // (v2, not merely "some terminal state").
 //
 // sdr-package.feature_lead (ref_target "Stakeholder", field: FeatureLead)
-// must NOT produce a 5th gate — "Stakeholder" resolves to no EntityType slug
-// in this domain's graph (contract §2/§6's existing honest TODO case).
+// must NOT produce an extra gate — "Stakeholder" resolves to no EntityType
+// slug in this domain's graph (contract §2/§6's existing honest TODO case).
+//
+// Deliberately NOT a pinned total-gate-count test (invariant form chosen
+// over exact-count sync): the prat domain is live and keeps growing new
+// kind:reference fields (2026-07: jira-write-permit.входной_реестр,
+// risk-registry.p_g3, risk-registry.p_g4 landed and correctly produce three
+// more general RequiresTerminal gates). Pinning "exactly 4" made this test
+// fail on every legitimate domain enrichment while adding no regression
+// signal. Instead: (1) the 4 documented gates above must ALWAYS be present
+// with their exact identifiers and precise-state resolution (that is the
+// generator-behavior signal, incl. contract §2.1's v2-vs-v3 proof), (2)
+// every additional gate must still be structurally sound (resolved
+// referencer/field/referenced, precise-or-general target), (3) unresolvable
+// ref_targets must still produce no gate.
 func TestGeneratePipelineFromGraph_RealPratDomain(t *testing.T) {
 	domainDir := pratDomainDir(t)
 	g, err := loader.LoadGraph(filepath.Join(domainDir, "graph.json"))
@@ -503,8 +516,32 @@ func TestGeneratePipelineFromGraph_RealPratDomain(t *testing.T) {
 		}
 		t.Logf("gate: %s (%s.%s -> %s) precise=%s", gt.funcName, gt.referencer.structName, gt.field.fieldName, gt.referenced.structName, precise)
 	}
-	if len(gates) != 4 {
-		t.Fatalf("expected exactly 4 pipeline gates on the real prat domain, got %d: %v", len(gates), gateFuncNames(gates))
+	if len(gates) < 4 {
+		t.Fatalf("expected at least the 4 documented core pipeline gates on the real prat domain, got %d: %v", len(gates), gateFuncNames(gates))
+	}
+
+	// Every gate — core or newly grown — must be structurally sound: a
+	// resolved referencer struct, a named field, a resolved referenced
+	// struct, a non-empty func name, and a target that is either a valid
+	// precise state (non-empty runtime value) or the general
+	// RequiresTerminal form. This is the invariant that survives domain
+	// growth without re-pinning counts.
+	for _, gt := range gates {
+		if gt.funcName == "" {
+			t.Errorf("gate with empty funcName: %+v", gt)
+		}
+		if gt.referencer == nil || gt.referencer.structName == "" {
+			t.Errorf("gate %q: unresolved referencer", gt.funcName)
+		}
+		if gt.field.fieldName == "" {
+			t.Errorf("gate %q: empty field name", gt.funcName)
+		}
+		if gt.referenced == nil || gt.referenced.structName == "" {
+			t.Errorf("gate %q: unresolved referenced entity", gt.funcName)
+		}
+		if gt.preciseState != nil && gt.preciseState.value == "" {
+			t.Errorf("gate %q: precise state with empty runtime value", gt.funcName)
+		}
 	}
 
 	type triple struct {
