@@ -4610,6 +4610,49 @@
       "decl_order": 92
     },
     {
+      "id": "R-domain-founded-in-wave-order",
+      "claim": "A new domain MUST be founded in wave order, not bottom-up: wave 0 (the skeleton -- manifest purpose/goals plus a Process node naming stages and roles plus Axes) MUST land BEFORE wave 1 (artifacts -- EntityTypes, each wired via Process.drives_entities); wave 1 MUST land BEFORE wave 2 (rules -- Requirements); wave 2 MUST land BEFORE wave 3 (tensions -- Assumptions/Conflicts); wave 3 MUST land BEFORE wave 4 (data -- EntityInstances). Each wave MUST close with a regeneration (`hotam gen-spec`) and a check of the overview projection (PIPELINE.md, R-domain-overview-projection) before the next wave opens. The diff against the domain's original source prose MUST run AFTER wave 0 (the skeleton), NEVER only at the end of the founding sequence.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Steward finding this session (task #203, dogfooded on the `prat` pilot domain, PRAT-hotam/domains/prat): the methodology already defines WHAT a domain needs (manifest, Process, Axes, EntityTypes, Requirements, Assumptions/Conflicts -- each with its own SETTLED requirements and check_* invariants) and HOW to add each node kind (the six-step mediation loop, R-... per node kind), but nowhere states in WHAT ORDER a brand-new domain should be founded. The `prat` pilot paid for this gap concretely: its Requirements were landed before any Process node existed (the Process-node-for-stages pattern only arrived later, task #199/#200, see R-process-aspect-first's successors and R-domain-overview-projection/task #201), and its manifest stayed empty for an extended stretch (partially fixed by task #200; full fix tracked as tasks #210/#211, not yet done at authorship time). The compounding failure this produced: an agent asked 'what are the stages of the PRAT methodology' could NOT answer from the graph + generated docs alone and had to fall back to reading the original prose document directly (diagnosed and partially closed by task #205 / R-domain-overview-projection, commit 7520545, docs/GEN-CODE-CONTRACT.md §7) -- a direct, observed consequence of building artifacts and rules before the skeleton (Process/manifest) existed to anchor them. This requirement is the general dogfood lesson generalized: it names the wave order (skeleton -> artifacts -> rules -> tensions -> data) that, had it been followed from day one, would have made R-domain-overview-projection's projection buildable and populated from the very first wave instead of retrofitted after 283 requirements had already accumulated with no Process anchor. `R-domain-overview-projection` (task #201, SETTLED/PROSE, feature-blocked on the PIPELINE.md generator) answers a DIFFERENT question -- 'how does a domain present its whole structure for READING once it has one' -- this requirement answers 'in what ORDER does a domain get WRITTEN in the first place'; the two are complementary halves of the same skeleton-first discipline, one about generation, one about founding sequence, hence the explicit `refines` relation below rather than treating them as duplicates. Correctly landed as PROSE/feature-blocked (R-speculative-aspects-frozen's sibling pattern, the same honest-roadmap-debt shape R-domain-overview-projection itself uses): no domain-founding-wave-sequencer tool exists yet to mechanically enforce wave ordering (e.g. refuse a ProposedRequirement land when the target domain has zero Process nodes and zero EntityTypes) -- the claim is real and SETTLED today as operator discipline (the six-step mediation loop enforces WHAT and HOW per proposal; this requirement adds the missing WHEN/ORDER dimension a human or agent founding a domain must follow by hand until the sequencer exists), the enforcer is honestly not-yet-built roadmap debt, not a silent omission.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-domain-overview-projection"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-16",
+      "settled_at": "2026-07-16",
+      "last_reviewed_at": "2026-07-16",
+      "review_after": "2027-01-16",
+      "evidence": [
+        "the `prat` pilot domain (PRAT-hotam/domains/prat) landed Requirements before any Process node existed for its own staged methodology -- the Process-node-for-stages pattern only arrived later via tasks #199/#200",
+        "the `prat` pilot's manifest stayed empty for an extended stretch, partially fixed by task #200, full fix tracked as not-yet-executed follow-on tasks #210/#211",
+        "an agent asked 'what are the stages of the PRAT methodology' could not answer from the graph + generated docs alone, diagnosed as R-domain-overview-projection (task #205, commit 7520545, docs/GEN-CODE-CONTRACT.md §7)"
+      ],
+      "source_refs": [
+        "internal/ontology/process.go",
+        "internal/ontology/entity.go",
+        "domains/hotam-spec-self/graph.json",
+        "PRAT-hotam/domains/prat"
+      ],
+      "history": [
+        {
+          "at": "2026-07-16",
+          "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin), task #203, 2026-07-16: dogfood skeleton-first wave-order finding on the prat pilot, landed as SETTLED/PROSE feature-blocked debt (no domain-founding-wave-sequencer tool exists yet); reserved-token gate hits above are lexical opposite-marker collisions (must/only/never/any tokens) against unrelated requirements, not substantive semantic conflicts with this claim's subject matter (domain-founding wave order); complementary to, not contradicting, R-domain-overview-projection (refines relation recorded) which answers a different question (how to project structure for reading vs. in what order to found a domain for writing)",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "blocked_on": "feature:domain-founding-wave-sequencer"
+    },
+    {
       "id": "R-domain-has-docs-dir",
       "claim": "Every domains/<name>/ shall contain a docs/ directory which wraps the generated docs/gen/ plus any hand-written domain material.",
       "owner": "framework-author",
@@ -13230,7 +13273,8 @@
       ],
       "drives_entities": [],
       "why": "The methodology's own process modeled as a Process node — eating its own dog food at the behavioral altitude (R-process-aspect-first).",
-      "decl_order": 0
+      "decl_order": 0,
+      "history": null
     }
   ],
   "goals": [

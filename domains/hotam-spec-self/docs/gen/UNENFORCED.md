@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 165 / SETTLED 239; closeable-now 5; feature-blocked 34; inherent discipline 35; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 165 / SETTLED 240; closeable-now 5; feature-blocked 35; inherent discipline 35; DRAFT 2; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -34,6 +34,7 @@ These ENFORCEABLE requirements stay PROSE because the feature they describe does
 
 | id | enforcement | owner | blocked_on | claim |
 |---|---|---|---|---|
+| `R-domain-founded-in-wave-order` | PROSE | `framework-author` | feature:domain-founding-wave-sequencer | A new domain MUST be founded in wave order, not bottom-up: wave 0 (the skeleton -- manifest purpose/goals plus a Process node naming stages and roles plus Axes) MUST land BEFORE wave 1 (artifacts -- EntityTypes, each wired via Process.drives_entities); wave 1 MUST land BEFORE wave 2 (rules -- Requirements); wave 2 MUST land BEFORE wave 3 (tensions -- Assumptions/Conflicts); wave 3 MUST land BEFORE wave 4 (data -- EntityInstances). Each wave MUST close with a regeneration (`hotam gen-spec`) and a check of the overview projection (PIPELINE.md, R-domain-overview-projection) before the next wave opens. The diff against the domain's original source prose MUST run AFTER wave 0 (the skeleton), NEVER only at the end of the founding sequence. |
 | `R-domain-overview-projection` | PROSE | `framework-author` | feature:overview-pipeline-generator | Every domain MUST answer the overview question ("how is this domain structured as a whole") with ONE generated projection (OVERVIEW/PIPELINE.md), assembled from Process nodes plus EntityType plus the pipeline references between entities. This projection ALWAYS speaks in the language of the methodology/business-domain author: stage names are taken verbatim from Process.steps as authored, and any Go/code identifier appears ONLY as an adjacent annotation, never as a replacement for the author's own name. The projection's regenerability is the mechanical completeness test against the domain's original prose description: a stage or concept present in the source prose that does not surface anywhere in the projection is a discoverable coverage defect, not a silent gap. |
 | `R-axis-gatekeeper-policy` | PROSE | `ai-agent` | blocked on the create_axis tool (Planned) — the gatekeeper check is part of the creation path | Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time), refusing near-duplicate axes unless overridden by an explicit --force-new justification. |
 | `R-subagent-gets-its-claude-md` | PROSE | `framework-author` | blocked on the create_agent tool (Planned) + per-agent crystal rendering in gen-spec | A delegated sub-operator shall receive its OWN crystal, a CLAUDE.md generated from its sub-domain. |
