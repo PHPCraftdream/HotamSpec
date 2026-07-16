@@ -16,6 +16,19 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_active_loop_apply_tool` (t.Log only)
 
+Coverage: 2/8 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Apply` (capitalized token/abbreviation): resembles requirement id `R-active-loop-apply-tool`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `JSON` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Proposed` (capitalized token/abbreviation): resembles requirement id `R-proposed-conflict-kind-exists`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `cmd/hotam` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/graph.json` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `hotam apply-proposal` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `internal/proposal.Apply` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-active-loop-playbook-doc {#r-active-loop-playbook-doc}
 
 At least one band-specific playbook shall exist under docs/playbooks/ describing the agent's role for that band.
@@ -23,6 +36,8 @@ At least one band-specific playbook shall exist under docs/playbooks/ describing
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_active_loop_playbook_doc` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-active-loop-protocol {#r-active-loop-protocol}
 
@@ -32,6 +47,18 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_active_loop_protocol` (t.Log only)
 
+Coverage: 1/7 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Proposed` (capitalized token/abbreviation): resembles requirement id `R-proposed-conflict-kind-exists`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ProposedAssumptionTransition` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `ProposedConflict` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `ProposedConflictTransition` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `ProposedRejection` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `ProposedRequirement` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `internal/proposal` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-agent-code-imports-framework {#r-agent-code-imports-framework}
 
 An agent's code shall import the framework body (the Go `internal/*` and `cmd/hotam` packages) as shared infrastructure, and the framework body itself shall never import back from any agent's private tools/ directory.
@@ -39,6 +66,14 @@ An agent's code shall import the framework body (the Go `internal/*` and `cmd/ho
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_code_imports_framework` (t.Log only)
+
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `cmd/hotam` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `internal/*` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-agent-conduct-is-rules-not-tests {#r-agent-conduct-is-rules-not-tests}
 
@@ -48,6 +83,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_conduct_is_rules_not_tests` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Agent` (capitalized token/abbreviation): resembles requirement id `R-agent-code-imports-framework`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ENFORCED` (capitalized token/abbreviation): resembles requirement id `R-enforced-by-resolvable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PROSE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-agent-declares-purpose {#r-agent-declares-purpose}
 
 Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).
@@ -55,6 +98,14 @@ Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE d
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_declares_purpose` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `PURPOSE` (capitalized token/abbreviation): resembles requirement id `R-agent-declares-purpose`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SCOPE` (capitalized token/abbreviation): resembles requirement id `R-backend-scope`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-agent-has-docs-dir {#r-agent-has-docs-dir}
 
@@ -64,6 +115,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_has_docs_dir` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-agent-has-own-tools-dir {#r-agent-has-own-tools-dir}
 
 Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
@@ -71,6 +128,13 @@ Each domain-agent shall carry a `tools/` subdirectory holding its private tools.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_has_own_tools_dir` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `tools/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-agent-is-a-directory {#r-agent-is-a-directory}
 
@@ -80,6 +144,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_is_a_directory` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `domains/<name>/agents/<agent>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-agent-is-recursive-director {#r-agent-is-recursive-director}
 
 Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE containing its own `agents/` subdirectory, with the recursion terminating at an empty leaf `agents/` folder.
@@ -87,6 +157,15 @@ Every agent at `domains/<name>/agents/<a>/` shall be a director of its SCOPE con
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_is_recursive_director` (t.Log only)
+
+Coverage: 1/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SCOPE` (capitalized token/abbreviation): resembles requirement id `R-backend-scope`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `agents/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/agents/<a>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-agent-map-generated {#r-agent-map-generated}
 
@@ -96,6 +175,17 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_map_generated` (t.Log only)
 
+Coverage: 5/6 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AGENT` (capitalized token/abbreviation): resembles requirement id `R-agent-code-imports-framework`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `MAP` (capitalized token/abbreviation): resembles requirement id `R-agent-map-generated`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PURPOSE` (capitalized token/abbreviation): resembles requirement id `R-agent-declares-purpose`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SCOPE` (capitalized token/abbreviation): resembles requirement id `R-backend-scope`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-agent-never-lost {#r-agent-never-lost}
 
 The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`.
@@ -103,6 +193,12 @@ The system shall let an agent dropped into the repo in any state, at any moment,
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_never_lost` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `hotam what-now` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-agent-references-shared-docs {#r-agent-references-shared-docs}
 
@@ -112,6 +208,16 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_references_shared_docs` (t.Log only)
 
+Coverage: 4/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DOCS` (capitalized token/abbreviation): resembles requirement id `R-agent-has-docs-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SCOPE` (capitalized token/abbreviation): resembles requirement id `R-backend-scope`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SHARED` (capitalized token/abbreviation): resembles requirement id `R-agent-references-shared-docs`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-agent-scoped-constitution {#r-agent-scoped-constitution}
 
 For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regenerate that agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple of R-id prefixes.
@@ -119,6 +225,15 @@ For each domains/<name>/agents/<name>/ directory, `hotam gen-spec` shall regener
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_agent_scoped_constitution` (t.Log only)
+
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CONSTITUTION` (capitalized token/abbreviation): resembles requirement id `R-agent-scoped-constitution`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SCOPE` (capitalized token/abbreviation): resembles requirement id `R-backend-scope`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `hotam gen-spec` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-ai-presents-not-decides {#r-ai-presents-not-decides}
 
@@ -128,6 +243,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_ai_presents_not_decides` (t.Log only)
 
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AI` (capitalized token/abbreviation): resembles requirement id `R-ai-presents-not-decides`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-anchor-everything {#r-anchor-everything}
 
 Every object shall carry a stable, short, typed anchor (prefix names the kind: R-/C-/A-/OP-/GOAL-/...).
@@ -135,6 +257,14 @@ Every object shall carry a stable, short, typed anchor (prefix names the kind: R
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_anchor_everything` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `GOAL` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `OP` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-anchor-taxonomy {#r-anchor-taxonomy}
 
@@ -144,6 +274,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_anchor_taxonomy` (t.Log only)
 
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Axis` (capitalized token/abbreviation): resembles requirement id `R-axis-controlled-vocab`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `GOAL` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `OP` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `PR` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-assumption-implements-state {#r-assumption-implements-state}
 
 An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD.
@@ -151,6 +290,17 @@ An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VO
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_assumption_implements_state` (t.Log only)
+
+Coverage: 4/6 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Assumption` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DEAD` (capitalized token/abbreviation): resembles requirement id `R-glossary-sync-fails-dead`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HOLDS` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `IMPLEMENTS` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `UNCERTAIN` (capitalized token/abbreviation): resembles requirement id `R-uncertain-assumptions-surface`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `VOLITIONAL` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-assumption-transition-kind-exists {#r-assumption-transition-kind-exists}
 
@@ -160,6 +310,19 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_assumption_transition_kind_exists` (t.Log only)
 
+Coverage: 4/8 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Assumption` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `AssumptionTransition` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `DEAD` (capitalized token/abbreviation): resembles requirement id `R-glossary-sync-fails-dead`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HOLDS` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `IMPLEMENTS` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ProposedAssumptionTransition` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `UNCERTAIN` (capitalized token/abbreviation): resembles requirement id `R-uncertain-assumptions-surface`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `hotam apply-proposal` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-atomicity-ratchet-no-growth {#r-atomicity-ratchet-no-growth}
 
 The set of requirement claims and check_* invariants flagged COMPOUND by the atomicity-audit classification shall never grow beyond the frozen baseline.
@@ -167,6 +330,12 @@ The set of requirement claims and check_* invariants flagged COMPOUND by the ato
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_atomicity_ratchet_no_growth` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `COMPOUND` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-attention-agent-agnostic-core {#r-attention-agent-agnostic-core}
 
@@ -176,6 +345,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_attention_agent_agnostic_core` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Anthropic` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Claude` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-attention-claude-adapter {#r-attention-claude-adapter}
 
 The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.
@@ -183,6 +359,13 @@ The committed sensorium generator shall wire the Claude attention adapter onto U
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_attention_claude_adapter` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Claude` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `UserPromptSubmit` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-attention-registry {#r-attention-registry}
 
@@ -192,6 +375,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_attention_registry` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AttentionSignal` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-attention-superset-of-diagnose {#r-attention-superset-of-diagnose}
 
 The live attention list collect(g) shall be a superset of the deterministic graph subset diagnose(g), equal to it exactly when no runtime-fs sources are injected.
@@ -199,6 +388,8 @@ The live attention list collect(g) shall be a superset of the deterministic grap
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_attention_superset_of_diagnose` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-audit-atomicity-tool {#r-audit-atomicity-tool}
 
@@ -208,6 +399,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_audit_atomicity_tool` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-axis-controlled-vocab {#r-axis-controlled-vocab}
 
 Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` tuple.
@@ -215,6 +408,15 @@ Every Conflict.axis shall be the slug of an Axis declared in the graph's `axes` 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_axis_controlled_vocab` (t.Log only)
+
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Axis` (capitalized token/abbreviation): resembles requirement id `R-axis-controlled-vocab`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `axes` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-axis-gatekeeper-policy {#r-axis-gatekeeper-policy}
 
@@ -224,6 +426,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_axis_gatekeeper_policy` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Axis` (capitalized token/abbreviation): resembles requirement id `R-axis-controlled-vocab`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-backend-scope {#r-backend-scope}
 
 The framework names no target backends: the core (graph/JSON proposals/CLI/Go test suite) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern.
@@ -231,6 +439,14 @@ The framework names no target backends: the core (graph/JSON proposals/CLI/Go te
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_backend_scope` (t.Log only)
+
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `JSON` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-bijection-r-to-enforcer {#r-bijection-r-to-enforcer}
 
@@ -240,6 +456,17 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_bijection_r_to_enforcer` (t.Log only)
 
+Coverage: 2/6 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENFORCED` (capitalized token/abbreviation): resembles requirement id `R-enforced-by-resolvable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `MustRegister` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Test` (capitalized token/abbreviation): resembles requirement id `R-generations-inherit-doc-test-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-boot-cite-in-first-sentence {#r-boot-cite-in-first-sentence}
 
 The operator shall cite at least one of the three substrate facts in the first sentence of any substantive reply.
@@ -247,6 +474,8 @@ The operator shall cite at least one of the three substrate facts in the first s
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_boot_cite_in_first_sentence` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-boot-reload-three-facts {#r-boot-reload-three-facts}
 
@@ -256,6 +485,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_boot_reload_three_facts` (t.Log only)
 
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `DRAFT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `UNENFORCED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-budget-measure {#r-budget-measure}
 
 An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts.
@@ -263,6 +500,12 @@ An operator's context budget shall measure the SIZE of its resident business con
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_budget_measure` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `SIZE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-check-method-is-atomic {#r-check-method-is-atomic}
 
@@ -272,6 +515,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_check_method_is_atomic` (t.Log only)
 
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `check_*` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-claude-md-consolidates-when-single-agent {#r-claude-md-consolidates-when-single-agent}
 
 While a repository has exactly one domain and zero actively-spawned concurrent sub-agents, `hotam gen-spec` shall generate exactly one CLAUDE.md file at repository root containing all operator-prompt content.
@@ -279,6 +529,14 @@ While a repository has exactly one domain and zero actively-spawned concurrent s
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_claude_md_consolidates_when_single_agent` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `While` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam gen-spec` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-claude-md-live-state-generated {#r-claude-md-live-state-generated}
 
@@ -288,6 +546,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_claude_md_live_state_generated` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-claude-md-template-driven {#r-claude-md-template-driven}
 
 CLAUDE.md shall be generated by substituting <!-- mind --> and <!-- business --> placeholders in CLAUDE.md.template.txt with rendered content, preserving all other template text verbatim.
@@ -295,6 +559,12 @@ CLAUDE.md shall be generated by substituting <!-- mind --> and <!-- business -->
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_claude_md_template_driven` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-commit-boundary-checkable {#r-commit-boundary-checkable}
 
@@ -304,6 +574,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_commit_boundary_checkable` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `SLICE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-committed-code-no-home-writes {#r-committed-code-no-home-writes}
 
 Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home.
@@ -311,6 +587,13 @@ Committed framework Go source (internal/*, cmd/hotam/*) shall never reference th
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_committed_code_no_home_writes` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Committed` (capitalized token/abbreviation): resembles requirement id `R-committed-code-no-home-writes`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-conflict-addressing-resolves-variables {#r-conflict-addressing-resolves-variables}
 
@@ -320,6 +603,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_conflict_addressing_resolves_variables` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ID` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-id-prefix`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `hotam apply-proposal` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-conflict-held-state {#r-conflict-held-state}
 
 Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements.
@@ -327,6 +618,14 @@ Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-si
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_conflict_held_state` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ConflictTransition` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `HELD` (capitalized token/abbreviation): resembles requirement id `R-conflict-held-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-conflict-is-connector-node {#r-conflict-is-connector-node}
 
@@ -336,6 +635,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_conflict_is_connector_node` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `NODE` (capitalized token/abbreviation): resembles requirement id `R-conflict-is-connector-node`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `conflicts_with` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-conflict-min-two-members {#r-conflict-min-two-members}
 
 Every Conflict node shall contain at least two distinct Requirement ids in its members tuple.
@@ -343,6 +650,14 @@ Every Conflict node shall contain at least two distinct Requirement ids in its m
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_conflict_min_two_members` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-conflict-resolved-in-members-or-mediator {#r-conflict-resolved-in-members-or-mediator}
 
@@ -352,6 +667,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_conflict_resolved_in_members_or_mediator` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-conflict-structurally-visible {#r-conflict-structurally-visible}
 
 Every Conflict node shall carry a non-empty axis, context, and steward.
@@ -359,6 +680,13 @@ Every Conflict node shall carry a non-empty axis, context, and steward.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_conflict_structurally_visible` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-confront-includes-aspirations {#r-confront-includes-aspirations}
 
@@ -368,6 +696,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_confront_includes_aspirations` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CONFRONT` (capitalized token/abbreviation): resembles requirement id `R-confront-includes-aspirations`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `IMPLEMENTS` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-constituting-requirements-converge {#r-constituting-requirements-converge}
 
 The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden.
@@ -375,6 +711,12 @@ The set of SETTLED requirements composing the operator-prompt shall be pairwise 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_constituting_requirements_converge` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-constitution-is-index {#r-constitution-is-index}
 
@@ -384,6 +726,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_constitution_is_index` (t.Log only)
 
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CONSTITUTION` (capitalized token/abbreviation): resembles requirement id `R-agent-scoped-constitution`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `REQUIREMENTS` (capitalized token/abbreviation): resembles requirement id `R-constituting-requirements-converge`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-constitution-separates-plumbing {#r-constitution-separates-plumbing}
 
 The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms.
@@ -391,6 +742,16 @@ The CONSTITUTION index in root CLAUDE.md shall render only business and discipli
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_constitution_separates_plumbing` (t.Log only)
+
+Coverage: 3/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CONSTITUTION` (capitalized token/abbreviation): resembles requirement id `R-agent-scoped-constitution`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `FRAMEWORK` (capitalized token/abbreviation): resembles requirement id `R-agent-code-imports-framework`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `INVARIANTS` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-content-free-no-business-data {#r-content-free-no-business-data}
 
@@ -400,6 +761,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_content_free_no_business_data` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-content-free-no-examples {#r-content-free-no-examples}
 
 The framework shall not include illustrative example graph content in its source modules, keeping worked examples in domain graph.json files that are the user's own content.
@@ -407,6 +774,8 @@ The framework shall not include illustrative example graph content in its source
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_content_free_no_examples` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-content-free-no-seed-graph {#r-content-free-no-seed-graph}
 
@@ -416,6 +785,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_content_free_no_seed_graph` (t.Log only)
 
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `LoadGraph` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `TensionGraph` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-content-layout-evolution {#r-content-layout-evolution}
 
 Domain content shall live in per-domain directories under domains/<name>/graph.json, with multi-domain federation implemented via the domains/ layout.
@@ -423,6 +799,12 @@ Domain content shall live in per-domain directories under domains/<name>/graph.j
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_content_layout_evolution` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Domain` (capitalized token/abbreviation): resembles requirement id `R-critical-core-per-domain`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-context-bounded-delegation {#r-context-bounded-delegation}
 
@@ -432,6 +814,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_context_bounded_delegation` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-context-budget-rule {#r-context-budget-rule}
 
 An operator's RESIDENT working set shall not exceed its context budget (measured by budget.measure — for CRYSTAL_CHARS the char-length of root CLAUDE.md vs the host cap), with any excess flagged as a structural OVERLOADED contradiction by the harness.
@@ -439,6 +823,14 @@ An operator's RESIDENT working set shall not exceed its context budget (measured
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_context_budget_rule` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `OVERLOADED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `RESIDENT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-core-imports-stdlib-or-hotam-spec-only {#r-core-imports-stdlib-or-hotam-spec-only}
 
@@ -448,6 +840,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_core_imports_stdlib_or_hotam_spec_only` (t.Log only)
 
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-core-periphery-import-ratchet {#r-core-periphery-import-ratchet}
 
 A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only.
@@ -455,6 +854,8 @@ A core module (ontology / graph / proposal / invariant layer) shall never import
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_core_periphery_import_ratchet` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-critical-core-methodology {#r-critical-core-methodology}
 
@@ -464,6 +865,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_critical_core_methodology` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-critical-core-per-domain {#r-critical-core-per-domain}
 
 Business-domain critical core (money, access, SLA) shall be a separate per-domain calibration, not framework-imposed.
@@ -471,6 +874,13 @@ Business-domain critical core (money, access, SLA) shall be a separate per-domai
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_critical_core_per_domain` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Business` (capitalized token/abbreviation): resembles requirement id `R-content-free-no-business-data`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SLA` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-crystal-carries-mediation-loop {#r-crystal-carries-mediation-loop}
 
@@ -480,6 +890,21 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_carries_mediation_loop` (t.Log only)
 
+Coverage: 6/10 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CONFRONT` (capitalized token/abbreviation): resembles requirement id `R-confront-includes-aspirations`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `LAND` (capitalized token/abbreviation): resembles requirement id `R-land-gate-tier-selector`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `LOCATE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `LOOP` (capitalized token/abbreviation): resembles requirement id `R-active-loop-apply-tool`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `MEDIATION` (capitalized token/abbreviation): resembles requirement id `R-crystal-carries-mediation-loop`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ORIENT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `PRESENT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Root` (capitalized token/abbreviation): resembles requirement id `R-project-root-not-hardcoded`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `TRANSLATE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-crystal-carries-recursion-seed {#r-crystal-carries-recursion-seed}
 
 Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.
@@ -487,6 +912,15 @@ Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block descr
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_carries_recursion_seed` (t.Log only)
+
+Coverage: 4/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `OPERATOR` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `RECURSION` (capitalized token/abbreviation): resembles requirement id `R-crystal-carries-recursion-seed`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Root` (capitalized token/abbreviation): resembles requirement id `R-project-root-not-hardcoded`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-crystal-carries-role-seed {#r-crystal-carries-role-seed}
 
@@ -496,6 +930,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_carries_role_seed` (t.Log only)
 
+Coverage: 4/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `OPERATOR` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ROLE` (capitalized token/abbreviation): resembles requirement id `R-crystal-carries-role-seed`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Root` (capitalized token/abbreviation): resembles requirement id `R-project-root-not-hardcoded`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-crystal-carries-short-form {#r-crystal-carries-short-form}
 
 The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.
@@ -503,6 +946,8 @@ The crystal generator shall render every object using a meaningful short form (a
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_carries_short_form` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-crystal-is-claude-md {#r-crystal-is-claude-md}
 
@@ -512,6 +957,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_is_claude_md` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-crystal-reload-by-reference {#r-crystal-reload-by-reference}
 
 An operator shall reload its crystal (CLAUDE.md) by reference rather than re-carrying it in working context.
@@ -519,6 +971,12 @@ An operator shall reload its crystal (CLAUDE.md) by reference rather than re-car
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_reload_by_reference` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-crystal-tree-hierarchy {#r-crystal-tree-hierarchy}
 
@@ -528,6 +986,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystal_tree_hierarchy` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-crystallize-before-split {#r-crystallize-before-split}
 
 On overload, an operator shall crystallize first, re-measure, and delegate (split) only if still over budget.
@@ -535,6 +999,8 @@ On overload, an operator shall crystallize first, re-measure, and delegate (spli
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystallize_before_split` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-crystallize-knowledge-to-code {#r-crystallize-knowledge-to-code}
 
@@ -544,6 +1010,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_crystallize_knowledge_to_code` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-decided-by-verifiable-signature {#r-decided-by-verifiable-signature}
 
 Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review.
@@ -551,6 +1019,12 @@ Whether the decided_by steward signature shall be bound to a verifiable signal (
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_decided_by_verifiable_signature` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Whether` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-decided-conflict-justifies-itself {#r-decided-conflict-justifies-itself}
 
@@ -560,6 +1034,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_decided_conflict_justifies_itself` (t.Log only)
 
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-decided-needs-human-signoff {#r-decided-needs-human-signoff}
 
 A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id field (later: a cryptographic signature) — enforced by a new invariant.
@@ -567,6 +1050,14 @@ A Conflict in DECIDED(...) lifecycle shall carry a decided_by: Stakeholder.id fi
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_decided_needs_human_signoff` (t.Log only)
+
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-delegation-conclusions-only {#r-delegation-conclusions-only}
 
@@ -576,6 +1067,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_delegation_conclusions_only` (t.Log only)
 
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CONCLUSIONS` (capitalized token/abbreviation): resembles requirement id `R-delegation-conclusions-only`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `When` (capitalized token/abbreviation): resembles requirement id `R-claude-md-consolidates-when-single-agent`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-delegation-is-a-file {#r-delegation-is-a-file}
 
 Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via a dedicated delegate tool), so git carries the who/when/what history of every hand-off.
@@ -583,6 +1081,13 @@ Every task delegation to an agent shall be recorded as a versioned file under de
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_delegation_is_a_file` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `DG` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-dependency-drives-parallel {#r-dependency-drives-parallel}
 
@@ -592,6 +1097,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_dependency_drives_parallel` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Independent` (capitalized token/abbreviation): resembles requirement id `R-framework-suite-domain-independent`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-dependency-drives-sequential {#r-dependency-drives-sequential}
 
 Dependency chains in the network shall be processed sequentially.
@@ -599,6 +1110,12 @@ Dependency chains in the network shall be processed sequentially.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_dependency_drives_sequential` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Dependency` (capitalized token/abbreviation): resembles requirement id `R-dependency-drives-parallel`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-dependency-tracked {#r-dependency-tracked}
 
@@ -608,6 +1125,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_dependency_tracked` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-deterministic-generation {#r-deterministic-generation}
 
 The Go generator (internal/generator, surfaced as `hotam gen-spec`) shall produce byte-stable LF utf-8 output with no timestamps or randomness — two runs over an unchanged graph yield identical bytes.
@@ -615,6 +1138,14 @@ The Go generator (internal/generator, surfaced as `hotam gen-spec`) shall produc
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_deterministic_generation` (t.Log only)
+
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `LF` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam gen-spec` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-director-agent-required-per-domain {#r-director-agent-required-per-domain}
 
@@ -624,6 +1155,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_director_agent_required_per_domain` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `director` (quoted term): resembles requirement id `R-agent-is-recursive-director`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `domains/<name>/agents/director/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-doc-names-reader {#r-doc-names-reader}
 
 Every generated doc shall name its reader as an existing Stakeholder id in its header.
@@ -631,6 +1170,13 @@ Every generated doc shall name its reader as an existing Stakeholder id in its h
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_doc_names_reader` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-docs-generated-from-requirements {#r-docs-generated-from-requirements}
 
@@ -640,6 +1186,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_docs_generated_from_requirements` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Per` (capitalized token/abbreviation): resembles requirement id `R-critical-core-per-domain`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-domain-declares-director {#r-domain-declares-director}
 
 Every domain's manifest shall declare a DIRECTOR agent that resolves to a real agent directory at `domains/<name>/agents/<DIRECTOR>/`.
@@ -647,6 +1200,14 @@ Every domain's manifest shall declare a DIRECTOR agent that resolves to a real a
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_declares_director` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `DIRECTOR` (capitalized token/abbreviation): resembles requirement id `R-agent-is-recursive-director`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/agents/<DIRECTOR>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-domain-has-docs-dir {#r-domain-has-docs-dir}
 
@@ -656,6 +1217,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_has_docs_dir` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-domain-has-manifest {#r-domain-has-manifest}
 
 Every `domains/<name>/` directory contains a `manifest.json` defining the domain's identity fields (id, description, goals, director), so the generator can discover a domain's metadata without loading its full graph.
@@ -663,6 +1230,14 @@ Every `domains/<name>/` directory contains a `manifest.json` defining the domain
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_has_manifest` (t.Log only)
+
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `manifest.json` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-domain-is-a-directory {#r-domain-is-a-directory}
 
@@ -672,6 +1247,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_is_a_directory` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `domains/<name>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-domain-map-generated {#r-domain-map-generated}
 
 The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<name>/` with id, description, goals, director, path, atoms-count.
@@ -679,6 +1260,16 @@ The root `CLAUDE.md` shall contain a DOMAIN-MAP block listing every `domains/<na
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_map_generated` (t.Log only)
+
+Coverage: 3/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DOMAIN` (capitalized token/abbreviation): resembles requirement id `R-critical-core-per-domain`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `MAP` (capitalized token/abbreviation): resembles requirement id `R-agent-map-generated`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CLAUDE.md` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-domain-map-shows-pulse {#r-domain-map-shows-pulse}
 
@@ -688,6 +1279,36 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_map_shows_pulse` (t.Log only)
 
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DOMAIN` (capitalized token/abbreviation): resembles requirement id `R-critical-core-per-domain`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `MAP` (capitalized token/abbreviation): resembles requirement id `R-agent-map-generated`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
+### R-domain-overview-projection {#r-domain-overview-projection}
+
+Every domain MUST answer the overview question ("how is this domain structured as a whole") with ONE generated projection (OVERVIEW/PIPELINE.md), assembled from Process nodes plus EntityType plus the pipeline references between entities. This projection ALWAYS speaks in the language of the methodology/business-domain author: stage names are taken verbatim from Process.steps as authored, and any Go/code identifier appears ONLY as an adjacent annotation, never as a replacement for the author's own name. The projection's regenerability is the mechanical completeness test against the domain's original prose description: a stage or concept present in the source prose that does not surface anywhere in the projection is a discoverable coverage defect, not a silent gap.
+
+Atoms:
+
+- no structural atom -> `requirements_test.go:Test_R_domain_overview_projection` (t.Log only)
+
+Coverage: 2/9 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `ONE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `OVERVIEW` (capitalized token/abbreviation): resembles requirement id `R-domain-overview-projection`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PIPELINE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `This` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `how is this domain structured as a whole` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-domain-owns-docs-gen {#r-domain-owns-docs-gen}
 
 Each `domains/<name>/docs/gen/` shall hold only the markdown generated from that domain's graph, with no cross-domain doc files.
@@ -695,6 +1316,13 @@ Each `domains/<name>/docs/gen/` shall hold only the markdown generated from that
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_owns_docs_gen` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/docs/gen/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-domain-owns-graph-py {#r-domain-owns-graph-py}
 
@@ -704,6 +1332,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_owns_graph_py` (t.Log only)
 
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `graph.json` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-domain-owns-tools-and-agents {#r-domain-owns-tools-and-agents}
 
 Each `domains/<name>/` shall materialize a `tools/` directory (private tools) and an `agents/` directory (sub-operators) only when a real sub-tool or sub-agent is actually created — not eagerly scaffolded; a domain with no sub-tools/sub-agents yet correctly carries neither directory.
@@ -711,6 +1347,15 @@ Each `domains/<name>/` shall materialize a `tools/` directory (private tools) an
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_owns_tools_and_agents` (t.Log only)
+
+Coverage: 0/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `agents/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `domains/<name>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `tools/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-domain-self-hosting-flag {#r-domain-self-hosting-flag}
 
@@ -720,6 +1365,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_domain_self_hosting_flag` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Framework` (capitalized token/abbreviation): resembles requirement id `R-agent-code-imports-framework`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-drift-structurally-impossible {#r-drift-structurally-impossible}
 
 The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte.
@@ -727,6 +1378,8 @@ The generated docs/gen/*.md and graph.json shall equal the regeneration of the c
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_drift_structurally_impossible` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-empty-content-calm-banner {#r-empty-content-calm-banner}
 
@@ -736,6 +1389,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_empty_content_calm_banner` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `When` (capitalized token/abbreviation): resembles requirement id `R-claude-md-consolidates-when-single-agent`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `hotam what-now` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-empty-content-gen-notice {#r-empty-content-gen-notice}
 
 When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail.
@@ -743,6 +1403,13 @@ When the active domain has no content yet (missing graph), `hotam gen-spec` shal
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_empty_content_gen_notice` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `When` (capitalized token/abbreviation): resembles requirement id `R-claude-md-consolidates-when-single-agent`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `hotam gen-spec` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-empty-content-wellformed {#r-empty-content-wellformed}
 
@@ -752,6 +1419,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_empty_content_wellformed` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-enforceability-kind-declared {#r-enforceability-kind-declared}
 
 A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline.
@@ -759,6 +1428,12 @@ A requirement shall carry an enforceability kind from the set ENFORCEABLE or INH
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforceability_kind_declared` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENFORCEABLE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-enforced-by-resolvable {#r-enforced-by-resolvable}
 
@@ -768,6 +1443,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforced_by_resolvable` (t.Log only)
 
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENFORCED` (capitalized token/abbreviation): resembles requirement id `R-enforced-by-resolvable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Test` (capitalized token/abbreviation): resembles requirement id `R-generations-inherit-doc-test-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-enforced-names-enforcer {#r-enforced-names-enforcer}
 
 An ENFORCED requirement shall name its enforcing invariant or test in enforced_by.
@@ -775,6 +1459,12 @@ An ENFORCED requirement shall name its enforcing invariant or test in enforced_b
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforced_names_enforcer` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENFORCED` (capitalized token/abbreviation): resembles requirement id `R-enforced-by-resolvable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-enforcement-first-class {#r-enforcement-first-class}
 
@@ -784,6 +1474,16 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforcement_first_class` (t.Log only)
 
+Coverage: 3/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENFORCED` (capitalized token/abbreviation): resembles requirement id `R-enforced-by-resolvable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PROSE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `STRUCTURAL` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Test` (capitalized token/abbreviation): resembles requirement id `R-generations-inherit-doc-test-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-enforcement-levels-declared {#r-enforcement-levels-declared}
 
 A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED.
@@ -791,6 +1491,14 @@ A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, E
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforcement_levels_declared` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENFORCED` (capitalized token/abbreviation): resembles requirement id `R-enforced-by-resolvable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PROSE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `STRUCTURAL` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-enforcement-perimeter-baselines-guarded {#r-enforcement-perimeter-baselines-guarded}
 
@@ -800,6 +1508,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforcement_perimeter_baselines_guarded` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Edit` (capitalized token/abbreviation): resembles requirement id `R-no-hand-edit-graph`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Write` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-enforcement-perimeter-visible {#r-enforcement-perimeter-visible}
 
 A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool.
@@ -807,6 +1522,12 @@ A content-hash pin shall cover the enforcement-perimeter code files, failing RED
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_enforcement_perimeter_visible` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `RED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-entities-md-generated {#r-entities-md-generated}
 
@@ -816,6 +1537,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entities_md_generated` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENTITIES` (capitalized token/abbreviation): resembles requirement id `R-entities-md-generated`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Mermaid` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-entity-checks-by-iteration {#r-entity-checks-by-iteration}
 
 The check_entity_* invariant family shall cover every declared EntityType by iterating g.EntityTypes, requiring no new check_* code per additional type.
@@ -823,6 +1552,13 @@ The check_entity_* invariant family shall cover every declared EntityType by ite
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_checks_by_iteration` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityTypes` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-entity-derived-requirement {#r-entity-derived-requirement}
 
@@ -832,6 +1568,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_derived_requirement` (t.Log only)
 
+Coverage: 1/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `FRAMEWORK` (capitalized token/abbreviation): resembles requirement id `R-agent-code-imports-framework`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `INVARIANTS` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-entity-field-kind-known {#r-entity-field-kind-known}
 
 Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string | number | enum | reference | state).
@@ -839,6 +1584,13 @@ Every EntityField.kind shall be in ENTITY_FIELD_KINDS (string | number | enum | 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_field_kind_known` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityField` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-entity-instance-id-prefix {#r-entity-instance-id-prefix}
 
@@ -848,6 +1600,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_instance_id_prefix` (t.Log only)
 
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityInstance` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-entity-instance-refs-resolve {#r-entity-instance-refs-resolve}
 
 Every EntityInstance reference field shall resolve in the graph according to its ref_target.
@@ -855,6 +1615,13 @@ Every EntityInstance reference field shall resolve in the graph according to its
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_instance_refs_resolve` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityInstance` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-entity-instance-required-fields {#r-entity-instance-required-fields}
 
@@ -864,6 +1631,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_instance_required_fields` (t.Log only)
 
+Coverage: 0/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityFields` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityInstance` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `True` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-entity-instance-state-in-lifecycle {#r-entity-instance-state-in-lifecycle}
 
 Every EntityInstance.state shall be a valid state in the corresponding EntityType.lifecycle.
@@ -871,6 +1647,14 @@ Every EntityInstance.state shall be a valid state in the corresponding EntityTyp
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_instance_state_in_lifecycle` (t.Log only)
+
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityInstance` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-entity-is-declarative {#r-entity-is-declarative}
 
@@ -880,6 +1664,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_is_declarative` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-entity-reuses-lifecycle {#r-entity-reuses-lifecycle}
 
 Each EntityType.Lifecycle shall be a Lifecycle value (the §Lifecycle keystone) with no parallel state machinery introduced.
@@ -887,6 +1677,14 @@ Each EntityType.Lifecycle shall be a Lifecycle value (the §Lifecycle keystone) 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_reuses_lifecycle` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Lifecycle` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-state-in-lifecycle`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-entity-state-conflict-surfaced {#r-entity-state-conflict-surfaced}
 
@@ -896,6 +1694,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_state_conflict_surfaced` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Two` (capitalized token/abbreviation): resembles requirement id `R-conflict-min-two-members`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-entity-type-lifecycle-wellformed {#r-entity-type-lifecycle-wellformed}
 
 Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_entity_type_lifecycle_wellformed.
@@ -903,6 +1708,14 @@ Every EntityType.lifecycle shall be a well-formed Lifecycle validated by check_e
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_type_lifecycle_wellformed` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Lifecycle` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-state-in-lifecycle`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-entity-typed-anchors {#r-entity-typed-anchors}
 
@@ -912,6 +1725,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_entity_typed_anchors` (t.Log only)
 
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ENT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityInstance` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-framework-owned-by-no-agent {#r-framework-owned-by-no-agent}
 
 The framework body (`internal/` package tree) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.
@@ -919,6 +1739,12 @@ The framework body (`internal/` package tree) shall be owned by no single agent 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_framework_owned_by_no_agent` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `internal/` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-framework-shared-docs-generated {#r-framework-shared-docs-generated}
 
@@ -928,6 +1754,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_framework_shared_docs_generated` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-framework-suite-domain-independent {#r-framework-suite-domain-independent}
 
 The framework test subset shall pass green under ANY active domain, or none, independent of which business domain is pinned.
@@ -935,6 +1763,8 @@ The framework test subset shall pass green under ANY active domain, or none, ind
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_framework_suite_domain_independent` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-framework-suite-tiered {#r-framework-suite-tiered}
 
@@ -944,6 +1774,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_framework_suite_tiered` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-generations-inherit-doc-test-code {#r-generations-inherit-doc-test-code}
 
 Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).
@@ -951,6 +1783,16 @@ Every artifact the methodology generates MUST recursively inherit the doc-test-c
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_generations_inherit_doc_test_code` (t.Log only)
+
+Coverage: 0/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EVERY` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-glossary-drift-stable {#r-glossary-drift-stable}
 
@@ -960,6 +1802,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_glossary_drift_stable` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `GLOSSARY` (capitalized token/abbreviation): resembles requirement id `R-glossary-drift-stable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-glossary-generated {#r-glossary-generated}
 
 A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md.
@@ -967,6 +1815,12 @@ A controlled vocabulary of methodology terms shall be generated under docs/gen/G
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_glossary_generated` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `GLOSSARY` (capitalized token/abbreviation): resembles requirement id `R-glossary-drift-stable`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-glossary-sync-fails-dead {#r-glossary-sync-fails-dead}
 
@@ -976,6 +1830,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_glossary_sync_fails_dead` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-glossary-sync-fails-unused {#r-glossary-sync-fails-unused}
 
 The glossary sync test shall fail when a section-anchor token used in the framework is absent from the glossary.
@@ -983,6 +1839,8 @@ The glossary sync test shall fail when a section-anchor token used in the framew
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_glossary_sync_fails_unused` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-goal-is-first-class-type {#r-goal-is-first-class-type}
 
@@ -992,6 +1850,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_goal_is_first_class_type` (t.Log only)
 
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `GOAL` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-goal-owner-is-operator {#r-goal-owner-is-operator}
 
 Goal.owner shall reference an existing Operator.id.
@@ -999,6 +1865,13 @@ Goal.owner shall reference an existing Operator.id.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_goal_owner_is_operator` (t.Log only)
+
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-goal-target-kind-known {#r-goal-target-kind-known}
 
@@ -1008,6 +1881,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_goal_target_kind_known` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-goal-type-vs-facet {#r-goal-type-vs-facet}
 
 Goal shall be its own first-class struct type (not a Requirement facet), with typed anchor 'GOAL-' and its own GoalLifecycle.
@@ -1015,6 +1894,15 @@ Goal shall be its own first-class struct type (not a Requirement facet), with ty
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_goal_type_vs_facet` (t.Log only)
+
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `GOAL` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `GoalLifecycle` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-held-carries-variants {#r-held-carries-variants}
 
@@ -1024,6 +1912,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_held_carries_variants` (t.Log only)
 
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HELD` (capitalized token/abbreviation): resembles requirement id `R-conflict-held-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Variants` (capitalized token/abbreviation): resembles requirement id `R-held-carries-variants`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-history-generated-from-decided {#r-history-generated-from-decided}
 
 docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHEN lifecycle states on Conflicts.
@@ -1031,6 +1927,14 @@ docs/gen/HISTORY.md shall include entries generated from DECIDED and REVISIT_WHE
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_history_generated_from_decided` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflicts` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HISTORY` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-decided`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-history-generated-from-rejected {#r-history-generated-from-rejected}
 
@@ -1040,6 +1944,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_history_generated_from_rejected` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `HISTORY` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-decided`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `REJECTED` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-rejected`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `WHY` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-initiator-supplies-domain-content {#r-initiator-supplies-domain-content}
 
 An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec (graph.json).
@@ -1047,6 +1959,8 @@ An agent shall receive its domain content from its initiator at boot and crystal
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_initiator_supplies_domain_content` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-land-gate-tier-selector {#r-land-gate-tier-selector}
 
@@ -1056,6 +1970,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_land_gate_tier_selector` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Test` (capitalized token/abbreviation): resembles requirement id `R-generations-inherit-doc-test-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-land-gate-tier-selector-fails-closed {#r-land-gate-tier-selector-fails-closed}
 
 internal/gate.SelectTier1 shall fall back to Confident=false (fail-closed, signaling the caller to run the full suite) on any selection uncertainty: an unknown/unresolvable target anchor, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), or any enforced_by entry that cannot be resolved to a concrete Go check_*/Test* function -- never returning a partial or best-effort subset in an uncertain case.
@@ -1063,6 +1983,15 @@ internal/gate.SelectTier1 shall fall back to Confident=false (fail-closed, signa
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_land_gate_tier_selector_fails_closed` (t.Log only)
+
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Confident` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Test` (capitalized token/abbreviation): resembles requirement id `R-generations-inherit-doc-test-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-land-is-transactional {#r-land-is-transactional}
 
@@ -1072,6 +2001,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_land_is_transactional` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-land-tier-trace {#r-land-tier-trace}
 
 Every applied proposal that reaches the LAND verify step shall append its verification tier (T1 targeted or T2 full-suite), selected test node-ids (or the literal 'full'), and verify/closure outcome to a runtime land-log, written AFTER the verify step so the record states what actually ran.
@@ -1079,6 +2010,14 @@ Every applied proposal that reaches the LAND verify step shall append its verifi
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_land_tier_trace` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AFTER` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `LAND` (capitalized token/abbreviation): resembles requirement id `R-land-gate-tier-selector`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-land-tier-trace-best-effort {#r-land-tier-trace-best-effort}
 
@@ -1088,6 +2027,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_land_tier_trace_best_effort` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-land-tier-trace-skips-dry-run {#r-land-tier-trace-skips-dry-run}
 
 A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record.
@@ -1095,6 +2036,8 @@ A dry-run proposal shall never write a spec/.runtime/land-log.jsonl record.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_land_tier_trace_skips_dry_run` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-latent-connectors-cluster-by-assumption {#r-latent-connectors-cluster-by-assumption}
 
@@ -1104,6 +2047,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_latent_connectors_cluster_by_assumption` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-lifecycle-type-exists {#r-lifecycle-type-exists}
 
 A generic lifecycle module shall define State, Transition, and Lifecycle types.
@@ -1111,6 +2056,14 @@ A generic lifecycle module shall define State, Transition, and Lifecycle types.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_lifecycle_type_exists` (t.Log only)
+
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Lifecycle` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-state-in-lifecycle`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `State` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Transition` (capitalized token/abbreviation): resembles requirement id `R-assumption-transition-kind-exists`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-lifecycle-validates-conflict {#r-lifecycle-validates-conflict}
 
@@ -1120,6 +2073,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_conflict` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-lifecycle-validates-goal {#r-lifecycle-validates-goal}
 
 Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE.
@@ -1127,6 +2086,12 @@ Goal.lifecycle shall validate against the framework-supplied GOAL_LIFECYCLE.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_goal` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-lifecycle-validates-operator {#r-lifecycle-validates-operator}
 
@@ -1136,6 +2101,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_operator` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-lifecycle-validates-requirement {#r-lifecycle-validates-requirement}
 
 Requirement.status shall validate against the framework-supplied REQUIREMENT_STATUS_LIFECYCLE.
@@ -1143,6 +2114,12 @@ Requirement.status shall validate against the framework-supplied REQUIREMENT_STA
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_lifecycle_validates_requirement` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-m-tag-format-valid {#r-m-tag-format-valid}
 
@@ -1152,6 +2129,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_m_tag_format_valid` (t.Log only)
 
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `OPEN` (capitalized token/abbreviation): resembles requirement id `R-open-states-question`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `^M[1-9][0-9]*$` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-machine-check-syntactic {#r-machine-check-syntactic}
 
 Every non-empty Assumption.machine_check shall be a well-formed Python expression (compilable in eval mode), never free prose.
@@ -1159,6 +2145,14 @@ Every non-empty Assumption.machine_check shall be a well-formed Python expressio
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_machine_check_syntactic` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Assumption` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Python` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-method-matches-docstring {#r-method-matches-docstring}
 
@@ -1168,6 +2162,16 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_method_matches_docstring` (t.Log only)
 
+Coverage: 2/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Claim` (capitalized token/abbreviation): resembles requirement id `R-requirement-claim-is-atomic`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Rule` (capitalized token/abbreviation): resembles requirement id `R-context-budget-rule`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Violation` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Why` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-no-hand-edit-graph {#r-no-hand-edit-graph}
 
 Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land`, with direct hand-edits prohibited outside of bootstrap events.
@@ -1175,6 +2179,14 @@ Changes to domains/*/graph.json shall be made only through `hotam apply-proposal
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_no_hand_edit_graph` (t.Log only)
+
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Changes` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam apply-proposal` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `hotam land` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-no-observation-type {#r-no-observation-type}
 
@@ -1184,6 +2196,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_no_observation_type` (t.Log only)
 
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Assumption` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Evidence` (capitalized token/abbreviation): resembles requirement id `R-observation-evidence-scope`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Observation` (capitalized token/abbreviation): resembles requirement id `R-no-observation-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-observation-evidence-scope {#r-observation-evidence-scope}
 
 Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request.
@@ -1191,6 +2211,12 @@ Operator epistemics (observations, beliefs, reasoning) shall live in the working
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_observation_evidence_scope` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-open-states-question {#r-open-states-question}
 
@@ -1200,6 +2226,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_open_states_question` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `OPEN` (capitalized token/abbreviation): resembles requirement id `R-open-states-question`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-open-tickets-visible {#r-open-tickets-visible}
 
 The what-now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into DiagnoseSignals.
@@ -1207,6 +2240,13 @@ The what-now harness shall surface a CLI-only band summarising open (non-done) o
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_open_tickets_visible` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `DiagnoseSignals` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-operator-crystal-embeds-thinking-distilled {#r-operator-crystal-embeds-thinking-distilled}
 
@@ -1216,6 +2256,16 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_crystal_embeds_thinking_distilled` (t.Log only)
 
+Coverage: 3/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Canon` (capitalized token/abbreviation): resembles requirement id `R-shared-thinking-doc-from-canon-sections`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `RULE` (capitalized token/abbreviation): resembles requirement id `R-context-budget-rule`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Section` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `WHY` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-operator-crystal-embeds-tools-distilled {#r-operator-crystal-embeds-tools-distilled}
 
 The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry and directs the operator to `hotam -h`, `hotam status --json`, `hotam req`, `hotam brief`, and docs/gen/tools/INDEX.md for on-demand detail — a compact pointer-only reference, not a per-tool distillation.
@@ -1223,6 +2273,22 @@ The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Im
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_crystal_embeds_tools_distilled` (t.Log only)
+
+Coverage: 4/11 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `EMBEDDED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `INDEX` (capitalized token/abbreviation): resembles requirement id `R-constitution-is-index`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Implemented` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Planned` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `TOOLS` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Tool` (capitalized token/abbreviation): resembles requirement id `R-active-loop-apply-tool`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `hotam -h` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `hotam brief` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `hotam req` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `hotam status --json` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-operator-has-context-budget {#r-operator-has-context-budget}
 
@@ -1232,6 +2298,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_has_context_budget` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ContextBudget` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-operator-is-frozen-dataclass {#r-operator-is-frozen-dataclass}
 
 An Operator shall be a dedicated struct type in internal/ontology/operator.go carrying the typed anchor 'OP-', with field mutations performed only through the proposal system.
@@ -1239,6 +2312,13 @@ An Operator shall be a dedicated struct type in internal/ontology/operator.go ca
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_is_frozen_dataclass` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `OP` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-operator-may-have-parent {#r-operator-may-have-parent}
 
@@ -1248,6 +2328,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_may_have_parent` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `None` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-operator-not-self-approve {#r-operator-not-self-approve}
 
 An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.
@@ -1255,6 +2342,14 @@ An Operator shall not steward a Conflict in which its underlying Stakeholder own
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_not_self_approve` (t.Log only)
+
+Coverage: 3/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-operator-prompt-from-substrate {#r-operator-prompt-from-substrate}
 
@@ -1264,6 +2359,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_prompt_from_substrate` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CONSTITUTION` (capitalized token/abbreviation): resembles requirement id `R-agent-scoped-constitution`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-operator-prompt-loaded-at-session-start {#r-operator-prompt-loaded-at-session-start}
 
 A SessionStart hook shall run `hotam gen-spec` before the operator's first turn of any session, ensuring root CLAUDE.md is current substrate-derived state.
@@ -1271,6 +2374,14 @@ A SessionStart hook shall run `hotam gen-spec` before the operator's first turn 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_prompt_loaded_at_session_start` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SessionStart` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam gen-spec` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-operator-references-stakeholder {#r-operator-references-stakeholder}
 
@@ -1280,6 +2391,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_references_stakeholder` (t.Log only)
 
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-operator-type-vs-facet {#r-operator-type-vs-facet}
 
 Operator shall be its own first-class struct type in internal/ontology/operator.go (not a Stakeholder facet), with typed anchor 'OP-', a ContextBudget, and an optional parent reference.
@@ -1287,6 +2405,15 @@ Operator shall be its own first-class struct type in internal/ontology/operator.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_operator_type_vs_facet` (t.Log only)
+
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ContextBudget` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `OP` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-overlap-single-presenter {#r-overlap-single-presenter}
 
@@ -1296,6 +2423,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_overlap_single_presenter` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-parallel-mutating-agents-use-worktree {#r-parallel-mutating-agents-use-worktree}
 
 Parallel agent invocations that mutate tracked repository files shall use git worktree isolation unless their target files are provably disjoint and no history-rewriting git operation is planned during their execution window.
@@ -1303,6 +2436,12 @@ Parallel agent invocations that mutate tracked repository files shall use git wo
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_parallel_mutating_agents_use_worktree` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Parallel` (capitalized token/abbreviation): resembles requirement id `R-dependency-drives-parallel`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-post-compact-regen-from-substrate {#r-post-compact-regen-from-substrate}
 
@@ -1312,6 +2451,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_post_compact_regen_from_substrate` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PostCompact` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam gen-spec` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-prefer-tool-over-hand {#r-prefer-tool-over-hand}
 
 The operator shall prefer a reusable tool over performing the same action by hand, with one-off acts permitted only for genuine bootstrap or single-occurrence events.
@@ -1319,6 +2466,8 @@ The operator shall prefer a reusable tool over performing the same action by han
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_prefer_tool_over_hand` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-presented-pending-decision-type {#r-presented-pending-decision-type}
 
@@ -1328,6 +2477,18 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_presented_pending_decision_type` (t.Log only)
 
+Coverage: 1/7 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `LAND` (capitalized token/abbreviation): resembles requirement id `R-land-gate-tier-selector`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Proposals` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `TRANSLATE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `applied/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `pending/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `proposals/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `waveN-<slug>/` (quoted term): no graph correlate found anywhere in the domain (out of model)
+
 ### R-private-tools-in-agent-folder {#r-private-tools-in-agent-folder}
 
 Tools available only to one agent shall live under that agent's tools/ subdirectory (domains/<domain>/agents/<name>/tools/).
@@ -1335,6 +2496,12 @@ Tools available only to one agent shall live under that agent's tools/ subdirect
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_private_tools_in_agent_folder` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Tools` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-process-drives-existing-entities {#r-process-drives-existing-entities}
 
@@ -1344,6 +2511,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_drives_existing_entities` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-process-goal-owner-is-operator-aspect {#r-process-goal-owner-is-operator-aspect}
 
 Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator.
@@ -1351,6 +2526,14 @@ Every Goal.owner shall reference an existing Operator.id, validated by check_goa
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_goal_owner_is_operator_aspect` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Operator` (capitalized token/abbreviation): resembles requirement id `R-goal-owner-is-operator`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-process-lifecycle-wellformed-aspect {#r-process-lifecycle-wellformed-aspect}
 
@@ -1360,6 +2543,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_lifecycle_wellformed_aspect` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-process-opt-in {#r-process-opt-in}
 
 The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty tuple.
@@ -1367,6 +2557,13 @@ The Process aspect shall be opt-in: TensionGraph.processes defaults to an empty 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_opt_in` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `TensionGraph` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-process-roles-declared-aspect {#r-process-roles-declared-aspect}
 
@@ -1376,6 +2573,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_roles_declared_aspect` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-process-typed-anchors-extended {#r-process-typed-anchors-extended}
 
 check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal nodes.
@@ -1383,6 +2587,15 @@ check_typed_anchors shall validate PR- and GOAL- prefixes for Process and Goal n
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_typed_anchors_extended` (t.Log only)
+
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `GOAL` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `PR` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-process-types-exist {#r-process-types-exist}
 
@@ -1392,6 +2605,17 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_process_types_exist` (t.Log only)
 
+Coverage: 3/6 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Goal` (capitalized token/abbreviation): resembles requirement id `R-goal-is-first-class-type`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `GoalLifecycle` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Process` (capitalized token/abbreviation): resembles requirement id `R-process-drives-existing-entities`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ProcessLifecycle` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Step` (capitalized token/abbreviation): resembles requirement id `R-step-invokes-known-transition`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `TargetState` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-project-name-hotam-spec {#r-project-name-hotam-spec}
 
 The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for domain-level artifacts — domain directory names like `domains/hotam-spec-self`, the `hotam` CLI binary name, and repository slug conventions), while the Go module path shall match the real git remote and is deliberately `github.com/PHPCraftdream/HotamSpec` (PascalCase suffix, per commit 4325ac8), closing M1.
@@ -1399,6 +2623,21 @@ The project's name shall be Hotam-Spec (display) and hotam-spec (kebab-case for 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_project_name_hotam_spec` (t.Log only)
+
+Coverage: 3/10 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Hotam` (capitalized token/abbreviation): resembles requirement id `R-core-imports-stdlib-or-hotam-spec-only`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HotamSpec` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `PHPCraftdream` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `PascalCase` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Spec` (capitalized token/abbreviation): resembles requirement id `R-core-imports-stdlib-or-hotam-spec-only`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `domains/hotam-spec-self` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `github.com/PHPCraftdream/HotamSpec` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `hotam` (quoted term): resembles requirement id `R-core-imports-stdlib-or-hotam-spec-only`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-project-root-not-hardcoded {#r-project-root-not-hardcoded}
 
@@ -1408,6 +2647,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_project_root_not_hardcoded` (t.Log only)
 
+Coverage: 0/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Caller` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `HotamSpec` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `ProjectRoot` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-proposed-conflict-kind-exists {#r-proposed-conflict-kind-exists}
 
 The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via `hotam apply-proposal`.
@@ -1415,6 +2662,14 @@ The proposal protocol shall include a ProposedConflict kind (kind='Conflict') th
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_proposed_conflict_kind_exists` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ProposedConflict` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam apply-proposal` (quoted term): no graph correlate found anywhere in the domain (out of model)
 
 ### R-proposed-stakeholder-kind-exists {#r-proposed-stakeholder-kind-exists}
 
@@ -1424,6 +2679,16 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_proposed_stakeholder_kind_exists` (t.Log only)
 
+Coverage: 3/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Kind` (capitalized token/abbreviation): resembles requirement id `R-assumption-transition-kind-exists`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ProposedStakeholder` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Stakeholders` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Stakeholder` (quoted term): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-recently-rejected-surfaced {#r-recently-rejected-surfaced}
 
 Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every REJECTED requirement whose why contains 'REJECTED — REPLACES' to surface anti-relitigation evidence before re-derivation.
@@ -1431,6 +2696,16 @@ Root CLAUDE.md shall contain a RECENTLY-REJECTED sentinel block listing every RE
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_recently_rejected_surfaced` (t.Log only)
+
+Coverage: 4/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `RECENTLY` (capitalized token/abbreviation): resembles requirement id `R-recently-rejected-surfaced`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `REJECTED` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-rejected`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `REPLACES` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Root` (capitalized token/abbreviation): resembles requirement id `R-project-root-not-hardcoded`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-reflection-predicates-first-class {#r-reflection-predicates-first-class}
 
@@ -1440,6 +2715,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_reflection_predicates_first_class` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AllFindings` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-rejected-preserved-not-deleted {#r-rejected-preserved-not-deleted}
 
 Requirements that are rejected shall be marked REJECTED and kept in the graph for history, never deleted.
@@ -1447,6 +2728,13 @@ Requirements that are rejected shall be marked REJECTED and kept in the graph fo
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_rejected_preserved_not_deleted` (t.Log only)
+
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `REJECTED` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-rejected`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Requirements` (capitalized token/abbreviation): resembles requirement id `R-constituting-requirements-converge`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-requirement-claim-is-atomic {#r-requirement-claim-is-atomic}
 
@@ -1456,6 +2744,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_requirement_claim_is_atomic` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-requirement-enforced {#r-requirement-enforced}
 
 A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (claimed-but-not-guaranteed, soft context-debt).
@@ -1463,6 +2758,13 @@ A SETTLED requirement that names no enforcing invariant or test is UNENFORCED (c
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_requirement_enforced` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `UNENFORCED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-requirement-freshness-fields {#r-requirement-freshness-fields}
 
@@ -1472,6 +2774,16 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_requirement_freshness_fields` (t.Log only)
 
+Coverage: 3/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `DERIVED` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HistoryEntry` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `STRUCTURALLY` (capitalized token/abbreviation): resembles requirement id `R-conflict-structurally-visible`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `UPDATE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-review-mark-carries-evidence {#r-review-mark-carries-evidence}
 
 A ProposedReviewMark proposal shall fail validation unless it carries at least one non-whitespace evidence entry.
@@ -1479,6 +2791,12 @@ A ProposedReviewMark proposal shall fail validation unless it carries at least o
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_review_mark_carries_evidence` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ProposedReviewMark` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-review-mark-requires-substantive-review {#r-review-mark-requires-substantive-review}
 
@@ -1488,6 +2806,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_review_mark_requires_substantive_review` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-revisit-markers-evaluated {#r-revisit-markers-evaluated}
 
 The what-now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.
@@ -1495,6 +2819,14 @@ The what-now harness shall surface a CLI-only action for each DECIDED conflict w
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_revisit_markers_evaluated` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-root-claude-md-is-sentinel-only {#r-root-claude-md-is-sentinel-only}
 
@@ -1504,6 +2836,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_root_claude_md_is_sentinel_only` (t.Log only)
 
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AGENTS` (capitalized token/abbreviation): resembles requirement id `R-domain-owns-tools-and-agents`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `GEMINI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-rules-as-data {#r-rules-as-data}
 
 Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data distinct from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic) -- with derivation of check_* function bodies from any such table explicitly deferred.
@@ -1511,6 +2851,13 @@ Regular invariant families (homogeneous per-entity structural checks such as dan
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_rules_as_data` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLASSIFIED` (capitalized token/abbreviation): resembles requirement id `R-unresolvable-classified-by-human`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Regular` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-run-speed-guarded {#r-run-speed-guarded}
 
@@ -1520,6 +2867,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_run_speed_guarded` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Test` (capitalized token/abbreviation): resembles requirement id `R-generations-inherit-doc-test-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-scope-is-projection {#r-scope-is-projection}
 
 An operator's sub-domain shall be a computed PROJECTION (an id-set view derived by prefix match over the shared graph), never a copy of any node.
@@ -1527,6 +2880,12 @@ An operator's sub-domain shall be a computed PROJECTION (an id-set view derived 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_scope_is_projection` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `PROJECTION` (capitalized token/abbreviation): resembles requirement id `R-domain-overview-projection`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-scope-overlap-generated {#r-scope-overlap-generated}
 
@@ -1536,6 +2895,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_scope_overlap_generated` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `When` (capitalized token/abbreviation): resembles requirement id `R-claude-md-consolidates-when-single-agent`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-sensorium-committed {#r-sensorium-committed}
 
 The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-guard, Stop context_producer) shall live in a committed project settings.json generated by a setup tool with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json.
@@ -1543,6 +2908,16 @@ The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubm
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_sensorium_committed` (t.Log only)
+
+Coverage: 0/5 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `PostCompact` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `PreToolUse` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SessionStart` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Stop` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `UserPromptSubmit` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-shared-thinking-doc-from-canon-sections {#r-shared-thinking-doc-from-canon-sections}
 
@@ -1552,6 +2927,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_shared_thinking_doc_from_canon_sections` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Canon` (capitalized token/abbreviation): resembles requirement id `R-shared-thinking-doc-from-canon-sections`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Topic` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-shared-tool-doc-from-docstring-and-help {#r-shared-tool-doc-from-docstring-and-help}
 
 Each docs/gen/tools/<command>.md shall be a pure function of that tool's methodology.Tool registry entry (Command/Canon/Purpose/Status), generated wholesale by BuildToolDocs with no hand-written content.
@@ -1559,6 +2942,18 @@ Each docs/gen/tools/<command>.md shall be a pure function of that tool's methodo
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_shared_tool_doc_from_docstring_and_help` (t.Log only)
+
+Coverage: 5/7 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `BuildToolDocs` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Canon` (capitalized token/abbreviation): resembles requirement id `R-shared-thinking-doc-from-canon-sections`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Command` (capitalized token/abbreviation): resembles requirement id `R-status-single-command-summary`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Each` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Purpose` (capitalized token/abbreviation): resembles requirement id `R-agent-declares-purpose`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Status` (capitalized token/abbreviation): resembles requirement id `R-status-single-command-summary`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Tool` (capitalized token/abbreviation): resembles requirement id `R-active-loop-apply-tool`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-shared-tools-in-spec-tools {#r-shared-tools-in-spec-tools}
 
@@ -1568,6 +2963,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_shared_tools_in_spec_tools` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Go` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Tools` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-signoff-preserved-in-substrate {#r-signoff-preserved-in-substrate}
 
 A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate.
@@ -1575,6 +2978,18 @@ A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_signoff_preserved_in_substrate` (t.Log only)
+
+Coverage: 6/7 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Assumption` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HELD` (capitalized token/abbreviation): resembles requirement id `R-conflict-held-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `IN` (capitalized token/abbreviation): resembles requirement id `R-boot-cite-in-first-sentence`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `JSON` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Signoff` (capitalized token/abbreviation): resembles requirement id `R-decided-needs-human-signoff`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-smoke-test {#r-smoke-test}
 
@@ -1584,6 +2999,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_smoke_test` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-spawn-log-carries-isolation {#r-spawn-log-carries-isolation}
 
 Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.
@@ -1591,6 +3008,12 @@ Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_spawn_log_carries_isolation` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-speak-by-reference {#r-speak-by-reference}
 
@@ -1600,6 +3023,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_speak_by_reference` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-speculative-aspects-frozen {#r-speculative-aspects-frozen}
 
 The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need.
@@ -1607,6 +3032,12 @@ The Entity aspect, multi-domain federation, and sub-agent recursion machinery sh
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_speculative_aspects_frozen` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Entity` (capitalized token/abbreviation): resembles requirement id `R-entity-checks-by-iteration`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-stable-conflict-identity {#r-stable-conflict-identity}
 
@@ -1616,6 +3047,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_stable_conflict_identity` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-stale-substrate {#r-stale-substrate}
 
 Crystallized knowledge whose enforcing assumption has died shall be surfaced as stale (enforced-but-wrong, a bad habit).
@@ -1623,6 +3060,12 @@ Crystallized knowledge whose enforcing assumption has died shall be surfaced as 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_stale_substrate` (t.Log only)
+
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Crystallized` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-statemachine-deterministic {#r-statemachine-deterministic}
 
@@ -1632,6 +3075,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_statemachine_deterministic` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Lifecycle` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-state-in-lifecycle`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-statemachine-guard-on-assumption {#r-statemachine-guard-on-assumption}
 
 A Transition.guard may name an Assumption it rests on (drift seam) — when that Assumption dies, the guard is surfaced.
@@ -1639,6 +3088,13 @@ A Transition.guard may name an Assumption it rests on (drift seam) — when that
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_statemachine_guard_on_assumption` (t.Log only)
+
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Assumption` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Transition` (capitalized token/abbreviation): resembles requirement id `R-assumption-transition-kind-exists`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-statemachine-reachable {#r-statemachine-reachable}
 
@@ -1648,6 +3104,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_statemachine_reachable` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Lifecycle` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-state-in-lifecycle`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-statemachine-terminal-or-cyclic {#r-statemachine-terminal-or-cyclic}
 
 Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state.
@@ -1655,6 +3118,13 @@ Every non-cyclic Lifecycle shall reach at least one terminal/quiescent state.
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_statemachine_terminal_or_cyclic` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Lifecycle` (capitalized token/abbreviation): resembles requirement id `R-entity-instance-state-in-lifecycle`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-status-single-command-summary {#r-status-single-command-summary}
 
@@ -1664,6 +3134,18 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_status_single_command_summary` (t.Log only)
 
+Coverage: 1/7 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `DD` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `It` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `MM` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `YYYY` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `hotam status [--domain <path>] [--today YYYY-MM-DD] [--json]` (quoted term): no graph correlate found anywhere in the domain (out of model)
+- `status` (quoted term): resembles requirement id `R-status-single-command-summary`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-step-invokes-known-transition {#r-step-invokes-known-transition}
 
 Every Step.transition (when non-empty) shall name a transition event declared in the driven EntityType.lifecycle.
@@ -1671,6 +3153,14 @@ Every Step.transition (when non-empty) shall name a transition event declared in
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_step_invokes_known_transition` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `EntityType` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Step` (capitalized token/abbreviation): resembles requirement id `R-step-invokes-known-transition`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-steward-distinct-from-owners {#r-steward-distinct-from-owners}
 
@@ -1680,6 +3170,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_steward_distinct_from_owners` (t.Log only)
 
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `NOT` (capitalized token/abbreviation): resembles requirement id `R-agent-conduct-is-rules-not-tests`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-sub-agent-crystal-triad {#r-sub-agent-crystal-triad}
 
 Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).
@@ -1687,6 +3186,14 @@ Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded m
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_sub_agent_crystal_triad` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `CONSTITUTION` (capitalized token/abbreviation): resembles requirement id `R-agent-scoped-constitution`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-subagent-gets-its-claude-md {#r-subagent-gets-its-claude-md}
 
@@ -1696,6 +3203,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_subagent_gets_its_claude_md` (t.Log only)
 
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `OWN` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-task-spawn-is-a-hand {#r-task-spawn-is-a-hand}
 
 A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated act, not a standing sub-operator.
@@ -1703,6 +3217,12 @@ A task-agent invocation (a sh/Agent-tool call) is a hand -- a one-shot delegated
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_task_spawn_is_a_hand` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Agent` (capitalized token/abbreviation): resembles requirement id `R-agent-code-imports-framework`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-task-spawn-log-runtime {#r-task-spawn-log-runtime}
 
@@ -1712,6 +3232,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_task_spawn_log_runtime` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-task-vs-action-distinct-altitudes {#r-task-vs-action-distinct-altitudes}
 
 The methodology's Task node type (a modeled work item) and the harness's Action (a fix-the-graph instruction) shall remain distinct types at distinct altitudes — never merged.
@@ -1719,6 +3241,13 @@ The methodology's Task node type (a modeled work item) and the harness's Action 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_task_vs_action_distinct_altitudes` (t.Log only)
+
+Coverage: 2/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Action` (capitalized token/abbreviation): resembles requirement id `R-task-vs-action-distinct-altitudes`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Task` (capitalized token/abbreviation): resembles requirement id `R-task-spawn-is-a-hand`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-tension-audit-presents-only {#r-tension-audit-presents-only}
 
@@ -1728,6 +3257,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_tension_audit_presents_only` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AI` (capitalized token/abbreviation): resembles requirement id `R-ai-presents-not-decides`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `SUSPECT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-tension-audit-shortlist-tool {#r-tension-audit-shortlist-tool}
 
 A tool shall emit a deterministic, LLM-free shortlist of SETTLED requirement pairs that might hide an unmediated tension.
@@ -1735,6 +3271,13 @@ A tool shall emit a deterministic, LLM-free shortlist of SETTLED requirement pai
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_tension_audit_shortlist_tool` (t.Log only)
+
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `LLM` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-tension-audit-staleness-visible {#r-tension-audit-staleness-visible}
 
@@ -1744,6 +3287,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_tension_audit_staleness_visible` (t.Log only)
 
+Coverage: 0/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLI` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `SETTLED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-three-cipher-pulse-structurally-injected {#r-three-cipher-pulse-structurally-injected}
 
 The three-cipher pulse (top action / debt / context) shall be structurally present in the LIVE-STATE block of the root CLAUDE.md, regenerated on every gen-spec / land, so the operator's per-turn ORIENT step reads it by reference rather than re-deriving it.
@@ -1751,6 +3301,15 @@ The three-cipher pulse (top action / debt / context) shall be structurally prese
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_three_cipher_pulse_structurally_injected` (t.Log only)
+
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `LIVE` (capitalized token/abbreviation): resembles requirement id `R-claude-md-live-state-generated`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ORIENT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `STATE` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-ticket-carries-history {#r-ticket-carries-history}
 
@@ -1760,6 +3319,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_ticket_carries_history` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `History` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-decided`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-ticket-engine-on-disk {#r-ticket-engine-on-disk}
 
 Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.
@@ -1767,6 +3333,14 @@ Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_ticket_engine_on_disk` (t.Log only)
+
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `JSON` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Markdown` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Work` (capitalized token/abbreviation): resembles requirement id `R-work-within-launch-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-ticket-mutation-via-tools-only {#r-ticket-mutation-via-tools-only}
 
@@ -1776,6 +3350,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_ticket_mutation_via_tools_only` (t.Log only)
 
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `History` (capitalized token/abbreviation): resembles requirement id `R-history-generated-from-decided`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-tiered-gate-not-a-commit-gate {#r-tiered-gate-not-a-commit-gate}
 
 The full go test ./... suite shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier (hotam gate / internal/gate.SelectTier1) is a standalone advisory selection tool, never a substitute for the full-suite run a steward or wave-closing agent performs before committing.
@@ -1783,6 +3363,8 @@ The full go test ./... suite shall remain the mandatory verification gate at wav
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_tiered_gate_not_a_commit_gate` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-tool-is-its-own-requirement {#r-tool-is-its-own-requirement}
 
@@ -1792,6 +3374,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_tool_is_its_own_requirement` (t.Log only)
 
+Coverage: 2/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Canon` (capitalized token/abbreviation): resembles requirement id `R-shared-thinking-doc-from-canon-sections`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `STRUCTURAL` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Tools` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-tools-registry-generated {#r-tools-registry-generated}
 
 The list of available tools shall be generated from a single methodology.Tools registry (internal/methodology), never hand-maintained in prose -- each tool carries its Canon section, purpose, and Implemented/Planned status, and the EMBEDDED-TOOLS block of CLAUDE.md is rendered from it.
@@ -1799,6 +3390,18 @@ The list of available tools shall be generated from a single methodology.Tools r
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_tools_registry_generated` (t.Log only)
+
+Coverage: 4/7 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `CLAUDE` (capitalized token/abbreviation): resembles requirement id `R-attention-claude-adapter`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Canon` (capitalized token/abbreviation): resembles requirement id `R-shared-thinking-doc-from-canon-sections`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `EMBEDDED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Implemented` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Planned` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `TOOLS` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Tools` (capitalized token/abbreviation): resembles requirement id `R-agent-has-own-tools-dir`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-trust-anchor-delegation-explicit-only {#r-trust-anchor-delegation-explicit-only}
 
@@ -1808,6 +3411,13 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_trust_anchor_delegation_explicit_only` (t.Log only)
 
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Delegation` (capitalized token/abbreviation): resembles requirement id `R-context-bounded-delegation`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `EXPLICITLY` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-trust-anchor-mechanism {#r-trust-anchor-mechanism}
 
 Every decision shall be personally signed by the human steward -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship.
@@ -1815,6 +3425,15 @@ Every decision shall be personally signed by the human steward -- today: a decid
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_trust_anchor_mechanism` (t.Log only)
+
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Every` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Stakeholder` (capitalized token/abbreviation): resembles requirement id `R-operator-references-stakeholder`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-two-altitude-ontology {#r-two-altitude-ontology}
 
@@ -1824,6 +3443,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_two_altitude_ontology` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `ONE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-uncertain-assumptions-surface {#r-uncertain-assumptions-surface}
 
 The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt.
@@ -1831,6 +3456,12 @@ The what_now harness shall surface every UNCERTAIN assumption carrying at least 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_uncertain_assumptions_surface` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `UNCERTAIN` (capitalized token/abbreviation): resembles requirement id `R-uncertain-assumptions-surface`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-uncrystallizable-automated {#r-uncrystallizable-automated}
 
@@ -1840,6 +3471,14 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_uncrystallizable_automated` (t.Log only)
 
+Coverage: 1/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `DRAFT` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Detection` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `OPEN` (capitalized token/abbreviation): resembles requirement id `R-open-states-question`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+
 ### R-uncrystallizable-is-missing-type {#r-uncrystallizable-is-missing-type}
 
 Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted).
@@ -1847,6 +3486,13 @@ Knowledge an operator cannot crystallize as any existing node shall be RECORDED 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_uncrystallizable_is_missing_type` (t.Log only)
+
+Coverage: 1/2 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Knowledge` (capitalized token/abbreviation): resembles requirement id `R-crystallize-knowledge-to-code`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `RECORDED` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
 
 ### R-unmeasured-cipher-names-host-boundary {#r-unmeasured-cipher-names-host-boundary}
 
@@ -1856,6 +3502,15 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_unmeasured_cipher_names_host_boundary` (t.Log only)
 
+Coverage: 3/4 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `LIVE` (capitalized token/abbreviation): resembles requirement id `R-claude-md-live-state-generated`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `STATE` (capitalized token/abbreviation): resembles requirement id `R-assumption-implements-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `UNMEASURED` (capitalized token/abbreviation): resembles requirement id `R-unmeasured-cipher-names-host-boundary`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `While` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-unresolvable-classified-by-human {#r-unresolvable-classified-by-human}
 
 Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference.
@@ -1863,6 +3518,14 @@ Classifying a Conflict as unresolvable-by-amending-its-members shall be a human 
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_unresolvable_classified_by_human` (t.Log only)
+
+Coverage: 2/3 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `AI` (capitalized token/abbreviation): resembles requirement id `R-ai-presents-not-decides`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Classifying` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-user-request-decomposed-to-tickets {#r-user-request-decomposed-to-tickets}
 
@@ -1872,6 +3535,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_user_request_decomposed_to_tickets` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-variant-choice-is-decision {#r-variant-choice-is-decision}
 
 A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED.
@@ -1879,6 +3544,17 @@ A derived Requirement shall be spawned from a HELD Conflict only after the stewa
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_variant_choice_is_decision` (t.Log only)
+
+Coverage: 5/6 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `Conflict` (capitalized token/abbreviation): resembles requirement id `R-conflict-addressing-resolves-variables`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `ConflictTransition` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+- `DECIDED` (capitalized token/abbreviation): resembles requirement id `R-decided-by-verifiable-signature`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `HELD` (capitalized token/abbreviation): resembles requirement id `R-conflict-held-state`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Requirement` (capitalized token/abbreviation): resembles requirement id `R-entity-derived-requirement`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
+- `Variant` (capitalized token/abbreviation): resembles requirement id `R-variant-choice-is-decision`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 
 ### R-verify-closure-per-action {#r-verify-closure-per-action}
 
@@ -1888,6 +3564,8 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_verify_closure_per_action` (t.Log only)
 
+Coverage: 0/0 candidate terms resolved
+
 ### R-wheel-build-atomic-verified {#r-wheel-build-atomic-verified}
 
 A release artifact shall be produced by a single atomic build command that fuses population + build + a self-check refusing to emit an artifact whose shipped tool-member names do not match the source-of-truth tool set on disk.
@@ -1895,6 +3573,8 @@ A release artifact shall be produced by a single atomic build command that fuses
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_wheel_build_atomic_verified` (t.Log only)
+
+Coverage: 0/0 candidate terms resolved
 
 ### R-work-within-launch-dir {#r-work-within-launch-dir}
 
@@ -1904,6 +3584,12 @@ Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_work_within_launch_dir` (t.Log only)
 
+Coverage: 0/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `PROSE` (capitalized token/abbreviation): no graph correlate found anywhere in the domain (out of model)
+
 ### R-working-vs-substrate-budget {#r-working-vs-substrate-budget}
 
 The context budget shall bound only the WORKING store of active uncrystallized knowledge, leaving the crystallized substrate free and unbounded.
@@ -1911,4 +3597,10 @@ The context budget shall bound only the WORKING store of active uncrystallized k
 Atoms:
 
 - no structural atom -> `requirements_test.go:Test_R_working_vs_substrate_budget` (t.Log only)
+
+Coverage: 1/1 candidate terms resolved
+
+Unresolved / partial-coverage-gap candidate terms:
+
+- `WORKING` (capitalized token/abbreviation): resembles requirement id `R-working-vs-substrate-budget`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)
 

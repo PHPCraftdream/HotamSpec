@@ -429,6 +429,11 @@ func Test_R_domain_map_shows_pulse(t *testing.T) {
 	t.Log("no structural atom - see requirements_audit.md#r-domain-map-shows-pulse")
 }
 
+// Atom: R-domain-overview-projection - see requirements_audit.md#r-domain-overview-projection
+func Test_R_domain_overview_projection(t *testing.T) {
+	t.Log("no structural atom - see requirements_audit.md#r-domain-overview-projection")
+}
+
 // Atom: R-domain-owns-docs-gen - see requirements_audit.md#r-domain-owns-docs-gen
 func Test_R_domain_owns_docs_gen(t *testing.T) {
 	t.Log("no structural atom - see requirements_audit.md#r-domain-owns-docs-gen")
