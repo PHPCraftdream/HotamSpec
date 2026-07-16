@@ -158,6 +158,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"PIPELINE.md", func(g *ontology.Graph) string { return BuildPipeline(g, "hotam-spec-self") }},
 		{"TRACEABILITY.md", BuildTraceability},
+		{"MODELS.md", BuildModels},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},
@@ -208,6 +209,7 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"PIPELINE.md", func(g *ontology.Graph) string { return BuildPipeline(g, "hotam-spec-self") }},
 		{"TRACEABILITY.md", BuildTraceability},
+		{"MODELS.md", BuildModels},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},

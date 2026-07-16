@@ -61,10 +61,12 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
 - `domains/hotam-dev/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
 - `domains/hotam-dev/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-dev/docs/gen/MODELS.md` — authored object model overview
 - `domains/hotam-dev/docs/gen/OPEN.md` — Open registry
 - `domains/hotam-dev/docs/gen/PIPELINE.md` — Domain overview: how this is put together, stage by stage
 - `domains/hotam-dev/docs/gen/REPO-MAP.md` — Repository file index
 - `domains/hotam-dev/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
 - `domains/hotam-dev/docs/gen/TENSIONS.md` — The tension map
+- `domains/hotam-dev/docs/gen/TRACEABILITY.md` — requirement -> implemented_by -> verified_by
 - `domains/hotam-dev/docs/gen/UNENFORCED.md` — Burn-down meter
 - `domains/hotam-dev/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_

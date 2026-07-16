@@ -60,6 +60,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
 - `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
 - `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/hotam-spec-self/docs/gen/MODELS.md` — authored object model overview
 - `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
 - `domains/hotam-spec-self/docs/gen/PIPELINE.md` — Domain overview: how this is put together, stage by stage
 - `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index

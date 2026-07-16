@@ -62,6 +62,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/fixture-domain/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
 - `domains/fixture-domain/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
 - `domains/fixture-domain/docs/gen/HISTORY.md` — Methodology decision history
+- `domains/fixture-domain/docs/gen/MODELS.md` — authored object model overview
 - `domains/fixture-domain/docs/gen/OPEN.md` — Open registry
 - `domains/fixture-domain/docs/gen/PIPELINE.md` — Domain overview: how this is put together, stage by stage
 - `domains/fixture-domain/docs/gen/REPO-MAP.md` — Repository file index

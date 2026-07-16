@@ -21,6 +21,7 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
 		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
+		title("MODELS.md", "MODELS.md — authored object model overview (Hotam-Spec)"),
 		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
 		title("PIPELINE.md", "PIPELINE.md — Domain overview: how this is put together, stage by stage (Hotam-Spec)"),
 		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
@@ -48,6 +49,7 @@ func fixtureGenDocs() []GenDocEntry {
 		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
 		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
+		title("MODELS.md", "MODELS.md — authored object model overview (Hotam-Spec)"),
 		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
 		title("PIPELINE.md", "PIPELINE.md — Domain overview: how this is put together, stage by stage (Hotam-Spec)"),
 		title("REPO-MAP.md", "REPO-MAP.md — Repository file index (Hotam-Spec)"),
@@ -122,4 +124,15 @@ func TestBuildTraceability_ByteIdenticalToFixture(t *testing.T) {
 		t.Fatalf("read reference: %v", err)
 	}
 	diffReport(t, "TRACEABILITY.md", got, string(want))
+}
+
+func TestBuildModels_ByteIdenticalToFixture(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildModels(g)
+	want, err := os.ReadFile("testdata/fixture/MODELS.md")
+	if err != nil {
+		t.Fatalf("read reference: %v", err)
+	}
+	diffReport(t, "MODELS.md", got, string(want))
 }

@@ -121,7 +121,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// repoMapDocs is the canonical set of docs written into
 	// domains/<name>/docs/gen/ (REQUIREMENTS/TENSIONS/OPEN/UNENFORCED/
 	// GLOSSARY/HISTORY/CONSTITUTION/FRAMEWORK-INVARIANTS/PIPELINE/
-	// REPO-MAP.md, plus conditional DECISIONS/ENTITIES.md) — it deliberately excludes
+	// TRACEABILITY/MODELS/REPO-MAP.md, plus conditional DECISIONS/ENTITIES.md) — it deliberately excludes
 	// atoms-*.md and live-state.md, which are only ever materialized at the
 	// repo-root docs/methodology/atoms/ (and inside root CLAUDE.md's
 	// LIVE-STATE block) for the single active domain, never per-domain under
@@ -139,6 +139,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
 		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName)},
 		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
+		{Filename: "MODELS.md", Content: generator.BuildModels(g)},
 	}
 	// REPO-MAP.md lists itself too (the repo-map scan globs docs/gen/*.md
 	// including the file it is about to (re)write); its own title is fixed by
@@ -189,6 +190,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{"FRAMEWORK-INVARIANTS.md", repoMapDocs[7].Content},
 		{"PIPELINE.md", repoMapDocs[8].Content},
 		{"TRACEABILITY.md", repoMapDocs[9].Content},
+		{"MODELS.md", repoMapDocs[10].Content},
 		{"REPO-MAP.md", repoMapMD},
 	}
 	if shouldWriteAtoms(atomsOperator) {
@@ -381,7 +383,7 @@ func cleanupStaleGenFiles(genDir string, written []string) ([]string, error) {
 	topLevelFiles := []string{
 		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
 		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
-		"PIPELINE.md", "TRACEABILITY.md",
+		"PIPELINE.md", "TRACEABILITY.md", "MODELS.md",
 		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
 		"atoms-discipline.md", "atoms-check.md", "live-state.md",
 		"AGENT-CONTEXT.md", "DECISIONS.md", "ENTITIES.md", "graph.json",
