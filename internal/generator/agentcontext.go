@@ -51,7 +51,7 @@ func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 		"",
 	}
 
-	lines = append(lines, BuildLiveState(g, claudeMDCharCount, today))
+	lines = append(lines, BuildLiveState(g, domainName, claudeMDCharCount, today))
 	lines = append(lines, "")
 
 	lines = append(lines, renderAgentContextWhatNow(g, today)...)

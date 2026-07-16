@@ -27,7 +27,12 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// and R-enforced-requires-enforcer-or-authored-link, anchoring the six
 		// new authored-spec mechanical checks (internal/invariants/authored_links.go)
 		// to the framework's own self-hosting bijection discipline.
-		{"requirements", len(g.Requirements), 286},
+		// 286 + 4: task #235 landed R-spec-link-embodied-vs-proven,
+		// R-authored-spec-layer-progression, R-structural-floor-vs-mirror-audit,
+		// and R-authored-spec-projections-are-derived -- the authored-spec
+		// discipline's own objects+fields modeled as first-class graph nodes
+		// (PLAN-authored-spec-discipline.md §4/§5/§6/§7).
+		{"requirements", len(g.Requirements), 290},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},

@@ -531,7 +531,7 @@ func runeTruncateEllipsis(s string, keep int) string {
 // profile renders byte-identical to before.
 func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph, today string, consumer bool) string {
 	parts := []string{
-		WrapBlock("LIVE-STATE", BuildLiveState(g, claudeMDCharCount, today)),
+		WrapBlock("LIVE-STATE", BuildLiveState(g, domainName, claudeMDCharCount, today)),
 		WrapBlock("DOMAIN-MAP", RenderDomainMapBlock(repoRoot, domainGraphs, today)),
 		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
 		WrapBlock("AGENT-MAP", RenderAgentMapBlock()),

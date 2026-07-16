@@ -204,7 +204,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		mdDocs = append(mdDocs, docEntry{"atoms-check.md", atomsCheck})
 	}
 	mdDocs = append(mdDocs,
-		docEntry{"live-state.md", generator.BuildLiveState(g, charCount, today)},
+		docEntry{"live-state.md", generator.BuildLiveState(g, domainName, charCount, today)},
 		docEntry{"AGENT-CONTEXT.md", generator.BuildAgentContext(g, domainName, charCount, today)},
 	)
 	if decisionsWritten {

@@ -61,8 +61,8 @@ func TestBuildLiveState_TodayIsInjectable(t *testing.T) {
 		},
 	}
 
-	gotA := BuildLiveState(g, 5000, "2026-01-01") // before review_after: not yet overdue
-	gotB := BuildLiveState(g, 5000, "2026-12-31") // after review_after: overdue
+	gotA := BuildLiveState(g, "", 5000, "2026-01-01") // before review_after: not yet overdue
+	gotB := BuildLiveState(g, "", 5000, "2026-12-31") // after review_after: overdue
 
 	if gotA == gotB {
 		t.Fatalf("BuildLiveState with two different today values produced byte-identical output — today is not actually threaded through:\n%s", gotA)
@@ -86,8 +86,8 @@ func TestBuildLiveState_TodayIsInjectable(t *testing.T) {
 func TestBuildLiveState_SameTodayIsByteIdentical(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	a := BuildLiveState(g, 5000, "2026-07-12")
-	b := BuildLiveState(g, 5000, "2026-07-12")
+	a := BuildLiveState(g, "", 5000, "2026-07-12")
+	b := BuildLiveState(g, "", 5000, "2026-07-12")
 	if a != b {
 		t.Fatalf("BuildLiveState with the same today value produced different output across two calls — not idempotent")
 	}
@@ -96,7 +96,7 @@ func TestBuildLiveState_SameTodayIsByteIdentical(t *testing.T) {
 func TestBuildLiveState_RendersOnFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildLiveState(g, 5000, "2026-07-12")
+	got := BuildLiveState(g, "", 5000, "2026-07-12")
 	if strings.TrimSpace(got) == "" {
 		t.Fatal("BuildLiveState: empty output on fixture graph")
 	}
@@ -123,7 +123,7 @@ func TestBuildLiveState_RendersOnFixture(t *testing.T) {
 func TestBuildLiveState_ThreeCipherPulsePresent(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildLiveState(g, 5000, "2026-07-12")
+	got := BuildLiveState(g, "", 5000, "2026-07-12")
 	for _, want := range []string{"- **top action:**", "- **debt:**", "- context: UNMEASURED"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("LIVE-STATE three-cipher pulse missing fragment %q (top action / debt / context):\n%s", want, got)
@@ -140,7 +140,7 @@ func TestBuildLiveState_ThreeCipherPulsePresent(t *testing.T) {
 func TestBuildLiveState_ContextLineNamesHostBoundaryNoCommand(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildLiveState(g, 5000, "2026-07-12")
+	got := BuildLiveState(g, "", 5000, "2026-07-12")
 
 	// extract the context line
 	var ctxLine string

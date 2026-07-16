@@ -241,7 +241,9 @@
     "R-attention-registry",
     "R-attention-superset-of-diagnose",
     "R-audit-atomicity-tool",
+    "R-authored-spec-layer-progression",
     "R-authored-spec-links-mechanically-checked",
+    "R-authored-spec-projections-are-derived",
     "R-axes-as-module-constant",
     "R-axis-controlled-vocab",
     "R-axis-gatekeeper-policy",
@@ -454,6 +456,7 @@
     "R-smoke-test",
     "R-spawn-log-carries-isolation",
     "R-speak-by-reference",
+    "R-spec-link-embodied-vs-proven",
     "R-speculative-aspects-frozen",
     "R-stable-conflict-identity",
     "R-stale-substrate",
@@ -465,6 +468,7 @@
     "R-status-single-command-summary",
     "R-step-invokes-known-transition",
     "R-steward-distinct-from-owners",
+    "R-structural-floor-vs-mirror-audit",
     "R-sub-agent-crystal-triad",
     "R-subagent-gets-its-claude-md",
     "R-t1-selector-as-land-default",
@@ -548,6 +552,33 @@
     },
     {
       "assumptions": [],
+      "claim": "Authored spec/ coverage of a domain SHALL proceed in layer order, general before specific, the same skeleton-first discipline R-domain-founded-in-wave-order already applies to graph founding: (1) MODELS -- first author the full skeleton of the domain's object model, every aggregate/entity/value-object that exists, before any one of them is fleshed out; (2) FIELDS -- then author each model's fields/attributes; (3) METHODS -- then author operations/methods, ALL the interactions between models (behavior, invariants, error paths), not just one model's; (4) TESTS -- then author the executable tests that prove requirements against that code. An agent building authored spec/ shall NOT take one requirement all the way from model to test before starting the next; it shall complete each layer across the WHOLE domain before advancing to the next layer.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [
+        "PLAN-authored-spec-discipline.md §5 states the four-layer order verbatim and names the not-yet-built coverage-audit tool as the future enforcer"
+      ],
+      "history": [
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin) task #235, 2026-07-16: lexical opposite-marker collision (shared tokens: before/first) against R-domain-founded-in-wave-order -- not a substantive conflict, this requirement is the explicit code-authoring sibling of that graph-founding requirement (refines relation recorded), same general-before-specific principle applied to spec/ code layers instead of graph node kinds"
+        }
+      ],
+      "id": "R-authored-spec-layer-progression",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "PLAN-authored-spec-discipline.md"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "PLAN-authored-spec-discipline.md §5 (\"Гейт готовности\", steward decision 2026-07-16) states the layer order explicitly: \"Сначала полная картина моделей, потом деталь -- не 'одно требование целиком до конца, потом следующее'\", and names the four layers (models -> fields -> methods -> tests) as the coverage progression a coverage-audit tool tracks (\"Coverage-дисциплина отслеживает, на каком слое домен сейчас\"). This is the code-authoring analogue of R-domain-founded-in-wave-order (#203), which already establishes the identical general-before-specific principle for GRAPH founding (skeleton -> artifacts -> rules -> tensions -> data) -- this requirement is the sibling discipline for CODE authoring inside a founded domain's spec/ tree, explicitly refining it rather than duplicating it: R-domain-founded-in-wave-order governs the order in which graph.json nodes (manifest, Process, EntityType, Requirement, Assumption/Conflict, EntityInstance) are landed; this requirement governs the order in which authored Go code (spec/model, spec/model fields, spec/application+policy methods, spec/tests) is written once a domain's requirements already exist. Both are honest roadmap-debt PROSE claims today: no coverage-audit tool yet exists that mechanically detects an agent skipping ahead (e.g. writing one requirement's test before another requirement's model exists) -- PLAN §5's promised \"Coverage-дисциплина\" and PLAN §7's COVERAGE.md generated projection are the not-yet-built enforcers (tracked by PLAN §11 task #225), so this requirement is honest operator discipline today, exactly the same shape as R-domain-founded-in-wave-order's own honest-PROSE status."
+    },
+    {
+      "assumptions": [],
       "claim": "Every requirement's implemented_by/verified_by entries (path-qualified file:symbol / file:test references into a domain's authored spec/ tree) shall be mechanically checked: the named symbol/test shall exist; a verified_by test shall be non-vacuous (a real assertion or exercising branch, not t.Log-only or empty) and free of an unconditional top-level t.Skip; and the same verified_by entry shall not be formally cited by two or more requirements that are not all mutually related via Relations.",
       "enforced_by": [
         "check_implemented_by_symbol_resolvable",
@@ -590,6 +621,27 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "PLAN-authored-spec-discipline.md §6 (the mechanical-checks catalog) requires a STRUCTURAL floor under the authored-spec era's implemented_by/verified_by fields (added additively in a prior session, internal/ontology/requirement.go): a stale, vacuous, skipped, or promiscuously-reused reference would let ENFORCED mean nothing for a domain's own authored code+tests, exactly the failure PLAN §1 documents from the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements\"). Six atomic check_* invariants implement this (internal/invariants/authored_links.go), each resolving against a single named file under the domain's own directory (g.DomainDir) via a targeted AST parse (internal/gate/spec_resolver.go ResolveSpecSymbol/ResolveSpecTest) -- never a repo-wide scan, since every implemented_by/verified_by entry already names its own file: check_implemented_by_symbol_resolvable (the symbol -- function, method, or type -- really exists; methods resolve here, unlike the engine-side Test*-scan which deliberately skips fn.Recv != nil), check_verified_by_test_resolvable (the test really exists and is Test*-shaped with the real go-test signature), check_verified_by_test_has_teeth (the real ENFORCEMENT successor to the honest no-op check_enforced_by_test_has_teeth -- a resolvable verified_by test whose body is empty or t.Log-only fires, since a domain's spec/ tree is not necessarily wired into any go test ./... this engine runs, so this is the only mechanical backstop against a vacuous claim), check_verified_by_test_no_skip (an unconditional top-level t.Skip/t.Skipf is the same defeat as a t.Log-only body and is split into its own check so the violation names the specific defect), and check_verified_by_no_unrelated_reuse (the same verified_by entry formally cited by requirements that do not all collapse into one connected component under the Relations adjacency is a red flag that one test is stretched thin across unrelated claims). HONESTY BOUNDARY (§6): these checks hold the structural floor only -- symbol/test exists, runs, is not hollow, is not skipped, is not promiscuously reused -- they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit performed by a human or an LLM reading the pair (requirement text, authored code+test), never encoded as a lexical/semantic heuristic in the graph invariant layer. All six checks are structurally NO-OP for any requirement with empty implemented_by/verified_by (both fields remain optional), so on every domain graph.json today (authored spec/ does not exist yet in any domain -- task #224 is the pilot) they contribute zero violations; mutation-proof coverage lives in internal/gate/spec_resolver_test.go and internal/invariants/authored_links_test.go (each check has a break-then-fix round-trip test proving it fires on a real mutated fixture and clears once fixed). REWORDED 2026-07-16: the claim text originally used bare MUST/MUST NOT phrasing, which collided with internal/diagnose's opposite-marker CONFRONT heuristic (oppositeMarkerPairs: must vs must not) on every future proposal whose claim happens to contain the bare word \"must\" plus any shared topical token (e.g. \"path\", \"land\") -- a corpus-wide false-positive tax this requirement would otherwise impose on every subsequent land. Reworded to \"shall\"/\"shall be\"/\"shall not\" phrasing (semantically identical RFC-2119-style obligation, same as most other SETTLED claims in this corpus) with no loss of meaning; the mechanical checks and their tests are unchanged."
+    },
+    {
+      "assumptions": [],
+      "claim": "Every generated document that describes a domain's authored spec/ tree -- TRACEABILITY.md (requirement -> implemented_by symbol -> verified_by test), MODELS.md (an inventory of authored model structs/fields/methods/invariants extracted from spec/model via go/ast), COVERAGE.md (which SETTLED+ENFORCEABLE requirements have real implemented_by/verified_by carriers versus roadmap debt, and which layer per R-authored-spec-layer-progression the domain currently sits at), and UNENFORCED.md's authored-era burn-down -- shall be a GENERATED projection assembled by `hotam gen-spec` from the graph plus the spec/ resolver (internal/gate/spec_resolver.go), and shall NEVER be hand-written or hand-edited. spec/ itself (the domain's authored model/application/policy/tests code) is the one artifact in this pipeline authored by hand and NEVER regenerated or overwritten by the engine; docs/gen/ is the generated side and is ALWAYS safe to regenerate and overwrite.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [
+        "PLAN-authored-spec-discipline.md §3 and §7 name the authored/generated boundary and the four future generated documents verbatim; task #225 (not yet executed) is the tracked follow-on to build the generators"
+      ],
+      "history": [],
+      "id": "R-authored-spec-projections-are-derived",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "PLAN-authored-spec-discipline.md"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "PLAN-authored-spec-discipline.md §3 draws the authored/generated line at the directory level (\"spec/ -- AUTHORED код-спека -- пишется РУКАМИ, движок НЕ перезаписывает\" versus \"docs/gen/ -- ГЕНЕРИРУЕМЫЕ проекции -- движок перезаписывает\"), and §7 (\"Генерируемые проекции (вместо кода)\") names the specific four documents this requirement covers: TRACEABILITY.md, MODELS.md, COVERAGE.md, UNENFORCED.md. This is the natural-language DEFINITION half of the authored/generated split; it is distinct from R-domain-overview-projection (#201/PIPELINE.md), which governs a DIFFERENT generated document (the Process/EntityType-driven whole-domain overview, unrelated to spec/ code) and from R-requirement-freshness-fields (#the history mechanism), which governs a DIFFERENT derived artifact (per-node History, not a whole document). Naming this requirement closes the same gap R-domain-overview-projection closes for PIPELINE.md, but for the NEW authored-spec-era documents PLAN §7 introduces -- without this node, an agent reading the self-domain graph would find no anchor stating that TRACEABILITY/MODELS/COVERAGE/UNENFORCED are derived, not authored, and might be tempted to hand-edit them the way spec/ itself is meant to be hand-edited, exactly inverting PLAN §3's authored/generated boundary. Honestly PROSE/feature-blocked today (R-speculative-aspects-frozen's pattern): none of these four generators exist yet in internal/generator (task #225, PLAN §11, not yet executed at authorship time) -- this requirement fixes the CONTRACT the future generator must honor (never hand-write these four documents) before the generator itself is built, the same order R-domain-overview-projection followed for PIPELINE.md."
     },
     {
       "assumptions": [],
@@ -824,6 +876,34 @@
     },
     {
       "assumptions": [],
+      "claim": "An authored-spec requirement's link to code shall carry two ORTHOGONAL fields, never collapsed into one: implemented_by names WHERE the requirement is EMBODIED (a path-qualified file:symbol reference into the domain's authored spec/ tree, the model/method that realizes the claim), and verified_by names WHERE the requirement is PROVEN (a path-qualified file:test reference, the executable test that demonstrates the claim holds). A symbol that embodies a requirement without a test that proves it, or a test cited without the symbol it exercises, is an incomplete SpecLink -- ENFORCED status requires both halves together (see R-enforced-requires-enforcer-or-authored-link), but the two fields answer two DIFFERENT questions and shall never be merged into a single field or treated as aliases of one another.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [
+        "internal/ontology/requirement.go:80-96 (ImplementedBy/VerifiedBy field doc comments, task #223) already state the embodied-vs-proven distinction in code; this requirement promotes it to a graph anchor"
+      ],
+      "history": [
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin) task #235, 2026-07-16: lexical opposite-marker collision (shared tokens: answer/authored/names) against R-domain-overview-projection -- that requirement governs the PIPELINE.md overview projection (Process/EntityType, whole-domain reading), this requirement names the SpecLink implemented_by/verified_by field-semantics distinction (embodied vs proven) already implemented in internal/ontology/requirement.go task #223; not a substantive conflict, refines relation recorded to the two already-landed mechanical-check requirements instead"
+        }
+      ],
+      "id": "R-spec-link-embodied-vs-proven",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "PLAN-authored-spec-discipline.md",
+        "internal/ontology/requirement.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (steward decision 2026-07-16) establish implemented_by/verified_by as two separate fields on Requirement (internal/ontology/requirement.go), landed additively in task #223 and already carrying inline doc comments naming the same embodied/proven distinction (requirement.go:80-96: \"ImplementedBy names WHERE this requirement is embodied\", \"VerifiedBy names WHERE this requirement is PROVEN\"). R-authored-spec-links-mechanically-checked (#223) and R-enforced-requires-enforcer-or-authored-link (#223) already model the MECHANICAL checking of these fields (symbol/test resolvability, non-vacuousness, no-skip, no-reuse) and the DISJUNCTIVE ENFORCED gate that accepts either enforced_by or implemented_by+verified_by together -- but neither requirement states the CONCEPTUAL distinction itself: why two fields exist, what each one MEANS, and why they are not interchangeable. Without this requirement as a first-class node, the SpecLink concept (PLAN §4's requirement->code->test schema) exists only in code comments and PLAN prose, not as a graph anchor a future agent can cite when modeling a business domain's own spec/ tree (task #224 pilot, task #236 recursion into hotam-spec-self's own engine code). This requirement is the missing OBJECT-level node: it names the SpecLink concept and its two fields' distinct semantics, one layer above the two already-landed mechanical-check requirements which govern HOW the fields are validated, not WHAT they mean. PROSE/SETTLED is correct here: this is a naming-and-definition claim about a data shape already implemented (internal/ontology/requirement.go ImplementedBy/VerifiedBy, task #223) -- the fields themselves are code, but THIS requirement's own implemented_by/verified_by linkage into hotam-spec-self's engine is deliberately deferred to task #236 (recursion), per the session's explicit instruction not to add code links at the objects+fields step."
+    },
+    {
+      "assumptions": [],
       "claim": "The hotam CLI shall provide a `status` command (`hotam status [--domain <path>] [--today YYYY-MM-DD] [--json]`) that composes what-now's top action + debt counts (internal/diagnose), due's freshness counts (internal/freshness), and all-violations' violation count (internal/invariants) into a single compact summary, so an agent does not need to run those three commands separately to reconstruct the same picture. It reuses the same underlying functions those commands call rather than reimplementing their logic, never gates (exit code always 0), and its --json output uses flat, explicitly named fields (top_action, settled_count, enforced_count, closeable_debt_count, overdue_count, never_reviewed_count, violation_count, node_count) parseable in one shot.",
       "enforced_by": [
         "TestStatusToolRegisteredImplemented"
@@ -854,6 +934,34 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "External review (TaskList P2 item #80) observed that an agent orienting itself has to run `what-now`, `due`, and `all-violations` separately and mentally merge the results, burning context on three graph loads and three renderings to reconstruct one picture. This mirrors the existing three-cipher pulse the root CLAUDE.md's LIVE-STATE block already carries (R-three-cipher-pulse-structurally-injected) but as an ad hoc, freshly-runnable CLI command rather than a static crystal block — useful mid-session when the crystal is stale or when a different domain than the resident one needs a quick pulse. Composition, not duplication: buildStatusReport (cmd/hotam/status.go) calls diagnose.DiagnoseSignals (the same call formatSignals/BuildLiveState make for what-now's top action and the LIVE-STATE debt line), freshness.ClassifyGraph (the same call buildDueReport makes), and invariants.AllViolations (the same call cmdAllViolations makes) on one already-loaded graph — it introduces no new definition of 'closeable debt', 'overdue', or 'violation'. Human-readable output is a handful of labeled lines (top action / debt / freshness / violations / graph), not a full report, matching the point of the command: a single-shot, low-context pulse. Exit code is always 0 like due/inspect/confront — status is advisory, not a gate; all-violations remains the hard gate command for invariant violations. ENFORCED 2026-07-13: TestStatusToolRegisteredImplemented (internal/methodology/methodology_test.go) enforces the existence half — the `status` tool is registered Implemented with a real Purpose, so the registry entry read by cmd/hotam/tool_wiring.go and the generated EMBEDDED-TOOLS crystal block can never silently regress. The behavioral half — buildStatusReport's aggregated numbers actually agreeing with what-now/due/all-violations — is proven by TestBuildStatusReport_MatchesWhatNowDueAllViolations (cmd/hotam/status_test.go), which independently recomputes every field via diagnose.DiagnoseSignals / freshness.ClassifyGraph / invariants.AllViolations on the same fixture graph; it cannot be named in enforced_by directly because internal/gate's Test*-name resolver (check_enforced_by_resolvable) is scoped to internal/**/*_test.go and cmd/hotam tests use unexported cmd/hotam helpers unreachable from internal/, but it is the test that actually guards against drift and is cited here for the audit trail. UPDATE 2026-07-13 (TaskList P2 item #81, external review): 'parseable in one shot' is refined to also mean array-typed fields are never JSON `null` for the empty case — a nil Go slice (`var x []T`) and an omitted/`[]` field are semantically identical ('no rows') but encoding/json distinguishes them, and a `null` where an agent expects an array is a real footgun (`for x of null` throws in JS; OpenAPI/JSON-Schema generators typed the field as an array). This was not hypothetical: domains/hotam-spec-self/graph.json itself carried `\"enforced_by\": null` on 2 SETTLED requirements and `\"source_refs\": null` on 3, which flowed unchanged through `hotam req show --json` into the CLI's machine-readable output before this fix. Every array-typed field across every `--json` command (`due`, `confront`, `inspect`, `req show/list/search/context/related`) now normalizes a nil slice to `[]` at the boundary where it is marshaled — either at construction (`due.go`'s DueReport, list.go's Search) or at the CLI-facing card-building step (query/show.go's requirementToCard/conflictToCard, which is also where a domain's own possibly-null persisted graph.json array field is normalized on its way OUT to an agent, without touching the loader or the persisted format itself). Regression-pinned at the byte level (asserting the literal marshaled JSON text, not just a Go-level len()==0 check) in cmd/hotam/due_test.go, internal/diagnose/confront_test.go, and internal/query/query_test.go. This is a refinement of an existing claim, not a new architectural commitment — no new node was created for it."
+    },
+    {
+      "assumptions": [],
+      "claim": "Two DIFFERENT parties hold two DIFFERENT guarantees over an authored SpecLink, and the boundary between them shall NEVER be blurred: the ENGINE holds the STRUCTURAL floor -- a cited symbol or test really exists, resolves by name against the domain's own authored spec/ tree, is not t.Log-only or otherwise empty (has teeth), is not an unconditional t.Skip, is not formally reused across unrelated requirements, and is not orphaned by a later code change -- while a MIRROR AUDIT, performed by a human or an LLM reading the pair (requirement claim text, authored code+test) without domain-specific heuristics baked into the engine, certifies that the cited test SEMANTICALLY proves the requirement's claim. The engine's structural checks shall NEVER be represented, documented, or relied upon as a substitute for the mirror audit's semantic certification, and the mirror audit's semantic judgment shall NEVER be encoded as a lexical or keyword heuristic inside the graph invariant layer.",
+      "enforced_by": [],
+      "enforcement": "PROSE",
+      "evidence": [
+        "PLAN-authored-spec-discipline.md §6 closing paragraph states the honesty boundary verbatim; internal/invariants/authored_links.go check_verified_by_test_has_teeth doc comment (task #223) already cites the same boundary in code"
+      ],
+      "history": [
+        {
+          "at": "2026-07-16",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: steward (Marat Karamullin) task #235, 2026-07-16: lexical opposite-marker false positives (shared tokens: human/judgment, them, invariant/structural) against unrelated REJECTED/SETTLED requirements -- not substantive conflicts; this requirement promotes PLAN-authored-spec-discipline.md §6's honesty-boundary paragraph (already paraphrased inside R-authored-spec-links-mechanically-checked's WHY) to its own first-class anchor"
+        }
+      ],
+      "id": "R-structural-floor-vs-mirror-audit",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "PLAN-authored-spec-discipline.md",
+        "internal/invariants/authored_links.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "PLAN-authored-spec-discipline.md §6 (\"Каталог механических проверок\") states this boundary as its closing paragraph, calling it out explicitly as an \"honesty boundary\": \"Граница честности: движок держит СТРУКТУРНЫЙ пол. Он не может механически доказать, что тест семантически доказывает требование -- это остаётся зеркальным аудитом.\" R-authored-spec-links-mechanically-checked (#223) already implements and names the six structural checks (symbol/test resolvable, has-teeth, no-skip, no-unrelated-reuse) and its own WHY paragraph already states the boundary in passing (\"HONESTY BOUNDARY (§6): these checks hold the structural floor only... they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit\"). This requirement promotes that boundary from a parenthetical inside #223's WHY text to its OWN first-class graph node, because the boundary is a distinct discipline concept with its own failure mode worth naming and citing independently: the session's own history shows repeated near-misses where lexical/keyword heuristics were proposed as a shortcut for semantic judgment (e.g. the CONFRONT opposite-marker gate's own false-positive collisions, R-authored-spec-links-mechanically-checked's own history entry documents one on 2026-07-16) -- the temptation to fold semantic certification into the engine as \"just one more check_*\" is the exact failure this requirement stands against. PLAN §1 documents the concrete cost of skipping this boundary in the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements... a always-green test is not coverage; it creates the appearance of an executable requirement\") -- the structural floor prevents THAT specific failure (a hollow always-green test), but does not and cannot prevent a technically-real, technically-passing test that simply tests the wrong thing; only a mirror audit catches that. Naming both halves as one requirement (not two) reflects that the discipline IS the boundary between them, not either half alone."
     },
     {
       "assumptions": [],

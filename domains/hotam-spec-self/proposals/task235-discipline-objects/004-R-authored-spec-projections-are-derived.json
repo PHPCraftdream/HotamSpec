@@ -1,0 +1,16 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-spec-projections-are-derived",
+  "claim": "Every generated document that describes a domain's authored spec/ tree -- TRACEABILITY.md (requirement -> implemented_by symbol -> verified_by test), MODELS.md (an inventory of authored model structs/fields/methods/invariants extracted from spec/model via go/ast), COVERAGE.md (which SETTLED+ENFORCEABLE requirements have real implemented_by/verified_by carriers versus roadmap debt, and which layer per R-authored-spec-layer-progression the domain currently sits at), and UNENFORCED.md's authored-era burn-down -- shall be a GENERATED projection assembled by `hotam gen-spec` from the graph plus the spec/ resolver (internal/gate/spec_resolver.go), and shall NEVER be hand-written or hand-edited. spec/ itself (the domain's authored model/application/policy/tests code) is the one artifact in this pipeline authored by hand and NEVER regenerated or overwritten by the engine; docs/gen/ is the generated side and is ALWAYS safe to regenerate and overwrite.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "why": "PLAN-authored-spec-discipline.md §3 draws the authored/generated line at the directory level (\"spec/ -- AUTHORED код-спека -- пишется РУКАМИ, движок НЕ перезаписывает\" versus \"docs/gen/ -- ГЕНЕРИРУЕМЫЕ проекции -- движок перезаписывает\"), and §7 (\"Генерируемые проекции (вместо кода)\") names the specific four documents this requirement covers: TRACEABILITY.md, MODELS.md, COVERAGE.md, UNENFORCED.md. This is the natural-language DEFINITION half of the authored/generated split; it is distinct from R-domain-overview-projection (#201/PIPELINE.md), which governs a DIFFERENT generated document (the Process/EntityType-driven whole-domain overview, unrelated to spec/ code) and from R-requirement-freshness-fields (#the history mechanism), which governs a DIFFERENT derived artifact (per-node History, not a whole document). Naming this requirement closes the same gap R-domain-overview-projection closes for PIPELINE.md, but for the NEW authored-spec-era documents PLAN §7 introduces -- without this node, an agent reading the self-domain graph would find no anchor stating that TRACEABILITY/MODELS/COVERAGE/UNENFORCED are derived, not authored, and might be tempted to hand-edit them the way spec/ itself is meant to be hand-edited, exactly inverting PLAN §3's authored/generated boundary. Honestly PROSE/feature-blocked today (R-speculative-aspects-frozen's pattern): none of these four generators exist yet in internal/generator (task #225, PLAN §11, not yet executed at authorship time) -- this requirement fixes the CONTRACT the future generator must honor (never hand-write these four documents) before the generator itself is built, the same order R-domain-overview-projection followed for PIPELINE.md.",
+  "assumptions": [],
+  "relations": [
+    {"kind": "refines", "target": "R-domain-overview-projection"},
+    {"kind": "refines", "target": "R-authored-spec-layer-progression"}
+  ],
+  "evidence": ["PLAN-authored-spec-discipline.md §3 and §7 name the authored/generated boundary and the four future generated documents verbatim; task #225 (not yet executed) is the tracked follow-on to build the generators"],
+  "source_refs": ["PLAN-authored-spec-discipline.md"]
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-spec-layer-progression",
+  "claim": "Authored spec/ coverage of a domain SHALL proceed in layer order, general before specific, the same skeleton-first discipline R-domain-founded-in-wave-order already applies to graph founding: (1) MODELS -- first author the full skeleton of the domain's object model, every aggregate/entity/value-object that exists, before any one of them is fleshed out; (2) FIELDS -- then author each model's fields/attributes; (3) METHODS -- then author operations/methods, ALL the interactions between models (behavior, invariants, error paths), not just one model's; (4) TESTS -- then author the executable tests that prove requirements against that code. An agent building authored spec/ shall NOT take one requirement all the way from model to test before starting the next; it shall complete each layer across the WHOLE domain before advancing to the next layer.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "PROSE",
+  "why": "PLAN-authored-spec-discipline.md §5 (\"Гейт готовности\", steward decision 2026-07-16) states the layer order explicitly: \"Сначала полная картина моделей, потом деталь -- не 'одно требование целиком до конца, потом следующее'\", and names the four layers (models -> fields -> methods -> tests) as the coverage progression a coverage-audit tool tracks (\"Coverage-дисциплина отслеживает, на каком слое домен сейчас\"). This is the code-authoring analogue of R-domain-founded-in-wave-order (#203), which already establishes the identical general-before-specific principle for GRAPH founding (skeleton -> artifacts -> rules -> tensions -> data) -- this requirement is the sibling discipline for CODE authoring inside a founded domain's spec/ tree, explicitly refining it rather than duplicating it: R-domain-founded-in-wave-order governs the order in which graph.json nodes (manifest, Process, EntityType, Requirement, Assumption/Conflict, EntityInstance) are landed; this requirement governs the order in which authored Go code (spec/model, spec/model fields, spec/application+policy methods, spec/tests) is written once a domain's requirements already exist. Both are honest roadmap-debt PROSE claims today: no coverage-audit tool yet exists that mechanically detects an agent skipping ahead (e.g. writing one requirement's test before another requirement's model exists) -- PLAN §5's promised \"Coverage-дисциплина\" and PLAN §7's COVERAGE.md generated projection are the not-yet-built enforcers (tracked by PLAN §11 task #225), so this requirement is honest operator discipline today, exactly the same shape as R-domain-founded-in-wave-order's own honest-PROSE status.",
+  "assumptions": [],
+  "relations": [
+    {"kind": "refines", "target": "R-domain-founded-in-wave-order"}
+  ],
+  "evidence": ["PLAN-authored-spec-discipline.md §5 states the four-layer order verbatim and names the not-yet-built coverage-audit tool as the future enforcer"],
+  "source_refs": ["PLAN-authored-spec-discipline.md"]
+}

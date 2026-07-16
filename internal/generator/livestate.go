@@ -24,12 +24,27 @@ var bandLabel = map[int]string{
 
 const ctxLineStatic = "context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary"
 
-func BuildLiveState(g *ontology.Graph, claudeMDCharCount int, today string) string {
+func BuildLiveState(g *ontology.Graph, domainName string, claudeMDCharCount int, today string) string {
+	if domainName == "" {
+		domainName = "hotam-spec-self"
+	}
 	signals := diagnose.DiagnoseSignals(g, today)
 	var topLine string
 	if len(signals) > 0 {
 		sig := signals[0]
-		topLine = fmt.Sprintf("[P%d] %s on `%s` — %s", sig.Priority, bandLabel[sig.Priority], sig.Target, sig.Message)
+		// diagnose.Finding.Imperative is domain-agnostic (the diagnose package
+		// never carries a domain name — see internal/diagnose/signal.go); a
+		// bare "docs/gen/UNENFORCED.md" pointer embedded in a Finding message
+		// (internal/diagnose/finding.go ReflectUnenforcedSettled) would resolve
+		// to a nonexistent repo-root path once rendered here (every domain's
+		// generated docs live under domains/<name>/docs/gen/, never at the repo
+		// root — see RenderEmbeddedThinkingBlock / BuildAgentContext's own
+		// domainName-qualification of the same pointer pattern). Qualify it at
+		// the one point domainName is actually known, the same fix pattern
+		// task #103 already applied to this exact call site's sibling
+		// (domainPulse's mid-word truncation bug).
+		msg := strings.ReplaceAll(sig.Message, "docs/gen/UNENFORCED.md", "domains/"+domainName+"/docs/gen/UNENFORCED.md")
+		topLine = fmt.Sprintf("[P%d] %s on `%s` — %s", sig.Priority, bandLabel[sig.Priority], sig.Target, msg)
 	} else {
 		topLine = "none — graph clean"
 	}
