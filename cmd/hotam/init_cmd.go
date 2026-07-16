@@ -254,15 +254,27 @@ hotam what-now --domain .
 hotam req show %[2]s --domain .
 ` + "```" + `
 
-## Founding order (skeleton first)
+## Founding order (general before specific, authored by hand)
 
-Grow the domain in waves, never bottom-up from requirements
-(R-domain-founded-in-wave-order): wave 0 skeleton (the domain's
-purpose/goals plus a Process node naming its stages and roles, plus Axes)
-→ wave 1 artifacts (EntityTypes, each wired via Process.drives_entities)
-→ wave 2 rules (Requirements) → wave 3 tensions (Assumptions/Conflicts)
-→ wave 4 data (EntityInstances). Close every wave with ` + "`hotam gen-spec`" + `
-and read ` + "`docs/gen/PIPELINE.md`" + ` — the generated domain overview
+Hotam-Spec is an authored-executable-specification discipline: an agent who
+understands the domain writes its model, behavior, and tests BY HAND; the
+engine holds the structural floor and generates only derived projections
+(REQUIREMENTS/MODELS/TRACEABILITY/COVERAGE.md), never the authored code
+itself. Grow a new domain in this order, never bottom-up from requirements
+(R-domain-founded-in-wave-order):
+
+1. Purpose, stakeholders, terminology — manifest purpose/goals + Stakeholders + Axes.
+2. Process and its scenarios — a Process node naming stages, roles, drives_entities.
+3. Object model, by hand (` + "`spec/model/`" + `) — all aggregates/value-objects and their fields.
+4. Operations, policies, invariants, by hand (` + "`spec/application/`" + `, ` + "`spec/policy/`" + `).
+5. Executable tests, by hand (` + "`spec/tests/`" + `, or beside the code they exercise).
+6. Requirements, linked to that code+tests via ` + "`implemented_by`" + `/` + "`verified_by`" + `
+   (R-spec-link-embodied-vs-proven) — ENFORCED requires both, real and resolvable.
+7. Assumptions and conflicts.
+8. Generated documentation and coverage audit — ` + "`hotam gen-spec`" + `.
+
+Close every step with ` + "`hotam gen-spec`" + ` and read
+` + "`docs/gen/PIPELINE.md`" + ` — the generated domain overview
 (R-domain-overview-projection), your second document after the Domain Map.
 
 ## Making changes
