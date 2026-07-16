@@ -1,0 +1,40 @@
+{
+  "kind": "Requirement",
+  "id": "R-enforced-requires-enforcer-or-authored-link",
+  "claim": "A SETTLED requirement with enforcement ENFORCED shall be valid iff EITHER the engine mechanism (enforced_by non-empty) OR the authored mechanism (implemented_by AND verified_by both non-empty) names a real enforcer; neither present is a violation.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "PLAN-authored-spec-discipline.md §5 (steward decision 2026-07-16) and §12 make the ENFORCED gate DISJUNCTIVE: a requirement may be SETTLED without code as honest roadmap debt, but ENFORCED requires a real noun via one of two paths -- the pre-existing engine mechanism (enforced_by: a check_* registry name or a repo-wide Test* function, guarded by check_enforced_names_invariant's non-emptiness half) or the new authored-spec mechanism (implemented_by AND verified_by both non-empty, pointing into a domain's own spec/ tree). check_enforced_names_invariant alone only recognizes the enforced_by half and would wrongly reject a requirement legitimately ENFORCED purely via implemented_by+verified_by; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the widened disjunctive gate that accepts either path, so a self-domain requirement enforced by the engine's own check_*/Test* machinery is not forced to fabricate a redundant authored spec/ reference, and a business domain's authored-spec requirement is not forced to invent a fake engine-side enforcer. Having implemented_by without verified_by (or vice versa) does NOT satisfy the authored path -- \"embodied somewhere\" without \"proven somewhere\" is not a real guarantee. Mutation-proof coverage in internal/invariants/authored_links_test.go proves both positive paths (engine-only, authored-only) pass, and a round-trip mutation (neither -> implemented_by-only, still violating -> both fields present, clears) proves the disjunction is exact, not a silent OR-by-accident.",
+  "assumptions": [],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-enforced-names-enforcer"
+    },
+    {
+      "kind": "refines",
+      "target": "R-authored-spec-links-mechanically-checked"
+    }
+  ],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "check_enforced_requires_enforcer_or_authored_link"
+  ],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-16",
+  "settled_at": "2026-07-16",
+  "last_reviewed_at": "2026-07-16",
+  "review_after": "2027-01-16",
+  "evidence": [
+    "go test ./internal/invariants/... -run EnforcedRequiresEnforcerOrAuthoredLink -v: engine-path/authored-path/disjunctive mutation round-trip all pass (task #223 session, 2026-07-16)"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_links.go",
+    "PLAN-authored-spec-discipline.md"
+  ],
+  "blocked_on": "",
+  "implemented_by": [],
+  "verified_by": []
+}

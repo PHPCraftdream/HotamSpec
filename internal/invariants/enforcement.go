@@ -25,12 +25,15 @@ func checkEnforcedNamesInvariant(g *ontology.Graph) []Violation {
 			})
 			continue
 		}
-		if r.Enforcement == ontology.EnforcementENFORCED && len(r.EnforcedBy) == 0 {
+		authoredMechanism := len(r.ImplementedBy) > 0 && len(r.VerifiedBy) > 0
+		if r.Enforcement == ontology.EnforcementENFORCED && len(r.EnforcedBy) == 0 && !authoredMechanism {
 			out = append(out, Violation{
 				Check: "check_enforced_names_invariant",
 				ID:    r.ID,
-				Message: "enforcement is ENFORCED but enforced_by is empty; " +
-					"name the check_* invariant or test that fires on violation",
+				Message: "enforcement is ENFORCED but enforced_by is empty and the authored path " +
+					"(implemented_by + verified_by) is not both non-empty either; " +
+					"name the check_* invariant or test that fires on violation, or point implemented_by/verified_by " +
+					"at real authored spec/ code+test",
 			})
 		}
 	}
@@ -40,13 +43,23 @@ func checkEnforcedNamesInvariant(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_enforced_names_invariant", Invariant{
 	Name:  "check_enforced_names_invariant",
 	Canon: methodology.Requirement,
-	Claim: "every ENFORCED requirement names its enforcer(s).",
+	Claim: "every ENFORCED requirement names its enforcer(s) -- via the engine mechanism (enforced_by) or the authored mechanism (implemented_by + verified_by).",
 	Rule: "Requirement.enforcement MUST be in ENFORCEMENT_LEVELS (PROSE | STRUCTURAL | ENFORCED); any other value is a " +
-		"misconfiguration. When enforcement == ENFORCED, enforced_by MUST be a non-empty tuple; an ENFORCED requirement " +
-		"with no named enforcer is an unverifiable claim -- the guarantee cannot be audited.",
+		"misconfiguration. When enforcement == ENFORCED, AT LEAST ONE of two mechanisms MUST name a real enforcer: (1) " +
+		"enforced_by is a non-empty tuple (the engine mechanism -- a check_* registry name or a repo-wide Test* function), " +
+		"or (2) implemented_by AND verified_by are BOTH non-empty (the authored mechanism -- path-qualified references into " +
+		"the domain's own spec/ tree; see PLAN-authored-spec-discipline.md §5/§12 and check_enforced_requires_enforcer_or_authored_link, " +
+		"internal/invariants/authored_links.go, which restates this same disjunction as its own atomic check). An ENFORCED " +
+		"requirement with NEITHER mechanism present is an unverifiable claim -- the guarantee cannot be audited.",
 	Why: "naming the enforcer is what makes \"ENFORCED\" mean something beyond PROSE; without the anchor the audit trail " +
 		"is broken and the burn-down meter cannot distinguish real reflexes from aspirational labels. An invalid enforcement " +
-		"level is rejected early so the UNENFORCED.md report is never built on corrupt data.",
+		"level is rejected early so the UNENFORCED.md report is never built on corrupt data. The authored mechanism was added " +
+		"by task #223 (authored-spec discipline): an authored-only ENFORCED requirement (enforced_by empty, implemented_by + " +
+		"verified_by both set -- the whole point of the authored path, since such a requirement has no engine-side check_*/Test* " +
+		"enforcer and should not be forced to fabricate one) MUST NOT trip this check just because enforced_by happens to be " +
+		"empty; this check and check_enforced_requires_enforcer_or_authored_link are now the SAME disjunction stated twice " +
+		"(non-emptiness half here, resolvability half there) so an authored-only requirement passes both, and a requirement " +
+		"with neither mechanism fails both, consistently.",
 	Check: checkEnforcedNamesInvariant,
 })
 

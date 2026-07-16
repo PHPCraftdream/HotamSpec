@@ -1,0 +1,41 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-spec-links-mechanically-checked",
+  "claim": "Every requirement's implemented_by/verified_by entries (path-qualified file:symbol / file:test references into a domain's authored spec/ tree) shall be mechanically checked: the named symbol/test shall exist; a verified_by test shall be non-vacuous (a real assertion or exercising branch, not t.Log-only or empty) and free of an unconditional top-level t.Skip; and the same verified_by entry shall not be formally cited by two or more requirements that are not all mutually related via Relations.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "PLAN-authored-spec-discipline.md §6 (the mechanical-checks catalog) requires a STRUCTURAL floor under the authored-spec era's implemented_by/verified_by fields (added additively in a prior session, internal/ontology/requirement.go): a stale, vacuous, skipped, or promiscuously-reused reference would let ENFORCED mean nothing for a domain's own authored code+tests, exactly the failure PLAN §1 documents from the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements\"). Six atomic check_* invariants implement this (internal/invariants/authored_links.go), each resolving against a single named file under the domain's own directory (g.DomainDir) via a targeted AST parse (internal/gate/spec_resolver.go ResolveSpecSymbol/ResolveSpecTest) -- never a repo-wide scan, since every implemented_by/verified_by entry already names its own file: check_implemented_by_symbol_resolvable (the symbol -- function, method, or type -- really exists; methods resolve here, unlike the engine-side Test*-scan which deliberately skips fn.Recv != nil), check_verified_by_test_resolvable (the test really exists and is Test*-shaped with the real go-test signature), check_verified_by_test_has_teeth (the real ENFORCEMENT successor to the honest no-op check_enforced_by_test_has_teeth -- a resolvable verified_by test whose body is empty or t.Log-only fires, since a domain's spec/ tree is not necessarily wired into any go test ./... this engine runs, so this is the only mechanical backstop against a vacuous claim), check_verified_by_test_no_skip (an unconditional top-level t.Skip/t.Skipf is the same defeat as a t.Log-only body and is split into its own check so the violation names the specific defect), and check_verified_by_no_unrelated_reuse (the same verified_by entry formally cited by requirements that do not all collapse into one connected component under the Relations adjacency is a red flag that one test is stretched thin across unrelated claims). HONESTY BOUNDARY (§6): these checks hold the structural floor only -- symbol/test exists, runs, is not hollow, is not skipped, is not promiscuously reused -- they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit performed by a human or an LLM reading the pair (requirement text, authored code+test), never encoded as a lexical/semantic heuristic in the graph invariant layer. All six checks are structurally NO-OP for any requirement with empty implemented_by/verified_by (both fields remain optional), so on every domain graph.json today (authored spec/ does not exist yet in any domain -- task #224 is the pilot) they contribute zero violations; mutation-proof coverage lives in internal/gate/spec_resolver_test.go and internal/invariants/authored_links_test.go (each check has a break-then-fix round-trip test proving it fires on a real mutated fixture and clears once fixed). REWORDED 2026-07-16: the claim text originally used bare MUST/MUST NOT phrasing, which collided with internal/diagnose's opposite-marker CONFRONT heuristic (oppositeMarkerPairs: must vs must not) on every future proposal whose claim happens to contain the bare word \"must\" plus any shared topical token (e.g. \"path\", \"land\") -- a corpus-wide false-positive tax this requirement would otherwise impose on every subsequent land. Reworded to \"shall\"/\"shall be\"/\"shall not\" phrasing (semantically identical RFC-2119-style obligation, same as most other SETTLED claims in this corpus) with no loss of meaning; the mechanical checks and their tests are unchanged.",
+  "assumptions": [],
+  "relations": [
+    {
+      "kind": "refines",
+      "target": "R-enforced-by-resolvable"
+    }
+  ],
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "check_implemented_by_symbol_resolvable",
+    "check_verified_by_test_resolvable",
+    "check_verified_by_test_has_teeth",
+    "check_verified_by_test_no_skip",
+    "check_verified_by_no_unrelated_reuse"
+  ],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-16",
+  "settled_at": "2026-07-16",
+  "last_reviewed_at": "2026-07-16",
+  "review_after": "2027-01-16",
+  "evidence": [
+    "go test ./internal/gate/... ./internal/invariants/... -run 'ResolveSpecSymbol|ResolveSpecTest|ImplementedBy|VerifiedBy' -v: all mutation round-trip tests pass (task #223 session, 2026-07-16); claim reworded same session after TestCmdLand_SuccessPathDoesNotRollBack / TestProposeLand_NonJSON_Unchanged surfaced the must/must-not opposite-marker collision"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_links.go",
+    "internal/gate/spec_resolver.go",
+    "PLAN-authored-spec-discipline.md"
+  ],
+  "blocked_on": "",
+  "implemented_by": [],
+  "verified_by": []
+}

@@ -12,7 +12,12 @@ const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	t.Parallel()
 	invs := All.All()
-	const expected = 88
+	// 88 + 6: task #223 added six authored-spec mechanical checks
+	// (check_implemented_by_symbol_resolvable, check_verified_by_test_resolvable,
+	// check_verified_by_test_has_teeth, check_verified_by_test_no_skip,
+	// check_verified_by_no_unrelated_reuse, check_enforced_requires_enforcer_or_authored_link
+	// -- internal/invariants/authored_links.go).
+	const expected = 94
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

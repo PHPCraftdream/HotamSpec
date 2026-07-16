@@ -9,10 +9,62 @@ package proposal
 // mixed with real entries is rejected by validate().
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
+
+// authoredRiskModelSrc / authoredRiskTestSrc are minimal real Go fixtures
+// mirroring the implemented_by/verified_by entries these tests exercise
+// ("spec/model/risk.go:NewRisk" / "spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner").
+// Apply now runs the full invariant set post-mutation (internal/proposal/apply.go),
+// which includes the authored-spec resolvability checks
+// (internal/invariants/authored_links.go) added in task #223 -- those checks
+// resolve entries against g.DomainDir (== filepath.Dir(graphPath), i.e. the
+// same temp dir writeTempGraph uses), so a graph carrying these entries must
+// have real files at that path for Apply to accept it, exactly as a real
+// authored spec/ tree would.
+const authoredRiskModelSrc = `package model
+
+func NewRisk(owner string) (*Risk, error) {
+	return &Risk{Owner: owner}, nil
+}
+
+type Risk struct {
+	Owner string
+}
+`
+
+const authoredRiskTestSrc = `package model
+
+import "testing"
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	r, err := NewRisk("")
+	if err == nil {
+		t.Fatalf("expected error for missing owner, got risk=%v", r)
+	}
+}
+`
+
+// writeAuthoredSpecFixtures writes the risk.go/risk_test.go pair under
+// <domainDir>/spec/model/, matching every implemented_by/verified_by entry
+// this test file uses.
+func writeAuthoredSpecFixtures(t *testing.T, domainDir string) {
+	t.Helper()
+	dir := filepath.Join(domainDir, "spec", "model")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("MkdirAll spec/model: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "risk.go"), []byte(authoredRiskModelSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile risk.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "risk_test.go"), []byte(authoredRiskTestSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile risk_test.go: %v", err)
+	}
+}
 
 // TestApply_Requirement_SetImplementedByAndVerifiedBy covers the plain SET
 // path: an UPDATE proposal carrying implemented_by and verified_by lands both
@@ -20,6 +72,7 @@ import (
 func TestApply_Requirement_SetImplementedByAndVerifiedBy(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
+	writeAuthoredSpecFixtures(t, filepath.Dir(path))
 	p := ProposedRequirement{
 		ID:            "R-1",
 		Claim:         "claim R-1",
@@ -143,6 +196,7 @@ func TestApply_Requirement_VerifiedByClearSentinelMixedWithRealFails(t *testing.
 func TestApply_Requirement_CreateCarriesImplementedByAndVerifiedBy(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
+	writeAuthoredSpecFixtures(t, filepath.Dir(path))
 	p := ProposedRequirement{
 		ID:            "R-new-authored",
 		Claim:         "a brand new claim with authored links",

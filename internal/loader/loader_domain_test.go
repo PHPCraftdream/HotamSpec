@@ -23,7 +23,11 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		{"axes", len(g.Axes), 9},
 		{"stakeholders", len(g.Stakeholders), 4},
 		{"assumptions", len(g.Assumptions), 16},
-		{"requirements", len(g.Requirements), 284},
+		// 284 + 2: task #223 landed R-authored-spec-links-mechanically-checked
+		// and R-enforced-requires-enforcer-or-authored-link, anchoring the six
+		// new authored-spec mechanical checks (internal/invariants/authored_links.go)
+		// to the framework's own self-hosting bijection discipline.
+		{"requirements", len(g.Requirements), 286},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
