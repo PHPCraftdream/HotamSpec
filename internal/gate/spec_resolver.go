@@ -363,19 +363,41 @@ func SpecRootForGraph(g *ontology.Graph) string {
 	return SpecRoot(g.DomainDir, g.SelfHosting)
 }
 
-// engineRoot finds the engine repository root by walking UP from domainDir
-// looking for the directory that contains go.mod. This is deliberately
-// robust rather than a hardcoded "two levels up" from domainDir: today
-// domains/hotam-spec-self happens to sit exactly two directories below the
-// repository root, but hardcoding that distance would silently break the
-// moment the domain moved, got nested deeper, or the engine's own layout
-// changed. Walking to go.mod is self-documenting (the marker IS "the
-// directory that owns this Go module") and matches the existing precedent in
-// internal/paths/project_root.go's unexported repoRoot() -- duplicated here
-// (rather than imported) to keep internal/gate free of a dependency on
-// internal/paths, which resolves the CWD-based project root for the running
-// hotam process, a different question from "where is the engine root
-// relative to THIS domain directory" that self-hosting resolution needs.
+// engineRoot finds the engine repository root using a three-step resolution,
+// each step a fallback for when the previous one cannot find go.mod:
+//
+//  1. Walk UP from domainDir looking for the directory that contains go.mod.
+//     This is deliberately robust rather than a hardcoded "two levels up"
+//     from domainDir: today domains/hotam-spec-self happens to sit exactly
+//     two directories below the repository root, but hardcoding that
+//     distance would silently break the moment the domain moved, got nested
+//     deeper, or the engine's own layout changed. Walking to go.mod is
+//     self-documenting (the marker IS "the directory that owns this Go
+//     module"). This is the production path: the real self-hosting domain
+//     (domains/hotam-spec-self) lives under the real engine's go.mod, so
+//     this step always succeeds there and steps 2-3 never trigger.
+//  2. If step 1 finds no go.mod above domainDir (e.g. domainDir is a copy of
+//     the self-domain's graph.json/manifest.json under an isolated
+//     t.TempDir(), as test fixtures do to avoid mutating the real domain --
+//     see cmd/hotam/main_test.go's copySelfDomainUnderRoot -- with no go.mod
+//     and no internal/ tree anywhere above it), walk UP from os.Getwd()
+//     instead. The hotam binary (and `go test`) is always invoked from
+//     inside its own module, so the process's CWD sits under the real
+//     engine's go.mod even when the domainDir under test is an isolated
+//     copy that is not. This lets internal/-relative implemented_by /
+//     verified_by entries resolve against the real engine tree instead of
+//     failing to find files that were never copied into the fixture.
+//  3. If neither walk finds go.mod, fall back to domainDir unchanged (as
+//     before) so resolution still fails cleanly (file not found) rather than
+//     panicking or silently resolving somewhere unexpected.
+//
+// Matches the existing precedent in internal/paths/project_root.go's
+// unexported repoRoot() -- duplicated here (rather than imported) to keep
+// internal/gate free of a dependency on internal/paths, which resolves the
+// CWD-based project root for the running hotam process, a different
+// question from "where is the engine root relative to THIS domain
+// directory" that self-hosting resolution needs (step 2 above answers a
+// narrower version of that same CWD question, only as a fallback).
 func engineRoot(domainDir string) (string, bool) {
 	if domainDir == "" {
 		return "", false
@@ -384,6 +406,22 @@ func engineRoot(domainDir string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
+	if root, ok := walkUpToGoMod(dir); ok {
+		return root, true
+	}
+	if cwd, err := os.Getwd(); err == nil {
+		if root, ok := walkUpToGoMod(cwd); ok {
+			return root, true
+		}
+	}
+	return "", false
+}
+
+// walkUpToGoMod walks UP from start looking for the directory that contains
+// go.mod, returning that directory. Returns ok=false if no go.mod is found
+// before reaching the filesystem root.
+func walkUpToGoMod(start string) (string, bool) {
+	dir := start
 	for {
 		if info, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil && !info.IsDir() {
 			return dir, true

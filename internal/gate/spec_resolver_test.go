@@ -466,6 +466,59 @@ func Baz() int {
 	}
 }
 
+// TestEngineRoot_NoGoModAboveDomainDir_FallsBackToCWD proves the third leg
+// of the fix for the #232/#226 regression: cmd/hotam's test fixtures (see
+// cmd/hotam/main_test.go's copySelfDomainUnderRoot) copy ONLY graph.json and
+// manifest.json for the self-hosting domain into an isolated t.TempDir(),
+// with no go.mod and no internal/ tree anywhere above that copy. Walking up
+// from such a domainDir alone can never find go.mod, so engineRoot must fall
+// back to walking up from the process's current working directory instead --
+// `go test` (like the built hotam binary) always runs from inside the real
+// engine module, so that walk lands on the real repository root, letting
+// internal/-relative implemented_by/verified_by entries resolve against the
+// real engine tree even though domainDir itself is an unrelated island.
+func TestEngineRoot_NoGoModAboveDomainDir_FallsBackToCWD(t *testing.T) {
+	// Intentionally NOT t.Parallel(): this test depends on process-wide
+	// os.Getwd(), and running in parallel with other tests that might change
+	// the working directory could make the assertion flaky.
+	isolatedRoot := t.TempDir()
+	domainDir := filepath.Join(isolatedRoot, "domains", "hotam-spec-self")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll domainDir: %v", err)
+	}
+	// Confirm the fixture premise: no go.mod anywhere above domainDir inside
+	// the isolated tree (t.TempDir() roots are never inside a Go module).
+	if _, ok := walkUpToGoMod(domainDir); ok {
+		t.Fatalf("test fixture invalid: expected no go.mod walking up from %s", domainDir)
+	}
+
+	root, ok := engineRoot(domainDir)
+	if !ok {
+		t.Fatalf("expected engineRoot to fall back to CWD-walk and succeed, got ok=false")
+	}
+	if root == domainDir {
+		t.Fatalf("expected engineRoot to resolve to the real engine root (via CWD), not degrade to domainDir=%s", domainDir)
+	}
+	if _, err := os.Stat(filepath.Join(root, "go.mod")); err != nil {
+		t.Fatalf("expected resolved root %s to contain go.mod: %v", root, err)
+	}
+
+	// The resolved root must be the SAME one a direct CWD-walk finds --
+	// proving engineRoot's fallback is exactly the CWD walk, not some other
+	// coincidental directory.
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("os.Getwd: %v", err)
+	}
+	wantRoot, ok := walkUpToGoMod(cwd)
+	if !ok {
+		t.Fatalf("test environment invalid: expected go.mod walking up from CWD %s", cwd)
+	}
+	if root != wantRoot {
+		t.Fatalf("engineRoot resolved to %s, want CWD-walk result %s", root, wantRoot)
+	}
+}
+
 // TestSpecRoot_NonSelfHosting_StillResolvesAgainstDomainDir is the
 // regression proof: an ordinary (non-self-hosting) domain's SpecRoot MUST
 // still return domainDir itself, unaffected by the self-hosting engine-root
