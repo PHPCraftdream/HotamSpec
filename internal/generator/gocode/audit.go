@@ -328,7 +328,27 @@ func candidateKindLabel(k candidateTermKind) string {
 // this requirement's own atoms is a follow-up candidate (graph enrichment or
 // matching-heuristic gap); a candidate with no correlate anywhere is
 // honestly out of the current model.
+//
+// The g.resolution == candidateAmbiguous case (task #213) is checked FIRST,
+// before the resolvedField/resolvedEntity switch below: an ambiguous
+// candidate is a genuinely-unresolved gap (resolveGraphNameCandidate does
+// NOT populate resolvedField/resolvedEntity for it — see that function's doc
+// comment), so it must never fall into the "resembles graph field X.Y"
+// branches, which would assert a specific entity attribution the candidate's
+// own extraction data explicitly could not support.
+//
+// The message cites resolveScopedFieldMatches' referencer-scoping guard
+// (requirements.go, contract §2.1's resolvePreciseGateState idea reused for
+// field-atom classification) and task #208 (which introduced that guard) as
+// the CONCEPT, not as a requirement id — there is no "R-referencer-scoping"
+// node in any domain graph; citing one would itself be a dishonest anchor.
 func candidateGapDetail(g candidateTerm) string {
+	if g.resolution == candidateAmbiguous {
+		if len(g.ambiguousEntities) > 0 {
+			return fmt.Sprintf("ambiguous between %d EntityTypes sharing this translated name (%s), no binding signal to attribute it to one (see resolveScopedFieldMatches' referencer-scoping guard, task #208) — genuinely unresolved, not a graph/heuristic follow-up candidate", len(g.ambiguousEntities), strings.Join(g.ambiguousEntities, ", "))
+		}
+		return "ambiguous between multiple EntityTypes sharing this translated name, no binding signal to attribute it to one (see resolveScopedFieldMatches' referencer-scoping guard, task #208) — genuinely unresolved, not a graph/heuristic follow-up candidate"
+	}
 	switch {
 	case g.resolvedField != nil && g.resolvedEntity != nil:
 		return fmt.Sprintf("resembles graph field `%s.%s`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)", g.resolvedEntity.structName, g.resolvedField.fieldName)
@@ -339,7 +359,7 @@ func candidateGapDetail(g candidateTerm) string {
 	case g.resolvedEntity != nil:
 		return fmt.Sprintf("resembles EntityType `%s`, not captured by this requirement's own atoms above (candidate for graph/heuristic follow-up)", g.resolvedEntity.structName)
 	default:
-		return "no graph correlate found anywhere in the domain (out of model, or genuinely ambiguous between multiple EntityTypes with no binding signal)"
+		return "no graph correlate found anywhere in the domain (out of model)"
 	}
 }
 

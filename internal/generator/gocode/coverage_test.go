@@ -342,6 +342,101 @@ func TestRenderAuditFile_CoverageSection_Deterministic(t *testing.T) {
 	}
 }
 
+// TestBuildCoverageReport_AmbiguousGraphNameCandidate_HonestGapText is task
+// #213's regression test: a claim that mentions a single-word translated
+// field name shared by 2+ EntityTypes (twoForecastEntityTypes' "прогноз" ->
+// "Forecast", the exact real-domain shape found on prat's
+// R-gate-pg1-planning-approved), with NO binding signal tying it to either
+// EntityType, must be reported candidateAmbiguous — NOT
+// candidateResolvedElsewhere / candidateUnresolved with a stale
+// resolvedField/resolvedEntity left over from before the ambiguity check —
+// and candidateGapDetail must render the honest "ambiguous between..." text,
+// never the misleading "resembles graph field `X.Forecast`" text a reader
+// would wrongly take as a confident, specific attribution.
+func TestBuildCoverageReport_AmbiguousGraphNameCandidate_HonestGapText(t *testing.T) {
+	ets := twoForecastEntityTypes()
+	models := buildSyntheticEntityModels(t, ets)
+
+	// Names neither entity's slug, quotes no forecast-version token adjacent
+	// to "forecast", and matches no sibling field of either entity - the
+	// exact "no binding signal" shape
+	// TestResolveScopedFieldMatches_AmbiguousSingleWord_NoSignalDropsAll
+	// already pins for field-atom classification, reused here for coverage.
+	reqs := []ontology.Requirement{
+		{
+			ID:     "R-ambiguous-forecast-coverage",
+			Claim:  "Pilot planning MUST produce an early forecast before Planning Approved.",
+			Status: ontology.StatusSETTLED,
+			Owner:  "test-owner",
+		},
+	}
+	reqModels, err := BuildRequirementModels(reqs, models, nil)
+	if err != nil {
+		t.Fatalf("BuildRequirementModels: %v", err)
+	}
+	if len(reqModels) != 1 {
+		t.Fatalf("expected exactly 1 requirement model, got %d", len(reqModels))
+	}
+	rm := reqModels[0]
+
+	cov := BuildCoverageReport(rm, models, settledOnly(reqs), nil)
+
+	var found *candidateTerm
+	for i := range cov.candidates {
+		if strings.EqualFold(cov.candidates[i].text, "forecast") {
+			found = &cov.candidates[i]
+		}
+	}
+	if found == nil {
+		t.Fatalf("expected a %q candidate term, got candidates: %+v", "forecast", cov.candidates)
+	}
+
+	if found.resolution != candidateAmbiguous {
+		t.Errorf("forecast candidate resolution = %v, want candidateAmbiguous (shared translated word, no binding signal)", found.resolution)
+	}
+	// The bug (task #213): resolvedEntity/resolvedField were populated from
+	// the graphNameCandidate BEFORE the ambiguity check downgraded
+	// resolution, so they leaked a specific (wrong) attribution into an
+	// ambiguous candidate. Both must be nil now.
+	if found.resolvedEntity != nil {
+		t.Errorf("ambiguous forecast candidate resolvedEntity = %+v, want nil (no single entity can be honestly attributed)", found.resolvedEntity)
+	}
+	if found.resolvedField != nil {
+		t.Errorf("ambiguous forecast candidate resolvedField = %+v, want nil (no single field can be honestly attributed)", found.resolvedField)
+	}
+
+	detail := candidateGapDetail(*found)
+	if strings.Contains(detail, "resembles graph field") {
+		t.Errorf("candidateGapDetail for an ambiguous candidate rendered the misleading %q, want honest ambiguous text: %q", "resembles graph field", detail)
+	}
+	if !strings.Contains(detail, "ambiguous") {
+		t.Errorf("candidateGapDetail for an ambiguous candidate = %q, want it to mention %q", detail, "ambiguous")
+	}
+	for _, entityName := range []string{"PlanPackage", "DesignPackage"} {
+		if !strings.Contains(detail, entityName) {
+			t.Errorf("candidateGapDetail for the ambiguous forecast candidate = %q, want it to name %q (one of the sharing EntityTypes)", detail, entityName)
+		}
+	}
+
+	// resolvedCount's arithmetic must NOT count this candidate as resolved -
+	// candidateAmbiguous is a "no correlate could be honestly attributed"
+	// case, same accounting bucket as candidateUnresolved, or the printed
+	// "Coverage: N/M" total would overcount N relative to the Unresolved
+	// section's actual row count (the exact prat R-gate-pg1-planning-approved
+	// arithmetic-mismatch symptom this task's brief reports).
+	unresolvedInReport := 0
+	for _, c := range cov.candidates {
+		if c.resolution == candidateUnresolved || c.resolution == candidateAmbiguous {
+			unresolvedInReport++
+		}
+	}
+	total := len(cov.candidates)
+	resolved := cov.resolvedCount()
+	if total-resolved != unresolvedInReport {
+		t.Errorf("Coverage arithmetic mismatch: total=%d resolved=%d (diff %d) but %d candidates are unresolved/ambiguous", total, resolved, total-resolved, unresolvedInReport)
+	}
+}
+
 // TestResolveCapitalizedCandidate_AmbiguousSingleLetter_NeverProduced is a
 // regression guard for the exact noise pattern found (and removed) during
 // this feature's own development on the real prat domain: before the 2+

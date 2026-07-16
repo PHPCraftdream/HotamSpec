@@ -102,6 +102,22 @@ const (
 	// gap": looks like a graph concept, but not mirrored into this
 	// requirement's atoms.
 	candidateResolvedElsewhere
+	// candidateAmbiguous means the candidate is a single-word-translated
+	// field name shared by 2+ EntityTypes in the domain, with no
+	// independent binding signal (entityHasClaimBindingSignal) tying the
+	// claim to any ONE of them (graphNameCandidate.ambiguous, task #208's
+	// referencer-scoping finding extended to coverage). This is NOT the
+	// same claim as candidateResolvedElsewhere: that says "this candidate
+	// IS a specific graph element X, just not one of this requirement's own
+	// atoms"; candidateAmbiguous instead says "this candidate cannot be
+	// honestly attributed to any single graph element at all" — asserting a
+	// specific resolvedEntity/resolvedField for it would be a false claim
+	// of specificity the extraction data does not support. Kept distinct
+	// from candidateUnresolved too, so the audit renderer can name WHICH
+	// entities share the word instead of the generic "no graph correlate
+	// found anywhere" text (more informative for a human/LLM auditor
+	// deciding whether this is a real follow-up candidate).
+	candidateAmbiguous
 )
 
 // candidateTerm is one extracted-and-resolved coverage candidate.
@@ -119,6 +135,13 @@ type candidateTerm struct {
 	resolvedField         *fieldModel
 	resolvedState         *stateModel
 	resolvedRequirementID string
+	// ambiguousEntities is set only when resolution == candidateAmbiguous:
+	// every EntityType struct name sharing the candidate's translated word,
+	// for the audit renderer's specific "ambiguous between X, Y" detail
+	// (task #213). resolvedEntity/resolvedField are deliberately left unset
+	// for an ambiguous candidate — see candidateAmbiguous's doc comment for
+	// why asserting either would be a false claim of specificity.
+	ambiguousEntities []string
 }
 
 // coverageReport is one SETTLED requirement's full §3.1 coverage-
@@ -130,11 +153,17 @@ type coverageReport struct {
 
 // resolvedCount reports how many of the report's candidates resolved to
 // SOME graph element (atom of this requirement OR elsewhere) — the "N" in
-// "Coverage: N/M candidate terms resolved".
+// "Coverage: N/M candidate terms resolved". candidateAmbiguous (task #213)
+// is deliberately excluded here alongside candidateUnresolved: an ambiguous
+// candidate resolves to NO single graph element (that is the whole point of
+// the tag — see candidateAmbiguous's doc comment), so it must count as
+// unresolved for THIS arithmetic exactly like candidateUnresolved does, or
+// the printed "Coverage: N/M" total would silently overcount N relative to
+// the Unresolved section's actual row count below it.
 func (c coverageReport) resolvedCount() int {
 	n := 0
 	for _, cand := range c.candidates {
-		if cand.resolution != candidateUnresolved {
+		if cand.resolution != candidateUnresolved && cand.resolution != candidateAmbiguous {
 			n++
 		}
 	}
@@ -293,12 +322,16 @@ func extractQuotedCandidates(claim string) []string {
 // несколькими EntityType без сигнала привязки, это тоже honest gap, не
 // наврать про resolution"), such a candidate must be reported unresolved,
 // never silently resolved to one arbitrary entity out of the ambiguous set.
+// ambiguousEntities names every EntityType sharing the translated word (task
+// #213's fix), for an honest, specific "ambiguous between X, Y" audit
+// message instead of a misleading single-entity attribution.
 type graphNameCandidate struct {
-	displayText string
-	entity      *entityModel
-	field       *fieldModel
-	state       *stateModel
-	ambiguous   bool
+	displayText       string
+	entity            *entityModel
+	field             *fieldModel
+	state             *stateModel
+	ambiguous         bool
+	ambiguousEntities []string
 }
 
 // extractGraphNameCandidates walks EVERY EntityType's fields and states
@@ -345,6 +378,12 @@ func extractGraphNameCandidates(claim string, entityModels []*entityModel) []gra
 				if w, ok := singleTranslatedWord(f.fieldName); ok && len(wordOwners[w]) >= 2 {
 					if !entityHasClaimBindingSignal(claim, em, w) {
 						gc.ambiguous = true
+						owners := make([]string, 0, len(wordOwners[w]))
+						for name := range wordOwners[w] {
+							owners = append(owners, name)
+						}
+						sort.Strings(owners)
+						gc.ambiguousEntities = owners
 					}
 				}
 			}
@@ -542,18 +581,27 @@ func requirementIDWordMatch(reqID, tok string) bool {
 // exactly this entity+field/state, candidateResolvedElsewhere otherwise
 // (contract §3.1's partial coverage gap — matched a real graph concept, but
 // not mirrored into this requirement's own atoms).
+//
+// Task #213 fix: resolvedEntity/resolvedField/resolvedState are deliberately
+// NOT populated from gc up front. Populating them unconditionally (the
+// pre-#213 shape) meant an ambiguous candidate — downgraded to
+// candidateUnresolved below — still carried a specific resolvedField/
+// resolvedEntity, so candidateGapDetail (audit.go) rendered the misleading
+// "resembles graph field X.Y" text for a candidate that was never actually
+// attributed to X.Y in the first place (gc.ambiguous means NO entity could
+// be honestly attributed). Each branch below now sets exactly the fields
+// that branch's resolution claim actually supports.
 func resolveGraphNameCandidate(gc graphNameCandidate, atomFields, atomStates map[string]struct{}) candidateTerm {
 	ct := candidateTerm{
-		text:           gc.displayText,
-		kind:           candidateKindGraphName,
-		resolvedEntity: gc.entity,
-		resolvedField:  gc.field,
-		resolvedState:  gc.state,
+		text: gc.displayText,
+		kind: candidateKindGraphName,
 	}
 	if gc.field != nil {
 		key := gc.entity.structName + "." + gc.field.fieldName
 		if _, ok := atomFields[key]; ok {
 			ct.resolution = candidateResolvedAtom
+			ct.resolvedEntity = gc.entity
+			ct.resolvedField = gc.field
 			return ct
 		}
 	}
@@ -561,6 +609,8 @@ func resolveGraphNameCandidate(gc graphNameCandidate, atomFields, atomStates map
 		key := gc.entity.structName + "." + gc.state.constant
 		if _, ok := atomStates[key]; ok {
 			ct.resolution = candidateResolvedAtom
+			ct.resolvedEntity = gc.entity
+			ct.resolvedState = gc.state
 			return ct
 		}
 	}
@@ -569,14 +619,21 @@ func resolveGraphNameCandidate(gc graphNameCandidate, atomFields, atomStates map
 		// single-word translated field name shared by 2+ EntityTypes, with
 		// no independent binding signal tying the claim to THIS specific
 		// candidate's entity, is not an honest "resolves elsewhere" claim —
-		// reporting it as candidateResolvedElsewhere would assert a specific
-		// entity attribution the claim text does not actually support.
-		// Treated as unresolved (contract §3.1's own instruction: "это тоже
-		// honest gap, не наврать про resolution").
-		ct.resolution = candidateUnresolved
+		// reporting it as candidateResolvedElsewhere (or leaving
+		// resolvedField/resolvedEntity set as if it were) would assert a
+		// specific entity attribution the claim text does not actually
+		// support. Tagged candidateAmbiguous (contract §3.1's own
+		// instruction: "это тоже honest gap, не наврать про resolution"),
+		// distinct from the generic candidateUnresolved so the audit
+		// renderer can name WHICH EntityTypes share the word.
+		ct.resolution = candidateAmbiguous
+		ct.ambiguousEntities = gc.ambiguousEntities
 		return ct
 	}
 	ct.resolution = candidateResolvedElsewhere
+	ct.resolvedEntity = gc.entity
+	ct.resolvedField = gc.field
+	ct.resolvedState = gc.state
 	return ct
 }
 
