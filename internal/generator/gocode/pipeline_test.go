@@ -498,6 +498,7 @@ func mutateGateAlwaysNil(t *testing.T, src string) string {
 // referencer/field/referenced, precise-or-general target), (3) unresolvable
 // ref_targets must still produce no gate.
 func TestGeneratePipelineFromGraph_RealPratDomain(t *testing.T) {
+	t.Skip("gen-code retired — authored-spec pivot 2026-07-16; see PLAN-authored-spec-discipline.md")
 	domainDir := pratDomainDir(t)
 	g, err := loader.LoadGraph(filepath.Join(domainDir, "graph.json"))
 	if err != nil {

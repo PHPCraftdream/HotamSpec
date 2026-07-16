@@ -776,6 +776,7 @@ func pratRequirements(t *testing.T) ([]ontology.EntityType, []ontology.Requireme
 // description, pinned into a test so a future generator regression on this
 // real domain is caught, not just eyeballed once.
 func TestGenerateRequirementsFromGraph_RealPratDomain(t *testing.T) {
+	t.Skip("gen-code retired — authored-spec pivot 2026-07-16; see PLAN-authored-spec-discipline.md")
 	ets, reqs := pratRequirements(t)
 
 	models := buildSyntheticEntityModels(t, ets)

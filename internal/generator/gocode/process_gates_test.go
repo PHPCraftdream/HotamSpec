@@ -311,6 +311,7 @@ func TestRenderProcessGatesFile_ZeroGates_NoUnusedImport(t *testing.T) {
 // fallback, (4) every resolved entity carries a usable required-state form
 // (precise state or non-empty terminal set).
 func TestBuildProcessStepGateModels_RealPratDomain(t *testing.T) {
+	t.Skip("gen-code retired — authored-spec pivot 2026-07-16; see PLAN-authored-spec-discipline.md")
 	domainDir := pratDomainDir(t)
 	g, err := loader.LoadGraph(filepath.Join(domainDir, "graph.json"))
 	if err != nil {
