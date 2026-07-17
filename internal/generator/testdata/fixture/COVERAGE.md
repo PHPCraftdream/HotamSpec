@@ -11,9 +11,17 @@ Generated from this domain's `graph.json` plus its authored `spec/` tree (PLAN-a
 
 ## Layer — where this domain's authored spec/ tree currently sits
 
-Per PLAN-authored-spec-discipline.md §4 (refined by R-authored-spec-layer-progression, §8 step 3-6): a domain is founded general-before-specific — ALL models before any one model's fields, ALL fields before any one model's methods, ALL methods before tests. Counts below are read from the same `go/ast` scan MODELS.md performs (`ScanModelLayerCounts`).
+Per PLAN-authored-spec-discipline.md §4 (refined by R-authored-spec-layer-progression, §8 step 3-6), extended by PLAN-scenario-generated-spec.md §1 with a fifth rung: a domain is founded general-before-specific — ALL models before any one model's fields, ALL fields before any one model's methods, ALL methods before tests, ALL tests before scenario narratives. The first five columns are read from the same `go/ast` scan MODELS.md performs (`ScanModelLayerCounts`); the `scenarios` column is the CHEAP AST-only count of verified_by tests whose body calls `hotamspec.NewScenario(...)` (gate.ResolveSpecTest's HasScenario, no test execution) — see the ratchet counter below for the honest remaining tail.
 
 **Layer 0 — no authored spec/ yet.** No authored model file was found (ordinary domain: nothing under `spec/`; self-hosting domain: no requirement names an engine file via `implemented_by`/`verified_by` yet). PLAN-authored-spec-discipline.md §8 step 3 has not started.
+
+## Scenario ratchet — SETTLED requirements still without a narrative
+
+PLAN-scenario-generated-spec.md §2 D4/§5: the honest remaining tail of SETTLED requirements that carry at least one `verified_by` entry but no test body yet calls `hotamspec.NewScenario(...)` — a RATCHET, not a promise: this count is reported so it is visible and trending down, never silently hidden. A requirement with NO `verified_by` at all is roadmap debt already reported above (and in TRACEABILITY.md's prose/roadmap-debt section), not counted again here — this ratchet only tracks requirements that DO have a test but that test does not yet narrate.
+
+**0/0 SETTLED requirement(s) with `verified_by` carry a scenario narrative; 0 remain in the ratchet tail.**
+
+_No SETTLED requirement in this domain carries `verified_by` yet — the ratchet has nothing to count._
 
 ## Authored-carrier (implemented_by + verified_by both resolve)
 

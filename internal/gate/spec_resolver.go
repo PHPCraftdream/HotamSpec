@@ -56,6 +56,26 @@ type SpecTestResult struct {
 	// normal Go idiom and not a blanket "this test proves nothing" escape
 	// hatch.
 	HasSkip bool
+	// HasScenario is true when the test body contains a call to the
+	// PACKAGE-QUALIFIED constructor `hotamspec.NewScenario(...)` anywhere in
+	// the body (top level or nested) -- PLAN-scenario-generated-spec.md §3
+	// W1.4's cheap, AST-only signal that this verified_by test narrates a
+	// hotamspec scenario, WITHOUT actually running `go test` to find out
+	// (that real, expensive proof -- a passing recorded artifact -- is
+	// W1.3's BuildSpec/RunVerifiedByTestRecording path, gated behind
+	// `gen-spec --spec`). Unlike isTeethCall's looser, unqualified `.Then`
+	// method-name-only match (which deliberately widens to avoid a
+	// go/types pass, see isTeethCall's doc comment, and accepts the
+	// occasional false positive because every other verified_by check still
+	// has to hold regardless), HasScenario requires the selector's operand
+	// to be the literal identifier "hotamspec" AND the method name to be
+	// "NewScenario" -- the one call every real scenario-based test must
+	// make exactly once to obtain its *Scenario, so this is a precise,
+	// low-false-positive signal cheap enough to run on every `gen-spec`
+	// (default, no --spec) without materially slowing it down: it is
+	// computed in the SAME AST walk ResolveSpecTest already performs for
+	// HasTeeth/HasSkip, not a second parse.
+	HasScenario bool
 }
 
 // EntryWithinSpecScope enforces the STRUCTURAL FLOOR half of the
@@ -276,7 +296,8 @@ func ResolveSpecTest(specRoot, file, testName string) (SpecTestResult, error) {
 		}
 		teeth := testBodyHasTeeth(fn.Body)
 		skip := testBodyHasTopLevelSkip(fn.Body)
-		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip}, nil
+		scenario := testBodyHasScenarioConstructor(fn.Body)
+		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip, HasScenario: scenario}, nil
 	}
 	return SpecTestResult{Found: false}, nil
 }
@@ -385,6 +406,44 @@ func isTeethCall(call *ast.CallExpr) bool {
 		}
 	}
 	return false
+}
+
+// testBodyHasScenarioConstructor reports whether body contains a call to the
+// package-qualified `hotamspec.NewScenario(...)` constructor anywhere in the
+// body (top level or nested inside if/for/switch/range/t.Run, same traversal
+// shape as testBodyHasTeeth) -- see SpecTestResult.HasScenario's doc comment
+// for why this is deliberately PRECISE (package-qualified selector, exact
+// method name) rather than isTeethCall's looser unqualified `.Then` match: a
+// generator column rendered on EVERY `gen-spec` (not just `--spec`) must not
+// falsely claim a test carries a scenario narrative it does not.
+func testBodyHasScenarioConstructor(body *ast.BlockStmt) bool {
+	if body == nil {
+		return false
+	}
+	found := false
+	ast.Inspect(body, func(n ast.Node) bool {
+		if found {
+			return false
+		}
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if sel.Sel.Name != "NewScenario" {
+			return true
+		}
+		pkgIdent, ok := sel.X.(*ast.Ident)
+		if !ok || pkgIdent.Name != "hotamspec" {
+			return true
+		}
+		found = true
+		return false
+	})
+	return found
 }
 
 // testBodyHasTopLevelSkip reports whether fn's body contains a call to

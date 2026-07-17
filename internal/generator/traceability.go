@@ -39,6 +39,17 @@ type traceabilityLink struct {
 	raw      string
 	resolved bool
 	detail   string // short reason when not resolved (parse error / not found)
+	// hasScenario is set only for a verified_by entry: whether the AST-only
+	// scan (gate.ResolveSpecTest's HasScenario, PLAN-scenario-generated-
+	// spec.md §3 W1.4) found a `hotamspec.NewScenario(...)` call in the
+	// test body -- a CHEAP, always-on signal (no `go test` execution),
+	// distinct from verdict below.
+	hasScenario bool
+	// verdict is the REAL, executed outcome (ScenarioVerdictsFromRows,
+	// gen-spec --spec only) -- "" when no verdicts map was supplied to
+	// BuildTraceability (the default, cheap gen-spec path never executes
+	// tests to fill this in).
+	verdict string
 }
 
 // BuildTraceability renders docs/gen/TRACEABILITY.md: for every requirement
@@ -57,7 +68,28 @@ type traceabilityLink struct {
 // (prose/roadmap-debt with no code carrier yet) -- so the doc is an honest
 // full partition of the roster, not just a spotlight on the authored-linked
 // minority.
-func BuildTraceability(g *ontology.Graph) string {
+//
+// Scenario column (PLAN-scenario-generated-spec.md §3 W1.4): every
+// verified_by entry additionally reports whether it carries a
+// hotamspec-recorder scenario -- CHEAPLY, via gate.ResolveSpecTest's
+// AST-only HasScenario detection (a `hotamspec.NewScenario(...)` call in
+// the test body), which BuildTraceability already gets for free from the
+// SAME resolveTraceabilityLinks call this function always made -- so the
+// default (no --spec) `gen-spec` gains this column at ZERO extra cost, no
+// `go test` execution. verdicts is OPTIONAL (nil on every pre-existing
+// caller and on a default `gen-spec` run): when supplied (only
+// `gen-spec --spec`, populated once via generator.CollectSpecRows +
+// generator.ScenarioVerdictsFromRows and shared with BuildSpec/BuildCoverage
+// in the SAME invocation, see cmd/hotam/gen_spec.go), each linked
+// requirement's verified_by cell additionally names the REAL recorded
+// verdict (narrated+pass / narrated-but-another-entry-not-passing /
+// no-narrative) instead of only the AST guess.
+func BuildTraceability(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) string {
+	var verdictMap map[string]ScenarioVerdict
+	if len(verdicts) > 0 {
+		verdictMap = verdicts[0]
+	}
+
 	lines := []string{Banner, ReaderHeaderLine("TRACEABILITY", g), ""}
 	lines = append(lines, "# TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)")
 	lines = append(lines, "")
@@ -69,7 +101,14 @@ func BuildTraceability(g *ontology.Graph) string {
 			"file:symbol / file:test was found by parsing that file; `ORPHANED` means it was "+
 			"not (stale reference, typo, or renamed/deleted symbol) — the mechanical gate "+
 			"(internal/invariants/authored_links.go) is the actual enforcement point, this doc "+
-			"only reports its verdict for navigation.")
+			"only reports its verdict for navigation. The `scenario` column (PLAN-scenario-"+
+			"generated-spec.md §3 W1.4) is a CHEAP, AST-only signal (no test execution) that a "+
+			"verified_by test's body calls `hotamspec.NewScenario(...)`; a `verdict` in "+
+			"parentheses (narrated, pass / narrated, another entry not passing / no narrative "+
+			"recorded) only appears "+
+			"when this doc was generated via `hotam gen-spec --spec`, which actually EXECUTES "+
+			"every verified_by test to record it (real, but expensive) — a default `gen-spec` "+
+			"run never pays that cost and this doc says so plainly rather than guessing.")
 	lines = append(lines, "")
 
 	if g.IsEmpty() {
@@ -94,10 +133,14 @@ func BuildTraceability(g *ontology.Graph) string {
 			}
 			continue
 		}
+		verifiedRes := resolveTraceabilityLinks(specRoot, r.VerifiedBy, false)
+		if v, ok := verdictMap[r.ID]; ok {
+			applyScenarioVerdict(verifiedRes, v)
+		}
 		linked = append(linked, traceabilityRow{
 			req:            r,
 			implementedRes: resolveTraceabilityLinks(specRoot, r.ImplementedBy, true),
-			verifiedRes:    resolveTraceabilityLinks(specRoot, r.VerifiedBy, false),
+			verifiedRes:    verifiedRes,
 		})
 	}
 
@@ -201,15 +244,50 @@ func resolveTraceabilityLinks(specRoot string, raw []string, isSymbol bool) []tr
 		} else if result.Found && result.HasSkip {
 			detail = "unconditional skip"
 		}
-		out = append(out, traceabilityLink{raw: trimmed, resolved: result.Found, detail: detail})
+		// HasScenario comes from the SAME AST walk ResolveSpecTest already
+		// performed above (gate.SpecTestResult.HasScenario, W1.4) -- no
+		// second parse, no test execution: a verified_by cell's scenario
+		// signal is free relative to what this function already computed
+		// for the resolves/ORPHANED verdict.
+		out = append(out, traceabilityLink{raw: trimmed, resolved: result.Found, detail: detail, hasScenario: result.Found && result.HasScenario})
 	}
 	return out
+}
+
+// applyScenarioVerdict overlays the REAL, executed ScenarioVerdict (gen-spec
+// --spec only, ScenarioVerdictsFromRows) onto verifiedRes's cells IN PLACE,
+// so renderTraceabilityLinks can render the actually-recorded outcome
+// instead of only the AST guess -- every verified_by cell for the SAME
+// requirement shares one ScenarioVerdict (the verdict is a per-requirement
+// reduction across all its verified_by entries, see ScenarioVerdictsFromRows'
+// own doc comment), so the same v is stamped onto every resolving link.
+func applyScenarioVerdict(verifiedRes []traceabilityLink, v ScenarioVerdict) {
+	for i := range verifiedRes {
+		if !verifiedRes[i].resolved {
+			continue
+		}
+		switch {
+		case v.Narrated && v.AllEntriesPass:
+			verifiedRes[i].verdict = "narrated, pass"
+		case v.Narrated:
+			verifiedRes[i].verdict = "narrated, another entry not passing"
+		default:
+			verifiedRes[i].verdict = "no narrative recorded"
+		}
+	}
 }
 
 // renderTraceabilityLinks renders one cell of the authored-linked table: each
 // entry as a clickable-looking backticked path, tagged ✓ when it resolved
 // and ORPHANED (plus a short reason) when it did not, joined with line
 // breaks (<br>) so a requirement with multiple entries stays one table row.
+// A resolving verified_by entry additionally carries its scenario signal
+// (W1.4): "scenario" when the cheap AST scan found `hotamspec.NewScenario`
+// in the test body, plus a real recorded verdict in parentheses when one was
+// supplied (applyScenarioVerdict, gen-spec --spec only) -- an
+// implemented_by entry never sets hasScenario/verdict (zero values), so this
+// branch is silently skipped for that table, keeping this one render
+// function shared without a caller-side conditional.
 func renderTraceabilityLinks(links []traceabilityLink) string {
 	if len(links) == 0 {
 		return "—"
@@ -228,6 +306,20 @@ func renderTraceabilityLinks(links []traceabilityLink) string {
 			cell += " — resolves (" + l.detail + ")"
 		default:
 			cell += " — resolves"
+		}
+		if l.resolved {
+			if l.hasScenario {
+				cell += " · scenario"
+				if l.verdict != "" {
+					cell += " (" + l.verdict + ")"
+				}
+			} else if l.verdict != "" {
+				// A verdicts map was supplied but this entry's own AST scan
+				// found no hotamspec.NewScenario call -- report the verdict
+				// alone (it will read "no narrative recorded", consistent
+				// with the AST guess) rather than silently dropping it.
+				cell += " · " + l.verdict
+			}
 		}
 		parts = append(parts, cell)
 	}

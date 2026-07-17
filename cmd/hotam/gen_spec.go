@@ -143,6 +143,25 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// must list exactly this set to stay byte-identical, even though
 	// atoms-*.md/live-state.md are additionally written alongside them on
 	// disk (see mdDocs below).
+	// includeSpec's real recording pass (RunVerifiedByTestRecording, one go
+	// test per verified_by entry) is collected ONCE here, before
+	// TRACEABILITY.md/COVERAGE.md/SPEC.md are rendered, and shared by all
+	// three verified_by-consuming projections (generator.CollectSpecRows's
+	// own doc comment) — so a `gen-spec --spec` run pays the ~90s record
+	// price exactly once, not three times over, and TRACEABILITY.md's/
+	// COVERAGE.md's scenario-verdict column reports the SAME executed
+	// outcome SPEC.md's narrative was rendered from. When includeSpec is
+	// false (the default, every pre-existing caller), specVerdictsArg stays
+	// an empty (nil-backed) slice and BuildTraceability/BuildCoverage's
+	// variadic parameter receives zero arguments, falling back to their
+	// cheap AST-only signal — see those functions' own doc comments.
+	var specRows map[string]generator.SpecRow
+	var specVerdictsArg []map[string]generator.ScenarioVerdict
+	if includeSpec {
+		specRows = generator.CollectSpecRows(g)
+		specVerdictsArg = []map[string]generator.ScenarioVerdict{generator.ScenarioVerdictsFromRows(specRows)}
+	}
+
 	repoMapDocs := []generator.GenDocEntry{
 		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g, domainName, consumer)},
 		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
@@ -153,9 +172,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName, consumer)},
 		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
 		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName)},
-		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
+		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g, specVerdictsArg...)},
 		{Filename: "MODELS.md", Content: generator.BuildModels(g)},
-		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g)},
+		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g, specVerdictsArg...)},
 	}
 	// SPEC.md (BuildSpec, W1.3) is the one docs/gen/ projection that EXECUTES
 	// real `go test` subprocesses (one per verified_by entry) rather than
@@ -166,7 +185,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// pays this cost or sees SPEC.md in its written/removed lists.
 	var specMD string
 	if includeSpec {
-		specMD = generator.BuildSpec(g)
+		specMD = generator.BuildSpecFromRows(g, specRows)
 		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "SPEC.md", Content: specMD})
 	}
 	// REPO-MAP.md lists itself too (the repo-map scan globs docs/gen/*.md

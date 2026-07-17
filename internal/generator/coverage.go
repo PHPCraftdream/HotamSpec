@@ -31,8 +31,20 @@ import (
 // roadmap debt (SETTLED, ENFORCEABLE, no carrier yet) versus permanent
 // discipline (SETTLED, INHERENTLY_PROSE) -- plus the domain's current
 // authored-spec layer per PLAN-authored-spec-discipline.md §4/§8 step 3-6,
-// read from the same go/ast scan models.go performs.
-func BuildCoverage(g *ontology.Graph) string {
+// read from the same go/ast scan models.go performs, EXTENDED
+// (PLAN-scenario-generated-spec.md §3 W1.4) with a fifth rung on that same
+// ladder -- objects -> fields -> methods -> tests -> SCENARIOS -- and a
+// ratchet counter of how many SETTLED+verified_by requirements still lack a
+// scenario narrative. Both additions are CHEAP (AST-only, gate.ResolveSpecTest's
+// HasScenario) on a default `gen-spec`; verdicts is OPTIONAL (nil on every
+// pre-existing caller) and, when supplied (gen-spec --spec only, the same
+// generator.ScenarioVerdictsFromRows map BuildTraceability accepts), overlays
+// the REAL executed verdict alongside the AST count.
+func BuildCoverage(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) string {
+	var verdictMap map[string]ScenarioVerdict
+	if len(verdicts) > 0 {
+		verdictMap = verdicts[0]
+	}
 	lines := []string{Banner, ReaderHeaderLine("COVERAGE", g), ""}
 	lines = append(lines, "# COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)")
 	lines = append(lines, "")
@@ -91,6 +103,7 @@ func BuildCoverage(g *ontology.Graph) string {
 	}
 
 	layer, layerErr := ScanModelLayerCounts(g)
+	ratchet := computeScenarioRatchet(g, verdictMap)
 
 	lines = append(lines,
 		"**"+strconv.Itoa(len(settled))+" SETTLED requirement(s): "+
@@ -106,28 +119,65 @@ func BuildCoverage(g *ontology.Graph) string {
 	lines = append(lines, "")
 	lines = append(lines,
 		"Per PLAN-authored-spec-discipline.md §4 (refined by "+
-			"R-authored-spec-layer-progression, §8 step 3-6): a domain is founded "+
+			"R-authored-spec-layer-progression, §8 step 3-6), extended by "+
+			"PLAN-scenario-generated-spec.md §1 with a fifth rung: a domain is founded "+
 			"general-before-specific — ALL models before any one model's fields, ALL "+
-			"fields before any one model's methods, ALL methods before tests. Counts "+
-			"below are read from the same `go/ast` scan MODELS.md performs "+
-			"(`ScanModelLayerCounts`).")
+			"fields before any one model's methods, ALL methods before tests, ALL tests "+
+			"before scenario narratives. The first five columns are read from the same "+
+			"`go/ast` scan MODELS.md performs (`ScanModelLayerCounts`); the `scenarios` "+
+			"column is the CHEAP AST-only count of verified_by tests whose body calls "+
+			"`hotamspec.NewScenario(...)` (gate.ResolveSpecTest's HasScenario, no test "+
+			"execution) — see the ratchet counter below for the honest remaining tail.")
 	lines = append(lines, "")
 	if layerErr != nil {
 		lines = append(lines, "_Layer could not be determined: "+layerErr.Error()+"_")
 		lines = append(lines, "")
-	} else if layer.Files == 0 {
+	} else if layer.Files == 0 && ratchet.total == 0 {
 		lines = append(lines, "**Layer 0 — no authored spec/ yet.** No authored model file was found "+
 			"(ordinary domain: nothing under `spec/`; self-hosting domain: no requirement "+
 			"names an engine file via `implemented_by`/`verified_by` yet). "+
 			"PLAN-authored-spec-discipline.md §8 step 3 has not started.")
 		lines = append(lines, "")
 	} else {
-		lines = append(lines, "| files scanned | objects (models) | fields | methods | typed errors |")
-		lines = append(lines, "|---|---|---|---|---|")
+		lines = append(lines, "| files scanned | objects (models) | fields | methods | typed errors | scenarios |")
+		lines = append(lines, "|---|---|---|---|---|---|")
 		lines = append(lines, "| "+strconv.Itoa(layer.Files)+" | "+strconv.Itoa(layer.Objects)+" | "+
-			strconv.Itoa(layer.Fields)+" | "+strconv.Itoa(layer.Methods)+" | "+strconv.Itoa(layer.Errors)+" |")
+			strconv.Itoa(layer.Fields)+" | "+strconv.Itoa(layer.Methods)+" | "+strconv.Itoa(layer.Errors)+" | "+
+			strconv.Itoa(ratchet.withScenario)+" |")
 		lines = append(lines, "")
-		lines = append(lines, "**"+layerVerdict(layer)+"**")
+		lines = append(lines, "**"+layerVerdict(layer, ratchet)+"**")
+		lines = append(lines, "")
+	}
+
+	lines = append(lines, "## Scenario ratchet — SETTLED requirements still without a narrative")
+	lines = append(lines, "")
+	lines = append(lines,
+		"PLAN-scenario-generated-spec.md §2 D4/§5: the honest remaining tail of SETTLED "+
+			"requirements that carry at least one `verified_by` entry but no test body yet "+
+			"calls `hotamspec.NewScenario(...)` — a RATCHET, not a promise: this count is "+
+			"reported so it is visible and trending down, never silently hidden. A "+
+			"requirement with NO `verified_by` at all is roadmap debt already reported above "+
+			"(and in TRACEABILITY.md's prose/roadmap-debt section), not counted again here — "+
+			"this ratchet only tracks requirements that DO have a test but that test does not "+
+			"yet narrate.")
+	lines = append(lines, "")
+	lines = append(lines, "**"+strconv.Itoa(ratchet.withScenario)+"/"+strconv.Itoa(ratchet.total)+
+		" SETTLED requirement(s) with `verified_by` carry a scenario narrative; "+
+		strconv.Itoa(ratchet.withoutScenario)+" remain in the ratchet tail.**")
+	lines = append(lines, "")
+	if ratchet.withoutScenario == 0 {
+		if ratchet.total == 0 {
+			lines = append(lines, "_No SETTLED requirement in this domain carries `verified_by` yet — the ratchet has nothing to count._")
+		} else {
+			lines = append(lines, "_None — every SETTLED requirement with `verified_by` in this domain already carries a scenario narrative._")
+		}
+		lines = append(lines, "")
+	} else {
+		lines = append(lines, "| id | verified_by | claim |")
+		lines = append(lines, "|---|---|---|")
+		for _, r := range ratchet.tailRows {
+			lines = append(lines, "| `"+r.ID+"` | "+Cell(strings.Join(r.VerifiedBy, ", "))+" | "+Cell(r.Claim)+" |")
+		}
 		lines = append(lines, "")
 	}
 
@@ -256,15 +306,20 @@ func renderCoverageAuthoredTable(specRoot string, rows []ontology.Requirement) s
 }
 
 // layerVerdict renders a one-line plain-English summary of which layer
-// PLAN-authored-spec-discipline.md §4 considers this domain "at": models
-// exist but no fields yet is layer 1, fields but no methods is layer 2,
-// methods but nothing further (tests are counted separately, via
-// verified_by presence on SETTLED requirements above, not here — a method
-// count alone cannot tell whether a test exists) is layer 3-in-progress.
-// This is a coarse, honest signal ("at least this far"), not a strict gate —
-// the mechanical floor (internal/invariants/authored_links.go) is the actual
-// enforcement point.
-func layerVerdict(c ModelLayerCounts) string {
+// PLAN-authored-spec-discipline.md §4 (extended by PLAN-scenario-generated-
+// spec.md §1's fifth rung) considers this domain "at": models exist but no
+// fields yet is layer 1, fields but no methods is layer 2, methods but
+// nothing further (tests are counted separately, via verified_by presence
+// on SETTLED requirements above, not here — a method count alone cannot
+// tell whether a test exists) is layer 3-in-progress, and — new for W1.4 —
+// once ratchet.total > 0 (at least one SETTLED requirement carries
+// verified_by) the verdict additionally reports layer 4 (tests exist, none
+// narrate yet) versus layer 5-in-progress (at least one narrates, ratchet
+// tail remains) versus layer 5 complete (ratchet tail is zero). This is a
+// coarse, honest signal ("at least this far"), not a strict gate — the
+// mechanical floor (internal/invariants/authored_links.go, and W2's future
+// check_settled_requires_scenario) is the actual enforcement point.
+func layerVerdict(c ModelLayerCounts, ratchet scenarioRatchet) string {
 	switch {
 	case c.Objects == 0:
 		return "Layer 0-in-progress — spec/ files exist but no exported object (model) parses yet."
@@ -272,7 +327,75 @@ func layerVerdict(c ModelLayerCounts) string {
 		return "Layer 1 — models exist (skeleton), no fields or methods yet."
 	case c.Methods == 0:
 		return "Layer 2 — models and fields exist, no methods (operations/invariants) yet."
-	default:
+	case ratchet.total == 0:
 		return "Layer 3 or later — models, fields, and methods all exist. See the authored-carrier table below for which SETTLED requirements this domain has actually proven with tests (layer 4)."
+	case ratchet.withScenario == 0:
+		return "Layer 4 — models, fields, methods, and tests (verified_by) all exist for at least one SETTLED requirement; none of them narrate a scenario yet (layer 5 has not started, see the ratchet counter above)."
+	case ratchet.withoutScenario == 0:
+		return "Layer 5 — every SETTLED requirement carrying verified_by also narrates a scenario (ratchet tail is zero)."
+	default:
+		return "Layer 5-in-progress — at least one SETTLED requirement narrates a scenario, and the ratchet tail above names the rest still to migrate."
 	}
+}
+
+// scenarioRatchet is the reduction computeScenarioRatchet returns: how many
+// SETTLED requirements carry at least one verified_by entry (total), how
+// many of THOSE already have at least one entry whose test body calls
+// `hotamspec.NewScenario` (withScenario, AST-only by default; overridden by
+// a supplied ScenarioVerdict's real Narrated flag when verdicts is
+// non-nil — the REAL, executed signal takes precedence over the AST guess
+// for the SAME reason applyScenarioVerdict overlays TRACEABILITY.md's
+// cells), and the honest remaining tail (withoutScenario) plus the actual
+// requirement rows in that tail (tailRows, DeclOrder-sorted like every other
+// COVERAGE.md table) for the ratchet section's own listing.
+type scenarioRatchet struct {
+	total           int
+	withScenario    int
+	withoutScenario int
+	tailRows        []ontology.Requirement
+}
+
+// computeScenarioRatchet walks every SETTLED requirement carrying at least
+// one verified_by entry and classifies it narrated/not: by default (verdicts
+// == nil, every pre-existing/default `gen-spec` caller) via the CHEAP
+// AST-only gate.ResolveSpecTest.HasScenario signal (any ONE verified_by
+// entry narrating is enough to count the requirement as "with scenario");
+// when verdicts is supplied (gen-spec --spec, ScenarioVerdictsFromRows) the
+// REAL executed Narrated flag is used instead, since it is strictly more
+// trustworthy than the AST guess for a requirement whose test the caller
+// already actually ran. tailRows is built in the SAME NarrativeOrder
+// (DeclOrder) every other COVERAGE.md/TRACEABILITY.md table uses, so a
+// SETTLED requirement's position in the ratchet table matches its founding
+// position elsewhere.
+func computeScenarioRatchet(g *ontology.Graph, verdicts map[string]ScenarioVerdict) scenarioRatchet {
+	specRoot := gate.SpecRootForGraph(g)
+	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
+
+	var ratchet scenarioRatchet
+	for _, r := range reqs {
+		if r.Status != ontology.StatusSETTLED || len(r.VerifiedBy) == 0 {
+			continue
+		}
+		ratchet.total++
+
+		narrated := false
+		if v, ok := verdicts[r.ID]; ok {
+			narrated = v.Narrated
+		} else {
+			for _, l := range resolveTraceabilityLinks(specRoot, r.VerifiedBy, false) {
+				if l.hasScenario {
+					narrated = true
+					break
+				}
+			}
+		}
+
+		if narrated {
+			ratchet.withScenario++
+		} else {
+			ratchet.withoutScenario++
+			ratchet.tailRows = append(ratchet.tailRows, r)
+		}
+	}
+	return ratchet
 }

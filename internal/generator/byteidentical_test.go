@@ -157,9 +157,9 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"PIPELINE.md", func(g *ontology.Graph) string { return BuildPipeline(g, "hotam-spec-self") }},
-		{"TRACEABILITY.md", BuildTraceability},
+		{"TRACEABILITY.md", func(g *ontology.Graph) string { return BuildTraceability(g) }},
 		{"MODELS.md", BuildModels},
-		{"COVERAGE.md", BuildCoverage},
+		{"COVERAGE.md", func(g *ontology.Graph) string { return BuildCoverage(g) }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},
@@ -209,9 +209,9 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"ENTITIES.md", func(g *ontology.Graph) string { return BuildEntities(g, "hotam-spec-self") }},
 		{"FRAMEWORK-INVARIANTS.md", func(g *ontology.Graph) string { return BuildFrameworkInvariants(g, "hotam-spec-self") }},
 		{"PIPELINE.md", func(g *ontology.Graph) string { return BuildPipeline(g, "hotam-spec-self") }},
-		{"TRACEABILITY.md", BuildTraceability},
+		{"TRACEABILITY.md", func(g *ontology.Graph) string { return BuildTraceability(g) }},
 		{"MODELS.md", BuildModels},
-		{"COVERAGE.md", BuildCoverage},
+		{"COVERAGE.md", func(g *ontology.Graph) string { return BuildCoverage(g) }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
 			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
 		}},

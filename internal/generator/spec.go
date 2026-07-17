@@ -72,14 +72,118 @@ type specTestOutcome struct {
 	entry     string // raw "file:test" verified_by entry
 	artifacts []specArtifact
 	problem   string // non-empty: why no scenario narrative exists for this entry
+	// passed is true whenever gate.RunVerifiedByTestRecording actually
+	// executed this entry's test AND it currently passes -- regardless of
+	// whether it narrated a scenario. Distinct from `problem == ""`: a
+	// plain (non-scenario) Go test that passes sets passed=true AND a
+	// non-empty problem ("recorded no hotamspec scenario") -- see
+	// recordVerifiedByEntry's own doc comment for why conflating "did not
+	// narrate" with "did not pass" would be dishonest (W1.4 zero-trust
+	// finding: TRACEABILITY.md's verdict column originally reported "another
+	// entry failing" for a requirement whose second verified_by entry was
+	// simply a plain, passing, non-scenario test -- a false failure signal).
+	passed bool
 }
 
-// specRow is one rendered requirement section: its own id/claim (the D2
+// SpecRow is one rendered requirement section: its own id/claim (the D2
 // short authored intent, taken verbatim from the graph, never invented
 // here) plus every verified_by entry's recording outcome.
-type specRow struct {
+type SpecRow struct {
 	req      ontology.Requirement
 	outcomes []specTestOutcome
+}
+
+// ScenarioVerdict is one requirement's REAL (executed, `--spec`-gated)
+// scenario-narrative outcome -- the shared shape BuildTraceability/
+// BuildCoverage render their optional "verdict" sub-column from
+// (PLAN-scenario-generated-spec.md §3 W1.4), derived from the SAME
+// SpecRow/specTestOutcome data BuildSpec itself renders narratives from (see
+// ScenarioVerdictsFromRows) so a `gen-spec --spec` run pays the real
+// RunVerifiedByTestRecording cost exactly ONCE per verified_by entry, shared
+// across SPEC.md, TRACEABILITY.md, and COVERAGE.md in the same invocation
+// (cmd/hotam's genSpec calls CollectSpecRows once and derives both BuildSpec's
+// input and this verdict map from it).
+type ScenarioVerdict struct {
+	// Narrated is true when at least one verified_by entry produced at
+	// least one hotamspec.Artifact with verdict "pass" -- the same bar
+	// BuildSpec's own narratedCount uses.
+	Narrated bool
+	// AllEntriesPass is true when EVERY verified_by entry on the
+	// requirement resolved to a currently-passing `go test` run (whether or
+	// not it narrated a scenario) -- i.e. specTestOutcome.passed is true for
+	// every entry. Deliberately independent of whether an entry narrated: a
+	// PLAIN (non-scenario) verified_by test that genuinely passes still
+	// counts as "passing" here (see specTestOutcome.passed's own doc
+	// comment -- zero-trust finding: conflating "did not narrate" with "did
+	// not pass" produced a false failure signal in TRACEABILITY.md's
+	// verdict column for a requirement whose second verified_by entry was
+	// simply a passing plain test). A requirement can have Narrated==true
+	// and AllEntriesPass==false if it carries more than one verified_by
+	// entry and one of them GENUINELY fails/errors/is skipped; callers that
+	// want a single pass/fail verdict should treat
+	// Narrated && AllEntriesPass as the strict "fully proven, fully
+	// narrated" state.
+	AllEntriesPass bool
+}
+
+// CollectSpecRows runs the SAME per-verified_by-entry recording pass
+// BuildSpec's own body performs (recordVerifiedByEntry, one real `go test`
+// invocation per entry via gate.RunVerifiedByTestRecording) and returns the
+// resulting requirement-keyed row map directly, WITHOUT rendering any
+// Markdown -- this is the shared, single execution point: a `gen-spec
+// --spec` run calls this ONCE (cmd/hotam/gen_spec.go), then hands the result
+// to both BuildSpecFromRows (SPEC.md's narrative) and
+// ScenarioVerdictsFromRows (TRACEABILITY.md/COVERAGE.md's verdict column),
+// so the ~90s record-price is paid once per invocation, not three times.
+// Deliberately still as expensive as BuildSpec's own execution (a real go
+// test per verified_by entry) -- callers MUST gate this behind the same
+// opt-in (--spec) BuildSpec already requires; it must never run as part of
+// a default `gen-spec`.
+func CollectSpecRows(g *ontology.Graph) map[string]SpecRow {
+	rows := make(map[string]SpecRow, len(g.Requirements))
+	if g.IsEmpty() {
+		return rows
+	}
+	specRoot := gate.SpecRootForGraph(g)
+	for _, r := range g.Requirements {
+		if len(r.VerifiedBy) == 0 {
+			continue
+		}
+		coverFile := firstImplementedByFile(r)
+		row := SpecRow{req: r}
+		for _, entry := range r.VerifiedBy {
+			row.outcomes = append(row.outcomes, recordVerifiedByEntry(specRoot, r.ID, entry, coverFile))
+		}
+		rows[r.ID] = row
+	}
+	return rows
+}
+
+// ScenarioVerdictsFromRows reduces a CollectSpecRows result to the
+// requirement-keyed ScenarioVerdict map BuildTraceability/BuildCoverage
+// accept, without touching the disk or spawning any further subprocess --
+// pure post-processing of data already collected.
+func ScenarioVerdictsFromRows(rows map[string]SpecRow) map[string]ScenarioVerdict {
+	verdicts := make(map[string]ScenarioVerdict, len(rows))
+	for id, row := range rows {
+		narrated := false
+		allPass := true
+		for _, o := range row.outcomes {
+			if len(o.artifacts) > 0 {
+				narrated = true
+			}
+			// AllEntriesPass reflects whether the test GENUINELY passed
+			// (o.passed), not whether it narrated (o.problem != "" is also
+			// true for a plain, passing, non-scenario test -- see
+			// specTestOutcome.passed's doc comment for the zero-trust finding
+			// this fixes).
+			if !o.passed {
+				allPass = false
+			}
+		}
+		verdicts[id] = ScenarioVerdict{Narrated: narrated, AllEntriesPass: allPass}
+	}
+	return verdicts
 }
 
 // BuildSpec renders docs/gen/SPEC.md: for every requirement, its short
@@ -116,7 +220,25 @@ type specRow struct {
 // byte-identical across repeated runs of the same scenario (that guarantee
 // is W1.1's, this generator only renders what it is handed, unmodified,
 // never re-sorting or re-deriving a step's own fields).
+//
+// BuildSpec itself calls CollectSpecRows internally (its own fresh
+// recording pass) -- kept as the simple, self-contained entry point every
+// existing caller/test already uses. A caller that ALSO wants
+// TRACEABILITY.md/COVERAGE.md's scenario-verdict column in the SAME
+// `gen-spec --spec` invocation should call CollectSpecRows once and use
+// BuildSpecFromRows instead, so the real go-test recording cost is paid
+// once, not duplicated across generators (see cmd/hotam/gen_spec.go).
 func BuildSpec(g *ontology.Graph) string {
+	return BuildSpecFromRows(g, CollectSpecRows(g))
+}
+
+// BuildSpecFromRows renders SPEC.md from an ALREADY-COLLECTED rows map
+// (CollectSpecRows) instead of running its own recording pass -- the shared
+// rendering body BuildSpec delegates to, split out so a caller that needs
+// the same recording data for more than one generator (TRACEABILITY.md/
+// COVERAGE.md's verdict column, W1.4) can collect it exactly once per
+// `gen-spec --spec` invocation.
+func BuildSpecFromRows(g *ontology.Graph, rows map[string]SpecRow) string {
 	lines := []string{Banner, ReaderHeaderLine("SPEC", g), ""}
 	lines = append(lines, "# SPEC.md — generated normative text (Hotam-Spec)")
 	lines = append(lines, "")
@@ -140,8 +262,6 @@ func BuildSpec(g *ontology.Graph) string {
 		return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 	}
 
-	specRoot := gate.SpecRootForGraph(g)
-
 	// R-authored-spec-layer-progression's own sort key elsewhere is
 	// DeclOrder (founding/narrative order); SPEC.md is deliberately sorted
 	// by ID instead — a normative-text reference is looked up by anchor
@@ -154,19 +274,12 @@ func BuildSpec(g *ontology.Graph) string {
 	sort.Slice(reqs, func(i, j int) bool { return reqs[i].ID < reqs[j].ID })
 
 	var withScenario, withoutVerifiedBy []ontology.Requirement
-	rows := make(map[string]specRow, len(reqs))
 	for _, r := range reqs {
 		if len(r.VerifiedBy) == 0 {
 			withoutVerifiedBy = append(withoutVerifiedBy, r)
 			continue
 		}
 		withScenario = append(withScenario, r)
-		coverFile := firstImplementedByFile(r)
-		row := specRow{req: r}
-		for _, entry := range r.VerifiedBy {
-			row.outcomes = append(row.outcomes, recordVerifiedByEntry(specRoot, r.ID, entry, coverFile))
-		}
-		rows[r.ID] = row
 	}
 
 	narratedCount := 0
@@ -272,6 +385,11 @@ func recordVerifiedByEntry(specRoot, reqID, entry, coverFile string) specTestOut
 		return out
 	}
 
+	// Reached only when result.Passed is true (every earlier branch above
+	// returns first) -- this entry's test genuinely passes, whether or not
+	// it goes on to narrate a scenario below.
+	out.passed = true
+
 	var artifacts []specArtifact
 	for _, a := range result.Artifacts {
 		var parsed specArtifact
@@ -300,7 +418,7 @@ func recordVerifiedByEntry(specRoot, reqID, entry, coverFile string) specTestOut
 // from the graph, never rewritten), then one subsection per verified_by
 // entry — either the entry's recorded scenario(s) (Given/When/Then/Value, in
 // record order) or an honest one-line reason no narrative exists.
-func renderSpecRequirement(row specRow) []string {
+func renderSpecRequirement(row SpecRow) []string {
 	var lines []string
 	lines = append(lines, "## `"+row.req.ID+"`", "")
 	lines = append(lines, "**Claim:** "+Cell(row.req.Claim), "")
