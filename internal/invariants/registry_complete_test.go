@@ -36,7 +36,17 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// declared discipline:"full" in its own manifest.json (every domain
 	// today), and a real per-SETTLED-requirement obligation (enforced_by OR
 	// implemented_by+verified_by+scenario) for a domain that has.
-	const expected = 98
+	// Task W2.2 (PLAN-scenario-generated-spec.md §2 D3) added an eleventh,
+	// check_scenario_executes_impl (scenario_coverage.go): the coverage-proof
+	// gate -- for every authored-path requirement (implemented_by AND
+	// verified_by both non-empty), every implemented_by symbol must actually
+	// be executed (a real, non-zero `go test -coverprofile` hit inside its
+	// own declaration lines) by at least one of that requirement's
+	// verified_by tests, closing the gap where a passing, non-vacuous,
+	// even scenario-narrating test could still assert a tautology or
+	// exercise a completely unrelated symbol and stay green through every
+	// prior AST-only or pass/fail-only check.
+	const expected = 99
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

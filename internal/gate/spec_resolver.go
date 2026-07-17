@@ -238,6 +238,89 @@ func ResolveSpecSymbol(specRoot, file, symbol string) (SpecSymbolResult, error) 
 	return SpecSymbolResult{Kind: SpecSymbolNone}, nil
 }
 
+// SymbolRange is the resolved location W2.2's coverage-proof gate needs for
+// one implemented_by entry: the absolute OS file path the symbol was found
+// in, plus the [StartLine, EndLine] (1-indexed, inclusive) source range of
+// its ENTIRE declaration (fn.Pos() through fn.End() for a *ast.FuncDecl --
+// signature line through closing brace, not just the body) -- a superset of
+// just the body, deliberately: Go's own coverage instrumentation can attach a
+// covered statement's block to a line at or near the opening `func ... {`
+// (e.g. a single-expression-bodied function, or the signature line itself
+// when the body's first statement starts on the same line), and using the
+// whole declaration range rather than only body.Pos()-body.End() avoids
+// under-counting a genuinely-executed one-liner as "not covered" merely
+// because its only statement's block boundary happens to include the
+// signature line.
+type SymbolRange struct {
+	// File is the absolute OS path (specRoot joined with the entry's
+	// domain-relative file, exactly as ResolveSpecSymbol resolves it) the
+	// symbol was found in.
+	File string
+	// StartLine is the 1-indexed line the declaration begins on.
+	StartLine int
+	// EndLine is the 1-indexed line the declaration ends on.
+	EndLine int
+}
+
+// ResolveSpecSymbolRange is ResolveSpecSymbol's sibling for task W2.2's
+// coverage-proof gate: instead of just reporting WHETHER symbol resolves, it
+// additionally reports WHERE (the absolute file path and the declaration's
+// own [StartLine, EndLine]) so a caller can intersect that range against a
+// parsed coverage profile's covered blocks (gate.SymbolRangeCoveredByProfile)
+// to mechanically prove a verified_by test's run actually executed lines
+// belonging to THIS symbol, not merely that the symbol exists.
+//
+// Only *ast.FuncDecl matches (top-level function or method, following the
+// exact same bare-name/qualified-"Type.Method" matching rules
+// ResolveSpecSymbol already documents) -- a *ast.GenDecl type declaration
+// (ResolveSpecSymbol's SpecSymbolType case) has no executable body for a test
+// to cover, so it is intentionally NOT resolved here; a caller asking for the
+// range of a type-only implemented_by entry gets ok=false, distinct from "not
+// found at all" only in that the symbol DOES exist (ResolveSpecSymbol would
+// report Found()==true for it) but simply has no coverable range -- callers
+// of ResolveSpecSymbolRange are expected to have already established the
+// entry resolves via ResolveSpecSymbol/checkImplementedBySymbolResolvable
+// before asking for its range, so this distinction is surfaced via ok=false
+// plus a nil error (not an error) rather than forcing every caller to
+// distinguish "parse failed" from "resolves but is a type, not a func".
+func ResolveSpecSymbolRange(specRoot, file, symbol string) (rng SymbolRange, ok bool, err error) {
+	path := filepath.Join(specRoot, filepath.FromSlash(file))
+	absPath, absErr := filepath.Abs(path)
+	if absErr != nil {
+		return SymbolRange{}, false, fmt.Errorf("could not resolve absolute path for %s: %w", path, absErr)
+	}
+	fset := token.NewFileSet()
+	astFile, parseErr := parser.ParseFile(fset, path, nil, 0)
+	if parseErr != nil {
+		return SymbolRange{}, false, fmt.Errorf("parse %s: %w", path, parseErr)
+	}
+
+	wantType, wantName, qualified := splitQualifiedSymbol(symbol)
+
+	for _, decl := range astFile.Decls {
+		fn, isFunc := decl.(*ast.FuncDecl)
+		if !isFunc {
+			continue
+		}
+		if fn.Recv == nil {
+			if qualified || fn.Name.Name != wantName {
+				continue
+			}
+		} else {
+			if fn.Name.Name != wantName {
+				continue
+			}
+			if qualified && receiverBaseTypeName(fn.Recv) != wantType {
+				continue
+			}
+		}
+		start := fset.Position(fn.Pos())
+		end := fset.Position(fn.End())
+		return SymbolRange{File: absPath, StartLine: start.Line, EndLine: end.Line}, true, nil
+	}
+	return SymbolRange{}, false, nil
+}
+
 // splitQualifiedSymbol splits a symbol name of the form "Type.Method" into
 // its two parts. If symbol contains no ".", qualified is false and name is
 // the whole symbol.

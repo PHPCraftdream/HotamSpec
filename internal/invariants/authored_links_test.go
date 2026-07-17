@@ -639,16 +639,33 @@ func TestAuthoredOnlyEnforcedRequirement_PassesFullAllViolations(t *testing.T) {
 // authoredUnrelatedArithmeticTestSrc is a REAL, structurally-perfect test --
 // it resolves, has teeth (a genuine t.Fatalf assertion), is not vacuous, is
 // not t.Skip -- that proves something true but has NOTHING to do with Risk
-// ownership validation: it is a plain arithmetic assertion. It exists to
-// demonstrate R-structural-floor-vs-mirror-audit's own claim: the engine's
-// mechanical checks cannot and do not verify that a cited test SEMANTICALLY
-// proves the citing requirement's claim, only that it structurally resolves
-// and has real assertions.
+// OWNERSHIP VALIDATION SEMANTICS: it calls NewRisk (so a real coverage-proof
+// run genuinely executes the symbol's lines -- check_scenario_executes_impl,
+// task W2.2, PLAN-scenario-generated-spec.md §2 D3, closes exactly the
+// narrower case where a cited test never touches the implemented_by symbol
+// AT ALL) but then asserts a completely unrelated arithmetic fact instead of
+// anything about the returned Risk or its owner. It exists to demonstrate
+// R-structural-floor-vs-mirror-audit's own claim in its FULL, still-standing
+// form even after coverage-proof: the engine's mechanical checks -- now
+// including "did this run touch the symbol's lines" -- still cannot and do
+// not verify that a cited test's ASSERTIONS semantically prove the citing
+// requirement's claim, only that it structurally resolves, has real
+// assertions, passes, AND executes the right lines. A test that dutifully
+// calls the right function and then asserts something irrelevant about an
+// unrelated value is the residual gap only a human/LLM mirror audit can
+// close -- coverage-proof narrows the forgeable surface (a test that never
+// even CALLS the implementation can no longer hide behind AST-only checks)
+// without eliminating the semantic-adequacy gap entirely.
 const authoredUnrelatedArithmeticTestSrc = `package model
 
 import "testing"
 
 func TestArithmetic_TwoPlusTwoIsFour(t *testing.T) {
+	r, err := NewRisk("someone")
+	if err != nil {
+		t.Fatalf("NewRisk(%q) unexpected error: %v", "someone", err)
+	}
+	_ = r
 	if 2+2 != 4 {
 		t.Fatalf("expected 4")
 	}
@@ -667,19 +684,34 @@ func TestArithmetic_TwoPlusTwoIsFour(t *testing.T) {
 //
 // This test proves that boundary operationally, not just in prose: it wires
 // a requirement whose CLAIM is about Risk ownership validation to a
-// verified_by test (authoredUnrelatedArithmeticTestSrc) that is completely
-// unrelated -- a bare arithmetic assertion -- yet passes EVERY structural
-// check the engine has (resolves, has teeth, not vacuous, not skipped, not
-// reused) and consequently the FULL AllViolations sweep reports ZERO
-// violations for this obviously-wrong pairing. That gap -- 0 mechanical
-// violations for a SpecLink no mirror audit would ever accept -- is exactly
-// what the requirement's claim asserts exists and must never be papered over
-// by encoding lexical/keyword heuristics into the graph invariant layer. If
-// a future change made the engine start rejecting this fixture (e.g. by
-// adding a claim-vs-test keyword-similarity check), THIS test would need to
-// be revisited -- deliberately, as a recorded decision to fold semantic
-// judgment into the mechanical layer -- not silently, which is exactly the
-// property this test is here to guard.
+// verified_by test (authoredUnrelatedArithmeticTestSrc) that is genuinely
+// unrelated IN ITS ASSERTIONS -- it calls NewRisk (so it DOES execute the
+// implemented_by symbol's own lines, satisfying task W2.2's coverage-proof,
+// check_scenario_executes_impl) but then asserts a bare arithmetic fact that
+// has nothing to do with Risk ownership -- yet passes EVERY mechanical check
+// the engine has, INCLUDING coverage-proof (resolves, has teeth, not
+// vacuous, not skipped, not reused, actually passes, actually executes the
+// symbol's lines), and consequently the FULL AllViolations sweep reports
+// ZERO violations for this obviously-wrong pairing. That residual gap -- 0
+// mechanical violations for a SpecLink no mirror audit would ever accept,
+// even once the engine can also mechanically prove the test executed the
+// right lines -- is exactly what the requirement's claim asserts exists and
+// must never be papered over by encoding lexical/keyword heuristics into the
+// graph invariant layer. (An EARLIER revision of this fixture used a test
+// that never called NewRisk at all -- pure `if 2+2 != 4` with no call into
+// the implementation -- and task W2.2's coverage-proof correctly started
+// rejecting THAT shape, exactly as its own forge-probe requires: a cited
+// test that never touches the implemented_by symbol's lines is no longer a
+// gap only a mirror audit can catch, it is now a mechanical violation. The
+// fixture was revised, deliberately and visibly in this comment, to call the
+// real symbol while still asserting something semantically irrelevant, so
+// the still-standing part of the thesis remains provable.) If a future change
+// made the engine start rejecting THIS narrower fixture too (e.g. by adding
+// a claim-vs-test keyword-similarity check, or an assertion-target dataflow
+// check), THIS test would need to be revisited -- deliberately, as a
+// recorded decision to fold more semantic judgment into the mechanical
+// layer -- not silently, which is exactly the property this test is here to
+// guard.
 func TestStructuralFloorDoesNotCatchSemanticMismatch(t *testing.T) {
 	t.Parallel()
 	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
