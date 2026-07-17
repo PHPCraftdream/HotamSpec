@@ -42,6 +42,18 @@ type Graph struct {
 	// to the graph actually being checked instead of a CWD-based project-root
 	// search, which resolves THIS framework's own root for external domains.
 	DomainDir string `json:"-"`
+	// Discipline is the domain's manifest.json "discipline" field
+	// (loader.ResolveDiscipline), populated by the loader at LoadGraph time
+	// exactly like SelfHosting above -- deliberately unserialized (json:"-"):
+	// discipline lives in manifest.json, not graph.json, so it never
+	// round-trips through this struct's own JSON encoding. "" (the zero
+	// value) is the long-standing soft-discipline default; loader.DisciplineFull
+	// ("full") opts a domain into check_settled_requires_scenario's real gate
+	// (PLAN-scenario-generated-spec.md §2 D4, task W2.1). A graph built
+	// in-memory by a test fixture (never through loader.LoadGraph) leaves
+	// this "" -- an honest no-op, the same convention DomainDir/SelfHosting
+	// already establish for synthetic graphs.
+	Discipline string `json:"-"`
 }
 
 func (g *Graph) IsEmpty() bool {

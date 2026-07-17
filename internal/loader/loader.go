@@ -105,6 +105,7 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		Entities:      dto.Entities,
 		SelfHosting:   resolveSelfHosting(path),
 		DomainDir:     filepath.Dir(path),
+		Discipline:    ResolveDiscipline(path),
 	}
 	if err := validateGraph(g); err != nil {
 		return nil, fmt.Errorf("load graph: %s: %w", path, err)
@@ -262,6 +263,70 @@ func ResolveRequireProvenance(graphPath string) bool {
 		return false
 	}
 	return m.RequireProvenance
+}
+
+// DisciplineFull is the one recognized non-empty value of manifest.json's
+// optional "discipline" field (PLAN-scenario-generated-spec.md §2 D4, task
+// W2.1). An empty/absent/unrecognized value means "soft discipline" — today's
+// long-standing behavior, unchanged: check_settled_requires_scenario
+// (internal/invariants/scenario_discipline.go) is an honest no-op for such a
+// domain, exactly like every optional-field NO-OP contract in this file
+// (ResolveGenProfile, ResolveRequireProvenance). Only "full" turns that same
+// check into a real, per-SETTLED-requirement gate.
+//
+// ONE-WAY SEMANTICS (steward decision, PLAN-scenario-generated-spec.md §2 D4):
+// flipping a domain's manifest.json from discipline:"" to discipline:"full"
+// is meant to be a ONE-WAY door — once a domain has migrated its SETTLED
+// requirements to carry real enforced_by / (implemented_by+verified_by+
+// scenario) coverage and declared discipline:"full", silently flipping it
+// back to "" would be a silent DOWNGRADE of a promise already made public in
+// the domain's own manifest (exactly the kind of quiet regression
+// R-no-hand-edit-graph and check_graph_lock_pins_graph_json exist to catch
+// for graph.json itself). This engine version does NOT yet mechanically
+// enforce the one-way property for manifest.json (manifest.json, unlike
+// graph.json, has no graph.lock-style content pin today) — ResolveDiscipline
+// is a pure READER, deliberately as small and honest as ResolveGenProfile's
+// own precedent. The one-way discipline is, for now, a DOCUMENTED convention
+// (this comment + PLAN-scenario-generated-spec.md §2 D4) plus ordinary code
+// review / R-no-hand-edit-graph-adjacent scrutiny of manifest.json diffs —
+// the same honesty-over-mechanism boundary check_verified_by_test_has_teeth's
+// own doc comment draws between "the structural floor" and "the mirror
+// audit". A future wave MAY harden this into a real mechanical gate (e.g. a
+// manifest.lock pin, or a check that refuses an all-violations run whose
+// manifest.json shows discipline flipping from "full" to "" relative to the
+// last landed commit) — tracked as follow-up, not silently promised here.
+const DisciplineFull = "full"
+
+// ResolveDiscipline reads the optional "discipline" field from the
+// manifest.json sitting next to graph.json, mirroring resolveSelfHosting's /
+// ResolveGenProfile's exact pattern (read manifest, tolerate a missing file,
+// tolerate malformed JSON, default when absent/unrecognized). Returns "" (the
+// soft-discipline default) for every absent/missing-field/malformed/
+// unrecognized case — preserving 100% backward compatibility with every
+// manifest.json in this repo and in the wild that predates the discipline
+// field (they carry no discipline field, so they keep resolving to "",
+// meaning check_settled_requires_scenario stays an honest no-op for them,
+// byte-identical to before this field existed). Only the single literal
+// value "full" (DisciplineFull) is recognized; any other non-empty string
+// (a typo, a future value not yet supported) is treated the same as absent —
+// deliberately, so a malformed opt-in can never silently masquerade as a
+// real one.
+func ResolveDiscipline(graphPath string) string {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return ""
+	}
+	var m struct {
+		Discipline string `json:"discipline"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return ""
+	}
+	if m.Discipline == DisciplineFull {
+		return DisciplineFull
+	}
+	return ""
 }
 
 // DomainPresentation carries the optional DOMAIN-MAP presentation fields of a

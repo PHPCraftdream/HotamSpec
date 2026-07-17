@@ -30,7 +30,13 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// vendored spec/hotamspec/hotamspec.go (if any) against the engine's own
 	// canonical scenario-recorder source, the same filesystem-aware,
 	// honest-no-op-when-absent shape as check_graph_lock_pins_graph_json.
-	const expected = 97
+	// Task W2.1 (PLAN-scenario-generated-spec.md §2 D4) added a tenth,
+	// check_settled_requires_scenario (scenario_discipline.go): the opt-in
+	// discipline:full gate -- an honest no-op for every domain that has not
+	// declared discipline:"full" in its own manifest.json (every domain
+	// today), and a real per-SETTLED-requirement obligation (enforced_by OR
+	// implemented_by+verified_by+scenario) for a domain that has.
+	const expected = 98
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}
