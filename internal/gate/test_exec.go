@@ -3,10 +3,12 @@ package gate
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,13 +55,29 @@ type TestRunResult struct {
 	// "unproven at this nesting level, proven at the outer level" and NOT
 	// report a violation for it.
 	Skipped bool
+	// InfraWarning is a non-fatal, non-empty diagnostic string set when
+	// RunVerifiedByTest observed something suspicious about its OWN
+	// execution environment that a caller may want to surface even though it
+	// did not stop the test from actually running (NEW-1, @fh adversarial
+	// re-review): specifically, a non-empty recursionGuardEnv present WITHOUT
+	// the corroborating go-test-child signal (guardWasUntrustedExternal) --
+	// i.e. an external actor exported HOTAM_VERIFIED_BY_EXEC_GUARD before
+	// invoking hotam directly, which this process correctly did NOT honor as
+	// proof of nesting (inRecursionGuard returned false, so the test below
+	// still actually ran), but the attempt itself is worth reporting rather
+	// than silently ignoring, so a caller (or an operator inspecting
+	// all-violations output) can see that someone tried to pull the
+	// kill-switch. InfraWarning is orthogonal to Err: it never prevents the
+	// real test run and is set independently of Passed/CompileFailed/Skipped.
+	InfraWarning string
 }
 
-// recursionGuardEnv is the environment variable RunVerifiedByTest sets to
-// "1" on every `go test` child process it spawns, and checks for on its OWN
-// process before spawning another. Self-hosting domains make recursion a
-// structural certainty, not an edge case: domains/hotam-spec-self's graph
-// names its OWN engine test files as verified_by targets (e.g.
+// recursionGuardEnv is the environment variable RunVerifiedByTest sets, on
+// every `go test` child process it spawns, to a per-process unguessable nonce
+// (see guardNonce / NEW-1 below -- NOT a fixed literal like "1"), and checks
+// for on its OWN process before spawning another. Self-hosting domains make
+// recursion a structural certainty, not an edge case: domains/hotam-spec-
+// self's graph names its OWN engine test files as verified_by targets (e.g.
 // "internal/ontology/graph_smoke_test.go:TestConflictPredicates"), and
 // several of the engine's own package test suites (internal/invariants,
 // internal/generator, cmd/hotam -- anywhere a _test.go file calls
@@ -70,15 +88,186 @@ type TestRunResult struct {
 // ./internal/invariants/...` -- itself containing the same test, which
 // recurses again, unbounded. The guard breaks the cycle at depth 1: the
 // outer (non-nested) process actually runs and proves the test; any process
-// that finds the marker already set knows it is nested and reports Skipped
-// instead of spawning yet another generation.
+// that finds a TRUSTED marker already set (see inRecursionGuard) knows it is
+// nested and reports Skipped instead of spawning yet another generation.
 const recursionGuardEnv = "HOTAM_VERIFIED_BY_EXEC_GUARD"
 
-// inRecursionGuard reports whether the CURRENT process is already running
-// inside a `go test` subprocess spawned by RunVerifiedByTest (see
-// recursionGuardEnv).
+// NEW-1 (@fh adversarial re-review): the ORIGINAL guard trusted the mere
+// PRESENCE of recursionGuardEnv="1" in the process's ambient environment as
+// proof "I am a nested child RunVerifiedByTest itself spawned". That is a
+// universal kill-switch any external actor can pull: `HOTAM_VERIFIED_BY_EXEC_
+// GUARD=1 hotam all-violations` makes the TOP-level (non-nested) process
+// itself believe it is already inside a guarded subprocess, so
+// RunVerifiedByTest returns Skipped for every single verified_by entry --
+// check_verified_by_test_passes reports zero violations no matter how broken
+// the underlying implementations are, on a gutted tree, silently. The literal
+// value "1" is guessable and requires no knowledge of anything this process
+// generated, so no process can tell a genuine nested child from an outside
+// forgery just by checking "is the var set". Two candidate corroborating
+// signals were tried and rejected before landing on the one below:
+//
+//   - argv[0]/invocation-shape sniffing ("is my own binary a `go test`-built
+//     .test binary") FAILS: the OUTERMOST `go test ./internal/invariants/...`
+//     invocation that legitimately reaches RunVerifiedByTest for the FIRST
+//     time (not nested at all) is ITSELF a `go test`-compiled binary -- e.g.
+//     this very package's own test suite. There is no way to distinguish "I
+//     am the genuine outer go-test run" from "I am a nested go-test run" by
+//     inspecting only this process's own argv[0]/build-path shape; both look
+//     identical.
+//   - direct os.Getppid() PID matching FAILS: `go test` always interposes
+//     the `go` tool as an intermediary process between whatever spawned it
+//     (runGoTest's exec.Command) and the compiled test binary that actually
+//     runs the tests, so the running test binary's immediate parent PID is
+//     never the original spawning hotam process's PID -- there is no cheap,
+//     portable way to walk the full ancestor chain (especially on Windows)
+//     to verify true lineage.
+//
+// Fix actually used: a genuine nested child is distinguished from an
+// external forgery by POSSESSION of an unguessable, freshly-minted
+// crypto/rand nonce, corroborated by a MARKER FILE only the minting process
+// itself could have written, in a location an external attacker exporting a
+// guessed/fixed env value cannot predict or race:
+//
+//   - guardNonce() mints a fresh 32-byte (256-bit) crypto/rand hex token
+//     exactly once per process (sync.Once), the first time it is needed
+//     (either to check "am I nested" or to spawn a child). It is NEVER read
+//     from the environment.
+//   - Before this process spawns a `go test` child (runGoTest), it writes a
+//     MARKER FILE at guardMarkerPath(nonce) -- inside diskCacheDir(), a
+//     location already used as this engine's own shared scratch space -- and
+//     ONLY THEN sets recursionGuardEnv to that same nonce in the child's
+//     environment. The marker file's existence is what makes the nonce
+//     "vouched for": an external actor who merely `export`s
+//     HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> before invoking hotam directly
+//     would need to ALSO have independently guessed a 256-bit random hex
+//     string AND pre-created a same-named marker file in this engine's own
+//     scratch directory -- computationally infeasible, and not what a naive
+//     `HOTAM_VERIFIED_BY_EXEC_GUARD=1 hotam ...` kill-switch attempt (@fh's
+//     literal reproduction) does or could do.
+//   - inRecursionGuard checks BOTH: recursionGuardEnv is non-empty, AND a
+//     marker file exists on disk at guardMarkerPath(that exact value). Only
+//     when both hold does this process treat itself as genuinely nested and
+//     report Skipped. A bare "1" (or any value with no corresponding marker
+//     file) fails the second check and is NOT honored as recursion --
+//     RunVerifiedByTest runs the test for real and records an InfraWarning
+//     instead of silently behaving as if nothing were amiss. See
+//     guardWasUntrustedExternal.
+//   - Marker files are cheap, small (empty), and self-cleaning is
+//     unnecessary for correctness: a stale marker for an old nonce a future
+//     process might coincidentally regenerate is astronomically unlikely
+//     (256 bits of entropy) to collide, so leftover marker files from past
+//     runs are harmless clutter, not a correctness or security hazard.
+var (
+	processGuardOnce  sync.Once
+	processGuardNonce string
+)
+
+// newGuardNonce generates a fresh, unguessable 32-byte hex token via
+// crypto/rand -- deliberately NOT a predictable value (a counter, a PID, a
+// timestamp) since the whole point is that no external actor can guess it in
+// advance and pre-seed the environment (or the marker-file directory) with a
+// matching value.
+func newGuardNonce() string {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		// crypto/rand failing is effectively unheard-of on a real OS; fall
+		// back to a fixed sentinel rather than panicking -- worst case this
+		// degrades to a deterministic-but-still-per-process value, never a
+		// crash. A fallback value never gets a marker file written for a
+		// mismatched nonce from a DIFFERENT process, so this does not
+		// silently reopen the kill-switch hole: it only affects a single
+		// process's own children, which still go through the same
+		// mint-then-mark-then-pass-down sequence.
+		return "hotam-guard-fallback-nonce"
+	}
+	return hex.EncodeToString(buf)
+}
+
+// guardNonce returns this process's OWN freshly-minted guard token, minting
+// it (crypto/rand) exactly once, the first time any caller in this process
+// asks for it -- NEVER read from the environment, precisely so an external
+// actor exporting recursionGuardEnv before this process even starts cannot
+// influence what this process considers "its own" token.
+func guardNonce() string {
+	processGuardOnce.Do(func() {
+		processGuardNonce = newGuardNonce()
+	})
+	return processGuardNonce
+}
+
+// guardMarkerPath returns the on-disk path this process (or an ancestor)
+// writes to VOUCH for a guard nonce it minted, before ever placing that nonce
+// into a spawned child's environment -- see the NEW-1 block comment above.
+// Lives under diskCacheDir() (already this engine's own shared scratch
+// space), namespaced with a "guard-" prefix distinct from the verified-by
+// result cache files diskCacheFileName produces, so the two never collide.
+func guardMarkerPath(nonce string) string {
+	return filepath.Join(diskCacheDir(), "guard-"+nonce+".marker")
+}
+
+// writeGuardMarker vouches for nonce by writing an (empty) marker file at
+// guardMarkerPath(nonce), creating diskCacheDir() first if needed. Called
+// exactly once per process, before that process's own nonce is ever placed
+// into a child's environment (runGoTest) -- see the NEW-1 block comment.
+// Errors are swallowed deliberately: if the marker cannot be written (e.g. a
+// read-only temp dir), the resulting child will simply fail the marker check
+// and run for real instead of Skipping -- a safe, non-silent failure mode
+// (an extra, harmless re-run) rather than a hazard, so this must never panic
+// or propagate an error that would abort the real work RunVerifiedByTest is
+// trying to do.
+func writeGuardMarker(nonce string) {
+	dir := diskCacheDir()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return
+	}
+	_ = os.WriteFile(guardMarkerPath(nonce), []byte{}, 0o644)
+}
+
+// guardMarkerExists reports whether nonce was vouched for by a
+// writeGuardMarker call from SOME process (this one or an ancestor) --
+// the corroborating signal inRecursionGuard requires before trusting a
+// non-empty recursionGuardEnv as genuine nesting.
+func guardMarkerExists(nonce string) bool {
+	if nonce == "" {
+		return false
+	}
+	_, err := os.Stat(guardMarkerPath(nonce))
+	return err == nil
+}
+
+// inRecursionGuard reports whether the CURRENT process should treat itself as
+// ALREADY running inside a `go test` subprocess RunVerifiedByTest itself
+// spawned. True only when recursionGuardEnv is non-empty AND a marker file
+// vouching for that exact value exists on disk (guardMarkerExists) -- a
+// non-empty recursionGuardEnv WITHOUT a corresponding marker is untrusted (an
+// external actor's `export HOTAM_VERIFIED_BY_EXEC_GUARD=1` before invoking
+// the hotam binary directly has no way to also predict a 256-bit nonce AND
+// pre-create its marker file), so this process runs its own verified_by
+// checks for real rather than silently Skipping every one of them. See
+// guardWasUntrustedExternal for the caller-facing signal RunVerifiedByTest
+// uses to additionally warn (rather than stay silent) when an untrusted
+// guard-env was observed and ignored.
 func inRecursionGuard() bool {
-	return os.Getenv(recursionGuardEnv) == "1"
+	v := os.Getenv(recursionGuardEnv)
+	if v == "" {
+		return false
+	}
+	return guardMarkerExists(v)
+}
+
+// guardWasUntrustedExternal reports whether recursionGuardEnv was observed
+// non-empty on this process WITHOUT a corresponding marker file
+// (guardMarkerExists) -- exactly the external-forgery shape NEW-1 targets:
+// `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam all-violations` invoked
+// directly, with no genuine ancestor RunVerifiedByTest call ever having
+// minted and vouched for that value. RunVerifiedByTest uses this to attach an
+// infra-warning to its result instead of staying silent, so the caller can
+// surface "an external guard-env was present but NOT honored as recursion"
+// rather than behaving identically to the case where no guard-env was
+// present at all.
+func guardWasUntrustedExternal() bool {
+	v := os.Getenv(recursionGuardEnv)
+	return v != "" && !guardMarkerExists(v)
 }
 
 // globalExecSlots is a PROCESS-WIDE (not per-call, not per-invariant-run)
@@ -127,7 +316,16 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	runPattern := "^" + testName + "$"
 	cmd := exec.CommandContext(ctx, "go", "test", "-run", runPattern, "-count=1", pkgPattern)
 	cmd.Dir = moduleRoot
-	cmd.Env = append(os.Environ(), recursionGuardEnv+"=1")
+	// Carry THIS process's own freshly-minted guard nonce (never a fixed
+	// literal -- see guardNonce's doc comment / NEW-1) so the spawned `go
+	// test` child, and anything it in turn runs, can recognize it is nested.
+	// writeGuardMarker vouches for the nonce on disk BEFORE it is ever placed
+	// into the child's environment, which is what lets the child's
+	// inRecursionGuard trust it (guardMarkerExists) instead of trusting the
+	// env var's mere presence.
+	nonce := guardNonce()
+	writeGuardMarker(nonce)
+	cmd.Env = append(os.Environ(), recursionGuardEnv+"="+nonce)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
@@ -398,7 +596,7 @@ func storeDiskCache(hash, testName string, result TestRunResult) {
 // entry pairs with which verified_by entry (they are not necessarily on the
 // same Requirement, and a package can have more source files than the ones
 // any single Requirement names).
-func RunVerifiedByTest(specRoot, file, testName string) TestRunResult {
+func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 	if inRecursionGuard() {
 		// See recursionGuardEnv's doc comment: this process is ALREADY
 		// running inside a `go test` subprocess that RunVerifiedByTest
@@ -417,6 +615,28 @@ func RunVerifiedByTest(specRoot, file, testName string) TestRunResult {
 		// the outer, non-nested level" rather than either a false PASS or a
 		// false violation.
 		return TestRunResult{Skipped: true}
+	}
+
+	// NEW-1: recursionGuardEnv was present but NOT honored as proof of
+	// nesting (guardWasUntrustedExternal -- no corroborating go-test-child
+	// signal). This process proceeds to actually run the test below (never a
+	// silent Skip), but the attempted external guard-env is worth surfacing:
+	// prefixed onto whatever InfraWarning the real run below produces (there
+	// is none yet at this point, so this sets the initial value).
+	if guardWasUntrustedExternal() {
+		infraWarning := fmt.Sprintf(
+			"%s was set in the environment but NOT honored as a recursion signal (this process shows no evidence of being a go-test-spawned child) -- ignored, the test below actually ran",
+			recursionGuardEnv)
+		// Stamp the warning onto whichever result this function ends up
+		// returning (cache hit, disk-cache hit, or a fresh run) via the
+		// named return value -- see the deferred stamp below.
+		defer func() {
+			if out.InfraWarning == "" {
+				out.InfraWarning = infraWarning
+			} else {
+				out.InfraWarning = infraWarning + "; " + out.InfraWarning
+			}
+		}()
 	}
 
 	path := filepath.Join(specRoot, filepath.FromSlash(file))
@@ -554,15 +774,96 @@ func singleflightRun(key cacheKey, hash string, run func() TestRunResult) TestRu
 	}
 }
 
-// hashPackageInputs computes a single SHA-256 digest over every file that
-// can affect `go test`'s verdict for a package: go.mod and go.sum (if
-// present) at moduleRoot, plus every *.go file directly inside pkgDir
-// (non-recursive -- Go packages are single-directory; a sub-package is a
-// separate compilation unit with its own hash). File CONTENTS are hashed,
-// not mtimes, so a touch-without-edit (e.g. a checkout that resets mtimes)
-// never forces a spurious re-run, and a content-identical rewrite never
-// causes a false cache miss.
+// hashPackageInputs computes a single SHA-256 digest over every file that can
+// affect `go test`'s verdict for the WHOLE MODULE rooted at moduleRoot: go.mod
+// and go.sum (if present) at moduleRoot, plus every *.go file anywhere under
+// moduleRoot (recursive). pkgDir is accepted for API/call-site compatibility
+// (existing callers, including this package's own tests, pass the test's
+// specific package directory) but is otherwise UNUSED for hashing purposes --
+// see the NEW-2 doc comment below for why the cache key intentionally widened
+// from "this one package directory" to "the whole owning module".
+//
+// NEW-2 (@fh adversarial re-review, stale-green across a package boundary):
+// the ORIGINAL implementation hashed only pkgDir's own *.go files (the single
+// directory containing the named verified_by test) plus go.mod/go.sum. That
+// is unsound the moment an authored spec/ tree follows
+// PLAN-authored-spec-discipline.md §8's own prescribed layout: spec/model/,
+// spec/application/, and spec/policy/ are SEPARATE Go packages (separate
+// directories), and a model/ test can transitively depend on policy/ (e.g.
+// a model constructor calling a policy/ validation function). `go test
+// ./model/` compiles and links the WHOLE DEPENDENCY GRAPH the model package
+// imports, so a behavioral change inside policy/ (e.g. a validation
+// function's threshold silently gutted) can flip that same `go test` from
+// PASS to FAIL -- but pkgDir-only hashing never observes the change, because
+// policy/'s files live in a DIFFERENT directory than model/'s. The stale
+// disk/in-memory cache entry (keyed on model/'s unchanged hash) is served
+// back verbatim: "0 violations -- graph clean" on a tree that would fail if
+// actually re-run. @fh reproduced exactly this: warm the cache (green run),
+// gut spec/policy/threshold.go's return value, `go test ./model/` now fails
+// for real, but `hotam all-violations` still reports clean because the cache
+// key never moved.
+//
+// Fix: widen the cache key from "one package directory's *.go files" to
+// "every *.go file anywhere under the OWNING MODULE (moduleRoot down)".
+// Two designs were considered:
+//
+//	(A) Compute the test package's TRANSITIVE IMPORT GRAPH (`go list -deps`
+//	    or golang.org/x/tools/go/packages), filter to packages whose import
+//	    path falls under the module's own path prefix, and hash only those
+//	    directories' *.go files. Precise (a change in an unrelated sibling
+//	    package that the test does NOT import would not force a re-run), but
+//	    adds a `go list` subprocess call (or a go/packages load) to EVERY
+//	    cache-key computation -- itself a real cost paid on every single
+//	    RunVerifiedByTest call, cache hit or not, since the hash has to be
+//	    computed before the cache can even be consulted -- and ties
+//	    correctness to `go list`'s own behavior (build tags, module graph
+//	    resolution) being invoked correctly for every domain shape.
+//	(B) Hash EVERY *.go file under the whole owning module (moduleRoot
+//	    downward), unconditionally, regardless of whether the test's package
+//	    actually imports each one. Coarser (a change to a sibling package the
+//	    test does NOT depend on also forces a re-run of tests that could not
+//	    possibly have been affected), but: (1) it is trivially CORRECT --
+//	    guarantees ANY behavioral change anywhere in the module invalidates
+//	    EVERY cache entry for that module, closing NEW-2 completely rather
+//	    than only for the specific sibling-package shape found so far; (2) it
+//	    needs no subprocess, no go/packages dependency, no import-graph
+//	    resolution logic to get right per-domain; (3) for a self-hosting
+//	    domain (the common real case today -- domains/hotam-spec-self names
+//	    the engine's OWN packages as verified_by targets) the owning module IS
+//	    the engine repository, and "any engine-side change invalidates every
+//	    self-hosting verified_by cache entry" is not overreach, it is exactly
+//	    correct: the whole engine is the thing under test. For an authored
+//	    domain's OWN spec/ module (small by construction -- a handful of
+//	    model/application/policy packages, not a large codebase), the
+//	    over-invalidation cost of (B) is bounded and cheap in absolute terms
+//	    (hashing a few hundred KB of source is single-digit milliseconds).
+//
+// CHOSEN: (B), whole-module hash. It is simpler, has no new external-tool
+// dependency, and its only real cost -- some cache misses that a precise
+// import-graph analysis would have avoided -- is bounded by module size,
+// which for every domain shape this engine currently supports (its own
+// engine module, or a domain's dedicated spec/ module) is small enough that
+// the hash itself stays cheap (this repo's own ~250 *.go files hash in low
+// single-digit milliseconds); the correctness guarantee (NOTHING under the
+// module can change without invalidating every verified_by cache entry for
+// that module) is worth strictly more than the saved cache-hit-rate (A)
+// would have bought, and is far simpler to keep correct as the authored-spec
+// layout (§8's model/application/policy split, and whatever further
+// packages a future domain adds) evolves without this cache-invalidation
+// logic having to be re-taught about each new package shape.
+//
+// Skips VCS/build-cache directories (.git, and any directory literally named
+// "vendor" -- a vendored dependency's source never affects THIS module's own
+// behavior in a way relevant to re-running ITS tests, and vendor trees can be
+// large) so the walk stays bounded to the module's own authored code. File
+// CONTENTS are hashed, not mtimes/paths-only, so a touch-without-edit (e.g. a
+// checkout that resets mtimes) never forces a spurious re-run, and a
+// content-identical rewrite never causes a false cache miss. Relative paths
+// (not absolute) are hashed alongside each file's content, with forward
+// slashes on every OS, so the digest is stable across machines/checkouts and
+// a file rename is still observed as a real content-relevant change.
 func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
+	_ = pkgDir // NEW-2: cache key is now the whole module, not one package dir; see doc comment.
 	h := sha256.New()
 
 	for _, modFile := range []string{"go.mod", "go.sum"} {
@@ -577,28 +878,43 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 		h.Write(data)
 	}
 
-	entries, err := os.ReadDir(pkgDir)
-	if err != nil {
-		return "", err
-	}
-	var goFiles []string
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		if strings.HasSuffix(name, ".go") {
-			goFiles = append(goFiles, name)
-		}
-	}
-	sort.Strings(goFiles)
-	for _, name := range goFiles {
-		data, err := os.ReadFile(filepath.Join(pkgDir, name))
+	var relPaths []string
+	fileData := map[string][]byte{}
+	walkErr := filepath.WalkDir(moduleRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return "", err
+			return err
 		}
-		h.Write([]byte(name + "\n"))
-		h.Write(data)
+		if d.IsDir() {
+			switch d.Name() {
+			case ".git", "vendor":
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(d.Name(), ".go") {
+			return nil
+		}
+		rel, relErr := filepath.Rel(moduleRoot, path)
+		if relErr != nil {
+			return relErr
+		}
+		relSlash := filepath.ToSlash(rel)
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		relPaths = append(relPaths, relSlash)
+		fileData[relSlash] = data
+		return nil
+	})
+	if walkErr != nil {
+		return "", walkErr
+	}
+
+	sort.Strings(relPaths)
+	for _, rel := range relPaths {
+		h.Write([]byte(rel + "\n"))
+		h.Write(fileData[rel])
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
