@@ -35,7 +35,14 @@ jobs:
         run: go vet ./...
 
       - name: go test -race
-        run: go test -race ./...
+        # -timeout 30m: see Makefile's test-race target for the measured
+        # rationale (two dev-machine runs of `go test ./cmd/hotam/` took
+        # 1079s/1174s even with the shared-binary build already in place;
+        # the floor is now a handful of serial t.Setenv tests, not
+        # per-test rebuilds). -race adds further instrumentation cost on
+        # top, and CI runners are typically slower than dev hardware, so
+        # 30m keeps real margin here too.
+        run: go test -race -timeout 30m ./...
 
       - name: gen-spec idempotency
         run: |
