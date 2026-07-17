@@ -315,6 +315,280 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	return TestRunResult{Passed: true, Output: output}
 }
 
+// RecordedArtifact is one hotamspec.Artifact read back, in memory, from a
+// record-mode `go test` run -- the engine-side mirror of
+// internal/recorder/canon's Artifact JSON shape (PLAN-scenario-generated-
+// spec.md §2 D1/§3 W1.2). Kept as this package's own struct (not importing
+// the canon package directly) so gate never depends on recorder/canon --
+// the two packages are deliberately independent: canon is VENDORED (copied)
+// into a consumer domain's own spec/ module and compiled there, while gate
+// only ever reads the JSON bytes that vendored copy wrote back out of a tmp
+// directory. RawJSON preserves the artifact's exact on-disk bytes (the
+// canonical, byte-identical-across-runs form the recorder itself already
+// guarantees) so a caller that wants to hash or persist the artifact
+// verbatim (e.g. a future SPEC.md generator, W1.3) never has to re-marshal
+// through a second, potentially non-identical encoding path.
+type RecordedArtifact struct {
+	// FileName is the artifact's file name as the recorder wrote it
+	// (<reqID>__<TestName>.json), useful for diagnostics and for a caller
+	// that wants to correlate an artifact back to which requirement/test
+	// produced it without re-parsing RawJSON.
+	FileName string
+	// RawJSON is the exact bytes read back from disk -- the canonical
+	// encoding hotamspec.Scenario.writeArtifact produced, byte-identical
+	// across repeated runs of the same scenario (see
+	// PLAN-scenario-generated-spec.md §2 D1's determinism requirement).
+	RawJSON []byte
+}
+
+// RecordingResult is the outcome of RunVerifiedByTestRecording: everything
+// TestRunResult already reports (the test's own pass/fail verdict), plus the
+// canonical scenario artifact(s) the test wrote in record-mode and the raw
+// coverage profile bytes proving which lines of the implemented_by symbol's
+// package this SAME test run actually executed (PLAN-scenario-generated-
+// spec.md §2 D3 -- consumed by W2.2's coverage-proof gate, but collected
+// here, in this one `go test` invocation, per the task's "one run gives
+// asserts + artifact + coverprofile" contract).
+type RecordingResult struct {
+	TestRunResult
+	// Artifacts holds every canonical JSON scenario artifact found in the
+	// record dir after the run -- ordinarily exactly one (a verified_by test
+	// that constructs a single hotamspec.Scenario), but a test that
+	// constructs more than one Scenario (e.g. several sub-cases, each with
+	// its own NewScenario call) writes one artifact per Scenario, and all of
+	// them are returned here. Empty (never nil vs non-nil distinguished
+	// beyond len==0) when the test does not use hotamspec at all, or was not
+	// reached (Skipped/Err).
+	Artifacts []RecordedArtifact
+	// CoverProfile is the raw bytes of the `go test -coverprofile` output
+	// file for this run (Go's own text coverage-profile format: a "mode:"
+	// header line followed by one "file:startLine.startCol,endLine.endCol
+	// numStmt count" line per counted statement block) -- nil when coverage
+	// collection was not requested, the run never reached execution
+	// (Skipped/Err/CompileFailed), or go test produced no profile (can
+	// happen for a package with zero coverable statements).
+	CoverProfile []byte
+}
+
+// RunVerifiedByTestRecording is the RECORD-MODE sibling of RunVerifiedByTest
+// (PLAN-scenario-generated-spec.md §2 D1/D3, task W1.2): ONE `go test`
+// invocation that simultaneously (a) asserts normally (Then still calls
+// t.Errorf exactly as plain mode), (b) writes a canonical hotamspec.Scenario
+// JSON artifact per PLAN §2 D1 (via internal/recorder/canon's env-gated
+// t.Cleanup -- see that package's RecordDirEnv), and (c) collects a Go
+// coverage profile over coverPkgFile's OWN package (the implemented_by
+// symbol's package -- PLAN §2 D3's coverage-proof input, consumed by a later
+// gate, W2.2, but the profile is captured here because it can only ever be
+// produced by actually re-running the test, and re-running it a SECOND time
+// just to add -coverprofile would defeat the whole "one run proves
+// everything" point of this task).
+//
+// specRoot/file/testName identify the verified_by test exactly as
+// RunVerifiedByTest's own parameters do. coverPkgFile is a file living in the
+// PACKAGE coverage should be measured over -- ordinarily the implemented_by
+// entry's own file (e.g. "model/brd_package.go") -- so -coverpkg targets
+// exactly that package's import path; pass "" to skip coverage collection
+// entirely (a plain record-mode run with no coverprofile).
+//
+// Deliberately DOES NOT read or write the runCache/singleflightRun in-memory
+// verdict cache RunVerifiedByTest maintains: a recording run's whole point is
+// to produce FRESH artifacts and a fresh coverage profile for THIS call, so
+// memoizing it under the same cache used by the boolean-verdict fast path
+// would either (a) let a plain RunVerifiedByTest call silently reuse a
+// recording run's cached TestRunResult without ever having asked for
+// artifacts (harmless but confusing), or (b) let a recording call reuse a
+// PLAIN cached result and return stale/absent artifacts for a test that
+// really did just run with recording requested -- neither is worth the
+// complexity of teaching one cache to carry two different result shapes.
+// Every call to this function spawns its OWN real `go test` subprocess --
+// unlike RunVerifiedByTest there is no in-memory memoization or singleflight
+// collapsing here at all (a caller invoking this twice for the same test
+// gets two real subprocess runs), which is deliberately simple rather than
+// teaching one cache/singleflight pair to carry two different result shapes;
+// callers that need to avoid redundant recording runs are expected to call
+// this at most once per (file, test) per invocation, the same way a
+// generator (W1.3) would only ever record a given verified_by entry once per
+// `hotam gen-spec` run. There is no PERSISTENT disk cache of any kind here
+// either way (holding b014a63's fix): the tmp directory this function
+// creates is deleted before it returns, on every return path, success or
+// failure.
+func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
+	if inRecursionGuard() {
+		return RecordingResult{TestRunResult: TestRunResult{
+			Skipped: true,
+			InfraWarning: fmt.Sprintf(
+				"%s recursion guard honored -- this process did not execute %s itself (record-mode); it is skipped at this nesting level and must be proven PASSING by the outer, non-nested process that set this guard",
+				recursionGuardEnv, testName),
+		}}
+	}
+
+	path := filepath.Join(specRoot, filepath.FromSlash(file))
+	pkgDir := filepath.Dir(path)
+	absPkgDir, err := filepath.Abs(pkgDir)
+	if err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not resolve package directory for %s: %w", path, err)}}
+	}
+
+	moduleRoot, ok := ModuleRoot(absPkgDir)
+	if !ok {
+		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("no go.mod found walking up from %s -- cannot determine which Go module owns %s", absPkgDir, path)}}
+	}
+
+	pattern, err := relativePackagePattern(moduleRoot, path)
+	if err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+	}
+
+	var coverPkgPattern string
+	if coverPkgFile != "" {
+		coverAbs, err := filepath.Abs(filepath.Join(specRoot, filepath.FromSlash(coverPkgFile)))
+		if err != nil {
+			return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not resolve coverage package file %s: %w", coverPkgFile, err)}}
+		}
+		coverPkgPattern, err = relativePackagePattern(moduleRoot, coverAbs)
+		if err != nil {
+			return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not compute -coverpkg pattern for %s: %w", coverPkgFile, err)}}
+		}
+	}
+
+	recordDir, err := os.MkdirTemp("", "hotam-record-")
+	if err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not create per-run record tmp dir: %w", err)}}
+	}
+	defer os.RemoveAll(recordDir)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	runResult, coverProfile := runGoTestRecording(ctx, moduleRoot, pattern, testName, recordDir, coverPkgPattern)
+
+	artifacts, artErr := readArtifacts(recordDir)
+	if artErr != nil && runResult.Err == nil {
+		runResult.Err = fmt.Errorf("record-mode run completed but artifacts could not be read back from %s: %w", recordDir, artErr)
+	}
+
+	return RecordingResult{
+		TestRunResult: runResult,
+		Artifacts:     artifacts,
+		CoverProfile:  coverProfile,
+	}
+}
+
+// runGoTestRecording is runGoTest's record-mode sibling: same recursion-guard
+// nonce, same globalExecSlots bound, same PASS/FAIL/CompileFailed
+// classification -- but additionally sets hotamspec.RecordDirEnv
+// ("HOTAM_RECORD_DIR") to recordDir on the child process's environment, and,
+// when coverPkgPattern is non-empty, passes -coverprofile (written inside
+// recordDir, never a shared/predictable path) and -coverpkg so the SAME
+// subprocess also produces a coverage profile over the implemented_by
+// symbol's package. Returns the classified TestRunResult plus the raw
+// coverprofile bytes (nil if coverage was not requested or the file was
+// never produced).
+func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, recordDir, coverPkgPattern string) (TestRunResult, []byte) {
+	select {
+	case globalExecSlots <- struct{}{}:
+	case <-ctx.Done():
+		return TestRunResult{Err: fmt.Errorf("go test (record-mode) for %s in %s: %w (timed out waiting for an execution slot)", testName, pkgPattern, ctx.Err())}, nil
+	}
+	defer func() { <-globalExecSlots }()
+
+	runPattern := "^" + testName + "$"
+	args := []string{"test", "-run", runPattern, "-count=1"}
+	var coverProfilePath string
+	if coverPkgPattern != "" {
+		coverProfilePath = filepath.Join(recordDir, "cover.out")
+		args = append(args, "-coverprofile="+coverProfilePath, "-coverpkg="+coverPkgPattern)
+	}
+	args = append(args, pkgPattern)
+
+	cmd := exec.CommandContext(ctx, "go", args...)
+	cmd.Dir = moduleRoot
+	nonce := guardNonce()
+	cmd.Env = append(os.Environ(),
+		recursionGuardEnv+"="+nonce,
+		recordDirEnvName+"="+recordDir,
+	)
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err := cmd.Run()
+	output := boundOutput(buf.String())
+
+	var coverProfile []byte
+	if coverProfilePath != "" {
+		if data, readErr := os.ReadFile(coverProfilePath); readErr == nil {
+			coverProfile = data
+		}
+		// A missing coverprofile (e.g. the run failed before any test ran at
+		// all, or a package with zero coverable statements) is not itself an
+		// error worth surfacing here -- TestRunResult's own Passed/
+		// CompileFailed/Err already carries whatever went wrong with the run
+		// itself; CoverProfile simply stays nil.
+	}
+
+	if ctx.Err() == context.DeadlineExceeded {
+		return TestRunResult{
+			Output: output,
+			Err:    fmt.Errorf("go test (record-mode) timed out running %s in %s: %w", runPattern, pkgPattern, ctx.Err()),
+		}, coverProfile
+	}
+	if err != nil {
+		var exitErr *exec.ExitError
+		if !isExitError(err, &exitErr) {
+			return TestRunResult{Output: output, Err: fmt.Errorf("could not run go test (record-mode): %w", err)}, coverProfile
+		}
+		compileFailed := looksLikeCompileFailure(output)
+		return TestRunResult{Passed: false, CompileFailed: compileFailed, Output: output}, coverProfile
+	}
+	if strings.Contains(output, "\nFAIL") || strings.HasPrefix(output, "FAIL") {
+		return TestRunResult{Passed: false, Output: output}, coverProfile
+	}
+	return TestRunResult{Passed: true, Output: output}, coverProfile
+}
+
+// recordDirEnvName is HotamSpec's own copy of internal/recorder/canon's
+// RecordDirEnv literal ("HOTAM_RECORD_DIR"). Declared as a separate literal
+// here, rather than importing internal/recorder/canon directly, so this
+// package (internal/gate, engine-internal) never depends on the recorder
+// canon package that gets VENDORED (copied) into consumer domains -- the two
+// sides of this contract (the engine setting the env var, the vendored
+// recorder reading it) only need to agree on the STRING, not share a Go
+// import; a mismatch between the two literals is caught mechanically by
+// TestRecordDirEnvName_MatchesCanonLiteral (test_exec_test.go), which reads
+// both packages' source at test time to compare the two constants without
+// creating a compile-time dependency.
+const recordDirEnvName = "HOTAM_RECORD_DIR"
+
+// readArtifacts reads every *.json file directly inside dir (non-recursive --
+// hotamspec.Scenario's writer never creates subdirectories) into memory as
+// RecordedArtifact values, sorted by file name for a deterministic return
+// order (os.ReadDir's own result is already name-sorted, but sorting again
+// explicitly here documents the guarantee rather than relying on an incidental
+// stdlib behavior this function does not itself control).
+func readArtifacts(dir string) ([]RecordedArtifact, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		names = append(names, e.Name())
+	}
+	sort.Strings(names)
+
+	artifacts := make([]RecordedArtifact, 0, len(names))
+	for _, name := range names {
+		data, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return artifacts, fmt.Errorf("could not read artifact %s: %w", name, err)
+		}
+		artifacts = append(artifacts, RecordedArtifact{FileName: name, RawJSON: data})
+	}
+	return artifacts, nil
+}
+
 // isExitError reports whether err is (or wraps) an *exec.ExitError, writing
 // it into *target on success. Kept as a named helper so the intent at the
 // call site ("this is a normal test-failure exit, not infra breakage") reads

@@ -56,7 +56,10 @@
 package hotamspec
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -68,10 +71,33 @@ import (
 // exists only so this package's OWN tests can substitute a fake recorder
 // without depending on testing.T's full surface, and so a future non-testing
 // driver (unlikely, but not foreclosed) is not structurally prevented.
+//
+// recordT is an OPTIONAL extension T may additionally satisfy: a real
+// *testing.T always does (Cleanup/Name/Failed are all part of its real
+// surface), so record-mode (see NewScenario's env-gated Cleanup below) works
+// unconditionally for genuine tests. This package's own fakeT double
+// (hotamspec_test.go) does NOT implement recordT, which is deliberate: this
+// package's own unit tests exercise the Given/When/Then/Value mechanism
+// directly via Steps(), never through the env-gated artifact writer, so they
+// have no need to fake Cleanup/Name/Failed too.
 type T interface {
 	Helper()
 	Errorf(format string, args ...any)
 	Fatalf(format string, args ...any)
+}
+
+// recordT is the extra surface NewScenario needs ONLY to support record-mode
+// (writing a canonical JSON artifact when HOTAM_RECORD_DIR is set). Declared
+// as a separate, optional interface -- checked via a type assertion in
+// NewScenario, never required by T itself -- so record-mode support layers
+// cleanly on top of the pre-existing plain-assert contract instead of
+// widening what every caller (including this package's own fakeT-based
+// tests) must implement.
+type recordT interface {
+	T
+	Cleanup(func())
+	Name() string
+	Failed() bool
 }
 
 // StepKind classifies one recorded Step.
@@ -141,6 +167,63 @@ type Scenario struct {
 	steps []Step
 }
 
+// RecordDirEnv is the environment variable that switches Scenario into
+// record-mode: WRITTEN ONLY BY THE ENGINE (internal/gate/test_exec.go's
+// record-mode runner, PLAN-scenario-generated-spec.md §2 D1/§3 W1.2), never
+// by the author of a verified_by test and never by the test's own code. When
+// set to a non-empty directory path, every Scenario constructed via
+// NewScenario in that `go test` process registers a t.Cleanup that
+// serializes its recorded steps to a canonical JSON artifact under that
+// directory once the test finishes -- see NewScenario's doc comment for the
+// exact file-naming and content contract. When unset (the default -- what
+// every plain `go test` invocation sees, including a human running `go test
+// ./...` locally), NewScenario writes nothing at all: a Scenario-based test
+// is byte-for-byte the same pure-asserts run W1.1 already established,
+// record-mode is purely additive.
+const RecordDirEnv = "HOTAM_RECORD_DIR"
+
+// Artifact is the canonical JSON shape written to
+// <HOTAM_RECORD_DIR>/<reqID>__<TestName>.json in record-mode -- one artifact
+// per Scenario instance (a single test function may construct more than one
+// Scenario, e.g. to narrate several sub-cases; each gets its own file, disambiguated by test name plus reqID). Field order here IS the
+// json.Marshal output order (Go's encoding/json marshals a struct's fields in
+// their declared order, never map order -- see ArtifactStep/ArtifactFact
+// below for the same guarantee extended to Values), which is what makes two
+// runs of the identical scenario produce byte-identical output: nothing in
+// this shape is a Go map, so there is no iteration-order hazard anywhere in
+// the marshaled tree.
+type Artifact struct {
+	ReqID   string         `json:"req_id"`
+	Test    string         `json:"test"`
+	Title   string         `json:"title"`
+	Steps   []ArtifactStep `json:"steps"`
+	Verdict string         `json:"verdict"`
+}
+
+// ArtifactStep is one Step's JSON projection. Kind/Desc/Values mirror Step's
+// own fields exactly (see Step's doc comment); Passed is omitted for
+// non-Then kinds by relying on Go's zero-value (false) rather than a
+// pointer/omitempty trick, since a plain `false` for a Given/When/Value step
+// is itself a deterministic, meaningful rendering (never present in the
+// source data to omit) -- an omitempty tag here would make the SAME
+// StepGiven step serialize differently depending on incidental struct-field
+// values, which is unnecessary risk for a shape that must stay
+// byte-identical run to run regardless of that kind of micro-optimization.
+type ArtifactStep struct {
+	Kind   StepKind       `json:"kind"`
+	Desc   string         `json:"desc"`
+	Values []ArtifactFact `json:"values,omitempty"`
+	Passed bool           `json:"passed,omitempty"`
+}
+
+// ArtifactFact is one Fact's JSON projection -- Key/Value, in the exact
+// order Step.Values already holds them (call order, per kv's own doc
+// comment: never re-sorted, since Given/Value are ordered slices, not maps).
+type ArtifactFact struct {
+	Key   string `json:"k"`
+	Value string `json:"v"`
+}
+
 // NewScenario starts a new Scenario bound to t, narrating the proof of
 // requirement reqID under the human-readable title. reqID is expected to be
 // an R-anchor (e.g. "R-brd-integrity-zero-blockers") matching the
@@ -156,9 +239,101 @@ type Scenario struct {
 // form used throughout this codebase's own conventions (see
 // model.NewBrdPackage / model.NewForecast in the pilot's authored spec/, the
 // exact style this recorder is designed to sit alongside).
+//
+// RECORD-MODE: if RecordDirEnv is set (non-empty) in this process's
+// environment AND t additionally satisfies recordT (a real *testing.T always
+// does), NewScenario registers a t.Cleanup that -- after the test function
+// itself has returned, so every Given/When/Then/Value call the test makes has
+// already landed in s.steps -- serializes this Scenario to an Artifact and
+// writes it as canonical JSON to
+// <RecordDirEnv>/<reqID>__<sanitized test name>.json. This is purely
+// ADDITIVE to the plain-asserts contract: Then still calls t.Errorf exactly
+// as before, record-mode never changes whether the test itself passes or
+// fails, only whether a side artifact also gets written. Any error while
+// writing the artifact (directory unwritable, marshal failure -- the latter
+// should be structurally impossible given Artifact's all-string/slice shape,
+// but is still handled rather than ignored) is reported via t.Errorf, not
+// silently swallowed: a record-mode run that FAILS to produce its artifact
+// must be visibly red, never a quiet no-op that looks identical to success
+// from the test's own PASS/FAIL alone.
 func NewScenario(t T, reqID, title string) *Scenario {
 	t.Helper()
-	return &Scenario{t: t, reqID: reqID, title: title}
+	s := &Scenario{t: t, reqID: reqID, title: title}
+	if dir := os.Getenv(RecordDirEnv); dir != "" {
+		if rt, ok := t.(recordT); ok {
+			rt.Cleanup(func() { s.writeArtifact(rt, dir) })
+		}
+	}
+	return s
+}
+
+// writeArtifact renders s as canonical JSON and writes it to
+// <dir>/<reqID>__<sanitized test name>.json, called from the t.Cleanup
+// NewScenario registers in record-mode. verdict is "pass" unless rt reports
+// the test already Failed() by the time Cleanup runs (t.Failed() reflects
+// every t.Error/t.Errorf/t.Fatal call made during the test, including ones
+// this Scenario's own Then steps made, and any the test's surrounding code
+// made directly) -- so verdict is a DERIVED summary of the same signal
+// go test's own PASS/FAIL line already carries, never a second, independently
+// -trackable notion of success a forged artifact could disagree with go
+// test's real exit code about.
+func (s *Scenario) writeArtifact(rt recordT, dir string) {
+	rt.Helper()
+	verdict := "pass"
+	if rt.Failed() {
+		verdict = "fail"
+	}
+	steps := make([]ArtifactStep, 0, len(s.steps))
+	for _, st := range s.steps {
+		values := make([]ArtifactFact, 0, len(st.Values))
+		for _, f := range st.Values {
+			values = append(values, ArtifactFact{Key: f.Key, Value: f.Value})
+		}
+		steps = append(steps, ArtifactStep{
+			Kind:   st.Kind,
+			Desc:   st.Desc,
+			Values: values,
+			Passed: st.Passed,
+		})
+	}
+	art := Artifact{
+		ReqID:   s.reqID,
+		Test:    rt.Name(),
+		Title:   s.title,
+		Steps:   steps,
+		Verdict: verdict,
+	}
+	data, err := json.MarshalIndent(art, "", "  ")
+	if err != nil {
+		rt.Errorf("hotamspec: record-mode: could not marshal artifact for %s/%s: %v", s.reqID, rt.Name(), err)
+		return
+	}
+	data = append(data, '\n')
+	name := artifactFileName(s.reqID, rt.Name())
+	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+		rt.Errorf("hotamspec: record-mode: could not write artifact %s: %v", name, err)
+	}
+}
+
+// artifactFileName builds the <reqID>__<sanitized test name>.json file name
+// record-mode writes into RecordDirEnv. testName comes from *testing.T.Name(),
+// which for a top-level test is just "TestFoo" but for a subtest (t.Run)
+// includes a "/"-separated path (e.g. "TestFoo/case_1") -- "/" is not a valid
+// path SEPARATOR-FREE filename character on every OS this engine targets
+// (Windows rejects it outright), so it is replaced with "_" here, the same
+// convention Go's own `go test -run` pattern matching and `t.TempDir()`
+// naming already use for subtest names in generated paths.
+func artifactFileName(reqID, testName string) string {
+	safe := make([]byte, 0, len(testName))
+	for i := 0; i < len(testName); i++ {
+		c := testName[i]
+		if c == '/' || c == '\\' {
+			safe = append(safe, '_')
+			continue
+		}
+		safe = append(safe, c)
+	}
+	return reqID + "__" + string(safe) + ".json"
 }
 
 // ReqID returns the requirement anchor this Scenario narrates.
@@ -342,3 +517,8 @@ func renderMap(rv reflect.Value) string {
 // library ever changes Helper/Errorf/Fatalf's signatures this file fails to
 // build instead of failing mysteriously at a real call site.
 var _ T = (*testing.T)(nil)
+
+// compile-time assertion that *testing.T also satisfies recordT -- a real
+// test always supports record-mode; only this package's own fakeT double
+// (hotamspec_test.go) deliberately does not.
+var _ recordT = (*testing.T)(nil)

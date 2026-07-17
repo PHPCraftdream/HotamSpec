@@ -1,9 +1,15 @@
 package gate
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
 )
 
 // writeModuleFixture builds a standalone temp Go module: go.mod at root,
@@ -684,5 +690,365 @@ func TestClearInheritedRecursionGuard_UnsetsEnv(t *testing.T) {
 	}
 	if inRecursionGuard() {
 		t.Fatalf("expected inRecursionGuard()==false after ClearInheritedRecursionGuard")
+	}
+}
+
+// TestRecordDirEnvName_MatchesCanonLiteral is the mechanical guard named in
+// recordDirEnvName's own doc comment: this package intentionally does NOT
+// import internal/recorder/canon (to avoid coupling the engine-internal gate
+// package to the vendored-recorder canon), so the two sides of the
+// HOTAM_RECORD_DIR contract are two independent string literals that could
+// silently drift. recordervendor.BodyForHash() re-exposes the canon's exact
+// source text (it is a go:embed of that same file, one hop away via
+// internal/recorder/vendor -- itself already an existing, approved
+// dependency direction, see that package's own doc comment), so this test
+// greps for the literal RecordDirEnv assignment inside the real canon source
+// and compares it against this package's own recordDirEnvName constant.
+func TestRecordDirEnvName_MatchesCanonLiteral(t *testing.T) {
+	canonSrc := recordervendor.BodyForHash()
+	want := `"` + recordDirEnvName + `"`
+	if !strings.Contains(canonSrc, "RecordDirEnv = "+want) {
+		t.Fatalf("canon source does not declare RecordDirEnv = %s -- recordDirEnvName (%q) has drifted from internal/recorder/canon/hotamspec.go's own RecordDirEnv literal", want, recordDirEnvName)
+	}
+}
+
+// writeRecordingFixture builds a standalone temp Go module that mirrors
+// EXACTLY what a real consumer domain's spec/ tree looks like once the
+// recorder has been vendored (PLAN-scenario-generated-spec.md §2 D1): a
+// go.mod, an implementation package (implPkgRelDir/impl.go, the
+// implemented_by symbol's home), and a model package
+// (modelPkgRelDir/impl_test.go) that imports "<modulePath>/hotamspec" -- a
+// LOCAL package inside this same fixture module, populated with the REAL
+// canonical recorder source (recordervendor.BodyForHash(), the exact bytes
+// `hotam vendor-recorder` would write into a real domain, banner aside) so
+// this test exercises the genuine hotamspec.NewScenario/Given/When/Then/
+// Value API, not a hand-rolled stand-in that could drift from it. testSrc is
+// the verified_by test's own source, free to reference "hotamspec" via that
+// local import.
+func writeRecordingFixture(t *testing.T, modulePath, implPkgRelDir, implSrc, modelPkgRelDir, testSrc string) (moduleRoot string) {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module "+modulePath+"\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
+
+	implDir := filepath.Join(root, filepath.FromSlash(implPkgRelDir))
+	if err := os.MkdirAll(implDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll implDir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(implDir, "impl.go"), []byte(implSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile impl.go: %v", err)
+	}
+
+	hotamspecDir := filepath.Join(root, "hotamspec")
+	if err := os.MkdirAll(hotamspecDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll hotamspecDir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(hotamspecDir, "hotamspec.go"), []byte(recordervendor.BodyForHash()), 0o644); err != nil {
+		t.Fatalf("WriteFile vendored hotamspec.go: %v", err)
+	}
+
+	modelDir := filepath.Join(root, filepath.FromSlash(modelPkgRelDir))
+	if err := os.MkdirAll(modelDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll modelDir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(modelDir, "impl_test.go"), []byte(testSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile impl_test.go: %v", err)
+	}
+
+	return root
+}
+
+// scenarioImplSrc is the implemented_by symbol under test: a tiny
+// RequireComplete function, deliberately with MORE THAN ONE executable
+// branch (an if/else, not a single unconditional return) so the coverage
+// profile a real run produces has more than one counted statement block to
+// assert on.
+const scenarioImplSrc = `package model
+
+func RequireComplete(fields int) error {
+	if fields < 1 {
+		return errNotComplete
+	}
+	return nil
+}
+
+var errNotComplete = errStub{}
+
+type errStub struct{}
+
+func (errStub) Error() string { return "not complete" }
+`
+
+// scenarioTestSrc is the verified_by test: a real hotamspec.Scenario-based
+// test (Given/When/Then/Value), calling the REAL RequireComplete symbol
+// (imported from the sibling model package) so both the recorder's record-
+// mode wiring AND the coverage profile prove genuine execution of that
+// symbol's lines, not just of the test file itself.
+func scenarioTestSrc(modulePath string) string {
+	return `package model
+
+import (
+	"testing"
+
+	"` + modulePath + `/hotamspec"
+)
+
+func TestRequireComplete_ScenarioRecorded(t *testing.T) {
+	s := hotamspec.NewScenario(t, "R-example-recording", "RequireComplete rejects zero fields")
+	s.Given("a fields count of zero", "fields", 0)
+	err := RequireComplete(0)
+	s.When("RequireComplete is called")
+	s.Then("an error is returned", err != nil)
+	s.Value("error_text", err)
+}
+`
+}
+
+// TestRunVerifiedByTestRecording_RealScenario_AssertPlusArtifactPlusCoverage
+// is the end-to-end proof this task's own verification step calls for: ONE
+// RunVerifiedByTestRecording call against a real vendored-recorder fixture
+// (a) reports Passed=true (the plain-assert half, unchanged from
+// RunVerifiedByTest's own contract), (b) returns exactly one artifact whose
+// JSON matches the expected canonical shape (req_id/test/title/steps/
+// verdict), and (c) returns a non-empty coverage profile whose text mentions
+// the implemented_by package/file, proving the SAME run that produced (a)
+// and (b) also exercised RequireComplete's lines.
+func TestRunVerifiedByTestRecording_RealScenario_AssertPlusArtifactPlusCoverage(t *testing.T) {
+	const modulePath = "example.com/recordmod"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	result := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+
+	if result.Err != nil {
+		t.Fatalf("unexpected infra error: %v\noutput:\n%s", result.Err, result.Output)
+	}
+	if result.Skipped {
+		t.Fatalf("unexpected Skipped=true: %+v", result.TestRunResult)
+	}
+	if !result.Passed {
+		t.Fatalf("expected Passed=true for a genuinely passing scenario test, got %+v\noutput:\n%s", result.TestRunResult, result.Output)
+	}
+	if result.CompileFailed {
+		t.Fatalf("unexpected CompileFailed=true, output:\n%s", result.Output)
+	}
+
+	if len(result.Artifacts) != 1 {
+		t.Fatalf("expected exactly 1 artifact, got %d: %+v", len(result.Artifacts), result.Artifacts)
+	}
+	art := result.Artifacts[0]
+	wantName := "R-example-recording__TestRequireComplete_ScenarioRecorded.json"
+	if art.FileName != wantName {
+		t.Errorf("artifact FileName = %q, want %q", art.FileName, wantName)
+	}
+
+	var parsed struct {
+		ReqID string `json:"req_id"`
+		Test  string `json:"test"`
+		Title string `json:"title"`
+		Steps []struct {
+			Kind   string `json:"kind"`
+			Desc   string `json:"desc"`
+			Values []struct {
+				K string `json:"k"`
+				V string `json:"v"`
+			} `json:"values,omitempty"`
+			Passed bool `json:"passed,omitempty"`
+		} `json:"steps"`
+		Verdict string `json:"verdict"`
+	}
+	if err := json.Unmarshal(art.RawJSON, &parsed); err != nil {
+		t.Fatalf("artifact RawJSON is not valid JSON: %v\n%s", err, art.RawJSON)
+	}
+	if parsed.ReqID != "R-example-recording" {
+		t.Errorf("req_id = %q, want R-example-recording", parsed.ReqID)
+	}
+	if parsed.Test != "TestRequireComplete_ScenarioRecorded" {
+		t.Errorf("test = %q, want TestRequireComplete_ScenarioRecorded", parsed.Test)
+	}
+	if parsed.Verdict != "pass" {
+		t.Errorf("verdict = %q, want pass", parsed.Verdict)
+	}
+	if len(parsed.Steps) != 4 {
+		t.Fatalf("steps len = %d, want 4: %+v", len(parsed.Steps), parsed.Steps)
+	}
+	if parsed.Steps[0].Kind != "given" || len(parsed.Steps[0].Values) != 1 || parsed.Steps[0].Values[0].K != "fields" || parsed.Steps[0].Values[0].V != "0" {
+		t.Errorf("steps[0] = %+v, want given fields=0", parsed.Steps[0])
+	}
+	if parsed.Steps[2].Kind != "then" || !parsed.Steps[2].Passed {
+		t.Errorf("steps[2] = %+v, want then passed=true", parsed.Steps[2])
+	}
+
+	if len(result.CoverProfile) == 0 {
+		t.Fatalf("expected a non-empty coverage profile")
+	}
+	coverText := string(result.CoverProfile)
+	if !strings.HasPrefix(coverText, "mode:") {
+		t.Errorf("coverage profile does not start with a mode: header:\n%s", coverText)
+	}
+	if !strings.Contains(coverText, filepath.ToSlash(modulePath+"/model/impl.go")) {
+		t.Errorf("coverage profile does not mention the implemented_by file %s/model/impl.go:\n%s", modulePath, coverText)
+	}
+	// RequireComplete has 2 branches (if/else via early return) -- a real
+	// execution with fields=0 covers the "return errNotComplete" branch;
+	// prove at least one non-zero hit COUNT is present (the last
+	// whitespace-separated field on a coverage line), not just that the
+	// package NAME appears in the profile (which alone would not prove any
+	// STATEMENT was actually executed).
+	if !hasNonZeroCoverageCount(coverText) {
+		t.Errorf("coverage profile has no line with a non-zero execution count -- implemented_by lines were not actually proven executed:\n%s", coverText)
+	}
+}
+
+// hasNonZeroCoverageCount reports whether cover (Go's text coverage-profile
+// format: "file:startLine.startCol,endLine.endCol numStmt count" per line,
+// after the leading "mode:" line) contains at least one line whose trailing
+// count field is non-zero -- the direct proof that some statement block was
+// actually executed, not merely instrumented.
+func hasNonZeroCoverageCount(cover string) bool {
+	for _, line := range strings.Split(cover, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "mode:") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		count := fields[len(fields)-1]
+		if count != "0" {
+			return true
+		}
+	}
+	return false
+}
+
+// TestRunVerifiedByTestRecording_Deterministic_TwoRunsByteIdentical is the
+// hard determinism proof PLAN-scenario-generated-spec.md §2 D1/the task's own
+// verification step demands: running the identical scenario test TWICE via
+// RunVerifiedByTestRecording (two separate calls, two separate per-run tmp
+// dirs, exactly as two independent `hotam` invocations would each get their
+// own) must produce byte-identical artifact JSON both times -- proven here by
+// sha256, and the exact byte comparison too.
+func TestRunVerifiedByTestRecording_Deterministic_TwoRunsByteIdentical(t *testing.T) {
+	const modulePath = "example.com/determinismmod"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	first := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if first.Err != nil || !first.Passed {
+		t.Fatalf("first run: unexpected result %+v, err=%v", first.TestRunResult, first.Err)
+	}
+	second := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if second.Err != nil || !second.Passed {
+		t.Fatalf("second run: unexpected result %+v, err=%v", second.TestRunResult, second.Err)
+	}
+
+	if len(first.Artifacts) != 1 || len(second.Artifacts) != 1 {
+		t.Fatalf("expected exactly 1 artifact per run, got first=%d second=%d", len(first.Artifacts), len(second.Artifacts))
+	}
+	firstBytes := first.Artifacts[0].RawJSON
+	secondBytes := second.Artifacts[0].RawJSON
+	firstHash := sha256Hex(firstBytes)
+	secondHash := sha256Hex(secondBytes)
+	t.Logf("record-mode artifact sha256 run1=%s run2=%s", firstHash, secondHash)
+	if firstHash != secondHash {
+		t.Fatalf("DETERMINISM VIOLATION: two record-mode runs of the identical scenario produced different artifact bytes\nrun1 sha256=%s:\n%s\nrun2 sha256=%s:\n%s", firstHash, firstBytes, secondHash, secondBytes)
+	}
+	if string(firstBytes) != string(secondBytes) {
+		t.Fatalf("DETERMINISM VIOLATION: hashes matched but raw bytes differ (should be impossible) -- run1:\n%s\nrun2:\n%s", firstBytes, secondBytes)
+	}
+}
+
+// sha256Hex is this test file's own tiny local helper (mirrors the
+// unexported same-named helper in internal/invariants/recorder_check.go --
+// duplicated rather than exported/shared across packages for a one-line
+// hex-encode, matching that file's own reasoning for why it stayed a small
+// private helper there).
+func sha256Hex(b []byte) string {
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:])
+}
+
+// TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly proves the
+// coverPkgFile="" escape hatch: RunVerifiedByTestRecording must still run and
+// record an artifact normally, with CoverProfile left nil (no -coverprofile
+// flag passed at all), when the caller does not ask for coverage.
+func TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly(t *testing.T) {
+	const modulePath = "example.com/nocovermod"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	result := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "")
+
+	if result.Err != nil || !result.Passed {
+		t.Fatalf("unexpected result %+v, err=%v, output:\n%s", result.TestRunResult, result.Err, result.Output)
+	}
+	if len(result.Artifacts) != 1 {
+		t.Fatalf("expected exactly 1 artifact even with coverage skipped, got %d", len(result.Artifacts))
+	}
+	if result.CoverProfile != nil {
+		t.Errorf("expected CoverProfile=nil when coverPkgFile is empty, got %d bytes", len(result.CoverProfile))
+	}
+}
+
+// TestRunVerifiedByTestRecording_TmpDirCleanedUpAfterReturn proves the
+// per-run tmp dir contract (task requirement: "artifacts... read into memory,
+// tmp deleted" -- no persistent disk trace once RunVerifiedByTestRecording
+// returns). This test cannot directly observe the tmp dir's own path (it is
+// internal), so it instead asserts on os.TempDir()'s own root: no directory
+// matching the "hotam-record-*" prefix this function uses may survive after
+// a call returns.
+func TestRunVerifiedByTestRecording_TmpDirCleanedUpAfterReturn(t *testing.T) {
+	const modulePath = "example.com/tmpcleanupmod"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	before, err := filepath.Glob(filepath.Join(os.TempDir(), "hotam-record-*"))
+	if err != nil {
+		t.Fatalf("Glob (before): %v", err)
+	}
+
+	result := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if result.Err != nil || !result.Passed {
+		t.Fatalf("unexpected result %+v, err=%v", result.TestRunResult, result.Err)
+	}
+
+	after, err := filepath.Glob(filepath.Join(os.TempDir(), "hotam-record-*"))
+	if err != nil {
+		t.Fatalf("Glob (after): %v", err)
+	}
+	if len(after) > len(before) {
+		t.Fatalf("expected no surviving hotam-record-* tmp dirs after RunVerifiedByTestRecording returns: before=%v after=%v", before, after)
+	}
+}
+
+// TestRunVerifiedByTestRecording_RecursionGuard_Skips proves
+// RunVerifiedByTestRecording honors the SAME recursion guard
+// RunVerifiedByTest does -- a process already nested inside a guarded `go
+// test` child must not spawn yet another generation, in record-mode exactly
+// as in plain mode.
+func TestRunVerifiedByTestRecording_RecursionGuard_Skips(t *testing.T) {
+	const modulePath = "example.com/recordguardmod"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	prev, hadPrev := os.LookupEnv(recursionGuardEnv)
+	if err := os.Setenv(recursionGuardEnv, newGuardNonce()); err != nil {
+		t.Fatalf("Setenv: %v", err)
+	}
+	t.Cleanup(func() {
+		if hadPrev {
+			os.Setenv(recursionGuardEnv, prev)
+		} else {
+			os.Unsetenv(recursionGuardEnv)
+		}
+	})
+
+	result := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if !result.Skipped {
+		t.Fatalf("expected Skipped=true with the guard env set, got %+v", result.TestRunResult)
+	}
+	if result.InfraWarning == "" {
+		t.Fatalf("expected a non-empty InfraWarning on a Skipped record-mode result")
+	}
+	if len(result.Artifacts) != 0 {
+		t.Fatalf("expected no artifacts on a Skipped run, got %d", len(result.Artifacts))
 	}
 }
