@@ -1165,3 +1165,72 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 		t.Fatalf("REGRESSION: expected the testing.Short() idiom to still pass check_verified_by_test_no_skip, got %v", vs)
 	}
 }
+
+// TestHonoredSkipWarnings_MUTATION_SkipIsVisibleNotSilent is the mutation
+// proof for @fh's "honored-skip must not be silent" re-review: with
+// gate.RunVerifiedByTest's own recursion guard env var
+// (HOTAM_VERIFIED_BY_EXEC_GUARD) set on THIS test process -- simulating
+// exactly the state a genuine nested `go test` child RunVerifiedByTest
+// itself spawned would observe -- a real, otherwise-passing verified_by
+// entry is Skipped rather than actually executed. Before this fix, that
+// Skipped result was dropped on the floor entirely: checkVerifiedByTestPasses
+// reported zero violations (correct -- Skipped is "unproven here", never a
+// false pass or false fail) and NOTHING else in AllViolations' output ever
+// mentioned the skip happened, so a run with every entry silently deferred
+// looked byte-identical to a run where every entry was genuinely proven.
+// This test proves BOTH halves of the fix: the blocking check still reports
+// zero violations for the Skipped entry (Skip is not itself a proof
+// failure), AND HonoredSkipWarnings now reports a non-empty, visible warning
+// naming the requirement -- the skip is no longer invisible.
+func TestHonoredSkipWarnings_MUTATION_SkipIsVisibleNotSilent(t *testing.T) {
+	// Deliberately NOT t.Parallel(): mutates process-global environment
+	// (HOTAM_VERIFIED_BY_EXEC_GUARD) that gate.RunVerifiedByTest reads for
+	// EVERY call in this process, including from other tests running
+	// concurrently in this same package.
+	const guardEnv = "HOTAM_VERIFIED_BY_EXEC_GUARD"
+	prev, hadPrev := os.LookupEnv(guardEnv)
+	if err := os.Setenv(guardEnv, "test-simulated-nested-go-test-child"); err != nil {
+		t.Fatalf("Setenv: %v", err)
+	}
+	t.Cleanup(func() {
+		if hadPrev {
+			os.Setenv(guardEnv, prev)
+		} else {
+			os.Unsetenv(guardEnv)
+		}
+	})
+
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	if err := os.WriteFile(filepath.Join(domainDir, "go.mod"), []byte("module prat-spec-honored-skip\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
+	testPath := filepath.Join(domainDir, "spec", "model", "risk_test.go")
+	if err := os.WriteFile(testPath, []byte(authoredRiskTestGoodSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile risk_test.go: %v", err)
+	}
+
+	r := reqWithLinks(
+		"R-honored-skip-visible", "sa",
+		[]string{"spec/model/risk.go:NewRisk"},
+		[]string{"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"},
+	)
+	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
+
+	blocking := runCheck(t, "check_verified_by_test_passes", g)
+	if len(blocking) != 0 {
+		t.Fatalf("expected NO blocking violation for an honored-Skipped entry (Skip is 'unproven here', never a false failure), got %v", blocking)
+	}
+
+	warnings := HonoredSkipWarnings(g)
+	if len(warnings) == 0 {
+		t.Fatalf("SILENT HONORED SKIP: expected HonoredSkipWarnings to report a non-blocking warning for the Skipped verified_by entry, got none")
+	}
+	if !hasViolationFor(warnings, "R-honored-skip-visible") {
+		t.Fatalf("expected a warning naming R-honored-skip-visible, got %v", warnings)
+	}
+	for _, w := range warnings {
+		if w.Message == "" {
+			t.Fatalf("expected a non-empty warning message, got %+v", w)
+		}
+	}
+}

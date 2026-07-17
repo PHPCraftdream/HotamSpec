@@ -395,12 +395,48 @@ var _ = All.MustRegister("check_verified_by_test_no_skip", Invariant{
 // entries cannot spawn dozens of simultaneous `go test` processes and
 // thrash the machine the way N-way unbounded parallelism would.
 func checkVerifiedByTestPasses(g *ontology.Graph) []Violation {
-	specRoot := gate.SpecRootForGraph(g)
-	type job struct {
-		reqID string
-		entry specFileEntry
+	results := runVerifiedByTestJobs(g)
+	var out []Violation
+	for _, r := range results {
+		if r.violation != nil {
+			out = append(out, *r.violation)
+		}
 	}
-	var jobs []job
+	return out
+}
+
+// verifiedByTestJob is one (requirement, verified_by entry) unit of work
+// checkVerifiedByTestPasses's worker pool executes -- shared between the
+// blocking check (checkVerifiedByTestPasses, above) and the non-blocking
+// honored-skip advisory (HonoredSkipWarnings, below) so both walk the exact
+// SAME job set via runVerifiedByTestJobs rather than maintaining two
+// independently-drifting copies of the eligibility filter (out-of-scope /
+// unresolvable / no-teeth / has-skip exclusions).
+type verifiedByTestJob struct {
+	reqID string
+	entry specFileEntry
+}
+
+// verifiedByTestJobResult is one job's outcome: at most ONE of violation /
+// skipWarning is ever non-nil (a run is either a real proof attempt --
+// pass, fail, compile-failure, or infra-error, all folded into violation --
+// or a Skipped result, folded into skipWarning; RunVerifiedByTest's own
+// TestRunResult never sets both Skipped and a real verdict at once).
+type verifiedByTestJobResult struct {
+	reqID       string
+	violation   *Violation
+	skipWarning *Violation
+}
+
+// collectVerifiedByTestJobs walks g's Requirements exactly the way
+// checkVerifiedByTestPasses always has (out-of-scope entries are
+// checkVerifiedByTestResolvable's violation to report; unresolvable entries
+// are also checkVerifiedByTestResolvable's; no-teeth/skipped entries are
+// checkVerifiedByTestHasTeeth/checkVerifiedByTestNoSkip's) -- extracted so
+// both checkVerifiedByTestPasses and HonoredSkipWarnings see the identical
+// eligible-job set.
+func collectVerifiedByTestJobs(g *ontology.Graph, specRoot string) []verifiedByTestJob {
+	var jobs []verifiedByTestJob
 	for _, r := range g.Requirements {
 		if len(r.VerifiedBy) == 0 {
 			continue
@@ -410,46 +446,81 @@ func checkVerifiedByTestPasses(g *ontology.Graph) []Violation {
 				continue
 			}
 			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
-				// Out-of-scope entries are checkVerifiedByTestResolvable's
-				// violation to report.
 				continue
 			}
 			resolved, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
 			if err != nil || !resolved.Found {
-				// checkVerifiedByTestResolvable's violation to report.
 				continue
 			}
 			if !resolved.HasTeeth || resolved.HasSkip {
-				// checkVerifiedByTestHasTeeth / checkVerifiedByTestNoSkip's
-				// violation to report -- do not also compile/run a test
-				// already known to be structurally hollow or skipped.
 				continue
 			}
-			jobs = append(jobs, job{reqID: r.ID, entry: e})
+			jobs = append(jobs, verifiedByTestJob{reqID: r.ID, entry: e})
 		}
 	}
+	return jobs
+}
+
+// runVerifiedByTestJobs actually executes (via RunVerifiedByTest) every
+// eligible verified_by entry in g, fanned out across runExecWorkers workers
+// exactly as checkVerifiedByTestPasses always has, and returns one result
+// per job -- both the blocking violation (if any) and the non-blocking
+// honored-skip warning (if any).
+func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
+	specRoot := gate.SpecRootForGraph(g)
+	jobs := collectVerifiedByTestJobs(g, specRoot)
 	if len(jobs) == 0 {
 		return nil
 	}
 
-	results := make([]*Violation, len(jobs))
+	results := make([]verifiedByTestJobResult, len(jobs))
 	sem := make(chan struct{}, runExecWorkers)
 	var wg sync.WaitGroup
 	for i, j := range jobs {
 		wg.Add(1)
 		sem <- struct{}{}
-		go func(idx int, j job) {
+		go func(idx int, j verifiedByTestJob) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			results[idx] = verifiedByTestPassesViolation(specRoot, j.reqID, j.entry)
+			violation, skipWarning := verifiedByTestPassesViolation(specRoot, j.reqID, j.entry)
+			results[idx] = verifiedByTestJobResult{reqID: j.reqID, violation: violation, skipWarning: skipWarning}
 		}(i, j)
 	}
 	wg.Wait()
+	return results
+}
 
+// HonoredSkipWarnings reports every verified_by entry whose RunVerifiedByTest
+// call was honored-Skipped (the recursion guard fired: this process is
+// already nested inside a `go test` subprocess RunVerifiedByTest itself
+// spawned -- see gate.recursionGuardEnv's doc comment) as a NON-BLOCKING
+// advisory Violation-shaped warning, never as a blocking violation --
+// checkVerifiedByTestPasses (the actual gate) deliberately does NOT report a
+// Skipped entry as a violation, because "unproven at this nesting level" is
+// not the same claim as "proven false", and the outer, non-nested process
+// that set the guard is the one that actually proves it.
+//
+// Exists because a Skipped result used to be COMPLETELY SILENT at the
+// all-violations level (@fh's "honored-skip must not be silent" re-review,
+// NEW-1 second half): a clean "0 violations -- graph clean" run looked
+// byte-identical whether every verified_by entry was actually proven, or
+// some were silently deferred to an outer process that may or may not exist.
+// Callers (cmd/hotam's all-violations, in its non-blocking ADVISORY section
+// alongside diagnose.ReflectOrphanEntityType) surface this list to the
+// operator so a skip is always visible, never indistinguishable from a real
+// proof. In normal top-level `hotam` operation this list is always empty
+// (cmd/hotam's main() unconditionally clears the inherited guard env before
+// any subcommand runs -- see gate.ClearInheritedRecursionGuard), so a
+// non-empty result here is itself diagnostic: something set the guard env in
+// THIS process's own environment before all-violations began, which is only
+// expected for a genuine nested `go test` child, never a top-level CLI
+// invocation.
+func HonoredSkipWarnings(g *ontology.Graph) []Violation {
+	results := runVerifiedByTestJobs(g)
 	var out []Violation
-	for _, v := range results {
-		if v != nil {
-			out = append(out, *v)
+	for _, r := range results {
+		if r.skipWarning != nil {
+			out = append(out, *r.skipWarning)
 		}
 	}
 	return out
@@ -477,11 +548,18 @@ func checkVerifiedByTestPasses(g *ontology.Graph) []Violation {
 const runExecWorkers = 2
 
 // verifiedByTestPassesViolation runs one job (a single verified_by entry
-// already known to resolve, have teeth, and not be skipped) and returns the
-// Violation to report, or nil if it passes. Split out from
-// checkVerifiedByTestPasses so the worker goroutine body is a plain
-// function call, not an inline closure duplicating this logic per call site.
-func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) *Violation {
+// already known to resolve, have teeth, and not be skipped) and returns
+// (violation, skipWarning): violation is checkVerifiedByTestPasses' BLOCKING
+// verdict (nil if the test passes or was honored-Skipped -- a Skipped result
+// is "unproven at this nesting level", never a false pass or a false
+// failure); skipWarning is HonoredSkipWarnings' NON-BLOCKING advisory (nil
+// unless run.Skipped, in which case it always carries run.InfraWarning --
+// RunVerifiedByTest guarantees a Skipped result never has an empty
+// InfraWarning, see TestRunResult's doc comment). At most one of the two
+// return values is ever non-nil. Split out from checkVerifiedByTestPasses so
+// the worker goroutine body is a plain function call, not an inline closure
+// duplicating this logic per call site.
+func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) (violation, skipWarning *Violation) {
 	run := gate.RunVerifiedByTest(specRoot, e.file, e.symbol)
 	if run.Skipped {
 		// RunVerifiedByTest's recursion guard fired: this process is already
@@ -489,9 +567,27 @@ func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) *Vio
 		// spawned (structural for self-hosting domains -- see
 		// gate.recursionGuardEnv's doc comment). Not provable at THIS
 		// nesting level; the outer, non-nested invocation is the one that
-		// actually runs and proves it, so this level reports no violation
-		// rather than a false pass or a false failure.
-		return nil
+		// actually runs and proves it, so this level reports no BLOCKING
+		// violation rather than a false pass or a false failure -- but it
+		// must not be silent either (@fh's "honored-skip must not be
+		// silent" re-review), so it is surfaced as a non-blocking advisory
+		// warning instead of being dropped on the floor.
+		warning := run.InfraWarning
+		if warning == "" {
+			// Defense-in-depth only: RunVerifiedByTest's own contract
+			// guarantees Skipped always carries a non-empty InfraWarning, so
+			// this branch should be unreachable in practice, but a Skipped
+			// result must never surface as a silent no-op warning even if
+			// that contract is ever violated by a future edit.
+			warning = fmt.Sprintf("verified_by entry %q was skipped (recursion guard honored) with no InfraWarning set -- this should never happen; treat as a bug in gate.RunVerifiedByTest", e.raw)
+		}
+		return nil, &Violation{
+			Check: "check_verified_by_test_passes_honored_skip",
+			ID:    reqID,
+			Message: fmt.Sprintf(
+				"verified_by entry %q was NOT executed at this nesting level (honored recursion-guard skip): %s",
+				e.raw, warning),
+		}
 	}
 	if run.Err != nil {
 		return &Violation{
@@ -500,10 +596,10 @@ func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) *Vio
 			Message: fmt.Sprintf(
 				"verified_by entry %q could not be executed: %v",
 				e.raw, run.Err),
-		}
+		}, nil
 	}
 	if run.Passed {
-		return nil
+		return nil, nil
 	}
 	if run.CompileFailed {
 		return &Violation{
@@ -512,7 +608,7 @@ func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) *Vio
 			Message: fmt.Sprintf(
 				"verified_by entry %q: package does not compile -- `go test` build failed for %s, so %s could never run. Output:\n%s",
 				e.raw, e.file, e.symbol, run.Output),
-		}
+		}, nil
 	}
 	return &Violation{
 		Check: "check_verified_by_test_passes",
@@ -520,7 +616,7 @@ func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) *Vio
 		Message: fmt.Sprintf(
 			"verified_by entry %q: test %s FAILS when actually run (`go test -run '^%s$'`) -- a red or non-compiling proof does not satisfy verified_by. Output:\n%s",
 			e.raw, e.symbol, e.symbol, run.Output),
-	}
+	}, nil
 }
 
 var _ = All.MustRegister("check_verified_by_test_passes", Invariant{

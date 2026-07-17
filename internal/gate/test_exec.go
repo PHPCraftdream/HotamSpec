@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -111,8 +110,9 @@ func ClearInheritedRecursionGuard() {
 // how broken the underlying implementations were, on a gutted tree, silently.
 //
 // A FIRST fix (marker-vouched-nonce: a random per-process nonce, corroborated
-// by a marker file written to diskCacheDir() before the nonce was ever placed
-// in a child's environment) was shipped and then broken by re-review: the
+// by a marker file written to the (since-removed) disk verdict cache's
+// directory before the nonce was ever placed in a child's environment) was
+// shipped and then broken by re-review: the
 // marker lived at a PREDICTABLE, WORLD-WRITABLE path
 // (os.TempDir()/hotam-verified-by-cache/guard-<value>.marker). An attacker
 // does not need to guess this process's nonce at all -- they pick their OWN
@@ -419,118 +419,57 @@ var runCache sync.Map // cacheKey -> cacheEntry
 
 // ResetRunCacheForTest clears the in-memory cache only. Test-only helper
 // (exported so internal/invariants' tests, a different package, can call
-// it). Deliberately does NOT wipe diskCacheDir: that directory is SHARED,
-// CROSS-PROCESS state (os.TempDir()/hotam-verified-by-cache/) that other
-// concurrent processes on the same machine -- another test binary, a real
-// `hotam` invocation, potentially another agent's session entirely on a
-// shared dev box -- may be reading or writing at the same moment; nuking it
-// out from under them would be a correctness hazard for THEM, not a
-// convenience for this process. It is also unnecessary for THIS process's
-// own correctness: every disk-cache entry is content-hash-keyed (hash +
-// testName), and every fixture in this package's tests that shares source
-// CONTENT (e.g. passingImplSrc/passingTestSrc reused across several tests)
-// also embeds a DIFFERENT module path in its own go.mod -- which
-// hashPackageInputs hashes as part of the key -- so distinct fixtures never
-// collide on the same disk-cache file even without clearing it between
-// tests.
+// it). There is no on-disk/cross-process cache to also clear: see the
+// removed-disk-cache history below (NEW-3) -- runCache (this in-memory
+// sync.Map) is the ONLY verdict cache RunVerifiedByTest maintains, and it is
+// process-lifetime only, so clearing it here is complete.
 func ResetRunCacheForTest() {
 	runCache = sync.Map{}
 }
 
-// diskCacheDir is the SHARED, CROSS-PROCESS on-disk cache location:
-// os.TempDir()/hotam-verified-by-cache/. This is what makes design decision
-// A (PLAN-authored-spec-discipline.md §6) actually deliver "an unchanged
-// spec is not re-run" across process boundaries, not just within one
-// process's lifetime: cmd/hotam's own e2e test suite builds ONE shared
-// `hotam` binary (testbinary_test.go's buildSharedHotamBinary) and spawns it
-// as a SEPARATE OS process from dozens of t.Parallel() tests, each against
-// its own copy of the SAME real self-hosting domain graph (copySelfDomain --
-// identical graph.json content, so identical verified_by entries resolving
-// against the SAME real engine packages via gate.engineRoot's CWD-fallback
-// walk). Without a cross-process cache, every one of those independently
-// spawned `hotam.exe` processes pays its own COLD `go test` compile for the
-// same real engine packages, all at once -- observed to blow past `go
-// test`'s own default 30s per-package timeout for the cmd/hotam suite under
-// load. A shared disk cache lets the FIRST process to prove a given
-// (content hash, test name) write the result once; every other process
-// (including nested guarded subprocesses, though those never reach this
-// path -- see inRecursionGuard) reads it back without spawning anything.
-func diskCacheDir() string {
-	return filepath.Join(os.TempDir(), "hotam-verified-by-cache")
-}
-
-// diskCacheFileName maps (hash, testName) to a filesystem-safe cache file
-// name: the content hash is already a hex SHA-256 (filesystem-safe on every
-// OS); testName is a valid Go identifier (enforced upstream by
-// ResolveSpecTest's isRealTestSignature/Test*-prefix checks before
-// RunVerifiedByTest is ever called), so neither needs further escaping.
-func diskCacheFileName(hash, testName string) string {
-	return hash + "__" + testName + ".json"
-}
-
-// diskCacheEntry is the on-disk JSON shape -- a strict subset of
-// TestRunResult (Skipped is deliberately NOT persisted: a Skipped result is
-// meaningless outside the recursion-guarded process that produced it, and
-// must never be read back as if it were a real verdict for an unguarded
-// caller).
-type diskCacheEntry struct {
-	Passed        bool   `json:"passed"`
-	CompileFailed bool   `json:"compile_failed"`
-	Output        string `json:"output"`
-}
-
-// loadDiskCache reads a cached TestRunResult for (hash, testName) from
-// diskCacheDir, if present. Returns ok=false on any error (missing file,
-// corrupt JSON, concurrent-write torn read) -- a disk cache miss always
-// falls through to a real `go test` run, never blocks or errors out the
-// caller; this is a pure performance optimization, and treating any
-// uncertainty as a miss keeps it that way.
-func loadDiskCache(hash, testName string) (TestRunResult, bool) {
-	path := filepath.Join(diskCacheDir(), diskCacheFileName(hash, testName))
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return TestRunResult{}, false
-	}
-	var entry diskCacheEntry
-	if err := json.Unmarshal(data, &entry); err != nil {
-		return TestRunResult{}, false
-	}
-	return TestRunResult{Passed: entry.Passed, CompileFailed: entry.CompileFailed, Output: entry.Output}, true
-}
-
-// storeDiskCache writes result to diskCacheDir under (hash, testName),
-// via a temp-file-then-rename so a concurrent reader from ANOTHER process
-// never observes a partially-written file (os.Rename is atomic on both
-// POSIX and Windows when source and destination are on the same volume,
-// which they always are here -- both under diskCacheDir). Errors are
-// swallowed (best-effort cache write, same reasoning as loadDiskCache: this
-// is a pure performance optimization that must never fail the caller).
-func storeDiskCache(hash, testName string, result TestRunResult) {
-	dir := diskCacheDir()
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return
-	}
-	entry := diskCacheEntry{Passed: result.Passed, CompileFailed: result.CompileFailed, Output: result.Output}
-	data, err := json.Marshal(entry)
-	if err != nil {
-		return
-	}
-	finalPath := filepath.Join(dir, diskCacheFileName(hash, testName))
-	tmp, err := os.CreateTemp(dir, "tmp-*")
-	if err != nil {
-		return
-	}
-	tmpPath := tmp.Name()
-	_, writeErr := tmp.Write(data)
-	closeErr := tmp.Close()
-	if writeErr != nil || closeErr != nil {
-		os.Remove(tmpPath)
-		return
-	}
-	if err := os.Rename(tmpPath, finalPath); err != nil {
-		os.Remove(tmpPath)
-	}
-}
+// NEW-3 (@fh final adversarial re-review, "kill-switch moved from env var to
+// cache file"): this package used to also maintain a SHARED, CROSS-PROCESS
+// on-disk verdict cache at os.TempDir()/hotam-verified-by-cache/, keyed by
+// content-hash (diskCacheDir/loadDiskCache/storeDiskCache, all now REMOVED).
+// The stated purpose was a real, legitimate performance win: cmd/hotam's own
+// e2e suite spawns dozens of independent `hotam.exe` processes against
+// copies of the SAME real self-hosting domain graph, and without a
+// cross-process cache each one pays its own cold `go test` compile for the
+// same real engine packages at once. But @fh reproduced a FULL OFFLINE
+// FORGE against it: the cache key (hashPackageInputs) is a pure function of
+// files already on disk, so ANYONE can recompute it WITHOUT ever running
+// `hotam` at all, then hand-write {"passed":true,...} to the resulting
+// world-writable, predictably-named path
+// (os.TempDir()/hotam-verified-by-cache/<sha256>__<TestName>.json) BEFORE
+// invoking `hotam all-violations` against a genuinely red domain --
+// RunVerifiedByTest's disk-cache-hit branch read the forged verdict back and
+// reported "0 violations -- graph clean" without ever actually compiling or
+// running anything. This is structurally worse than the NEW-1 env-var
+// kill-switch it superficially resembles: an env var could only ever signal
+// "skip" (Skipped, never a fabricated PASS), but the disk-cache file carried
+// the VERDICT ITSELF -- an attacker did not need to make the engine skip
+// proof, they could hand it a fabricated proof directly.
+//
+// No corroborating-secret patch (a signed cache file, a per-user-writable
+// directory, a "trusted path" allowlist) was attempted: NEW-1's own history
+// (recursionGuardEnv's doc comment) already demonstrates that pattern fails
+// here for the identical reason a marker-vouched-nonce failed there -- any
+// corroborating secret stored ALONGSIDE the untrusted value it is meant to
+// vouch for, in a location the attacker can also read and write, buys
+// nothing. The root-cause fix is the one NEW-1 already established as the
+// only sound shape for this class of problem: remove the untrusted shared
+// state ENTIRELY rather than trying to make it unforgeable. In production a
+// single `hotam all-violations` invocation is one process; there is no
+// legitimate cross-process verdict-sharing need to weigh against the forge
+// risk. The in-memory runCache (this process only, unreachable from outside
+// the process) plus singleflightRun (collapses concurrent in-process
+// callers) remain -- they give every real correctness and anti-stampede
+// property the disk cache offered WITHIN one process, which is the only
+// scope a single `hotam` invocation ever needs. cmd/hotam's own e2e suite
+// (which legitimately spawns many separate processes against copies of the
+// same graph) is slower without cross-process sharing -- an accepted,
+// measured cost of closing a real production forgery hole, not a regression
+// in anything a real `hotam all-violations` invocation depends on.
 
 // RunVerifiedByTest compiles and executes the named verified_by test
 // (specRoot/file:testName, in the shape ResolveSpecTest already validated
@@ -614,19 +553,6 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 		}
 	}
 
-	// Cross-process fallback (diskCacheDir's doc comment): another PROCESS
-	// entirely -- e.g. a sibling `hotam.exe` spawned by a different
-	// t.Parallel() test in cmd/hotam's own e2e suite, working against its
-	// own copy of the same real self-hosting domain graph -- may have
-	// already proven this exact (content hash, test name) and written the
-	// result to disk. A hit here skips the subprocess spawn entirely,
-	// AND populates the in-memory cache so this process's own subsequent
-	// calls for the same key are free too.
-	if result, ok := loadDiskCache(hash, testName); ok {
-		runCache.Store(key, cacheEntry{hash: hash, result: result})
-		return result
-	}
-
 	// SINGLEFLIGHT (anti-stampede): several goroutines in THIS process can
 	// reach here for the SAME (hash, testName) at once -- checkVerifiedByTestPasses's
 	// own worker pool is only 4-wide per call, but cmd/hotam's e2e suite
@@ -658,7 +584,6 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 	// every subsequent call for the rest of the process's life).
 	if result.Err == nil {
 		runCache.Store(key, cacheEntry{hash: hash, result: result})
-		storeDiskCache(hash, testName, result)
 	}
 	return result
 }

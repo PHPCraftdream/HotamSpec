@@ -1,9 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -302,6 +307,220 @@ func TestKillswitch_PassiveReplay_DoesNotSilenceRedDomain(t *testing.T) {
 	}
 	if !strings.Contains(string(out), "R-risk-owner-required") {
 		t.Errorf("expected the violation to name R-risk-owner-required, got:\n%s", out)
+	}
+}
+
+// hashModuleInputsForTest reproduces internal/gate's UNEXPORTED
+// hashPackageInputs bit-for-bit (same field order, same SHA-256 write
+// sequence: "go.mod\n"+contents, then "go.sum\n"+contents if present, then
+// every *.go file under moduleRoot -- skipping .git/vendor -- in SORTED
+// relative-path order, each written as "<relpath>\n"+contents) so this test
+// can compute the EXACT on-disk cache path an attacker would compute, purely
+// OFFLINE from source files, without ever running `hotam` or importing the
+// unexported function from a different package. This is deliberately a
+// SEPARATE, independent reimplementation (not a call into internal/gate) --
+// the whole point of the forge attack this test reproduces is that the
+// attacker has NO privileged access to the engine's internals, only its
+// published algorithm (readable from this very source file), so proving the
+// attack requires an independent computation of the same hash, not a
+// shortcut through the package under test.
+func hashModuleInputsForTest(t *testing.T, moduleRoot string) string {
+	t.Helper()
+	h := sha256.New()
+	for _, modFile := range []string{"go.mod", "go.sum"} {
+		data, err := os.ReadFile(filepath.Join(moduleRoot, modFile))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			t.Fatalf("read %s: %v", modFile, err)
+		}
+		h.Write([]byte(modFile + "\n"))
+		h.Write(data)
+	}
+	var relPaths []string
+	fileData := map[string][]byte{}
+	walkErr := filepath.WalkDir(moduleRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			switch d.Name() {
+			case ".git", "vendor":
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(d.Name(), ".go") {
+			return nil
+		}
+		rel, relErr := filepath.Rel(moduleRoot, path)
+		if relErr != nil {
+			return relErr
+		}
+		relSlash := filepath.ToSlash(rel)
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		relPaths = append(relPaths, relSlash)
+		fileData[relSlash] = data
+		return nil
+	})
+	if walkErr != nil {
+		t.Fatalf("walk %s: %v", moduleRoot, walkErr)
+	}
+	sort.Strings(relPaths)
+	for _, rel := range relPaths {
+		h.Write([]byte(rel + "\n"))
+		h.Write(fileData[rel])
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// TestKillswitch_ForgedVerdictCacheFile_DoesNotSilenceRedDomain is the REAL
+// oracle for @fh's ROOT finding (severity HIGH, the one that made the
+// marker-file and env-var kill-switches above look tame by comparison): the
+// cache key (hash of every *.go file + go.mod/go.sum under the owning
+// module, computed by hashPackageInputs) was a PURE FUNCTION of files
+// already on disk -- an attacker never needed to run `hotam`, guess a nonce,
+// or race a marker file. They could compute the EXACT verdict-cache path
+// OFFLINE from source alone and hand-write a fabricated PASS verdict to it
+// BEFORE ever invoking `hotam all-violations` against a genuinely red
+// domain, and the (now-removed) loadDiskCache hit would read the forged
+// verdict back as if a real `go test` had produced it -- worse than every
+// env-var-shaped kill-switch above, because the forged artifact carried the
+// VERDICT ITSELF, not merely a "skip real proof" signal.
+//
+// This test computes the REAL path a real attacker would compute (via
+// hashModuleInputsForTest above, an independent reimplementation of the
+// exact algorithm, not a shortcut through internal/gate), writes a forged
+// {"passed":true} verdict there BEFORE gutting the implementation and
+// BEFORE ever invoking hotam, and asserts the forge has ZERO effect: since
+// the disk verdict cache (diskCacheDir/loadDiskCache/storeDiskCache) has
+// been REMOVED entirely (NEW-3, gate/test_exec.go), there is no code path
+// left that would ever read this file back, no matter how precisely its
+// name matches what the old mechanism would have computed.
+func TestKillswitch_ForgedVerdictCacheFile_DoesNotSilenceRedDomain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("kill-switch e2e: builds/spawns real binaries; skipped in -short")
+	}
+	t.Parallel()
+
+	binPath := buildSharedHotamBinary(t)
+	workDir, err := os.MkdirTemp("", "hotam-ks-work-")
+	if err != nil {
+		t.Fatalf("MkdirTemp: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(workDir) })
+
+	clearedEnv := filteredEnv(t, "HOTAM_SPEC_PROJECT_ROOT", "HOTAM_SPEC_DOMAINS_ROOT", "HOTAM_VERIFIED_BY_EXEC_GUARD")
+	domainDir, implPath := killswitchFixtureDomain(t, binPath, workDir, clearedEnv)
+
+	// The attacker's offline reconnaissance: the fixture domain's own go.mod
+	// module root is domainDir (killswitchFixtureDomain writes "module
+	// prat-spec" there) -- compute the EXACT hash the (now-removed)
+	// hashPackageInputs would have computed for this module's CURRENT
+	// (still-passing) source, before any mutation.
+	moduleHash := hashModuleInputsForTest(t, domainDir)
+	testName := "TestNewRisk_RejectsMissingOwner"
+	legacyCacheDir := filepath.Join(os.TempDir(), "hotam-verified-by-cache")
+	forgedVerdictPath := filepath.Join(legacyCacheDir, moduleHash+"__"+testName+".json")
+
+	if err := os.MkdirAll(legacyCacheDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll legacy cache dir: %v", err)
+	}
+	forgedPayload, err := json.Marshal(map[string]any{
+		"passed":         true,
+		"compile_failed": false,
+		"output":         "PASS (forged -- this process never ran go test)",
+	})
+	if err != nil {
+		t.Fatalf("marshal forged payload: %v", err)
+	}
+	if err := os.WriteFile(forgedVerdictPath, forgedPayload, 0o644); err != nil {
+		t.Fatalf("write forged verdict file: %v", err)
+	}
+	t.Cleanup(func() { os.Remove(forgedVerdictPath) })
+
+	// NOW flip the domain red -- exactly @fh's Probe C shape -- AFTER the
+	// forged verdict is already in place, mirroring the real attack
+	// timeline: forge first (computable purely offline, no need to observe
+	// any hotam run at all), gut the implementation second, then invoke
+	// all-violations expecting the forged "clean" verdict to be believed.
+	if err := os.WriteFile(implPath, []byte(guttedRiskImplSrc), 0o644); err != nil {
+		t.Fatalf("write gutted risk.go: %v", err)
+	}
+
+	cmd := exec.Command(binPath, "all-violations", "--domain", domainDir)
+	cmd.Dir = workDir
+	cmd.Env = clearedEnv // no env-var attack layered in -- this is the disk-cache forge in isolation.
+	out, err := cmd.CombinedOutput()
+
+	if err == nil {
+		t.Fatalf("KILL-SWITCH NOT CLOSED: a forged on-disk verdict file at the real computed cache path silenced a genuinely red domain (exited 0):\n%s", out)
+	}
+	if strings.Contains(string(out), "0 violations") {
+		t.Fatalf("KILL-SWITCH NOT CLOSED: forged verdict cache file produced a silent \"0 violations\" on a red domain:\n%s", out)
+	}
+	if !strings.Contains(string(out), "R-risk-owner-required") {
+		t.Errorf("expected the violation to name R-risk-owner-required, got:\n%s", out)
+	}
+}
+
+// TestKillswitch_CleanRun_NeverCreatesOnDiskVerdictStore proves the positive
+// half of NEW-3's fix: a completely NORMAL, non-adversarial all-violations
+// run against a genuinely clean domain must never create ANY file or
+// directory under os.TempDir()/hotam-verified-by-cache -- there is no
+// world-writable verdict store left to populate, forge, or race, because the
+// mechanism that used to write one (storeDiskCache) has been deleted
+// outright rather than hardened.
+func TestKillswitch_CleanRun_NeverCreatesOnDiskVerdictStore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("kill-switch e2e: builds/spawns real binaries; skipped in -short")
+	}
+	t.Parallel()
+
+	binPath := buildSharedHotamBinary(t)
+	workDir, err := os.MkdirTemp("", "hotam-ks-work-")
+	if err != nil {
+		t.Fatalf("MkdirTemp: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(workDir) })
+
+	// An ISOLATED TMPDIR for this test's own subprocess, so this assertion
+	// ("no world-writable verdict store gets created") is not confused by
+	// unrelated files any other concurrently-running test/process may have
+	// left under the machine's real shared os.TempDir().
+	isolatedTemp := filepath.Join(workDir, "isolated-tmp")
+	if err := os.MkdirAll(isolatedTemp, 0o755); err != nil {
+		t.Fatalf("MkdirAll isolated temp dir: %v", err)
+	}
+
+	clearedEnv := filteredEnv(t, "HOTAM_SPEC_PROJECT_ROOT", "HOTAM_SPEC_DOMAINS_ROOT", "HOTAM_VERIFIED_BY_EXEC_GUARD", "TMPDIR", "TMP", "TEMP")
+	envWithIsolatedTemp := append(append([]string{}, clearedEnv...),
+		"TMPDIR="+isolatedTemp, "TMP="+isolatedTemp, "TEMP="+isolatedTemp)
+
+	domainDir, _ := killswitchFixtureDomain(t, binPath, workDir, envWithIsolatedTemp)
+	// implementation left untouched -- genuinely clean, ordinary run.
+
+	cmd := exec.Command(binPath, "all-violations", "--domain", domainDir)
+	cmd.Dir = workDir
+	cmd.Env = envWithIsolatedTemp
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("all-violations on a genuinely clean domain failed: %v\n%s", err, out)
+	}
+	if !strings.Contains(string(out), "0 violations") {
+		t.Fatalf("expected 0 violations on a genuinely clean domain, got:\n%s", out)
+	}
+
+	legacyCacheDir := filepath.Join(isolatedTemp, "hotam-verified-by-cache")
+	if _, statErr := os.Stat(legacyCacheDir); statErr == nil {
+		entries, _ := os.ReadDir(legacyCacheDir)
+		t.Fatalf("WORLD-WRITABLE VERDICT STORE RECREATED: %s exists after a normal clean run (entries: %v) -- the removed disk cache must never be written again", legacyCacheDir, entries)
+	} else if !os.IsNotExist(statErr) {
+		t.Fatalf("unexpected error stat'ing %s: %v", legacyCacheDir, statErr)
 	}
 }
 

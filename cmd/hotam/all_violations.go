@@ -42,10 +42,19 @@ func cmdAllViolations(args []string) error {
 	// 0 if clean. --json changes the OUTPUT FORMAT, never the exit-code
 	// contract. Advisory signals (below) NEVER affect this exit code —
 	// they are informational, not a gate (R-ai-presents-not-decides'
-	// sibling: advisory is presented, never enforced).
+	// sibling: advisory is presented, never enforced). The advisory section
+	// is printed on BOTH the clean and the violations-found path (not only
+	// when clean): an honored verified_by recursion-guard skip must stay
+	// visible even in a run that ALSO reports unrelated real violations
+	// elsewhere in the graph — @fh's "honored-skip must not be silent"
+	// re-review does not carve out an exception for "the run was already
+	// going to fail anyway".
 	if len(violations) > 0 {
 		if !*asJSON {
 			fmt.Fprintf(os.Stderr, "%d violation(s) found\n", len(violations))
+			if err := printAdvisorySection(domainDir); err != nil {
+				return err
+			}
 		}
 		os.Exit(1)
 	}
@@ -58,26 +67,35 @@ func cmdAllViolations(args []string) error {
 	return nil
 }
 
-// printAdvisorySection prints a non-blocking "ADVISORY" section after a clean
-// (0 blocking violations) all-violations run: signals like orphan-detail
-// (diagnose.ReflectOrphanEntityType) that are informational for the steward,
-// never a gate. It never affects the exit code and never appears in --json
-// output (see cmdAllViolations' --json branch above). No-ops silently when
-// there is nothing advisory to report — an empty advisory section would be
-// noise, not signal.
+// printAdvisorySection prints a non-blocking "ADVISORY" section: signals like
+// orphan-detail (diagnose.ReflectOrphanEntityType) and honored verified_by
+// recursion-guard skips (invariants.HonoredSkipWarnings -- @fh's
+// "honored-skip must not be silent" re-review: a Skipped RunVerifiedByTest
+// result must never look identical to a genuinely proven entry) that are
+// informational for the steward, never a gate. Called on BOTH the clean and
+// the violations-found path in cmdAllViolations (see its own comment) so a
+// skip warning is never hidden behind an unrelated blocking violation. It
+// never affects the exit code and never appears in --json output (see
+// cmdAllViolations' --json branch above). No-ops silently when there is
+// nothing advisory to report — an empty advisory section would be noise, not
+// signal.
 func printAdvisorySection(domainDir string) error {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return err
 	}
 	orphans := diagnose.ReflectOrphanEntityType(g)
-	if len(orphans) == 0 {
+	skips := invariants.HonoredSkipWarnings(g)
+	if len(orphans) == 0 && len(skips) == 0 {
 		return nil
 	}
 	fmt.Println()
 	fmt.Println("ADVISORY (non-blocking):")
 	for _, f := range orphans {
 		fmt.Printf("[%s] %s: %s\n", f.Condition, f.Target, f.Imperative)
+	}
+	for _, v := range skips {
+		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
 	}
 	return nil
 }
