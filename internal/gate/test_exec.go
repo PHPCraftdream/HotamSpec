@@ -651,12 +651,13 @@ func singleflightRun(key cacheKey, hash string, run func() TestRunResult) TestRu
 
 // hashPackageInputs computes a single SHA-256 digest over every file that can
 // affect `go test`'s verdict for the WHOLE MODULE rooted at moduleRoot: go.mod
-// and go.sum (if present) at moduleRoot, plus every *.go file anywhere under
-// moduleRoot (recursive). pkgDir is accepted for API/call-site compatibility
-// (existing callers, including this package's own tests, pass the test's
-// specific package directory) but is otherwise UNUSED for hashing purposes --
-// see the NEW-2 doc comment below for why the cache key intentionally widened
-// from "this one package directory" to "the whole owning module".
+// and go.sum (if present) at moduleRoot, plus EVERY file anywhere under
+// moduleRoot (recursive) -- not just *.go files, see the NEW-4 doc comment
+// below. pkgDir is accepted for API/call-site compatibility (existing
+// callers, including this package's own tests, pass the test's specific
+// package directory) but is otherwise UNUSED for hashing purposes -- see the
+// NEW-2 doc comment below for why the cache key intentionally widened from
+// "this one package directory" to "the whole owning module".
 //
 // NEW-2 (@fh adversarial re-review, stale-green across a package boundary):
 // the ORIGINAL implementation hashed only pkgDir's own *.go files (the single
@@ -727,16 +728,62 @@ func singleflightRun(key cacheKey, hash string, run func() TestRunResult) TestRu
 // packages a future domain adds) evolves without this cache-invalidation
 // logic having to be re-taught about each new package shape.
 //
-// Skips VCS/build-cache directories (.git, and any directory literally named
-// "vendor" -- a vendored dependency's source never affects THIS module's own
-// behavior in a way relevant to re-running ITS tests, and vendor trees can be
-// large) so the walk stays bounded to the module's own authored code. File
-// CONTENTS are hashed, not mtimes/paths-only, so a touch-without-edit (e.g. a
+// Skips VCS/build-cache/tool-state directories: any directory whose name
+// starts with "." (the same convention `go build`/`go list` themselves use
+// to decide what is NOT part of a module's own package tree -- .git, .github,
+// an editor's .vscode, or any other dotted tool-state directory a host
+// environment happens to keep at the module root) plus any directory
+// literally named "vendor" (a vendored dependency's source never affects
+// THIS module's own behavior in a way relevant to re-running ITS tests, and
+// vendor trees can be large). This bound is what keeps the walk to the
+// module's own authored code -- see the NEW-4-PERF note below for why it
+// matters more now that the file-suffix filter (*.go only) is gone: a
+// dotted tool-state directory can hold arbitrarily large, frequently
+// rewritten, build-irrelevant files (a local agent/editor cache database,
+// logs, lockfiles) that a *.go-only walk never touched at all (nothing in
+// them ends in ".go") but a some-content-not-touched, all-files walk would
+// otherwise read and hash on EVERY hashPackageInputs call -- a real,
+// measured perf regression (a single dotted directory holding a ~80MB cache
+// file pushed one whole-module hash from single-digit milliseconds to
+// dominating a test run) that is not a hypothetical: it was caught by
+// running this fix's own mutation tests, plus a full `go test ./...` pass,
+// against the live self-hosting repository before landing. File CONTENTS
+// are hashed, not mtimes/paths-only, so a touch-without-edit (e.g. a
 // checkout that resets mtimes) never forces a spurious re-run, and a
 // content-identical rewrite never causes a false cache miss. Relative paths
 // (not absolute) are hashed alongside each file's content, with forward
 // slashes on every OS, so the digest is stable across machines/checkouts and
 // a file rename is still observed as a real content-relevant change.
+//
+// NEW-4 (@fh final adversarial re-review, "non-.go inputs never invalidate
+// the in-memory verdict cache"): the walk used to filter to files whose name
+// ends in ".go" ONLY, on the theory that `go test` compiles Go source and
+// nothing else. That is unsound for any package whose test verdict also
+// depends on a NON-.go file `go test` reads as part of running (not
+// compiling): a //go:embed directive pulling in a golden fixture, a
+// testdata/ file a test opens directly, or any other on-disk input a test
+// function's own logic consults at run time. Such a file can change the
+// test's PASS/FAIL verdict exactly as an impl.go edit can, but a
+// *.go-suffix-only walk never observes it -- a cache entry keyed on the old
+// digest is served back stale (a green verdict for a package that would now,
+// if actually re-run, go red). This is the same shape as NEW-2 (a sibling
+// package's behavior affecting the verdict without appearing in the hash),
+// just for non-.go inputs instead of a different package directory, and gets
+// the same fix: widen what gets hashed rather than try to enumerate exactly
+// which files a given test happens to read (equivalent to NEW-2's rejected
+// option (A) -- precise dependency analysis -- and rejected for the identical
+// reasons: it would need per-test static analysis of //go:embed directives
+// and file I/O calls to be exhaustive, is easy to get wrong as tests evolve,
+// and the coarser whole-tree hash is already cheap for every module shape
+// this engine supports).
+//
+// Fix: hash EVERY regular file under moduleRoot (recursive), not just those
+// named *.go -- go.mod/go.sum are still hashed once, up front, by their own
+// explicit read (kept as-is, harmless double coverage since the walk below
+// also reaches them and hashing the same bytes twice under the same relative
+// path is a no-op for cache-key purposes beyond a few extra sha256.Write
+// calls). The SAME skip list applies (.git, vendor) -- broadening the file
+// SUFFIX filter never broadens which directories are walked.
 func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 	_ = pkgDir // NEW-2: cache key is now the whole module, not one package dir; see doc comment.
 	h := sha256.New()
@@ -760,13 +807,35 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 			return err
 		}
 		if d.IsDir() {
-			switch d.Name() {
-			case ".git", "vendor":
+			name := d.Name()
+			if path != moduleRoot && (strings.HasPrefix(name, ".") || name == "vendor") {
+				// Dotted directories (.git, .github, .crush, .vscode, any
+				// other VCS/editor/tool-state directory a host environment
+				// keeps at the module root) and "vendor" are never part of
+				// the module's OWN package tree -- see the doc comment above
+				// for why the dot-prefix rule (not just a literal ".git"
+				// entry) is load-bearing now that every file is hashed, not
+				// only *.go ones. The moduleRoot != path guard only matters
+				// if moduleRoot itself were ever named starting with "."
+				// (never true for a real go.mod-owning directory in
+				// practice, but keeps the walk from vacuously skipping its
+				// own root on a hypothetical dotted checkout path).
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(d.Name(), ".go") {
+		// NEW-4: hash every regular file, not just *.go -- a //go:embed
+		// target, testdata/ golden file, or any other non-.go input a test
+		// reads at run time can flip its verdict exactly as a .go edit can,
+		// and must invalidate the cache the same way. Only the directory
+		// skip-list (.git, vendor) bounds the walk now; there is no file-name
+		// suffix filter left.
+		if !d.Type().IsRegular() {
+			// Skip symlinks/devices/etc: os.ReadFile on a non-regular entry
+			// either follows a symlink (already reachable via its target
+			// path elsewhere in the walk, or intentionally outside the
+			// module) or fails outright -- neither is a "file whose content
+			// affects go test" in the sense this hash needs to capture.
 			return nil
 		}
 		rel, relErr := filepath.Rel(moduleRoot, path)

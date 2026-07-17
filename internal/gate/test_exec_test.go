@@ -505,6 +505,160 @@ func TestInRecursionGuard_AnyNonEmptyEnv_Honored(t *testing.T) {
 	}
 }
 
+// writeEmbedThresholdFixture builds a standalone temp Go module whose test
+// verdict depends on a NON-.go file: threshold.txt is pulled in via
+// //go:embed at compile time, parsed as an int, and the test asserts
+// RequireComplete(fields) against that embedded threshold rather than a
+// hardcoded literal. This is the NEW-4 mutation shape: editing ONLY
+// threshold.txt (never impl.go, never impl_test.go) must be able to flip the
+// test's real PASS/FAIL verdict, which is exactly the case the pre-fix
+// *.go-suffix-only hashPackageInputs walk could never observe.
+func writeEmbedThresholdFixture(t *testing.T, modulePath, pkgRelDir, thresholdContent string) (moduleRoot, thresholdPath string) {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module "+modulePath+"\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
+	pkgDir := filepath.Join(root, filepath.FromSlash(pkgRelDir))
+	if err := os.MkdirAll(pkgDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll pkgDir: %v", err)
+	}
+	implSrc := `package model
+
+import (
+	_ "embed"
+	"strconv"
+	"strings"
+)
+
+//go:embed threshold.txt
+var thresholdRaw string
+
+// Threshold parses the embedded threshold.txt at call time (not init time)
+// so a change to the embedded file's CONTENT (this whole file is recompiled
+// whenever it changes, since //go:embed bakes the file's bytes into the
+// compiled binary) is observed by a fresh ` + "`go test`" + ` invocation of this
+// package -- exactly the input hashPackageInputs must also observe.
+func Threshold() int {
+	n, err := strconv.Atoi(strings.TrimSpace(thresholdRaw))
+	if err != nil {
+		return -1
+	}
+	return n
+}
+
+// RequireComplete is valid only when fields is AT LEAST the embedded
+// threshold -- so editing threshold.txt alone (never this file, never the
+// test file) can flip whether a given fields value passes.
+func RequireComplete(fields int) error {
+	if fields < Threshold() {
+		return errNotComplete
+	}
+	return nil
+}
+
+var errNotComplete = errStub{}
+
+type errStub struct{}
+
+func (errStub) Error() string { return "not complete" }
+`
+	if err := os.WriteFile(filepath.Join(pkgDir, "impl.go"), []byte(implSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile impl.go: %v", err)
+	}
+	testSrc := `package model
+
+import "testing"
+
+// TestRequireComplete_MeetsEmbeddedThreshold asserts fields=5 satisfies
+// RequireComplete -- true only while threshold.txt's embedded value is <= 5.
+func TestRequireComplete_MeetsEmbeddedThreshold(t *testing.T) {
+	if err := RequireComplete(5); err != nil {
+		t.Fatalf("expected fields=5 to satisfy the embedded threshold, got error: %v", err)
+	}
+}
+`
+	if err := os.WriteFile(filepath.Join(pkgDir, "impl_test.go"), []byte(testSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile impl_test.go: %v", err)
+	}
+	thresholdPath = filepath.Join(pkgDir, "threshold.txt")
+	if err := os.WriteFile(thresholdPath, []byte(thresholdContent), 0o644); err != nil {
+		t.Fatalf("WriteFile threshold.txt: %v", err)
+	}
+	return root, thresholdPath
+}
+
+// TestRunVerifiedByTest_MUTATION_NEW4_EmbeddedNonGoFileChangeInvalidatesCache
+// is the NEW-4 finding reproduced end-to-end through RunVerifiedByTest's real
+// cache: a verified_by test's real PASS/FAIL verdict depends on a //go:embed
+// non-.go file (threshold.txt), never on any *.go file's content changing.
+// Before the fix, hashPackageInputs walked only files whose name ends in
+// ".go", so threshold.txt was invisible to the cache key -- warm the cache
+// with threshold="3" (fields=5 >= 3, PASS), then edit ONLY threshold.txt to
+// "10" (fields=5 < 10, the SAME compiled test now fails for real) and call
+// RunVerifiedByTest again with the identical (file, test) key. Pre-fix this
+// returned the stale cached PASS (a stale-green vector: the cache never saw
+// the file that determines the verdict change at all). Post-fix the digest
+// must move, forcing a real re-run that reports Passed=false.
+func TestRunVerifiedByTest_MUTATION_NEW4_EmbeddedNonGoFileChangeInvalidatesCache(t *testing.T) {
+	ResetRunCacheForTest()
+	root, thresholdPath := writeEmbedThresholdFixture(t, "example.com/new4mod", "model", "3\n")
+
+	before := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_MeetsEmbeddedThreshold")
+	if before.Err != nil {
+		t.Fatalf("unexpected infra error (before): %v", before.Err)
+	}
+	if !before.Passed {
+		t.Fatalf("expected Passed=true before mutating threshold.txt (fields=5 >= threshold=3), got %+v", before)
+	}
+
+	// Mutate ONLY the embedded non-.go file -- impl.go and impl_test.go are
+	// completely untouched, exactly the shape a *.go-suffix-only hash walk
+	// could never observe.
+	if err := os.WriteFile(thresholdPath, []byte("10\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile mutated threshold.txt: %v", err)
+	}
+
+	after := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_MeetsEmbeddedThreshold")
+	if after.Err != nil {
+		t.Fatalf("unexpected infra error (after): %v", after.Err)
+	}
+	if after.Passed {
+		t.Fatalf("STALE-GREEN (NEW-4): expected Passed=false after raising the embedded threshold.txt past fields=5 (cache must invalidate on a non-.go input change), got %+v", after)
+	}
+	if after.CompileFailed {
+		t.Fatalf("expected a real test failure after raising the threshold, not a compile failure, got %+v", after)
+	}
+}
+
+// TestHashPackageInputs_NEW4_NonGoFileChangeChangesModuleHash is the
+// hashPackageInputs-level companion proof: mutating a NON-.go file
+// (threshold.txt) under moduleRoot, with every *.go file byte-for-byte
+// unchanged, MUST still change the digest -- the direct mechanical reason
+// TestRunVerifiedByTest_MUTATION_NEW4_EmbeddedNonGoFileChangeInvalidatesCache
+// above observes a real re-run instead of a stale cache hit.
+func TestHashPackageInputs_NEW4_NonGoFileChangeChangesModuleHash(t *testing.T) {
+	t.Parallel()
+	root, thresholdPath := writeEmbedThresholdFixture(t, "example.com/new4hashmod", "model", "3\n")
+
+	h1, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs: %v", err)
+	}
+
+	if err := os.WriteFile(thresholdPath, []byte("10\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	h2, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after non-.go mutation): %v", err)
+	}
+	if h1 == h2 {
+		t.Fatalf("expected a different module hash after mutating the non-.go file threshold.txt (every *.go file untouched), got the same hash %q both times -- this is exactly the NEW-4 stale-green shape", h1)
+	}
+}
+
 // TestClearInheritedRecursionGuard_UnsetsEnv is the direct unit proof for the
 // exported function cmd/hotam's main() calls at CLI entry: given a
 // (simulated-externally-forged) non-empty recursionGuardEnv, calling
