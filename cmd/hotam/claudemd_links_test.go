@@ -126,7 +126,7 @@ func resolveCrystalPathToken(repoRoot, token string) string {
 // failure-message clarity.
 func assertCrystalLinksExist(t *testing.T, repoRoot, domainDir, claudeMDPath, profile, profileLabel string) {
 	t.Helper()
-	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", profile); err != nil {
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", profile, false); err != nil {
 		t.Fatalf("genSpec (%s): %v", profileLabel, err)
 	}
 	crystal, err := os.ReadFile(claudeMDPath)
@@ -216,7 +216,7 @@ func TestCrystalLinks_ConsumerNeverReferencesThinkingDir(t *testing.T) {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
-	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "consumer"); err != nil {
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 	crystal, err := os.ReadFile(claudeMDPath)
@@ -245,7 +245,7 @@ func TestCrystalLinks_FullProfileStillReferencesThinkingDir(t *testing.T) {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
-	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "full"); err != nil {
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "full", false); err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
 	crystal, err := os.ReadFile(claudeMDPath)
@@ -353,7 +353,7 @@ func TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk(t *testing.T) {
 	if _, err := initDomain(domainDir, "test-toolindex-linkcheck", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
-	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 
@@ -404,7 +404,7 @@ func TestConsumerProfile_NoFrameworkSourceReferences(t *testing.T) {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
-	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "consumer"); err != nil {
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 
@@ -463,7 +463,7 @@ func TestConsumerProfile_DocsGenNoFrameworkSourceReferences(t *testing.T) {
 	if _, err := initDomain(domainDir, "test-consumer-docsgen", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
-	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 
@@ -534,7 +534,7 @@ func TestFullProfile_NoGoRunPrefix(t *testing.T) {
 		t.Fatalf("initDomain: %v", err)
 	}
 	claudeMDPath := filepath.Join(repoRoot, "CLAUDE.md")
-	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "full"); err != nil {
+	if _, _, err := genSpec(domainDir, claudeMDPath, "2026-07-14", "full", false); err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
 	crystal, err := os.ReadFile(claudeMDPath)

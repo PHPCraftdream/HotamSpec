@@ -90,7 +90,7 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 	// (R8-e: unified with init-project). We pass explicit "consumer" here to
 	// test the cut directly regardless of the manifest default.
 
-	consumerWritten, _, err := genSpec(domainDir, "", "2026-07-13", "consumer")
+	consumerWritten, _, err := genSpec(domainDir, "", "2026-07-13", "consumer", false)
 	if err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
@@ -141,9 +141,9 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 }
 
 // TestGenSpec_FullProfileUnchanged proves the full profile writes the SAME file
-// set as today (no regression for existing domains), and that genSpec(...,"")
+// set as today (no regression for existing domains), and that genSpec(...,"", false)
 // (empty profile, manifest without gen_profile → resolves to "full") produces
-// an identical file set to genSpec(...,"full").
+// an identical file set to genSpec(...,"full", false).
 func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	t.Parallel()
 
@@ -153,7 +153,7 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	}
 
 	// Full profile
-	fullWritten, _, err := genSpec(domainDir, "", "2026-07-13", "full")
+	fullWritten, _, err := genSpec(domainDir, "", "2026-07-13", "full", false)
 	if err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false}\n"), 0o644); err != nil {
 		t.Fatalf("write gen_profile-less manifest: %v", err)
 	}
-	emptyWritten, _, err := genSpec(domainDir, "", "2026-07-13", "")
+	emptyWritten, _, err := genSpec(domainDir, "", "2026-07-13", "", false)
 	if err != nil {
 		t.Fatalf("genSpec empty-profile: %v", err)
 	}
@@ -227,7 +227,7 @@ func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 	if _, err := initDomain(dirConsumer, "ext", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain consumer: %v", err)
 	}
-	if _, _, err := genSpec(dirConsumer, "", "2026-07-13", "consumer"); err != nil {
+	if _, _, err := genSpec(dirConsumer, "", "2026-07-13", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 	consumerTotal, _ := countFilesUnder(t, filepath.Join(dirConsumer, "docs", "gen"))
@@ -236,7 +236,7 @@ func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 	if _, err := initDomain(dirFull, "ext", "2026-07-13"); err != nil {
 		t.Fatalf("initDomain full: %v", err)
 	}
-	if _, _, err := genSpec(dirFull, "", "2026-07-13", "full"); err != nil {
+	if _, _, err := genSpec(dirFull, "", "2026-07-13", "full", false); err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
 	fullTotal, _ := countFilesUnder(t, filepath.Join(dirFull, "docs", "gen"))
@@ -293,7 +293,7 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 	fullPlannedToolPage := filepath.Join(domainDir, plannedToolPage)
 
 	// (1) full profile: thinking/*.md and the Planned-tool page exist on disk.
-	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full"); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full", false); err != nil {
 		t.Fatalf("genSpec full (pass 1): %v", err)
 	}
 	fullThinking, err := filepath.Glob(filepath.Join(thinkingDir, "*.md"))
@@ -317,7 +317,7 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 	// (2) consumer profile on the SAME domainDir (simulating a real profile
 	// switch on an existing checkout): thinking/*.md and the Planned-tool page
 	// must now be ABSENT from disk, not merely absent from written.
-	consumerWritten, removed, err := genSpec(domainDir, "", "2026-07-13", "consumer")
+	consumerWritten, removed, err := genSpec(domainDir, "", "2026-07-13", "consumer", false)
 	if err != nil {
 		t.Fatalf("genSpec consumer (pass 2): %v", err)
 	}
@@ -360,7 +360,7 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 
 	// (3) full profile again on the same domain: everything restored. The
 	// round-trip is non-destructive to content; only file PRESENCE cycles.
-	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full"); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full", false); err != nil {
 		t.Fatalf("genSpec full (pass 3): %v", err)
 	}
 	restoredThinking, err := filepath.Glob(filepath.Join(thinkingDir, "*.md"))
@@ -398,7 +398,7 @@ func TestGenSpec_ConsumerRequirementsToolsIndexReferenceExistsOnDisk(t *testing.
 	if _, err := initDomain(domainDir, "test-linkcheck-requirements", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
-	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer"); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 

@@ -39,6 +39,7 @@ var DocReaderRoles = map[string]string{
 	"SHARED_THINKING":      RoleOperator,
 	"SHARED_TOOL":          RoleOperator,
 	"REQUIREMENTS":         RoleDomainSteward,
+	"SPEC":                 RoleDomainSteward,
 	"TENSIONS":             RoleDomainSteward,
 	"DECISIONS":            RoleDomainSteward,
 	"HISTORY":              RoleDomainSteward,

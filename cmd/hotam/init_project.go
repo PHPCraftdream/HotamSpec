@@ -163,7 +163,7 @@ func initProject(dir, domainName, today string, requireProvenance bool) ([]strin
 	// under <dir>/domains/<name>/docs/gen/. repoRootForDomain (gen_spec.go)
 	// derives the repo root from the domains/<name> layout, so the DOMAIN-MAP
 	// block lists the scaffolded domain correctly with no extra plumbing.
-	genWritten, _, err := genSpec(domainDir, claudeMDPath, today, "")
+	genWritten, _, err := genSpec(domainDir, claudeMDPath, today, "", false)
 	if err != nil {
 		return written, err
 	}

@@ -166,7 +166,7 @@ func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
 
 	// Pre-land baseline: render docs once so there is a concrete pre-land
 	// state to compare the rolled-back domain against.
-	if _, _, err := genSpec(domainDir, "", "2026-07-12", ""); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-12", "", false); err != nil {
 		t.Fatalf("baseline genSpec: %v", err)
 	}
 	baselineGraph, err := os.ReadFile(gp)
@@ -243,7 +243,7 @@ func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
 	// consistent with NO permanent drift. FAILS if graph.json were not
 	// restored: a graph still carrying the new node would regenerate docs
 	// that mention it.
-	if _, _, err := genSpec(domainDir, "", "2026-07-12", ""); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-12", "", false); err != nil {
 		t.Fatalf("post-land standalone genSpec: %v", err)
 	}
 	regenReqs, err := os.ReadFile(filepath.Join(genDir, "REQUIREMENTS.md"))
@@ -272,7 +272,7 @@ func TestRollbackLand_RestoresFilesAndRegeneratesDocs(t *testing.T) {
 	lp := loader.LockPath(gp)
 
 	// Pre-land baseline.
-	if _, _, err := genSpec(domainDir, "", "2026-07-12", ""); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-12", "", false); err != nil {
 		t.Fatalf("baseline genSpec: %v", err)
 	}
 	baselineGraph, err := os.ReadFile(gp)
@@ -314,7 +314,7 @@ func TestRollbackLand_RestoresFilesAndRegeneratesDocs(t *testing.T) {
 	// Simulate step (b) having run too: regenerate docs from the NEW graph so
 	// the on-disk docs already mention the new node. This makes the genSpec
 	// re-run inside rollbackLand non-vacuous.
-	if _, _, err := genSpec(domainDir, "", "2026-07-12", ""); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-12", "", false); err != nil {
 		t.Fatalf("post-apply genSpec: %v", err)
 	}
 	newReqs, _ := os.ReadFile(filepath.Join(genDir, "REQUIREMENTS.md"))
@@ -518,7 +518,7 @@ func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
 	// Capture the pre-apply debt line from docs/gen (rendered WITHOUT touching
 	// the crystal) so the freshness assertion below is robust to whatever the
 	// fixture's current DRAFT count is.
-	if _, _, err := genSpec(domainDir, "", "2026-07-14", ""); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-14", "", false); err != nil {
 		t.Fatalf("baseline genSpec: %v", err)
 	}
 	baselineLS, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "live-state.md"))
@@ -730,7 +730,7 @@ func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
 	if resolved == "" {
 		t.Fatal("resolveClaudeMDPath returned empty despite seeded CLAUDE.md")
 	}
-	if _, _, err := genSpec(domainDir, resolved, "2026-07-14", ""); err != nil {
+	if _, _, err := genSpec(domainDir, resolved, "2026-07-14", "", false); err != nil {
 		t.Fatalf("second genSpec: %v", err)
 	}
 	second, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))

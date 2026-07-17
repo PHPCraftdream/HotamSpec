@@ -22,6 +22,7 @@ func cmdGenSpec(args []string) error {
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
 	profile := fs.String("profile", "", "output profile: consumer|full (default: resolve from the domain's manifest.json, falling back to full)")
+	spec := fs.Bool("spec", false, "also render docs/gen/SPEC.md (PLAN-scenario-generated-spec.md §3 W1.3): EXECUTES every verified_by test via go test to record its hotamspec scenario narrative — real, but expensive (a full compile+run per verified_by entry), so this is opt-in, never part of gen-spec's default write set")
 	fs.Parse(args)
 
 	// Validate --profile: only "consumer", "full", or empty (resolve from
@@ -43,7 +44,7 @@ func cmdGenSpec(args []string) error {
 	if today == "" {
 		today = time.Now().Format("2006-01-02")
 	}
-	written, removed, err := genSpec(domainDir, *claudeMD, today, *profile)
+	written, removed, err := genSpec(domainDir, *claudeMD, today, *profile, *spec)
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,19 @@ func cmdGenSpec(args []string) error {
 	return nil
 }
 
-func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string, error) {
+// includeSpec (--spec) gates whether SPEC.md (BuildSpec, PLAN-scenario-
+// generated-spec.md §3 W1.3) is rendered and written at all: unlike every
+// other docs/gen/*.md projection, BuildSpec is NOT a pure/cheap function of
+// the graph — it EXECUTES every verified_by test via a real `go test`
+// subprocess (gate.RunVerifiedByTestRecording) to record its scenario
+// narrative, exactly once per verified_by entry, per gen-spec run. For a
+// domain with dozens of verified_by entries (e.g. hotam-spec-self's own 50+)
+// this is a real, measured cost (tens of seconds to minutes), so genSpec
+// defaults to SKIPPING it — every existing caller (every e2e test in
+// cmd/hotam, every other genSpec call site) stays exactly as fast and
+// byte-identical as before this task, and a caller that wants the generated
+// normative text opts in explicitly (cmdGenSpec's --spec flag).
+func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) ([]string, []string, error) {
 	// Profile resolution (R-gen-spec-profile): an explicit non-empty profile
 	// (only cmdGenSpec's --profile flag passes one) overrides the domain's
 	// manifest for THIS invocation without rewriting it. An empty profile
@@ -121,13 +134,15 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 	// repoMapDocs is the canonical set of docs written into
 	// domains/<name>/docs/gen/ (REQUIREMENTS/TENSIONS/OPEN/UNENFORCED/
 	// GLOSSARY/HISTORY/CONSTITUTION/FRAMEWORK-INVARIANTS/PIPELINE/
-	// TRACEABILITY/MODELS/COVERAGE/REPO-MAP.md, plus conditional DECISIONS/ENTITIES.md) — it deliberately excludes
-	// atoms-*.md and live-state.md, which are only ever materialized at the
-	// repo-root docs/methodology/atoms/ (and inside root CLAUDE.md's
-	// LIVE-STATE block) for the single active domain, never per-domain under
-	// docs/gen/. REPO-MAP.md's own "Generated docs" section must list exactly
-	// this set to stay byte-identical, even though atoms-*.md/live-state.md
-	// are additionally written alongside them on disk (see mdDocs below).
+	// TRACEABILITY/MODELS/COVERAGE/REPO-MAP.md, plus conditional
+	// DECISIONS/ENTITIES.md and — only when includeSpec is true — SPEC.md) —
+	// it deliberately excludes atoms-*.md and live-state.md, which are only
+	// ever materialized at the repo-root docs/methodology/atoms/ (and inside
+	// root CLAUDE.md's LIVE-STATE block) for the single active domain, never
+	// per-domain under docs/gen/. REPO-MAP.md's own "Generated docs" section
+	// must list exactly this set to stay byte-identical, even though
+	// atoms-*.md/live-state.md are additionally written alongside them on
+	// disk (see mdDocs below).
 	repoMapDocs := []generator.GenDocEntry{
 		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g, domainName, consumer)},
 		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
@@ -141,6 +156,18 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
 		{Filename: "MODELS.md", Content: generator.BuildModels(g)},
 		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g)},
+	}
+	// SPEC.md (BuildSpec, W1.3) is the one docs/gen/ projection that EXECUTES
+	// real `go test` subprocesses (one per verified_by entry) rather than
+	// reading the graph/filesystem alone — see includeSpec's own doc comment
+	// above. Appended conditionally, at the end, so every existing index into
+	// repoMapDocs/mdDocs by position (below) stays valid whether or not it is
+	// present, and every pre-existing caller (includeSpec always false) never
+	// pays this cost or sees SPEC.md in its written/removed lists.
+	var specMD string
+	if includeSpec {
+		specMD = generator.BuildSpec(g)
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "SPEC.md", Content: specMD})
 	}
 	// REPO-MAP.md lists itself too (the repo-map scan globs docs/gen/*.md
 	// including the file it is about to (re)write); its own title is fixed by
@@ -194,6 +221,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string) ([]string, []string
 		{"MODELS.md", repoMapDocs[10].Content},
 		{"COVERAGE.md", repoMapDocs[11].Content},
 		{"REPO-MAP.md", repoMapMD},
+	}
+	if includeSpec {
+		mdDocs = append(mdDocs, docEntry{"SPEC.md", specMD})
 	}
 	if shouldWriteAtoms(atomsOperator) {
 		mdDocs = append(mdDocs, docEntry{"atoms-operator.md", atomsOperator})
@@ -385,7 +415,7 @@ func cleanupStaleGenFiles(genDir string, written []string) ([]string, error) {
 	topLevelFiles := []string{
 		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
 		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
-		"PIPELINE.md", "TRACEABILITY.md", "MODELS.md", "COVERAGE.md",
+		"PIPELINE.md", "TRACEABILITY.md", "MODELS.md", "COVERAGE.md", "SPEC.md",
 		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
 		"atoms-discipline.md", "atoms-check.md", "live-state.md",
 		"AGENT-CONTEXT.md", "DECISIONS.md", "ENTITIES.md", "graph.json",

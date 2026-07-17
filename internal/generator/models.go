@@ -15,6 +15,7 @@
 package generator
 
 import (
+	"bufio"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
 )
 
 // modelObject is one rendered type declaration: its name, kind (struct/
@@ -355,7 +357,17 @@ func scanSelfHostingModelFiles(g *ontology.Graph) ([]modelFile, error) {
 // re-sorted by root-relative slash path for determinism) into a modelFile,
 // skipping any file that fails to parse or no longer exists rather than
 // failing the whole doc (a stale implemented_by reference is already
-// reported as ORPHANED by TRACEABILITY.md; MODELS.md simply omits it).
+// reported as ORPHANED by TRACEABILITY.md; MODELS.md simply omits it) --
+// and skipping any file that is a VENDORED copy of the hotamspec scenario
+// recorder (isVendoredRecorderFile), since that file is engine machinery
+// copied into the domain's spec/ tree for a Go module boundary reason
+// (PLAN-scenario-generated-spec.md §2 D1's vendoring contract,
+// internal/recorder/vendor's own doc comment), never a domain-authored
+// model -- see isVendoredRecorderFile's doc comment for why this is the
+// single, shared choke point BOTH scanDomainModelFiles and
+// scanSelfHostingModelFiles funnel through, so MODELS.md/COVERAGE.md
+// (ScanModelLayerCounts reuses this same function) never disagree about
+// which files count as "this domain's own models".
 func parseModelFiles(paths []string, root string) ([]modelFile, error) {
 	seen := map[string]struct{}{}
 	var uniquePaths []string
@@ -371,6 +383,9 @@ func parseModelFiles(paths []string, root string) ([]modelFile, error) {
 	var files []modelFile
 	fset := token.NewFileSet()
 	for _, p := range uniquePaths {
+		if isVendoredRecorderFile(p) {
+			continue
+		}
 		astFile, err := parser.ParseFile(fset, p, nil, parser.ParseComments)
 		if err != nil {
 			continue
@@ -385,6 +400,60 @@ func parseModelFiles(paths []string, root string) ([]modelFile, error) {
 
 	sort.Slice(files, func(i, j int) bool { return files[i].relPath < files[j].relPath })
 	return files, nil
+}
+
+// vendoredRecorderBannerFirstLine is the exact first line of
+// internal/recorder/vendor's do-not-edit banner (recordervendor.Banner),
+// extracted once so isVendoredRecorderFile never has to re-split the whole
+// banner string per call. Derived from recordervendor.Banner itself (never
+// a hand-copied literal) so a future wording change to that banner cannot
+// silently desync this detector from the marker it is meant to recognize.
+var vendoredRecorderBannerFirstLine = strings.SplitN(recordervendor.Banner, "\n", 2)[0]
+
+// isVendoredRecorderFile reports whether the Go source file at path is a
+// VENDORED copy of the hotamspec scenario recorder
+// (internal/recorder/canon/hotamspec.go, copied byte-for-byte into a
+// consumer domain's spec/ tree by `hotam vendor-recorder` --
+// internal/recorder/vendor's own doc comment) rather than a domain-authored
+// model -- MODELS.md/COVERAGE.md must never count the recorder's own types
+// (Scenario, Artifact, Step, StepKind, ...) as domain object-model surface
+// (zero-trust review finding: a pilot's COVERAGE.md drifted from "3 files /
+// 6 objects / 11 fields / 16 methods" to "4 / 14 / 32 / 24" purely because
+// the vendored recorder got swept into the same spec/ walk as the domain's
+// real model/ files).
+//
+// Detection is by the vendored copy's OWN do-not-edit banner -- its first
+// line must equal vendoredRecorderBannerFirstLine EXACTLY -- rather than by
+// package name ("hotamspec") or directory name ("spec/hotamspec/"): a
+// package/directory name is a convention a domain could rename, but the
+// banner is the file's own generated-marker, stamped by
+// internal/recorder/vendor.Source on every `hotam vendor-recorder` run
+// (recordervendor.Banner's own doc comment: "this file is a VENDORED,
+// byte-for-byte copy ... DO NOT EDIT"), so it survives a directory rename
+// and cannot drift out of sync with what the vendoring tool itself writes.
+// Only the FIRST LINE is checked (not a full-banner match) so this stays
+// robust to whitespace/line-ending normalization elsewhere in the pipeline
+// without weakening the signal -- no ordinary domain-authored file begins
+// with this exact comment line by accident.
+//
+// A file that cannot be opened, or whose first line cannot be read, is
+// treated as NOT vendored (ok=false payload folded into "false, keep
+// scanning") -- consistent with parseModelFiles' own existing policy of
+// skipping unreadable/unparsable files silently rather than failing the
+// whole document; a real read failure surfaces moments later anyway when
+// parser.ParseFile is attempted on the same path.
+func isVendoredRecorderFile(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	if !scanner.Scan() {
+		return false
+	}
+	return scanner.Text() == vendoredRecorderBannerFirstLine
 }
 
 // extractModelFile walks one parsed *ast.File's top-level declarations into

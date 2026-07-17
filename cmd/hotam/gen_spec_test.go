@@ -34,7 +34,7 @@ func TestGenSpec_MissingGraphRendersCalmNotice(t *testing.T) {
 		t.Fatalf("precondition: graph.json must not exist in the temp domain dir")
 	}
 
-	written, _, err := genSpec(domainDir, "", "2026-07-12", "")
+	written, _, err := genSpec(domainDir, "", "2026-07-12", "", false)
 	if err != nil {
 		t.Fatalf("R-empty-content-gen-notice: genSpec on missing graph.json must not fail, got: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestGenSpec_MissingGraph_MalformedStillErrors(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(domainDir, "graph.json"), garbage, 0o644); err != nil {
 		t.Fatalf("write malformed graph.json: %v", err)
 	}
-	if _, _, err := genSpec(domainDir, "", "2026-07-12", ""); err == nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-12", "", false); err == nil {
 		t.Fatal("R-empty-content-gen-notice non-vacuity: a malformed graph.json must still produce a real decode error, got nil")
 	}
 }
