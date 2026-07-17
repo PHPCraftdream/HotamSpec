@@ -11,15 +11,11 @@
 // why), cross-referenced against the domain's EntityTypes two ways — (1)
 // Process.DrivesEntities (the direct, authoritative process->entity edge)
 // and (2) EntityType kind:reference fields whose ref_target resolves to
-// another EntityType in the same domain (the same structural edge
-// internal/generator/gocode/pipeline.go's BuildPipelineGateModels resolves
-// for Go-code pipeline gates — this file builds a parallel, lighter read-only
-// pass over ontology.EntityType directly rather than importing gocode, whose
-// entityModel/fieldModel types are unexported and gocode-internal by design,
-// contract §0's own single-source rule applying one level down: gen-spec
-// documents the same graph edge gocode enforces, but each package resolves
-// it from the shared ontology source, not from the other package's private
-// model).
+// another EntityType in the same domain — a read-only pass over
+// ontology.EntityType, resolved directly from the shared ontology source
+// (the authored-spec pivot, task #223b/#228, retired the gen-code generator
+// this file's edge-resolution once mirrored; this is now the only resolver
+// of that edge, not a parallel read-only twin of one).
 package generator
 
 import (
@@ -31,9 +27,7 @@ import (
 )
 
 // pipelineRefEdge is one resolved kind:reference edge between two EntityTypes
-// of the same domain: referencer.field -> referenced. Mirrors (at ontology
-// level, not gocode's Go-identifier level) the edge
-// gocode.BuildPipelineGateModels resolves for gate-function generation.
+// of the same domain: referencer.field -> referenced.
 type pipelineRefEdge struct {
 	referencerSlug string
 	fieldName      string
@@ -44,8 +38,8 @@ type pipelineRefEdge struct {
 // keeps only the ones whose ref_target resolves to another EntityType slug
 // declared in this SAME domain — a real structural pipeline edge, not a
 // cross-graph/role reference (e.g. sdr-package.feature_lead -> "Stakeholder"
-// has no EntityType of that slug and is skipped, same honest-gap rule
-// gocode/pipeline.go already documents for its own gate-generation pass).
+// has no EntityType of that slug and is skipped — an honest gap, not an
+// error).
 func resolvePipelineRefEdges(entityTypes []ontology.EntityType) []pipelineRefEdge {
 	bySlug := make(map[string]struct{}, len(entityTypes))
 	for _, et := range entityTypes {
@@ -72,10 +66,10 @@ func resolvePipelineRefEdges(entityTypes []ontology.EntityType) []pipelineRefEdg
 
 // pipelineAnchorPattern matches a generic "typed identifier-looking" token in
 // free text: a capitalized word followed by one or more hyphen-joined
-// segments (e.g. "R-gate-pg3-brd-approved", "P-G3", "P-G1-R"). Same shape as
-// gocode/requirements.go's idAnchorPattern — deliberately domain-agnostic, no
-// hardcoded "R-" prefix, so any typed anchor convention a domain's authors
-// use surfaces as a citation, not just the framework's own R-/C-/A- family.
+// segments (e.g. "R-gate-pg3-brd-approved", "P-G3", "P-G1-R") — deliberately
+// domain-agnostic, no hardcoded "R-" prefix, so any typed anchor convention a
+// domain's authors use surfaces as a citation, not just the framework's own
+// R-/C-/A- family.
 var pipelineAnchorPattern = regexp.MustCompile(`\b[A-Z][A-Za-z0-9]*(-[A-Za-z0-9]+)+\b`)
 
 // docURLFragmentPattern matches a markdown/doc-link URL FRAGMENT — a `#`
@@ -198,11 +192,9 @@ func BuildPipeline(g *ontology.Graph, domainName string) string {
 
 			// Artifact-to-artifact structural dependencies (kind:reference
 			// fields whose ref_target resolves to another EntityType of this
-			// domain — the same edge gocode.BuildPipelineGateModels uses for
-			// Go-code pipeline gates), restricted to edges where BOTH ends are
-			// among this process's own driven entities, so this list stays a
-			// narrative of THIS process's artifact graph, not the whole
-			// domain's.
+			// domain), restricted to edges where BOTH ends are among this
+			// process's own driven entities, so this list stays a narrative of
+			// THIS process's artifact graph, not the whole domain's.
 			var processEdges []pipelineRefEdge
 			for _, e := range refEdges {
 				_, referencerIn := drivesSet[e.referencerSlug]
@@ -249,21 +241,17 @@ func stageNameCell(step ontology.Step) string {
 
 // stageEntityCell renders the "Вход"/"Выход" cell for one Step of process p:
 // the EntityType(s) THIS SPECIFIC stage produces/consumes, resolved two
-// ways, most-specific first, deterministically (never guessing — the same
-// "не гадай" discipline gocode/pipeline.go's resolvePreciseGateState
-// documents for its own precise-state search):
+// ways, most-specific first, deterministically (never guessing):
 //
 //  1. step.Invokes, when it names an EntityType lifecycle event directly
 //     ("<slug>.<event>", the same parse entities.go's processDestinations
 //     already performs) — the strongest signal, an explicit wiring.
 //  2. Referencer-bound correlation: among the process's own DrivesEntities,
 //     keep only the EntityType slugs whose token literally appears in THIS
-//     step's own `why` text — the same anchor-correlation idea
-//     resolvePreciseGateState (gocode/pipeline.go) applies to precise gate
-//     states, narrowed here from "any claim in the domain" to "this
-//     specific step's own why", so a step's cell reflects what that step's
-//     own prose actually names, not an undifferentiated dump of every
-//     entity the whole process ever touches.
+//     step's own `why` text, narrowed from "any claim in the domain" to
+//     "this specific step's own why", so a step's cell reflects what that
+//     step's own prose actually names, not an undifferentiated dump of
+//     every entity the whole process ever touches.
 //
 // If neither source narrows the stage to a specific EntityType, the cell is
 // an honest "—" (a step whose why text does not name any of the process's

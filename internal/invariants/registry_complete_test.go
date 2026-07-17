@@ -20,8 +20,12 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// seventh, check_verified_by_test_passes, the EXECUTION half (actually
 	// compiles and runs the named verified_by test via `go test`, closing
 	// the gap where every prior check was AST-only and never proved the
-	// test actually PASSES -- @fh finding F1, Probe C).
-	const expected = 95
+	// test actually PASSES -- @fh finding F1, Probe C). The F6 remediation
+	// added an eighth, check_graph_lock_pins_graph_json (domain_structure.go):
+	// R-no-hand-edit-graph's runtime half, extending the sha256-pin check
+	// lock_real_domains_test.go already ran (but only for this repo's own two
+	// domains) to EVERY domain all-violations loads, self-hosting or consumer.
+	const expected = 96
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

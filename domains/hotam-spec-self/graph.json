@@ -8316,14 +8316,15 @@
       "claim": "Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land`, with direct hand-edits prohibited outside of bootstrap events.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json>` or `hotam land` (cmd/hotam/apply_proposal.go, cmd/hotam/land.go), which load a Proposed* JSON, validate it, mutate the in-memory graph, check for new invariant violations, and only then write graph.json + graph.lock (internal/proposal/apply.go). Not yet implemented as a deterministic host-hook guard: the CLI is a pure command-line tool with no PreToolUse / host-hook integration, so there is no mechanism that mechanically blocks direct Edit/Write on graph.json. (Historically the Python _graph_guard.py PreToolUse hook provided that mechanical block.) Without a guard on graph.json, a hand-edit can bypass the proposal protocol's validation+invariant-check gate -- the same self-judging-the-judge problem (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists. ENFORCED 2026-07-13: TestNoHandEditGraph_RealDomainLocksPinCurrentGraph in internal/loader/lock_real_domains_test.go mechanically verifies this claim. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+      "why": "The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json>` or `hotam land` (cmd/hotam/apply_proposal.go, cmd/hotam/land.go), which load a Proposed* JSON, validate it, mutate the in-memory graph, check for new invariant violations, and only then write graph.json + graph.lock (internal/proposal/apply.go). Not yet implemented as a deterministic host-hook guard: the CLI is a pure command-line tool with no PreToolUse / host-hook integration, so there is no mechanism that mechanically blocks direct Edit/Write on graph.json. (Historically the Python _graph_guard.py PreToolUse hook provided that mechanical block.) Without a guard on graph.json, a hand-edit can bypass the proposal protocol's validation+invariant-check gate -- the same self-judging-the-judge problem (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists. ENFORCED 2026-07-13: TestNoHandEditGraph_RealDomainLocksPinCurrentGraph in internal/loader/lock_real_domains_test.go mechanically verifies this claim -- but only for THIS repo's own two domains (hotam-spec-self, hotam-dev), and only as a TEST, never as part of `hotam all-violations` itself, so a hand-edited CONSUMER domain graph.json (e.g. an adopting repo's domains/prat, domains/gpsm-sm) reported '0 violations -- graph clean' even with a stale lock (@fh adversarial review finding F6). ENFORCED_BY WIDENED 2026-07-17: check_graph_lock_pins_graph_json (internal/invariants/domain_structure.go) moves the same loader.VerifyLock machinery into the graph-generic invariant registry, keyed off g.DomainDir (populated by loader.LoadGraph for every domain, self-hosting or consumer) so it runs inside `hotam all-violations` itself for ANY domain, closing the gap the test-only enforcer left open. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
       "assumptions": [
         "A-python-stack"
       ],
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "TestNoHandEditGraph_RealDomainLocksPinCurrentGraph"
+        "TestNoHandEditGraph_RealDomainLocksPinCurrentGraph",
+        "check_graph_lock_pins_graph_json"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -8333,11 +8334,12 @@
       "last_reviewed_at": "2026-07-13",
       "review_after": "2026-12-12",
       "evidence": [
-        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion, 2026-07-16); Apply (internal/proposal/apply.go) is the sanctioned write path (load -> mutate -> WriteGraph -> WriteLock); TestNoHandEditGraph_RealDomainLocksPinCurrentGraph mechanically verifies every real domain's graph.lock sha256 pin matches its current graph.json, catching any hand-edit that bypassed Apply"
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestRegistryComplete -v : PASS (F6 remediation, 2026-07-17); check_graph_lock_pins_graph_json registered in internal/invariants/domain_structure.go, verified by mutation test: hand-edit a consumer domain's graph.json field with graph.lock untouched -> `hotam all-violations --domain <consumer-domain>` reports check_graph_lock_pins_graph_json violation -> revert -> 0 violations again."
       ],
       "source_refs": [
         "internal/proposal/apply.go",
-        "internal/loader/lock_real_domains_test.go"
+        "internal/loader/lock_real_domains_test.go",
+        "internal/invariants/domain_structure.go"
       ],
       "history": [
         {
@@ -8373,6 +8375,11 @@
         {
           "at": "2026-07-16",
           "summary": "evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion,…; source_refs: [cmd/hotam/apply_proposal.go, cmd/hotam/land.go, internal/proposal/apply.go]→[internal/proposal/apply.go, internal/loader/lock_real_domains_test.go]; implemented_by: []→[internal/proposal/apply.go:Apply]; verified_by: []→[internal/loader/lock_real_domains_test.go:TestNoHandEditGraph_RealDomainLocksPinCurrentGraph]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-17",
+          "summary": "why: The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json…→The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json…; enforced_by: [TestNoHandEditGraph_RealDomainLocksPinCurrentGraph]→[TestNoHandEditGraph_RealDomainLocksPinCurrentGraph, check_graph_lock_pins_graph_json]; evidence: [cd D:/ai_dev/prat/HotamSpec && go test ./internal/loader/... -run TestNoHandEditGraph_RealDomainLocksPinCurrentGraph -v : PASS (task #226 recursion,…→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestRegistryComplete -v : PASS (F6 remediation, 2026-07-17); check_graph_lock_…; source_refs: [internal/proposal/apply.go, internal/loader/lock_real_domains_test.go]→[internal/proposal/apply.go, internal/loader/lock_real_domains_test.go, internal/invariants/domain_structure.go]",
           "decided_by": ""
         }
       ],
@@ -11324,7 +11331,7 @@
       "claim": "An authored-spec requirement's link to code shall carry two ORTHOGONAL fields, never collapsed into one: implemented_by names WHERE the requirement is EMBODIED (a path-qualified file:symbol reference into the domain's authored spec/ tree, the model/method that realizes the claim), and verified_by names WHERE the requirement is PROVEN (a path-qualified file:test reference, the executable test that demonstrates the claim holds). A symbol that embodies a requirement without a test that proves it, or a test cited without the symbol it exercises, is an incomplete SpecLink -- ENFORCED status requires both halves together (see R-enforced-requires-enforcer-or-authored-link), but the two fields answer two DIFFERENT questions and shall never be merged into a single field or treated as aliases of one another.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (steward decision 2026-07-16) establish implemented_by/verified_by as two separate fields on Requirement (internal/ontology/requirement.go), landed additively in task #223 and already carrying inline doc comments naming the same embodied/proven distinction (requirement.go:80-96: \"ImplementedBy names WHERE this requirement is embodied\", \"VerifiedBy names WHERE this requirement is PROVEN\"). R-authored-spec-links-mechanically-checked (#223) and R-enforced-requires-enforcer-or-authored-link (#223) already model the MECHANICAL checking of these fields (symbol/test resolvability, non-vacuousness, no-skip, no-reuse) and the DISJUNCTIVE ENFORCED gate that accepts either enforced_by or implemented_by+verified_by together -- but neither requirement states the CONCEPTUAL distinction itself: why two fields exist, what each one MEANS, and why they are not interchangeable. Without this requirement as a first-class node, the SpecLink concept (PLAN §4's requirement->code->test schema) exists only in code comments and PLAN prose, not as a graph anchor a future agent can cite when modeling a business domain's own spec/ tree (task #224 pilot, task #236 recursion into hotam-spec-self's own engine code). This requirement is the missing OBJECT-level node: it names the SpecLink concept and its two fields' distinct semantics, one layer above the two already-landed mechanical-check requirements which govern HOW the fields are validated, not WHAT they mean. PROSE/SETTLED is correct here: this is a naming-and-definition claim about a data shape already implemented (internal/ontology/requirement.go ImplementedBy/VerifiedBy, task #223) -- the fields themselves are code, but THIS requirement's own implemented_by/verified_by linkage into hotam-spec-self's engine is deliberately deferred to task #236 (recursion), per the session's explicit instruction not to add code links at the objects+fields step.",
+      "why": "PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (steward decision 2026-07-16) establish implemented_by/verified_by as two separate fields on Requirement (internal/ontology/requirement.go), landed additively in task #223 and already carrying inline doc comments naming the same embodied/proven distinction (requirement.go:80-96: \"ImplementedBy names WHERE this requirement is embodied\", \"VerifiedBy names WHERE this requirement is PROVEN\"). R-authored-spec-links-mechanically-checked (#223) and R-enforced-requires-enforcer-or-authored-link (#223) already model the MECHANICAL checking of these fields (symbol/test resolvability, non-vacuousness, no-skip, no-reuse) and the DISJUNCTIVE ENFORCED gate that accepts either enforced_by or implemented_by+verified_by together -- but neither requirement states the CONCEPTUAL distinction itself: why two fields exist, what each one MEANS, and why they are not interchangeable. Without this requirement as a first-class node, the SpecLink concept (PLAN §4's requirement->code->test schema) exists only in code comments and PLAN prose, not as a graph anchor a future agent can cite when modeling a business domain's own spec/ tree (task #224 pilot, task #236 recursion into hotam-spec-self's own engine code). This requirement is the missing OBJECT-level node: it names the SpecLink concept and its two fields' distinct semantics, one layer above the two already-landed mechanical-check requirements which govern HOW the fields are validated, not WHAT they mean. F5 remediation (2026-07-17, @fh adversarial review): the previous carrier (implemented_by internal/gate/spec_resolver.go:ResolveSpecSymbol, verified_by a symbol-resolution staleness mutation test) proved a SINGLE field resolves correctly, not that the two fields are ORTHOGONAL -- the claim's own load-bearing word. The new carrier is internal/proposal/mutate.go's resolveImplementedBy AND resolveVerifiedBy together -- two structurally near-identical wrapper functions (both delegate to coalesceSlice with the same clear-sentinel handling) that are consequently easy to cross-wire by accident, proven distinct and independently-addressable by TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal (internal/proposal/proposal_test.go): an implemented_by-only UPDATE leaves verified_by byte-identical, a verified_by-only UPDATE leaves implemented_by byte-identical, and each field's own clear-sentinel clears only itself. This is a genuine ORTHOGONALITY proof (mutation-verified: swapping the two resolve calls in mutate.go's apply path makes the test fail), not merely a staleness/resolvability check on one field in isolation.",
       "assumptions": null,
       "relations": [
         {
@@ -11346,11 +11353,11 @@
       "last_reviewed_at": "",
       "review_after": "",
       "evidence": [
-        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/gate/spec_resolver.go:ResolveSpecSymbol, verified_by internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal -v : PASS (F5 remediation, 2026-07-17); MUTATION PROOF: swapping the resolveImplementedBy/resolveVerifiedBy call arguments in mutate.go's ProposedRequirement.mutate (p.ImplementedBy<->p.VerifiedBy cross-wired) makes this same test FAIL with 3 explicit orthogonality-violation messages; reverted, test green again -- proves the test has teeth against exactly the failure mode the claim's own text warns against ('never merged into a single field or treated as aliases of one another')"
       ],
       "source_refs": [
-        "internal/gate/spec_resolver.go",
-        "internal/gate/spec_resolver_test.go"
+        "internal/proposal/mutate.go",
+        "internal/proposal/proposal_test.go"
       ],
       "history": [
         {
@@ -11377,14 +11384,25 @@
           "at": "2026-07-16",
           "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: promoting PROSE->ENFORCED, claim text byte-identical to already-SETTLED requirement, no substantive change -- if flagged, same false-positive class already handled for this claim earlier in this wave",
           "decided_by": ""
+        },
+        {
+          "at": "2026-07-17",
+          "summary": "why: PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (steward decision 2026-07-16) establish implemen…→PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (steward decision 2026-07-16) establish implemen…; evidence: [task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal -v : PASS (F5 reme…; source_refs: [internal/gate/spec_resolver.go, internal/gate/spec_resolver_test.go]→[internal/proposal/mutate.go, internal/proposal/proposal_test.go]; implemented_by: [internal/gate/spec_resolver.go:ResolveSpecSymbol]→[internal/proposal/mutate.go:resolveImplementedBy, internal/proposal/mutate.go:resolveVerifiedBy]; verified_by: [internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound]→[internal/proposal/proposal_test.go:TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-17",
+          "summary": "semantic conflict acknowledged — human decision recorded: F5 remediation 2026-07-17: same lexical opposite-marker false positive already acknowledged twice for this requirement's claim text (task #235, task #236, both recorded in History) against R-domain-overview-projection -- shared generic vocabulary (answer/authored/names), unrelated concepts (this requirement names the SpecLink implemented_by/verified_by orthogonality; R-domain-overview-projection governs the PIPELINE.md overview projection). This UPDATE only changes implemented_by/verified_by + why text, claim text byte-identical to the already-settled requirement -- no new substantive conflict introduced.",
+          "decided_by": ""
         }
       ],
       "decl_order": 0,
       "implemented_by": [
-        "internal/gate/spec_resolver.go:ResolveSpecSymbol"
+        "internal/proposal/mutate.go:resolveImplementedBy",
+        "internal/proposal/mutate.go:resolveVerifiedBy"
       ],
       "verified_by": [
-        "internal/gate/spec_resolver_test.go:TestSpecRoot_SelfHosting_MUTATION_RemoveSymbolFlipsToNotFound"
+        "internal/proposal/proposal_test.go:TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal"
       ]
     },
     {
@@ -11806,7 +11824,7 @@
       "claim": "Two DIFFERENT parties hold two DIFFERENT guarantees over an authored SpecLink, and the boundary between them shall NEVER be blurred: the ENGINE holds the STRUCTURAL floor -- a cited symbol or test really exists, resolves by name against the domain's own authored spec/ tree, is not t.Log-only or otherwise empty (has teeth), is not an unconditional t.Skip, is not formally reused across unrelated requirements, and is not orphaned by a later code change -- while a MIRROR AUDIT, performed by a human or an LLM reading the pair (requirement claim text, authored code+test) without domain-specific heuristics baked into the engine, certifies that the cited test SEMANTICALLY proves the requirement's claim. The engine's structural checks shall NEVER be represented, documented, or relied upon as a substitute for the mirror audit's semantic certification, and the mirror audit's semantic judgment shall NEVER be encoded as a lexical or keyword heuristic inside the graph invariant layer.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "PLAN-authored-spec-discipline.md §6 (\"Каталог механических проверок\") states this boundary as its closing paragraph, calling it out explicitly as an \"honesty boundary\": \"Граница честности: движок держит СТРУКТУРНЫЙ пол. Он не может механически доказать, что тест семантически доказывает требование -- это остаётся зеркальным аудитом.\" R-authored-spec-links-mechanically-checked (#223) already implements and names the six structural checks (symbol/test resolvable, has-teeth, no-skip, no-unrelated-reuse) and its own WHY paragraph already states the boundary in passing (\"HONESTY BOUNDARY (§6): these checks hold the structural floor only... they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit\"). This requirement promotes that boundary from a parenthetical inside #223's WHY text to its OWN first-class graph node, because the boundary is a distinct discipline concept with its own failure mode worth naming and citing independently: the session's own history shows repeated near-misses where lexical/keyword heuristics were proposed as a shortcut for semantic judgment (e.g. the CONFRONT opposite-marker gate's own false-positive collisions, R-authored-spec-links-mechanically-checked's own history entry documents one on 2026-07-16) -- the temptation to fold semantic certification into the engine as \"just one more check_*\" is the exact failure this requirement stands against. PLAN §1 documents the concrete cost of skipping this boundary in the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements... a always-green test is not coverage; it creates the appearance of an executable requirement\") -- the structural floor prevents THAT specific failure (a hollow always-green test), but does not and cannot prevent a technically-real, technically-passing test that simply tests the wrong thing; only a mirror audit catches that. Naming both halves as one requirement (not two) reflects that the discipline IS the boundary between them, not either half alone.",
+      "why": "PLAN-authored-spec-discipline.md §6 (\"Каталог механических проверок\") states this boundary as its closing paragraph, calling it out explicitly as an \"honesty boundary\": \"Граница честности: движок держит СТРУКТУРНЫЙ пол. Он не может механически доказать, что тест семантически доказывает требование -- это остаётся зеркальным аудитом.\" R-authored-spec-links-mechanically-checked (#223) already implements and names the six structural checks (symbol/test resolvable, has-teeth, no-skip, no-unrelated-reuse) and its own WHY paragraph already states the boundary in passing (\"HONESTY BOUNDARY (§6): these checks hold the structural floor only... they do NOT and cannot verify that a test SEMANTICALLY proves the requirement's claim; that remains a mirror audit\"). This requirement promotes that boundary from a parenthetical inside #223's WHY text to its OWN first-class graph node, because the boundary is a distinct discipline concept with its own failure mode worth naming and citing independently: the session's own history shows repeated near-misses where lexical/keyword heuristics were proposed as a shortcut for semantic judgment (e.g. the CONFRONT opposite-marker gate's own false-positive collisions, R-authored-spec-links-mechanically-checked's own history entry documents one on 2026-07-16) -- the temptation to fold semantic certification into the engine as \"just one more check_*\" is the exact failure this requirement stands against. PLAN §1 documents the concrete cost of skipping this boundary in the old generator era (\"t.Log('no structural atom') in 10 of 22 requirements... a always-green test is not coverage; it creates the appearance of an executable requirement\") -- the structural floor prevents THAT specific failure (a hollow always-green test), but does not and cannot prevent a technically-real, technically-passing test that simply tests the wrong thing; only a mirror audit catches that. Naming both halves as one requirement (not two) reflects that the discipline IS the boundary between them, not either half alone. F5 remediation (2026-07-17, @fh adversarial review): the previous verified_by carrier (TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip) proved only ONE structural check's own break->fix round trip (vacuous-body detection) -- one brick, not the wall this claim is actually about (the STRUCTURAL-vs-MIRROR boundary itself). The new verified_by carrier, TestStructuralFloorDoesNotCatchSemanticMismatch (internal/invariants/authored_links_test.go), proves the boundary operationally: a requirement claiming Risk-ownership validation is wired to a verified_by test that is completely unrelated (a bare arithmetic assertion) yet passes every structural check the engine has and every enforced_by/authored gate -- the FULL AllViolations sweep reports ZERO violations for a pairing no mirror audit would ever accept. That gap IS the claim: the engine cannot and does not catch this, which is exactly what 'shall never be relied upon as a substitute for the mirror audit' asserts. implemented_by keeps checkVerifiedByTestHasTeeth (internal/invariants/authored_links.go) as the STRUCTURAL-floor half's own embodiment (one of the six mechanical checks the ENGINE side of the boundary actually performs), now paired with a verified_by that demonstrates the boundary rather than one check's internal correctness.",
       "assumptions": null,
       "relations": [
         {
@@ -11824,7 +11842,7 @@
       "last_reviewed_at": "",
       "review_after": "",
       "evidence": [
-        "task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND verified_by both non-empty) -- landed in this same wave: implemented_by internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth, verified_by internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip; check_enforced_requires_enforcer_or_authored_link (internal/invariants/authored_links.go) is the mechanical gate recognizing this authored path"
+        "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestStructuralFloorDoesNotCatchSemanticMismatch -v : PASS (F5 remediation, 2026-07-17); the test wires a Risk-ownership-validation requirement to a semantically-unrelated (arithmetic) verified_by test that is nonetheless structurally perfect (resolves, has teeth, not vacuous, not skipped, not reused, actually compiles+passes via check_verified_by_test_passes/F1's execution gate) and asserts the FULL AllViolations sweep still reports 0 violations -- proving the structural floor cannot and does not catch this class of semantic mismatch, which only a mirror audit can"
       ],
       "source_refs": [
         "internal/invariants/authored_links.go",
@@ -11855,6 +11873,16 @@
           "at": "2026-07-16",
           "summary": "semantic conflict acknowledged — human decision recorded: task #236 self-example W2: promoting PROSE->ENFORCED, claim text byte-identical to already-SETTLED requirement, no substantive change -- if flagged, same false-positive class already handled for this claim earlier in this wave",
           "decided_by": ""
+        },
+        {
+          "at": "2026-07-17",
+          "summary": "why: PLAN-authored-spec-discipline.md §6 (\"Каталог механических проверок\") states this boundary as its closing paragraph, call…→PLAN-authored-spec-discipline.md §6 (\"Каталог механических проверок\") states this boundary as its closing paragraph, call…; evidence: [task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestStructuralFloorDoesNotCatchSemanticMismatch -v : PASS (F5 remediation, 202…; verified_by: [internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip]→[internal/invariants/authored_links_test.go:TestStructuralFloorDoesNotCatchSemanticMismatch]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-17",
+          "summary": "semantic conflict acknowledged — human decision recorded: F5 remediation 2026-07-17: same lexical opposite-marker false positive already acknowledged for this requirement's claim text (task #236, recorded in History) against multiple unrelated SETTLED requirements -- shared generic vocabulary (only/any/structural/across/authored), none of the flagged requirements concern the engine/mirror-audit boundary this requirement names. This UPDATE only changes implemented_by/verified_by + why text, claim text byte-identical to the already-settled requirement -- no new substantive conflict introduced.",
+          "decided_by": ""
         }
       ],
       "decl_order": 0,
@@ -11862,7 +11890,7 @@
         "internal/invariants/authored_links.go:checkVerifiedByTestHasTeeth"
       ],
       "verified_by": [
-        "internal/invariants/authored_links_test.go:TestCheckVerifiedByTestHasTeeth_MUTATION_VacuousRoundTrip"
+        "internal/invariants/authored_links_test.go:TestStructuralFloorDoesNotCatchSemanticMismatch"
       ]
     },
     {

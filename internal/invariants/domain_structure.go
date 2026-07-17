@@ -1,9 +1,132 @@
 package invariants
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
+
+// checkGraphLockPinsGraphJSON is the runtime (all-violations) half of
+// R-no-hand-edit-graph. lock_real_domains_test.go (internal/loader) already
+// pins this via a hardcoded realDomains list -- but that list names only
+// THIS repo's own two domains (hotam-spec-self, hotam-dev), so a hand-edit to
+// a CONSUMER domain's graph.json (e.g. an adopting repo's domains/prat or
+// domains/gpsm-sm) that leaves graph.lock untouched is invisible to that
+// test and to `hotam all-violations` alike -- exactly @fh's F6 finding: "0
+// violations -- graph clean" on a graph.json a human quietly edited by hand.
+//
+// This check closes that gap FOR ANY DOMAIN, not just this framework's own:
+// it runs against whichever graph.json all-violations actually loaded
+// (g.DomainDir, populated by loader.LoadGraph for every domain, self-hosting
+// or consumer -- see enforcement.go's checkEnforcedByResolvable and
+// authored_links.go for the same g.DomainDir pattern already established for
+// filesystem-aware checks) and calls loader.VerifyLock on that graph's own
+// graph.json/graph.lock pair. loader.WriteGraph (the only writer
+// hotam apply-proposal/hotam land ever call) writes graph.lock in the SAME
+// call as graph.json, so the legitimate proposal flow always leaves the pair
+// in sync; only a hand-edit that bypasses that writer (editing graph.json
+// directly, or restoring an old graph.json over a newer lock) can desync
+// them, which is exactly the signal this check exists to surface.
+func checkGraphLockPinsGraphJSON(g *ontology.Graph) []Violation {
+	if g.DomainDir == "" {
+		// No on-disk domain to check against (e.g. an in-memory fixture graph
+		// built without ever going through loader.LoadGraph) -- honest no-op,
+		// not a false positive against a path that was never loaded from disk.
+		return nil
+	}
+	graphPath := graphPathForDomainDir(g.DomainDir)
+	if _, statErr := os.Stat(graphPath); statErr != nil {
+		// No graph.json actually sitting at g.DomainDir -- e.g. a synthetic
+		// fixture graph built in-memory (ontology.Graph{DomainDir: someTempDir,
+		// ...}) whose temp dir carries authored spec/ files for a DIFFERENT
+		// check (authored_links_test.go's writeAuthoredSpecFixture) but was
+		// never itself written by loader.LoadGraph/WriteGraph. A domain that
+		// really went through LoadGraph always has a graph.json at this exact
+		// path (LoadGraph reads it to construct the graph in the first place),
+		// so this branch can never mask a real hand-edit on an actually-loaded
+		// domain -- only a graph that was never backed by an on-disk pair at
+		// all. Honest no-op, not a false positive.
+		return nil
+	}
+	if _, statErr := os.Stat(loader.LockPath(graphPath)); statErr != nil {
+		// graph.json exists but graph.lock does not -- a domain that has
+		// never yet gone through hotam apply-proposal/hotam land (a freshly
+		// scaffolded/copied fixture, or a domain still in its bootstrap
+		// window before its first landed proposal). R-no-hand-edit-graph's
+		// own claim text carves this out explicitly ("...prohibited outside
+		// of bootstrap events"): WriteGraph/WriteLock always write the lock
+		// alongside graph.json from the very first land, so an ABSENT lock
+		// means "not yet under lock discipline", a materially different
+		// signal from a PRESENT lock whose hash no longer matches (which can
+		// only mean graph.json changed via some path OTHER than
+		// WriteGraph -- the real hand-edit signal). Conflating the two would
+		// falsely flag every test/bootstrap fixture that legitimately copies
+		// a bare graph.json onto disk without ever calling WriteGraph
+		// (cmd/hotam's own copySelfDomainUnderRoot test helper, used across
+		// 100+ existing cmd/hotam tests, is exactly this shape) -- an honest
+		// no-op here, not a false positive.
+		return nil
+	}
+	ok, err := loader.VerifyLock(graphPath)
+	if err != nil {
+		return []Violation{{
+			Check:   "check_graph_lock_pins_graph_json",
+			ID:      g.DomainDir,
+			Message: fmt.Sprintf("graph.lock could not be verified for %s: %v -- run `hotam apply-proposal`/`hotam land` to (re)create a consistent graph.json + graph.lock pair", graphPath, err),
+		}}
+	}
+	if !ok {
+		return []Violation{{
+			Check:   "check_graph_lock_pins_graph_json",
+			ID:      g.DomainDir,
+			Message: fmt.Sprintf("graph.lock sha256 does not match the current %s -- the graph was hand-edited outside `hotam apply-proposal`/`hotam land` (R-no-hand-edit-graph); revert the hand-edit or land it as a real proposal so graph.json and graph.lock are rewritten together", graphPath),
+		}}
+	}
+	return nil
+}
+
+var _ = All.MustRegister("check_graph_lock_pins_graph_json", Invariant{
+	Name:  "check_graph_lock_pins_graph_json",
+	Canon: methodology.Domain,
+	Claim: "every domain's graph.lock sha256 pin matches its own current graph.json -- for ANY domain, not just this framework's self-hosting ones.",
+	Rule: "RULE: for the domain graph actually being checked (g.DomainDir), when a graph.json really sits at that path AND a " +
+		"sibling graph.lock also already exists, loader.VerifyLock(graph.json) MUST report a match against the sha256 pinned " +
+		"in that graph.lock. loader.WriteGraph (the sole writer hotam apply-proposal / hotam land use) always rewrites " +
+		"graph.lock in the same call as graph.json, so a legitimate land leaves the pair in sync; a mismatch on an EXISTING " +
+		"lock can only mean graph.json was edited by some OTHER path -- a hand-edit, a restored backup, a manual merge -- " +
+		"while graph.lock was left stale (R-no-hand-edit-graph). Two cases are honest no-ops, not false positives: (1) no " +
+		"on-disk graph.json at g.DomainDir at all (g.DomainDir empty, or a synthetic fixture graph built purely in-memory and " +
+		"pointed at an unrelated temp dir -- e.g. authored_links_test.go's writeAuthoredSpecFixture, which writes only spec/ " +
+		"files, never a graph.json/graph.lock pair); (2) graph.json exists but graph.lock does not -- R-no-hand-edit-graph's " +
+		"own claim text carves out this exact case ('...prohibited outside of bootstrap events'): a domain that has never yet " +
+		"gone through its first hotam apply-proposal/hotam land (a freshly scaffolded or test-copied graph.json) is not yet " +
+		"under lock discipline at all, a materially different signal from a PRESENT lock that no longer matches.",
+	Why: "R-no-hand-edit-graph's OWN runtime enforcement previously existed only as internal/loader/lock_real_domains_test.go, a " +
+		"test whose realDomains list names exactly this repo's own two domains (hotam-spec-self, hotam-dev) -- so it protects " +
+		"HotamSpec's own graphs but is structurally blind to any domain outside this repo (an adopting consumer's domains/prat, " +
+		"domains/gpsm-sm, or any future domain). Worse, that protection was TEST-ONLY: it never ran as part of `hotam " +
+		"all-violations`, the command a consumer actually runs as their gate, so a hand-edited consumer graph.json reported " +
+		"\"0 violations -- graph clean\" even though the lock had gone stale (@fh F6). This check moves the SAME VerifyLock " +
+		"machinery (internal/loader/lock.go, already used by WriteGraph/WriteLock and by lock_real_domains_test.go) into the " +
+		"graph-generic invariant registry, keyed off g.DomainDir the way enforcement.go's checkEnforcedByResolvable and " +
+		"authored_links.go already resolve filesystem paths for whichever domain is actually loaded -- so it runs for every " +
+		"domain all-violations ever checks, self-hosting or consumer, closing the gap without touching lock.go's proven " +
+		"hash logic or WriteGraph/WriteLock's legitimate write path. References: R-no-hand-edit-graph, " +
+		"TestNoHandEditGraph_RealDomainLocksPinCurrentGraph.",
+	Check: checkGraphLockPinsGraphJSON,
+})
+
+// graphPathForDomainDir mirrors cmd/hotam/common.go's graphPathForDomain
+// (filepath.Join(domainDir, "graph.json")) without importing package main --
+// internal/ packages cannot import cmd/, so the one-line join is duplicated
+// here rather than factored into a shared helper across that boundary.
+func graphPathForDomainDir(domainDir string) string {
+	return filepath.Join(domainDir, "graph.json")
+}
 
 func checkDomainManifestExistsAndImportable(g *ontology.Graph) []Violation {
 	return nil

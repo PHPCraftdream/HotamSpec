@@ -1,0 +1,21 @@
+{
+  "kind": "Requirement",
+  "id": "R-no-hand-edit-graph",
+  "claim": "Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land`, with direct hand-edits prohibited outside of bootstrap events.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "why": "The closed loop's ACT half goes through the proposal writer (R-active-loop-apply-tool). The sanctioned write path is `hotam apply-proposal <file.json>` or `hotam land` (cmd/hotam/apply_proposal.go, cmd/hotam/land.go), which load a Proposed* JSON, validate it, mutate the in-memory graph, check for new invariant violations, and only then write graph.json + graph.lock (internal/proposal/apply.go). Not yet implemented as a deterministic host-hook guard: the CLI is a pure command-line tool with no PreToolUse / host-hook integration, so there is no mechanism that mechanically blocks direct Edit/Write on graph.json. (Historically the Python _graph_guard.py PreToolUse hook provided that mechanical block.) Without a guard on graph.json, a hand-edit can bypass the proposal protocol's validation+invariant-check gate -- the same self-judging-the-judge problem (Enf#3, supervector A). PROSE (not ENFORCED): no enforcer exists. ENFORCED 2026-07-13: TestNoHandEditGraph_RealDomainLocksPinCurrentGraph in internal/loader/lock_real_domains_test.go mechanically verifies this claim -- but only for THIS repo's own two domains (hotam-spec-self, hotam-dev), and only as a TEST, never as part of `hotam all-violations` itself, so a hand-edited CONSUMER domain graph.json (e.g. an adopting repo's domains/prat, domains/gpsm-sm) reported '0 violations -- graph clean' even with a stale lock (@fh adversarial review finding F6). ENFORCED_BY WIDENED 2026-07-17: check_graph_lock_pins_graph_json (internal/invariants/domain_structure.go) moves the same loader.VerifyLock machinery into the graph-generic invariant registry, keyed off g.DomainDir (populated by loader.LoadGraph for every domain, self-hosting or consumer) so it runs inside `hotam all-violations` itself for ANY domain, closing the gap the test-only enforcer left open. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "TestNoHandEditGraph_RealDomainLocksPinCurrentGraph",
+    "check_graph_lock_pins_graph_json"
+  ],
+  "evidence": [
+    "cd D:/ai_dev/prat/HotamSpec && go test ./internal/invariants/... -run TestRegistryComplete -v : PASS (F6 remediation, 2026-07-17); check_graph_lock_pins_graph_json registered in internal/invariants/domain_structure.go, verified by mutation test: hand-edit a consumer domain's graph.json field with graph.lock untouched -> `hotam all-violations --domain <consumer-domain>` reports check_graph_lock_pins_graph_json violation -> revert -> 0 violations again."
+  ],
+  "source_refs": [
+    "internal/proposal/apply.go",
+    "internal/loader/lock_real_domains_test.go",
+    "internal/invariants/domain_structure.go"
+  ]
+}

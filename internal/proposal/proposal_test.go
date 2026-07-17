@@ -76,6 +76,110 @@ func TestApply_Requirement_UpdateAppendsHistory(t *testing.T) {
 	}
 }
 
+// TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal is the
+// carrier test for R-spec-link-embodied-vs-proven's own claim text: "the two
+// fields answer two DIFFERENT questions and shall never be merged into a
+// single field or treated as aliases of one another." resolveImplementedBy
+// and resolveVerifiedBy (internal/proposal/mutate.go) are structurally
+// identical wrappers around coalesceSlice (same patch-semantics, same
+// clearSentinel handling) -- which makes it easy to accidentally cross-wire
+// them (e.g. a copy-paste slip that reads p.ImplementedBy into
+// applied.VerifiedBy or vice versa) without any existing test catching it,
+// since no prior test named either resolver or exercised the pair together.
+// This test proves three things no single-field test can: (1) an UPDATE
+// proposal setting ONLY implemented_by leaves the existing verified_by
+// completely untouched, (2) an UPDATE proposal setting ONLY verified_by
+// leaves the existing implemented_by completely untouched, and (3) the two
+// fields clear INDEPENDENTLY via their own clearSentinel -- clearing one
+// never clears or otherwise disturbs the other. Together these are exactly
+// what "orthogonal, never aliased" means operationally: mutating one
+// dimension of a SpecLink cannot leak into or erase the other.
+func TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal(t *testing.T) {
+	t.Parallel()
+
+	seed := baseGraph()
+	idx := -1
+	for i, r := range seed.Requirements {
+		if r.ID == "R-1" {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		t.Fatalf("fixture R-1 missing from baseGraph")
+	}
+	seed.Requirements[idx].ImplementedBy = []string{"spec/model/risk.go:NewRisk"}
+	seed.Requirements[idx].VerifiedBy = []string{"spec/model/risk_test.go:TestNewRisk"}
+	path := writeTempGraph(t, seed)
+
+	// Step 1: UPDATE implemented_by only. verified_by must survive byte-for-byte.
+	if err := Apply(path, today, ProposedRequirement{
+		ID:            "R-1",
+		Claim:         "claim R-1",
+		Owner:         "sa",
+		Status:        ontology.StatusSETTLED,
+		ImplementedBy: []string{"spec/model/risk.go:UpdatedRisk"},
+	}); err != nil {
+		t.Fatalf("Apply (implemented_by-only update): %v", err)
+	}
+	g := reload(t, path)
+	r, ok := findReq(g, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing after implemented_by-only update")
+	}
+	if got, want := r.ImplementedBy, []string{"spec/model/risk.go:UpdatedRisk"}; len(got) != 1 || got[0] != want[0] {
+		t.Errorf("ImplementedBy = %v, want %v", got, want)
+	}
+	if got, want := r.VerifiedBy, "spec/model/risk_test.go:TestNewRisk"; len(got) != 1 || got[0] != want {
+		t.Errorf("VerifiedBy = %v, want unchanged [%q] -- an implemented_by-only update must not touch verified_by (orthogonality)", got, want)
+	}
+
+	// Step 2: UPDATE verified_by only. implemented_by (from step 1) must survive.
+	if err := Apply(path, today, ProposedRequirement{
+		ID:         "R-1",
+		Claim:      "claim R-1",
+		Owner:      "sa",
+		Status:     ontology.StatusSETTLED,
+		VerifiedBy: []string{"spec/model/risk_test.go:TestUpdatedRisk"},
+	}); err != nil {
+		t.Fatalf("Apply (verified_by-only update): %v", err)
+	}
+	g = reload(t, path)
+	r, ok = findReq(g, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing after verified_by-only update")
+	}
+	if got, want := r.VerifiedBy, "spec/model/risk_test.go:TestUpdatedRisk"; len(got) != 1 || got[0] != want {
+		t.Errorf("VerifiedBy = %v, want [%q]", got, want)
+	}
+	if got, want := r.ImplementedBy, "spec/model/risk.go:UpdatedRisk"; len(got) != 1 || got[0] != want {
+		t.Errorf("ImplementedBy = %v, want unchanged [%q] -- a verified_by-only update must not touch implemented_by (orthogonality)", got, want)
+	}
+
+	// Step 3: clear implemented_by ONLY via the sentinel. verified_by (from
+	// step 2) must survive; implemented_by must go empty, not verified_by.
+	if err := Apply(path, today, ProposedRequirement{
+		ID:            "R-1",
+		Claim:         "claim R-1",
+		Owner:         "sa",
+		Status:        ontology.StatusSETTLED,
+		ImplementedBy: []string{clearSentinel},
+	}); err != nil {
+		t.Fatalf("Apply (implemented_by clear): %v", err)
+	}
+	g = reload(t, path)
+	r, ok = findReq(g, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing after implemented_by clear")
+	}
+	if len(r.ImplementedBy) != 0 {
+		t.Errorf("ImplementedBy = %v, want cleared to empty", r.ImplementedBy)
+	}
+	if got, want := r.VerifiedBy, "spec/model/risk_test.go:TestUpdatedRisk"; len(got) != 1 || got[0] != want {
+		t.Errorf("VerifiedBy = %v, want unchanged [%q] -- clearing implemented_by must not clear verified_by (independent clear, not aliased fields)", got, want)
+	}
+}
+
 // TestApply_Requirement_SettledTransitionStampsSettledAt covers the OTHER
 // half of the settled_at contract: a genuine DRAFT -> SETTLED transition
 // (not a same-status content edit) DOES stamp settled_at to today, when the

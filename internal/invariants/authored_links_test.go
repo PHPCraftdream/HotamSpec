@@ -636,6 +636,86 @@ func TestAuthoredOnlyEnforcedRequirement_PassesFullAllViolations(t *testing.T) {
 	}
 }
 
+// authoredUnrelatedArithmeticTestSrc is a REAL, structurally-perfect test --
+// it resolves, has teeth (a genuine t.Fatalf assertion), is not vacuous, is
+// not t.Skip -- that proves something true but has NOTHING to do with Risk
+// ownership validation: it is a plain arithmetic assertion. It exists to
+// demonstrate R-structural-floor-vs-mirror-audit's own claim: the engine's
+// mechanical checks cannot and do not verify that a cited test SEMANTICALLY
+// proves the citing requirement's claim, only that it structurally resolves
+// and has real assertions.
+const authoredUnrelatedArithmeticTestSrc = `package model
+
+import "testing"
+
+func TestArithmetic_TwoPlusTwoIsFour(t *testing.T) {
+	if 2+2 != 4 {
+		t.Fatalf("expected 4")
+	}
+}
+`
+
+// TestStructuralFloorDoesNotCatchSemanticMismatch is the carrier test for
+// R-structural-floor-vs-mirror-audit's own claim text: the engine holds the
+// STRUCTURAL floor (symbol/test resolves, has teeth, not vacuous, not
+// skipped, not orphaned, not suspiciously reused) while a SEPARATE mirror
+// audit -- a human or LLM reading (requirement claim, code+test) together --
+// is the only thing that can certify the cited test SEMANTICALLY proves the
+// requirement's claim; "the engine's structural checks shall NEVER be
+// represented, documented, or relied upon as a substitute for the mirror
+// audit's semantic certification."
+//
+// This test proves that boundary operationally, not just in prose: it wires
+// a requirement whose CLAIM is about Risk ownership validation to a
+// verified_by test (authoredUnrelatedArithmeticTestSrc) that is completely
+// unrelated -- a bare arithmetic assertion -- yet passes EVERY structural
+// check the engine has (resolves, has teeth, not vacuous, not skipped, not
+// reused) and consequently the FULL AllViolations sweep reports ZERO
+// violations for this obviously-wrong pairing. That gap -- 0 mechanical
+// violations for a SpecLink no mirror audit would ever accept -- is exactly
+// what the requirement's claim asserts exists and must never be papered over
+// by encoding lexical/keyword heuristics into the graph invariant layer. If
+// a future change made the engine start rejecting this fixture (e.g. by
+// adding a claim-vs-test keyword-similarity check), THIS test would need to
+// be revisited -- deliberately, as a recorded decision to fold semantic
+// judgment into the mechanical layer -- not silently, which is exactly the
+// property this test is here to guard.
+func TestStructuralFloorDoesNotCatchSemanticMismatch(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	if err := os.WriteFile(filepath.Join(domainDir, "go.mod"), []byte("module prat-spec\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile go.mod: %v", err)
+	}
+	testPath := filepath.Join(domainDir, "spec", "model", "arithmetic_test.go")
+	if err := os.WriteFile(testPath, []byte(authoredUnrelatedArithmeticTestSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile arithmetic_test.go: %v", err)
+	}
+
+	r := reqWithLinks(
+		"R-semantic-mismatch-fixture", "sa",
+		[]string{"spec/model/risk.go:NewRisk"},
+		[]string{"spec/model/arithmetic_test.go:TestArithmetic_TwoPlusTwoIsFour"},
+	)
+	r.Claim = "Risk creation MUST reject a missing owner."
+	r.Enforcement = ontology.EnforcementENFORCED
+	r.Status = ontology.StatusSETTLED
+	r.Enforceability = ontology.EnforceabilityENFORCEABLE
+
+	g := &ontology.Graph{
+		DomainDir:    domainDir,
+		Stakeholders: []ontology.Stakeholder{sA},
+		Requirements: []ontology.Requirement{r},
+	}
+
+	vs := AllViolations(g)
+	if len(vs) != 0 {
+		t.Fatalf("expected the FULL AllViolations sweep to report 0 violations for a semantically-unrelated "+
+			"but structurally-perfect verified_by test -- that gap IS R-structural-floor-vs-mirror-audit's own "+
+			"claim (structural checks cannot and must not substitute for a semantic mirror audit); got %d: %v",
+			len(vs), vs)
+	}
+}
+
 // --- self-hosting recursion (PLAN-authored-spec-discipline.md §9) ---------
 
 const selfHostingEngineFooSrc = `package internal
