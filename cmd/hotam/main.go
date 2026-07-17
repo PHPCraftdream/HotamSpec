@@ -90,6 +90,8 @@ func main() {
 		err = cmdUse(args)
 	case "gen-spec":
 		err = cmdGenSpec(args)
+	case "vendor-recorder":
+		err = cmdVendorRecorder(args)
 	case "what-now":
 		err = cmdWhatNow(args)
 	case "apply-proposal":
@@ -166,6 +168,14 @@ Commands:
         tool docs; "consumer" skips framework-self-documentation noise
         (thinking/*.md, Planned tool docs, empty atoms docs) for external
         business projects.
+  vendor-recorder [--domain <path>]
+        Copy the engine's canonical hotamspec scenario-recorder source
+        (internal/recorder/canon/hotamspec.go) into
+        <domain>/spec/hotamspec/hotamspec.go, banner-stamped do-not-edit.
+        Requires <domain>/spec/go.mod to already exist. Re-run after an
+        engine upgrade to pick up a newer canon; check_recorder_current
+        (hotam all-violations) flags a vendored copy that has drifted from
+        the engine's own canon.
   what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
         Print top-N diagnosed signals (default 20). With --json, emit the
         underlying signal slice as machine-readable JSON.

@@ -875,3 +875,73 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 		t.Fatalf("FIXED CASE: expected HasSkip=false after replacing with a real runtime condition, got %+v", res2)
 	}
 }
+
+// --- hotamspec Scenario.Then recognized as teeth (task W1.1) ---------------
+
+// TestResolveSpecTest_ScenarioThenCountsAsTeeth proves a verified_by test
+// written entirely against the hotamspec scenario recorder (s.Given/s.When/
+// s.Then/s.Value, PLAN-scenario-generated-spec.md §2 D1) -- with NO literal
+// t.Error/t.Fatal/require/assert call anywhere in its own body -- is still
+// recognized as having real teeth, because s.Then(...) is exactly the shape
+// isTeethCall now also matches (a method literally named "Then"). Without
+// this, every scenario-recorder-based verified_by test would be
+// mechanically indistinguishable from a t.Log-only vacuous test to
+// check_verified_by_test_has_teeth.
+func TestResolveSpecTest_ScenarioThenCountsAsTeeth(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import (
+	"testing"
+
+	"prat-spec/hotamspec"
+)
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	s := hotamspec.NewScenario(t, "R-example", "example")
+	r, err := NewRisk("")
+	s.Then("rejects a missing owner", err != nil && r == nil)
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !res.HasTeeth {
+		t.Fatalf("expected HasTeeth=true for a test using hotamspec's s.Then(...), got %+v", res)
+	}
+}
+
+// TestResolveSpecTest_UnrelatedThenMethodAlsoCountsAsTeeth documents the
+// deliberate, narrow over-approximation isTeethCall's doc comment accepts:
+// ANY method literally named "Then" (not just hotamspec.Scenario's) is
+// treated as teeth, since AST-only inspection cannot resolve the receiver's
+// concrete type. This is intentional, not a regression to guard against --
+// see isTeethCall's doc comment for why the remaining verified_by checks
+// (especially check_verified_by_test_passes actually running the test)
+// keep this widening safe.
+func TestResolveSpecTest_UnrelatedThenMethodAlsoCountsAsTeeth(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import "testing"
+
+type notAScenario struct{}
+
+func (n notAScenario) Then(desc string) {}
+
+func TestNewRisk_RejectsMissingOwner(t *testing.T) {
+	var n notAScenario
+	n.Then("unrelated Then method, not hotamspec's")
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/risk_test.go", "TestNewRisk_RejectsMissingOwner")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !res.HasTeeth {
+		t.Fatalf("expected HasTeeth=true (documented over-approximation for any .Then(...) call), got %+v", res)
+	}
+}

@@ -25,7 +25,12 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// R-no-hand-edit-graph's runtime half, extending the sha256-pin check
 	// lock_real_domains_test.go already ran (but only for this repo's own two
 	// domains) to EVERY domain all-violations loads, self-hosting or consumer.
-	const expected = 96
+	// Task W1.1 (PLAN-scenario-generated-spec.md) added a ninth,
+	// check_recorder_current (recorder_check.go): sha256-compares a domain's
+	// vendored spec/hotamspec/hotamspec.go (if any) against the engine's own
+	// canonical scenario-recorder source, the same filesystem-aware,
+	// honest-no-op-when-absent shape as check_graph_lock_pins_graph_json.
+	const expected = 97
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

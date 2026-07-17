@@ -308,12 +308,14 @@ func isRealTestSignature(fn *ast.FuncDecl) bool {
 // assertion call, anywhere in the body (including nested inside if/for/
 // switch/range/t.Run branches): a call to t.Error/t.Errorf/t.Fatal/
 // t.Fatalf/t.FailNow/t.Fail, or a call whose selector name matches a common
-// assertion-library pattern (require.*/assert.*). This is the anti-
-// vacuousness detector: the mechanical successor to the old honest no-op
-// checkEnforcedByTestHasTeeth, now applied to verified_by as a structural
-// PROHIBITION for ENFORCED (not an advisory no-op). It does not and cannot
-// judge whether the assertions are ABOUT the right thing -- only that the
-// test body is not hollow.
+// assertion-library pattern (require.*/assert.*), OR a call to a
+// hotamspec.Scenario's Then method (PLAN-scenario-generated-spec.md §2 D1,
+// task W1.1 -- see isTeethCall's own doc comment for why `.Then(...)`
+// specifically). This is the anti-vacuousness detector: the mechanical
+// successor to the old honest no-op checkEnforcedByTestHasTeeth, now applied
+// to verified_by as a structural PROHIBITION for ENFORCED (not an advisory
+// no-op). It does not and cannot judge whether the assertions are ABOUT the
+// right thing -- only that the test body is not hollow.
 //
 // Hardened per adversarial review (@fh Probe A): a bare control-flow
 // construct (if/for/switch/range) with NO assert call anywhere inside it is
@@ -342,10 +344,30 @@ func testBodyHasTeeth(body *ast.BlockStmt) bool {
 }
 
 // isTeethCall reports whether call is an assertion-shaped call: t.Error*,
-// t.Fatal*, t.Fail*, or a call on an identifier/package conventionally used
-// by Go assertion libraries (require.*, assert.*) -- e.g. require.NoError,
-// assert.Equal. t.Log/t.Logf and other non-assertion calls (helper setup,
-// fmt.Sprintf, etc.) do not count.
+// t.Fatal*, t.Fail*, a call on an identifier/package conventionally used by
+// Go assertion libraries (require.*, assert.*) -- e.g. require.NoError,
+// assert.Equal -- or a call to a method literally named "Then" (the
+// hotamspec scenario-recorder's assertion step, PLAN-scenario-generated-
+// spec.md §2 D1, task W1.1: internal/recorder/canon/hotamspec.go's
+// Scenario.Then asserts through the underlying *testing.T's Errorf exactly
+// like a hand-written `if !cond { t.Errorf(...) }`, so a verified_by test
+// written against the hotamspec API has REAL teeth even though the AST here
+// sees `s.Then(...)`, never a literal `t.Error*` call). t.Log/t.Logf and
+// other non-assertion calls (helper setup, fmt.Sprintf, etc.) do not count.
+//
+// "Then" is recognized by method name alone (not qualified to a specific
+// receiver/package identifier the way require./assert. are) because AST-only
+// inspection cannot resolve which concrete type a `s` variable has without a
+// full type-checking pass (go/types) this checker deliberately does not run
+// (see ResolveSpecTest's package-level doc comments on staying AST-only for
+// speed and locality). This is a narrow, deliberate widening: "Then" is not
+// a common Go standard-library or generic-helper method name, so a false
+// positive (a test calling an unrelated `.Then(...)` on some other type,
+// e.g. a promise/future library) would still have to ALSO satisfy every
+// other verified_by check (resolvable, no-skip, and -- most importantly --
+// check_verified_by_test_passes actually running and passing the test) to
+// stay ENFORCED, so this widening does not weaken the overall discipline's
+// honesty boundary, only its most literal AST-shape half.
 func isTeethCall(call *ast.CallExpr) bool {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
@@ -353,7 +375,7 @@ func isTeethCall(call *ast.CallExpr) bool {
 	}
 	method := sel.Sel.Name
 	switch method {
-	case "Error", "Errorf", "Fatal", "Fatalf", "FailNow", "Fail":
+	case "Error", "Errorf", "Fatal", "Fatalf", "FailNow", "Fail", "Then":
 		return true
 	}
 	if ident, ok := sel.X.(*ast.Ident); ok {
