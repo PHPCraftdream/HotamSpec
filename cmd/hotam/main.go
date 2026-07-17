@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 )
 
 // Build-time metadata, injected via -ldflags:
@@ -36,7 +38,40 @@ func cmdVersion(args []string) error {
 	return nil
 }
 
+// clearInheritedVerifiedByGuard unconditionally removes
+// HOTAM_VERIFIED_BY_EXEC_GUARD (internal/gate's recursionGuardEnv) from this
+// process's own environment before any subcommand runs -- the CLI-side half
+// of the NEW-1 fix (@fh's second adversarial re-review: the first fix, a
+// marker file vouching for a random nonce, was itself forgeable because the
+// marker lived at a predictable, world-writable path -- see
+// internal/gate/test_exec.go's recursionGuardEnv doc comment for the full
+// history).
+//
+// Every top-level `hotam` invocation is, BY DEFINITION, the ROOT of any
+// hotam-managed recursion: it can never legitimately be a NESTED child of a
+// RunVerifiedByTest-spawned `go test` subprocess, because that spawned child
+// is a compiled `go test` binary, not another cmd/hotam CLI process -- it
+// never goes through this main() at all. So a `hotam` process observing a
+// non-empty HOTAM_VERIFIED_BY_EXEC_GUARD in its OWN ambient (inherited)
+// environment can only mean one thing: something OUTSIDE this process
+// (an operator's shell, a CI script, or an attacker) exported it before
+// invoking this binary directly -- e.g. the exact kill-switch shape
+// `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam all-violations --domain
+// <red-domain>` that must NOT make verified_by execution silently no-op.
+// Clearing it here, unconditionally, before cmd dispatch, means
+// internal/gate.RunVerifiedByTest can never observe an inherited value at the
+// top of a `hotam` process's own call graph -- inRecursionGuard only ever
+// sees a non-empty value for a REAL nested `go test` child that runGoTest
+// itself spawned and stamped with a fresh crypto/rand nonce AFTER this point,
+// never one inherited from outside. No corroborating secret (nonce, marker
+// file) is needed on the gate side any more: the untrusted input is
+// discarded at the door, not verified.
+func clearInheritedVerifiedByGuard() {
+	gate.ClearInheritedRecursionGuard()
+}
+
 func main() {
+	clearInheritedVerifiedByGuard()
 	if len(os.Args) < 2 {
 		printUsage(os.Stderr)
 		os.Exit(2)

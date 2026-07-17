@@ -419,26 +419,28 @@ func Validate(fields int) bool {
 }
 
 // TestRunVerifiedByTest_MUTATION_NEW1_ExternalGuardEnvDoesNotSilentlySkip is
-// @fh's NEW-1 finding reproduced at unit-test granularity: the ORIGINAL guard
-// (inRecursionGuard) trusted the mere PRESENCE of HOTAM_VERIFIED_BY_EXEC_GUARD
-// in the process's ambient environment as proof "I am a nested child
-// RunVerifiedByTest itself spawned" -- a universal kill-switch any external
-// actor could pull by simply exporting the variable before invoking hotam
-// directly (this test process is NOT a go-test-spawned child in the sense
-// the guard cares about -- it IS `go test`, but it never went through
-// runGoTest's spawn path, so it must not be treated as "recursed"). This test
-// sets the guard env var directly (simulating the external `HOTAM_VERIFIED_
-// BY_EXEC_GUARD=1 hotam all-violations` shape @fh used) and proves
-// RunVerifiedByTest still ACTUALLY RUNS a genuinely red test -- Skipped must
-// be false and Passed must be false, never a silent Skipped=true that would
-// make check_verified_by_test_passes report zero violations on a gutted tree.
-func TestRunVerifiedByTest_MUTATION_NEW1_ExternalGuardEnvDoesNotSilentlySkip(t *testing.T) {
+// @fh's NEW-1 finding reproduced at unit-test granularity, at the level this
+// package alone can prove (the FULL CLI-level reproduction --
+// `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam all-violations` genuinely
+// spawning a top-level `hotam` process and observing a real violation -- lives
+// in cmd/hotam's own e2e suite, since the actual root-cause fix is
+// cmd/hotam/main's unconditional os.Unsetenv, not anything in this package).
+// At THIS package's level, inRecursionGuard is now a bare presence check
+// (marker-vouching was removed -- see recursionGuardEnv's doc comment for why
+// it was forgeable and is no longer needed): a directly-set guard env DOES
+// get honored as recursion by this package alone, exactly as intended for a
+// genuine `go test` child. This test proves the OTHER guaranteed-loud half of
+// the contract instead: whenever RunVerifiedByTest DOES honor the guard and
+// Skip, it is never silent -- Skipped=true always carries a non-empty
+// InfraWarning, so a caller can never mistake a skipped, unproven entry for a
+// quietly-passed one.
+func TestRunVerifiedByTest_MUTATION_NEW1_HonoredSkipAlwaysCarriesInfraWarning(t *testing.T) {
 	ResetRunCacheForTest()
 
 	root := writeModuleFixture(t, "example.com/new1mod", "model", guttedImplSrc, passingTestSrc)
 
 	prev, hadPrev := os.LookupEnv(recursionGuardEnv)
-	if err := os.Setenv(recursionGuardEnv, "1"); err != nil {
+	if err := os.Setenv(recursionGuardEnv, newGuardNonce()); err != nil {
 		t.Fatalf("Setenv: %v", err)
 	}
 	t.Cleanup(func() {
@@ -451,17 +453,11 @@ func TestRunVerifiedByTest_MUTATION_NEW1_ExternalGuardEnvDoesNotSilentlySkip(t *
 
 	result := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 
-	if result.Skipped {
-		t.Fatalf("KILL-SWITCH (NEW-1): an externally-set %s made RunVerifiedByTest silently Skip a genuinely red test -- got %+v", recursionGuardEnv, result)
-	}
-	if result.Err != nil {
-		t.Fatalf("unexpected infra error: %v", result.Err)
-	}
-	if result.Passed {
-		t.Fatalf("expected Passed=false for a genuinely gutted implementation (external guard-env must not suppress the real run), got %+v", result)
+	if !result.Skipped {
+		t.Fatalf("expected Skipped=true with the guard env set (this package's own inRecursionGuard honors any non-empty value -- the CLI-side os.Unsetenv is what prevents an EXTERNAL actor from ever reaching this state at a `hotam` process's top level), got %+v", result)
 	}
 	if result.InfraWarning == "" {
-		t.Fatalf("expected a non-empty InfraWarning surfacing that an external %s was observed and NOT honored, got empty", recursionGuardEnv)
+		t.Fatalf("SILENT HONORED SKIP (NEW-1, second re-review): a Skipped result must always carry a non-empty InfraWarning -- 'clean' must never look identical to 'silently deferred', got %+v", result)
 	}
 }
 
@@ -479,52 +475,18 @@ func TestInRecursionGuard_NoEnv_False(t *testing.T) {
 	if inRecursionGuard() {
 		t.Fatalf("expected inRecursionGuard()==false with no guard env set")
 	}
-	if guardWasUntrustedExternal() {
-		t.Fatalf("expected guardWasUntrustedExternal()==false with no guard env set")
-	}
 }
 
-// TestInRecursionGuard_ExternalEnvSet_NoMarker_NotHonored proves the core
-// NEW-1 mechanism directly at the inRecursionGuard/guardWasUntrustedExternal
-// level (the same contract TestRunVerifiedByTest_MUTATION_NEW1_
-// ExternalGuardEnvDoesNotSilentlySkip proves end-to-end through
-// RunVerifiedByTest): setting the guard env to an arbitrary externally-chosen
-// value with NO corresponding marker file on disk (guardMarkerExists) must
-// NOT make inRecursionGuard report true -- an external actor exporting
-// HOTAM_VERIFIED_BY_EXEC_GUARD before invoking hotam directly has a value but
-// no marker (nobody vouched for it via writeGuardMarker), so it is untrusted.
-func TestInRecursionGuard_ExternalEnvSet_NoMarker_NotHonored(t *testing.T) {
-	forged := "external-forged-value-no-marker-" + newGuardNonce()
-
-	prev, hadPrev := os.LookupEnv(recursionGuardEnv)
-	if err := os.Setenv(recursionGuardEnv, forged); err != nil {
-		t.Fatalf("Setenv: %v", err)
-	}
-	t.Cleanup(func() {
-		if hadPrev {
-			os.Setenv(recursionGuardEnv, prev)
-		} else {
-			os.Unsetenv(recursionGuardEnv)
-		}
-	})
-
-	if inRecursionGuard() {
-		t.Fatalf("expected inRecursionGuard()==false for a forged guard-env value with no marker file")
-	}
-	if !guardWasUntrustedExternal() {
-		t.Fatalf("expected guardWasUntrustedExternal()==true for a forged guard-env value with no marker file")
-	}
-}
-
-// TestInRecursionGuard_VouchedNonce_Honored proves the LEGITIMATE nesting
-// path: a nonce that WAS vouched for via writeGuardMarker (exactly what
-// runGoTest does before spawning a real child) IS honored as genuine
-// recursion -- this is what keeps self-hosting's real recursion actually
-// breaking at depth 1 (go test ./... must not hang/loop) even after NEW-1
-// tightens the guard against forgery.
-func TestInRecursionGuard_VouchedNonce_Honored(t *testing.T) {
+// TestInRecursionGuard_AnyNonEmptyEnv_Honored proves inRecursionGuard's
+// current, deliberately simple contract: ANY non-empty recursionGuardEnv
+// value is honored as genuine recursion at THIS package's level -- no marker
+// file, no corroborating secret. This is sound only because the OTHER half of
+// the NEW-1 fix (cmd/hotam/main's unconditional ClearInheritedRecursionGuard
+// call, proven by TestMain_ClearsInheritedRecursionGuardBeforeDispatch in
+// cmd/hotam) guarantees no top-level `hotam` process can ever observe an
+// externally-inherited value here -- see recursionGuardEnv's doc comment.
+func TestInRecursionGuard_AnyNonEmptyEnv_Honored(t *testing.T) {
 	nonce := newGuardNonce()
-	writeGuardMarker(nonce)
 
 	prev, hadPrev := os.LookupEnv(recursionGuardEnv)
 	if err := os.Setenv(recursionGuardEnv, nonce); err != nil {
@@ -539,9 +501,34 @@ func TestInRecursionGuard_VouchedNonce_Honored(t *testing.T) {
 	})
 
 	if !inRecursionGuard() {
-		t.Fatalf("expected inRecursionGuard()==true for a nonce vouched for by writeGuardMarker")
+		t.Fatalf("expected inRecursionGuard()==true for any non-empty guard-env value")
 	}
-	if guardWasUntrustedExternal() {
-		t.Fatalf("expected guardWasUntrustedExternal()==false for a vouched-for nonce")
+}
+
+// TestClearInheritedRecursionGuard_UnsetsEnv is the direct unit proof for the
+// exported function cmd/hotam's main() calls at CLI entry: given a
+// (simulated-externally-forged) non-empty recursionGuardEnv, calling
+// ClearInheritedRecursionGuard must leave it unset, and inRecursionGuard must
+// then report false.
+func TestClearInheritedRecursionGuard_UnsetsEnv(t *testing.T) {
+	prev, hadPrev := os.LookupEnv(recursionGuardEnv)
+	if err := os.Setenv(recursionGuardEnv, "forged-external-value"); err != nil {
+		t.Fatalf("Setenv: %v", err)
+	}
+	t.Cleanup(func() {
+		if hadPrev {
+			os.Setenv(recursionGuardEnv, prev)
+		} else {
+			os.Unsetenv(recursionGuardEnv)
+		}
+	})
+
+	ClearInheritedRecursionGuard()
+
+	if v, ok := os.LookupEnv(recursionGuardEnv); ok {
+		t.Fatalf("expected %s to be unset after ClearInheritedRecursionGuard, got %q", recursionGuardEnv, v)
+	}
+	if inRecursionGuard() {
+		t.Fatalf("expected inRecursionGuard()==false after ClearInheritedRecursionGuard")
 	}
 }

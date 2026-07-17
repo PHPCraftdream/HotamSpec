@@ -154,6 +154,34 @@ func TestAllViolations_SmokeNoPanic(t *testing.T) {
 	}
 }
 
+// TestClearInheritedVerifiedByGuard_UnsetsEnv is the in-process unit proof
+// that main()'s CLI-entry guard-clear actually removes
+// HOTAM_VERIFIED_BY_EXEC_GUARD from this process's own environment --
+// complementing the real-subprocess kill-switch reproductions in
+// killswitch_e2e_test.go, which prove the end-to-end effect through the
+// compiled binary. This test proves the specific function main() calls does
+// what it claims, independent of process-spawn overhead.
+func TestClearInheritedVerifiedByGuard_UnsetsEnv(t *testing.T) {
+	const guardEnv = "HOTAM_VERIFIED_BY_EXEC_GUARD"
+	prev, hadPrev := os.LookupEnv(guardEnv)
+	if err := os.Setenv(guardEnv, "externally-forged-value"); err != nil {
+		t.Fatalf("Setenv: %v", err)
+	}
+	t.Cleanup(func() {
+		if hadPrev {
+			os.Setenv(guardEnv, prev)
+		} else {
+			os.Unsetenv(guardEnv)
+		}
+	})
+
+	clearInheritedVerifiedByGuard()
+
+	if v, ok := os.LookupEnv(guardEnv); ok {
+		t.Fatalf("expected %s to be unset after clearInheritedVerifiedByGuard, got %q", guardEnv, v)
+	}
+}
+
 func TestParseProposal_Requirement(t *testing.T) {
 	t.Parallel()
 	json := `{"kind":"Requirement","ID":"R-smoke","Claim":"smoke claim","Owner":"sa","Status":"DRAFT"}`

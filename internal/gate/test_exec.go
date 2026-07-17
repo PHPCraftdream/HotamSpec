@@ -53,31 +53,28 @@ type TestRunResult struct {
 	// engine modeling itself), not an optional optimization. A Skipped
 	// result is NEITHER Passed NOR a failure: the caller MUST treat it as
 	// "unproven at this nesting level, proven at the outer level" and NOT
-	// report a violation for it.
+	// report a violation for it. Skipped==true ALWAYS carries a non-empty
+	// InfraWarning (see below) -- a honored guard is never silent.
 	Skipped bool
-	// InfraWarning is a non-fatal, non-empty diagnostic string set when
-	// RunVerifiedByTest observed something suspicious about its OWN
-	// execution environment that a caller may want to surface even though it
-	// did not stop the test from actually running (NEW-1, @fh adversarial
-	// re-review): specifically, a non-empty recursionGuardEnv present WITHOUT
-	// the corroborating go-test-child signal (guardWasUntrustedExternal) --
-	// i.e. an external actor exported HOTAM_VERIFIED_BY_EXEC_GUARD before
-	// invoking hotam directly, which this process correctly did NOT honor as
-	// proof of nesting (inRecursionGuard returned false, so the test below
-	// still actually ran), but the attempt itself is worth reporting rather
-	// than silently ignoring, so a caller (or an operator inspecting
-	// all-violations output) can see that someone tried to pull the
-	// kill-switch. InfraWarning is orthogonal to Err: it never prevents the
-	// real test run and is set independently of Passed/CompileFailed/Skipped.
+	// InfraWarning is a non-fatal, non-empty diagnostic string set whenever
+	// RunVerifiedByTest wants to surface something about its OWN execution
+	// that a caller may want to know about, without treating it as a failure.
+	// Set unconditionally whenever Skipped is true (NEW-1, @fh's second
+	// adversarial re-review, "honored-skip must not be silent" -- a clean
+	// "0 violations" run must never look identical to one where entries were
+	// silently deferred to an outer process; see RunVerifiedByTest's guard
+	// branch). InfraWarning is orthogonal to Err: it never prevents the real
+	// test run (when one happens) and is set independently of
+	// Passed/CompileFailed.
 	InfraWarning string
 }
 
 // recursionGuardEnv is the environment variable RunVerifiedByTest sets, on
 // every `go test` child process it spawns, to a per-process unguessable nonce
-// (see guardNonce / NEW-1 below -- NOT a fixed literal like "1"), and checks
-// for on its OWN process before spawning another. Self-hosting domains make
-// recursion a structural certainty, not an edge case: domains/hotam-spec-
-// self's graph names its OWN engine test files as verified_by targets (e.g.
+// (see guardNonce -- NOT a fixed literal like "1"), and checks for on its OWN
+// process before spawning another. Self-hosting domains make recursion a
+// structural certainty, not an edge case: domains/hotam-spec-self's graph
+// names its OWN engine test files as verified_by targets (e.g.
 // "internal/ontology/graph_smoke_test.go:TestConflictPredicates"), and
 // several of the engine's own package test suites (internal/invariants,
 // internal/generator, cmd/hotam -- anywhere a _test.go file calls
@@ -88,23 +85,47 @@ type TestRunResult struct {
 // ./internal/invariants/...` -- itself containing the same test, which
 // recurses again, unbounded. The guard breaks the cycle at depth 1: the
 // outer (non-nested) process actually runs and proves the test; any process
-// that finds a TRUSTED marker already set (see inRecursionGuard) knows it is
+// that finds recursionGuardEnv already set (see inRecursionGuard) knows it is
 // nested and reports Skipped instead of spawning yet another generation.
 const recursionGuardEnv = "HOTAM_VERIFIED_BY_EXEC_GUARD"
 
-// NEW-1 (@fh adversarial re-review): the ORIGINAL guard trusted the mere
-// PRESENCE of recursionGuardEnv="1" in the process's ambient environment as
-// proof "I am a nested child RunVerifiedByTest itself spawned". That is a
-// universal kill-switch any external actor can pull: `HOTAM_VERIFIED_BY_EXEC_
-// GUARD=1 hotam all-violations` makes the TOP-level (non-nested) process
-// itself believe it is already inside a guarded subprocess, so
-// RunVerifiedByTest returns Skipped for every single verified_by entry --
-// check_verified_by_test_passes reports zero violations no matter how broken
-// the underlying implementations are, on a gutted tree, silently. The literal
-// value "1" is guessable and requires no knowledge of anything this process
-// generated, so no process can tell a genuine nested child from an outside
-// forgery just by checking "is the var set". Two candidate corroborating
-// signals were tried and rejected before landing on the one below:
+// ClearInheritedRecursionGuard unsets recursionGuardEnv in this process's own
+// environment. Exported ONLY for cmd/hotam's main() to call, unconditionally,
+// before any subcommand dispatch -- see recursionGuardEnv's doc comment (the
+// NEW-1 fix) for why a top-level CLI process must never honor an INHERITED
+// value of this variable: it is the root-cause half of the fix, the
+// inRecursionGuard side is the other half, and callers other than a genuine
+// CLI entry point have no legitimate reason to call this.
+func ClearInheritedRecursionGuard() {
+	os.Unsetenv(recursionGuardEnv)
+}
+
+// NEW-1 (@fh adversarial re-review, twice): the ORIGINAL guard trusted the
+// mere PRESENCE of recursionGuardEnv="1" in the process's ambient environment
+// as proof "I am a nested child RunVerifiedByTest itself spawned" -- a
+// universal kill-switch any external actor could pull:
+// `HOTAM_VERIFIED_BY_EXEC_GUARD=1 hotam all-violations` made the TOP-level
+// (non-nested) process itself believe it was already inside a guarded
+// subprocess, so RunVerifiedByTest returned Skipped for every verified_by
+// entry -- check_verified_by_test_passes reported zero violations no matter
+// how broken the underlying implementations were, on a gutted tree, silently.
+//
+// A FIRST fix (marker-vouched-nonce: a random per-process nonce, corroborated
+// by a marker file written to diskCacheDir() before the nonce was ever placed
+// in a child's environment) was shipped and then broken by re-review: the
+// marker lived at a PREDICTABLE, WORLD-WRITABLE path
+// (os.TempDir()/hotam-verified-by-cache/guard-<value>.marker). An attacker
+// does not need to guess this process's nonce at all -- they pick their OWN
+// value X, write guard-X.marker themselves, then export
+// HOTAM_VERIFIED_BY_EXEC_GUARD=X before invoking hotam directly. The
+// corroborating secret (the marker) was stored in the open, right next to the
+// exact env var being verified, so the "vouching" bought zero real
+// protection -- and legitimate runs never cleaned up their markers, leaving a
+// permanent, passively replayable kill-switch value for anyone who inspected
+// os.TempDir() once.
+//
+// Two candidate corroborating signals, tried before either the marker
+// approach or the fix actually used below, were rejected:
 //
 //   - argv[0]/invocation-shape sniffing ("is my own binary a `go test`-built
 //     .test binary") FAILS: the OUTERMOST `go test ./internal/invariants/...`
@@ -122,41 +143,33 @@ const recursionGuardEnv = "HOTAM_VERIFIED_BY_EXEC_GUARD"
 //     portable way to walk the full ancestor chain (especially on Windows)
 //     to verify true lineage.
 //
-// Fix actually used: a genuine nested child is distinguished from an
-// external forgery by POSSESSION of an unguessable, freshly-minted
-// crypto/rand nonce, corroborated by a MARKER FILE only the minting process
-// itself could have written, in a location an external attacker exporting a
-// guessed/fixed env value cannot predict or race:
-//
-//   - guardNonce() mints a fresh 32-byte (256-bit) crypto/rand hex token
-//     exactly once per process (sync.Once), the first time it is needed
-//     (either to check "am I nested" or to spawn a child). It is NEVER read
-//     from the environment.
-//   - Before this process spawns a `go test` child (runGoTest), it writes a
-//     MARKER FILE at guardMarkerPath(nonce) -- inside diskCacheDir(), a
-//     location already used as this engine's own shared scratch space -- and
-//     ONLY THEN sets recursionGuardEnv to that same nonce in the child's
-//     environment. The marker file's existence is what makes the nonce
-//     "vouched for": an external actor who merely `export`s
-//     HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> before invoking hotam directly
-//     would need to ALSO have independently guessed a 256-bit random hex
-//     string AND pre-created a same-named marker file in this engine's own
-//     scratch directory -- computationally infeasible, and not what a naive
-//     `HOTAM_VERIFIED_BY_EXEC_GUARD=1 hotam ...` kill-switch attempt (@fh's
-//     literal reproduction) does or could do.
-//   - inRecursionGuard checks BOTH: recursionGuardEnv is non-empty, AND a
-//     marker file exists on disk at guardMarkerPath(that exact value). Only
-//     when both hold does this process treat itself as genuinely nested and
-//     report Skipped. A bare "1" (or any value with no corresponding marker
-//     file) fails the second check and is NOT honored as recursion --
-//     RunVerifiedByTest runs the test for real and records an InfraWarning
-//     instead of silently behaving as if nothing were amiss. See
-//     guardWasUntrustedExternal.
-//   - Marker files are cheap, small (empty), and self-cleaning is
-//     unnecessary for correctness: a stale marker for an old nonce a future
-//     process might coincidentally regenerate is astronomically unlikely
-//     (256 bits of entropy) to collide, so leftover marker files from past
-//     runs are harmless clutter, not a correctness or security hazard.
+// FIX ACTUALLY USED (root-cause, not a corroborating-secret patch): a
+// process-local, unguessable, in-memory-only signal cannot itself be forged
+// from OUTSIDE the process by exporting an env var, no matter what value is
+// chosen or what files an attacker can pre-create on disk -- so instead of
+// trying to make the env var itself unforgeable (impossible: any child
+// process can read+re-export any env var its parent had), the TOP-LEVEL CLI
+// entry point (cmd/hotam's main(), see its own doc comment) unconditionally
+// clears recursionGuardEnv from its OWN process environment BEFORE any
+// subcommand runs. This is sound because a top-level `hotam` invocation is BY
+// DEFINITION the root of any hotam-managed recursion -- it can never be a
+// legitimate nested child (legitimate children are `go test`-spawned test
+// binaries, which never go through cmd/hotam's main() at all -- see
+// runGoTest). An external `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam
+// all-violations` therefore has its forged value wiped before
+// RunVerifiedByTest is ever reached: the CLI process runs its own
+// verified_by tests for real, with no defense the attacker can construct
+// (no nonce to guess, no marker to race -- there is no corroborating check
+// left to fool, because the untrusted input is discarded outright, not
+// verified). Legitimate recursion is unaffected: runGoTest still mints a
+// fresh crypto/rand nonce (guardNonce) and passes it ONLY to the `go test`
+// child it itself spawns (cmd.Env) -- that child is a go-test binary, not a
+// cmd/hotam CLI process, so main()'s Unsetenv never runs for it, and
+// inRecursionGuard (below) trusts the env var's mere presence again, exactly
+// as originally designed, because by the time ANY process can observe a
+// non-empty recursionGuardEnv, main() has already guaranteed it was not
+// inherited from outside a genuine RunVerifiedByTest-spawned lineage. No
+// marker file, no disk state, no corroborating secret to leak or replay.
 var (
 	processGuardOnce  sync.Once
 	processGuardNonce string
@@ -195,79 +208,25 @@ func guardNonce() string {
 	return processGuardNonce
 }
 
-// guardMarkerPath returns the on-disk path this process (or an ancestor)
-// writes to VOUCH for a guard nonce it minted, before ever placing that nonce
-// into a spawned child's environment -- see the NEW-1 block comment above.
-// Lives under diskCacheDir() (already this engine's own shared scratch
-// space), namespaced with a "guard-" prefix distinct from the verified-by
-// result cache files diskCacheFileName produces, so the two never collide.
-func guardMarkerPath(nonce string) string {
-	return filepath.Join(diskCacheDir(), "guard-"+nonce+".marker")
-}
-
-// writeGuardMarker vouches for nonce by writing an (empty) marker file at
-// guardMarkerPath(nonce), creating diskCacheDir() first if needed. Called
-// exactly once per process, before that process's own nonce is ever placed
-// into a child's environment (runGoTest) -- see the NEW-1 block comment.
-// Errors are swallowed deliberately: if the marker cannot be written (e.g. a
-// read-only temp dir), the resulting child will simply fail the marker check
-// and run for real instead of Skipping -- a safe, non-silent failure mode
-// (an extra, harmless re-run) rather than a hazard, so this must never panic
-// or propagate an error that would abort the real work RunVerifiedByTest is
-// trying to do.
-func writeGuardMarker(nonce string) {
-	dir := diskCacheDir()
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return
-	}
-	_ = os.WriteFile(guardMarkerPath(nonce), []byte{}, 0o644)
-}
-
-// guardMarkerExists reports whether nonce was vouched for by a
-// writeGuardMarker call from SOME process (this one or an ancestor) --
-// the corroborating signal inRecursionGuard requires before trusting a
-// non-empty recursionGuardEnv as genuine nesting.
-func guardMarkerExists(nonce string) bool {
-	if nonce == "" {
-		return false
-	}
-	_, err := os.Stat(guardMarkerPath(nonce))
-	return err == nil
-}
-
 // inRecursionGuard reports whether the CURRENT process should treat itself as
 // ALREADY running inside a `go test` subprocess RunVerifiedByTest itself
-// spawned. True only when recursionGuardEnv is non-empty AND a marker file
-// vouching for that exact value exists on disk (guardMarkerExists) -- a
-// non-empty recursionGuardEnv WITHOUT a corresponding marker is untrusted (an
-// external actor's `export HOTAM_VERIFIED_BY_EXEC_GUARD=1` before invoking
-// the hotam binary directly has no way to also predict a 256-bit nonce AND
-// pre-create its marker file), so this process runs its own verified_by
-// checks for real rather than silently Skipping every one of them. See
-// guardWasUntrustedExternal for the caller-facing signal RunVerifiedByTest
-// uses to additionally warn (rather than stay silent) when an untrusted
-// guard-env was observed and ignored.
+// spawned. True whenever recursionGuardEnv is non-empty.
+//
+// This is a deliberately simple presence check -- no marker file, no
+// corroborating secret -- because the hard problem ("can an external actor
+// forge this") is solved UPSTREAM, not here: cmd/hotam's main() (the only
+// process type that could ever observe an INHERITED, attacker-controlled
+// value of this env var before RunVerifiedByTest first runs) unconditionally
+// clears recursionGuardEnv at CLI entry, before any subcommand executes. By
+// the time inRecursionGuard runs inside a `hotam` process, any externally
+// forged value has already been wiped; the only way this process can observe
+// a non-empty value is if IT is a `go test` child that runGoTest itself
+// spawned with a freshly minted nonce (see recursionGuardEnv's doc comment
+// for the full NEW-1 history and why a marker-file corroboration scheme was
+// tried, found forgeable via a predictable world-writable path, and removed
+// in favor of this root-cause fix).
 func inRecursionGuard() bool {
-	v := os.Getenv(recursionGuardEnv)
-	if v == "" {
-		return false
-	}
-	return guardMarkerExists(v)
-}
-
-// guardWasUntrustedExternal reports whether recursionGuardEnv was observed
-// non-empty on this process WITHOUT a corresponding marker file
-// (guardMarkerExists) -- exactly the external-forgery shape NEW-1 targets:
-// `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam all-violations` invoked
-// directly, with no genuine ancestor RunVerifiedByTest call ever having
-// minted and vouched for that value. RunVerifiedByTest uses this to attach an
-// infra-warning to its result instead of staying silent, so the caller can
-// surface "an external guard-env was present but NOT honored as recursion"
-// rather than behaving identically to the case where no guard-env was
-// present at all.
-func guardWasUntrustedExternal() bool {
-	v := os.Getenv(recursionGuardEnv)
-	return v != "" && !guardMarkerExists(v)
+	return os.Getenv(recursionGuardEnv) != ""
 }
 
 // globalExecSlots is a PROCESS-WIDE (not per-call, not per-invariant-run)
@@ -317,14 +276,13 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	cmd := exec.CommandContext(ctx, "go", "test", "-run", runPattern, "-count=1", pkgPattern)
 	cmd.Dir = moduleRoot
 	// Carry THIS process's own freshly-minted guard nonce (never a fixed
-	// literal -- see guardNonce's doc comment / NEW-1) so the spawned `go
-	// test` child, and anything it in turn runs, can recognize it is nested.
-	// writeGuardMarker vouches for the nonce on disk BEFORE it is ever placed
-	// into the child's environment, which is what lets the child's
-	// inRecursionGuard trust it (guardMarkerExists) instead of trusting the
-	// env var's mere presence.
+	// literal -- see guardNonce's / recursionGuardEnv's doc comments) so the
+	// spawned `go test` child, and anything it in turn runs, can recognize it
+	// is nested. No marker file is written: the child this env var reaches is
+	// always a `go test`-compiled binary, never a cmd/hotam CLI process (that
+	// only ever clears this var, see main()'s doc comment), so there is no
+	// forgery surface left for a marker to defend against.
 	nonce := guardNonce()
-	writeGuardMarker(nonce)
 	cmd.Env = append(os.Environ(), recursionGuardEnv+"="+nonce)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
@@ -614,29 +572,21 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 		// treats this entry as "unproven at THIS nesting level, proven at
 		// the outer, non-nested level" rather than either a false PASS or a
 		// false violation.
-		return TestRunResult{Skipped: true}
-	}
-
-	// NEW-1: recursionGuardEnv was present but NOT honored as proof of
-	// nesting (guardWasUntrustedExternal -- no corroborating go-test-child
-	// signal). This process proceeds to actually run the test below (never a
-	// silent Skip), but the attempted external guard-env is worth surfacing:
-	// prefixed onto whatever InfraWarning the real run below produces (there
-	// is none yet at this point, so this sets the initial value).
-	if guardWasUntrustedExternal() {
-		infraWarning := fmt.Sprintf(
-			"%s was set in the environment but NOT honored as a recursion signal (this process shows no evidence of being a go-test-spawned child) -- ignored, the test below actually ran",
-			recursionGuardEnv)
-		// Stamp the warning onto whichever result this function ends up
-		// returning (cache hit, disk-cache hit, or a fresh run) via the
-		// named return value -- see the deferred stamp below.
-		defer func() {
-			if out.InfraWarning == "" {
-				out.InfraWarning = infraWarning
-			} else {
-				out.InfraWarning = infraWarning + "; " + out.InfraWarning
-			}
-		}()
+		//
+		// NEW-1 (@fh's second re-review, "honored-skip must not be silent"):
+		// a Skipped result used to carry no InfraWarning at all -- a clean
+		// "0 violations" run gave no visible trace of how many verified_by
+		// entries were actually proven at THIS level versus deferred to an
+		// outer process. Every honored Skip now stamps a non-empty
+		// InfraWarning unconditionally, so a caller inspecting results (or an
+		// operator reading all-violations output) can always see that this
+		// entry's real proof happened elsewhere, not nowhere.
+		return TestRunResult{
+			Skipped: true,
+			InfraWarning: fmt.Sprintf(
+				"%s recursion guard honored -- this process did not execute %s itself; it is skipped at this nesting level and must be proven PASSING by the outer, non-nested process that set this guard",
+				recursionGuardEnv, testName),
+		}
 	}
 
 	path := filepath.Join(specRoot, filepath.FromSlash(file))
