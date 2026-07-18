@@ -55,7 +55,21 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// with no SPEC.md yet (the scenario-generated-spec layer is opt-in) is
 	// an honest no-op, mirroring check_recorder_current's identical
 	// opt-in/filesystem-aware shape.
-	const expected = 100
+	// Task W2.4 (PLAN-scenario-generated-spec.md §2 D5) added a thirteenth,
+	// check_model_complete (model_complete.go): the MODEL-LEVEL
+	// completeness gate -- in a discipline:full domain, every authored
+	// model object with at least one exported method cited as
+	// implemented_by by a SETTLED requirement is COMPLETE (every such
+	// cited method backed by a scenario-narrated verified_by test on some
+	// citing requirement); a half-bound model (one cited method
+	// scenario-proven, another cited-but-narratively-dangling) fires one
+	// violation naming the object + every uncovered method. Regroups
+	// W2.1's anyVerifiedByEntryHasScenario signal and gate.ScanAuthoredModels'
+	// inventory (the model scan was extracted to internal/gate/model_scan.go
+	// in this same task, W2.3 spec_build.go precedent, so
+	// internal/invariants can reach it without importing internal/generator)
+	// by OWNING OBJECT -- no new coverage run, no second spec/ walk.
+	const expected = 101
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

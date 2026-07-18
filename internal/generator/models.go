@@ -6,69 +6,56 @@
 // declares -- their fields, their methods, and their typed sentinel errors
 // -- without opening every file under spec/model by hand.
 //
-// This file is read-only over both the graph and the filesystem: it parses
-// authored Go source with go/parser purely for a structural inventory (type
-// names, field names+types, method signatures, `var Err*` declarations). It
-// never executes, type-checks, or mutates anything it reads, and it is not
-// an enforcement gate -- that role belongs to the mechanical checks in
-// internal/invariants/authored_links.go; this doc is display-only.
+// LAYERING (W2.4): the AST model SCAN itself (which files to parse, how to
+// extract objects/fields/methods, the vendored-recorder exclusion) moved to
+// internal/gate/model_scan.go -- see that file's own LAYERING doc comment
+// for the full reasoning (same W2.3 spec_build.go precedent: the scan is
+// shared with internal/invariants' new check_model_complete gate, W2.4, and
+// internal/invariants must never import internal/generator). This file now
+// holds ONLY the RENDERING of MODELS.md plus the public count wrapper
+// (ScanModelLayerCounts) coverage.go consumes: thin type aliases over
+// gate's scan types and a thin re-export of IsVendoredRecorderFile (kept so
+// internal/generator's own models_vendor_exclusion_test.go, package
+// generator, can still call it by its lowercase name without reaching
+// across the package boundary). Behavior is byte-identical to before the
+// move -- internal/generator/models_vendor_exclusion_test.go and
+// byteidentical_test.go's MODELS.md golden are the mechanical proof.
+//
+// This file is read-only over both the graph and the filesystem: it renders
+// what gate.ScanAuthoredModels inventories. It never executes, type-checks,
+// or mutates anything it reads, and it is not an enforcement gate -- that
+// role belongs to the mechanical checks in internal/invariants; this doc is
+// display-only.
 package generator
 
 import (
-	"bufio"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
-	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
 )
 
-// modelObject is one rendered type declaration: its name, kind (struct/
-// interface/other), fields (struct only), and methods (functions with this
-// type as receiver, matched by base type name so both pointer and value
-// receivers collapse onto the same object).
-type modelObject struct {
-	name    string
-	kind    string // "struct" | "interface" | "type"
-	doc     string
-	fields  []modelField
-	methods []modelMethod
-}
+// The scan-inventory types are thin aliases over gate's exported types so
+// BuildModels's rendering body (and any in-package caller) reads the exact
+// same shape the scan produces, with zero conversion at the call site. They
+// stay lowercase to preserve this file's pre-move public surface (no
+// external package referenced them; only BuildModels/ScanModelLayerCounts
+// are part of generator's public API).
+type modelObject = gate.ModelObject
+type modelField = gate.ModelField
+type modelMethod = gate.ModelMethod
+type modelError = gate.ModelError
+type modelFile = gate.ModelFile
 
-type modelField struct {
-	name string
-	typ  string
-}
-
-type modelMethod struct {
-	receiver  string // e.g. "*Risk" or "Risk"
-	name      string
-	signature string // full "func (r *Risk) Validate(...) error"-shaped rendering, receiver+name+params+results
-	doc       string
-}
-
-// modelError is one `var Err... = errors.New(...)`-shaped typed sentinel
-// error declaration.
-type modelError struct {
-	name string
-	doc  string
-}
-
-// modelFile is one parsed authored Go source file's extracted inventory,
-// keyed by its path relative to the scan root (specRoot for an ordinary
-// domain, engineRoot for self-hosting) so rendering can group by file and
-// sort deterministically.
-type modelFile struct {
-	relPath string
-	pkg     string
-	objects []modelObject
-	errors  []modelError
+// isVendoredRecorderFile re-exports gate.IsVendoredRecorderFile under the
+// lowercase name internal/generator/models_vendor_exclusion_test.go already
+// calls it by (that test is package generator, so it reaches unexported
+// names directly -- the rename keeps the test unchanged). The canonical,
+// shared implementation lives in gate (single choke point both
+// generator and invariants funnel through); this wrapper is a zero-cost
+// re-export, not a second copy.
+func isVendoredRecorderFile(path string) bool {
+	return gate.IsVendoredRecorderFile(path)
 }
 
 // BuildModels renders docs/gen/MODELS.md: an object model overview --
@@ -111,13 +98,7 @@ func BuildModels(g *ontology.Graph) string {
 		return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 	}
 
-	var files []modelFile
-	var scanErr error
-	if g.SelfHosting {
-		files, scanErr = scanSelfHostingModelFiles(g)
-	} else {
-		files, scanErr = scanDomainModelFiles(g)
-	}
+	files, scanErr := gate.ScanAuthoredModels(g)
 
 	if scanErr != nil {
 		lines = append(lines, "_MODELS.md could not be generated: "+scanErr.Error()+"_")
@@ -137,8 +118,8 @@ func BuildModels(g *ontology.Graph) string {
 
 	totalObjects, totalErrors := 0, 0
 	for _, f := range files {
-		totalObjects += len(f.objects)
-		totalErrors += len(f.errors)
+		totalObjects += len(f.Objects)
+		totalErrors += len(f.Errors)
 	}
 	lines = append(lines,
 		"**"+itoa(len(files))+" file(s) scanned; "+itoa(totalObjects)+" object(s); "+itoa(totalErrors)+" typed error(s).**")
@@ -147,56 +128,56 @@ func BuildModels(g *ontology.Graph) string {
 	lines = append(lines, "")
 
 	for _, f := range files {
-		lines = append(lines, "## `"+f.relPath+"`")
+		lines = append(lines, "## `"+f.RelPath+"`")
 		lines = append(lines, "")
-		if f.pkg != "" {
-			lines = append(lines, "package `"+f.pkg+"`")
+		if f.Pkg != "" {
+			lines = append(lines, "package `"+f.Pkg+"`")
 			lines = append(lines, "")
 		}
 
-		if len(f.objects) == 0 && len(f.errors) == 0 {
+		if len(f.Objects) == 0 && len(f.Errors) == 0 {
 			lines = append(lines, "_No exported objects or typed errors in this file._")
 			lines = append(lines, "")
 			continue
 		}
 
-		for _, obj := range f.objects {
-			lines = append(lines, "### `"+obj.name+"` ("+obj.kind+")")
+		for _, obj := range f.Objects {
+			lines = append(lines, "### `"+obj.Name+"` ("+obj.Kind+")")
 			lines = append(lines, "")
-			if obj.doc != "" {
-				lines = append(lines, Cell(obj.doc))
+			if obj.Doc != "" {
+				lines = append(lines, Cell(obj.Doc))
 				lines = append(lines, "")
 			}
-			if len(obj.fields) > 0 {
+			if len(obj.Fields) > 0 {
 				lines = append(lines, "**Fields:**")
 				lines = append(lines, "")
 				lines = append(lines, "| field | type |")
 				lines = append(lines, "|---|---|")
-				for _, fld := range obj.fields {
-					lines = append(lines, "| `"+fld.name+"` | `"+fld.typ+"` |")
+				for _, fld := range obj.Fields {
+					lines = append(lines, "| `"+fld.Name+"` | `"+fld.Typ+"` |")
 				}
 				lines = append(lines, "")
 			}
-			if len(obj.methods) > 0 {
+			if len(obj.Methods) > 0 {
 				lines = append(lines, "**Methods:**")
 				lines = append(lines, "")
-				for _, m := range obj.methods {
-					lines = append(lines, "- `"+m.signature+"`")
-					if m.doc != "" {
-						lines = append(lines, "  "+Cell(m.doc))
+				for _, m := range obj.Methods {
+					lines = append(lines, "- `"+m.Signature+"`")
+					if m.Doc != "" {
+						lines = append(lines, "  "+Cell(m.Doc))
 					}
 				}
 				lines = append(lines, "")
 			}
 		}
 
-		if len(f.errors) > 0 {
+		if len(f.Errors) > 0 {
 			lines = append(lines, "**Typed errors:**")
 			lines = append(lines, "")
 			lines = append(lines, "| name | doc |")
 			lines = append(lines, "|---|---|")
-			for _, e := range f.errors {
-				lines = append(lines, "| `"+e.name+"` | "+Cell(e.doc)+" |")
+			for _, e := range f.Errors {
+				lines = append(lines, "| `"+e.Name+"` | "+Cell(e.Doc)+" |")
 			}
 			lines = append(lines, "")
 		}
@@ -207,9 +188,10 @@ func BuildModels(g *ontology.Graph) string {
 
 // ModelLayerCounts is the structural inventory COVERAGE.md (§4's layer
 // progression: models -> fields -> methods -> tests) reads from the SAME
-// go/ast scan BuildModels performs, so the two projections never disagree
-// about how many objects/fields/methods a domain's authored spec/ tree
-// declares. Purely a count -- no rendering concern lives here.
+// go/ast scan BuildModels performs (now gate.ScanAuthoredModels), so the two
+// projections never disagree about how many objects/fields/methods a
+// domain's authored spec/ tree declares. Purely a count -- no rendering
+// concern lives here.
 type ModelLayerCounts struct {
 	Files   int
 	Objects int
@@ -219,20 +201,14 @@ type ModelLayerCounts struct {
 }
 
 // ScanModelLayerCounts runs the same source selection BuildModels uses
-// (ordinary domain: spec/ on disk; self-hosting domain: the focused
-// implemented_by/verified_by-named engine file slice) and reduces it to
-// counts only. Returns the zero value, not an error, when spec/ does not
-// exist yet or no authored links name engine files yet -- mirroring
-// BuildModels' own "nothing to show" branches (a calm, expected state, not a
-// scan failure).
+// (gate.ScanAuthoredModels: ordinary domain -> spec/ on disk; self-hosting
+// domain -> the focused implemented_by/verified_by-named engine file slice)
+// and reduces it to counts only. Returns the zero value, not an error, when
+// spec/ does not exist yet or no authored links name engine files yet --
+// mirroring BuildModels's own "nothing to show" branches (a calm, expected
+// state, not a scan failure).
 func ScanModelLayerCounts(g *ontology.Graph) (ModelLayerCounts, error) {
-	var files []modelFile
-	var err error
-	if g.SelfHosting {
-		files, err = scanSelfHostingModelFiles(g)
-	} else {
-		files, err = scanDomainModelFiles(g)
-	}
+	files, err := gate.ScanAuthoredModels(g)
 	if err != nil {
 		return ModelLayerCounts{}, err
 	}
@@ -240,11 +216,11 @@ func ScanModelLayerCounts(g *ontology.Graph) (ModelLayerCounts, error) {
 	var c ModelLayerCounts
 	c.Files = len(files)
 	for _, f := range files {
-		c.Errors += len(f.errors)
-		for _, obj := range f.objects {
+		c.Errors += len(f.Errors)
+		for _, obj := range f.Objects {
 			c.Objects++
-			c.Fields += len(obj.fields)
-			c.Methods += len(obj.methods)
+			c.Fields += len(obj.Fields)
+			c.Methods += len(obj.Methods)
 		}
 	}
 	return c, nil
@@ -272,426 +248,4 @@ func itoa(n int) string {
 		buf[i] = '-'
 	}
 	return string(buf[i:])
-}
-
-// scanDomainModelFiles walks an ordinary (non-self-hosting) domain's
-// authored spec/ tree on disk -- SpecRootForGraph(g)/spec/model and any
-// sibling *.go files directly under spec/ (excluding *_test.go) -- and
-// parses each into a modelFile. Returns an empty (nil) slice, not an error,
-// when spec/ does not exist yet (a domain that has not reached founding
-// step 3 yet, PLAN §8) -- that is a normal, calm state, not a scan failure.
-func scanDomainModelFiles(g *ontology.Graph) ([]modelFile, error) {
-	specRoot := gate.SpecRootForGraph(g)
-	specDir := filepath.Join(specRoot, "spec")
-
-	var goFiles []string
-	err := filepath.WalkDir(specDir, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		name := d.Name()
-		if !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
-			return nil
-		}
-		goFiles = append(goFiles, path)
-		return nil
-	})
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	if len(goFiles) == 0 {
-		return nil, nil
-	}
-
-	return parseModelFiles(goFiles, specRoot)
-}
-
-// scanSelfHostingModelFiles resolves the focused engine-file slice for a
-// self-hosting domain: every distinct file (deduplicated, sorted) named by
-// an implemented_by or verified_by entry on this domain's own requirements,
-// resolved against gate.SpecRootForGraph(g) -- the same engine-root
-// resolution internal/invariants/authored_links.go uses -- so MODELS.md
-// shows exactly the engine types the discipline's own authored links point
-// at, never the whole internal/ tree.
-func scanSelfHostingModelFiles(g *ontology.Graph) ([]modelFile, error) {
-	specRoot := gate.SpecRootForGraph(g)
-
-	relSet := map[string]struct{}{}
-	for _, r := range g.Requirements {
-		for _, entry := range append(append([]string{}, r.ImplementedBy...), r.VerifiedBy...) {
-			file, _, ok := gate.ParseFileColonSymbol(strings.TrimSpace(entry))
-			if !ok {
-				continue
-			}
-			relSet[file] = struct{}{}
-		}
-	}
-	if len(relSet) == 0 {
-		return nil, nil
-	}
-
-	rels := make([]string, 0, len(relSet))
-	for rel := range relSet {
-		rels = append(rels, rel)
-	}
-	sort.Strings(rels)
-
-	paths := make([]string, len(rels))
-	for i, rel := range rels {
-		paths[i] = filepath.Join(specRoot, filepath.FromSlash(rel))
-	}
-
-	return parseModelFiles(paths, specRoot)
-}
-
-// parseModelFiles parses each absolute path in paths (deduplicated,
-// re-sorted by root-relative slash path for determinism) into a modelFile,
-// skipping any file that fails to parse or no longer exists rather than
-// failing the whole doc (a stale implemented_by reference is already
-// reported as ORPHANED by TRACEABILITY.md; MODELS.md simply omits it) --
-// and skipping any file that is a VENDORED copy of the hotamspec scenario
-// recorder (isVendoredRecorderFile), since that file is engine machinery
-// copied into the domain's spec/ tree for a Go module boundary reason
-// (PLAN-scenario-generated-spec.md §2 D1's vendoring contract,
-// internal/recorder/vendor's own doc comment), never a domain-authored
-// model -- see isVendoredRecorderFile's doc comment for why this is the
-// single, shared choke point BOTH scanDomainModelFiles and
-// scanSelfHostingModelFiles funnel through, so MODELS.md/COVERAGE.md
-// (ScanModelLayerCounts reuses this same function) never disagree about
-// which files count as "this domain's own models".
-func parseModelFiles(paths []string, root string) ([]modelFile, error) {
-	seen := map[string]struct{}{}
-	var uniquePaths []string
-	for _, p := range paths {
-		clean := filepath.Clean(p)
-		if _, ok := seen[clean]; ok {
-			continue
-		}
-		seen[clean] = struct{}{}
-		uniquePaths = append(uniquePaths, clean)
-	}
-
-	var files []modelFile
-	fset := token.NewFileSet()
-	for _, p := range uniquePaths {
-		if isVendoredRecorderFile(p) {
-			continue
-		}
-		astFile, err := parser.ParseFile(fset, p, nil, parser.ParseComments)
-		if err != nil {
-			continue
-		}
-		rel, err := filepath.Rel(root, p)
-		if err != nil {
-			rel = p
-		}
-		rel = filepath.ToSlash(rel)
-		files = append(files, extractModelFile(astFile, rel))
-	}
-
-	sort.Slice(files, func(i, j int) bool { return files[i].relPath < files[j].relPath })
-	return files, nil
-}
-
-// vendoredRecorderBannerFirstLine is the exact first line of
-// internal/recorder/vendor's do-not-edit banner (recordervendor.Banner),
-// extracted once so isVendoredRecorderFile never has to re-split the whole
-// banner string per call. Derived from recordervendor.Banner itself (never
-// a hand-copied literal) so a future wording change to that banner cannot
-// silently desync this detector from the marker it is meant to recognize.
-var vendoredRecorderBannerFirstLine = strings.SplitN(recordervendor.Banner, "\n", 2)[0]
-
-// isVendoredRecorderFile reports whether the Go source file at path is a
-// VENDORED copy of the hotamspec scenario recorder
-// (internal/recorder/canon/hotamspec.go, copied byte-for-byte into a
-// consumer domain's spec/ tree by `hotam vendor-recorder` --
-// internal/recorder/vendor's own doc comment) rather than a domain-authored
-// model -- MODELS.md/COVERAGE.md must never count the recorder's own types
-// (Scenario, Artifact, Step, StepKind, ...) as domain object-model surface
-// (zero-trust review finding: a pilot's COVERAGE.md drifted from "3 files /
-// 6 objects / 11 fields / 16 methods" to "4 / 14 / 32 / 24" purely because
-// the vendored recorder got swept into the same spec/ walk as the domain's
-// real model/ files).
-//
-// Detection is by the vendored copy's OWN do-not-edit banner -- its first
-// line must equal vendoredRecorderBannerFirstLine EXACTLY -- rather than by
-// package name ("hotamspec") or directory name ("spec/hotamspec/"): a
-// package/directory name is a convention a domain could rename, but the
-// banner is the file's own generated-marker, stamped by
-// internal/recorder/vendor.Source on every `hotam vendor-recorder` run
-// (recordervendor.Banner's own doc comment: "this file is a VENDORED,
-// byte-for-byte copy ... DO NOT EDIT"), so it survives a directory rename
-// and cannot drift out of sync with what the vendoring tool itself writes.
-// Only the FIRST LINE is checked (not a full-banner match) so this stays
-// robust to whitespace/line-ending normalization elsewhere in the pipeline
-// without weakening the signal -- no ordinary domain-authored file begins
-// with this exact comment line by accident.
-//
-// A file that cannot be opened, or whose first line cannot be read, is
-// treated as NOT vendored (ok=false payload folded into "false, keep
-// scanning") -- consistent with parseModelFiles' own existing policy of
-// skipping unreadable/unparsable files silently rather than failing the
-// whole document; a real read failure surfaces moments later anyway when
-// parser.ParseFile is attempted on the same path.
-func isVendoredRecorderFile(path string) bool {
-	f, err := os.Open(path)
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	if !scanner.Scan() {
-		return false
-	}
-	return scanner.Text() == vendoredRecorderBannerFirstLine
-}
-
-// extractModelFile walks one parsed *ast.File's top-level declarations into
-// a modelFile: GenDecl(TYPE) -> modelObject (struct fields extracted when
-// the underlying type is *ast.StructType), FuncDecl with a receiver ->
-// attached to the matching modelObject by base receiver type name,
-// GenDecl(VAR) whose spec name starts with "Err" -> modelError. Everything
-// is re-sorted (objects, fields already declaration-ordered are left as-is
-// since struct field order is itself meaningful API surface, but objects/
-// methods/errors ARE sorted by name) so output is deterministic regardless
-// of source declaration order.
-func extractModelFile(astFile *ast.File, relPath string) modelFile {
-	f := modelFile{relPath: relPath, pkg: astFile.Name.Name}
-
-	objByName := map[string]*modelObject{}
-	var objOrder []string
-
-	for _, decl := range astFile.Decls {
-		gd, ok := decl.(*ast.GenDecl)
-		if !ok {
-			continue
-		}
-		switch gd.Tok {
-		case token.TYPE:
-			for _, spec := range gd.Specs {
-				ts, ok := spec.(*ast.TypeSpec)
-				if !ok || !ts.Name.IsExported() {
-					continue
-				}
-				obj := modelObject{name: ts.Name.Name, doc: docText(gd.Doc)}
-				if obj.doc == "" {
-					obj.doc = docText(ts.Doc)
-				}
-				switch t := ts.Type.(type) {
-				case *ast.StructType:
-					obj.kind = "struct"
-					obj.fields = extractFields(t)
-				case *ast.InterfaceType:
-					obj.kind = "interface"
-				default:
-					obj.kind = "type"
-				}
-				objByName[obj.name] = &obj
-				objOrder = append(objOrder, obj.name)
-			}
-		case token.VAR:
-			for _, spec := range gd.Specs {
-				vs, ok := spec.(*ast.ValueSpec)
-				if !ok {
-					continue
-				}
-				for i, name := range vs.Names {
-					if !name.IsExported() || !strings.HasPrefix(name.Name, "Err") {
-						continue
-					}
-					doc := docText(gd.Doc)
-					if doc == "" && i == 0 {
-						doc = docText(vs.Doc)
-					}
-					f.errors = append(f.errors, modelError{name: name.Name, doc: doc})
-				}
-			}
-		}
-	}
-
-	for _, decl := range astFile.Decls {
-		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || fn.Recv == nil || len(fn.Recv.List) == 0 {
-			continue
-		}
-		baseName := receiverBaseTypeName(fn.Recv)
-		obj, ok := objByName[baseName]
-		if !ok {
-			continue
-		}
-		recvStr := renderReceiverType(fn.Recv.List[0].Type)
-		obj.methods = append(obj.methods, modelMethod{
-			receiver:  recvStr,
-			name:      fn.Name.Name,
-			signature: renderFuncSignature(fn, recvStr),
-			doc:       docText(fn.Doc),
-		})
-	}
-
-	for _, name := range objOrder {
-		obj := objByName[name]
-		sort.Slice(obj.methods, func(i, j int) bool { return obj.methods[i].name < obj.methods[j].name })
-		f.objects = append(f.objects, *obj)
-	}
-	sort.Slice(f.objects, func(i, j int) bool { return f.objects[i].name < f.objects[j].name })
-	sort.Slice(f.errors, func(i, j int) bool { return f.errors[i].name < f.errors[j].name })
-
-	return f
-}
-
-// extractFields renders a struct type's field list as modelFields, one per
-// declared name (an embedded field or a multi-name single declaration like
-// `X, Y int` both expand to one modelField per name). Unexported fields are
-// included too -- MODELS.md is a navigation overview of the WHOLE shape a
-// domain author wrote, not just its public API, since an authored spec/
-// model commonly keeps its invariant-carrying fields unexported on purpose.
-func extractFields(t *ast.StructType) []modelField {
-	if t.Fields == nil {
-		return nil
-	}
-	var fields []modelField
-	for _, field := range t.Fields.List {
-		typeStr := exprToString(field.Type)
-		if len(field.Names) == 0 {
-			// Embedded field: name is the type's own base identifier.
-			fields = append(fields, modelField{name: typeStr, typ: typeStr})
-			continue
-		}
-		for _, n := range field.Names {
-			fields = append(fields, modelField{name: n.Name, typ: typeStr})
-		}
-	}
-	return fields
-}
-
-// renderReceiverType renders a method receiver's type expression back to
-// source-shaped text ("*Risk" / "Risk").
-func renderReceiverType(expr ast.Expr) string {
-	return exprToString(expr)
-}
-
-// renderFuncSignature renders a method's full signature the way it appears
-// in source: "func (r *Risk) Validate(ctx context.Context) error".
-func renderFuncSignature(fn *ast.FuncDecl, recvType string) string {
-	var b strings.Builder
-	b.WriteString("func ")
-	if fn.Recv != nil && len(fn.Recv.List) > 0 {
-		recvName := ""
-		if len(fn.Recv.List[0].Names) > 0 {
-			recvName = fn.Recv.List[0].Names[0].Name + " "
-		}
-		b.WriteString("(" + recvName + recvType + ") ")
-	}
-	b.WriteString(fn.Name.Name)
-	b.WriteString(renderFieldList(fn.Type.Params, true))
-	if fn.Type.Results != nil {
-		results := renderFieldList(fn.Type.Results, false)
-		if len(fn.Type.Results.List) == 1 && len(fn.Type.Results.List[0].Names) == 0 {
-			b.WriteString(" " + strings.Trim(results, "()"))
-		} else {
-			b.WriteString(" " + results)
-		}
-	}
-	return b.String()
-}
-
-// renderFieldList renders a parameter or result field list back to
-// source-shaped text, always parenthesized ("(a, b int, c string)").
-func renderFieldList(fl *ast.FieldList, _ bool) string {
-	if fl == nil || len(fl.List) == 0 {
-		return "()"
-	}
-	var parts []string
-	for _, field := range fl.List {
-		typeStr := exprToString(field.Type)
-		if len(field.Names) == 0 {
-			parts = append(parts, typeStr)
-			continue
-		}
-		names := make([]string, len(field.Names))
-		for i, n := range field.Names {
-			names[i] = n.Name
-		}
-		parts = append(parts, strings.Join(names, ", ")+" "+typeStr)
-	}
-	return "(" + strings.Join(parts, ", ") + ")"
-}
-
-// exprToString renders an ast.Expr type expression back to source-shaped
-// text for the common shapes found in authored model code (identifiers,
-// pointers, selectors, arrays/slices, maps, ellipsis, and simple generic
-// index expressions). Anything not recognized falls back to its Go %T kind
-// name in brackets rather than panicking, so an unusual type expression
-// degrades to a visible placeholder instead of crashing generation.
-func exprToString(expr ast.Expr) string {
-	switch e := expr.(type) {
-	case *ast.Ident:
-		return e.Name
-	case *ast.StarExpr:
-		return "*" + exprToString(e.X)
-	case *ast.SelectorExpr:
-		return exprToString(e.X) + "." + e.Sel.Name
-	case *ast.ArrayType:
-		if e.Len == nil {
-			return "[]" + exprToString(e.Elt)
-		}
-		return "[" + exprToString(e.Len) + "]" + exprToString(e.Elt)
-	case *ast.MapType:
-		return "map[" + exprToString(e.Key) + "]" + exprToString(e.Value)
-	case *ast.Ellipsis:
-		return "..." + exprToString(e.Elt)
-	case *ast.InterfaceType:
-		return "interface{}"
-	case *ast.StructType:
-		return "struct{}"
-	case *ast.FuncType:
-		return "func" + renderFieldList(e.Params, true)
-	case *ast.ChanType:
-		return "chan " + exprToString(e.Value)
-	case *ast.IndexExpr:
-		return exprToString(e.X) + "[" + exprToString(e.Index) + "]"
-	case *ast.BasicLit:
-		return e.Value
-	default:
-		return "?"
-	}
-}
-
-// receiverBaseTypeName extracts the bare type name from a method receiver
-// field list, unwrapping a leading pointer ("*Risk" -> "Risk"). Mirrors
-// internal/gate's unexported helper of the same name (spec_resolver.go) --
-// duplicated locally rather than exported across the package boundary
-// purely to look up a FuncDecl's owning modelObject by base type name.
-func receiverBaseTypeName(recv *ast.FieldList) string {
-	if recv == nil || len(recv.List) == 0 {
-		return ""
-	}
-	expr := recv.List[0].Type
-	if star, ok := expr.(*ast.StarExpr); ok {
-		expr = star.X
-	}
-	if ident, ok := expr.(*ast.Ident); ok {
-		return ident.Name
-	}
-	return ""
-}
-
-// docText joins a *ast.CommentGroup's text into a single trimmed line
-// (newlines collapsed to spaces) for a compact table/list cell. Returns ""
-// for a nil group.
-func docText(cg *ast.CommentGroup) string {
-	if cg == nil {
-		return ""
-	}
-	return strings.TrimSpace(strings.ReplaceAll(cg.Text(), "\n", " "))
 }
