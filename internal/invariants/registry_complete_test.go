@@ -46,7 +46,16 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// even scenario-narrating test could still assert a tautology or
 	// exercise a completely unrelated symbol and stay green through every
 	// prior AST-only or pass/fail-only check.
-	const expected = 99
+	// Task W2.3 (PLAN-scenario-generated-spec.md §3 W2.3) added a twelfth,
+	// check_spec_md_current (spec_md_current.go): the mechanical staleness
+	// gate for a domain's committed docs/gen/SPEC.md -- if a SPEC.md exists,
+	// it must be byte-identical to what a fresh `hotam gen-spec --spec` run
+	// (gate.CollectSpecRows + gate.BuildSpecFromRows, a real `go test`
+	// execution of every verified_by entry) produces right now; a domain
+	// with no SPEC.md yet (the scenario-generated-spec layer is opt-in) is
+	// an honest no-op, mirroring check_recorder_current's identical
+	// opt-in/filesystem-aware shape.
+	const expected = 100
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

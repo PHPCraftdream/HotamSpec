@@ -405,7 +405,29 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// against written, not the profile flag directly, so it stays correct for
 	// any future variance in the written set (e.g. conditional DECISIONS/
 	// ENTITIES), not just the profile switch.
-	removed, err := cleanupStaleGenFiles(genDir, written)
+	//
+	// SPEC.md (W2.3 lifecycle fix): unlike every other top-level docs/gen/
+	// projection, SPEC.md is a KNOWN, first-class projection whose
+	// regeneration is gated behind --spec (includeSpec above) for cost
+	// reasons alone (BuildSpecFromRows executes a real `go test` per
+	// verified_by entry — see includeSpec's own doc comment) — it is never
+	// an orphan just because a cheap default `gen-spec` run did not
+	// regenerate it. Passing exemptFromCleanup here tells
+	// cleanupStaleGenFiles to leave an existing SPEC.md alone whenever this
+	// run did NOT render it (includeSpec == false), instead of treating its
+	// absence from `written` as staleness the way it would for any other
+	// top-level file. When includeSpec IS true, SPEC.md is already inside
+	// `written` (repoMapDocs/mdDocs above), so it is never a cleanup
+	// candidate in that run regardless of this exemption — the exemption
+	// only matters for the includeSpec==false path, and even there it is a
+	// pure "leave present file alone" rule: it never fabricates or deletes
+	// content, it only stops the DEFAULT run from mistaking "not
+	// regenerated this run" for "orphaned".
+	var exemptFromCleanup []string
+	if !includeSpec {
+		exemptFromCleanup = []string{"SPEC.md"}
+	}
+	removed, err := cleanupStaleGenFiles(genDir, written, exemptFromCleanup)
 	if err != nil {
 		return written, nil, err
 	}
@@ -422,10 +444,28 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 // thinking/ and tools/ ARE fully globbed because every file in them is
 // generator-owned. It returns the sorted list of deleted file paths so the
 // caller can report the shrinkage.
-func cleanupStaleGenFiles(genDir string, written []string) ([]string, error) {
+//
+// exemptTopLevelNames (W2.3): a small, explicit list of top-level filenames
+// (e.g. "SPEC.md") that this call must NEVER remove, regardless of whether
+// they appear in written — distinct from every other candidate, whose
+// absence from written IS staleness. This is for a projection that is
+// KNOWN to the generator (its filename is still in topLevelFiles below, so
+// REPO-MAP.md keeps listing it — see genSpec's own repoMapDocs comment) but
+// whose regeneration this particular run deliberately skipped for cost
+// reasons, not because it stopped being wanted. An exempt name that genSpec
+// DID write this run (e.g. a `--spec` invocation) is harmless to also list
+// here — it is already in writtenSet and would never have been a deletion
+// candidate anyway, so callers are free to pass a fixed exemption list
+// without conditioning it on whether this particular run happened to write
+// that file.
+func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames []string) ([]string, error) {
 	writtenSet := make(map[string]bool, len(written))
 	for _, p := range written {
 		writtenSet[filepath.Clean(p)] = true
+	}
+	exemptSet := make(map[string]bool, len(exemptTopLevelNames))
+	for _, name := range exemptTopLevelNames {
+		exemptSet[filepath.Clean(filepath.Join(genDir, name))] = true
 	}
 
 	// (1) Closed list of top-level docs/gen/ filenames genSpec ever produces.
@@ -460,7 +500,7 @@ func cleanupStaleGenFiles(genDir string, written []string) ([]string, error) {
 	var removed []string
 	for _, c := range candidates {
 		cp := filepath.Clean(c)
-		if writtenSet[cp] {
+		if writtenSet[cp] || exemptSet[cp] {
 			continue
 		}
 		if _, err := os.Stat(cp); err != nil {
