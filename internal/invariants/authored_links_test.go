@@ -7,6 +7,7 @@ import (
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	hotamspec "github.com/PHPCraftdream/HotamSpec/internal/recorder/canon"
 )
 
 // writeAuthoredSpecFixture writes a single Go source file under
@@ -130,20 +131,37 @@ func TestCheckImplementedBySymbolResolvable_FiresOnMalformedEntry(t *testing.T) 
 }
 
 // TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip is the
-// break->fix mutation proof: an implemented_by entry pointing at a symbol
-// that exists passes; deleting the symbol (simulating a rename that orphans
-// the reference) makes the check fire; restoring the symbol makes it pass
-// again.
+// break->fix mutation proof for R-authored-spec-links-mechanically-checked's
+// structural floor: an implemented_by entry pointing at a symbol that exists
+// passes; deleting the symbol (simulating a rename that orphans the reference)
+// makes the check fire; restoring the symbol makes it pass again. The
+// soft->stale(red)->fresh(green) round-trip MUST stay intact -- it is the one
+// signal an AST-only resolvable check can never fake, and the coverage-proof
+// gate (check_scenario_executes_impl) relies on this test actually executing
+// checkImplementedBySymbolResolvable's lines three times across the mutation.
+//
+// Rewritten onto the hotamspec scenario recorder (task W3.1 self-example -- the
+// recorder describing itself: this test PROVES the mechanical link check while
+// narrating that proof as a Given/When/Then scenario). A plain `go test` run is
+// PURE ASSERTS, byte-identical in enforcement to the hand-rolled version it
+// replaces: every s.Then still asserts through t.Errorf exactly as the old bare
+// `if len(vs) != 0 { t.Fatalf }` did; the only added surface is the narrative
+// steps that become the source of generated SPEC.md prose.
 func TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip(t *testing.T) {
 	t.Parallel()
+	s := hotamspec.NewScenario(t, "R-authored-spec-links-mechanically-checked",
+		"checkImplementedBySymbolResolvable catches a stale implemented_by symbol across a break->fix round-trip")
+
 	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
 	path := filepath.Join(domainDir, "spec", "model", "risk.go")
 	r := reqWithLinks("R-1", "sa", []string{"spec/model/risk.go:NewRisk"}, nil)
 	g := &ontology.Graph{DomainDir: domainDir, Stakeholders: []ontology.Stakeholder{sA}, Requirements: []ontology.Requirement{r}}
 
-	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
-		t.Fatalf("INTACT: expected no violations, got %v", vs)
-	}
+	// --- INTACT (green): the symbol is present, the reference resolves ------
+	s.Given("an authored spec/ fixture whose implemented_by symbol NewRisk is present", "symbol", "NewRisk")
+	vs := runCheck(t, "check_implemented_by_symbol_resolvable", g)
+	s.When("checkImplementedBySymbolResolvable runs against the intact fixture")
+	s.Then("no staleness violation is reported (the symbol resolves)", len(vs) == 0)
 
 	orphaned := `package model
 
@@ -154,17 +172,22 @@ type Risk struct {
 	if err := os.WriteFile(path, []byte(orphaned), 0o644); err != nil {
 		t.Fatalf("WriteFile mutation: %v", err)
 	}
-	vs := runCheck(t, "check_implemented_by_symbol_resolvable", g)
-	if !hasViolationFor(vs, "R-1") {
-		t.Fatalf("BROKEN: expected violation after removing NewRisk (staleness), got %v", vs)
+	s.Given("NewRisk is removed from the fixture (a rename that orphans the implemented_by reference)", "removed_symbol", "NewRisk")
+	vs = runCheck(t, "check_implemented_by_symbol_resolvable", g)
+	s.When("checkImplementedBySymbolResolvable runs against the stale fixture")
+	if !s.Then("a staleness violation fires for R-1 (the reference no longer resolves)", hasViolationFor(vs, "R-1")) {
+		t.Fatalf("BROKEN: mutation did not produce the expected staleness violation -- "+
+			"checkImplementedBySymbolResolvable would not catch an orphaned implemented_by symbol: %v", vs)
 	}
+	s.Value("violation_count_after_mutation", len(vs))
 
 	if err := os.WriteFile(path, []byte(authoredRiskModelSrc), 0o644); err != nil {
 		t.Fatalf("WriteFile restore: %v", err)
 	}
-	if vs := runCheck(t, "check_implemented_by_symbol_resolvable", g); len(vs) != 0 {
-		t.Fatalf("RESTORED: expected no violations after restoring NewRisk, got %v", vs)
-	}
+	s.Given("NewRisk is restored to the fixture")
+	vs = runCheck(t, "check_implemented_by_symbol_resolvable", g)
+	s.When("checkImplementedBySymbolResolvable runs against the restored fixture")
+	s.Then("no staleness violation is reported again (the break->fix round-trip closed)", len(vs) == 0)
 }
 
 // TestCheckImplementedBySymbolResolvable_MethodResolves proves methods
