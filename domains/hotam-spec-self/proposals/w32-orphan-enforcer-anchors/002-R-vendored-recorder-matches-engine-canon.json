@@ -1,0 +1,20 @@
+{
+  "kind": "Requirement",
+  "id": "R-vendored-recorder-matches-engine-canon",
+  "claim": "A domain's vendored scenario-recorder, when present at <domainDir>/spec/hotamspec/hotamspec.go, MUST be byte-identical (post-banner) to the engine's own canonical recorder source (internal/recorder/canon), so that every domain running the scenario API runs the SAME contract the engine itself defines and generates -- never a stale, locally-patched, or divergent copy. check_recorder_current (internal/invariants/recorder_check.go) mechanically enforces this via a sha256 comparison between the vendored file and the engine canon, and is an honest no-op for a domain that has not yet vendored a recorder (no file at that path).",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforcement": "ENFORCED",
+  "enforced_by": [
+    "check_recorder_current"
+  ],
+  "why": "PLAN-scenario-generated-spec.md §2 D1: the scenario-recorder (the hotamspec Scenario/Given/When/Then API) is VENDORED into a consumer domain's own spec/ module as a generated single-package file -- the same crystal-style copy pattern, NOT a cross-module `replace` (which would reopen the NEW-2-bis dependency debt). Vendoring means the domain compiles and runs its OWN copy; without an integrity check that copy could silently drift from the engine canon (a partial update, a local patch, a stale vendoring), so a domain's scenario artifacts would be produced by a DIFFERENT contract than the engine documents and generates SPEC.md from -- defeating the byte-identical-across-domains guarantee the recorder's deterministic renderer exists to provide. check_recorder_current closes that the same filesystem-aware, honest-no-op-when-absent shape check_graph_lock_pins_graph_json already established for graph.json+graph.lock integrity (R-no-hand-edit-graph): a vendored recorder that diverges from the canon is the recorder-side analog of a hand-edited graph, and is detected the same way (sha256, content-addressed). This requirement is the self-hosting anchor (W3.2 spirit) for the orphan-enforcer gate check_bijection_r_to_enforcer flagged on hotam-spec-self: the engine holds its own vendored-recorder integrity obligation, symmetric to the one it imposes on consumer domains.",
+  "relations": [
+    {"kind": "refines", "target": "R-authored-spec-projections-are-derived"}
+  ],
+  "evidence": ["PLAN-scenario-generated-spec.md §2 D1 and §3 W1.1 name check_recorder_current verbatim and the vendoring+sha256 shape; internal/invariants/recorder_check.go registers the check_* with its full Rule/Why; this anchor closes the W3.2 self-hosting debt where check_bijection_r_to_enforcer flagged check_recorder_current as an orphan enforcer on hotam-spec-self"],
+  "source_refs": [
+    "PLAN-scenario-generated-spec.md",
+    "internal/invariants/recorder_check.go"
+  ]
+}

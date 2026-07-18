@@ -27,7 +27,7 @@ package `generator`
 
 ### `ModelLayerCounts` (struct)
 
-ModelLayerCounts is the structural inventory COVERAGE.md (§4's layer progression: models -> fields -> methods -> tests) reads from the SAME go/ast scan BuildModels performs, so the two projections never disagree about how many objects/fields/methods a domain's authored spec/ tree declares. Purely a count -- no rendering concern lives here.
+ModelLayerCounts is the structural inventory COVERAGE.md (§4's layer progression: models -> fields -> methods -> tests) reads from the SAME go/ast scan BuildModels performs (now gate.ScanAuthoredModels), so the two projections never disagree about how many objects/fields/methods a domain's authored spec/ tree declares. Purely a count -- no rendering concern lives here.
 
 **Fields:**
 
@@ -59,7 +59,7 @@ _No exported objects or typed errors in this file._
 
 ## `internal/loader/lock_real_domains_test.go`
 
-package `loader`
+package `loader_test`
 
 _No exported objects or typed errors in this file._
 

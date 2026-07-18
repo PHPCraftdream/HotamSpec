@@ -444,6 +444,7 @@
     "R-root-claude-md-is-sentinel-only",
     "R-rules-as-data",
     "R-run-speed-guarded",
+    "R-scenario-spec-obligations-mechanically-enforced",
     "R-scope-is-projection",
     "R-scope-overlap-generated",
     "R-seed-in-src",
@@ -499,6 +500,7 @@
     "R-unresolvable-conflict-carries-variants",
     "R-user-request-decomposed-to-tickets",
     "R-variant-choice-is-decision",
+    "R-vendored-recorder-matches-engine-canon",
     "R-verify-closure-per-action",
     "R-wheel-build-atomic-verified",
     "R-work-within-launch-dir",
@@ -960,6 +962,36 @@
     },
     {
       "assumptions": [],
+      "claim": "PLAN-scenario-generated-spec.md §3 W2 (the obligatoriness wave) makes the scenario-generated-spec layer's obligations mechanically real rather than aspirational, and each of its four gates shall be anchored here as the claim it enforces: check_settled_requires_scenario (in a domain whose manifest declares discipline:\"full\", every SETTLED requirement carries a real carrier -- enforced_by OR implemented_by+verified_by+at-least-one-scenario-narrated verified_by test; an honest no-op for every domain that has not opted in); check_scenario_executes_impl (for every authored-path requirement with implemented_by AND verified_by both non-empty, regardless of discipline:full, every implemented_by symbol is actually executed by at least one verified_by test under real `go test -coverprofile` instrumentation); check_spec_md_current (a committed docs/gen/SPEC.md, when present, is byte-identical to a fresh `hotam gen-spec --spec` run; an honest no-op for a domain with no SPEC.md yet); and check_model_complete (in a discipline:\"full\" domain, every authored model object with at least one exported method cited as implemented_by is COMPLETE, each cited method backed by a scenario-narrated verified_by test). Each gate is an honest no-op before its own opt-in trigger fires (no discipline:full, no SPEC.md, no authored-path pair), so the migration is per-domain and carries no long-lived opt-out flag.",
+      "enforced_by": [
+        "check_settled_requires_scenario",
+        "check_scenario_executes_impl",
+        "check_spec_md_current",
+        "check_model_complete"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [
+        "PLAN-scenario-generated-spec.md §2 D3-D5 and §3 W2.1-W2.4 name these four gates verbatim and the opt-in shape; internal/invariants/scenario_discipline.go, scenario_coverage.go, spec_md_current.go, model_complete.go register each check_* with its full Rule/Why; this anchor closes the W3.2 self-hosting debt where check_bijection_r_to_enforcer flagged all four as orphan enforcers on hotam-spec-self (the engine modeling itself must anchor its own gates to claims, exactly as consumer domains must)"
+      ],
+      "history": [],
+      "id": "R-scenario-spec-obligations-mechanically-enforced",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "PLAN-scenario-generated-spec.md",
+        "internal/invariants/scenario_discipline.go",
+        "internal/invariants/scenario_coverage.go",
+        "internal/invariants/spec_md_current.go",
+        "internal/invariants/model_complete.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "PLAN-scenario-generated-spec.md §0/§2 D4-D5/§3 W2: the authored-spec discipline MUST be mechanically obligatory once a domain opts in, not held together by text. Before W2, the engine's authored-spec layer was a NO-OP contract (authored_links.go:33-36) -- a consumer domain with zero authored models passed every check cleanly, so the methodology connected into sub-projects as INSTRUCTION only, never as a binding obligation. W2's four gates close that: each turns one facet of the scenario-generated-spec layer (per-requirement carrier existence, coverage-proof of the carrier, generated SPEC.md currency, model-level completeness) into a mechanical gate with an honest opt-in trigger, so obligation is per-domain and one-way (the discipline:\"full\" flip lands in the same commit that completes a domain's migration, per §2 D4). These four check_* invariants are the engine mechanism that makes this requirement ENFORCED; the gates are registered in internal/invariants/ (scenario_discipline.go, scenario_coverage.go, spec_md_current.go, model_complete.go) and each has its own mutation-round-trip test proving it fires on a real mutated fixture and clears once fixed. This requirement is the self-hosting anchor (W3.2 spirit) for the four orphan-enforcer gates check_bijection_r_to_enforcer flagged on hotam-spec-self: the engine holds itself to the same obligation it imposes on consumer domains."
+    },
+    {
+      "assumptions": [],
       "claim": "An authored-spec requirement's link to code shall carry two ORTHOGONAL fields, never collapsed into one: implemented_by names WHERE the requirement is EMBODIED (a path-qualified file:symbol reference into the domain's authored spec/ tree, the model/method that realizes the claim), and verified_by names WHERE the requirement is PROVEN (a path-qualified file:test reference, the executable test that demonstrates the claim holds). A symbol that embodies a requirement without a test that proves it, or a test cited without the symbol it exercises, is an incomplete SpecLink -- ENFORCED status requires both halves together (see R-enforced-requires-enforcer-or-authored-link), but the two fields answer two DIFFERENT questions and shall never be merged into a single field or treated as aliases of one another.",
       "enforced_by": [],
       "enforcement": "ENFORCED",
@@ -1132,6 +1164,36 @@
       "status": "DRAFT",
       "verified_by": [],
       "why": "Preserves an intent that was about to be silently lost. R-land-gate-tier-selector and R-land-gate-tier-selector-fails-closed originally claimed this wiring existed (Python-era wording: 'the per-proposal LAND verify step ... shall, by default, run the T1 targeted-enforcer subset'); that was never true in the Go port and both were reworded 2026-07-12 to describe only the standalone hotam gate selector's own contract, dropping the 'wired into land by default' assertion because it wasn't real. But the underlying design intent -- avoid the full-suite time tax on every proposal apply, since most proposals touch exactly one node whose enforced_by already names its enforcer(s) -- is still a live, undecided idea, not a rejected one. Held open here as its own DRAFT rather than quietly dropped when the two ENFORCED claims were narrowed (R-conflict-is-connector-node's generative law: important-yet-invisible tension gets a named node, not silent extinguishment). Scope note for whoever settles this: cmd/hotam/land.go's cmdLand would need to call gate.SelectTier1(targetAnchor, g) after apply and, on Confident=true, run `go test -run '^(name1|name2|...)$' ./...` against the resolved node_ids instead of the current always-full all-violations + implicit full go test at commit boundaries; on Confident=false it must still run the full suite (all-violations already does the structural half; the gap is in NOT also running a scoped `go test` subset). Two open questions for the steward: (1) does 'the full suite' here mean go test ./... or just all-violations (they check different things -- all-violations is structural invariants, go test also runs enforcer test bodies); (2) is a per-land `go test -run` subprocess spawn (Windows subprocess overhead, per the perf note already recorded in R-land-gate-tier-selector's why) actually faster than the current all-violations-only path for the common case, or does it need benchmarking first. Not yet implemented; land's current behavior (apply -> gen-spec -> all-violations, no gate call) is unaffected."
+    },
+    {
+      "assumptions": [],
+      "claim": "A domain's vendored scenario-recorder, when present at <domainDir>/spec/hotamspec/hotamspec.go, MUST be byte-identical (post-banner) to the engine's own canonical recorder source (internal/recorder/canon), so that every domain running the scenario API runs the SAME contract the engine itself defines and generates -- never a stale, locally-patched, or divergent copy. check_recorder_current (internal/invariants/recorder_check.go) mechanically enforces this via a sha256 comparison between the vendored file and the engine canon, and is an honest no-op for a domain that has not yet vendored a recorder (no file at that path).",
+      "enforced_by": [
+        "check_recorder_current"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [
+        "PLAN-scenario-generated-spec.md §2 D1 and §3 W1.1 name check_recorder_current verbatim and the vendoring+sha256 shape; internal/invariants/recorder_check.go registers the check_* with its full Rule/Why; this anchor closes the W3.2 self-hosting debt where check_bijection_r_to_enforcer flagged check_recorder_current as an orphan enforcer on hotam-spec-self"
+      ],
+      "history": [
+        {
+          "at": "2026-07-19",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: W3.2 orphan-enforcer anchor task (2026-07-19): CONFRONT opposite-marker false positive (must; shared tokens: between/must/present/source -- generic vocabulary, no topical anchor about recorder sha256 integrity vs domain-overview generated projection) against R-domain-overview-projection -- this CREATE adds a new requirement anchoring check_recorder_current (orphan enforcer flagged by check_bijection_r_to_enforcer on self), claim is about vendored scenario-recorder byte-identity with the engine canon; R-domain-overview-projection governs the OVERVIEW/PIPELINE.md generated projection, a distinct concept sharing only generic modal/vocabulary tokens; same false-positive shape W2 task236-selfexample already recorded (2026-07-16) for the authored-spec family"
+        }
+      ],
+      "id": "R-vendored-recorder-matches-engine-canon",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "PLAN-scenario-generated-spec.md",
+        "internal/invariants/recorder_check.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "PLAN-scenario-generated-spec.md §2 D1: the scenario-recorder (the hotamspec Scenario/Given/When/Then API) is VENDORED into a consumer domain's own spec/ module as a generated single-package file -- the same crystal-style copy pattern, NOT a cross-module `replace` (which would reopen the NEW-2-bis dependency debt). Vendoring means the domain compiles and runs its OWN copy; without an integrity check that copy could silently drift from the engine canon (a partial update, a local patch, a stale vendoring), so a domain's scenario artifacts would be produced by a DIFFERENT contract than the engine documents and generates SPEC.md from -- defeating the byte-identical-across-domains guarantee the recorder's deterministic renderer exists to provide. check_recorder_current closes that the same filesystem-aware, honest-no-op-when-absent shape check_graph_lock_pins_graph_json already established for graph.json+graph.lock integrity (R-no-hand-edit-graph): a vendored recorder that diverges from the canon is the recorder-side analog of a hand-edited graph, and is detected the same way (sha256, content-addressed). This requirement is the self-hosting anchor (W3.2 spirit) for the orphan-enforcer gate check_bijection_r_to_enforcer flagged on hotam-spec-self: the engine holds its own vendored-recorder integrity obligation, symmetric to the one it imposes on consumer domains."
     },
     {
       "assumptions": [

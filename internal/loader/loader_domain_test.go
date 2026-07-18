@@ -32,7 +32,12 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// and R-authored-spec-projections-are-derived -- the authored-spec
 		// discipline's own objects+fields modeled as first-class graph nodes
 		// (PLAN-authored-spec-discipline.md §4/§5/§6/§7).
-		{"requirements", len(g.Requirements), 290},
+		// 290 + 2: task W3.1b landed R-scenario-spec-obligations-mechanically-
+		// enforced and R-vendored-recorder-matches-engine-canon, anchoring the
+		// five W1.1/W2.1-W2.4 scenario-generated-spec gates that
+		// check_bijection_r_to_enforcer had flagged as orphan enforcers on
+		// hotam-spec-self (the engine holding itself to its own obligation).
+		{"requirements", len(g.Requirements), 292},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
