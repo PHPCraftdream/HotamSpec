@@ -29,6 +29,15 @@ var genTopLevelOwned = []string{
 	"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
 	"PIPELINE.md", "TRACEABILITY.md", "MODELS.md", "COVERAGE.md",
 	"REPO-MAP.md",
+	// SPEC.md (W1.3) is written only under `hotam gen-spec --spec` -- opt-in,
+	// like DECISIONS.md/ENTITIES.md's predicate-gated entries below -- but
+	// unlike those two, its presence has no cheap in-memory predicate to gate
+	// on (BuildSpec's own cost IS a real `go test` run per verified_by entry,
+	// see internal/generator/spec.go's doc comment): if it exists on disk at
+	// all, only the generator could have written it (W2.3's genSpec never
+	// orphan-deletes it), so it belongs in the always-owned set exactly like
+	// the other top-level entries, present or not.
+	"SPEC.md",
 	"atoms-operator.md", "atoms-substrate.md", "atoms-discipline.md", "atoms-check.md",
 	"live-state.md",
 	"AGENT-CONTEXT.md",
