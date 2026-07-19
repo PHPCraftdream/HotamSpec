@@ -438,6 +438,75 @@ func TestApply_Requirement_ClearBlockedOn(t *testing.T) {
 	}
 }
 
+// TestApply_Requirement_FlipEnforceabilityToDefaultValueTakesEffect covers a
+// real bug found by task W4.2 (prat batch 1): an UPDATE proposal explicitly
+// setting Enforceability to ENFORCEABLE (the ontology default value) was a
+// silent no-op. The old mutate.go line wrapped p.Enforceability in
+// defaultStr(..., ENFORCEABLE) before coalescing against the ENFORCEABLE
+// sentinel, so an explicit "ENFORCEABLE" was indistinguishable from
+// "omitted" and always collapsed to preserving the OLD value — an
+// INHERENTLY_PROSE requirement could never be flipped to ENFORCEABLE via
+// apply-proposal, only away from it. Fixed by passing p.Enforceability raw
+// with "" as the omitted-sentinel (the same fix already applied to the
+// sibling Enforcement field above, for the identical asymmetry).
+func TestApply_Requirement_FlipEnforceabilityToDefaultValueTakesEffect(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].Enforceability = ontology.EnforceabilityINHERENTLY_PROSE
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:             "R-1",
+		Claim:          "claim R-1",
+		Owner:          "sa",
+		Status:         ontology.StatusSETTLED,
+		Enforceability: ontology.EnforceabilityENFORCEABLE,
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.Enforceability != ontology.EnforceabilityENFORCEABLE {
+		t.Errorf("Enforceability = %q, want %q (explicit flip must take effect, not collapse to preserved old value)",
+			r.Enforceability, ontology.EnforceabilityENFORCEABLE)
+	}
+}
+
+// TestApply_Requirement_UpdateOmittedEnforceabilityPreservesExisting pins the
+// unchanged patch semantics alongside the fix above: an UPDATE proposal that
+// OMITS enforceability (empty string) must still preserve whatever
+// enforceability was already set, exactly as blocked_on/why/etc. already do.
+func TestApply_Requirement_UpdateOmittedEnforceabilityPreservesExisting(t *testing.T) {
+	t.Parallel()
+	g := baseGraph()
+	g.Requirements[0].Enforceability = ontology.EnforceabilityINHERENTLY_PROSE
+	path := writeTempGraph(t, g)
+
+	p := ProposedRequirement{
+		ID:     "R-1",
+		Claim:  "claim R-1 updated text",
+		Owner:  "sa",
+		Status: ontology.StatusSETTLED,
+		// Enforceability omitted entirely.
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	got := reload(t, path)
+	r, ok := findReq(got, "R-1")
+	if !ok {
+		t.Fatalf("R-1 missing")
+	}
+	if r.Enforceability != ontology.EnforceabilityINHERENTLY_PROSE {
+		t.Errorf("Enforceability = %q, want preserved %q (omitted field must not reset to default)",
+			r.Enforceability, ontology.EnforceabilityINHERENTLY_PROSE)
+	}
+}
+
 // TestApply_Requirement_UpdateOmittedBlockedOnPreservesExisting pins the
 // unchanged patch semantics: an UPDATE proposal that OMITS blocked_on (an
 // empty string, not the sentinel) must preserve whatever blocked_on was

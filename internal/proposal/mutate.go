@@ -199,7 +199,19 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.ImplementedBy = resolveImplementedBy(p.ImplementedBy, existing.ImplementedBy)
 		applied.VerifiedBy = resolveVerifiedBy(p.VerifiedBy, existing.VerifiedBy)
 		applied.Relations = coalesceRelations(p.Relations, existing.Relations)
-		applied.Enforceability = coalesceStr(defaultStr(p.Enforceability, ontology.EnforceabilityENFORCEABLE), ontology.EnforceabilityENFORCEABLE, existing.Enforceability)
+		// Enforceability coalesce: same asymmetry bug the Enforcement field
+		// above was already fixed for (see that field's comment). The old
+		// form wrapped p.Enforceability in defaultStr(..., ENFORCEABLE)
+		// before coalescing against the ENFORCEABLE sentinel, so an explicit
+		// "ENFORCEABLE" (the CREATE-path default value) was
+		// indistinguishable from "omitted" and always collapsed to
+		// preserving the old value — an UPDATE proposal could never flip
+		// INHERENTLY_PROSE -> ENFORCEABLE (found by task W4.2, prat batch 1:
+		// R-agent-mode-four-typed and 3 siblings could not actually flip via
+		// `hotam apply-proposal`). Passing p.Enforceability raw with ""
+		// as the omitted-sentinel keeps "omitted == preserve" while letting
+		// an explicit ENFORCEABLE/INHERENTLY_PROSE/NOT_APPLICABLE take effect.
+		applied.Enforceability = coalesceStr(p.Enforceability, "", existing.Enforceability)
 		applied.MTag = coalesceStr(p.MTag, "", existing.MTag)
 		applied.Summary = coalesceStr(p.Summary, "", existing.Summary)
 		applied.CreatedAt = coalesceStr(p.CreatedAt, "", existing.CreatedAt)
