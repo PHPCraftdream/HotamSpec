@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -221,5 +222,123 @@ func TestBuildCoverage_NoVerifiedByAtAll_RatchetIsEmpty(t *testing.T) {
 	got := BuildCoverage(g)
 	if !strings.Contains(got, "_No SETTLED requirement in this domain carries `verified_by` yet — the ratchet has nothing to count._") {
 		t.Errorf("BuildCoverage did not render the calm empty-ratchet notice:\n%s", got)
+	}
+}
+
+// disciplineExemptFixtureGraph builds a discipline:full graph exercising the
+// COVERAGE.md "Discipline-exempt (inherently prose, no carrier)" section: a
+// SETTLED+INHERENTLY_PROSE requirement with NO carrier (R-prose-no-carrier,
+// the actively-exempted set), a SETTLED+INHERENTLY_PROSE requirement that
+// DOES carry enforced_by (R-prose-with-engine -- NOT in the section, the
+// engine-path exemption already covers it), and a SETTLED+ENFORCEABLE
+// requirement with no carrier (R-ordinary-no-carrier -- NOT in the section,
+// it is roadmap debt, not exempt). All three are needed so the section test
+// can prove the listing is the precise intersection (INHERENTLY_PROSE AND
+// no carrier), not just INHERENTLY_PROSE, and not just no-carrier.
+func disciplineExemptFixtureGraph(discipline string) *ontology.Graph {
+	return &ontology.Graph{
+		DomainDir:   "",
+		SelfHosting: false,
+		Discipline:  discipline,
+		Requirements: []ontology.Requirement{
+			{
+				ID:             "R-prose-no-carrier",
+				Claim:          "Found a domain wave-before-specific (architectural, inherently prose).",
+				Owner:          "spec-author",
+				Status:         ontology.StatusSETTLED,
+				Enforcement:    ontology.EnforcementPROSE,
+				Enforceability: ontology.EnforceabilityINHERENTLY_PROSE,
+			},
+			{
+				ID:             "R-prose-with-engine",
+				Claim:          "Another inherently-prose note that happens to reference an engine mechanism.",
+				Owner:          "spec-author",
+				Status:         ontology.StatusSETTLED,
+				Enforcement:    ontology.EnforcementENFORCED,
+				Enforceability: ontology.EnforceabilityINHERENTLY_PROSE,
+				EnforcedBy:     []string{"check_enforced_names_invariant"},
+			},
+			{
+				ID:             "R-ordinary-no-carrier",
+				Claim:          "An ordinary ENFORCEABLE claim that has no carrier yet (roadmap debt).",
+				Owner:          "spec-author",
+				Status:         ontology.StatusSETTLED,
+				Enforcement:    ontology.EnforcementPROSE,
+				Enforceability: ontology.EnforceabilityENFORCEABLE,
+			},
+		},
+	}
+}
+
+// sectionRange returns the substring of doc spanning the heading `heading`
+// (the "## <heading>" line) up to (but not including) the NEXT "## " heading
+// after it, or "" if the heading is absent. Used to scope substring searches
+// to ONE section so a string appearing elsewhere in the doc does not produce
+// a false positive.
+func sectionRange(doc, heading string) string {
+	startMarker := "## " + heading
+	start := strings.Index(doc, startMarker)
+	if start < 0 {
+		return ""
+	}
+	rest := doc[start+1:]
+	next := strings.Index(rest, "\n## ")
+	if next < 0 {
+		return doc[start:]
+	}
+	return doc[start : start+1+next]
+}
+
+// TestBuildCoverage_DisciplineExemptSection_ListsExemptedInDisciplineFull
+// proves that for a discipline:full domain the new section is rendered, AND
+// its table lists EXACTLY the SETTLED+INHERENTLY_PROSE+no-carrier subset
+// (R-prose-no-carrier) -- NOT the INHERENTLY_PROSE requirement that has a
+// carrier (R-prose-with-engine), and NOT the ordinary ENFORCEABLE no-carrier
+// requirement (R-ordinary-no-carrier). This is the visibility contract for
+// check_settled_requires_scenario's INHERENTLY_PROSE exemption.
+func TestBuildCoverage_DisciplineExemptSection_ListsExemptedInDisciplineFull(t *testing.T) {
+	t.Parallel()
+	g := disciplineExemptFixtureGraph(loader.DisciplineFull)
+	if g.Discipline != loader.DisciplineFull {
+		t.Fatalf("test setup: expected DisciplineFull, got %q", g.Discipline)
+	}
+	got := BuildCoverage(g)
+
+	section := sectionRange(got, "Discipline-exempt (inherently prose, no carrier)")
+	if section == "" {
+		t.Fatalf("BuildCoverage for a discipline:full domain did not render the \"Discipline-exempt\" section:\n%s", got)
+	}
+	if !strings.Contains(section, "R-prose-no-carrier") {
+		t.Errorf("Discipline-exempt section missing R-prose-no-carrier (the actively-exempted requirement):\n%s", section)
+	}
+	if strings.Contains(section, "R-prose-with-engine") {
+		t.Errorf("Discipline-exempt section wrongly lists R-prose-with-engine (it carries enforced_by -- not actively exempted):\n%s", section)
+	}
+	if strings.Contains(section, "R-ordinary-no-carrier") {
+		t.Errorf("Discipline-exempt section wrongly lists R-ordinary-no-carrier (ENFORCEABLE, not INHERENTLY_PROSE -- roadmap debt, not exempt):\n%s", section)
+	}
+}
+
+// TestBuildCoverage_DisciplineExemptSection_AbsentForNonDisciplineFull proves
+// the matching honest-no-op: for a domain that has NOT opted into
+// discipline:full, the section MUST NOT appear at all (the exemption is
+// dormant there). This is the same graph as the discipline:full test above,
+// only the Discipline field differs -- so the contrast is exactly the
+// opt-in boundary.
+func TestBuildCoverage_DisciplineExemptSection_AbsentForNonDisciplineFull(t *testing.T) {
+	t.Parallel()
+	g := disciplineExemptFixtureGraph("") // soft discipline -- every domain today
+	if g.Discipline != "" {
+		t.Fatalf("test setup: expected empty Discipline, got %q", g.Discipline)
+	}
+	got := BuildCoverage(g)
+	if sectionRange(got, "Discipline-exempt (inherently prose, no carrier)") != "" {
+		t.Errorf("BuildCoverage for a non-discipline:full domain rendered the \"Discipline-exempt\" section (must be absent):\n%s", got)
+	}
+	// Sanity: the INHERENTLY_PROSE requirement still appears in the existing
+	// permanent-discipline table for a soft-discipline domain (that section is
+	// discipline-agnostic); only the NEW section is discipline:full-gated.
+	if !strings.Contains(got, "## Permanent discipline") {
+		t.Errorf("BuildCoverage missing the discipline-agnostic Permanent discipline section entirely:\n%s", got)
 	}
 }

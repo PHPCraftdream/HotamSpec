@@ -287,6 +287,67 @@ func TestCheckSettledRequiresScenario_MUTATION_FlipDisciplineFullRoundTrip(t *te
 	}
 }
 
+// TestCheckSettledRequiresScenario_GreenWithInherentlyProse proves the THIRD
+// branch (the INHERENTLY_PROSE exemption): a SETTLED requirement with empty
+// enforced_by/implemented_by/verified_by in a discipline:full domain produces
+// NO violation the moment its Enforceability field is honestly tagged
+// INHERENTLY_PROSE -- the residual category no snapshot gate could
+// mechanically check (PLAN-scenario-generated-spec.md §2 D4 + §5 risks).
+func TestCheckSettledRequiresScenario_GreenWithInherentlyProse(t *testing.T) {
+	t.Parallel()
+	domainDir := writeScenarioDisciplineFixture(t, authoredRiskTestGoodSrc, "full")
+	r := settledReq("R-inherently-prose", "sa") // no enforced_by, no implemented_by, no verified_by
+	r.Enforceability = ontology.EnforceabilityINHERENTLY_PROSE
+	g := graphForDiscipline(t, domainDir, []ontology.Requirement{r})
+	if g.Discipline != loader.DisciplineFull {
+		t.Fatalf("test setup: expected DisciplineFull, got %q", g.Discipline)
+	}
+	if vs := runCheck(t, "check_settled_requires_scenario", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for a SETTLED+INHERENTLY_PROSE requirement with no carrier in a discipline:full domain, got %v", vs)
+	}
+}
+
+// TestCheckSettledRequiresScenario_OrdinaryEnforceableStillFires proves the
+// INHERENTLY_PROSE exemption does NOT overreach to ordinary requirements: the
+// SAME shape (empty enforced_by/implemented_by/verified_by, same
+// discipline:full domain) but Enforceability=ENFORCEABLE (the ordinary
+// default) STILL produces a violation. The exemption triggers ONLY on the
+// Enforceability field, never on the bare absence of links.
+func TestCheckSettledRequiresScenario_OrdinaryEnforceableStillFires(t *testing.T) {
+	t.Parallel()
+	domainDir := writeScenarioDisciplineFixture(t, authoredRiskTestGoodSrc, "full")
+	r := settledReq("R-ordinary", "sa") // same empty shape as above ...
+	r.Enforceability = ontology.EnforceabilityENFORCEABLE // ... but the ordinary default
+	g := graphForDiscipline(t, domainDir, []ontology.Requirement{r})
+	if g.Discipline != loader.DisciplineFull {
+		t.Fatalf("test setup: expected DisciplineFull, got %q", g.Discipline)
+	}
+	vs := runCheck(t, "check_settled_requires_scenario", g)
+	if !hasViolationFor(vs, "R-ordinary") {
+		t.Fatalf("expected a violation for a SETTLED+ENFORCEABLE requirement with no carrier (exemption must NOT cover the ordinary case), got %v", vs)
+	}
+}
+
+// TestCheckSettledRequiresScenario_InherentlyProseWithCarrierIsGreenEitherWay
+// proves the INHERENTLY_PROSE exemption and the engine-path exemption are
+// independent: a SETTLED+INHERENTLY_PROSE requirement that ALSO carries an
+// enforced_by is green -- it would have been green WITHOUT the INHERENTLY_PROSE
+// tag too (engine path already exempts it), so the INHERENTLY_PROSE branch is
+// dormant here. This guards against any future refactor accidentally making
+// the two exemption branches mutually exclusive.
+func TestCheckSettledRequiresScenario_InherentlyProseWithCarrierIsGreenEitherWay(t *testing.T) {
+	t.Parallel()
+	domainDir := writeScenarioDisciplineFixture(t, authoredRiskTestGoodSrc, "full")
+	r := settledReq("R-prose-with-engine", "sa")
+	r.Enforceability = ontology.EnforceabilityINHERENTLY_PROSE
+	r.Enforcement = ontology.EnforcementENFORCED
+	r.EnforcedBy = []string{"check_enforced_names_invariant"}
+	g := graphForDiscipline(t, domainDir, []ontology.Requirement{r})
+	if vs := runCheck(t, "check_settled_requires_scenario", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for an INHERENTLY_PROSE requirement that also carries enforced_by, got %v", vs)
+	}
+}
+
 // TestResolveDiscipline_Absent proves loader.ResolveDiscipline's own
 // backward-compatibility contract directly (not merely through the check
 // above): a manifest.json with no discipline field at all resolves to "".

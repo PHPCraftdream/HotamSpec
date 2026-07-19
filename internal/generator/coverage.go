@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -40,6 +41,18 @@ import (
 // pre-existing caller) and, when supplied (gen-spec --spec only, the same
 // generator.ScenarioVerdictsFromRows map BuildTraceability accepts), overlays
 // the REAL executed verdict alongside the AST count.
+//
+// DISCIPLINE-EXEMPT SECTION (PLAN-scenario-generated-spec.md §2 D4/§5): for
+// a discipline:full domain only (g.Discipline == loader.DisciplineFull), the
+// doc additionally renders a "Discipline-exempt (inherently prose, no
+// carrier)" section naming the SETTLED subset tagged
+// Enforceability=INHERENTLY_PROSE that lacks a carrier -- the exact set
+// check_settled_requires_scenario (internal/invariants/scenario_discipline.go)
+// exempts from its carrier demand via its INHERENTLY_PROSE branch, surfaced
+// here so that exemption is visible rather than silently folded into
+// "0 violations". A non-discipline:full domain produces no such section at
+// all (the exemption is dormant there -- the same honest-no-op shape
+// loader.DisciplineFull's own doc comment establishes).
 func BuildCoverage(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) string {
 	var verdictMap map[string]ScenarioVerdict
 	if len(verdicts) > 0 {
@@ -257,7 +270,83 @@ func BuildCoverage(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) st
 		lines = append(lines, "")
 	}
 
+	// Discipline-exempt (inherently prose, no carrier) -- rendered ONLY for a
+	// discipline:full domain. This section names the exact SETTLED subset
+	// check_settled_requires_scenario (internal/invariants/scenario_discipline.go)
+	// exempts from its carrier demand via the INHERENTLY_PROSE branch: a
+	// requirement tagged Enforceability=INHERENTLY_PROSE that ALSO lacks a
+	// carrier (no enforced_by, no implemented_by+verified_by+scenario). For a
+	// non-discipline:full domain this section MUST NOT appear at all -- the
+	// exemption is dormant there, so naming it would be noise (the same
+	// honest-no-op shape loader.DisciplineFull's own doc comment draws; see
+	// coverage.go's computeScenarioRatchet for the established tone).
+	if g.Discipline == loader.DisciplineFull {
+		var disciplineExempt []ontology.Requirement
+		for _, r := range settled {
+			if r.Enforceability == ontology.EnforceabilityINHERENTLY_PROSE &&
+				requirementLacksDisciplineCarrier(specRoot, r) {
+				disciplineExempt = append(disciplineExempt, r)
+			}
+		}
+		lines = append(lines, "## Discipline-exempt (inherently prose, no carrier)")
+		lines = append(lines, "")
+		lines = append(lines,
+			"ONLY for a discipline:full domain (PLAN-scenario-generated-spec.md §2 D4 / §5 risks: «категория "+
+				"«inherently prose» сжимается при миграции per-requirement; любое остаточное исключение видно в "+
+				"COVERAGE, не прячется»): the residual subset of SETTLED requirements tagged "+
+				"`enforceability=INHERENTLY_PROSE` that lack ANY carrier (no `enforced_by` engine mechanism, no "+
+				"`implemented_by`+`verified_by`+scenario authored path) — exactly the set "+
+				"`check_settled_requires_scenario` exempts from its carrier demand so a domain can reach a clean "+
+				"0 violations without bolting an architectural/temporal-order claim onto a fake mechanism (the same "+
+				"class as R-domain-founded-in-wave-order, deliberately left honestly PROSE). The exemption is "+
+				"surfaced HERE so it is visible, never folded silently into \"0 violations\". A member of this set "+
+				"MAY also appear in the permanent-discipline table above; this section exists specifically to name "+
+				"the discipline:full gate's actively-exempted subset, distinct from the broader INHERENTLY_PROSE "+
+				"roster. This section never appears for a non-discipline:full domain — the exemption is dormant there.")
+		lines = append(lines, "")
+		if len(disciplineExempt) == 0 {
+			lines = append(lines, "_None — no INHERENTLY_PROSE SETTLED requirement in this discipline:full domain lacks a carrier (the exemption is dormant)._")
+			lines = append(lines, "")
+		} else {
+			lines = append(lines, "| id | owner | claim |")
+			lines = append(lines, "|---|---|---|")
+			for _, r := range disciplineExempt {
+				lines = append(lines, "| `"+r.ID+"` | `"+r.Owner+"` | "+Cell(r.Claim)+" |")
+			}
+			lines = append(lines, "")
+		}
+	}
+
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
+}
+
+// requirementLacksDisciplineCarrier mirrors
+// checkSettledRequiresScenario's carrier test (internal/invariants/
+// scenario_discipline.go): the INVERSE of "would pass without the
+// INHERENTLY_PROSE exemption" -- TRUE when the requirement satisfies NEITHER
+// the engine path (enforced_by non-empty) NOR the authored path
+// (implemented_by non-empty AND verified_by non-empty AND at least one
+// verified_by entry resolves to a test whose body calls
+// hotamspec.NewScenario(...)). Used by BuildCoverage's discipline-exempt
+// section to name exactly the SETTLED+INHERENTLY_PROSE subset the gate is
+// actively exempting (a requirement that already has a carrier would not
+// have fired a violation anyway, so it is not "actively exempted" -- only
+// the carrier-less subset is). Reuses resolveTraceabilityLinks's per-entry
+// hasScenario signal (the same AST-only signal computeScenarioRatchet uses
+// and the gate's anyVerifiedByEntryHasScenario re-derives independently).
+func requirementLacksDisciplineCarrier(specRoot string, r ontology.Requirement) bool {
+	if len(r.EnforcedBy) > 0 {
+		return false
+	}
+	if len(r.ImplementedBy) == 0 || len(r.VerifiedBy) == 0 {
+		return true
+	}
+	for _, l := range resolveTraceabilityLinks(specRoot, r.VerifiedBy, false) {
+		if l.hasScenario {
+			return false
+		}
+	}
+	return true
 }
 
 // authoredLinksAllResolve reports whether r carries at least one

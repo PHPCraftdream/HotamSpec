@@ -280,6 +280,7 @@ var boolFlagNames = map[string]bool{
 	"json":               true,
 	"land":               true,
 	"require-provenance": true,
+	"spec":               true,
 	"h":                  true,
 	"help":               true,
 }

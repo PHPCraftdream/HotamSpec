@@ -38,6 +38,26 @@ import (
 // verified_by OR no verified_by entry narrates a scenario)) -- an
 // actionable diagnostic, not a generic "not compliant" message.
 //
+// INHERENTLY_PROSE EXEMPTION (PLAN-scenario-generated-spec.md §2 D4 + §5
+// risks: "категория «inherently prose» сжимается при миграции
+// per-requirement; любое остаточное исключение видно в COVERAGE, не
+// прячется"): a SETTLED requirement whose Enforceability field equals
+// ontology.EnforceabilityINHERENTLY_PROSE is EXEMPT from both paths above --
+// the same early-`continue` shape as the engine-path exemption, an
+// independent third branch. This is the residual category of claims that are
+// architectural/temporal-order in nature and cannot be mechanically checked
+// by ANY snapshot gate (the same class as R-domain-founded-in-wave-order,
+// which was deliberately left honestly PROSE rather than forced onto a fake
+// mechanism). The exemption is intentionally NARROW: it triggers ONLY on the
+// Enforceability field, never on Enforcement, never on the absence of links
+// alone -- so a steward must EXPLICITLY tag a requirement
+// enforceability:"INHERENTLY_PROSE" in graph.json to claim it, and that tag
+// is itself visible (it surfaces the requirement in COVERAGE.md's
+// "Permanent discipline" table, and -- for a discipline:full domain whose
+// requirement lacks a carrier -- in the "Discipline-exempt" section
+// internal/generator/coverage.go renders, so the exemption is never folded
+// silently into "0 violations").
+//
 // SCOPE EXCLUSION (self-hosting engine requirements, per task instructions):
 // for a discipline:full domain, a requirement carrying a real enforced_by
 // (the engine path) is ALREADY structurally proven by
@@ -80,6 +100,20 @@ func checkSettledRequiresScenario(g *ontology.Graph) []Violation {
 			// mechanism (check_enforced_by_resolvable et al. police its
 			// resolvability elsewhere) -- exempt from the scenario demand,
 			// per the self-hosting scope exclusion documented above.
+			continue
+		}
+		if r.Enforceability == ontology.EnforceabilityINHERENTLY_PROSE {
+			// Residual category: a claim no snapshot gate could ever
+			// mechanically check (architectural / temporal-order in nature),
+			// honestly tagged by the steward via the Enforceability field --
+			// exempt from BOTH paths, per the INHERENTLY_PROSE EXEMPTION
+			// documented above. Independent branch from the engine-path
+			// exemption: a carrier, if present, was already handled by the
+			// branch above; reaching here means the requirement lacks a
+			// carrier, so this is the active exemption. The exemption is
+			// VISIBLE: internal/generator/coverage.go's "Discipline-exempt"
+			// section names exactly this set for a discipline:full domain, so
+			// it never disappears into a silent "0 violations".
 			continue
 		}
 		if len(r.ImplementedBy) == 0 || len(r.VerifiedBy) == 0 {
@@ -142,8 +176,9 @@ var _ = All.MustRegister("check_settled_requires_scenario", Invariant{
 	Name:  "check_settled_requires_scenario",
 	Canon: methodology.Requirement,
 	Claim: "in a discipline:full domain, every SETTLED requirement carries a real carrier -- enforced_by (engine path), " +
-		"or implemented_by + verified_by + at least one scenario-narrated verified_by test (authored path); a domain " +
-		"without discipline:full is an honest no-op.",
+		"or implemented_by + verified_by + at least one scenario-narrated verified_by test (authored path) -- UNLESS the " +
+		"requirement is honestly tagged enforceability=INHERENTLY_PROSE (the residual category no snapshot gate could " +
+		"mechanically check); a domain without discipline:full is an honest no-op.",
 	Rule: "IF g.Discipline == loader.DisciplineFull (the domain's manifest.json declares \"discipline\": \"full\"), THEN " +
 		"for EVERY Requirement with status == SETTLED, AT LEAST ONE of the following MUST hold: (1) enforced_by is " +
 		"non-empty (the engine mechanism -- already structurally checked by check_enforced_by_resolvable/" +
@@ -151,8 +186,18 @@ var _ = All.MustRegister("check_settled_requires_scenario", Invariant{
 		"implemented_by is non-empty AND verified_by is non-empty AND at least one verified_by entry resolves " +
 		"(gate.ResolveSpecTest) to a real Test* function whose body calls hotamspec.NewScenario(...) anywhere " +
 		"(gate.SpecTestResult.HasScenario) -- mirroring internal/generator/coverage.go's computeScenarioRatchet " +
-		"convention that any ONE narrating verified_by entry is sufficient. A requirement satisfying NEITHER path fires " +
-		"a violation naming exactly which half is missing. IF g.Discipline is NOT loader.DisciplineFull (empty, or any " +
+		"convention that any ONE narrating verified_by entry is sufficient -- OR (3) the requirement's Enforceability " +
+		"field equals ontology.EnforceabilityINHERENTLY_PROSE (the residual category of architectural/temporal-order " +
+		"claims no snapshot gate could mechanically check, the same class as R-domain-founded-in-wave-order which was " +
+		"deliberately left honestly PROSE rather than forced onto a fake mechanism; PLAN-scenario-generated-spec.md §2 " +
+		"D4 + §5 risks: «категория «inherently prose» сжимается при миграции per-requirement; любое остаточное " +
+		"исключение видно в COVERAGE, не прячется»). A requirement satisfying NONE of the three fires a violation " +
+		"naming exactly which half is missing. The INHERENTLY_PROSE exemption (branch 3) is intentionally NARROW: it " +
+		"triggers ONLY on the Enforceability field, never on Enforcement, never on the absence of links alone -- so a " +
+		"steward must EXPLICITLY tag a requirement enforceability:\"INHERENTLY_PROSE\" in graph.json to claim it, and " +
+		"that tag is itself visible: internal/generator/coverage.go's \"Discipline-exempt\" section names exactly the " +
+		"discipline:full subset of these requirements that lack a carrier (the actively-exempted set), so the exemption " +
+		"is never folded silently into \"0 violations\". IF g.Discipline is NOT loader.DisciplineFull (empty, or any " +
 		"other value -- the default for every domain today), this check is a pure HONEST NO-OP: zero violations " +
 		"regardless of how bare a domain's implemented_by/verified_by/enforced_by fields are.",
 	Why: "PLAN-scenario-generated-spec.md §0/§2 D4 (steward-directed remediation of the @fh audit finding): every prior " +
@@ -175,6 +220,17 @@ var _ = All.MustRegister("check_settled_requires_scenario", Invariant{
 		"domain (same engine-path exemption, but the authored path additionally demands a scenario). The two checks are " +
 		"deliberately NOT merged: a plain SETTLED+ENFORCED requirement in a non-discipline:full domain must still pass " +
 		"the older, looser gate; only a discipline:full domain's requirements face the stricter scenario demand this " +
-		"check adds on top.",
+		"check adds on top. INHERENTLY_PROSE EXEMPTION RATIONALE: without it, a discipline:full domain with even ONE " +
+		"honestly INHERENTLY_PROSE SETTLED requirement (a claim architectural/temporal-order in nature that no snapshot " +
+		"gate could ever mechanically check) could never reach a clean 0 violations -- the gate would either force the " +
+		"steward to bolt the requirement onto a FAKE mechanism (exactly the anti-pattern R-domain-founded-in-wave-order " +
+		"was deliberately left honestly PROSE in task W3.4/#263 to avoid) or leave the domain perpetually red. The " +
+		"exemption instead lets the steward tag such a requirement enforceability:\"INHERENTLY_PROSE\" in graph.json -- " +
+		"an EXPLICIT, VISIBLE act (the tag surfaces in COVERAGE.md's permanent-discipline table, and for a " +
+		"discipline:full domain that lacks a carrier for it, in coverage.go's \"Discipline-exempt\" section too) -- and " +
+		"the gate respects it. The §2 D4 / §5 design intent is explicit that this residual category is meant to " +
+		"SHRINK during per-requirement migration (each requirement genuinely convertible to a real object+method+scenario " +
+		"is converted, and loses the tag), with any genuinely-unconvertible remainder VISIBLE in COVERAGE rather than " +
+		"silently hidden behind a 0-violations count.",
 	Check: checkSettledRequiresScenario,
 })
