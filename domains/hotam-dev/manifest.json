@@ -6,5 +6,6 @@
     "every spawn and every apply leaves a trace in the .runtime logs",
     "push only on the steward's explicit word"
   ],
-  "director": "director"
+  "director": "director",
+  "parent": "hotam-spec-self"
 }
