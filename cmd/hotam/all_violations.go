@@ -9,6 +9,9 @@ import (
 )
 
 func cmdAllViolations(args []string) error {
+	// Compile-cache cleanup (gate.CleanupCompileCache) is centralized in
+	// main() -- reachable from every subcommand, not just this one. See
+	// main()'s own doc comment for why.
 	fs := newFlagSet("all-violations")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")

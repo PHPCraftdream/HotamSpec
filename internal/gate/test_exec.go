@@ -253,19 +253,43 @@ func inRecursionGuard() bool {
 // pushing a whole package past its -timeout budget.
 var globalExecSlots = make(chan struct{}, 2)
 
-// runGoTest invokes `go test -run '^<testName>$' <pkgPattern>` with cwd set
-// to moduleRoot (the directory containing the go.mod that owns pkgDir), and
-// classifies the result. pkgPattern is the "./..."-relative import pattern
-// for the package directory (e.g. "./internal/ontology/" for a self-hosting
-// entry, or "./model/" for an authored spec/ package) -- callers compute it
-// via relativePackagePattern. The spawned process carries recursionGuardEnv
+// runGoTest invokes the named test against a pre-compiled test binary
+// (compileTestBinary, the cache layer that compiles `go test -c` ONCE per
+// (moduleRoot, pkgPattern, coverPkgPattern) triple and reuses it across
+// every test in the same package), and classifies the result. pkgPattern
+// is the "./..."-relative import pattern for the package directory (e.g.
+// "./internal/ontology/" for a self-hosting entry, or "./model/" for an
+// authored spec/ package) -- callers compute it via
+// relativePackagePattern. The spawned process carries recursionGuardEnv
 // so IT (or anything it in turn runs) knows not to spawn a further nested
 // invocation -- see recursionGuardEnv's doc comment. Acquires a
 // globalExecSlots slot before spawning and releases it after the subprocess
-// exits, so this process never has more than a small bounded number of `go
-// test` children running concurrently no matter how many independent
-// callers invoke it at once.
+// exits, so this process never has more than a small bounded number of
+// test-execution children running concurrently no matter how many
+// independent callers invoke it at once. The compile step
+// (compileTestBinary, on a cache miss) is ALSO bounded by globalExecSlots
+// for the same host-load reason -- see doCompileTestBinary's doc comment.
 func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) TestRunResult {
+	// Step 1: get-or-compile the binary for this package (no coverpkg for
+	// the plain verdict path -- the caller did not ask for coverage). This
+	// is the optimization: across N tests in the same package, the compile
+	// happens ONCE; subsequent calls get a cache hit and skip straight to
+	// the execution step. A CompileFailed result here is surfaced with the
+	// SAME classification runGoTest originally produced inline (via the
+	// captured `go test -c` output, byte-identical to what `go test -run`
+	// would have printed on the same broken package).
+	bin := compileTestBinary(ctx, moduleRoot, pkgPattern, "")
+	if bin.err != nil {
+		return TestRunResult{Output: bin.output, Err: bin.err}
+	}
+	if bin.compileFailed {
+		return TestRunResult{Passed: false, CompileFailed: true, Output: bin.output}
+	}
+
+	// Step 2: invoke the cached binary directly. Same per-test isolation
+	// as before -- ONE subprocess per test, in its own process, with its
+	// own env. The binary was compiled with the package's whole test
+	// entry; -test.run "^TestName$" selects exactly one test out of it.
 	select {
 	case globalExecSlots <- struct{}{}:
 	case <-ctx.Done():
@@ -274,15 +298,22 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	defer func() { <-globalExecSlots }()
 
 	runPattern := "^" + testName + "$"
-	cmd := exec.CommandContext(ctx, "go", "test", "-run", runPattern, "-count=1", pkgPattern)
-	cmd.Dir = moduleRoot
+	cmd := exec.CommandContext(ctx, bin.path,
+		"-test.run", runPattern,
+		"-test.count", "1",
+	)
+	// `go test` chdirs into the test's own package directory before
+	// running it; a directly-invoked .test binary does not, so set
+	// cmd.Dir to the package directory explicitly to preserve testdata/
+	// and cwd-relative-path behavior. See packageDirFromPattern's doc.
+	cmd.Dir = packageDirFromPattern(moduleRoot, pkgPattern)
 	// Carry THIS process's own freshly-minted guard nonce (never a fixed
 	// literal -- see guardNonce's / recursionGuardEnv's doc comments) so the
-	// spawned `go test` child, and anything it in turn runs, can recognize it
-	// is nested. No marker file is written: the child this env var reaches is
-	// always a `go test`-compiled binary, never a cmd/hotam CLI process (that
-	// only ever clears this var, see main()'s doc comment), so there is no
-	// forgery surface left for a marker to defend against.
+	// spawned test binary, and anything it in turn runs, can recognize it
+	// is nested. No marker file is written: the child this env var reaches
+	// is always a `go test`-compiled binary, never a cmd/hotam CLI process
+	// (that only ever clears this var, see main()'s doc comment), so there
+	// is no forgery surface left for a marker to defend against.
 	nonce := guardNonce()
 	cmd.Env = append(os.Environ(), recursionGuardEnv+"="+nonce)
 	var buf bytes.Buffer
@@ -304,12 +335,19 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 			// not a test verdict.
 			return TestRunResult{Output: output, Err: fmt.Errorf("could not run go test: %w", err)}
 		}
+		// A directly-invoked .test binary has ALREADY been compiled, so
+		// looksLikeCompileFailure(output) should never fire here in
+		// practice -- kept as a defensive classifier against a wrapped
+		// `go`/binary path that could in theory produce compile-error-
+		// shaped output at run time (e.g. a binary that re-checks build
+		// constraints on launch). The common case is a plain test
+		// failure (CompileFailed=false).
 		compileFailed := looksLikeCompileFailure(output)
 		return TestRunResult{Passed: false, CompileFailed: compileFailed, Output: output}
 	}
-	// Exit 0. Still scan for a "FAIL" line as belt-and-braces (a wrapped `go`
-	// or a test harness oddity could theoretically exit 0 with FAIL text);
-	// the exit code is authoritative for the common case.
+	// Exit 0. Still scan for a "FAIL" line as belt-and-braces (a wrapped
+	// `go` or a test harness oddity could theoretically exit 0 with FAIL
+	// text); the exit code is authoritative for the common case.
 	if strings.Contains(output, "\nFAIL") || strings.HasPrefix(output, "FAIL") {
 		return TestRunResult{Passed: false, Output: output}
 	}
@@ -478,13 +516,34 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 // nonce, same globalExecSlots bound, same PASS/FAIL/CompileFailed
 // classification -- but additionally sets hotamspec.RecordDirEnv
 // ("HOTAM_RECORD_DIR") to recordDir on the child process's environment, and,
-// when coverPkgPattern is non-empty, passes -coverprofile (written inside
-// recordDir, never a shared/predictable path) and -coverpkg so the SAME
-// subprocess also produces a coverage profile over the implemented_by
+// when coverPkgPattern is non-empty, the compiled binary was built with
+// -coverpkg so a -test.coverprofile (written inside recordDir, never a
+// shared/predictable path) at RUN time instruments the implemented_by
 // symbol's package. Returns the classified TestRunResult plus the raw
 // coverprofile bytes (nil if coverage was not requested or the file was
 // never produced).
+//
+// The -coverpkg flag is a COMPILE-time input (Go bakes the coverage
+// instrumentation into the binary when `go test -c` runs), so the compiled
+// binary is cached keyed by coverPkgPattern -- a record-mode call for
+// (pkg P, coverpkg A) and a second call for (pkg P, coverpkg B) get
+// DIFFERENT compiled binaries and do NOT share, even though they share the
+// same pkgPattern. The -test.coverprofile flag, by contrast, is a RUNTIME
+// input (the binary writes the profile to whatever path the caller names),
+// so it stays per-invocation and points into this call's own recordDir.
 func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, recordDir, coverPkgPattern string) (TestRunResult, []byte) {
+	// Step 1: get-or-compile the binary for this package AND coverpkg
+	// pattern. The coverpkg is baked in at compile time, so it is part of
+	// the cache KEY -- two record-mode calls for the same package but
+	// different coverpkg patterns get different binaries (correctly).
+	bin := compileTestBinary(ctx, moduleRoot, pkgPattern, coverPkgPattern)
+	if bin.err != nil {
+		return TestRunResult{Output: bin.output, Err: bin.err}, nil
+	}
+	if bin.compileFailed {
+		return TestRunResult{Passed: false, CompileFailed: true, Output: bin.output}, nil
+	}
+
 	select {
 	case globalExecSlots <- struct{}{}:
 	case <-ctx.Done():
@@ -493,16 +552,18 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 	defer func() { <-globalExecSlots }()
 
 	runPattern := "^" + testName + "$"
-	args := []string{"test", "-run", runPattern, "-count=1"}
+	args := []string{"-test.run", runPattern, "-test.count", "1"}
 	var coverProfilePath string
 	if coverPkgPattern != "" {
 		coverProfilePath = filepath.Join(recordDir, "cover.out")
-		args = append(args, "-coverprofile="+coverProfilePath, "-coverpkg="+coverPkgPattern)
+		args = append(args, "-test.coverprofile="+coverProfilePath)
 	}
-	args = append(args, pkgPattern)
 
-	cmd := exec.CommandContext(ctx, "go", args...)
-	cmd.Dir = moduleRoot
+	cmd := exec.CommandContext(ctx, bin.path, args...)
+	// See runGoTest: a directly-invoked .test binary does not chdir into
+	// the package directory on its own the way `go test` does, so set
+	// cmd.Dir explicitly to preserve testdata/ + cwd-relative behavior.
+	cmd.Dir = packageDirFromPattern(moduleRoot, pkgPattern)
 	nonce := guardNonce()
 	cmd.Env = append(os.Environ(),
 		recursionGuardEnv+"="+nonce,
@@ -537,6 +598,9 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 		if !isExitError(err, &exitErr) {
 			return TestRunResult{Output: output, Err: fmt.Errorf("could not run go test (record-mode): %w", err)}, coverProfile
 		}
+		// A directly-invoked .test binary has already been compiled, so
+		// looksLikeCompileFailure(output) should not fire in practice;
+		// kept defensive for the same reason runGoTest keeps it.
 		compileFailed := looksLikeCompileFailure(output)
 		return TestRunResult{Passed: false, CompileFailed: compileFailed, Output: output}, coverProfile
 	}
@@ -747,14 +811,31 @@ type cacheEntry struct {
 // DeterministicOrder's 21x loop) never even touches disk.
 var runCache sync.Map // cacheKey -> cacheEntry
 
-// ResetRunCacheForTest clears the in-memory cache only. Test-only helper
-// (exported so internal/invariants' tests, a different package, can call
-// it). There is no on-disk/cross-process cache to also clear: see the
-// removed-disk-cache history below (NEW-3) -- runCache (this in-memory
-// sync.Map) is the ONLY verdict cache RunVerifiedByTest maintains, and it is
-// process-lifetime only, so clearing it here is complete.
+// ResetRunCacheForTest clears the in-memory verdict cache AND the binary
+// compile cache (compile_cache.go), plus resets the compile-invocation
+// counter. Test-only helper (exported so internal/invariants' tests, a
+// different package, can call it). There is no on-disk/cross-process
+// cache to also clear: see the removed-disk-cache history below (NEW-3)
+// -- runCache (this in-memory sync.Map) is the ONLY verdict cache
+// RunVerifiedByTest maintains, and it is process-lifetime only, so
+// clearing it here is complete.
+//
+// The compile cache reset (added by the binary-level compile cache,
+// compile_cache.go) is needed for the SAME reason the verdict cache reset
+// is: the cache's key does not carry a content hash, so a test that
+// MUTATES source mid-process (the existing
+// TestRunVerifiedByTest_MUTATION_* tests do exactly this -- they edit
+// impl.go / policy/impl.go / threshold.txt between two RunVerifiedByTest
+// calls in one test process) would otherwise observe a STALE cached
+// binary built from the pre-mutation source on the second call. Folding
+// the reset here (rather than asking every mutation test to call a
+// SEPARATE resetCompileCacheForTest) keeps every existing mutation test
+// correct with zero changes, the same way it already keeps the verdict
+// cache correct. The compile cache's file doc comment documents this
+// design decision in full.
 func ResetRunCacheForTest() {
 	runCache = sync.Map{}
+	resetCompileCacheForTest()
 }
 
 // NEW-3 (@fh final adversarial re-review, "kill-switch moved from env var to
@@ -881,6 +962,22 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 		if entry.hash == hash {
 			return entry.result
 		}
+		// Hash mismatch: the module's content changed since this verdict
+		// was cached (hashPackageInputs hashes the whole module -- any
+		// *.go / non-.go file edit, anywhere under moduleRoot, moves the
+		// hash). The verdict cache entry is stale, AND so is any compiled
+		// .test binary the compile cache (compile_cache.go) holds for
+		// this module -- a binary built from the pre-mutation source
+		// would silently mask the change the verdict cache just detected.
+		// Drop every compile cache entry for this module before
+		// re-running, so runGoTest's compileTestBinary call below
+		// recompiles from the CURRENT (post-mutation) source. This is
+		// the compile cache's ONLY invalidation path; it is FREE in
+		// production (source never changes within one CLI run, so this
+		// branch is unreachable) and exists solely for the mutation
+		// tests + any hypothetical mid-run edit. See
+		// invalidateCompileCacheForModule's doc comment.
+		invalidateCompileCacheForModule(moduleRoot)
 	}
 
 	// SINGLEFLIGHT (anti-stampede): several goroutines in THIS process can

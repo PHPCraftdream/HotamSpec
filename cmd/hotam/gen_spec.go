@@ -17,6 +17,10 @@ import (
 )
 
 func cmdGenSpec(args []string) error {
+	// Compile-cache cleanup (gate.CleanupCompileCache) is centralized in
+	// main() -- reachable from every subcommand, not just this one (land,
+	// init-project, and others also drive genSpec/allViolations
+	// transitively). See main()'s own doc comment for why.
 	fs := newFlagSet("gen-spec")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count")

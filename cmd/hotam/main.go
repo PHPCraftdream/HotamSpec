@@ -72,6 +72,20 @@ func clearInheritedVerifiedByGuard() {
 
 func main() {
 	clearInheritedVerifiedByGuard()
+	// CleanupCompileCache ensures every compiled .test binary ANY subcommand
+	// produced (gate.compileTestBinary, task W7.3) is removed from disk
+	// before this process exits -- centralized here at the single top-level
+	// entry point rather than scattered per-command, since the compile
+	// cache is reachable from more than just `all-violations`/`gen-spec`:
+	// `land`/`land --batch` (via land.go's own genSpec/allViolations calls)
+	// and `init-project` (via genSpec with includeSpec=true) ALSO drive
+	// RunVerifiedByTest/RunVerifiedByTestRecording transitively, and a
+	// per-command defer would have to be re-added at every such call site,
+	// with the same risk of missing one that motivated moving it here. No
+	// persistent artifact survives past the run that created it, regardless
+	// of which subcommand was invoked. See internal/gate/compile_cache.go's
+	// CleanupCompileCache doc comment.
+	defer gate.CleanupCompileCache()
 	if len(os.Args) < 2 {
 		printUsage(os.Stderr)
 		os.Exit(2)
