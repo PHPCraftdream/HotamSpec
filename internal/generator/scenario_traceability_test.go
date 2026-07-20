@@ -11,7 +11,7 @@ import (
 // scenarioFixtureGraph builds a small graph mirroring specFixtureGraph's own
 // shape (see spec_test.go) but exercising the specific rows W1.4's
 // TRACEABILITY.md/COVERAGE.md additions need: a SETTLED requirement whose
-// verified_by test narrates a hotamspec scenario (R-scenario-narrated), a
+// verified_by test narrates a hotamspec scenario (R-spec-narrated), a
 // SETTLED requirement whose verified_by test is a plain (non-scenario) Go
 // test (R-scenario-plain), and a SETTLED requirement with no verified_by at
 // all (not part of the ratchet -- roadmap debt instead).
@@ -21,7 +21,7 @@ func scenarioFixtureGraph(domainDir string) *ontology.Graph {
 		SelfHosting: false,
 		Requirements: []ontology.Requirement{
 			{
-				ID:             "R-scenario-narrated",
+				ID:             "R-spec-narrated",
 				Claim:          "RequireComplete ALWAYS rejects a zero fields count.",
 				Owner:          "spec-author",
 				Status:         ontology.StatusSETTLED,
@@ -65,15 +65,15 @@ func TestBuildTraceability_DefaultScenarioColumnIsASTOnly(t *testing.T) {
 
 	got := BuildTraceability(g)
 
-	if !strings.Contains(got, "R-scenario-narrated") {
-		t.Fatalf("BuildTraceability output missing R-scenario-narrated:\n%s", got)
+	if !strings.Contains(got, "R-spec-narrated") {
+		t.Fatalf("BuildTraceability output missing R-spec-narrated:\n%s", got)
 	}
 	// The narrated requirement's row must carry the scenario tag.
-	narratedIdx := strings.Index(got, "R-scenario-narrated")
+	narratedIdx := strings.Index(got, "R-spec-narrated")
 	narratedRowEnd := strings.Index(got[narratedIdx:], "\n")
 	narratedRow := got[narratedIdx : narratedIdx+narratedRowEnd]
 	if !strings.Contains(narratedRow, "scenario") {
-		t.Errorf("R-scenario-narrated's row does not carry the scenario tag:\n%s", narratedRow)
+		t.Errorf("R-spec-narrated's row does not carry the scenario tag:\n%s", narratedRow)
 	}
 	// No verdicts were supplied -- no real verdict text should appear IN THE
 	// TABLE ROW (the document's own explanatory intro prose legitimately
@@ -82,7 +82,7 @@ func TestBuildTraceability_DefaultScenarioColumnIsASTOnly(t *testing.T) {
 	// part of documenting what --spec WOULD add; only the row itself must
 	// stay silent about a verdict it was never asked to compute).
 	if strings.Contains(narratedRow, "(narrated") || strings.Contains(narratedRow, "(no narrative recorded)") {
-		t.Errorf("BuildTraceability rendered a REAL verdict in R-scenario-narrated's row with no verdicts map supplied (should be AST-only):\n%s", narratedRow)
+		t.Errorf("BuildTraceability rendered a REAL verdict in R-spec-narrated's row with no verdicts map supplied (should be AST-only):\n%s", narratedRow)
 	}
 
 	plainIdx := strings.Index(got, "R-scenario-plain")
@@ -110,14 +110,14 @@ func TestBuildTraceability_WithVerdicts_OverlaysRealOutcome(t *testing.T) {
 
 	got := BuildTraceability(g, verdicts)
 
-	narratedIdx := strings.Index(got, "R-scenario-narrated")
+	narratedIdx := strings.Index(got, "R-spec-narrated")
 	if narratedIdx < 0 {
-		t.Fatalf("BuildTraceability output missing R-scenario-narrated:\n%s", got)
+		t.Fatalf("BuildTraceability output missing R-spec-narrated:\n%s", got)
 	}
 	narratedRowEnd := strings.Index(got[narratedIdx:], "\n")
 	narratedRow := got[narratedIdx : narratedIdx+narratedRowEnd]
 	if !strings.Contains(narratedRow, "(narrated, pass)") {
-		t.Errorf("R-scenario-narrated's row did not report the real narrated+pass verdict:\n%s", narratedRow)
+		t.Errorf("R-spec-narrated's row did not report the real narrated+pass verdict:\n%s", narratedRow)
 	}
 }
 
@@ -139,7 +139,7 @@ func TestBuildTraceability_ScenarioColumn_ByteIdenticalAcrossRuns(t *testing.T) 
 
 // TestBuildCoverage_ScenarioRatchet_ASTOnlyByDefault proves COVERAGE.md's
 // ratchet counter (PLAN-scenario-generated-spec.md §2 D4/§5, W1.4) computes
-// from the same cheap AST signal by default: R-scenario-narrated counts as
+// from the same cheap AST signal by default: R-spec-narrated counts as
 // "with scenario" (narrated), R-scenario-plain counts as still in the
 // ratchet tail (verified_by exists, but its test does not call
 // hotamspec.NewScenario), and R-scenario-no-carrier (no verified_by at all)
@@ -157,16 +157,16 @@ func TestBuildCoverage_ScenarioRatchet_ASTOnlyByDefault(t *testing.T) {
 	if !strings.Contains(got, "R-scenario-plain") {
 		t.Errorf("BuildCoverage ratchet tail table missing R-scenario-plain:\n%s", got)
 	}
-	// R-scenario-narrated must NOT appear in the ratchet TAIL table (it is
+	// R-spec-narrated must NOT appear in the ratchet TAIL table (it is
 	// narrated) -- check specifically within the "Scenario ratchet" section,
-	// not the whole document (R-scenario-narrated legitimately appears
+	// not the whole document (R-spec-narrated legitimately appears
 	// elsewhere, e.g. roadmap-debt is not it, but a future table could
 	// legitimately mention it).
 	ratchetStart := strings.Index(got, "## Scenario ratchet")
 	nextSection := strings.Index(got[ratchetStart+1:], "\n## ")
 	ratchetSection := got[ratchetStart : ratchetStart+1+nextSection]
-	if strings.Contains(ratchetSection, "R-scenario-narrated") {
-		t.Errorf("BuildCoverage ratchet section wrongly lists the already-narrated R-scenario-narrated:\n%s", ratchetSection)
+	if strings.Contains(ratchetSection, "R-spec-narrated") {
+		t.Errorf("BuildCoverage ratchet section wrongly lists the already-narrated R-spec-narrated:\n%s", ratchetSection)
 	}
 }
 

@@ -69,7 +69,16 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// in this same task, W2.3 spec_build.go precedent, so
 	// internal/invariants can reach it without importing internal/generator)
 	// by OWNING OBJECT -- no new coverage run, no second spec/ walk.
-	const expected = 102
+	// Task W7.2 (@fx finding F2) added a fourteenth, check_discipline_ratchet
+	// (discipline_ratchet.go): the ONE-WAY ratchet gate for discipline:"full"
+	// -- once a domain's manifest.json has been observed with
+	// discipline:"full" (pinned in graph.lock's DisciplineFullObserved by
+	// loader.WriteLock), a later manifest that no longer resolves
+	// discipline:"full" is a regression violation, closing the gap where a
+	// steward could silently delete/downgrade the discipline key and every
+	// discipline-gated check became an honest no-op again with zero
+	// all-violations signal.
+	const expected = 103
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

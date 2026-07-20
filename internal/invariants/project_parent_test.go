@@ -226,3 +226,76 @@ func TestCheckProjectParentDeclared_NoOpWhenManifestAbsentButDomainDirSet(t *tes
 		t.Fatalf("expected no violations when DomainDir is real but manifest.json is entirely absent, got %v", vs)
 	}
 }
+
+// --- F5: parent VALUE validation (task W7.2, @fx finding F5) ----------------
+//
+// check_project_parent_declared now additionally validates that a parent VALUE
+// is not a self-reference (parent == the domain's own directory name). A
+// domain declaring itself as its own parent is a structural error caught
+// without needing sibling-domain filesystem access. Non-self parent values
+// are NOT resolved against real sibling domains (documented scoping -- see the
+// doc comment in checkProjectParentDeclared itself).
+
+// writeParentFixtureNamedDomain writes a manifest.json + graph.json into a
+// domain directory NAMED <domainName> under a temp parent (so
+// filepath.Base(DomainDir) == domainName), matching how real domains sit
+// under domains/<name>/. Returns the full domain directory path.
+func writeParentFixtureNamedDomain(t *testing.T, parentRoot, domainName, manifestBody string) string {
+	t.Helper()
+	domainDir := filepath.Join(parentRoot, domainName)
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll %s: %v", domainDir, err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifestBody), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "graph.json"), []byte(`{"schema_version":3}`), 0o644); err != nil {
+		t.Fatalf("WriteFile graph.json: %v", err)
+	}
+	return domainDir
+}
+
+// TestCheckProjectParentDeclared_F5_FiresOnSelfReference proves a manifest that
+// declares a domain as its OWN parent fires a violation: "parent":
+// "my-domain" when the domain's directory name IS "my-domain" is a structural
+// error (a domain cannot be its own parent).
+func TestCheckProjectParentDeclared_F5_FiresOnSelfReference(t *testing.T) {
+	t.Parallel()
+	parentRoot := t.TempDir()
+	domainDir := writeParentFixtureNamedDomain(t, parentRoot, "self-ref-domain",
+		`{"parent": "self-ref-domain"}`+"\n")
+	g := graphForParent(t, domainDir, []ontology.Requirement{settledReq("R-1", "sa")})
+	if !g.ParentDeclared || g.Parent != "self-ref-domain" {
+		t.Fatalf("test setup: expected ParentDeclared=true Parent=\"self-ref-domain\", got Declared=%v Parent=%q",
+			g.ParentDeclared, g.Parent)
+	}
+	vs := runCheck(t, "check_project_parent_declared", g)
+	if len(vs) != 1 {
+		t.Fatalf("F5: expected one violation for a self-referencing parent, got %d: %v", len(vs), vs)
+	}
+	if vs[0].Check != "check_project_parent_declared" {
+		t.Errorf("violation Check = %q, want check_project_parent_declared", vs[0].Check)
+	}
+}
+
+// TestCheckProjectParentDeclared_F5_GreenWhenParentIsDifferentName proves a
+// manifest declaring a parent name that is DIFFERENT from the domain's own
+// name does NOT fire the self-reference violation (the non-regression case).
+// Note: the parent value is NOT resolved against a real sibling domain here
+// -- that scoping is documented in the check's doc comment. The point of this
+// test is only that a non-self parent value passes the self-reference check.
+func TestCheckProjectParentDeclared_F5_GreenWhenParentIsDifferentName(t *testing.T) {
+	t.Parallel()
+	parentRoot := t.TempDir()
+	domainDir := writeParentFixtureNamedDomain(t, parentRoot, "child-domain",
+		`{"parent": "some-other-domain"}`+"\n")
+	g := graphForParent(t, domainDir, []ontology.Requirement{settledReq("R-1", "sa")})
+	if !g.ParentDeclared || g.Parent != "some-other-domain" {
+		t.Fatalf("test setup: expected ParentDeclared=true Parent=\"some-other-domain\", got Declared=%v Parent=%q",
+			g.ParentDeclared, g.Parent)
+	}
+	vs := runCheck(t, "check_project_parent_declared", g)
+	if len(vs) != 0 {
+		t.Fatalf("F5: expected no violations for a parent name different from the domain's own name, got: %v", vs)
+	}
+}

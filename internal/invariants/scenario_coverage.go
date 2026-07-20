@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -40,6 +41,25 @@ import (
 // (checkSettledRequiresScenario's OPT-IN gate) or whether the requirement
 // happens to be ENFORCED yet -- a forged pairing is exactly as false on a
 // SETTLED-but-not-yet-ENFORCED requirement as on an ENFORCED one.
+//
+// F1 GATE (task W7.2, @fx finding F1): the coverage-proof above is scoped to
+// implemented_by entries that resolve to a function/method (a coverable
+// range). A type-only entry (struct/interface declaration) deliberately has
+// no coverable range (ResolveSpecSymbolRange returns found=false), so it
+// produces no coverage job. Before F1, a SETTLED discipline:full requirement
+// whose ENTIRE implemented_by set was type-only produced zero jobs and passed
+// this gate having proven ZERO execution -- a silent bypass of the
+// coverage-proof the same requirement's discipline:full promise demands. The
+// F1 gate closes this: when such a requirement's implemented_by set contains
+// at least one type-only entry AND zero coverable entries, this check fires
+// a violation directly (no coverage run needed -- there is nothing to run
+// coverage against). Scoped to SETTLED + discipline:full because only those
+// requirements have made the one-way promise that their implementation is
+// fully scenario-proven; a requirement citing a type for documentation in a
+// soft-discipline domain has not. Does NOT fire when ALL entries are
+// unresolvable (checkImplementedBySymbolResolvable's violation) -- the
+// type-only distinction (ResolveSpecSymbol's SpecSymbolType) is what
+// separates F1's concern from the unresolvable case.
 //
 // SEMANTICS -- why "each implemented_by symbol covered by AT LEAST ONE
 // verified_by test" rather than an index-paired 1:1 correspondence: task
@@ -112,6 +132,25 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 			// to report, not this check's. Nothing to run coverage against.
 			continue
 		}
+		// F1 (task W7.2, @fx finding F1): track whether ANY implemented_by
+		// entry of this requirement resolved to a coverable function/method
+		// range (a job this check can actually run coverage against). A
+		// requirement whose ENTIRE implemented_by set consists of type-only
+		// declarations (struct/interface -- ResolveSpecSymbolRange returns
+		// found=false for them deliberately, since a type has no executable
+		// lines a test could cover) produces ZERO jobs and would otherwise
+		// pass this coverage-proof gate having proven ZERO execution -- the
+		// exact silent bypass F1 targets. typeOnlyCount distinguishes a
+		// type-only entry (resolves as SpecSymbolType -- the steward intended
+		// a real citation, it just has nothing coverable) from an unresolvable
+		// entry (SpecSymbolNone -- checkImplementedBySymbolResolvable's
+		// violation, not this check's), so this fix only fires when the
+		// requirement has at least one type-only entry AND no coverable entry
+		// at all (the all-type/all-uncoverable case), never for a legitimate
+		// mixed citation (type for context + method for the real logic, where
+		// the method's range does get covered and a job IS created).
+		var coverableCount int
+		var typeOnlyEntries []string
 		for _, ie := range implEntries {
 			if !ie.ok {
 				// Malformed implemented_by shape -- checkImplementedBySymbolResolvable's
@@ -122,14 +161,22 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 				continue
 			}
 			rng, found, err := gate.ResolveSpecSymbolRange(specRoot, ie.file, ie.symbol)
-			if err != nil || !found {
-				// Unresolvable, or resolves to a type (no coverable range) --
-				// checkImplementedBySymbolResolvable's violation to report (or,
-				// for a type-only entry, legitimately nothing to cover: a type
-				// declaration has no executable lines a test could touch, so
-				// this check has nothing to ask of it either way).
+			if err != nil {
+				// Parse error -- checkImplementedBySymbolResolvable's violation
+				// to report, not this check's.
 				continue
 			}
+			if !found {
+				// Resolves to a type (no coverable range) or is unresolvable.
+				// Distinguish the two: a type-only entry (SpecSymbolType) is
+				// this check's F1 concern; an unresolvable entry
+				// (SpecSymbolNone) is checkImplementedBySymbolResolvable's.
+				if symRes, symErr := gate.ResolveSpecSymbol(specRoot, ie.file, ie.symbol); symErr == nil && symRes.Kind == gate.SpecSymbolType {
+					typeOnlyEntries = append(typeOnlyEntries, ie.raw)
+				}
+				continue
+			}
+			coverableCount++
 			// The Go MODULE root that owns rng.File is NOT necessarily specRoot:
 			// for an ordinary (non-self-hosting) domain, specRoot is domainDir
 			// (e.g. "domains/prat"), but the actual go.mod authored spec/ lives
@@ -163,6 +210,36 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 				continue
 			}
 			jobs = append(jobs, job{reqID: r.ID, implRaw: ie.raw, symRng: rng, imports: importPath, tests: testEntries})
+		}
+		// F1 gate: a SETTLED requirement in a discipline:full domain whose
+		// implemented_by set produced ZERO coverable symbols (no function/
+		// method range a coverage run could touch) AND has at least one
+		// type-only entry claims to be "implemented" yet nothing in that
+		// claim is even theoretically checkable by this coverage-proof gate.
+		// This is the all-type/all-uncoverable bypass: the requirement passes
+		// every other authored-link gate (resolvable, has teeth, passes,
+		// scenario-narrated) while this check -- the one gate whose entire
+		// purpose is to prove execution -- silently proves nothing. Scoped to
+		// SETTLED + discipline:full because only those requirements have made
+		// the explicit one-way promise that their implementation is fully
+		// scenario-proven; a requirement in a soft-discipline domain citing a
+		// type for documentation has not made that promise. typeOnlyEntries >
+		// 0 (rather than coverableCount == 0 alone) ensures this does NOT fire
+		// for a requirement whose entries are all unresolvable
+		// (checkImplementedBySymbolResolvable's violation, not this check's).
+		if coverableCount == 0 && len(typeOnlyEntries) > 0 &&
+			r.Status == ontology.StatusSETTLED && g.Discipline == loader.DisciplineFull {
+			out = append(out, Violation{
+				Check: "check_scenario_executes_impl",
+				ID:    r.ID,
+				Message: fmt.Sprintf(
+					"implemented_by set (%s) contains only type declarations with no executable lines -- a SETTLED requirement "+
+						"in a discipline:full domain claims to be implemented, but none of its implemented_by entries resolve to a "+
+						"function/method this coverage-proof gate could ever prove was executed; add a real function/method entry "+
+						"(the implementation's actual logic) to implemented_by, or cite the type alongside a method that the "+
+						"verified_by test genuinely exercises",
+					strings.Join(typeOnlyEntries, ", ")),
+			})
 		}
 	}
 

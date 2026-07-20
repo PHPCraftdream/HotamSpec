@@ -229,7 +229,18 @@ func initProject(dir, domainName, today string, requireProvenance bool) ([]strin
 	// under <dir>/domains/<name>/docs/gen/. repoRootForDomain (gen_spec.go)
 	// derives the repo root from the domains/<name> layout, so the DOMAIN-MAP
 	// block lists the scaffolded domain correctly with no extra plumbing.
-	genWritten, _, err := genSpec(domainDir, claudeMDPath, today, "", false)
+	//
+	// includeSpec=true (task W7.2, @fx finding F3 fix): this base domain is
+	// ALWAYS scaffolded discipline:"full" (step 2b above), and F3's fix to
+	// check_spec_md_current now fires a violation for ANY discipline:full
+	// domain with no docs/gen/SPEC.md on disk -- so init-project must render
+	// SPEC.md from birth, or the freshly-scaffolded domain would immediately
+	// fail its own first `all-violations` run and violate D6's "no migration
+	// window" promise (the exact contract task #273/W6.2 exists to prove).
+	// A brand-new domain has zero verified_by entries at this point (only the
+	// INHERENTLY_PROSE seed requirement), so this BuildSpec pass is a fast,
+	// near-empty render -- no real `go test` recording work exists to do yet.
+	genWritten, _, err := genSpec(domainDir, claudeMDPath, today, "", true)
 	if err != nil {
 		return written, err
 	}

@@ -1052,3 +1052,135 @@ func TestRunVerifiedByTestRecording_RecursionGuard_Skips(t *testing.T) {
 		t.Fatalf("expected no artifacts on a Skipped run, got %d", len(result.Artifacts))
 	}
 }
+
+// --- F6: artifact shape validation + req_id cross-check (task W7.2) ---------
+
+// TestLooksLikeRecorderArtifact_ValidShape proves the shape checker accepts a
+// genuine recorder-produced artifact.
+func TestLooksLikeRecorderArtifact_ValidShape(t *testing.T) {
+	t.Parallel()
+	genuine := []byte(`{
+  "req_id": "R-test",
+  "test": "TestFoo",
+  "title": "Foo does bar",
+  "steps": [
+    {"kind": "given", "desc": "a precondition", "values": [{"k": "x", "v": "1"}]}
+  ],
+  "verdict": "pass"
+}` + "\n")
+	if !looksLikeRecorderArtifact(genuine) {
+		t.Fatalf("expected looksLikeRecorderArtifact to accept a genuine recorder artifact")
+	}
+}
+
+// TestLooksLikeRecorderArtifact_RejectsMalformed proves the shape checker
+// rejects common off-shape JSON a hand-crafted file might carry (F6 forge
+// vector: a test process os.WriteFile-ing arbitrary JSON into the record dir).
+func TestLooksLikeRecorderArtifact_RejectsMalformed(t *testing.T) {
+	t.Parallel()
+	cases := map[string][]byte{
+		"empty req_id": []byte(`{"req_id":"","test":"T","title":"t","steps":[],"verdict":"pass"}` + "\n"),
+		"bad verdict":  []byte(`{"req_id":"R","test":"T","title":"t","steps":[],"verdict":"maybe"}` + "\n"),
+		"missing steps field": []byte(`{"req_id":"R","test":"T","title":"t","verdict":"pass"}` + "\n"),
+		"not even json":       []byte(`hello world`),
+		"wrong structure":     []byte(`{"foo": "bar"}`),
+		"empty json object":   []byte(`{}`),
+	}
+	for name, data := range cases {
+		if looksLikeRecorderArtifact(data) {
+			t.Errorf("case %q: expected looksLikeRecorderArtifact to REJECT this shape", name)
+		}
+	}
+}
+
+// TestReadArtifacts_F6_RejectsOffShapeFiles proves readArtifacts skips files
+// that do not match the recorder's canonical shape, rather than ingesting them
+// as genuine artifacts. Plants a mix of genuine + malformed files in a temp
+// record dir and checks only the genuine one survives.
+func TestReadArtifacts_F6_RejectsOffShapeFiles(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	genuine := []byte(`{"req_id":"R-real","test":"TestReal","title":"real","steps":[],"verdict":"pass"}` + "\n")
+	forged := []byte(`{"whatever": "this is not a recorder artifact"}`)
+
+	if err := os.WriteFile(filepath.Join(dir, "R-real__TestReal.json"), genuine, 0o644); err != nil {
+		t.Fatalf("WriteFile genuine: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "forged.json"), forged, 0o644); err != nil {
+		t.Fatalf("WriteFile forged: %v", err)
+	}
+
+	arts, err := readArtifacts(dir)
+	if err != nil {
+		t.Fatalf("readArtifacts: %v", err)
+	}
+	if len(arts) != 1 {
+		t.Fatalf("F6: expected readArtifacts to return exactly 1 artifact (the genuine one), got %d: %+v", len(arts), arts)
+	}
+	if arts[0].FileName != "R-real__TestReal.json" {
+		t.Errorf("expected the genuine artifact, got %q", arts[0].FileName)
+	}
+}
+
+// scenarioTestWrongReqIDSrc is a fixture test whose NewScenario call names a
+// DIFFERENT requirement (R-different-req) than the requirement it will be
+// cited from (R-citing-req). F6's req_id cross-check in recordVerifiedByEntry
+// must filter this artifact out of R-citing-req's SPEC.md section.
+const scenarioTestWrongReqIDSrc = `package model
+
+import (
+	"testing"
+
+	"__MODULEPATH__/hotamspec"
+)
+
+func TestRequireComplete_ScenarioRecorded(t *testing.T) {
+	s := hotamspec.NewScenario(t, "R-different-req", "narrates a DIFFERENT requirement")
+	s.Given("a fields count of zero", "fields", 0)
+	err := RequireComplete(0)
+	s.When("RequireComplete is called")
+	s.Then("an error is returned", err != nil)
+	s.Value("error_text", err)
+}
+`
+
+// TestRecordVerifiedByEntry_F6_FiltersMismatchedReqID proves the F6 req_id
+// cross-check: a verified_by test whose recorded artifact names a DIFFERENT
+// requirement than the one being rendered is filtered out, not silently
+// rendered into the wrong requirement's SPEC.md section.
+func TestRecordVerifiedByEntry_F6_FiltersMismatchedReqID(t *testing.T) {
+	const modulePath = "example.com/f6reqidcheck"
+	// Use the same impl source as the recording fixture, but a test that
+	// records under "R-different-req" instead of "R-citing-req".
+	testSrc := strings.ReplaceAll(scenarioTestWrongReqIDSrc, "__MODULEPATH__", modulePath)
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", testSrc)
+
+	// Render for R-citing-req -- the test's artifact says R-different-req.
+	out := recordVerifiedByEntry(root, "R-citing-req", "model/impl_test.go:TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if !out.passed {
+		t.Fatalf("expected the test to pass (out.passed=true), got problem: %s", out.problem)
+	}
+	if len(out.artifacts) != 0 {
+		t.Fatalf("F6: expected recordVerifiedByEntry to filter out artifacts whose req_id (R-different-req) does not "+
+			"match the requirement being rendered (R-citing-req), got %d artifacts: %+v", len(out.artifacts), out.artifacts)
+	}
+}
+
+// TestRecordVerifiedByEntry_F6_KeepsMatchingReqID proves the F6 req_id
+// cross-check does NOT break the legitimate case: a verified_by test whose
+// recorded artifact names the SAME requirement as the one being rendered
+// passes through normally.
+func TestRecordVerifiedByEntry_F6_KeepsMatchingReqID(t *testing.T) {
+	const modulePath = "example.com/f6reqmatch"
+	testSrc := strings.ReplaceAll(scenarioTestSrc(modulePath), "R-example-recording", "R-citing-req")
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", testSrc)
+
+	out := recordVerifiedByEntry(root, "R-citing-req", "model/impl_test.go:TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if !out.passed {
+		t.Fatalf("expected the test to pass, got problem: %s", out.problem)
+	}
+	if len(out.artifacts) != 1 {
+		t.Fatalf("F6: expected recordVerifiedByEntry to keep the artifact whose req_id matches the rendered requirement, "+
+			"got %d artifacts", len(out.artifacts))
+	}
+}

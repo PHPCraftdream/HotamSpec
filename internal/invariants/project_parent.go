@@ -2,6 +2,7 @@ package invariants
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -83,6 +84,55 @@ func checkProjectParentDeclared(g *ontology.Graph) []Violation {
 		// (an explicit root-domain declaration) or a string naming the parent
 		// domain (a child-domain declaration). Both are valid declarations;
 		// D6's obligation is satisfied. No violation.
+		//
+		// F5 (task W7.2, @fx finding F5): SELF-REFERENCE DETECTION. A parent
+		// value that names THIS domain's own name (e.g. gpsm-sm's manifest
+		// declaring "parent": "gpsm-sm") is a self-reference -- a domain
+		// cannot be its own parent. This is the ONE parent-VALUE check that
+		// does NOT require reaching into a sibling domain's filesystem (it
+		// only needs filepath.Base(g.DomainDir), the domain's own directory
+		// name), so it is architecturally sound to enforce here without
+		// introducing the cross-domain-filesystem pattern no other invariant
+		// in this codebase uses. A self-referencing parent fires a violation.
+		if g.Parent != "" && g.DomainDir != "" {
+			ownName := filepath.Base(g.DomainDir)
+			if g.Parent == ownName {
+				return []Violation{{
+					Check: "check_project_parent_declared",
+					ID:    g.DomainDir,
+					Message: fmt.Sprintf(
+						"manifest.json declares \"parent\": %q for %s, but that is this domain's OWN name -- "+
+							"a domain cannot be its own parent; use \"parent\": null (root domain) or "+
+							"\"parent\": \"<a-different-domain-name>\" (child domain)",
+						g.Parent, ownName),
+				}}
+			}
+		}
+		//
+		// HONESTY BOUNDARY -- VALUE NOT RESOLVED AGAINST REAL DOMAINS (F5,
+		// task W7.2): this check validates that the parent key IS declared
+		// (presence) and that it is not a SELF-REFERENCE (parent == own
+		// name), but it does NOT validate that a NON-SELF parent value
+		// names a REAL sibling domain (e.g. "parent": "nonexistent-domain"
+		// or an A<->B cycle passes silently here). Every other filesystem-
+		// aware invariant in this codebase (check_graph_lock_pins_graph_json,
+		// check_recorder_current, check_spec_md_current) reads from the
+		// domain's OWN directory only; validating a sibling's existence
+		// (../<parent-name>/graph.json) would be architecturally new (no
+		// existing invariant reaches into a sibling domain's filesystem),
+		// and would break the existing test-fixture pattern (project_parent
+		// _test.go's temp-dir fixtures declare parent values pointing to
+		// real domain names like "hotam-spec-self" that do not exist as
+		// siblings inside the temp dir). The crystal's
+		// RenderParentProjectBlock (internal/generator/claudemd.go)
+		// renders whatever parent value is declared, unvalidated --
+		// a steward reading the crystal sees the declaration as-is.
+		// This scoping is deliberately LOUDLY documented here (matching
+		// this codebase's convention of never leaving an honesty boundary
+		// silent -- see checkScenarioExecutesImpl's own doc comment and
+		// the INHERENTLY_PROSE exemption's doc comment); a future wave
+		// MAY add cross-domain sibling validation as a separate invariant
+		// with its own anchoring and test fixtures.
 		return nil
 	}
 	return []Violation{{

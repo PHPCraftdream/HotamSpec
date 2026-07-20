@@ -10787,7 +10787,8 @@
         "check_settled_requires_scenario",
         "check_scenario_executes_impl",
         "check_spec_md_current",
-        "check_model_complete"
+        "check_model_complete",
+        "check_discipline_ratchet"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -10806,7 +10807,13 @@
         "internal/invariants/spec_md_current.go",
         "internal/invariants/model_complete.go"
       ],
-      "history": null,
+      "history": [
+        {
+          "at": "2026-07-20",
+          "summary": "enforced_by: [check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current, check_model_complete]→[check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current, check_model_complete, check_discipline_ratchet]",
+          "decided_by": ""
+        }
+      ],
       "decl_order": 0
     },
     {

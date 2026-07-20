@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -564,6 +565,18 @@ const recordDirEnvName = "HOTAM_RECORD_DIR"
 // order (os.ReadDir's own result is already name-sorted, but sorting again
 // explicitly here documents the guarantee rather than relying on an incidental
 // stdlib behavior this function does not itself control).
+//
+// F6 ARTIFACT SHAPE VALIDATION (task W7.2, @fx finding F6): before trusting a
+// JSON file as a genuine recorder artifact, this function verifies it matches
+// the EXACT shape internal/recorder/canon's writeArtifact produces
+// (req_id/test/title/steps/verdict fields, verdict is "pass" or "fail",
+// req_id non-empty). A file that does not match is SILENTLY SKIPPED (not
+// included in the returned slice) -- the record dir is a per-run tmp
+// directory the engine itself creates and sets via HOTAM_RECORD_DIR, so a
+// file that does not match the recorder's shape was not written by the
+// recorder. This closes the forge vector where a test process could
+// os.WriteFile a hand-crafted JSON mimicking the artifact shape into the
+// record dir, bypassing the real recorder API entirely.
 func readArtifacts(dir string) ([]RecordedArtifact, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -584,9 +597,52 @@ func readArtifacts(dir string) ([]RecordedArtifact, error) {
 		if err != nil {
 			return artifacts, fmt.Errorf("could not read artifact %s: %w", name, err)
 		}
+		if !looksLikeRecorderArtifact(data) {
+			// F6: this file does not match the recorder's canonical artifact
+			// shape -- skip it rather than trusting arbitrary JSON as a
+			// genuine recorder-produced artifact.
+			continue
+		}
 		artifacts = append(artifacts, RecordedArtifact{FileName: name, RawJSON: data})
 	}
 	return artifacts, nil
+}
+
+// looksLikeRecorderArtifact verifies that data decodes into the EXACT shape
+// internal/recorder/canon's writeArtifact produces (hotamspec.go's Artifact
+// struct): top-level fields req_id (non-empty string), test (string), title
+// (string), steps (array), and verdict ("pass" or "fail"). The recorder
+// ALWAYS writes all five fields in this shape, so a file missing any of them
+// or carrying unexpected types was not produced by the recorder. This is a
+// STRUCTURAL shape check only -- it does not validate the steps' internal
+// structure (that is specArtifact's own json.Unmarshal's job in
+// recordVerifiedByEntry) or the req_id's correctness for the requirement
+// being rendered (that is recordVerifiedByEntry's F6 req_id cross-check).
+func looksLikeRecorderArtifact(data []byte) bool {
+	var shape struct {
+		ReqID   string `json:"req_id"`
+		Test    string `json:"test"`
+		Title   string `json:"title"`
+		Steps   []any  `json:"steps"`
+		Verdict string `json:"verdict"`
+	}
+	if err := json.Unmarshal(data, &shape); err != nil {
+		return false
+	}
+	// The recorder always writes a non-empty reqID (NewScenario's first arg).
+	if shape.ReqID == "" {
+		return false
+	}
+	// The recorder only writes "pass" or "fail" (derived from t.Failed()).
+	if shape.Verdict != "pass" && shape.Verdict != "fail" {
+		return false
+	}
+	// Steps must be present (even if empty -- a scenario with zero steps is
+	// structurally possible, and the recorder writes `"steps": []`).
+	if shape.Steps == nil {
+		return false
+	}
+	return true
 }
 
 // isExitError reports whether err is (or wraps) an *exec.ExitError, writing

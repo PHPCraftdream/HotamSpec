@@ -489,6 +489,16 @@ func recordVerifiedByEntry(specRoot, reqID, entry, coverFile string) specTestOut
 		if parsed.Verdict != "pass" {
 			continue
 		}
+		// F6 (task W7.2, @fx finding F6): cross-check the artifact's req_id
+		// against the requirement ID actually being processed. A test cited
+		// by R-A's verified_by whose hotamspec.NewScenario(t, "R-B", ...)
+		// call names a DIFFERENT requirement would otherwise have its
+		// narrative rendered into R-A's SPEC.md section undetected. Filter
+		// it out the same way Verdict != "pass" is filtered -- do not render
+		// an artifact that belongs to a different requirement.
+		if parsed.ReqID != reqID {
+			continue
+		}
 		artifacts = append(artifacts, parsed)
 	}
 	out.artifacts = artifacts

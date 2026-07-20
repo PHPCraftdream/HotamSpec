@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -102,9 +103,33 @@ func checkSpecMDCurrent(g *ontology.Graph) []Violation {
 	committed, err := os.ReadFile(specPath)
 	if err != nil {
 		if os.IsNotExist(err) {
+			// F3 (task W7.2, @fx finding F3): a discipline:full domain that
+			// has no docs/gen/SPEC.md at all is NOT an honest no-op -- a
+			// discipline:full domain has made the explicit, one-way promise
+			// (PLAN-scenario-generated-spec.md §2 D4) that its normative text
+			// is generated from real scenario test runs; a missing SPEC.md
+			// means that promise's artifact is entirely absent, which is a
+			// violation, not an "hasn't adopted yet" state. Before F3, this
+			// branch was an unconditional honest no-op regardless of
+			// discipline -- a discipline:full domain with SPEC.md deleted
+			// (accidentally or maliciously) kept claiming the discipline
+			// while its entire generated normative text was gone, undetected
+			// by all-violations. A domain WITHOUT discipline:full keeps the
+			// existing honest no-op (it never promised a SPEC.md).
+			if g.Discipline == loader.DisciplineFull {
+				return []Violation{{
+					Check: "check_spec_md_current",
+					ID:    g.DomainDir,
+					Message: fmt.Sprintf(
+						"docs/gen/SPEC.md does not exist for %s, but this domain has declared discipline:\"full\" -- "+
+							"a discipline:full domain's normative text must be generated from real scenario test runs; "+
+							"run `hotam gen-spec --domain %s --spec` to generate it",
+						g.DomainDir, g.DomainDir),
+				}}
+			}
 			// This domain has never adopted the scenario-generated-spec
-			// layer (no `gen-spec --spec` run yet) -- honest no-op, see doc
-			// comment above.
+			// layer (no `gen-spec --spec` run yet) and is not discipline:full
+			// -- honest no-op, see doc comment above.
 			return nil
 		}
 		return []Violation{{
