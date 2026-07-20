@@ -137,17 +137,21 @@ Usage:
   hotam <command> [flags] [args]
 
 Commands:
-  init <dir> [--name <domain-name>] [--profile consumer|full] [--require-provenance]
+  init <dir> [--name <domain-name>] [--profile consumer|full] [--require-provenance] [--parent <parent-domain-name>]
         Scaffold a new domain: minimal graph.json (seed Stakeholder + seed
         SETTLED Requirement, all-violations=0 immediately), manifest.json
-        (defaults to the consumer gen-spec profile, matching init-project),
-        docs/gen/, and a README.md pointing at the next commands to run.
-        --profile full overrides to the heavier framework-self-hosting doc
-        set. --require-provenance sets require_provenance: true in
-        manifest.json, requiring source_refs/last_reviewed_at/review_after on
-        every SETTLED requirement landed into this domain. <dir> may be
-        anywhere on disk — it does not need to live under this repository or
-        contain a domains/ ancestor.
+        (defaults to the consumer gen-spec profile, matching init-project,
+        and "parent": null — a root domain by default, PLAN-scenario-
+        generated-spec.md §2 D6), docs/gen/, and a README.md pointing at the
+        next commands to run. --profile full overrides to the heavier
+        framework-self-hosting doc set. --require-provenance sets
+        require_provenance: true in manifest.json, requiring source_refs/
+        last_reviewed_at/review_after on every SETTLED requirement landed
+        into this domain. --parent <name> declares this domain a child of
+        <name> instead of a root (writes "parent": "<name>"; not validated
+        against a live filesystem lookup). <dir> may be anywhere on disk —
+        it does not need to live under this repository or contain a
+        domains/ ancestor.
   init-project <dir> [--domain <name>] [--today YYYY-MM-DD] [--require-provenance]
         Bootstrap an external business project's full Hotam-Spec layout in one
         call: scaffold a base domain under <dir>/domains/<name> (default

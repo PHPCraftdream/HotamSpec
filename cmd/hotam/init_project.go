@@ -29,10 +29,32 @@ const defaultInitProjectDomain = "main"
 // brand-new adopter lands on a fully working project the instant the command
 // returns — "we say HOW, the business builds WHAT using our HOW".
 //
+// BORN FULLY OBLIGATED (PLAN-scenario-generated-spec.md §2 D6, task W6.2):
+// the scaffolded base domain is immediately (a) "parent": null in its
+// manifest.json (it is the root of the new external project, within the
+// framework's own hierarchy — see W6.1's manifest.parent mechanism), (b)
+// "discipline": "full" in its manifest.json, UNCONDITIONALLY — not an opt-in
+// flag the way --require-provenance is, because a brand-new project has no
+// prior soft-discipline history to migrate FROM ("у новых проектов нет
+// миграционного окна, обязанность действует с рождения" — no migration
+// window, the obligation acts from birth), and (c) equipped with a real
+// spec/go.mod + the vendored hotamspec scenario recorder
+// (spec/hotamspec/hotamspec.go), so the discipline it is born under is
+// immediately actionable, not just declared. The seed requirement initDomain
+// writes (R-domain-exists) already satisfies check_settled_requires_scenario
+// under discipline:full via the INHERENTLY_PROSE exemption (it carries
+// Enforceability: INHERENTLY_PROSE with no carrier) — see
+// internal/invariants/scenario_discipline.go — so the freshly-scaffolded
+// domain passes a REAL `hotam all-violations` run with ZERO manual
+// follow-up, proving the "no migration window" promise holds from the very
+// first command.
+//
 // It is a pure composition of the two existing primitives — initDomain (the
 // per-domain scaffold) and genSpec (the doc/crystal generator) — plus a
-// marker-file write. It does not reimplement either: a future change to domain
-// scaffolding or doc generation flows through init-project for free.
+// marker-file write and the vendored-recorder scaffold (vendorRecorder,
+// cmd/hotam/vendor_recorder.go). It does not reimplement any of them: a
+// future change to domain scaffolding, doc generation, or recorder vendoring
+// flows through init-project for free.
 func cmdInitProject(args []string) error {
 	fs := newFlagSet("init-project")
 	domainName := fs.String("domain", "", "name of the base domain to scaffold under <dir>/domains/ (default: "+defaultInitProjectDomain+")")
@@ -125,24 +147,68 @@ func initProject(dir, domainName, today string, requireProvenance bool) ([]strin
 		return nil, err
 	}
 
-	// (2b) initDomain already writes gen_profile: consumer into the
-	// manifest (R8-e: unified with init-project's own historical default), so
-	// no second manifest write is needed here UNLESS --require-provenance was
-	// passed, in which case a single follow-up write adds
-	// "require_provenance": true while preserving initDomain's own
-	// self_hosting/gen_profile fields verbatim — never a second independent
-	// blind overwrite (R12-b; see cmdInit's own composition comment for the
-	// landmine this avoids when a future --profile flag lands here too).
-	// genSpec's profile parameter is passed "" below so it resolves from that
-	// manifest, making the consumer-file-count reduction visible immediately
-	// on the very first gen-spec inside init-project's own pipeline.
+	// (2b) initDomain already writes gen_profile: consumer and "parent": null
+	// into the manifest (R8-e: unified with init-project's own historical
+	// default; "parent": null per W6.1/D6 — this base domain has no parent
+	// WITHIN the framework's own hierarchy, it IS the root of the new
+	// external project). This step layers "discipline": "full" into the SAME
+	// composed manifest write, UNCONDITIONALLY — not gated behind a flag the
+	// way --require-provenance is below. PLAN-scenario-generated-spec.md §2
+	// D6 (task W6.2): "init-project создаёт под-проект СРАЗУ с
+	// discipline: full ... у новых проектов нет миграционного окна,
+	// обязанность действует с рождения" — a brand-new project scaffolded by
+	// init-project has no prior soft-discipline history to migrate FROM, so
+	// there is nothing to opt into; it is simply born under the stricter
+	// discipline check_settled_requires_scenario enforces
+	// (internal/invariants/scenario_discipline.go). --require-provenance
+	// additionally adds "require_provenance": true while preserving
+	// initDomain's own self_hosting/gen_profile/parent fields verbatim — one
+	// single follow-up write, never a second independent blind overwrite
+	// (R12-b; see cmdInit's own composition comment for the landmine this
+	// avoids when combining flags). genSpec's profile parameter is passed ""
+	// below so it resolves from that manifest, making the consumer-file-count
+	// reduction visible immediately on the very first gen-spec inside
+	// init-project's own pipeline.
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	manifest := "{\"self_hosting\": false, \"gen_profile\": \"consumer\", \"parent\": null, \"discipline\": \"full\""
 	if requireProvenance {
-		manifestPath := filepath.Join(domainDir, "manifest.json")
-		manifest := "{\"self_hosting\": false, \"gen_profile\": \"consumer\", \"require_provenance\": true}\n"
-		if err := writeFileMkdir(manifestPath, []byte(manifest)); err != nil {
-			return written, fmt.Errorf("write %s: %w", manifestPath, err)
-		}
+		manifest += ", \"require_provenance\": true"
 	}
+	manifest += "}\n"
+	if err := writeFileMkdir(manifestPath, []byte(manifest)); err != nil {
+		return written, fmt.Errorf("write %s: %w", manifestPath, err)
+	}
+
+	// (2c) Scaffold the vendored hotamspec scenario recorder from birth —
+	// the second half of "born fully obligated" (PLAN-scenario-generated-
+	// spec.md §2 D6, task W6.2): a domain born discipline:"full" needs a
+	// real spec/ Go module and a vendored recorder available immediately,
+	// not after a manual follow-up step. Two sub-steps, in order:
+	//
+	//   (i) write <domainDir>/spec/go.mod — a fresh, minimal Go module.
+	//       Module-naming convention (module <domain-name>-spec, go 1.25)
+	//       mirrors the established shape already used by every consumer
+	//       domain in the sibling PRAT-hotam repo (domains/prat/spec/go.mod,
+	//       domains/gpsm-sm/spec/go.mod), for consistency across the whole
+	//       framework's consumer domains.
+	//   (ii) call the EXISTING vendorRecorder(domainDir) (cmd/hotam/
+	//        vendor_recorder.go) — do NOT reimplement the vendoring logic,
+	//        it already copies the canonical recorder source (internal/
+	//        recorder/canon/hotamspec.go), banner-stamped do-not-edit, into
+	//        spec/hotamspec/hotamspec.go. It REQUIRES spec/go.mod to exist
+	//        first (see its own doc comment), hence (i) before (ii).
+	specGoModPath := filepath.Join(domainDir, "spec", "go.mod")
+	specGoMod := fmt.Sprintf("module %s-spec\n\ngo 1.25\n", domainName)
+	if err := writeFileMkdir(specGoModPath, []byte(specGoMod)); err != nil {
+		return written, fmt.Errorf("write %s: %w", specGoModPath, err)
+	}
+	written = append(written, specGoModPath)
+
+	recorderPath, err := vendorRecorder(domainDir)
+	if err != nil {
+		return written, fmt.Errorf("vendor recorder into %s: %w", domainDir, err)
+	}
+	written = append(written, recorderPath)
 
 	// (3) Write the project-root marker, recording the scaffolded domain as the
 	// active-domain preference. paths.WriteActiveDomain writes

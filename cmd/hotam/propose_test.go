@@ -1116,7 +1116,7 @@ func TestCmdPropose_Requirement_Land_RequireProvenance_WithFlags_Succeeds(t *tes
 		t.Fatalf("initDomain: %v", err)
 	}
 	manifestPath := filepath.Join(domainDir, "manifest.json")
-	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true}\n"), 0o644); err != nil {
+	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true, \"parent\": null}\n"), 0o644); err != nil {
 		t.Fatalf("write require_provenance manifest: %v", err)
 	}
 
@@ -1161,7 +1161,7 @@ func TestCmdPropose_Requirement_Land_RequireProvenance_MissingFlags_Refused(t *t
 		t.Fatalf("initDomain: %v", err)
 	}
 	manifestPath := filepath.Join(domainDir, "manifest.json")
-	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true}\n"), 0o644); err != nil {
+	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true, \"parent\": null}\n"), 0o644); err != nil {
 		t.Fatalf("write require_provenance manifest: %v", err)
 	}
 

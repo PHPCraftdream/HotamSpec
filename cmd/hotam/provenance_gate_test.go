@@ -15,7 +15,11 @@ import (
 // {"require_provenance": true} (same self_hosting:false as initDomain's
 // default, since the field is orthogonal) — mirroring the
 // os.WriteFile(manifestPath, ...) pattern gen_spec_profile_test.go already
-// uses to control manifest content directly in a test.
+// uses to control manifest content directly in a test. The overwrite also
+// preserves initDomain's own "parent": null default (W6.1/D6: manifest.parent
+// is mandatory once a manifest exists, check_project_parent_declared fires
+// otherwise) — a raw overwrite that dropped it would be exactly the
+// composition landmine R12-b's own doc comments warn against.
 func setupProvenanceTestDomain(t *testing.T, requireProvenance bool) string {
 	t.Helper()
 	root := t.TempDir()
@@ -25,7 +29,7 @@ func setupProvenanceTestDomain(t *testing.T, requireProvenance bool) string {
 	}
 	if requireProvenance {
 		manifestPath := filepath.Join(domainDir, "manifest.json")
-		if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true}\n"), 0o644); err != nil {
+		if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true, \"parent\": null}\n"), 0o644); err != nil {
 			t.Fatalf("write require_provenance manifest: %v", err)
 		}
 	}

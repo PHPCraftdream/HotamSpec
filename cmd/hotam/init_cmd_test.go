@@ -258,3 +258,135 @@ func TestCmdInit_RequireProvenanceDefaultOff(t *testing.T) {
 		t.Errorf("loader.ResolveRequireProvenance = true without --require-provenance, want false")
 	}
 }
+
+// readManifestParent reads a domain's manifest.json and returns its "parent"
+// value plus whether the key is present at all, distinguishing JSON null
+// (present=true, value="") from a genuinely absent key (present=false) —
+// exactly the triple loader.ResolveParent/g.ParentDeclared/g.Parent resolve,
+// but read directly off disk here so the test asserts on the literal
+// scaffolded bytes, not just the loader's own reading of them.
+func readManifestParent(t *testing.T, manifestPath string) (value string, present bool) {
+	t.Helper()
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("read manifest %s: %v", manifestPath, err)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal manifest %s: %v", manifestPath, err)
+	}
+	pv, ok := raw["parent"]
+	if !ok {
+		return "", false
+	}
+	if string(pv) == "null" {
+		return "", true
+	}
+	var s string
+	if err := json.Unmarshal(pv, &s); err != nil {
+		t.Fatalf("unmarshal parent in %s: %v", manifestPath, err)
+	}
+	return s, true
+}
+
+// TestCmdInit_DefaultsToRootParentAndPassesAllViolations proves the core W6.2
+// promise for the SIMPLE case: `hotam init <dir>` (bare, no init-project, no
+// --parent flag) scaffolds a manifest.json carrying "parent": null (the D6
+// EXPLICIT root-domain declaration — see internal/invariants/
+// project_parent.go's checkProjectParentDeclared), and a subsequent
+// `all-violations` run against that freshly-scaffolded domain is 0
+// violations — proving check_project_parent_declared (and every other
+// invariant) is satisfied from birth, with no migration window, even for a
+// domain scaffolded by the simplest possible onboarding command.
+func TestCmdInit_DefaultsToRootParentAndPassesAllViolations(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	domainDir := filepath.Join(dir, "root-domain")
+	if err := cmdInit([]string{domainDir}); err != nil {
+		t.Fatalf("cmdInit (default): %v", err)
+	}
+
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	value, present := readManifestParent(t, manifestPath)
+	if !present {
+		t.Fatalf("manifest.json has no \"parent\" key after bare `hotam init`; want \"parent\": null")
+	}
+	if value != "" {
+		t.Errorf("manifest.json \"parent\" = %q, want JSON null (root-domain declaration)", value)
+	}
+
+	violations, err := allViolations(domainDir)
+	if err != nil {
+		t.Fatalf("allViolations: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("freshly-scaffolded `hotam init` domain has %d violation(s), want 0: %+v", len(violations), violations)
+	}
+}
+
+// TestCmdInit_ParentFlagWritesChildDeclaration proves `hotam init --parent
+// <name>` overrides initDomain's root-domain default with a child
+// declaration ("parent": "<name>"), composed correctly alongside the other
+// manifest-affecting flags (--profile, --require-provenance) so no flag's
+// write silently discards another's — mirroring
+// TestCmdInit_ProfileFullAndRequireProvenanceCombine's own composition
+// proof.
+func TestCmdInit_ParentFlagWritesChildDeclaration(t *testing.T) {
+	t.Parallel()
+
+	// --parent alone.
+	dir := t.TempDir()
+	domainDir := filepath.Join(dir, "child-domain")
+	if err := cmdInit([]string{"--parent", "some-name", domainDir}); err != nil {
+		t.Fatalf("cmdInit --parent some-name: %v", err)
+	}
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	value, present := readManifestParent(t, manifestPath)
+	if !present {
+		t.Fatalf("manifest.json has no \"parent\" key after --parent some-name")
+	}
+	if value != "some-name" {
+		t.Errorf("manifest.json \"parent\" = %q, want \"some-name\"", value)
+	}
+
+	violations, err := allViolations(domainDir)
+	if err != nil {
+		t.Fatalf("allViolations: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("--parent-scaffolded domain has %d violation(s), want 0: %+v", len(violations), violations)
+	}
+
+	// --parent composed with --profile full and --require-provenance: none
+	// of the three flags' writes may clobber another's.
+	comboDir := t.TempDir()
+	comboDomain := filepath.Join(comboDir, "combo-domain")
+	if err := cmdInit([]string{"--parent", "combo-parent", "--profile", "full", "--require-provenance", comboDomain}); err != nil {
+		t.Fatalf("cmdInit --parent --profile full --require-provenance: %v", err)
+	}
+	comboManifest := filepath.Join(comboDomain, "manifest.json")
+	comboParent, comboParentPresent := readManifestParent(t, comboManifest)
+	if !comboParentPresent || comboParent != "combo-parent" {
+		t.Errorf("combined flags: manifest \"parent\" present=%v value=%q, want present=true value=\"combo-parent\"", comboParentPresent, comboParent)
+	}
+	if gotProfile := readManifestGenProfile(t, comboManifest); gotProfile != "full" {
+		t.Errorf("combined flags: manifest gen_profile = %q, want \"full\" (--parent must not clobber --profile full)", gotProfile)
+	}
+	comboProvenance, comboProvenancePresent := readManifestRequireProvenance(t, comboManifest)
+	if !comboProvenancePresent || !comboProvenance {
+		t.Errorf("combined flags: manifest require_provenance present=%v value=%v, want present=true value=true (--parent must not clobber --require-provenance)", comboProvenancePresent, comboProvenance)
+	}
+
+	// No --parent → default root declaration (JSON null), matching the bare
+	// default proven in TestCmdInit_DefaultsToRootParentAndPassesAllViolations.
+	defaultDir := t.TempDir()
+	defaultDomain := filepath.Join(defaultDir, "default-parent-domain")
+	if err := cmdInit([]string{defaultDomain}); err != nil {
+		t.Fatalf("cmdInit (default, no --parent): %v", err)
+	}
+	defaultValue, defaultPresent := readManifestParent(t, filepath.Join(defaultDomain, "manifest.json"))
+	if !defaultPresent || defaultValue != "" {
+		t.Errorf("no --parent: manifest \"parent\" present=%v value=%q, want present=true value=\"\" (JSON null)", defaultPresent, defaultValue)
+	}
+}

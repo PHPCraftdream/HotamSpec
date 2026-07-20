@@ -38,19 +38,32 @@ import (
 //     stays observable/separate, matching QUICKSTART-CONSUMER.md's own
 //     step-by-step structure).
 //   - <dir>/manifest.json — {"self_hosting": false, "gen_profile":
-//     "consumer"}, so internal/loader.resolveSelfHosting reads a real,
-//     explicit value instead of silently defaulting via a missing file, and
-//     ResolveGenProfile resolves to the consumer profile — matching
-//     init-project's own default so both onboarding paths are consistent
-//     (R8-e: --profile full overrides this to the heavier full-profile
-//     output set for a domain that needs framework-self-hosting-style docs).
+//     "consumer", "parent": null}, so internal/loader.resolveSelfHosting reads
+//     a real, explicit value instead of silently defaulting via a missing
+//     file, and ResolveGenProfile resolves to the consumer profile —
+//     matching init-project's own default so both onboarding paths are
+//     consistent (R8-e: --profile full overrides this to the heavier
+//     full-profile output set for a domain that needs
+//     framework-self-hosting-style docs). "parent": null is initDomain's
+//     own unconditional default (PLAN-scenario-generated-spec.md §2 D6,
+//     task W6.1/W6.2): a domain scaffolded via bare `hotam init` with no
+//     wrapping project and no --parent flag is, by definition, a ROOT domain
+//     unless told otherwise, so it satisfies check_project_parent_declared
+//     (internal/invariants/project_parent.go) the instant `hotam init`
+//     returns — no migration window, matching the seed requirement's own
+//     born-clean discipline. --parent <name> overrides this default to a
+//     child declaration ("parent": "<name>") for a caller founding a domain
+//     that IS a sub-project of an existing one; this flag does NOT validate
+//     that a domain named <name> actually exists on disk (matching how
+//     --domain flags elsewhere in this codebase don't validate against a
+//     live filesystem lookup either — that is out of scope for this command).
 //     --require-provenance additionally sets "require_provenance": true in
 //     this same manifest, so internal/loader.ResolveRequireProvenance (task
 //     #158) reports true from the very first `hotam land` in this domain —
 //     no hand-editing manifest.json after scaffolding required (R12-b).
-//     Both overrides are composed into ONE manifest write when either is
-//     set, so combining --profile full with --require-provenance never lets
-//     one flag's write silently discard the other's.
+//     All overrides (--profile, --require-provenance, --parent) are composed
+//     into ONE manifest write when any is set, so combining them never lets
+//     one flag's write silently discard another's.
 //   - <dir>/README.md — a short pointer back at the graph + the `hotam`
 //     commands to run next, so a directory listing alone orients a human.
 //
@@ -68,10 +81,11 @@ func cmdInit(args []string) error {
 	profile := fs.String("profile", "", "gen-spec profile: consumer|full (default: consumer, matching init-project; full produces the heavier framework-self-hosting doc set)")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — used as the seed requirement's last_reviewed_at/review_after basis; pin this for reproducible/byte-identical scaffolding")
 	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into this domain (writes require_provenance: true into manifest.json; see internal/loader.ResolveRequireProvenance)")
+	parentFlag := fs.String("parent", "", "name of this domain's parent domain (default: none — this is a root domain, written as \"parent\": null; PLAN-scenario-generated-spec.md §2 D6). Not validated against a live filesystem lookup.")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full] [--today YYYY-MM-DD] [--require-provenance]")
+		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full] [--today YYYY-MM-DD] [--require-provenance] [--parent <parent-domain-name>]")
 	}
 	rawDir := fs.Arg(0)
 
@@ -103,15 +117,16 @@ func cmdInit(args []string) error {
 	}
 
 	// initDomain defaults to the consumer gen-spec profile (matching
-	// init-project) and require_provenance omitted (false). --profile full
-	// and/or --require-provenance override that default. Both flags are
-	// resolved together into ONE final manifest write, rather than two
-	// independent blind overwrites layered on top of each other — a prior
-	// version of this code rewrote the WHOLE manifest.json for --profile
-	// full alone, which would have silently discarded --require-provenance
-	// if it wrote independently. Composing here means the two flags can
-	// never clobber each other, however they're combined.
-	if *profile == loader.GenProfileFull || *requireProvenance {
+	// init-project), require_provenance omitted (false), and "parent": null
+	// (this domain is a root, per D6 — see initDomain's own doc comment).
+	// --profile full, --require-provenance, and/or --parent <name> override
+	// those defaults. All three flags are resolved together into ONE final
+	// manifest write, rather than independent blind overwrites layered on
+	// top of each other — a prior version of this code rewrote the WHOLE
+	// manifest.json for --profile full alone, which would have silently
+	// discarded --require-provenance if it wrote independently. Composing
+	// here means the flags can never clobber each other, however combined.
+	if *profile == loader.GenProfileFull || *requireProvenance || *parentFlag != "" {
 		manifestProfile := loader.GenProfileConsumer
 		if *profile == loader.GenProfileFull {
 			manifestProfile = loader.GenProfileFull
@@ -119,6 +134,11 @@ func cmdInit(args []string) error {
 		manifest := fmt.Sprintf("{\"self_hosting\": false, \"gen_profile\": %q", manifestProfile)
 		if *requireProvenance {
 			manifest += ", \"require_provenance\": true"
+		}
+		if *parentFlag != "" {
+			manifest += fmt.Sprintf(", \"parent\": %q", *parentFlag)
+		} else {
+			manifest += ", \"parent\": null"
 		}
 		manifest += "}\n"
 
@@ -199,7 +219,7 @@ func initDomain(domainDir, domainName, today string) ([]string, error) {
 	written := []string{graphPath, loader.LockPath(graphPath)}
 
 	manifestPath := filepath.Join(domainDir, "manifest.json")
-	if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false, \"gen_profile\": \"consumer\"}\n")); err != nil {
+	if err := writeFileMkdir(manifestPath, []byte("{\"self_hosting\": false, \"gen_profile\": \"consumer\", \"parent\": null}\n")); err != nil {
 		return nil, err
 	}
 	written = append(written, manifestPath)
