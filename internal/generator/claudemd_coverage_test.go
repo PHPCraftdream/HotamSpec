@@ -40,7 +40,7 @@ func TestRenderClaudeMDFromTemplate_Fixture(t *testing.T) {
 	for _, block := range []string{
 		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
 		"EMBEDDED-TOOLS", "OPERATOR-RECURSION",
-		"LIVE-STATE", "DOMAIN-MAP", "CONSTITUTION", "AGENT-MAP",
+		"LIVE-STATE", "DOMAIN-MAP", "PARENT-PROJECT", "CONSTITUTION", "AGENT-MAP",
 		"CONCEPT-MAP", "RECENTLY-REJECTED",
 	} {
 		begin := "<!-- " + block + ":BEGIN -->"
@@ -895,7 +895,7 @@ func TestRenderClaudeMDFromTemplate_NoProseBetweenSentinels(t *testing.T) {
 	blockNames := []string{
 		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
 		"EMBEDDED-TOOLS", "OPERATOR-RECURSION",
-		"LIVE-STATE", "DOMAIN-MAP", "CONSTITUTION", "AGENT-MAP",
+		"LIVE-STATE", "DOMAIN-MAP", "PARENT-PROJECT", "CONSTITUTION", "AGENT-MAP",
 		"CONCEPT-MAP", "RECENTLY-REJECTED",
 	}
 	begins := make(map[string]bool)
@@ -1012,7 +1012,7 @@ func TestRenderClaudeMDFromTemplate_SingleDomainConsolidatesToOneCrystal(t *test
 	for _, block := range []string{
 		"OPERATOR-ROLE", "MEDIATION-LOOP", "EMBEDDED-THINKING",
 		"EMBEDDED-TOOLS", "OPERATOR-RECURSION",
-		"LIVE-STATE", "DOMAIN-MAP", "CONSTITUTION", "AGENT-MAP",
+		"LIVE-STATE", "DOMAIN-MAP", "PARENT-PROJECT", "CONSTITUTION", "AGENT-MAP",
 		"CONCEPT-MAP", "RECENTLY-REJECTED",
 	} {
 		if _, ok := ExtractBlock(out, block); !ok {

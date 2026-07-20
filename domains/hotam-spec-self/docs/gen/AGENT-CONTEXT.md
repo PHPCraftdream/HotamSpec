@@ -8,7 +8,7 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-spec-self/docs/gen/UNENFORCED.md.
 - **debt:** 172/248 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 316 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 19985 chars (headroom 130015)
+- **graph:** 316 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 20159 chars (headroom 129841)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 
@@ -16,11 +16,11 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - [P7] ADVISORY on `feature-blocked-roadmap` — 35 SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.
-- [P7] ADVISORY on `review-freshness` — 6 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-19` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
+- [P7] ADVISORY on `review-freshness` — 6 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-20` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
 
 ## Status counters
 
-SETTLED 248 · DRAFT 2 · REJECTED 42 · OVERDUE 0 (as of 2026-07-19)
+SETTLED 248 · DRAFT 2 · REJECTED 42 · OVERDUE 0 (as of 2026-07-20)
 
 ## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)
 

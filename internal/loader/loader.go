@@ -107,6 +107,10 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		DomainDir:     filepath.Dir(path),
 		Discipline:    ResolveDiscipline(path),
 	}
+	parentDecl := ResolveParent(path)
+	g.ManifestExists = parentDecl.ManifestExists
+	g.ParentDeclared = parentDecl.Declared
+	g.Parent = parentDecl.Value
 	if err := validateGraph(g); err != nil {
 		return nil, fmt.Errorf("load graph: %s: %w", path, err)
 	}
@@ -327,6 +331,108 @@ func ResolveDiscipline(graphPath string) string {
 		return DisciplineFull
 	}
 	return ""
+}
+
+// ParentDeclaration is the result of ResolveParent. D6 makes "parent"
+// MANDATORY for any domain that has a manifest.json at all -- but unlike
+// Discipline/GenProfile/RequireProvenance, a bare *string cannot carry the
+// needed distinctions, so this type surfaces THREE independent facts:
+//
+//   - ManifestExists: whether manifest.json exists at all next to graph.json.
+//     A domain with NO manifest.json (the shape of countless synthetic
+//     test-fixture graphs across this codebase that build an
+//     ontology.Graph{DomainDir: someTempDir, ...} directly, in Go code,
+//     without ever running `hotam init` or writing a manifest.json) is not a
+//     "real" domain in the sense D6 cares about -- it never had the chance to
+//     declare a parent because it never had a manifest at all. Mirrors every
+//     sibling resolver's own convention (ResolveDiscipline/ResolveGenProfile/
+//     ResolveRequireProvenance all treat "manifest missing" as the soft
+//     default, not an error) rather than inventing a new, stricter contract
+//     for this one field.
+//   - Declared: whether the "parent" KEY is present in an EXISTING
+//     manifest.json (whether the value is JSON null or a string -- both
+//     count as "declared"). Only meaningful when ManifestExists is true.
+//   - Value: the parent-domain name when the key is present with a non-empty
+//     string; "" both when the key is present with JSON null/empty-string
+//     (an EXPLICIT root declaration) and when the key is absent or the
+//     manifest itself is absent (Declared/ManifestExists distinguish those
+//     from the root case).
+//
+// check_project_parent_declared (internal/invariants/project_parent.go) fires
+// a violation ONLY when ManifestExists && !Declared -- a domain that HAS a
+// manifest.json but never declared its parent. ManifestExists=false is a
+// HONEST NO-OP, the same shape as every sibling resolver's missing-manifest
+// default.
+type ParentDeclaration struct {
+	ManifestExists bool
+	Declared       bool
+	Value          string
+}
+
+// ResolveParent reads the manifest.json "parent" field sitting next to
+// graph.json and resolves it into the ParentDeclaration D6 requires
+// (PLAN-scenario-generated-spec.md §2 D6, task W6.1).
+//
+// A plain *string field unmarshaled from a struct CANNOT distinguish "key
+// absent" from "key present with JSON null" (both decode to nil), so this
+// reader decodes manifest.json into map[string]json.RawMessage FIRST and
+// checks map presence ("parent" key in the map), THEN decodes the raw value
+// into a string for the content. This is the established idiom for
+// optional-vs-explicit-null detection in Go's encoding/json.
+//
+// Returns ParentDeclaration{} (ManifestExists: false, the HONEST NO-OP case --
+// mirrors every sibling resolver's missing-manifest default) when
+// manifest.json does not exist at all (os.ReadFile error) -- there is no
+// manifest for a "parent" key to be missing FROM.
+//
+// Returns ParentDeclaration{ManifestExists: true, Declared: false} (the
+// check_project_parent_declared VIOLATION case -- a manifest exists yet never
+// declared its parent) when:
+//
+//   - manifest.json exists but is malformed JSON (first json.Unmarshal
+//     error) -- a manifest that exists but cannot even be parsed has
+//     certainly not validly declared parent.
+//   - "parent" key absent from the map (the canonical violation case D6
+//     exists to catch: the steward simply never declared the field).
+//   - "parent" key present but its value is neither a JSON string nor JSON
+//     null (a number, bool, object, or array -- a malformed declaration).
+//     json.Unmarshal of JSON null into a plain string is NOT an error (it
+//     leaves the string at its zero value ""), so null reaches the
+//     Declared=true branch below; only the other non-string types fail here.
+//
+// Returns ParentDeclaration{ManifestExists: true, Declared: true, Value: ""}
+// when the key is present with JSON null or an explicit empty string -- the
+// valid root-domain declaration ("this domain has no parent").
+//
+// Returns ParentDeclaration{ManifestExists: true, Declared: true, Value: <name>}
+// when the key is present with a non-empty string -- the valid child-domain
+// declaration ("this domain's parent is <name>").
+func ResolveParent(graphPath string) ParentDeclaration {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return ParentDeclaration{}
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return ParentDeclaration{ManifestExists: true}
+	}
+	rawParent, ok := raw["parent"]
+	if !ok {
+		return ParentDeclaration{ManifestExists: true}
+	}
+	// Key present. Decode the raw value into a string: JSON null decodes
+	// into a plain string as "" with no error (encoding/json treats null as
+	// "leave the target unchanged"), and a JSON string decodes to its value.
+	// Any other JSON type (number/bool/object/array) is a malformed
+	// declaration and is treated as Declared=false -- the steward named a
+	// value that is neither a string nor null, so it is not a valid
+	// declaration of either root or child.
+	var s string
+	if err := json.Unmarshal(rawParent, &s); err != nil {
+		return ParentDeclaration{ManifestExists: true}
+	}
+	return ParentDeclaration{ManifestExists: true, Declared: true, Value: s}
 }
 
 // DomainPresentation carries the optional DOMAIN-MAP presentation fields of a

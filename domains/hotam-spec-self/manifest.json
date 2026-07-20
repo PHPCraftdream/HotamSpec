@@ -6,5 +6,6 @@
     "atomize all compound check_*",
     "every CLAUDE.md section auto-generated from substrate"
   ],
-  "director": "director"
+  "director": "director",
+  "parent": null
 }

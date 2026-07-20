@@ -521,9 +521,55 @@ func runeTruncateEllipsis(s string, keep int) string {
 	return strings.TrimRight(string(r[:keep]), " \t\r\n") + "…"
 }
 
+// RenderParentProjectBlock renders the PARENT-PROJECT block content (without
+// sentinels): the active domain's place in the sub-project hierarchy, read
+// from the manifest.json "parent" field resolved by loader.ResolveParent at
+// LoadGraph time and surfaced on the loaded graph as g.ParentDeclared /
+// g.Parent (PLAN-scenario-generated-spec.md §2 D6, task W6.1).
+//
+// This is a single-domain block (it renders the ACTIVE domain's parent, not a
+// map over all domains) like LIVE-STATE / CONSTITUTION, NOT like DOMAIN-MAP
+// (which walks every domains/<name>/ directory). It sits in the BUSINESS
+// bucket directly after DOMAIN-MAP because, like DOMAIN-MAP, it is a
+// manifest-derived section (purpose/goals/director/parent all live in
+// manifest.json, not graph.json).
+//
+// The three manifest tri-states render as:
+//
+//   - g.ParentDeclared == false: the "parent" key is absent from manifest.json.
+//     In a live domain this state is already firing a
+//     check_project_parent_declared violation (so this branch should not be
+//     the steady-state output for any real domain), but the renderer renders
+//     an HONEST placeholder rather than empty output if it is reached, naming
+//     the invariant so a reader of the crystal is pointed at the actionable
+//     fix rather than seeing a blank section.
+//   - g.ParentDeclared == true, g.Parent == "": JSON null -- the explicit
+//     root-domain declaration. Renders "This is a root domain (no parent).".
+//   - g.ParentDeclared == true, g.Parent != "": a non-empty string -- the
+//     child-domain declaration. Renders "Parent: `<name>`.".
+//
+// g is expected to be the active domain's loaded graph (loader.LoadGraph
+// populates ParentDeclared/Parent); a synthetic in-memory graph leaves both
+// at the zero value (ParentDeclared=false, Parent="") and renders the
+// placeholder branch -- harmless for the smoke/byte-identity fixtures, which
+// do not assert this block's content.
+func RenderParentProjectBlock(g *ontology.Graph) string {
+	line := "### Parent project"
+	var body string
+	switch {
+	case g.ParentDeclared && g.Parent != "":
+		body = "Parent: `" + g.Parent + "`."
+	case g.ParentDeclared:
+		body = "This is a root domain (no parent)."
+	default:
+		body = "_(parent not yet declared — see check_project_parent_declared)_"
+	}
+	return strings.Join([]string{generatedHeaderComment, "", line, "", body}, "\n")
+}
+
 // RenderBusinessContent renders the BUSINESS bucket: the domain-specific
-// "what this claims" layer. Order: LIVE-STATE, DOMAIN-MAP, CONSTITUTION,
-// AGENT-MAP, CONCEPT-MAP (full profile only), RECENTLY-REJECTED.
+// "what this claims" layer. Order: LIVE-STATE, DOMAIN-MAP, PARENT-PROJECT,
+// CONSTITUTION, AGENT-MAP, CONCEPT-MAP (full profile only), RECENTLY-REJECTED.
 //
 // consumer gates the CONCEPT-MAP block: it maps §-sections to framework
 // SOURCE FILE paths (internal/ontology/*.go) that do not exist in an external
@@ -533,6 +579,7 @@ func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claud
 	parts := []string{
 		WrapBlock("LIVE-STATE", BuildLiveState(g, domainName, claudeMDCharCount, today)),
 		WrapBlock("DOMAIN-MAP", RenderDomainMapBlock(repoRoot, domainGraphs, today)),
+		WrapBlock("PARENT-PROJECT", RenderParentProjectBlock(g)),
 		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
 		WrapBlock("AGENT-MAP", RenderAgentMapBlock()),
 	}

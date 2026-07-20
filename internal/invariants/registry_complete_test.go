@@ -69,7 +69,7 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// in this same task, W2.3 spec_build.go precedent, so
 	// internal/invariants can reach it without importing internal/generator)
 	// by OWNING OBJECT -- no new coverage run, no second spec/ walk.
-	const expected = 101
+	const expected = 102
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

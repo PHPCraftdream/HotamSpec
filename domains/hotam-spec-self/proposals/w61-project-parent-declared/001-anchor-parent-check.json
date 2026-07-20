@@ -1,0 +1,16 @@
+{
+  "kind": "Requirement",
+  "id": "R-domain-has-manifest",
+  "claim": "Every `domains/<name>/` directory contains a `manifest.json` defining the domain's identity fields (id, description, goals, director), so the generator can discover a domain's metadata without loading its full graph.",
+  "owner": "framework-author",
+  "status": "SETTLED",
+  "enforced_by": [
+    "check_domain_manifest_exists_and_importable",
+    "check_domain_manifest_id_matches_dirname",
+    "check_domain_manifest_description_nonempty",
+    "check_domain_manifest_goals_nonempty",
+    "check_domain_manifest_director_nonempty",
+    "check_project_parent_declared"
+  ],
+  "evidence": ["PLAN-scenario-generated-spec.md §2 D6 (task W6.1) adds manifest.parent as a MANDATORY tri-state identity field (null=root, string=child, absent=violation); check_project_parent_declared (internal/invariants/project_parent.go) is attached here as the enforcer proving the parent facet of this manifest-identity claim. NOTE: this anchor attaches to the EXISTING R-domain-has-manifest rather than a dedicated new R-project-parent-declared because the latter is currently blocked by a SPEC.md tooling gap (see W6.1 summary): adding any new requirement joins SPEC.md's 'no verified_by' roster, making the committed SPEC.md stale, which the apply gate (internal/proposal/apply.go) refuses; land regenerates docs/gen/* but not the opt-in --spec projection. Attaching to an existing roster member whose id/status/claim are untouched leaves SPEC.md byte-identical, so the gate accepts. A dedicated R-project-parent-declared remains the more precise future anchor once that gap is closed."]
+}

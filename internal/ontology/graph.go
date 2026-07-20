@@ -54,6 +54,46 @@ type Graph struct {
 	// this "" -- an honest no-op, the same convention DomainDir/SelfHosting
 	// already establish for synthetic graphs.
 	Discipline string `json:"-"`
+	// ManifestExists, ParentDeclared, and Parent carry the domain's
+	// manifest.json "parent" field (loader.ResolveParent), populated by the
+	// loader at LoadGraph time exactly like Discipline above -- deliberately
+	// unserialized (json:"-"): parent lives in manifest.json, not graph.json,
+	// so it never round-trips through this struct's own JSON encoding.
+	//
+	// D6 (PLAN-scenario-generated-spec.md §2 D6) makes "parent" MANDATORY for
+	// any domain that HAS a manifest.json -- but a domain with NO
+	// manifest.json at all (the shape of countless synthetic test-fixture
+	// graphs across this codebase that build an ontology.Graph{DomainDir:
+	// someTempDir, ...} directly, in Go code, without ever running `hotam
+	// init` or writing a manifest.json) never had the chance to declare a
+	// parent, so ManifestExists distinguishes that HONEST NO-OP case (mirrors
+	// every sibling resolver's own missing-manifest-is-the-soft-default
+	// convention) from the real check_project_parent_declared VIOLATION case
+	// (a manifest exists yet never declared parent):
+	//
+	//   - ManifestExists == false: no manifest.json next to graph.json at
+	//     all. check_project_parent_declared is a no-op -- there is no
+	//     manifest for a "parent" key to be missing FROM.
+	//   - ManifestExists == true, ParentDeclared == false: a manifest.json
+	//     exists but its "parent" key is absent (or the manifest is malformed,
+	//     or the value is a non-string/non-null type). THIS is the violation
+	//     D6 exists to catch.
+	//   - ManifestExists == true, ParentDeclared == true, Parent == "": the
+	//     key is present with JSON null (or an explicit empty string) -- the
+	//     EXPLICIT root-domain declaration ("I have considered this and I
+	//     have no parent"). No violation.
+	//   - ManifestExists == true, ParentDeclared == true, Parent != "": the
+	//     key is present with a non-empty string naming the parent domain --
+	//     a valid child-domain declaration. No violation.
+	//
+	// A graph built in-memory by a test fixture (never through
+	// loader.LoadGraph) leaves all three at the zero value
+	// (ManifestExists=false, ParentDeclared=false, Parent="") -- the honest
+	// no-op case above, the same convention DomainDir/SelfHosting already
+	// establish for synthetic graphs.
+	ManifestExists bool   `json:"-"`
+	ParentDeclared bool   `json:"-"`
+	Parent         string `json:"-"`
 }
 
 func (g *Graph) IsEmpty() bool {
