@@ -251,7 +251,7 @@ Commands:
         (--requirement-id, --reason, --replaced-by), stakeholder (--id,
         --name, --stakeholder-domain, --why), axis (--slug, --description),
         assumption (--id, --statement, --status, --owner), conflict (--axis,
-        --context, --members, --steward). --domain always means the
+        --context, --members, --resolver). --domain always means the
         TARGET GRAPH DIRECTORY across every kind (including stakeholder).
         Other complex kinds (ConflictTransition, EntityType, …) keep the
         hand-authored-JSON path (hotam land <file.json>).

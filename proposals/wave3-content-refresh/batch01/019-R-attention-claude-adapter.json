@@ -4,7 +4,7 @@
   "claim": "The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
   "owner": "framework-author",
   "status": "SETTLED",
-  "why": "Steward verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet ported in the Go port: setup-hooks and the attention adapter are Declared, not ported; historically implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py.",
+  "why": "Resolver verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet ported in the Go port: setup-hooks and the attention adapter are Declared, not ported; historically implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py.",
   "last_reviewed_at": "2026-07-12",
   "review_after": "2026-08-12"
 }

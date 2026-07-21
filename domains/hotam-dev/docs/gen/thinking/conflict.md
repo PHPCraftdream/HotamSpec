@@ -4,7 +4,7 @@
 
 ## Canon
 
-The first-class connector NODE between requirements, carrying axis+context+steward.
+The first-class connector NODE between requirements, carrying axis+context+resolver.
 
 ## Narrative
 

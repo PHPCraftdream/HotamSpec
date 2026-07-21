@@ -1,7 +1,7 @@
 {
   "kind": "Requirement",
   "id": "R-commit-boundary-checkable",
-  "claim": "A gate-status command shall answer, from a runtime land-log, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
+  "claim": "A gate-status command shall answer, from a runtime land-log, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a resolver runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
   "owner": "framework-author",
   "status": "SETTLED",
   "blocked_on": "blocked on the gate_status tool (Planned) + the land-log it reads (absent)"

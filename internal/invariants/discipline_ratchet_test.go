@@ -15,7 +15,7 @@ import (
 // (pinned in graph.lock's DisciplineFullObserved by loader.WriteLock), a later
 // manifest that no longer resolves discipline:"full" is a regression violation.
 // Before F2, this one-way-door property was purely a documented convention --
-// a steward could silently delete/downgrade the discipline key and every
+// a resolver could silently delete/downgrade the discipline key and every
 // discipline-gated check became an honest no-op again with zero signal.
 
 // writeRatchetFixture writes a minimal domain directory (manifest.json +
@@ -56,7 +56,7 @@ func ratchetGraph(t *testing.T, domainDir string) *ontology.Graph {
 
 // TestCheckDisciplineRatchet_FiresOnRegression is the core F2 exploit case:
 // a domain first landed with discipline:"full" (graph.lock pins
-// DisciplineFullObserved=true), then the steward silently removed the
+// DisciplineFullObserved=true), then the resolver silently removed the
 // discipline key from manifest.json. check_discipline_ratchet MUST fire --
 // the one-way door was violated.
 func TestCheckDisciplineRatchet_FiresOnRegression(t *testing.T) {
@@ -74,7 +74,7 @@ func TestCheckDisciplineRatchet_FiresOnRegression(t *testing.T) {
 		t.Fatalf("test setup: expected DisciplineFullObserved=true after WriteLock with discipline:full, got false")
 	}
 
-	// Step 2: steward silently removes the discipline key (regression).
+	// Step 2: resolver silently removes the discipline key (regression).
 	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(`{}`+"\n"), 0o644); err != nil {
 		t.Fatalf("WriteFile regression: %v", err)
 	}
@@ -178,7 +178,7 @@ func TestWriteLock_RatchetsDisciplineFull(t *testing.T) {
 		t.Fatalf("after first WriteLock with discipline:full, expected pin=true, got false")
 	}
 
-	// Steward removes discipline from manifest.
+	// Resolver removes discipline from manifest.
 	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(`{}`+"\n"), 0o644); err != nil {
 		t.Fatalf("WriteFile remove discipline: %v", err)
 	}

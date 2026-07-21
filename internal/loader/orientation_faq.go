@@ -66,7 +66,7 @@ type OrientationFAQEntry struct {
 // rather than failing the whole read — an honest no-op for that one entry,
 // never a hard error that would block all-violations. A Question is the one
 // REQUIRED field on a well-formed entry (it is what a violation message
-// names so a steward can find the broken question); Keywords and Link are
+// names so a resolver can find the broken question); Keywords and Link are
 // both optional but at least one MUST be non-empty for the entry to be
 // satisfiable (an entry with neither fires a violation at CHECK time, not
 // at READ time — the check, not the loader, is where "this entry cannot be

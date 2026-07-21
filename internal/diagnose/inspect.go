@@ -17,7 +17,7 @@ import (
 // heuristic that gestures at "these two might be in tension" into typed,
 // evidence-carrying Candidate records. A Candidate is ALWAYS advisory: it
 // never blocks a write, never changes exit code, and never decides anything
-// (R-ai-presents-not-decides) — it is raw material for a steward or an
+// (R-ai-presents-not-decides) — it is raw material for a resolver or an
 // agent's judgment, surfaced by `hotam inspect`.
 
 // InspectHeuristic names the detection method that produced a Candidate, so
@@ -45,7 +45,7 @@ type Candidate struct {
 
 func advice(members []string) string {
 	return fmt.Sprintf(
-		"ADVISORY: consider a ProposedConflict with axis=<pick one>, members=[%s] — this is ADVISORY only, the steward decides (R-ai-presents-not-decides, R-decided-needs-human-signoff).",
+		"ADVISORY: consider a ProposedConflict with axis=<pick one>, members=[%s] — this is ADVISORY only, the resolver decides (R-ai-presents-not-decides, R-decided-needs-human-signoff).",
 		strings.Join(members, ", "),
 	)
 }
@@ -204,7 +204,7 @@ var tokenRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
 // fraction of SETTLED claims is, empirically, not a discriminative topical
 // anchor for THIS domain — it is domain-frequent connective tissue (measured
 // on hotam-spec-self's own 234 SETTLED requirements: "every" 26.5%, "graph"
-// 19.7%, "operator" 19.7%, "requirement" 12.4%, "steward" 7.3%, "proposal"
+// 19.7%, "operator" 19.7%, "requirement" 12.4%, "resolver" 7.3%, "proposal"
 // 6.4% all clear this ceiling, while genuinely narrower topical words like
 // "system" 2.1% or "budget" 3.0% stay under it). This is computed fresh from
 // whatever graph is loaded at call time — it is NOT a hardcoded word list, so
@@ -219,10 +219,10 @@ var tokenRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
 // inspect_test.go's TestCorpusCommonTokens_* for the regression pin).
 //
 // Anti-false-negative validation (task #99, 2026-07-13): checked all 8 real
-// steward-confirmed Conflict node member pairs in hotam-spec-self's own graph
+// resolver-confirmed Conflict node member pairs in hotam-spec-self's own graph
 // against InspectLexicalClaimOverlap's output. 7 of 8 never fired via lexical
 // overlap even with this filter fully disabled (they were surfaced by the
-// steward through other channels — see R-tension-audit-shortlist-tool's own
+// resolver through other channels — see R-tension-audit-shortlist-tool's own
 // "0 of 8 conflicts machine-surfaced" history note). Exactly ONE pair,
 // C-c3911f28 (R-content-free-framework + R-empty-content-is-legitimate), is a
 // genuine false negative caused by this filter: its 3 shared tokens
@@ -402,7 +402,7 @@ var capsTokenRE = map[string]*regexp.Regexp{
 // precedence logic) and returns hits in the same "a|b" -> side shape
 // markerHits already produces, so the two signals can be unioned directly.
 //
-// This is the mechanism behind the meta-language design (steward design
+// This is the mechanism behind the meta-language design (resolver design
 // discussion, task #156/R10-b): a business requirement is authored in plain
 // natural language, in ANY language — the reserved CAPS tokens are never
 // written by the business author. They are inserted by the AGENT during the
@@ -490,7 +490,7 @@ func markerHits(claim string) map[string]string {
 // MinLexicalOverlapTokens is the minimum shared-significant-token count
 // required when the ONLY signal is "different owner" (no opposite marker).
 // Kept low deliberately — this is an ADVISORY signal meant to be
-// over-inclusive (false positives are cheap: a steward glances and
+// over-inclusive (false positives are cheap: a resolver glances and
 // dismisses; false negatives silently hide real tension).
 //
 // Worked example of this tradeoff (task #99, 2026-07-13): `hotam confront
@@ -501,7 +501,7 @@ func markerHits(claim string) map[string]string {
 // leaking through. It is a real (if weak, score=2, the minimum) two-token
 // overlap correctly surfaced at this deliberately low bar. Confirmed
 // defensible rather than tuned away: confront never gates (exit code always
-// 0), so the cost of a steward glancing at one weak hit and dismissing it is
+// 0), so the cost of a resolver glancing at one weak hit and dismissing it is
 // cheap, exactly the tradeoff this comment already commits to.
 const MinLexicalOverlapTokens = 2
 
@@ -644,7 +644,7 @@ func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
 
 // AxisCoReferenceBaselineScore is the minimum score any InspectAxisCoReference
 // candidate can carry, awarded purely for the structural fact itself: two
-// SEPARATE Conflict nodes — each already a steward-attended, first-class
+// SEPARATE Conflict nodes — each already a resolver-attended, first-class
 // connector node in the graph, not a heuristic guess — reference the SAME
 // Axis. That is graph ground truth, arguably stronger evidence of real
 // tension-worth-a-look than any token-overlap heuristic can produce, since no
@@ -666,7 +666,7 @@ const AxisCoReferenceBaselineScore = 5
 // above this floor is extra entanglement breadth beyond the minimum
 // structural case, and is rewarded 1 score point per extra member (more
 // requirements pulled into the two co-referencing conflicts = a broader,
-// more consequential tangle worth a steward's attention sooner).
+// more consequential tangle worth a resolver's attention sooner).
 const AxisCoReferenceMemberFloor = 4
 
 // axisCoReferenceScore combines AxisCoReferenceBaselineScore (awarded for the
@@ -687,7 +687,7 @@ func axisCoReferenceScore(c1, c2 ontology.Conflict) int {
 // InspectAxisCoReference is heuristic (c) from the task: requirements that
 // are members of DIFFERENT Conflict nodes which nonetheless share the same
 // Axis are "co-referencing" one tension dimension from separate connector
-// nodes — worth a steward glance to decide whether they are really one
+// nodes — worth a resolver glance to decide whether they are really one
 // conflict split in two, or genuinely independent tensions that happen to
 // share a vocabulary axis. See AxisCoReferenceBaselineScore's doc comment
 // for the scoring reasoning.

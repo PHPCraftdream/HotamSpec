@@ -16,7 +16,7 @@ The minimal core from which the "agent is never lost" property is demonstrable:
   `Lifecycle`, `Process`, `Goal`, `Signoff`.
 - **Layer 2 — structural graph invariants.** `internal/invariants.check_*`
   returning `[]Violation`: referential integrity, conflict has axis/context/
-  steward, ≥2 members, axis ∈ registry, id == `hash(axis, context)`, steward ≠
+  resolver, ≥2 members, axis ∈ registry, id == `hash(axis, context)`, resolver ≠
   member owner, OPEN states its question, DECIDED justifies itself. Each invariant
   has a deliberately-broken fixture proving it fires (anti-phantom).
 - **Layer 3 — visibility of the open.** `OPEN(question)` requirements +
@@ -49,7 +49,7 @@ are not yet selected. The conceptual layers remain:
   the economics hold for all values." An SMT solver is a *conflict detector*: for a
   pair of machine-readable claims (e.g. `latency_ms < 200` vs
   `latency_ms >= aml_check_ms` with `aml_check_ms >= 800`), produce a **model
-  where both are jointly violated** — a concrete witness scenario the steward
+  where both are jointly violated** — a concrete witness scenario the resolver
   cannot dismiss. Applied only to the critical-core claims that carry machine
   predicates (`Requirement.claim` / `Assumption.machine_check`).
 - **Layer 6 — behavioral/temporal conflicts.** For *process*
@@ -70,8 +70,8 @@ are not yet selected. The conceptual layers remain:
     (`>= 800` → `>= 0`); a conflict that depended on it should stop being detected.
   - **tighten bound** — strengthen a claim's numeric bound (`< 200` → `< 50`); a
     latent collision should newly appear.
-  - **swap actor** — replace a `Requirement.owner` / `Conflict.steward` with
-    another stakeholder; `check_steward_not_a_member_owner` should fire or clear.
+  - **swap actor** — replace a `Requirement.owner` / `Conflict.resolver` with
+    another stakeholder; `check_resolver_not_a_member_owner` should fire or clear.
   - **invert cardinality** — change a "single X" assumption to "many X"
     (`A-single-customer`), which is exactly the drift that should revive a cluster.
   A surviving mutant = a detector that is not actually testing what it claims.
@@ -96,7 +96,7 @@ living organization. The answer is an **external anchor**:
   has changed since its last signature, or a signature has aged past its cadence.
 - **Why it is deferred.** It needs a key-management and verification mechanism and
   a per-domain canonicalization of the tension map; both are out of scope for the
-  CORE. The seam is ready: `Conflict.steward` and `Stakeholder.domain` already
+  CORE. The seam is ready: `Conflict.resolver` and `Stakeholder.domain` already
   give the binding between a tension and the human who must sign for it.
 
 This ritual is decision **M5** in the CLAUDE.md OPEN list — the signature

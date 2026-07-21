@@ -25,8 +25,8 @@ _None._
 
 - **context:** T1 targeted-enforcer gate on every apply_proposal call vs mandatory full T2 pytest suite at wave/commit boundaries -- T2 runs have hit multi-minute timeouts in this repo (observed Wave 2), creating real pressure to skip or shrink T2, which would undermine R-wave-lands-atomically
 - **members:** `R-t1-gate-is-default`, `R-wave-lands-atomically`
-- **steward:** `dev-steward`
-- **rationale:** Resolved 2026-07-05 both ways per R-conflict-resolved-in-members-or-mediator: members amended (test suite sped 223s->~55s, gen_spec 20s->3s) AND a mediating rule created (R-run-speed-guarded self-calibrating guard) so the speed need cannot silently regress. Steward verdict.
+- **resolver:** `dev-resolver`
+- **rationale:** Resolved 2026-07-05 both ways per R-conflict-resolved-in-members-or-mediator: members amended (test suite sped 223s->~55s, gen_spec 20s->3s) AND a mediating rule created (R-run-speed-guarded self-calibrating guard) so the speed need cannot silently regress. Resolver verdict.
 - **shared assumption:** `A-runtime-logs-append-only`
 - **revisit when:** REVISIT if at larger scale (600+ atoms / 5+ domains) the run-speed guard trips persistently despite Python-side optimizations -- then reconsider deeper (compiled snapshot / language).
 
@@ -34,9 +34,9 @@ _None._
 
 - **context:** R-wave-strictly-sequential demands that waves touching overlapping files/scopes run strictly sequentially (never concurrently) to avoid racing a shared working tree, while R-worktree-parallel-permitted sanctions running mutating pipeline agents in parallel when each is isolated in its own git worktree -- the same pipeline both forbids overlapping-scope concurrency and permits isolated concurrency, and the boundary (when is isolation sufficient to relax strict sequencing?) is undecided
 - **members:** `R-wave-strictly-sequential`, `R-worktree-parallel-permitted`
-- **steward:** `dev-steward`
-- **rationale:** no real tension: worktree isolation removes the shared-files premise; the sequentiality rule governs shared working copies only. Steward verdict 2026-07-03 (V5), verbatim: «здесь нет противоерчия. Worktree - это как бы не параллельно». A worktree is not truly parallel work on the same files -- each worktree is an isolated copy, so the strict-sequential wave rule (which exists to prevent two agents clobbering one shared working tree) simply does not apply there; the two requirements never actually collide. Decided by dev-steward, 2026-07-03.
-- **shared assumption:** `A-single-steward-session`
+- **resolver:** `dev-resolver`
+- **rationale:** no real tension: worktree isolation removes the shared-files premise; the sequentiality rule governs shared working copies only. Resolver verdict 2026-07-03 (V5), verbatim: «здесь нет противоерчия. Worktree - это как бы не параллельно». A worktree is not truly parallel work on the same files -- each worktree is an isolated copy, so the strict-sequential wave rule (which exists to prevent two agents clobbering one shared working tree) simply does not apply there; the two requirements never actually collide. Decided by dev-resolver, 2026-07-03.
+- **shared assumption:** `A-single-resolver-session`
 
 ## Parked decisions (REVISIT_WHEN)
 

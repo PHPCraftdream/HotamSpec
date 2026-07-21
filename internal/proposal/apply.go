@@ -45,8 +45,8 @@ func errNotDeclared(label, id string) error {
 	return fmt.Errorf("%s %q is not declared in the graph.", label, id)
 }
 
-func errStewardOwnsMember(steward, member string) error {
-	return fmt.Errorf("steward %q owns member %q — the steward must not own any member.", steward, member)
+func errResolverOwnsMember(resolver, member string) error {
+	return fmt.Errorf("resolver %q owns member %q — the resolver must not own any member.", resolver, member)
 }
 
 func errTooFewMembers(conflictID string, count int) error {

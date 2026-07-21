@@ -16,7 +16,7 @@ var Requirement = Sections.MustRegister("§Requirement", Section{
 var Conflict = Sections.MustRegister("§Conflict", Section{
 	Slug:  "§Conflict",
 	Kind:  ONTOLOGY,
-	Canon: "The first-class connector NODE between requirements, carrying axis+context+steward.",
+	Canon: "The first-class connector NODE between requirements, carrying axis+context+resolver.",
 	Narrative: "A Conflict is NOT an edge between requirements. It is a mediator node through which two otherwise-" +
 		"unconnectable requirements first come to lie in one structure (R-87 -> C-12 <- R-203). The node carries knowledge " +
 		"belonging to NEITHER member: axis (the tension dimension), context (the colliding scenario), and shared_assumption " +
@@ -57,10 +57,10 @@ var Axis = Sections.MustRegister("§Axis", Section{
 var Stakeholder = Sections.MustRegister("§Stakeholder", Section{
 	Slug:  "§Stakeholder",
 	Kind:  ONTOLOGY,
-	Canon: "Who owns requirements and stewards conflicts.",
+	Canon: "Who owns requirements and resolvers conflicts.",
 	Narrative: "A Stakeholder is the human (or role) accountable for a piece of the requirement graph. Two distinct " +
 		"accountabilities exist and MUST stay separate: OWNER of a Requirement (defends that requirement's claim) and " +
-		"STEWARD of a Conflict (holds the tension between requirements; by construction the steward is NOT the owner of any " +
+		"RESOLVER of a Conflict (holds the tension between requirements; by construction the resolver is NOT the owner of any " +
 		"member requirement, because a conflict lives BETWEEN stakeholders).",
 	Why: "WHY a first-class node (not a free-text 'owner: Finance'): accountability is the external anchor of the whole " +
 		"internal loop. Every OPEN question, every undecided conflict, every dead-assumption fallout resolves to a named " +
@@ -74,9 +74,9 @@ var Invariants = Sections.MustRegister("§Invariants", Section{
 	Canon: "Structural form of the tension graph (the check_* layer).",
 	Narrative: "These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how " +
 		"many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected " +
-		"and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a steward; " +
+		"and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a resolver; " +
 		"no edge dangles; every open hole states its question; every decision justifies itself. A conflict that is invisible " +
-		"(stewardless, axis-less) is the one thing forbidden.",
+		"(resolverless, axis-less) is the one thing forbidden.",
 	Why: "WHY return violations, not bool: dev-coin's check_* return bool because there the goal is a single pass/fail " +
 		"gate. Here the SAME functions feed the 'what now' diagnosis, which needs the offending id and a human imperative — " +
 		"so the richer return type (Violation) is load-bearing, and holds() recovers the boolean when a test just wants " +
@@ -122,7 +122,7 @@ var Operator = Sections.MustRegister("§Operator", Section{
 		"has a lifecycle matched by OPERATOR_LIFECYCLE, carries a ContextBudget bounding its WORKING store, and optionally " +
 		"has a parent Operator (the delegation hierarchy).",
 	Why: "WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing " +
-		"Stakeholder) preserves the steward-distinct boundary at the methodology altitude. A Stakeholder is an " +
+		"Stakeholder) preserves the resolver-distinct boundary at the methodology altitude. A Stakeholder is an " +
 		"accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge accountability " +
 		"with action and re-introduce the invisibility the boundary forbids.",
 })
@@ -147,11 +147,11 @@ var Loop = Sections.MustRegister("§Loop", Section{
 	Canon: "The closed loop: State→Diagnosis→Next-action→Action→regenerate→State.",
 	Narrative: "The closed loop is how ANY input is processed: ORIENT (reload pulse: top action, debt, context), " +
 		"LOCATE (find what input touches), CONFRONT (check input vs reality), TRANSLATE (outcome -> typed nodes under a " +
-		"proposal), PRESENT (show steward the proposal + anchors), LAND (after approval: apply_proposal -> regen -> tiered " +
+		"proposal), PRESENT (show resolver the proposal + anchors), LAND (after approval: apply_proposal -> regen -> tiered " +
 		"gate -> closure verifies the triggering diagnosis is gone). Writing nothing is a valid outcome.",
 	Why: "WHY a closed loop with a human PRESENT/LAND gate: the loop makes 'being lost' structurally impossible " +
 		"(what_now derives the next correct action from any graph state) and keeps the hard boundary — the AI presents and " +
-		"proposes, the steward decides; no conflict is ever closed silently. The regenerate->verify->closure arc guarantees " +
+		"proposes, the resolver decides; no conflict is ever closed silently. The regenerate->verify->closure arc guarantees " +
 		"each landed action actually removed the diagnosis that triggered it.",
 })
 
@@ -164,7 +164,7 @@ var Glossary = Sections.MustRegister("§Glossary", Section{
 		"in at least one framework module doc. Domain-side business terms (R-ids, axis slugs, stakeholders) live in the " +
 		"domain's graph.json — not here.",
 	Why: "WHY a generated controlled vocabulary: terminology drift is its own kind of invisibility — 'axis'/'dimension', " +
-		"'steward'/'owner', 'conflict'/'tension' fragment the methodology language without it. The vocabulary and its mirror " +
+		"'resolver'/'owner', 'conflict'/'tension' fragment the methodology language without it. The vocabulary and its mirror " +
 		"(docs/gen/GLOSSARY.md) are generated from the same source so they cannot drift from each other.",
 })
 
@@ -197,14 +197,14 @@ var Ticket = Sections.MustRegister("§Ticket", Section{
 var Proposal = Sections.MustRegister("§Proposal", Section{
 	Slug:  "§Proposal",
 	Kind:  PROCESS,
-	Canon: "Structured operator→steward change proposals.",
+	Canon: "Structured operator→resolver change proposals.",
 	Narrative: "The closed loop's ACT half: the AI operator emits a structured proposal (ProposedRequirement / " +
-		"ProposedConflictTransition / ProposedRejection / ProposedConflict), the steward approves it out-of-band (review + " +
+		"ProposedConflictTransition / ProposedRejection / ProposedConflict), the resolver approves it out-of-band (review + " +
 		"greenlight), and `hotam apply-proposal` (internal/proposal) mechanically writes the change to the active domain's " +
 		"graph.json + runs the regen+verify pipeline. No free-text AI editing of source.",
 	Why: "This honors R-ai-presents-not-decides (the AI never closes a conflict silently) AND R-active-loop-playbooks " +
 		"(each what_now band has a playbook + a mechanical apply path). The AI TRANSLATES outcomes into typed proposals but " +
-		"never decides; the steward decides and the mechanical writer lands it deterministically.",
+		"never decides; the resolver decides and the mechanical writer lands it deterministically.",
 })
 
 var Closure = Sections.MustRegister("§Closure", Section{
@@ -222,12 +222,12 @@ var Closure = Sections.MustRegister("§Closure", Section{
 var Tick = Sections.MustRegister("§Tick", Section{
 	Slug:  "§Tick",
 	Kind:  PROCESS,
-	Canon: "The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention.",
+	Canon: "The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for resolver attention.",
 	Narrative: "The Drive organ runs the closed loop one cycle: load the graph, call diagnose() (all_violations + " +
 		"reflection findings + attention signals), and emit a TickReport. It is ADVISORY (M32 conservative): it presents the " +
-		"prioritized next-action surface to the steward; it does not itself mutate the graph.",
+		"prioritized next-action surface to the resolver; it does not itself mutate the graph.",
 	Why: "WHY advisory (not auto-acting): the hard boundary forbids the AI from closing anything silently; the Tick's " +
-		"job is to make the operator's state and next correct action visible, not to take the steward's decision. A " +
+		"job is to make the operator's state and next correct action visible, not to take the resolver's decision. A " +
 		"structural failure in all_violations outranks every softer signal because a malformed graph makes all downstream " +
 		"diagnosis unreliable.",
 })
@@ -371,16 +371,16 @@ var Entity = Sections.MustRegister("§Entity", Section{
 var Signoff = Sections.MustRegister("§Signoff", Section{
 	Slug:  "§Signoff",
 	Kind:  ONTOLOGY,
-	Canon: "The frozen provenance payload (decided_by + date + verbatim + instrument + chosen_variant) attached to a node a human steward decided on; not a node type, a payload like Variant.",
-	Narrative: "Every steward-approved transition (Conflict -> DECIDED/HELD, Assumption -> HOLDS/DEAD/IMPLEMENTS) MUST " +
+	Canon: "The frozen provenance payload (decided_by + date + verbatim + instrument + chosen_variant) attached to a node a human resolver decided on; not a node type, a payload like Variant.",
+	Narrative: "Every resolver-approved transition (Conflict -> DECIDED/HELD, Assumption -> HOLDS/DEAD/IMPLEMENTS) MUST " +
 		"be auditable from the substrate. Before this record, decided_by lived only in the gitignored proposal JSON and " +
 		"evaporated when the writer landed. The Signoff payload closes that gap — it is NOT a new node type, it is a frozen " +
 		"dataclass payload attached to the node the human already governed (the same rationale that keeps Variant a payload " +
 		"on Conflict).",
-	Why: "WHY instrument is an explicit SEAM (not a hidden assumption): the steward has not yet decided whether to bind " +
+	Why: "WHY instrument is an explicit SEAM (not a hidden assumption): the resolver has not yet decided whether to bind " +
 		"provenance to git commit authorship or a cryptographic signature; instrument names HOW this signoff was captured " +
 		"today and leaves room for git/crypto without reshaping the record. WHY date is the only (coarse) timestamp: this " +
-		"wave fixes provenance, not temporal modeling — ISO YYYY-MM-DD is enough to say 'WHEN did the steward sign'.",
+		"wave fixes provenance, not temporal modeling — ISO YYYY-MM-DD is enough to say 'WHEN did the resolver sign'.",
 })
 
 var Attention = Sections.MustRegister("§Attention", Section{

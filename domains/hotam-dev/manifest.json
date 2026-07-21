@@ -4,7 +4,7 @@
   "goals": [
     "waves land atomically with a green T2 at the boundary",
     "every spawn and every apply leaves a trace in the .runtime logs",
-    "push only on the steward's explicit word"
+    "push only on the resolver's explicit word"
   ],
   "director": "director",
   "parent": "hotam-spec-self"

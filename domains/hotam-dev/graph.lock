@@ -1,5 +1,5 @@
 {
-  "sha256": "fa6527338906b2fe30d02f56e3a4670215443cbd4349efb9d53cbf47b8271766",
-  "updated_at": "2026-07-13T13:48:22Z",
-  "note": ""
+  "sha256": "6d1cc0d92aa4ded7d83c86a20b5c11f9bc376a8c7f09c0babbdb3efe8432d0d6",
+  "updated_at": "2026-07-21T12:24:20Z",
+  "note": "Mechanical rename: steward -\u003e resolver (Conflict.Steward field), user-directed full sweep (R1, task #294)"
 }

@@ -17,7 +17,7 @@ examples + R-content-free-no-seed-graph (3 atoms).
 
 DIRECTOR'S RECOMMENDATION: A. The rule is one rule ("zero business
 content"); the dash-list is what zero MEANS, not a second constraint.
-But the user/steward decides.
+But the user/resolver decides.
 
 ### D2. R-empty-content-is-legitimate: ATOMIC UX claim or 3 atoms?
 
@@ -75,7 +75,7 @@ In order of payoff (most fan-out first):
    - check_no_dangling_requirement_assumptions
    - check_no_dangling_relation_kind
    - check_no_dangling_relation_target
-   - check_no_dangling_conflict_steward
+   - check_no_dangling_conflict_resolver
    - check_no_dangling_conflict_members
    - check_no_dangling_conflict_shared_assumption
    - check_no_dangling_conflict_derived
@@ -92,8 +92,8 @@ In order of payoff (most fan-out first):
 6. **check_decided_has_decided_by** → 3 sub-checks (non-empty + known +
    not-member-owner).
 7. **check_m_tag_format** → 3 sub-checks (format + unique + OPEN-only).
-8. **check_conflict_has_axis_context_steward** → 3 sub-checks (axis +
-   context + steward).
+8. **check_conflict_has_axis_context_resolver** → 3 sub-checks (axis +
+   context + resolver).
 9. **check_decided_has_rationale_or_derived** → 2 sufficiency conditions
    (rationale OR derived).
 10. (others as audit identifies)

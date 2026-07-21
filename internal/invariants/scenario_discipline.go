@@ -50,7 +50,7 @@ import (
 // which was deliberately left honestly PROSE rather than forced onto a fake
 // mechanism). The exemption is intentionally NARROW: it triggers ONLY on the
 // Enforceability field, never on Enforcement, never on the absence of links
-// alone -- so a steward must EXPLICITLY tag a requirement
+// alone -- so a resolver must EXPLICITLY tag a requirement
 // enforceability:"INHERENTLY_PROSE" in graph.json to claim it, and that tag
 // is itself visible (it surfaces the requirement in COVERAGE.md's
 // "Permanent discipline" table, and -- for a discipline:full domain whose
@@ -82,7 +82,7 @@ import (
 // mechanism that closes PLAN-scenario-generated-spec.md §0's "gpsm-sm with 0
 // models and 33 SETTLED requirements passes `hotam all-violations` clean"
 // finding -- WITHOUT breaking that domain's existing soft-discipline
-// behavior until its own steward deliberately opts it in.
+// behavior until its own resolver deliberately opts it in.
 func checkSettledRequiresScenario(g *ontology.Graph) []Violation {
 	if g.Discipline != loader.DisciplineFull {
 		// Soft discipline (the default, and every domain in this wave) --
@@ -105,7 +105,7 @@ func checkSettledRequiresScenario(g *ontology.Graph) []Violation {
 		if r.Enforceability == ontology.EnforceabilityINHERENTLY_PROSE {
 			// Residual category: a claim no snapshot gate could ever
 			// mechanically check (architectural / temporal-order in nature),
-			// honestly tagged by the steward via the Enforceability field --
+			// honestly tagged by the resolver via the Enforceability field --
 			// exempt from BOTH paths, per the INHERENTLY_PROSE EXEMPTION
 			// documented above. Independent branch from the engine-path
 			// exemption: a carrier, if present, was already handled by the
@@ -194,18 +194,18 @@ var _ = All.MustRegister("check_settled_requires_scenario", Invariant{
 		"исключение видно в COVERAGE, не прячется»). A requirement satisfying NONE of the three fires a violation " +
 		"naming exactly which half is missing. The INHERENTLY_PROSE exemption (branch 3) is intentionally NARROW: it " +
 		"triggers ONLY on the Enforceability field, never on Enforcement, never on the absence of links alone -- so a " +
-		"steward must EXPLICITLY tag a requirement enforceability:\"INHERENTLY_PROSE\" in graph.json to claim it, and " +
+		"resolver must EXPLICITLY tag a requirement enforceability:\"INHERENTLY_PROSE\" in graph.json to claim it, and " +
 		"that tag is itself visible: internal/generator/coverage.go's \"Discipline-exempt\" section names exactly the " +
 		"discipline:full subset of these requirements that lack a carrier (the actively-exempted set), so the exemption " +
 		"is never folded silently into \"0 violations\". IF g.Discipline is NOT loader.DisciplineFull (empty, or any " +
 		"other value -- the default for every domain today), this check is a pure HONEST NO-OP: zero violations " +
 		"regardless of how bare a domain's implemented_by/verified_by/enforced_by fields are.",
-	Why: "PLAN-scenario-generated-spec.md §0/§2 D4 (steward-directed remediation of the @fh audit finding): every prior " +
+	Why: "PLAN-scenario-generated-spec.md §0/§2 D4 (resolver-directed remediation of the @fh audit finding): every prior " +
 		"authored-link check in authored_links.go is NO-OP for a requirement with empty implemented_by/verified_by " +
 		"(that file's own header comment, lines 32-36) -- so a domain with ZERO models and dozens of SETTLED " +
 		"requirements (the audit's concrete example: gpsm-sm, 0 models, 33 SETTLED) passes `hotam all-violations` " +
 		"completely clean, because the methodology RECOMMENDS authored links but never MECHANICALLY OBLIGATES them. " +
-		"This check is the opt-in gate that closes that gap for any domain whose steward has declared discipline:full " +
+		"This check is the opt-in gate that closes that gap for any domain whose resolver has declared discipline:full " +
 		"in its own manifest.json -- a domain that has NOT opted in keeps today's exact soft behavior (this wave " +
 		"deliberately does not flip discipline:full on any real domain; that is future-wave work per the plan's own " +
 		"wave ordering), so existing domains (prat, gpsm-sm, hotam-spec-self) see zero new violations from this check " +
@@ -223,9 +223,9 @@ var _ = All.MustRegister("check_settled_requires_scenario", Invariant{
 		"check adds on top. INHERENTLY_PROSE EXEMPTION RATIONALE: without it, a discipline:full domain with even ONE " +
 		"honestly INHERENTLY_PROSE SETTLED requirement (a claim architectural/temporal-order in nature that no snapshot " +
 		"gate could ever mechanically check) could never reach a clean 0 violations -- the gate would either force the " +
-		"steward to bolt the requirement onto a FAKE mechanism (exactly the anti-pattern R-domain-founded-in-wave-order " +
+		"resolver to bolt the requirement onto a FAKE mechanism (exactly the anti-pattern R-domain-founded-in-wave-order " +
 		"was deliberately left honestly PROSE in task W3.4/#263 to avoid) or leave the domain perpetually red. The " +
-		"exemption instead lets the steward tag such a requirement enforceability:\"INHERENTLY_PROSE\" in graph.json -- " +
+		"exemption instead lets the resolver tag such a requirement enforceability:\"INHERENTLY_PROSE\" in graph.json -- " +
 		"an EXPLICIT, VISIBLE act (the tag surfaces in COVERAGE.md's permanent-discipline table, and for a " +
 		"discipline:full domain that lacks a carrier for it, in coverage.go's \"Discipline-exempt\" section too) -- and " +
 		"the gate respects it. The §2 D4 / §5 design intent is explicit that this residual category is meant to " +

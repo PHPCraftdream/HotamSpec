@@ -23,7 +23,7 @@ func TestSimulateRequirementResult_Create(t *testing.T) {
 		SourceRefs:     []string{"https://example.com/doc"},
 		LastReviewedAt: today,
 		ReviewAfter:    "2027-01-01",
-		Evidence:       []string{"steward sign-off"},
+		Evidence:       []string{"resolver sign-off"},
 	}
 	result, err := SimulateRequirementResult(g, today, p)
 	if err != nil {

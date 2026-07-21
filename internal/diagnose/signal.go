@@ -120,8 +120,8 @@ func DiagnoseSignals(g *ontology.Graph, today string) []Signal {
 				Check:    "conflict_detected_stalled",
 				Target:   c.ID,
 				Message: fmt.Sprintf(
-					"conflict '%s' on axis '%s' is DETECTED with no steward movement; steward '%s' must ACKNOWLEDGE it",
-					c.ID, c.Axis, c.Steward,
+					"conflict '%s' on axis '%s' is DETECTED with no resolver movement; resolver '%s' must ACKNOWLEDGE it",
+					c.ID, c.Axis, c.Resolver,
 				),
 			})
 		} else if c.Lifecycle == ontology.ConflictACKNOWLEDGED {
@@ -131,8 +131,8 @@ func DiagnoseSignals(g *ontology.Graph, today string) []Signal {
 				Check:    "conflict_acknowledged_stalled",
 				Target:   c.ID,
 				Message: fmt.Sprintf(
-					"conflict '%s' is ACKNOWLEDGED but undecided; steward '%s' must DECIDE (rationale) or set REVISIT_WHEN",
-					c.ID, c.Steward,
+					"conflict '%s' is ACKNOWLEDGED but undecided; resolver '%s' must DECIDE (rationale) or set REVISIT_WHEN",
+					c.ID, c.Resolver,
 				),
 			})
 		}

@@ -8,13 +8,14 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-spec-self/docs/gen/UNENFORCED.md.
 - **debt:** 173/250 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 318 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21069 chars (headroom 128931)
+- **graph:** 318 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21082 chars (headroom 128918)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 
 ## Top actions (what-now, top 10)
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
+- [P1] STRUCTURE on `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self` — [check_spec_md_current] D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self\docs\gen\SPEC.md does not match what a fresh `hotam gen-spec --spec` run produces right now -- it is either stale (the domain's graph, implemented_by/verified_by links, or the code they point at changed since SPEC.md was last regenerated) or was edited by hand despite its own do-not-edit banner; re-run `hotam gen-spec --domain D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self --spec` to regenerate it from the current, real, passing `go test` output
 - [P7] ADVISORY on `feature-blocked-roadmap` — 35 SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.
 - [P7] ADVISORY on `review-freshness` — 8 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-21` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
 
@@ -30,7 +31,7 @@ SETTLED 250 · DRAFT 2 · REJECTED 42 · OVERDUE 0 (as of 2026-07-21)
 
 **Discipline** — R-active-loop-protocol [E] (+2 related: R-active-loop-apply-tool[E], R-active-loop-playbook-doc[E]) · R-crystallize-before-split [S] · R-crystallize-knowledge-to-code [S] · R-delegation-conclusions-only [S] · R-delegation-is-a-file [P] · R-prefer-tool-over-hand [S] · R-shared-tools-in-spec-tools [E] · R-task-spawn-is-a-hand [S] · R-task-spawn-log-runtime [P] · R-task-vs-action-distinct-altitudes [S] · R-verify-closure-per-action [E] · R-working-vs-substrate-budget [P]
 
-**Check / Invariant** — R-axis-controlled-vocab [E] · R-axis-gatekeeper-policy [P] · R-conflict-addressing-resolves-variables [E] · R-conflict-held-state [E] · R-conflict-is-connector-node [E] · R-conflict-min-two-members [E] · R-conflict-resolved-in-members-or-mediator [P] · R-conflict-structurally-visible [E] · R-decided-by-verifiable-signature [P] · R-decided-conflict-justifies-itself [E] · R-decided-needs-human-signoff [E] · R-enforcement-first-class [E] · R-enforcement-perimeter-baselines-guarded [P] · R-enforcement-perimeter-visible [P] · R-open-states-question [E] · R-open-tickets-visible [P] · R-requirement-claim-is-atomic [P] · R-requirement-freshness-fields [E] · R-stable-conflict-identity [E] · R-steward-distinct-from-owners [E]
+**Check / Invariant** — R-axis-controlled-vocab [E] · R-axis-gatekeeper-policy [P] · R-conflict-addressing-resolves-variables [E] · R-conflict-held-state [E] · R-conflict-is-connector-node [E] · R-conflict-min-two-members [E] · R-conflict-resolved-in-members-or-mediator [P] · R-conflict-structurally-visible [E] · R-decided-by-verifiable-signature [P] · R-decided-conflict-justifies-itself [E] · R-decided-needs-human-signoff [E] · R-enforcement-first-class [E] · R-enforcement-perimeter-baselines-guarded [P] · R-enforcement-perimeter-visible [P] · R-open-states-question [E] · R-open-tickets-visible [P] · R-requirement-claim-is-atomic [P] · R-requirement-freshness-fields [E] · R-resolver-distinct-from-owners [E] · R-stable-conflict-identity [E]
 
 **Framework Self** — R-rejected-preserved-not-deleted [E] · R-two-altitude-ontology [P]
 

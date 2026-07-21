@@ -20,11 +20,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** Agent conduct -- the highest abstraction -- shall not be faked as code-checked: what code can verify is ENFORCED with a real test, what only conscience can verify is an honest PROSE rule, and the two are kept explicitly separate.
 
-**Why.** Steward verdict (2026-07-05, signed; original Russian preserved verbatim below for provenance): "we can't verify an agent's conduct with code -- that's the highest abstraction, code can't check it. So it needs to be formalized as a rule, if we genuinely need and find it useful. Probably true of many things. We won't even be able to test it. And it seems we need to separate what we can test from mere rules -- and rules should ideally be phrased so that contradictions surface quickly when changes are introduced." (Original: «мы не можем проверить кодом работу агента — это высшая абстракция кодом не проверяется. Поэтому это нужно оформлять как правило, если оно нам действительно нужно и полезно. И так наверное многие вещи. Мы даже протестировать это не сможем. И кажется нужно отделять то, что мы можем протестировать от просто правил. При чем правила желательно формулировать так, чтобы быстро показывались противоречия при их внесении с изменениями.») Two dead meters confirmed the verdict: the boot-cite Stop-hook logged 10-13% to a journal nothing read (form-metric theatre); spawn-log was empty across dozens of spawns. The principle gave them their fate: boot-cite-measured REJECTED as a fake ENFORCED, the spawn-log atom honestly marked STRUCTURAL. Refines R-enforcement-first-class (field mechanics) and R-enforceability-kind-declared (ENFORCEABLE vs INHERENTLY_PROSE): those define HOW to mark, this principle defines WHY and WHEN to choose which level.
+**Why.** Resolver verdict (2026-07-05, signed; original Russian preserved verbatim below for provenance): "we can't verify an agent's conduct with code -- that's the highest abstraction, code can't check it. So it needs to be formalized as a rule, if we genuinely need and find it useful. Probably true of many things. We won't even be able to test it. And it seems we need to separate what we can test from mere rules -- and rules should ideally be phrased so that contradictions surface quickly when changes are introduced." (Original: «мы не можем проверить кодом работу агента — это высшая абстракция кодом не проверяется. Поэтому это нужно оформлять как правило, если оно нам действительно нужно и полезно. И так наверное многие вещи. Мы даже протестировать это не сможем. И кажется нужно отделять то, что мы можем протестировать от просто правил. При чем правила желательно формулировать так, чтобы быстро показывались противоречия при их внесении с изменениями.») Two dead meters confirmed the verdict: the boot-cite Stop-hook logged 10-13% to a journal nothing read (form-metric theatre); spawn-log was empty across dozens of spawns. The principle gave them their fate: boot-cite-measured REJECTED as a fake ENFORCED, the spawn-log atom honestly marked STRUCTURAL. Refines R-enforcement-first-class (field mechanics) and R-enforceability-kind-declared (ENFORCEABLE vs INHERENTLY_PROSE): those define HOW to mark, this principle defines WHY and WHEN to choose which level.
 
 ## `R-agent-declares-purpose` (ENFORCED)
 
-**Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.
+**Claim.** Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent resolvers in one line.
 
 **Why.** An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine-readable (vs README which is prose); placing it next to SCOPE keeps the agent's contract in one file. Enforced structurally so the absence of PURPOSE = missing operator visibility = red test, not silent gap.
 
@@ -34,7 +34,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content.
 
-**Why.** Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64).
+**Why.** Agents accumulate private reasoning — checkpoints, open questions, resolver notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64).
 
 **Enforced by:** `check_agent_has_docs_subdir`
 
@@ -66,7 +66,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
 
-**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)
+**Why.** The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)
 
 **Enforced by:** `test_agent_map.py`
 
@@ -150,11 +150,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-operator-not-self-approve` (ENFORCED)
 
-**Claim.** An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.
+**Claim.** An Operator shall not resolver a Conflict in which its underlying Stakeholder owns one of the members.
 
-**Why.** M36 — the reflexive twin of check_steward_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the steward-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.
+**Why.** M36 — the reflexive twin of check_resolver_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the resolver-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.
 
-**Enforced by:** `check_operator_steward_not_self`, `test_operator.py::test_check_operator_steward_not_self_fires`
+**Enforced by:** `check_operator_resolver_not_self`, `test_operator.py::test_check_operator_resolver_not_self_fires`
 
 ## `R-operator-prompt-from-substrate` (ENFORCED)
 

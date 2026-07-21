@@ -283,7 +283,7 @@ func ReflectAllMembersRejected(g *ontology.Graph) []Finding {
 				Condition: "reflect_all_members_rejected",
 				Target:    c.ID,
 				Imperative: fmt.Sprintf(
-					"Conflict '%s' is live (%s) but ALL its members are REJECTED (%s). The tension's parties are gone; DECIDE it (mark exhausted) or REVISIT_WHEN (park) so the graph stops holding a ghost connector. Advisory; never a gate (the steward closes a conflict, never the harness — R-decided-needs-human-signoff).",
+					"Conflict '%s' is live (%s) but ALL its members are REJECTED (%s). The tension's parties are gone; DECIDE it (mark exhausted) or REVISIT_WHEN (park) so the graph stops holding a ghost connector. Advisory; never a gate (the resolver closes a conflict, never the harness — R-decided-needs-human-signoff).",
 					c.ID, c.Lifecycle, pyListRepr(c.Members),
 				),
 				Advisory: true,
@@ -312,7 +312,7 @@ func ReflectAllMembersRejected(g *ontology.Graph) []Finding {
 // all-violations' exit code. An EntityType landed before the Process step
 // that wires it in (a normal, sequential multi-proposal land) must not be
 // treated as a hard error — it is a "not wired in yet" signal for the
-// steward's attention, not a structural break. Advisory: true routes it to
+// resolver's attention, not a structural break. Advisory: true routes it to
 // PAdvisory in DiagnoseSignals (what-now's lowest-priority band), never to
 // PStructure.
 func ReflectOrphanEntityType(g *ontology.Graph) []Finding {

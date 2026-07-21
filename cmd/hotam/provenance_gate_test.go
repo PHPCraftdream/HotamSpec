@@ -69,7 +69,7 @@ func writeCompleteSettledReqJSON(t *testing.T, dir, id string) string {
 		"status": "SETTLED",
 		"why": "provenance gate test",
 		"source_refs": ["https://example.com/source"],
-		"evidence": ["steward review"],
+		"evidence": ["resolver review"],
 		"last_reviewed_at": "2026-07-15",
 		"review_after": "2027-07-15"
 	}`

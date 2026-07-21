@@ -72,7 +72,7 @@ func FormatConflictCard(c ConflictCard) string {
 	fmt.Fprintf(&b, "axis: %s\n", c.Axis)
 	fmt.Fprintf(&b, "context: %s\n", c.Context)
 	fmt.Fprintf(&b, "members: %s\n", joinOrDash(c.Members))
-	fmt.Fprintf(&b, "steward: %s\n", c.Steward)
+	fmt.Fprintf(&b, "resolver: %s\n", c.Resolver)
 	if c.SharedAssumption != nil {
 		fmt.Fprintf(&b, "shared_assumption: %s\n", *c.SharedAssumption)
 	}

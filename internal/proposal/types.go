@@ -85,7 +85,7 @@ type ProposedConflict struct {
 	Axis             string   `json:"axis"`
 	Context          string   `json:"context"`
 	Members          []string `json:"members"`
-	Steward          string   `json:"steward"`
+	Resolver         string   `json:"resolver"`
 	SharedAssumption string   `json:"shared_assumption"`
 	Note             string   `json:"note"`
 	InitialLifecycle string   `json:"initial_lifecycle"`
@@ -199,7 +199,7 @@ func (p ProposedEntityType) TargetAnchor() string { return "EntityType:" + p.Slu
 // patch path. It exists because backfilling review metadata across 275
 // requirements via ProposedRequirement would require re-stating every other
 // field just to avoid an unintended coalesce, and because a review-mark is
-// conceptually a distinct act (the steward re-affirmed a claim is still
+// conceptually a distinct act (the resolver re-affirmed a claim is still
 // true) from a content edit — it deserves its own typed node so
 // `hotam due` / freshness tooling can distinguish "reviewed" history from
 // "content changed" history if it ever needs to (mirrors

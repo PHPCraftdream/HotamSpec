@@ -8,8 +8,8 @@ The closed loop: State→Diagnosis→Next-action→Action→regenerate→State.
 
 ## Narrative
 
-The closed loop is how ANY input is processed: ORIENT (reload pulse: top action, debt, context), LOCATE (find what input touches), CONFRONT (check input vs reality), TRANSLATE (outcome -> typed nodes under a proposal), PRESENT (show steward the proposal + anchors), LAND (after approval: apply_proposal -> regen -> tiered gate -> closure verifies the triggering diagnosis is gone). Writing nothing is a valid outcome.
+The closed loop is how ANY input is processed: ORIENT (reload pulse: top action, debt, context), LOCATE (find what input touches), CONFRONT (check input vs reality), TRANSLATE (outcome -> typed nodes under a proposal), PRESENT (show resolver the proposal + anchors), LAND (after approval: apply_proposal -> regen -> tiered gate -> closure verifies the triggering diagnosis is gone). Writing nothing is a valid outcome.
 
 ## Why
 
-WHY a closed loop with a human PRESENT/LAND gate: the loop makes 'being lost' structurally impossible (what_now derives the next correct action from any graph state) and keeps the hard boundary — the AI presents and proposes, the steward decides; no conflict is ever closed silently. The regenerate->verify->closure arc guarantees each landed action actually removed the diagnosis that triggered it.
+WHY a closed loop with a human PRESENT/LAND gate: the loop makes 'being lost' structurally impossible (what_now derives the next correct action from any graph state) and keeps the hard boundary — the AI presents and proposes, the resolver decides; no conflict is ever closed silently. The regenerate->verify->closure arc guarantees each landed action actually removed the diagnosis that triggered it.

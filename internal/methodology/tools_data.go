@@ -24,9 +24,9 @@ func init() {
 	Tools.MustRegister("apply_proposal", Tool{
 		Command:  "apply_proposal",
 		Canon:    "§Proposal",
-		Purpose:  "Usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]. Mechanical writer for steward-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.",
+		Purpose:  "Usage: hotam apply-proposal <proposal.json> --domain <path> --today YYYY-MM-DD [--batch <dir>]. Mechanical writer for resolver-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.",
 		Status:   Implemented,
-		Claim:    "mechanical writer for steward-approved JSON proposals.",
+		Claim:    "mechanical writer for resolver-approved JSON proposals.",
 		Enforcer: "",
 		Run:      nil,
 	})

@@ -833,7 +833,7 @@ var _ = All.MustRegister("check_enforced_requires_enforcer_or_authored_link", In
 		"symbol reference into the domain's spec/ tree plus a path-qualified test reference -- see check_implemented_by_symbol_resolvable / " +
 		"check_verified_by_test_resolvable). Having implemented_by without verified_by (or vice versa) does NOT satisfy the authored path -- " +
 		"\"embodied somewhere\" without \"proven somewhere\" (or vice versa) is not a real guarantee.",
-	Why: "PLAN-authored-spec-discipline.md §5 (steward decision 2026-07-16): a requirement may be SETTLED without code as honest roadmap debt, " +
+	Why: "PLAN-authored-spec-discipline.md §5 (resolver decision 2026-07-16): a requirement may be SETTLED without code as honest roadmap debt, " +
 		"but ENFORCED requires a real noun -- EITHER path is acceptable so a requirement enforced by the engine's own check_*/Test* machinery " +
 		"(self-domain requirements about the engine itself) is not forced to fabricate a redundant authored spec/ reference, while a business " +
 		"domain's authored-spec requirement is not forced to invent a fake engine-side enforcer. check_enforced_names_invariant alone only " +

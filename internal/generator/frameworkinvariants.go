@@ -130,7 +130,7 @@ var digestCategories = []struct {
 	{"Operator", []string{"R-operator-", "R-crystal-", "R-context-", "R-budget-", "R-agent-"}},
 	{"Substrate / Anchoring", []string{"R-anchor-", "R-speak-", "R-stale-", "R-claude-md-"}},
 	{"Discipline", []string{"R-prefer-", "R-crystallize-", "R-delegation-", "R-task-", "R-active-loop-", "R-shared-tools-", "R-verify-", "R-working-"}},
-	{"Check / Invariant", []string{"R-statemachine-", "R-bijection-", "R-conflict-", "R-decided-", "R-axis-", "R-m-tag-", "R-typed-", "R-requirement-", "R-enforcement-", "R-check-", "R-stable-", "R-steward-", "R-open-"}},
+	{"Check / Invariant", []string{"R-statemachine-", "R-bijection-", "R-conflict-", "R-decided-", "R-axis-", "R-m-tag-", "R-typed-", "R-requirement-", "R-enforcement-", "R-check-", "R-stable-", "R-resolver-", "R-open-"}},
 	{"Framework Self", []string{"R-drift-", "R-deterministic-", "R-content-", "R-empty-", "R-two-altitude-", "R-rejected-"}},
 	{"Lifecycle / Process / Goal", []string{"R-lifecycle-", "R-process-", "R-goal-"}},
 	{"Boot / Glossary / History / Docs", []string{"R-boot-", "R-glossary-", "R-history-", "R-docs-"}},

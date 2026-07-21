@@ -4,11 +4,11 @@
      RETIREMENT DECISION itself remains in effect; only the file paths and tool names
      below are artifacts of the pre-Go era. -->
 
-# Steward campaign-delegation history (jsonl-era, retired)
+# Resolver campaign-delegation history (jsonl-era, retired)
 
 Hand-authored (not generated). This file preserves the full, unabridged
 content of `domains/hotam-spec-self/delegations.jsonl` before that file was
-deleted (steward triage decision, item B1: "снести старую jsonl-систему
+deleted (resolver triage decision, item B1: "снести старую jsonl-систему
 делегаций полностью").
 
 ## Background — the two delegation mechanisms
@@ -17,7 +17,7 @@ Two distinct concepts historically shared the word "delegation" in this
 repo, and only one of them survives:
 
 1. **Campaign/case trust-anchor signature** (`DEL-<n>`, this file's subject)
-   — the steward's own explicit act of handing the DECIDED/HELD
+   — the resolver's own explicit act of handing the DECIDED/HELD
    personal-signature duty to an agent, per-case or for a declared campaign,
    recorded in `domains/hotam-spec-self/delegations.jsonl` via
    `spec/tools/record_delegation.py`. This mechanism is now RETIRED: the
@@ -41,7 +41,7 @@ mechanism).
 
 ## Why retire the jsonl ledger rather than keep both
 
-The steward's verdict (triage item B1, verbatim): "снести старую
+The resolver's verdict (triage item B1, verbatim): "снести старую
 jsonl-систему делегаций полностью" (tear down the old jsonl delegation
 system completely). Two delegation-recording systems doing adjacent but
 distinct jobs (one full ledger for personal-signature campaign grants, one
@@ -52,12 +52,12 @@ practice: one seed record, DEL-1, granted once and closed once) did not
 justify a parallel, separately-tested, separately-enforced ledger format.
 
 The underlying PRINCIPLE `R-trust-anchor-delegation-explicit-only` encodes
-— delegation of the steward's personal-signature duty is valid ONLY when
+— delegation of the resolver's personal-signature duty is valid ONLY when
 granted EXPLICITLY, never implied or standing by default — is untouched by
 this retirement. What changed is the RECORDING MECHANISM: it is no longer a
 dedicated jsonl ledger with its own writer tool, but the same versioned-file
 mechanism (`delegations/DG-<n>.md` + `spec/tools/delegate.py`) already used
-for every other steward hand-off, per `R-delegation-is-a-file`.
+for every other resolver hand-off, per `R-delegation-is-a-file`.
 
 ## Verbatim content of `domains/hotam-spec-self/delegations.jsonl` (deleted)
 
@@ -65,24 +65,24 @@ The file held exactly one record, DEL-1, from creation to closure. Preserved
 here byte-for-byte (as parsed JSON, one record per line in the original):
 
 ```json
-{"id": "DEL-1", "steward": "domain-user", "verbatim": "реши все задачи. Все вопросы решай в сторону совершенства", "date": "2026-07-02", "scope": "campaign for current work, until steward revokes", "status": "closed", "closed_date": "2026-07-05"}
+{"id": "DEL-1", "resolver": "domain-user", "verbatim": "реши все задачи. Все вопросы решай в сторону совершенства", "date": "2026-07-02", "scope": "campaign for current work, until resolver revokes", "status": "closed", "closed_date": "2026-07-05"}
 ```
 
 Field-by-field:
 
 - **id**: `DEL-1` — the seed and only record ever written to this ledger.
-- **steward**: `domain-user` — the Stakeholder id of the human who granted
+- **resolver**: `domain-user` — the Stakeholder id of the human who granted
   the delegation.
 - **verbatim**: `реши все задачи. Все вопросы решай в сторону совершенства`
   ("resolve all tasks. Decide every question in the direction of
-  perfection") — the steward's exact wording, carried verbatim per
+  perfection") — the resolver's exact wording, carried verbatim per
   `R-speak-by-reference` (an unlabeled or unscoped delegation cannot be
   resolved back to a specific human act).
 - **date**: `2026-07-02` — the day the campaign delegation was granted.
-- **scope**: `campaign for current work, until steward revokes` — an
+- **scope**: `campaign for current work, until resolver revokes` — an
   open-ended, standing campaign grant (not a single case).
 - **status**: `closed` — the campaign was later revoked.
-- **closed_date**: `2026-07-05` — the day the steward closed it, after
+- **closed_date**: `2026-07-05` — the day the resolver closed it, after
   which every conflict resolution again required an explicit personal
   signature.
 

@@ -17,7 +17,7 @@ import (
 // Before F2, this one-way property was purely a DOCUMENTED convention (see
 // loader.ResolveDiscipline's own doc comment: "This engine version does NOT
 // yet mechanically enforce the one-way property for manifest.json") -- a
-// steward could delete or change the discipline key in manifest.json and
+// resolver could delete or change the discipline key in manifest.json and
 // every discipline-gated check (check_settled_requires_scenario,
 // check_model_complete) became an honest no-op again, with zero violations
 // from all-violations.
@@ -28,7 +28,7 @@ import (
 // back to false (the ratchet). This check reads that pin and compares it
 // against the live manifest's resolved discipline: if the pin says true (the
 // domain WAS discipline:full at some point) but the live discipline is no
-// longer "full" (the steward removed or downgraded the key), this check fires
+// longer "full" (the resolver removed or downgraded the key), this check fires
 // a violation -- the one-way door was violated.
 //
 // HONEST NO-OP CASES (not false positives), mirroring
@@ -110,13 +110,13 @@ var _ = All.MustRegister("check_discipline_ratchet", Invariant{
 		"existed), this check is a HONEST NO-OP. OTHERWISE (the pin is true -- the domain WAS discipline:\"full\" at " +
 		"some point, recorded by WriteLock's ratchet), IF g.Discipline == loader.DisciplineFull (the live manifest still " +
 		"resolves discipline:\"full\"), no violation (happy path -- domain stayed discipline:full). OTHERWISE (pin is true " +
-		"but live discipline is no longer \"full\" -- the steward removed or downgraded the manifest key), this check " +
+		"but live discipline is no longer \"full\" -- the resolver removed or downgraded the manifest key), this check " +
 		"fires ONE violation naming the domain and the regression. Domain-level (fires once per all-violations run), " +
 		"matching check_graph_lock_pins_graph_json's shape.",
 	Why: "PLAN-scenario-generated-spec.md §2 D4 (@fh/@fx finding F2, task W7.2): before this check, the one-way-door " +
 		"property of discipline:\"full\" was purely a DOCUMENTED convention -- loader.ResolveDiscipline's own doc comment " +
 		"explicitly stated 'This engine version does NOT yet mechanically enforce the one-way property for manifest.json " +
-		"(manifest.json, unlike graph.json, has no graph.lock-style content pin today)'. A steward could silently delete " +
+		"(manifest.json, unlike graph.json, has no graph.lock-style content pin today)'. A resolver could silently delete " +
 		"or change the discipline key in manifest.json, and every discipline-gated check (check_settled_requires_scenario, " +
 		"check_model_complete, and the F1 gate in check_scenario_executes_impl) became an honest no-op again -- zero " +
 		"violations, silent regression of a public promise. This check closes that gap using the SAME lock-file mechanism " +

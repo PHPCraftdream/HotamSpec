@@ -69,7 +69,7 @@
 
 **Стратегия — три волны:**
 - **Волна A (механическая):** перепривязка enforced_by на реальные Go-тесты через `gate.BuildCheckToTestsMap`; без Go-эквивалента — честный даунгрейд ENFORCED→STRUCTURAL/PROSE. Скрипт → proposals → land батчами.
-- **Волна B (содержательная):** переписывание claim/why/summary/evidence у 155 требований, 8–10 параллельных батчей по разделам конституции, каждый батч — steward-ревью. Каждый UPDATE ставит `last_reviewed_at=today` и разнесённый `review_after` (устраняет review cliff). REJECTED не переписывать — только replaces-рёбра (область A).
+- **Волна B (содержательная):** переписывание claim/why/summary/evidence у 155 требований, 8–10 параллельных батчей по разделам конституции, каждый батч — resolver-ревью. Каждый UPDATE ставит `last_reviewed_at=today` и разнесённый `review_after` (устраняет review cliff). REJECTED не переписывать — только replaces-рёбра (область A).
 - **Волна C (процессная):** регламент — review-mark только после фактической сверки, backfill запрещён (новое требование R-review-mark-requires-substantive-review).
 - **Инфраструктурная предпосылка:** batch-режим `hotam land` — иначе ~184 отдельных приземления.
 

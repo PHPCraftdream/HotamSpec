@@ -3,7 +3,7 @@ reader: (unresolved-reader)
 
 # OPEN.md — Open registry (Hotam-Spec)
 
-Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `hotam what-now` for the prioritized next actions that close these.
+Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a resolver (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `hotam what-now` for the prioritized next actions that close these.
 
 Open requirements: **0**. Unresolved conflicts: **0**.
 
@@ -13,6 +13,6 @@ Open requirements: **0**. Unresolved conflicts: **0**.
 
 _None._
 
-## Unresolved conflicts (no steward resolution yet)
+## Unresolved conflicts (no resolver resolution yet)
 
 _None._

@@ -36,7 +36,7 @@ working knowledge into the substrate via delegated sub-agents (textbook
 crystallize-before-split), kept conclusions, returned anchored summaries.
 Current graph state: **54 requirements** (13 SETTLED · 25 DRAFT · 13 OPEN · 3
 REJECTED), 9 axes, 6 conflicts (5 DECIDED, 1 live DETECTED — `C-8600b1b8` on
-`core-vs-aspect`, steward `domain-user`), 9 assumptions, 4 stakeholders;
+`core-vs-aspect`, resolver `domain-user`), 9 assumptions, 4 stakeholders;
 M-decisions M1–M31 in CLAUDE.md (currently DUPLICATED with the graph's OPEN
 reqs — flagged as U5, Hotam-Spec's own anti-drift violation).
 
@@ -81,7 +81,7 @@ None — no `/goal` Stop hook in force.
 
 ### recently completed
 - #26 Resolve the blocking open decisions via the methodology's own machinery (oxx)
-- #25 Present anchored backlog + steward decision to user
+- #25 Present anchored backlog + resolver decision to user
 - #24 Audit substrate → anchored UPDATE/ANCHOR/DEFER backlog (oxx)
 - #23 Crystallize dependency-graph + director-crystal trio; build CLAUDE.md Director's Map (delegated)
 - #22 Director verification: pytest green + what_now sane after crystallization
@@ -98,14 +98,14 @@ Older tasks (#4–#16) were the framework-build + content-free refactor work; al
 - **Storage = Python code, NOT RDF/SHACL.** Frozen dataclasses + tuple-of-id edges + plain-function traversal + `check_*` invariants + generator. Rejected RDF as the heavy parallel substrate dev-coin already disproves the need for. (Recorded as `R-rdf-store` REJECTED.)
 - **Framework is CONTENT-FREE.** Demo seed lives in `spec/tests/fixtures/seed.py`, real domain in `spec/content/graph.py`; `src/hotam_spec/` ships zero business data. (Recorded as `R-content-free-framework` SETTLED; the leaked seed in src as `R-seed-in-src` REJECTED.)
 - **Hotam-Spec models itself in `spec/content/graph.py`** (the meta-domain). The methodology eats its own dog food as the strongest stress test — proving `R-two-altitude-ontology` (operator : methodology :: actor : business).
-- **M26 (enforcement representation) — BOTH field AND generated report**, per dev-coin's `Param.status`+`HOLES.md` precedent. Pre-decided before steward ratification, awaiting greenlight.
-- **First heavy increment = Lifecycle keystone**, not Operator trio. The dependency-graph principle (`R-dependency-graph-parallelism`) puts Lifecycle upstream of Operator and aspects; trio has two now-resolved blockers (M17 NODE_COUNT, M20 new type). Awaiting steward ratification.
+- **M26 (enforcement representation) — BOTH field AND generated report**, per dev-coin's `Param.status`+`HOLES.md` precedent. Pre-decided before resolver ratification, awaiting greenlight.
+- **First heavy increment = Lifecycle keystone**, not Operator trio. The dependency-graph principle (`R-dependency-graph-parallelism`) puts Lifecycle upstream of Operator and aspects; trio has two now-resolved blockers (M17 NODE_COUNT, M20 new type). Awaiting resolver ratification.
 
 ## Open questions
 
 - **Ratify the resolution sheet?** Seven items in the table (mechanical batch, U5 canonicalization, M26 enforcement = field+report, M17 NODE_COUNT, M20 new type, build-order = Lifecycle-first, commit timing). Single greenlight unblocks Batch A immediately.
 - **Run Batch A now?** Six mechanical items (delegate-and-go), each enforces a SETTLED principle of the framework against itself.
-- **Commit cadence?** Recommendation: batch-by-batch; operator proposes, steward runs `git commit`. Working tree currently dirty (5 files modified — the two crystallization waves not yet committed).
+- **Commit cadence?** Recommendation: batch-by-batch; operator proposes, resolver runs `git commit`. Working tree currently dirty (5 files modified — the two crystallization waves not yet committed).
 
 ## Repo state
 

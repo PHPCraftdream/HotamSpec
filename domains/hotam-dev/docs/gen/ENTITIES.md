@@ -7,7 +7,7 @@ reader: (unresolved-reader)
 
 ## wave
 
-A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed steward review and a commit.
+A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed resolver review and a commit.
 
 ### Lifecycle
 

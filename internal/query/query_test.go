@@ -60,7 +60,7 @@ func fixtureGraph() *ontology.Graph {
 				Axis:             "test-axis",
 				Context:          "alpha vs beta tension",
 				Members:          []string{"R-alpha", "R-beta"},
-				Steward:          "tester",
+				Resolver:         "tester",
 				Lifecycle:        ontology.ConflictDETECTED,
 				SharedAssumption: str("A-shared"),
 			},

@@ -14,7 +14,7 @@ var constitutionSet = map[string]struct{}{
 	"R-two-altitude-ontology":            {},
 	"R-empty-content-is-legitimate":      {},
 	"R-ai-presents-not-decides":          {},
-	"R-steward-distinct-from-owners":     {},
+	"R-resolver-distinct-from-owners":    {},
 	"R-operator-not-self-approve":        {},
 	"R-decided-needs-human-signoff":      {},
 	"R-open-states-question":             {},
@@ -43,7 +43,7 @@ var constitutionCategories = []struct {
 	IDs   map[string]struct{}
 }{
 	{"Closed loop & operator role", set("R-agent-never-lost", "R-drift-structurally-impossible", "R-deterministic-generation", "R-conflict-is-connector-node", "R-two-altitude-ontology", "R-empty-content-is-legitimate")},
-	{"Hard boundary", set("R-ai-presents-not-decides", "R-steward-distinct-from-owners", "R-operator-not-self-approve", "R-decided-needs-human-signoff", "R-open-states-question", "R-rejected-preserved-not-deleted", "R-axis-controlled-vocab", "R-stable-conflict-identity")},
+	{"Hard boundary", set("R-ai-presents-not-decides", "R-resolver-distinct-from-owners", "R-operator-not-self-approve", "R-decided-needs-human-signoff", "R-open-states-question", "R-rejected-preserved-not-deleted", "R-axis-controlled-vocab", "R-stable-conflict-identity")},
 	{"Self + delegation", set("R-operator-acting-facet", "R-context-budget-rule", "R-operator-crystal-is-claude-md")},
 	{"Super-rules (crystallize + anchor)", set("R-crystallize-knowledge-to-code", "R-crystallize-before-split", "R-working-vs-substrate-budget", "R-enforcement-gradient", "R-requirement-enforced", "R-anchor-everything", "R-speak-by-reference")},
 	{"Loop machinery", set("R-active-loop-playbooks", "R-verify-closure-per-action")},
@@ -51,8 +51,8 @@ var constitutionCategories = []struct {
 }
 
 var criticalCoreNames = []string{
-	"check_steward_not_a_member_owner",
-	"check_operator_steward_not_self",
+	"check_resolver_not_a_member_owner",
+	"check_operator_resolver_not_self",
 	"check_decided_has_decided_by",
 	"check_typed_anchors",
 	"check_no_dangling_ids",
@@ -120,7 +120,7 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	lines = append(lines, "")
 	hardBoundaryIDs := []string{
 		"R-ai-presents-not-decides",
-		"R-steward-distinct-from-owners",
+		"R-resolver-distinct-from-owners",
 		"R-operator-not-self-approve",
 		"R-decided-needs-human-signoff",
 		"R-open-states-question",
@@ -206,11 +206,11 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	lines = append(lines, "  6. Read `domains/"+domainName+"/docs/gen/HISTORY.md`        → what's been decided / rejected?")
 	lines = append(lines, "  7. Read `domains/"+domainName+"/docs/gen/DECISIONS.md`      → which M-decisions are open?")
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get steward\napproval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.\nThe closure check (R-verify-closure-per-action) will confirm advancement.")
+	lines = append(lines, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get resolver\napproval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.\nThe closure check (R-verify-closure-per-action) will confirm advancement.")
 	lines = append(lines, "")
 	lines = append(lines, "If the top action is P4 OPEN_ITEM: same procedure.")
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P1 STRUCTURE: stop. A structural violation means the\ngraph is malformed — investigate the root cause; do not edit by hand.\n`hotam apply-proposal` refuses non-stewarded structural changes.")
+	lines = append(lines, "If the top action is P1 STRUCTURE: stop. A structural violation means the\ngraph is malformed — investigate the root cause; do not edit by hand.\n`hotam apply-proposal` refuses non-resolvered structural changes.")
 	lines = append(lines, "")
 
 	lines = append(lines, "## 7. The methodology's laws (full constitutional set)")
@@ -244,23 +244,23 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	lines = append(lines, "  - propose Requirements / Conflict transitions / Rejections via the proposal")
 	lines = append(lines, "    protocol;")
 	lines = append(lines, "  - run `hotam what-now`, `hotam gen-spec`;")
-	lines = append(lines, "  - call `hotam apply-proposal` with a steward-approved JSON;")
+	lines = append(lines, "  - call `hotam apply-proposal` with a resolver-approved JSON;")
 	lines = append(lines, "  - crystallize working knowledge into requirement-code;")
 	lines = append(lines, "  - cite anchors in every communication.")
 	lines = append(lines, "")
-	lines = append(lines, "NOT yours (steward's act):")
+	lines = append(lines, "NOT yours (resolver's act):")
 	lines = append(lines, "")
-	lines = append(lines, "  - approving a proposal (the steward writes the `decided_by`);")
+	lines = append(lines, "  - approving a proposal (the resolver writes the `decided_by`);")
 	lines = append(lines, "  - resolving an OPEN(question) requirement's content;")
-	lines = append(lines, "  - closing a Conflict (the operator presents, the steward decides);")
-	lines = append(lines, "  - running `git commit` (the act of recording in history is the steward's).")
+	lines = append(lines, "  - closing a Conflict (the operator presents, the resolver decides);")
+	lines = append(lines, "  - running `git commit` (the act of recording in history is the resolver's).")
 	lines = append(lines, "")
 	lines = append(lines, "This is verbatim from R-ai-presents-not-decides + R-operator-not-self-approve.")
 	lines = append(lines, "")
 
 	lines = append(lines, "## 9. If you are unsure")
 	lines = append(lines, "")
-	lines = append(lines, "Re-read this file. Then read CLAUDE.md (your crystal — the index).\nIf a question remains, surface it to the steward as a `ProposedRequirement`\nwith status OPEN(<question>). That is how the methodology questions itself.")
+	lines = append(lines, "Re-read this file. Then read CLAUDE.md (your crystal — the index).\nIf a question remains, surface it to the resolver as a `ProposedRequirement`\nwith status OPEN(<question>). That is how the methodology questions itself.")
 	lines = append(lines, "")
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"

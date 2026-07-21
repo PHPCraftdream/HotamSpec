@@ -47,14 +47,14 @@ func writeReqProposalJSON(t *testing.T, id, claim string) string {
 }
 
 // addTestConflict creates a valid Conflict node in the domain's graph via the
-// proposal pipeline (steward stakeholder + axis + conflict), returning the
+// proposal pipeline (resolver stakeholder + axis + conflict), returning the
 // Conflict ID. members must already exist as requirements in the graph.
 func addTestConflict(t *testing.T, graphPath, today string, members []string) string {
 	t.Helper()
 	if err := proposal.Apply(graphPath, today, proposal.ProposedStakeholder{
-		ID: "steward-gate", Name: "Gate Steward", Domain: "gate-test",
+		ID: "resolver-gate", Name: "Gate Resolver", Domain: "gate-test",
 	}); err != nil {
-		t.Fatalf("add steward: %v", err)
+		t.Fatalf("add resolver: %v", err)
 	}
 	if err := proposal.Apply(graphPath, today, proposal.ProposedAxis{
 		Slug: "security", Description: "security tension axis",
@@ -62,10 +62,10 @@ func addTestConflict(t *testing.T, graphPath, today string, members []string) st
 		t.Fatalf("add axis: %v", err)
 	}
 	pc := proposal.ProposedConflict{
-		Axis:    "security",
-		Context: "encrypt export tension",
-		Members: members,
-		Steward: "steward-gate",
+		Axis:     "security",
+		Context:  "encrypt export tension",
+		Members:  members,
+		Resolver: "resolver-gate",
 	}
 	if err := proposal.Apply(graphPath, today, pc); err != nil {
 		t.Fatalf("add conflict: %v", err)
@@ -197,7 +197,7 @@ func TestSemanticConflictGate_DecisionRefSucceedsAndPersists(t *testing.T) {
 	}
 
 	// Land the contradicting requirement WITH --decision-ref — must succeed.
-	const ref = "ticket-BUG-42: steward decided both apply to different export contexts"
+	const ref = "ticket-BUG-42: resolver decided both apply to different export contexts"
 	second := writeReqProposalJSON(t, "R-gate-never-3",
 		"export service must never encrypt records")
 	err := cmdLand([]string{

@@ -1,7 +1,7 @@
 {
   "kind": "Requirement",
   "id": "R-tension-audit-presents-only",
-  "claim": "tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict.",
+  "claim": "tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/resolver review, never a decided conflict.",
   "owner": "framework-author",
   "status": "SETTLED",
   "enforcement": "PROSE",

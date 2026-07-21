@@ -313,7 +313,7 @@ func stakeholderToOperatorIDs(g *ontology.Graph) map[string][]string {
 	return result
 }
 
-func checkOperatorStewardNotSelf(g *ontology.Graph) []Violation {
+func checkOperatorResolverNotSelf(g *ontology.Graph) []Violation {
 	ownerOf := requirementOwnerMap(g)
 	opByStakeholder := stakeholderToOperatorIDs(g)
 	var out []Violation
@@ -326,12 +326,12 @@ func checkOperatorStewardNotSelf(g *ontology.Graph) []Violation {
 		}
 		for sid := range memberOwners {
 			for _, opID := range opByStakeholder[sid] {
-				if c.Steward == opID {
+				if c.Resolver == opID {
 					out = append(out, Violation{
-						Check: "check_operator_steward_not_self",
+						Check: "check_operator_resolver_not_self",
 						ID:    c.ID,
 						Message: fmt.Sprintf(
-							"Operator %q (acting facet of stakeholder %q) cannot steward conflict %q because "+
+							"Operator %q (acting facet of stakeholder %q) cannot resolver conflict %q because "+
 								"its underlying Stakeholder owns a member requirement; M36 -- operator must not "+
 								"self-approve (R-operator-not-self-approve)",
 							opID, sid, c.ID),
@@ -343,20 +343,20 @@ func checkOperatorStewardNotSelf(g *ontology.Graph) []Violation {
 	return out
 }
 
-var _ = All.MustRegister("check_operator_steward_not_self", Invariant{
-	Name:  "check_operator_steward_not_self",
+var _ = All.MustRegister("check_operator_resolver_not_self", Invariant{
+	Name:  "check_operator_resolver_not_self",
 	Canon: methodology.Operator,
-	Claim: "an Operator may not steward a Conflict that contains its own Stakeholder's requirement.",
+	Claim: "an Operator may not resolver a Conflict that contains its own Stakeholder's requirement.",
 	Rule: "(M36): for each Conflict, collect the set of Stakeholder ids that own the conflict's member Requirements " +
 		"('member-owners'). For each Operator whose stakeholder field is in that set, if any such Operator id equals the " +
-		"Conflict's steward, fire a Violation. An Operator is the acting facet of a Stakeholder; the steward-distinct " +
-		"boundary applies THROUGH that facet -- an Operator cannot steward a Conflict in which its own underlying " +
+		"Conflict's resolver, fire a Violation. An Operator is the acting facet of a Stakeholder; the resolver-distinct " +
+		"boundary applies THROUGH that facet -- an Operator cannot resolver a Conflict in which its own underlying " +
 		"Stakeholder owns one of the member Requirements.",
 	Why: "(R-ai-presents-not-decides + R-operator-not-self-approve): the hard boundary that prevents an interested party " +
-		"from judging its own side extends to the acting facet. If an Operator could steward a conflict its Stakeholder has " +
+		"from judging its own side extends to the acting facet. If an Operator could resolver a conflict its Stakeholder has " +
 		"a stake in, the boundary would be defeated at the operator level while formally satisfied at the Stakeholder level " +
-		"-- structural invisibility. This is the reflexive twin of check_steward_not_a_member_owner.",
-	Check: checkOperatorStewardNotSelf,
+		"-- structural invisibility. This is the reflexive twin of check_resolver_not_a_member_owner.",
+	Check: checkOperatorResolverNotSelf,
 })
 
 // crystalPathForDomain resolves the resident-crystal path (root CLAUDE.md)

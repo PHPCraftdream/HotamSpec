@@ -1,7 +1,7 @@
 {
   "kind": "Requirement",
   "id": "R-agent-declares-purpose",
-  "claim": "Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).",
+  "claim": "Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent resolvers in one line (machine-readable, alongside its SCOPE).",
   "owner": "framework-author",
   "status": "SETTLED",
   "blocked_on": "blocked on the create_agent tool (Planned) — no non-director agent exists to carry a PURPOSE"

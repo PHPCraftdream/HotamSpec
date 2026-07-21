@@ -40,7 +40,7 @@ type Conflict struct {
 	Axis             string    `json:"axis"`
 	Context          string    `json:"context"`
 	Members          []string  `json:"members"`
-	Steward          string    `json:"steward"`
+	Resolver         string    `json:"resolver"`
 	Lifecycle        string    `json:"lifecycle"`
 	SharedAssumption *string   `json:"shared_assumption"`
 	Derived          []string  `json:"derived"`

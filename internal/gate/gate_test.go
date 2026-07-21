@@ -372,7 +372,7 @@ func TestBuildCheckToTestsMap_UnaffectedByCmdRootWidening(t *testing.T) {
 // directory's gen/go tree (not anywhere in HotamSpec's own internal/ or
 // cmd/) must fail closed even when g.DomainDir points at that directory.
 // The gen-code generator and its resolver trust shift (task #214) were
-// removed entirely (steward directive, see internal/gate/gate.go's
+// removed entirely (resolver directive, see internal/gate/gate.go's
 // testFuncRoots doc) -- the resolver scans ONLY internal/ and cmd/,
 // regardless of what DomainDir is set to.
 func TestSelectTier1_DomainDirIgnored_NoFilesystemTrustShift(t *testing.T) {

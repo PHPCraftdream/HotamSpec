@@ -8,7 +8,7 @@ import (
 )
 
 var expectedDelegatorNames = []string{
-	"check_conflict_has_axis_context_steward",
+	"check_conflict_has_axis_context_resolver",
 	"check_decided_has_decided_by",
 	"check_domain_manifest_valid",
 	"check_held_has_decided_by",

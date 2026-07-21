@@ -54,52 +54,52 @@ var _ = All.MustRegister("check_conflict_has_context", Invariant{
 	Canon: methodology.Conflict,
 	Claim: "every Conflict carries a non-empty context.",
 	Rule: "Conflict.context MUST be a non-empty string describing the scenario where the two requirements collide. " +
-		"A context-less conflict has no scenario and cannot be communicated to a steward.",
-	Why:   "without a context the conflict cannot be communicated to a steward or a domain user in a way that enables resolution.",
+		"A context-less conflict has no scenario and cannot be communicated to a resolver.",
+	Why:   "without a context the conflict cannot be communicated to a resolver or a domain user in a way that enables resolution.",
 	Check: checkConflictHasContext,
 })
 
-func checkConflictHasSteward(g *ontology.Graph) []Violation {
+func checkConflictHasResolver(g *ontology.Graph) []Violation {
 	var out []Violation
 	for _, c := range g.Conflicts {
-		if strings.TrimSpace(c.Steward) == "" {
+		if strings.TrimSpace(c.Resolver) == "" {
 			out = append(out, Violation{
-				Check:   "check_conflict_has_steward",
+				Check:   "check_conflict_has_resolver",
 				ID:      c.ID,
-				Message: "conflict has no steward (WHO holds this tension?)",
+				Message: "conflict has no resolver (WHO holds this tension?)",
 			})
 		}
 	}
 	return out
 }
 
-var _ = All.MustRegister("check_conflict_has_steward", Invariant{
-	Name:  "check_conflict_has_steward",
+var _ = All.MustRegister("check_conflict_has_resolver", Invariant{
+	Name:  "check_conflict_has_resolver",
 	Canon: methodology.Conflict,
-	Claim: "every Conflict carries a non-empty steward.",
-	Rule: "Conflict.steward MUST be a non-empty string. A stewardless conflict has no holder — the tension is invisible " +
+	Claim: "every Conflict carries a non-empty resolver.",
+	Rule: "Conflict.resolver MUST be a non-empty string. A resolverless conflict has no holder — the tension is invisible " +
 		"to the methodology.",
-	Why: "this is the structural definition of 'the contradiction is visible'. A stewardless conflict is exactly an " +
+	Why: "this is the structural definition of 'the contradiction is visible'. A resolverless conflict is exactly an " +
 		"invisible contradiction — the hard boundary (R-ai-presents-not-decides) requires a named outside party.",
-	Check: checkConflictHasSteward,
+	Check: checkConflictHasResolver,
 })
 
-func checkConflictHasAxisContextSteward(g *ontology.Graph) []Violation {
+func checkConflictHasAxisContextResolver(g *ontology.Graph) []Violation {
 	var out []Violation
 	out = append(out, checkConflictHasAxis(g)...)
 	out = append(out, checkConflictHasContext(g)...)
-	out = append(out, checkConflictHasSteward(g)...)
+	out = append(out, checkConflictHasResolver(g)...)
 	return out
 }
 
-var _ = All.MustRegister("check_conflict_has_axis_context_steward", Invariant{
-	Name:  "check_conflict_has_axis_context_steward",
+var _ = All.MustRegister("check_conflict_has_axis_context_resolver", Invariant{
+	Name:  "check_conflict_has_axis_context_resolver",
 	Canon: methodology.Conflict,
-	Claim: "every Conflict carries a non-empty axis, context, steward (thin delegator).",
-	Rule:  "axis, context and steward MUST all be non-empty. These three are the knowledge that belongs to neither member.",
-	Why: "this is the structural definition of 'the contradiction is visible'. An axis-less or stewardless conflict is " +
+	Claim: "every Conflict carries a non-empty axis, context, resolver (thin delegator).",
+	Rule:  "axis, context and resolver MUST all be non-empty. These three are the knowledge that belongs to neither member.",
+	Why: "this is the structural definition of 'the contradiction is visible'. An axis-less or resolverless conflict is " +
 		"exactly an invisible contradiction. This is a THIN DELEGATOR — calls the three atomic sub-checks and concatenates.",
-	Check:       checkConflictHasAxisContextSteward,
+	Check:       checkConflictHasAxisContextResolver,
 	IsDelegator: true,
 })
 
@@ -166,7 +166,7 @@ func checkConstitutingNotInUnresolvedConflict(g *ontology.Graph) []Violation {
 				ID:    c.ID,
 				Message: fmt.Sprintf(
 					"conflict %q (%s) holds >= 2 SETTLED constituting atoms (%s) as an UNRESOLVED contradiction while the "+
-						"CONSTITUTION presents them as settled truth — steward must resolve it (DECIDED / REVISIT_WHEN) "+
+						"CONSTITUTION presents them as settled truth — resolver must resolve it (DECIDED / REVISIT_WHEN) "+
 						"or the members must not both be SETTLED (R-constituting-requirements-converge).",
 					c.ID, c.Lifecycle, strings.Join(settledMembers, ", ")),
 			})
@@ -183,7 +183,7 @@ var _ = All.MustRegister("check_constituting_not_in_unresolved_conflict", Invari
 		"members. This is the machine-checkable face of 'the set of SETTLED requirements composing the operator-prompt " +
 		"shall be pairwise consistent' (R-constituting-requirements-converge).",
 	Why: "scoped to the self-host graph (FRAMEWORK_SCOPED, gated on g.self_hosting): a business domain's DETECTED " +
-		"conflict with SETTLED members is NORMAL life — the tension has been found and is awaiting its steward, which is " +
+		"conflict with SETTLED members is NORMAL life — the tension has been found and is awaiting its resolver, which is " +
 		"exactly what the methodology is for.",
 	Check: checkConstitutingNotInUnresolvedConflict,
 })
@@ -253,7 +253,7 @@ func requirementOwnerMap(g *ontology.Graph) map[string]string {
 	return out
 }
 
-func checkStewardNotAMemberOwner(g *ontology.Graph) []Violation {
+func checkResolverNotAMemberOwner(g *ontology.Graph) []Violation {
 	ownerOf := requirementOwnerMap(g)
 	var out []Violation
 	for _, c := range g.Conflicts {
@@ -263,26 +263,26 @@ func checkStewardNotAMemberOwner(g *ontology.Graph) []Violation {
 				memberOwners[owner] = struct{}{}
 			}
 		}
-		if _, ok := memberOwners[c.Steward]; ok {
+		if _, ok := memberOwners[c.Resolver]; ok {
 			out = append(out, Violation{
-				Check:   "check_steward_not_a_member_owner",
+				Check:   "check_resolver_not_a_member_owner",
 				ID:      c.ID,
-				Message: fmt.Sprintf("steward %q also owns a member requirement; a conflict must be stewarded from outside its members", c.Steward),
+				Message: fmt.Sprintf("resolver %q also owns a member requirement; a conflict must be resolvered from outside its members", c.Resolver),
 			})
 		}
 	}
 	return out
 }
 
-var _ = All.MustRegister("check_steward_not_a_member_owner", Invariant{
-	Name:  "check_steward_not_a_member_owner",
+var _ = All.MustRegister("check_resolver_not_a_member_owner", Invariant{
+	Name:  "check_resolver_not_a_member_owner",
 	Canon: methodology.Conflict,
-	Claim: "steward is not the owner of any member.",
-	Rule: "Conflict.steward MUST NOT equal the owner of any member Requirement. A conflict lives BETWEEN stakeholders; " +
-		"if the steward owned a side, the tension would be judged by an interested party and quietly resolved in their favor.",
+	Claim: "resolver is not the owner of any member.",
+	Rule: "Conflict.resolver MUST NOT equal the owner of any member Requirement. A conflict lives BETWEEN stakeholders; " +
+		"if the resolver owned a side, the tension would be judged by an interested party and quietly resolved in their favor.",
 	Why: "this is the hard boundary made structural: it is the same principle as the AI never closing a conflict silently — " +
 		"the holder of the tension must be a party who does not own either claim, or invisibility returns.",
-	Check: checkStewardNotAMemberOwner,
+	Check: checkResolverNotAMemberOwner,
 })
 
 func checkOpenHasQuestion(g *ontology.Graph) []Violation {
@@ -313,7 +313,7 @@ var _ = All.MustRegister("check_open_has_question", Invariant{
 	Claim: "an OPEN requirement carries a non-empty question.",
 	Rule: "if status starts with \"OPEN\", it MUST be of the form \"OPEN(<question>)\" with a non-empty question. An OPEN " +
 		"with no question is a hole nobody can act on — invisible openness.",
-	Why: "the harness and OPEN.md surface open holes by their question; an empty question gives the steward nothing to " +
+	Why: "the harness and OPEN.md surface open holes by their question; an empty question gives the resolver nothing to " +
 		"decide, defeating the point of marking it open at all.",
 	Check: checkOpenHasQuestion,
 })

@@ -44,7 +44,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-agent-declares-purpose` (PROSE)
 
-**Claim.** Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alongside its SCOPE).
+**Claim.** Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent resolvers in one line (machine-readable, alongside its SCOPE).
 
 **Why.** An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable PURPOSE placed next to SCOPE keeps the agent's contract in one place, distinct from the prose README. Not yet implemented: the agents/ scaffolding infrastructure (create-agent, scope/purpose declaration) is Planned, so no agent exists to declare a PURPOSE yet; the policy stands for the moment one is scaffolded. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
@@ -56,7 +56,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→PROSE; enforced_by: [test_every_agent_declares_purpose]→[]; settled_at: 2026-06-30→2026-07-12
-- 2026-07-12 — claim: Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.→Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent stewards in one line (machine-readable, alon…; why: An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-12 — claim: Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent resolvers in one line.→Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent resolvers in one line (machine-readable, alon…; why: An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
 - 2026-07-13 — why: An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
 - 2026-07-13 — why: An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…→An agent without a declared purpose is invisible to the operator-prompt -- the AGENT-MAP block cannot render its responsibility. A machine-readable P…; settled_at: 2026-07-13→2026-07-12
 - 2026-07-13 — blocked_on: →blocked on the create_agent tool (Planned) — no non-director agent exists to carry a PURPOSE
@@ -65,7 +65,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes, separate from any generated content.
 
-**Why.** Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. Enforcing check check_agent_has_docs_subdir is registered in internal/invariants but is an HONEST NO-OP: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
+**Why.** Agents accumulate private reasoning -- checkpoints, open questions, resolver notes -- that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. Enforcing check check_agent_has_docs_subdir is registered in internal/invariants but is an HONEST NO-OP: it checks the FILE SYSTEM STRUCTURE of agent directories on disk, which the in-memory-graph invariant contract has no access to (filesystem-coherence checks belong to a future agent-scaffolding layer), and no agent has been scaffolded yet. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `check_agent_has_docs_subdir`
 
@@ -76,9 +76,9 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
-- 2026-07-12 — claim: Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent p…→Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes,…; why: Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operato…→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
-- 2026-07-13 — why: Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
-- 2026-07-13 — why: Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …→Agents accumulate private reasoning -- checkpoints, open questions, steward notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-07-13→2026-07-12
+- 2026-07-12 — claim: Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent p…→Every agent at domains/<name>/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent's private notes,…; why: Agents accumulate private reasoning — checkpoints, open questions, resolver notes — that must not mix with generated content or the parent operato…→Agents accumulate private reasoning -- checkpoints, open questions, resolver notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-06-30→2026-07-12; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12
+- 2026-07-13 — why: Agents accumulate private reasoning -- checkpoints, open questions, resolver notes -- that must not mix with generated content or the parent operator …→Agents accumulate private reasoning -- checkpoints, open questions, resolver notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: Agents accumulate private reasoning -- checkpoints, open questions, resolver notes -- that must not mix with generated content or the parent operator …→Agents accumulate private reasoning -- checkpoints, open questions, resolver notes -- that must not mix with generated content or the parent operator …; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-has-own-tools-dir` (ENFORCED)
 
@@ -143,7 +143,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 **Claim.** CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.
 
-**Why.** The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/generator; RenderAgentMapBlock in claudemd.go) emits the AGENT-MAP block from the graph; today it renders '_(no sub-operators yet)_' because no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Planned). The block materializes the moment a real sub-operator is scaffolded. ENFORCED 2026-07-13: TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
+**Why.** The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/generator; RenderAgentMapBlock in claudemd.go) emits the AGENT-MAP block from the graph; today it renders '_(no sub-operators yet)_' because no agent has been scaffolded yet (the agents/ infrastructure -- create-agent, scope, private tools -- is Planned). The block materializes the moment a real sub-operator is scaffolded. ENFORCED 2026-07-13: TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.
 
 **Enforced by:** `TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents`
 
@@ -157,10 +157,10 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
 - 2026-07-12 — enforcement: ENFORCED→STRUCTURAL; enforced_by: [test_agent_map.py]→[]; settled_at: 2026-06-30→2026-07-12
-- 2026-07-12 — claim: CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count…→CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of…; why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_static.go]
-- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
-- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents]
-- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; settled_at: 2026-07-13→2026-07-12
+- 2026-07-12 — claim: CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count…→CLAUDE.md shall contain an AGENT-MAP block listing every scaffolded agent (domains/<name>/agents/<agent>/) with its PURPOSE, SCOPE prefixes, count of…; why: The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. PURPOSE (machine-readable in…→The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/generator/claudemd.go, internal/generator/claudemd_static.go]
+- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; settled_at: 2026-07-12→2026-07-13; last_reviewed_at: 2026-07-12→2026-07-13
+- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderAgentMapBlock_EmptyMarkerWhenNoSubAgents]
+- 2026-07-13 — why: The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…→The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. `hotam gen-spec` (internal/g…; settled_at: 2026-07-13→2026-07-12
 
 ## `R-agent-never-lost` (ENFORCED)
 
@@ -354,11 +354,11 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 ## `R-operator-not-self-approve` (ENFORCED)
 
-**Claim.** An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.
+**Claim.** An Operator shall not resolver a Conflict in which its underlying Stakeholder owns one of the members.
 
-**Why.** M36 — the reflexive twin of check_steward_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the steward-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.
+**Why.** M36 — the reflexive twin of check_resolver_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the resolver-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.
 
-**Enforced by:** `check_operator_steward_not_self`
+**Enforced by:** `check_operator_resolver_not_self`
 
 **Last reviewed.** 2026-06-30
 
@@ -367,7 +367,7 @@ The atomic requirements that constitute the operator's role, identity, and disci
 **Change history.**
 
 - 2026-07-12 — last_reviewed_at: →2026-06-30; review_after: →2026-12-30
-- 2026-07-12 — enforced_by: [check_operator_steward_not_self, test_operator.py::test_check_operator_steward_not_self_fires]→[check_operator_steward_not_self]; settled_at: 2026-06-30→2026-07-12
+- 2026-07-12 — enforced_by: [check_operator_resolver_not_self, test_operator.py::test_check_operator_resolver_not_self_fires]→[check_operator_resolver_not_self]; settled_at: 2026-06-30→2026-07-12
 
 ## `R-operator-prompt-from-substrate` (ENFORCED)
 

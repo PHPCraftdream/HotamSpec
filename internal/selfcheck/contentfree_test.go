@@ -29,7 +29,7 @@ var frameworkScanRoots = []string{"internal", "cmd/hotam"}
 //   - every Stakeholder ID and Requirement owner value,
 //
 // MINUS the canonical reader-role contract: internal/generator/common.go's
-// DomainDocReaders binds the operator/steward/maintainer roles to exactly three
+// DomainDocReaders binds the operator/resolver/maintainer roles to exactly three
 // stakeholder IDs ("ai-agent", "domain-user", "framework-author"). Those three
 // are framework INFRASTRUCTURE (the cross-domain reader-resolution contract
 // every domain is expected to honor), not domain-specific business data, so
@@ -142,7 +142,7 @@ func businessTokenDenylist(t *testing.T) map[string]string {
 // etc.) may appear ONLY in the two content-INTAKE boundaries, which handle
 // content functionally rather than embedding illustrative examples:
 //
-//   - internal/proposal/* — the mechanical writer that applies steward-approved
+//   - internal/proposal/* — the mechanical writer that applies resolver-approved
 //     proposals; it constructs nodes FROM proposal input, never embeds examples;
 //   - cmd/hotam/init_cmd.go — the `hotam init` domain scaffold, a functional,
 //     explicitly-replaceable seed template (its own Why text says "replace it"),

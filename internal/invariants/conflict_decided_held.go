@@ -130,7 +130,7 @@ func checkDecidedByNotMemberOwner(g *ontology.Graph) []Violation {
 			out = append(out, Violation{
 				Check:   "check_decided_by_not_member_owner",
 				ID:      c.ID,
-				Message: fmt.Sprintf("decided_by %q also owns a member requirement; the decider must be outside the conflict's members (steward-distinct rule applied to the decider)", c.DecidedBy),
+				Message: fmt.Sprintf("decided_by %q also owns a member requirement; the decider must be outside the conflict's members (resolver-distinct rule applied to the decider)", c.DecidedBy),
 			})
 		}
 	}
@@ -143,9 +143,9 @@ var _ = All.MustRegister("check_decided_by_not_member_owner", Invariant{
 	Claim: "a DECIDED conflict's decided_by is not the owner of any member Requirement.",
 	Rule: "when Conflict.lifecycle starts with \"DECIDED\", decided_by MUST NOT be the owner of " +
 		"any of the conflict's member Requirements. The decider must be outside the conflict's " +
-		"members (steward-distinct rule applied to the decider).",
+		"members (resolver-distinct rule applied to the decider).",
 	Why: "if the decider owned one of the members, the hard boundary would be circumvented at " +
-		"the decision step. This is the structural twin of check_steward_not_a_member_owner " +
+		"the decision step. This is the structural twin of check_resolver_not_a_member_owner " +
 		"applied at the moment of resolution.",
 	Check: checkDecidedByNotMemberOwner,
 })
@@ -164,7 +164,7 @@ func checkHeldHasMinTwoVariants(g *ontology.Graph) []Violation {
 			out = append(out, Violation{
 				Check:   "check_held_has_min_two_variants",
 				ID:      c.ID,
-				Message: "HELD conflict must carry >= 2 distinct Variant ids (the steward needs at least two sides to choose between)",
+				Message: "HELD conflict must carry >= 2 distinct Variant ids (the resolver needs at least two sides to choose between)",
 			})
 		}
 	}
@@ -176,7 +176,7 @@ var _ = All.MustRegister("check_held_has_min_two_variants", Invariant{
 	Canon: methodology.Conflict,
 	Claim: "a HELD conflict carries at least two elaborated Variants.",
 	Rule: "when Conflict.lifecycle starts with \"HELD\", `variants` MUST contain at least two " +
-		"distinct Variant ids. A HELD tension with fewer than two variants gives the steward " +
+		"distinct Variant ids. A HELD tension with fewer than two variants gives the resolver " +
 		"nothing to choose between -- exactly the invisible-contradiction-in-a-new-costume the " +
 		"hard boundary forbids.",
 	Why: "mirrors check_conflict_min_two_members -- a HELD conflict connects at least two SIDES " +
@@ -269,7 +269,7 @@ func checkHeldByNotMemberOwner(g *ontology.Graph) []Violation {
 			out = append(out, Violation{
 				Check:   "check_held_by_not_member_owner",
 				ID:      c.ID,
-				Message: fmt.Sprintf("decided_by %q also owns a member requirement; the human who holds this tension open must be outside the conflict's members (steward-distinct rule applied to HELD)", c.DecidedBy),
+				Message: fmt.Sprintf("decided_by %q also owns a member requirement; the human who holds this tension open must be outside the conflict's members (resolver-distinct rule applied to HELD)", c.DecidedBy),
 			})
 		}
 	}
@@ -281,7 +281,7 @@ var _ = All.MustRegister("check_held_by_not_member_owner", Invariant{
 	Canon: methodology.Conflict,
 	Claim: "a HELD conflict's decided_by is not the owner of any member Requirement.",
 	Rule: "when Conflict.lifecycle starts with \"HELD\", decided_by MUST NOT be the owner of any " +
-		"of the conflict's member Requirements -- the steward-distinct rule applied to the human " +
+		"of the conflict's member Requirements -- the resolver-distinct rule applied to the human " +
 		"who holds the tension open.",
 	Why: "mirrors check_decided_by_not_member_owner applied to HELD; if the signoff owned a " +
 		"member, the hard boundary would be circumvented at the hold step exactly as it would " +

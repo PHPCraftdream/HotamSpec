@@ -40,7 +40,7 @@ func cmdApplyProposal(args []string) error {
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
 	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, steward+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History")
 	fs.Parse(args)
 
 	if *today == "" {
@@ -162,7 +162,7 @@ func applyProposalValue(p proposal.Proposal, domainDir, today string) (string, e
 // I/O happens, so a structurally invalid JSON file fails the batch before
 // the graph is even loaded — leaving disk untouched. The caller (ApplyBatch)
 // then applies the parsed proposals atomically to one in-memory graph.
-// Filename sort gives the steward explicit control over application order
+// Filename sort gives the resolver explicit control over application order
 // (proposal 2 may reference a node proposal 1 just created): name files
 // 01-*.json, 02-*.json, … to make the sequence self-documenting.
 func loadBatchDir(dir string) ([]proposal.Proposal, error) {

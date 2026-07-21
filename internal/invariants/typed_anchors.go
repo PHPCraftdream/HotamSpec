@@ -33,7 +33,7 @@ var _ = All.MustRegister("check_typed_anchors_variant", Invariant{
 		"with 'V-'. An id with the wrong prefix breaks the typed-anchor discipline " +
 		"(R-anchor-everything) for the new Variant payload type introduced alongside HELD.",
 	Why: "Variant is not a graph node (anti-RDF, payload on Conflict), but it IS a typed anchor " +
-		"a steward or agent may cite by reference (R-speak-by-reference) -- the same discipline " +
+		"a resolver or agent may cite by reference (R-speak-by-reference) -- the same discipline " +
 		"that governs R-/C-/A-/OP- ids applies to V- ids.",
 	Check: checkTypedAnchorsVariant,
 })
@@ -84,7 +84,7 @@ var _ = All.MustRegister("check_signoff_chosen_variant_resolves", Invariant{
 		"decision precisely so the chosen one can be cited — an unresolvable chosen_variant " +
 		"severs that citation.",
 	Why: "this check is on the Conflict (not the Signoff alone): the chosen variant is " +
-		"meaningful ONLY relative to the variants the steward was choosing BETWEEN, which live " +
+		"meaningful ONLY relative to the variants the resolver was choosing BETWEEN, which live " +
 		"on the Conflict. A Signoff detached from its conflict has no variants to resolve " +
 		"against, so the check must walk conflict.signoff against conflict.variants together.",
 	Check: checkSignoffChosenVariantResolves,

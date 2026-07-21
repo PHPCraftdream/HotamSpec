@@ -14,13 +14,13 @@ var batchANames = []string{
 	"check_doc_reader_resolves_to_stakeholder",
 	"check_conflict_has_axis",
 	"check_conflict_has_context",
-	"check_conflict_has_steward",
-	"check_conflict_has_axis_context_steward",
+	"check_conflict_has_resolver",
+	"check_conflict_has_axis_context_resolver",
 	"check_conflict_min_two_members",
 	"check_constituting_not_in_unresolved_conflict",
 	"check_axis_in_registry",
 	"check_conflict_id_matches_identity",
-	"check_steward_not_a_member_owner",
+	"check_resolver_not_a_member_owner",
 	"check_open_has_question",
 }
 

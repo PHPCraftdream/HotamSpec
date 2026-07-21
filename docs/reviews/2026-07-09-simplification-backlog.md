@@ -74,7 +74,7 @@
 | G4 | Сузить R3-маркеры: `CLAUDE.md` и `tickets/` — слишком общие (любой Claude-Code-репозиторий ложно распознается как hotam-проект). | решение | S | L3#7 |
 | G5 | Справочник Proposal JSON для человека (одна страница: kinds, обязательные поля, примеры) — сейчас единственный источник — исходник proposal.py. | механика | S | L3#3 |
 | G6 | В README/Adopt разделить шаги: «команда без Claude» vs «команда с AI-оператором» (hooks/sensorium — опциональный AI-слой, не обязательный шаг 2). | механика | S | L3#4 |
-| G7 | Глоссарий 6 стартовых терминов в README (Stakeholder, Requirement, Axis, Conflict, steward≠owner, Assumption) + граница «operators/crystals/budgets нужны только для AI-оператора». Заменить захардкоженный бейдж «944 passing». | механика | S | L3#6, L3#7 |
+| G7 | Глоссарий 6 стартовых терминов в README (Stakeholder, Requirement, Axis, Conflict, resolver≠owner, Assumption) + граница «operators/crystals/budgets нужны только для AI-оператора». Заменить захардкоженный бейдж «944 passing». | механика | S | L3#6, L3#7 |
 
 ## Группа H — Тестовая гигиена
 

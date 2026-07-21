@@ -30,7 +30,7 @@ func structuralFixtureGraph() *ontology.Graph {
 			{ID: "R-gamma", Claim: "gamma reports quietly", Owner: "platform", Status: ontology.StatusSETTLED, Assumptions: []string{"A-other"}},
 		},
 		Conflicts: []ontology.Conflict{
-			{ID: "C-xy", Axis: "latency-vs-completeness", Context: "peak load", Members: []string{"R-alpha", "R-beta"}, Steward: "platform", Lifecycle: ontology.ConflictDETECTED},
+			{ID: "C-xy", Axis: "latency-vs-completeness", Context: "peak load", Members: []string{"R-alpha", "R-beta"}, Resolver: "platform", Lifecycle: ontology.ConflictDETECTED},
 		},
 	}
 }

@@ -82,7 +82,7 @@ var _ = All.MustRegister("check_no_dangling_requirement_owner", Invariant{
 	Claim: "every Requirement.owner resolves to a known Stakeholder.",
 	Rule: "Requirement.owner MUST be in stakeholder_ids(g). A requirement without a resolvable owner is structurally " +
 		"unanchored.",
-	Why:   "a dangling owner makes the requirement unanchored and breaks the steward boundary invariant downstream.",
+	Why:   "a dangling owner makes the requirement unanchored and breaks the resolver boundary invariant downstream.",
 	Check: checkNoDanglingRequirementOwner,
 })
 
@@ -155,11 +155,11 @@ func checkNoDanglingConflictRefs(g *ontology.Graph) []Violation {
 	rids := ontology.RequirementIDs(g)
 	var out []Violation
 	for _, c := range g.Conflicts {
-		if _, ok := sids[c.Steward]; !ok {
+		if _, ok := sids[c.Resolver]; !ok {
 			out = append(out, Violation{
 				Check:   "check_no_dangling_conflict_refs",
 				ID:      c.ID,
-				Message: fmt.Sprintf("dangling Conflict ref — steward %q is not a known Stakeholder", c.Steward),
+				Message: fmt.Sprintf("dangling Conflict ref — resolver %q is not a known Stakeholder", c.Resolver),
 			})
 		}
 		for _, mid := range c.Members {
@@ -205,8 +205,8 @@ func checkNoDanglingConflictRefs(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_no_dangling_conflict_refs", Invariant{
 	Name:  "check_no_dangling_conflict_refs",
 	Canon: methodology.Invariants,
-	Claim: "every Conflict's steward, members, shared_assumption, derived, and decided_by resolve.",
-	Rule: "Conflict.steward MUST be in stakeholder_ids(g); each member MUST be in requirement_ids(g); shared_assumption " +
+	Claim: "every Conflict's resolver, members, shared_assumption, derived, and decided_by resolve.",
+	Rule: "Conflict.resolver MUST be in stakeholder_ids(g); each member MUST be in requirement_ids(g); shared_assumption " +
 		"(if set) MUST be in assumption_ids(g); each derived id MUST be in requirement_ids(g); decided_by (if set) MUST " +
 		"be in stakeholder_ids(g).",
 	Why: "a dangling member is how a conflict silently loses a party; a dangling assumption is how drift hides. " +
@@ -265,7 +265,7 @@ var _ = All.MustRegister("check_no_dangling_ids", Invariant{
 	Name:  "check_no_dangling_ids",
 	Canon: methodology.Invariants,
 	Claim: "every id referenced by an edge resolves in the graph (thin delegator).",
-	Rule: "Requirement.owner, Requirement.assumptions[*], Relation.target, Conflict.steward, Conflict.members[*], " +
+	Rule: "Requirement.owner, Requirement.assumptions[*], Relation.target, Conflict.resolver, Conflict.members[*], " +
 		"Conflict.shared_assumption, Conflict.derived[*], Assumption.owner, Operator.stakeholder, and Operator.parent " +
 		"MUST each name an object that exists.",
 	Why: "a dangling member is how a conflict silently loses a party; a dangling assumption is how drift hides. A " +

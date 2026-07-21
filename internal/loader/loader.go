@@ -278,7 +278,7 @@ func ResolveRequireProvenance(graphPath string) bool {
 // (ResolveGenProfile, ResolveRequireProvenance). Only "full" turns that same
 // check into a real, per-SETTLED-requirement gate.
 //
-// ONE-WAY SEMANTICS (steward decision, PLAN-scenario-generated-spec.md §2 D4):
+// ONE-WAY SEMANTICS (resolver decision, PLAN-scenario-generated-spec.md §2 D4):
 // flipping a domain's manifest.json from discipline:"" to discipline:"full"
 // is meant to be a ONE-WAY door — once a domain has migrated its SETTLED
 // requirements to carry real enforced_by / (implemented_by+verified_by+
@@ -393,7 +393,7 @@ type ParentDeclaration struct {
 //     error) -- a manifest that exists but cannot even be parsed has
 //     certainly not validly declared parent.
 //   - "parent" key absent from the map (the canonical violation case D6
-//     exists to catch: the steward simply never declared the field).
+//     exists to catch: the resolver simply never declared the field).
 //   - "parent" key present but its value is neither a JSON string nor JSON
 //     null (a number, bool, object, or array -- a malformed declaration).
 //     json.Unmarshal of JSON null into a plain string is NOT an error (it
@@ -425,7 +425,7 @@ func ResolveParent(graphPath string) ParentDeclaration {
 	// into a plain string as "" with no error (encoding/json treats null as
 	// "leave the target unchanged"), and a JSON string decodes to its value.
 	// Any other JSON type (number/bool/object/array) is a malformed
-	// declaration and is treated as Declared=false -- the steward named a
+	// declaration and is treated as Declared=false -- the resolver named a
 	// value that is neither a string nor null, so it is not a valid
 	// declaration of either root or child.
 	var s string
@@ -437,7 +437,7 @@ func ResolveParent(graphPath string) ParentDeclaration {
 
 // DomainPresentation carries the optional DOMAIN-MAP presentation fields of a
 // domain's manifest.json: purpose (one-line description), goals (bullet list),
-// and director (the accountable steward role/name). All three are optional —
+// and director (the accountable resolver role/name). All three are optional —
 // a manifest without them (every manifest predating task #210) yields the
 // zero value, and the DOMAIN-MAP renderer falls back to em-dash placeholders,
 // exactly as before.

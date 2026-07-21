@@ -13,7 +13,7 @@ Hand-authored (not generated). This file preserves the accumulated
 enforcement-perimeter baseline (`R-speculative-aspects-frozen`,
 `R-enforcement-perimeter-baselines-guarded`) — its `_comment` field is now a
 short fixed pointer to this file; the full narrative below is the durable
-record of every steward-directed unfreeze.
+record of every resolver-directed unfreeze.
 
 Each entry documents: what was re-hashed, why (concrete-need trigger per
 R-speculative-aspects-frozen), and the scope of what changed vs. what stayed
@@ -27,7 +27,7 @@ UPDATED 2026-07-02 (Wave 5): tools/spawn_agent.py partially unfrozen
 (isolation/mutating flags, R-spawn-log-carries-isolation).
 
 UPDATED 2026-07-03 (Wave 10, honesty of the spawn seam): tools/spawn_agent.py
-further partially unfrozen by explicit steward act (Wave 10 move 2a
+further partially unfrozen by explicit resolver act (Wave 10 move 2a
 directive) to add the --log-only CLI flag -- a narrow, additive change that
 appends a spawn-log row WITHOUT composing the crystal, so a HOST-level spawn
 (Task/Agent tool) that never routes through the crystal-composition path can
@@ -37,7 +37,7 @@ coverage gap. Backward compatible (default off); the core
 agent-resolution/prompt-composition logic remains frozen.
 
 UPDATE (Wave 13, the stranger door): tools/create_domain.py re-hashed after
-a steward-directed unfreeze -- the scaffolded graph.py used inline
+a resolver-directed unfreeze -- the scaffolded graph.py used inline
 TensionGraph(...) kwargs and lacked imports, so apply_proposal.py writers
 could not append ANY node (a fresh domain could not accept even its first
 Stakeholder/Axis/Requirement/Conflict); and the CLAUDE.md template carried a
@@ -50,7 +50,7 @@ domains/.active-domain + regenerates the root crystal). Federation surface
 otherwise unchanged.
 
 UPDATE (Portability W2, 2026-07-09): tools/create_domain.py and
-tools/spawn_agent.py re-hashed after a steward-directed unfreeze for the
+tools/spawn_agent.py re-hashed after a resolver-directed unfreeze for the
 portability migration (R-project-root-not-hardcoded, W2 of the
 external-framework requirement) -- both tools switched their domains-root
 source from parents[N]/__file__-derivatives to project_paths.domains_root()
@@ -65,7 +65,7 @@ UPDATE (Portability W4, 2026-07-09): tools/spawn_agent.py re-hashed again --
 _RUNTIME_DIR source swapped from spec_root()/.runtime (framework-internal)
 to runtime_paths.runtime_dir() (consumer-scoped, HOTAM_SPEC_RUNTIME_DIR env
 with project_root()/.hotam-spec/runtime default, per section 3.2 of the
-portability requirement). Steward pre-approved this class of change
+portability requirement). Resolver pre-approved this class of change
 (source-of-path swap only, no new
 agent-resolution/prompt-composition/spawn-log-semantics capability) when
 authorizing the W2 unfreeze of this same file; this is the same category

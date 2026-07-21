@@ -138,13 +138,13 @@ call — prefer it over standalone `apply-proposal` unless you specifically
 want to batch several proposals before regenerating docs once at the end.
 
 ```bash
-# a) at least TWO stakeholders — a conflict's steward may not own either side.
+# a) at least TWO stakeholders — a conflict's resolver may not own either side.
 echo '{"kind":"Stakeholder","id":"alice","name":"Alice","domain":"product"}'    > sh1.json
 echo '{"kind":"Stakeholder","id":"bob","name":"Bob","domain":"engineering"}'    > sh2.json
 echo '{"kind":"Stakeholder","id":"carol","name":"Carol","domain":"governance"}' > sh3.json
 hotam apply-proposal sh1.json --domain domains/main --today 2026-07-12
 hotam apply-proposal sh2.json --domain domains/main --today 2026-07-12
-hotam apply-proposal sh3.json --domain domains/main --today 2026-07-12   # a NEUTRAL steward for the conflict below
+hotam apply-proposal sh3.json --domain domains/main --today 2026-07-12   # a NEUTRAL resolver for the conflict below
 
 # b) an axis — the shared dimension your first tension lives on.
 echo '{"kind":"Axis","slug":"speed-vs-rigor","description":"ship fast vs verify thoroughly"}' > ax1.json
@@ -158,7 +158,7 @@ hotam land r1.json --domain domains/main --today 2026-07-12
 hotam land r2.json --domain domains/main --today 2026-07-12
 
 # d) your first Conflict — the tension between them, held by the neutral party.
-echo '{"kind":"Conflict","axis":"speed-vs-rigor","context":"first release cadence","members":["R-ship-fast","R-verify-all"],"steward":"carol"}' > c1.json
+echo '{"kind":"Conflict","axis":"speed-vs-rigor","context":"first release cadence","members":["R-ship-fast","R-verify-all"],"resolver":"carol"}' > c1.json
 hotam apply-proposal c1.json --domain domains/main --today 2026-07-12
 
 # e) re-check your pulse — the new conflict now awaits carol's ACKNOWLEDGE.

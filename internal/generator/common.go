@@ -24,7 +24,7 @@ const UnresolvedReader = "(unresolved-reader)"
 
 const RoleOperator = "operator"
 
-const RoleDomainSteward = "domain-steward"
+const RoleDomainResolver = "domain-resolver"
 
 const RoleFrameworkMaintainer = "framework-maintainer"
 
@@ -38,23 +38,23 @@ var DocReaderRoles = map[string]string{
 	"ATOMS_CHECK":          RoleOperator,
 	"SHARED_THINKING":      RoleOperator,
 	"SHARED_TOOL":          RoleOperator,
-	"REQUIREMENTS":         RoleDomainSteward,
-	"SPEC":                 RoleDomainSteward,
-	"TENSIONS":             RoleDomainSteward,
-	"DECISIONS":            RoleDomainSteward,
-	"HISTORY":              RoleDomainSteward,
-	"ENTITIES":             RoleDomainSteward,
+	"REQUIREMENTS":         RoleDomainResolver,
+	"SPEC":                 RoleDomainResolver,
+	"TENSIONS":             RoleDomainResolver,
+	"DECISIONS":            RoleDomainResolver,
+	"HISTORY":              RoleDomainResolver,
+	"ENTITIES":             RoleDomainResolver,
 	"FRAMEWORK_INVARIANTS": RoleFrameworkMaintainer,
 	"GLOSSARY":             RoleFrameworkMaintainer,
 	"AUDIT":                RoleFrameworkMaintainer,
 	"REPO_MAP":             RoleOperator,
-	"MODELS":               RoleDomainSteward,
-	"COVERAGE":             RoleDomainSteward,
+	"MODELS":               RoleDomainResolver,
+	"COVERAGE":             RoleDomainResolver,
 }
 
 var DomainDocReaders = map[string]string{
 	RoleOperator:            "ai-agent",
-	RoleDomainSteward:       "domain-user",
+	RoleDomainResolver:      "domain-user",
 	RoleFrameworkMaintainer: "framework-author",
 }
 

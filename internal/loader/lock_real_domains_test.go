@@ -26,9 +26,9 @@ var realDomains = []string{
 
 // minimalValidGraph is the smallest graph that passes the engine's own invariant
 // suite (mirrors internal/proposal/fixture_test.go's baseGraph): one axis, three
-// stakeholders (a non-member steward "outsider" + two requirement owners), one
+// stakeholders (a non-member resolver "outsider" + two requirement owners), one
 // holding assumption, three SETTLED requirements, and one ACKNOWLEDGED conflict
-// whose steward owns none of its members. It exists so R-no-hand-edit-graph's
+// whose resolver owns none of its members. It exists so R-no-hand-edit-graph's
 // sanctioned-write-path half can be exercised against a graph that proposal.Apply's
 // internal invariants.AllViolations check will not reject -- proving Apply is the
 // path that writes graph.json + graph.lock TOGETHER, not just that a stale lock can
@@ -59,7 +59,7 @@ func minimalValidGraph() *ontology.Graph {
 				Axis:      axis,
 				Context:   context,
 				Members:   []string{"R-1", "R-2"},
-				Steward:   "outsider",
+				Resolver:  "outsider",
 				Lifecycle: "ACKNOWLEDGED",
 			},
 		},

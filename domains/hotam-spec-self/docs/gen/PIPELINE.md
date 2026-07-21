@@ -19,7 +19,7 @@ The methodology's own process modeled as a Process node — eating its own dog f
 |---|---|---|---|---|
 | diagnose | — | — | — | `operator` |
 | propose | — | — | — | `operator` |
-| approve | — | — | — | `steward` |
+| approve | — | — | — | `resolver` |
 | apply | — | — | — | `operator` |
 | regenerate | — | — | — | `operator` |
 | verify | — | — | — | `operator` |

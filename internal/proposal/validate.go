@@ -173,9 +173,9 @@ func (p ProposedConflict) validate() error {
 			return validationError("member %q must be an R-... requirement id.", m)
 		}
 	}
-	steward := strings.TrimSpace(p.Steward)
-	if steward == "" {
-		return validationError("'steward' is required and must be non-empty.")
+	resolver := strings.TrimSpace(p.Resolver)
+	if resolver == "" {
+		return validationError("'resolver' is required and must be non-empty.")
 	}
 	initialLifecycle := strings.TrimSpace(p.InitialLifecycle)
 	if initialLifecycle == "" {
@@ -477,7 +477,7 @@ func (p ProposedReviewMark) validate() error {
 	if len(trimNonEmpty(p.Evidence)) == 0 {
 		return validationError(
 			"'evidence' is required for a ReviewMark proposal — it is the attestation " +
-				"the steward inspects to confirm the review was substantive; without it a mark " +
+				"the resolver inspects to confirm the review was substantive; without it a mark " +
 				"is indistinguishable from an administrative date backfill (R-review-mark-" +
 				"carries-evidence).")
 	}

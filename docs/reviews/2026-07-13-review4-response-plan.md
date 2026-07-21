@@ -16,10 +16,10 @@ Every claim re-checked against the repo myself:
 | 5 | 41 SETTLED closeable debt (38 PROSE + 3 STRUCTURAL). | CONFIRMED. |
 | 6 | README says `@latest` won't resolve without a release tag (README.md:26). | CONFIRMED. |
 
-## Steward decisions taken
+## Resolver decisions taken
 
 - Scope: #1, #2, #3, #4, #5 all IN. Plus self-proposed reliability/maintainability items (below).
-- #6 release tag: **declined again** — steward chose "leave without tag" this wave (README already documents the build-from-source / @commit workaround honestly).
+- #6 release tag: **declined again** — resolver chose "leave without tag" this wave (README already documents the build-from-source / @commit workaround honestly).
 
 ## Plan
 
@@ -30,7 +30,7 @@ Every claim re-checked against the repo myself:
 `checkOperatorWithinBudget`'s CRYSTAL_CHARS branch must resolve CLAUDE.md relative to the domain being checked, not global `paths.ProjectRoot()`. The invariant check currently receives only the Graph — thread the domain root (or the resolved CLAUDE.md path) into the check. Switch `len(string(data))` → `utf8.RuneCountInString` to match the generator's post-#102 measurement. **Self-proposed sweep:** audit ALL invariant checks and commands for the same global-CWD file-read pattern that should be domain-relative (this bug + the CI regression are two instances of one family — find any others).
 
 ### T-c (#3) — trim seed output for external consumers
-Reduce first-contact cognitive load: keep Planned tools out of the consumer-facing REQUIREMENTS.md (or clearly separate Implemented from Planned), fix stale CLAUDE.md references / Python-era terms / dead paths in generated seed docs. Scope carefully — this is about what the seed domain SHIPS, decided with the steward.
+Reduce first-contact cognitive load: keep Planned tools out of the consumer-facing REQUIREMENTS.md (or clearly separate Implemented from Planned), fix stale CLAUDE.md references / Python-era terms / dead paths in generated seed docs. Scope carefully — this is about what the seed domain SHIPS, decided with the resolver.
 
 ### T-d (#4) — graph.json schema_version + tolerant loader
 Add a `schema_version` field to Graph, write it during generation, and give the loader a version-aware path: known version → proceed; newer/unknown → a clear migration error instead of an opaque DisallowUnknownFields decode failure. Bounded migration layer, not a full framework.
@@ -38,9 +38,9 @@ Add a `schema_version` field to Graph, write it during generation, and give the 
 ### T-e (#5) — enforcement debt triage (biggest, last)
 The 41 closeable debt (38 PROSE + 3 STRUCTURAL, all ENFORCEABLE). Triage each: write a genuine enforcement test where truly enforceable (flip to ENFORCED), or reclassify to INHERENTLY_PROSE where mechanical enforcement would be theatre. NOT mass evidence-backfill (declined twice before). Same discipline as the earlier A-batch enforcement waves this session.
 
-### C1 roadmap-debt triage (emerged mid-wave via steward Q&A — task #117)
+### C1 roadmap-debt triage (emerged mid-wave via resolver Q&A — task #117)
 
-An `@fm` advisory consultation this session concluded that the remaining feature-blocked items in T-e's residual cannot honestly be resolved by "write a test or reclassify" — they describe features that do not exist in the codebase yet (ticket engine, attention core, sub-agent hierarchy, sensorium hooks, land-log, audit tools, perimeter guards, test-tiering, etc.). The full triage is in [`docs/reviews/2026-07-13-c1-roadmap-debt-triage.md`](2026-07-13-c1-roadmap-debt-triage.md): 33 items, grouped into 10 clusters by blocking feature, anchored on the already-steward-approved `R-speculative-aspects-frozen` principle. The document also identifies (but does not implement) the root-cause fix: splitting the burn-down metric to visually separate "closeable-now" from "feature-blocked" — a future-wave ontology+generator change.
+An `@fm` advisory consultation this session concluded that the remaining feature-blocked items in T-e's residual cannot honestly be resolved by "write a test or reclassify" — they describe features that do not exist in the codebase yet (ticket engine, attention core, sub-agent hierarchy, sensorium hooks, land-log, audit tools, perimeter guards, test-tiering, etc.). The full triage is in [`docs/reviews/2026-07-13-c1-roadmap-debt-triage.md`](2026-07-13-c1-roadmap-debt-triage.md): 33 items, grouped into 10 clusters by blocking feature, anchored on the already-resolver-approved `R-speculative-aspects-frozen` principle. The document also identifies (but does not implement) the root-cause fix: splitting the burn-down metric to visually separate "closeable-now" from "feature-blocked" — a future-wave ontology+generator change.
 
 ## Execution
 Sequential /crush sub-agents (established pattern), independent orchestrator verification after each (build/vet/gofmt/test -race -count=1 ./.../all-violations both domains, in a CLEAN env — TMP/TEMP outside the repo AND outside this machine's contaminated home dir, since C:\Users\Computer has stray domains/ + CLAUDE.md + .claude that false-positive project-root resolution). Commit after each task; push + final @fl review at the end on explicit request.

@@ -58,7 +58,7 @@ func BuildGraphJSON(g *ontology.Graph) (string, error) {
 			"id":        c.ID,
 			"lifecycle": c.Lifecycle,
 			"members":   copyStrings(c.Members),
-			"steward":   c.Steward,
+			"resolver":  c.Resolver,
 		})
 	}
 

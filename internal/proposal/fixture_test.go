@@ -37,7 +37,7 @@ func baseGraph() *ontology.Graph {
 				Axis:      axis,
 				Context:   context,
 				Members:   []string{"R-1", "R-2"},
-				Steward:   "outsider",
+				Resolver:  "outsider",
 				Lifecycle: "ACKNOWLEDGED",
 			},
 		},

@@ -16,7 +16,7 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
 - [P5] LATENT_CONNECTOR on `A-runtime-logs-append-only` — [HEURISTIC, for AI review] assumption(s) A-runtime-logs-append-only shared by 5 requirements (R-host-spawn-leaves-trace, R-land-leaves-trace, R-spawn-logged, R-t1-gate-is-default, R-wave-lands-atomically) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
-- [P5] LATENT_CONNECTOR on `A-single-steward-session` — [HEURISTIC, for AI review] assumption(s) A-single-steward-session shared by 5 requirements (R-commit-follows-review, R-push-only-on-request, R-wave-lands-atomically, R-wave-strictly-sequential, R-worktree-parallel-permitted) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
+- [P5] LATENT_CONNECTOR on `A-single-resolver-session` — [HEURISTIC, for AI review] assumption(s) A-single-resolver-session shared by 5 requirements (R-commit-follows-review, R-push-only-on-request, R-wave-lands-atomically, R-wave-strictly-sequential, R-worktree-parallel-permitted) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
 
 ## Status counters
 

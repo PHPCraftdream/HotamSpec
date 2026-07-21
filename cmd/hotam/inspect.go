@@ -17,7 +17,7 @@ import (
 // other is a semantic question no structural check answers. `what-now`
 // already surfaces a terse cluster signal + a freshness signal at
 // PLatentConnector/PAdvisory priority (internal/diagnose/signal.go); this
-// command does NOT duplicate that — it is the detailed drill-down a steward
+// command does NOT duplicate that — it is the detailed drill-down a resolver
 // or agent reaches for on demand, backed by the SAME underlying detectors
 // (internal/diagnose.AllCandidates) plus additional heuristics not surfaced
 // in the terse what-now view (lexical claim overlap, axis co-reference).

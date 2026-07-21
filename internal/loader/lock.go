@@ -14,7 +14,7 @@ import (
 // original graph.json content pin (R-no-hand-edit-graph). DisciplineFullObserved
 // is the F2 discipline ratchet (task W7.2, @fx finding F2): once a domain's
 // manifest.json has EVER been observed with discipline:"full", this field is
-// pinned true and NEVER goes back to false -- a steward who silently removes
+// pinned true and NEVER goes back to false -- a resolver who silently removes
 // or downgrades the discipline key from manifest.json cannot un-pin it, so
 // check_discipline_ratchet (internal/invariants) fires on the regression. This
 // field is ADDITIVE (json:"discipline_full_observed,omitempty"): an existing
@@ -51,7 +51,7 @@ func sha256File(path string) (string, error) {
 // live discipline is "full", pins DisciplineFullObserved=true in the lock. The
 // ratchet is ONE-WAY: if the EXISTING lock already has DisciplineFullObserved=
 // true, it stays true even if the live manifest's discipline is no longer "full"
-// (the steward removed or downgraded the key) -- exactly the one-way-door
+// (the resolver removed or downgraded the key) -- exactly the one-way-door
 // semantics PLAN-scenario-generated-spec.md §2 D4 specifies for discipline:full.
 // This means a domain that was EVER discipline:full and then silently regressed
 // will have lock.DisciplineFullObserved=true but live discipline!="" --

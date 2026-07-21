@@ -141,7 +141,7 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 		// lines a test could cover) produces ZERO jobs and would otherwise
 		// pass this coverage-proof gate having proven ZERO execution -- the
 		// exact silent bypass F1 targets. typeOnlyCount distinguishes a
-		// type-only entry (resolves as SpecSymbolType -- the steward intended
+		// type-only entry (resolves as SpecSymbolType -- the resolver intended
 		// a real citation, it just has nothing coverable) from an unresolvable
 		// entry (SpecSymbolNone -- checkImplementedBySymbolResolvable's
 		// violation, not this check's), so this fix only fires when the

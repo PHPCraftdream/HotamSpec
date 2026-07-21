@@ -17,11 +17,11 @@ reader: (unresolved-reader)
 - `internal/ontology/operator.go` — the acting facet of a Stakeholder (M20: NEW TYPE).
 - `internal/ontology/process.go` — opt-in behavioral aspect (M12).
 - `internal/ontology/requirement.go` — a business requirement as a node in the tension graph.
-- `internal/ontology/signoff.go` — the frozen provenance record of a human steward decision.
-- `internal/ontology/stakeholder.go` — who owns requirements and stewards conflicts.
+- `internal/ontology/signoff.go` — the frozen provenance record of a human resolver decision.
+- `internal/ontology/stakeholder.go` — who owns requirements and resolvers conflicts.
 - `internal/invariants/` — structural form of the tension graph (the check_* layer).
 - `internal/diagnose/` — the operator's next-action diagnosis (what_now equivalent).
-- `internal/proposal/` — structured operator-→-steward change proposals + the mechanical apply writer.
+- `internal/proposal/` — structured operator-→-resolver change proposals + the mechanical apply writer.
 - `internal/loader/` — reads a domain's graph.json into an in-memory Graph.
 - `internal/generator/` — regenerates docs/gen/ from the graph (the gen-spec engine).
 - `internal/gate/` — T1 tiered LAND gate: select a targeted test subset instead of the full suite.
@@ -31,7 +31,7 @@ reader: (unresolved-reader)
 
 - `hotam gen-spec` — regenerates docs/gen/ from the executable model (methodology + graph), making drift structurally impossible.
 - `hotam what-now` — derives the prioritized next correct action from any graph state, making being-lost structurally impossible.
-- `hotam apply-proposal` — mechanical writer for steward-approved JSON proposals.
+- `hotam apply-proposal` — mechanical writer for resolver-approved JSON proposals.
 - `hotam gate` — T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.
 - `hotam all-violations` — prints all invariant violations for a domain graph, exiting 1 if any are found.
 - `hotam req` — compact agentic read interface over the domain graph, answering 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc.

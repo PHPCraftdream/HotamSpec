@@ -98,7 +98,7 @@ committed. Recent commits referenced in Repo state below.
 - **Did NOT decide three audit-flagged ambiguous calls** — R-content-free-
   framework (keep illustrative list atomic vs split), R-empty-content-is-
   legitimate (1 atom vs 3 behaviors), R-two-altitude-ontology (atomic
-  philosophical vs compound). Hard-boundary: these are steward calls, not
+  philosophical vs compound). Hard-boundary: these are resolver calls, not
   operator calls.
 - **Used `o46l` for mechanical work, kept `sh` for richer directives.**
   o46l confirmed cheap+effective for atomic mechanical edits; sh stays for
@@ -147,7 +147,7 @@ fcacdd9 feat(P10c): crystallize deferred architecture as DRAFT/OPEN — record, 
 - **256 tests passing; gen deterministic; CLAUDE.md LIVE-STATE block stable**
 - **what_now top action: [P0] REFLECTION on enforcement-gradient** (21 SETTLED
   still PROSE/STRUCTURAL — the burn-down target)
-- **C-8600b1b8 (core-vs-aspect, DETECTED, steward domain-user)** — the live
+- **C-8600b1b8 (core-vs-aspect, DETECTED, resolver domain-user)** — the live
   open conflict, untouched
 
 ## Resume hint for next session

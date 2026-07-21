@@ -434,13 +434,13 @@ func (p ProposedConflict) mutate(g *ontology.Graph, today string) error {
 		if !ok {
 			return errNotFound("member requirement", m)
 		}
-		if r.Owner == strings.TrimSpace(p.Steward) {
-			return errStewardOwnsMember(p.Steward, m)
+		if r.Owner == strings.TrimSpace(p.Resolver) {
+			return errResolverOwnsMember(p.Resolver, m)
 		}
 	}
 	if len(g.Stakeholders) > 0 {
-		if _, ok := ontology.StakeholderIDs(g)[strings.TrimSpace(p.Steward)]; !ok {
-			return errNotDeclared("steward", p.Steward)
+		if _, ok := ontology.StakeholderIDs(g)[strings.TrimSpace(p.Resolver)]; !ok {
+			return errNotDeclared("resolver", p.Resolver)
 		}
 	}
 	lifecycle := strings.TrimSpace(p.InitialLifecycle)
@@ -452,7 +452,7 @@ func (p ProposedConflict) mutate(g *ontology.Graph, today string) error {
 		Axis:      strings.TrimSpace(p.Axis),
 		Context:   p.Context,
 		Members:   members,
-		Steward:   strings.TrimSpace(p.Steward),
+		Resolver:  strings.TrimSpace(p.Resolver),
 		Lifecycle: lifecycle,
 		CreatedAt: today,
 	}
@@ -731,7 +731,7 @@ func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 // drives_entities referential integrity is checked HERE (not in validate()),
 // on BOTH CREATE and UPDATE: validate() has no graph access, so it cannot
 // know which EntityType slugs are declared in the target domain -- the same
-// split ProposedConflict.mutate already uses for its member/steward lookups.
+// split ProposedConflict.mutate already uses for its member/resolver lookups.
 // Each slug in p.DrivesEntities MUST resolve to a declared EntityType.slug in
 // g.entity_types (mirrors check_process_drives_existing_entities,
 // internal/invariants/scope_process.go) so a bad slug is rejected here with a

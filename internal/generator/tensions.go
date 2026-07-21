@@ -127,7 +127,7 @@ func ConflictBlock(c ontology.Conflict) []string {
 		members[i] = "`" + m + "`"
 	}
 	lines = append(lines, "- **members:** "+strings.Join(members, ", "))
-	lines = append(lines, "- **steward:** `"+c.Steward+"`")
+	lines = append(lines, "- **resolver:** `"+c.Resolver+"`")
 	lines = append(lines, "- **lifecycle:** "+c.Lifecycle)
 	if c.SharedAssumption != nil && *c.SharedAssumption != "" {
 		lines = append(lines, "- **shared assumption:** `"+*c.SharedAssumption+"`")
@@ -143,7 +143,7 @@ func ConflictBlock(c ontology.Conflict) []string {
 		lines = append(lines, "- **revisit marker:** "+c.RevisitMarker)
 	}
 	if len(c.Variants) > 0 {
-		lines = append(lines, "- **variants** (steward chooses one):")
+		lines = append(lines, "- **variants** (resolver chooses one):")
 		for _, v := range c.Variants {
 			lines = append(lines, "  - `"+v.ID+"`")
 			lines = append(lines, "    - behavior: "+v.Behavior)

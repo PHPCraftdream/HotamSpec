@@ -75,7 +75,7 @@ func cmdAllViolations(args []string) error {
 // recursion-guard skips (invariants.HonoredSkipWarnings -- @fh's
 // "honored-skip must not be silent" re-review: a Skipped RunVerifiedByTest
 // result must never look identical to a genuinely proven entry) that are
-// informational for the steward, never a gate. Called on BOTH the clean and
+// informational for the resolver, never a gate. Called on BOTH the clean and
 // the violations-found path in cmdAllViolations (see its own comment) so a
 // skip warning is never hidden behind an unrelated blocking violation. It
 // never affects the exit code and never appears in --json output (see

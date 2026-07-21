@@ -8,7 +8,7 @@ Structural form of the tension graph (the check_* layer).
 
 ## Narrative
 
-These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a steward; no edge dangles; every open hole states its question; every decision justifies itself. A conflict that is invisible (stewardless, axis-less) is the one thing forbidden.
+These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a resolver; no edge dangles; every open hole states its question; every decision justifies itself. A conflict that is invisible (resolverless, axis-less) is the one thing forbidden.
 
 ## Why
 

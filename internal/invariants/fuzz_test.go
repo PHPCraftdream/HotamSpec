@@ -46,7 +46,7 @@ var fuzzAxes = []ontology.Axis{
 var fuzzConflictLifecycles = []string{
 	"DETECTED",
 	"ACKNOWLEDGED",
-	"DECIDED(steward chose R-1)",
+	"DECIDED(resolver chose R-1)",
 	"HELD(awaiting data)",
 }
 
@@ -79,13 +79,13 @@ func buildFuzzGraph(r *fuzzReader) *ontology.Graph {
 		if nReqs >= 2 {
 			members = []string{reqs[0].ID, reqs[1].ID}
 		}
-		steward := r.pick(fuzzOwners)
+		resolver := r.pick(fuzzOwners)
 		c := ontology.Conflict{
 			ID:        ontology.ConflictIdentity(axes[0].Slug, context),
 			Axis:      axes[0].Slug,
 			Context:   context,
 			Members:   members,
-			Steward:   steward,
+			Resolver:  resolver,
 			Lifecycle: r.pick(fuzzConflictLifecycles),
 			DecidedBy: r.pick(fuzzOwners),
 		}

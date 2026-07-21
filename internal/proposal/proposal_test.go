@@ -707,7 +707,7 @@ func TestApply_ConflictTransition_HeldRequiresVariants(t *testing.T) {
 // R-conflict-addressing-resolves-variables: findConflictIndex (mutate.go)
 // locates a Conflict by its direct string ID — the "direct form" addressing
 // mode — and an unknown/nonexistent ID must surface as an ERROR, never a silent
-// no-op (which would silently drop a steward decision) nor a panic.
+// no-op (which would silently drop a resolver decision) nor a panic.
 //
 // Two halves in one test: (A) a transition addressed by the literal conflict ID
 // is located and mutates the conflict; (B) a nonexistent ID errors and leaves
@@ -791,10 +791,10 @@ func TestApply_Conflict_Create(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflict{
-		Axis:    "cost-vs-flexibility",
-		Context: "a brand new tension surface",
-		Members: []string{"R-1", "R-3"},
-		Steward: "outsider",
+		Axis:     "cost-vs-flexibility",
+		Context:  "a brand new tension surface",
+		Members:  []string{"R-1", "R-3"},
+		Resolver: "outsider",
 	}
 	if err := Apply(path, today, p); err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -813,14 +813,14 @@ func TestApply_Conflict_Create(t *testing.T) {
 	}
 }
 
-func TestApply_Conflict_StewardOwnsMemberFails(t *testing.T) {
+func TestApply_Conflict_ResolverOwnsMemberFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedConflict{
-		Axis:    "cost-vs-flexibility",
-		Context: "another tension",
-		Members: []string{"R-1", "R-2"},
-		Steward: "sa",
+		Axis:     "cost-vs-flexibility",
+		Context:  "another tension",
+		Members:  []string{"R-1", "R-2"},
+		Resolver: "sa",
 	}
 	assertApplyFails(t, path, p, "owns member")
 }
@@ -1342,9 +1342,9 @@ func validProcessProposal() ProposedProcess {
 		ID: "PR-test-loop",
 		Steps: []ProposedStep{
 			{Name: "diagnose", RequiresRole: "operator", Why: "find the top action"},
-			{Name: "approve", RequiresRole: "steward", Why: "steward reviews and signs off"},
+			{Name: "approve", RequiresRole: "resolver", Why: "resolver reviews and signs off"},
 		},
-		RolesRequired:  []string{"operator", "steward"},
+		RolesRequired:  []string{"operator", "resolver"},
 		DrivesEntities: []string{"feature-flag"},
 		Why:            "a worked example process for testing",
 	}
@@ -1485,7 +1485,7 @@ func TestApply_Process_StepRoleNotInRolesRequiredFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, processBaseGraph())
 	p := validProcessProposal()
-	p.RolesRequired = []string{"operator"} // "steward" (used by second step) omitted
+	p.RolesRequired = []string{"operator"} // "resolver" (used by second step) omitted
 	assertApplyFails(t, path, p, "not listed in 'roles_required'")
 }
 
@@ -1543,9 +1543,9 @@ func TestApply_Process_UpdateAppendsStep(t *testing.T) {
 	p := ProposedProcess{
 		ID: "PR-test-loop",
 		Steps: []ProposedStep{
-			{Name: "approve", RequiresRole: "steward", Why: "steward reviews and signs off"},
+			{Name: "approve", RequiresRole: "resolver", Why: "resolver reviews and signs off"},
 		},
-		RolesRequired: []string{"steward"},
+		RolesRequired: []string{"resolver"},
 	}
 	if err := Apply(path, today, p); err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -1561,12 +1561,12 @@ func TestApply_Process_UpdateAppendsStep(t *testing.T) {
 	if proc.Steps[0].Name != "diagnose" {
 		t.Errorf("Steps[0].Name = %q, want %q (original order preserved)", proc.Steps[0].Name, "diagnose")
 	}
-	if proc.Steps[1].Name != "approve" || proc.Steps[1].RequiresRole != "steward" {
-		t.Errorf("Steps[1] = %+v, want approve/steward", proc.Steps[1])
+	if proc.Steps[1].Name != "approve" || proc.Steps[1].RequiresRole != "resolver" {
+		t.Errorf("Steps[1] = %+v, want approve/resolver", proc.Steps[1])
 	}
-	wantRoles := map[string]bool{"operator": true, "steward": true}
+	wantRoles := map[string]bool{"operator": true, "resolver": true}
 	if len(proc.RolesRequired) != 2 {
-		t.Fatalf("RolesRequired = %v, want [operator steward]", proc.RolesRequired)
+		t.Fatalf("RolesRequired = %v, want [operator resolver]", proc.RolesRequired)
 	}
 	for _, r := range proc.RolesRequired {
 		if !wantRoles[r] {
@@ -1635,8 +1635,8 @@ func TestApply_Process_UpdateInvalidAppendStepFails(t *testing.T) {
 		path := writeTempGraph(t, processBaseGraphWithLandedProcess())
 		p := ProposedProcess{
 			ID:            "PR-test-loop",
-			Steps:         []ProposedStep{{Name: "  ", RequiresRole: "steward", Why: "y"}},
-			RolesRequired: []string{"steward"},
+			Steps:         []ProposedStep{{Name: "  ", RequiresRole: "resolver", Why: "y"}},
+			RolesRequired: []string{"resolver"},
 		}
 		assertApplyFails(t, path, p, "'name' is required")
 	})
@@ -1654,8 +1654,8 @@ func TestApply_Process_UpdateInvalidAppendStepFails(t *testing.T) {
 		path := writeTempGraph(t, processBaseGraphWithLandedProcess())
 		p := ProposedProcess{
 			ID:            "PR-test-loop",
-			Steps:         []ProposedStep{{Name: "approve", RequiresRole: "steward", Why: ""}},
-			RolesRequired: []string{"steward"},
+			Steps:         []ProposedStep{{Name: "approve", RequiresRole: "resolver", Why: ""}},
+			RolesRequired: []string{"resolver"},
 		}
 		assertApplyFails(t, path, p, "'why' is required")
 	})

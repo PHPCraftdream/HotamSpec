@@ -43,35 +43,35 @@ func TestCheckConflictHasContext_FiresOnEmpty(t *testing.T) {
 	}
 }
 
-func TestCheckConflictHasSteward_OK(t *testing.T) {
+func TestCheckConflictHasResolver_OK(t *testing.T) {
 	t.Parallel()
-	if vs := runCheck(t, "check_conflict_has_steward", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
+	if vs := runCheck(t, "check_conflict_has_resolver", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
-func TestCheckConflictHasSteward_FiresOnEmpty(t *testing.T) {
+func TestCheckConflictHasResolver_FiresOnEmpty(t *testing.T) {
 	t.Parallel()
 	bad := baseConflict()
-	bad.Steward = ""
-	vs := runCheck(t, "check_conflict_has_steward", graphWithConflict(bad, nil))
+	bad.Resolver = ""
+	vs := runCheck(t, "check_conflict_has_resolver", graphWithConflict(bad, nil))
 	if !hasViolationFor(vs, bad.ID) {
 		t.Fatalf("expected violation on %s, got %v", bad.ID, vs)
 	}
 }
 
-func TestCheckConflictHasAxisContextSteward_OK(t *testing.T) {
+func TestCheckConflictHasAxisContextResolver_OK(t *testing.T) {
 	t.Parallel()
-	if vs := runCheck(t, "check_conflict_has_axis_context_steward", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
+	if vs := runCheck(t, "check_conflict_has_axis_context_resolver", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
-func TestCheckConflictHasAxisContextSteward_FiresOnMissingSteward(t *testing.T) {
+func TestCheckConflictHasAxisContextResolver_FiresOnMissingResolver(t *testing.T) {
 	t.Parallel()
 	bad := baseConflict()
-	bad.Steward = ""
-	vs := runCheck(t, "check_conflict_has_axis_context_steward", graphWithConflict(bad, nil))
+	bad.Resolver = ""
+	vs := runCheck(t, "check_conflict_has_axis_context_resolver", graphWithConflict(bad, nil))
 	if len(vs) == 0 {
 		t.Fatalf("expected >=1 violation, got %v", vs)
 	}
@@ -107,7 +107,7 @@ func TestCheckConstitutingNotInUnresolvedConflict_SilentForBusinessDomain(t *tes
 func TestCheckConstitutingNotInUnresolvedConflict_SilentWhenResolved(t *testing.T) {
 	t.Parallel()
 	decided := baseConflict()
-	decided.Lifecycle = "DECIDED(steward chose R-1)"
+	decided.Lifecycle = "DECIDED(resolver chose R-1)"
 	decided.DecidedBy = "outsider"
 	g := graphWithConflict(decided, []ontology.Requirement{
 		req("R-1", "sa"), req("R-2", "sb"), req(constitutingConvergenceAtom, "sa"),
@@ -183,18 +183,18 @@ func TestCheckConflictIDMatchesIdentity_FiresOnMismatch(t *testing.T) {
 	}
 }
 
-func TestCheckStewardNotAMemberOwner_OK(t *testing.T) {
+func TestCheckResolverNotAMemberOwner_OK(t *testing.T) {
 	t.Parallel()
-	if vs := runCheck(t, "check_steward_not_a_member_owner", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
+	if vs := runCheck(t, "check_resolver_not_a_member_owner", graphWithConflict(baseConflict(), nil)); len(vs) != 0 {
 		t.Fatalf("expected no violations, got %v", vs)
 	}
 }
 
-func TestCheckStewardNotAMemberOwner_FiresWhenStewardOwnsMember(t *testing.T) {
+func TestCheckResolverNotAMemberOwner_FiresWhenResolverOwnsMember(t *testing.T) {
 	t.Parallel()
 	bad := baseConflict()
-	bad.Steward = "sa"
-	vs := runCheck(t, "check_steward_not_a_member_owner", graphWithConflict(bad, nil))
+	bad.Resolver = "sa"
+	vs := runCheck(t, "check_resolver_not_a_member_owner", graphWithConflict(bad, nil))
 	if !hasViolationFor(vs, bad.ID) {
 		t.Fatalf("expected violation on %s, got %v", bad.ID, vs)
 	}

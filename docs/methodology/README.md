@@ -25,7 +25,7 @@ them **visible and keep them visible over time**.
 
 So the ontology is **requirements-as-tension-graph**, not
 requirements-as-truth. A contradiction is a first-class object with a status, a
-steward, a rationale and a history. It is never silently "fixed" — it transitions
+resolver, a rationale and a history. It is never silently "fixed" — it transitions
 through a lifecycle.
 
 What stays identical to HotamChain: the store is the Python code (frozen
@@ -36,7 +36,7 @@ docstring discipline (RULE + `Canon:§N` + WHY) with anti-relitigation markers.
 
 What inverts: the invariants do not assert "no contradiction" — they assert the
 contradictions are **well-formed and visible**. A green run means every conflict
-has an axis, a context and a steward; no edge dangles; every open hole states its
+has an axis, a context and a resolver; no edge dangles; every open hole states its
 question; every decision justifies itself. The one forbidden thing is an
 *invisible* contradiction.
 
@@ -132,14 +132,14 @@ kind, a target object id, a human imperative and a priority band:
    graph makes every softer diagnosis unreliable.
 2. **DRIFT_FALLOUT** — dead assumptions with live dependents (the revived
    cluster).
-3. **CONFLICT_STALLED** — conflicts still DETECTED/ACKNOWLEDGED with no steward
+3. **CONFLICT_STALLED** — conflicts still DETECTED/ACKNOWLEDGED with no resolver
    resolution.
 4. **OPEN_ITEM** — `OPEN(question)` requirements awaiting a decision.
 5. **LATENT_CONNECTOR** — heuristic missing-connector suspects, for AI review
    only.
 
 An empty list is itself an answer: the graph is well-formed and every
-contradiction is visible, stewarded and current.
+contradiction is visible, resolvered and current.
 
 ## 5. The AI's three roles and the hard boundary
 
@@ -152,9 +152,9 @@ contradiction is visible, stewarded and current.
   now triggered."
 
 **Hard boundary:** the AI never closes a conflict silently. It presents,
-justifies, asks; the decision and its recording stay with the human steward —
+justifies, asks; the decision and its recording stay with the human resolver —
 otherwise invisibility returns, now AI-authored. The boundary is also structural:
-the steward of a conflict is, by invariant, not the owner of any member
+the resolver of a conflict is, by invariant, not the owner of any member
 requirement, so a tension is never adjudicated by an interested party.
 
 See [`../development/ROADMAP.md`](../development/ROADMAP.md) for the deferred

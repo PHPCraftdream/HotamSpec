@@ -44,7 +44,7 @@ Verified absent in repo (Glob/Grep): types `Operator`/`ContextBudget`/`Lifecycle
 GLOSSARY/HISTORY docs. That absence IS the gap; the plan closes it.
 
 The greenlight ledger is pre-computed: 4 decisions resolved-on-paper need
-one-line confirmation (M26, M20, M17, M19); 5 are new and need a steward
+one-line confirmation (M26, M20, M17, M19); 5 are new and need a resolver
 decision (M36 operator-not-self-approve, M32 tick autonomy, M33 constitution
 location, M34 reflection band, M35 burn-down metric); 2 live OPEN need scope
 calls (M7 critical-core for conscience, M18 partition vs border). A single
@@ -81,7 +81,7 @@ None — no `/goal` Stop hook in force.
 - #28 Director verification of Batch A
 - #27 Execute Batch A: mechanical drift fixes + anchor tests (sh)
 - #26 Resolve the blocking open decisions via the methodology's own machinery (oxx)
-- #25 Present anchored backlog + steward decision to user
+- #25 Present anchored backlog + resolver decision to user
 - #24 Audit substrate → anchored UPDATE/ANCHOR/DEFER backlog (oxx)
 - #23 Crystallize dependency-graph + director-crystal trio; build Director's Map (delegated)
 - #22 Director verification post-crystallization
@@ -97,14 +97,14 @@ prior crystallization waves — all completed and committed in `6465c93`,
   `UNENFORCED.md`, "DRAFT→ENFORCED" is unmeasurable. Lifecycle follows at P1.
 - **M26 representation = field AND report**, per dev-coin's
   `Param.status`+`HOLES.md` precedent. Not either/or. Pre-decided in the
-  ratification sheet, ready for one-line steward confirm.
+  ratification sheet, ready for one-line resolver confirm.
 - **A‖/B‖/U‖ run as parallel sub-operators** (independent sub-graph per
   `R-dependency-graph-parallelism`); only the P-chain is strictly sequential.
   P6 (conscience) also parallelizes with P3-P5 once P2 lands.
 - **M36 (operator-not-self-approve) is mandatory at P2**, not deferred.
   Without it, a Self-node could self-approve its own status/budget changes,
   re-importing the invisibility the hard boundary forbids. The reflexive twin
-  of `check_steward_not_a_member_owner`.
+  of `check_resolver_not_a_member_owner`.
 - **Each phase promotes ≥2 DRAFTs to ENFORCED** and never spawns more DRAFT
   than it retires. Only P9 (Process aspect) may spawn one new DRAFT; offset
   in-phase. This is the honesty governor that keeps crystallization from
@@ -141,7 +141,7 @@ Reference table for resume (full per-phase detail in conversation; key dependenc
 |---|---|---|---|---|---|
 | P0 | Burn-down meter | enforcement-gradient, requirement-enforced | M26 | MECH | → root |
 | P1 | Lifecycle keystone | lifecycle-abstraction, statemachine-wellformedness | M11 | MECH | → |
-| P2 | Self node + steward-safety | operator-acting-facet, context-budget-rule | M20, M17, **M36** | GREEN | → |
+| P2 | Self node + resolver-safety | operator-acting-facet, context-budget-rule | M20, M17, **M36** | GREEN | → |
 | P3 | Action half | active-loop-playbooks, decided-needs-human-signoff | — | MECH | → |
 | P4 | Per-action verify | smoke-test (flip), crystallize-knowledge-to-code | — | MECH | → |
 | P5 | Drive/tick | anchor-everything (broaden), speak-by-reference | **M32** | GREEN | → |

@@ -13,7 +13,7 @@
 | 4 | README.md:68 says "thirteen commands", actual count is 14; init-project (the key onboarding command) absent from README's command section. | CONFIRMED. |
 | 5 | what-now still yells P0 "37 closeable debt" although 33 are feature-blocked roadmap (per this repo's own c1-roadmap-debt-triage.md). | CONFIRMED by live run. Third independent source naming this (review 5 + @fl review + @fm consultation). |
 
-## Steward decisions
+## Resolver decisions
 
 Scope: ALL of — 5 P1 items + `--profile consumer/full` + reviews/checkpoints archive index + structural boolFlagNames test + a new agent-UX improvement track ("проще развивать/поддерживать/понимать требования, быстрее ловить нестыковки старого и нового, меньше прогонов"). Agent-UX designs resolved via an @fx max-effort consultation (full text relayed in-session); its ranked recommendations are tasks T-i..T-m below.
 
@@ -32,7 +32,7 @@ Fix hardcoded defaultDomainRel: resolution order explicit --domain → HOTAM_DOM
 Fix "thirteen"→actual, add init-project to the command section; add a test asserting README's command section covers every Implemented tool (pattern precedent: TestToolPurposeDocumentsRealFlags).
 
 ### T-e (P1) — burn-down metric split (root-cause fix, three sources demanded it)
-Split the one-dimensional "closeable debt: N": ontology gains an optional `blocked_on` field on Requirement (naming the Planned tool/absent package); UNENFORCED.md renders closeable-now vs feature-blocked sub-tables; what-now's enforcement-gradient P0 counts ONLY closeable-now (feature-blocked becomes a lower-priority informational line). Backfill blocked_on for the 33 C1 items via proposals (data already grouped in 2026-07-13-c1-roadmap-debt-triage.md). This is the ontology+generator change previously deferred — now steward-approved.
+Split the one-dimensional "closeable debt: N": ontology gains an optional `blocked_on` field on Requirement (naming the Planned tool/absent package); UNENFORCED.md renders closeable-now vs feature-blocked sub-tables; what-now's enforcement-gradient P0 counts ONLY closeable-now (feature-blocked becomes a lower-priority informational line). Backfill blocked_on for the 33 C1 items via proposals (data already grouped in 2026-07-13-c1-roadmap-debt-triage.md). This is the ontology+generator change previously deferred — now resolver-approved.
 
 ### T-f — structural boolFlagNames test
 From the @fl review finding: a test that scans all fs.Bool(...) registrations across cmd/hotam/*.go (AST or grep-style, mirroring internal/selfcheck patterns) and asserts each name is present in boolFlagNames — closing the "comment, not test" gap.
@@ -49,7 +49,7 @@ consumer profile skips: Planned tool pages, the 29 thinking docs, empty atom doc
 `hotam propose requirement --claim ... --owner ... --why ... [--axis|--assumes|--out]` writes valid proposal JSON itself (schema knowledge moves from agent memory into the tool), runs schema validation + an AUTOMATIC confront report before writing; optional --land collapses draft→confront→land into one call. Start with the 2-3 most common kinds; complex kinds keep the JSON path. Reuses internal/proposal.Validate + diagnose.Confront. ~250 lines cmd/hotam/propose.go.
 
 ### T-j — confront at the land/apply gate (warn, not fail)
-land/apply-proposal automatically runs Confront for claim-carrying kinds and prints hits in the report — warn only (R-ai-presents-not-decides: tool presents evidence, steward already decided; blocking would be theatre). Batch mode summarizes. ~40 lines in land.go/apply_proposal.go.
+land/apply-proposal automatically runs Confront for claim-carrying kinds and prints hits in the report — warn only (R-ai-presents-not-decides: tool presents evidence, resolver already decided; blocking would be theatre). Batch mode summarizes. ~40 lines in land.go/apply_proposal.go.
 
 ### T-k — `hotam brief <id>`
 One call replacing show+context+related+due: claim/why/status/enforcement + graph neighbors + conflicts w/ axes + assumption liveness + freshness, --json. Aggregator over existing internal/query functions (~150 lines) + cmd (~80). 3-4 round-trips → 1 for the most frequent session operation.

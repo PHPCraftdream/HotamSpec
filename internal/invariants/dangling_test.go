@@ -136,7 +136,7 @@ func TestCheckNoDanglingConflictRefs_OK(t *testing.T) {
 		ontology.Conflict{
 			ID:   ontology.ConflictIdentity("cost-vs-flexibility", "ctx"),
 			Axis: "cost-vs-flexibility", Context: "ctx", Members: []string{"R-1", "R-2"},
-			Steward: "outsider", Lifecycle: "ACKNOWLEDGED",
+			Resolver: "outsider", Lifecycle: "ACKNOWLEDGED",
 			SharedAssumption: &shared, Derived: []string{}, DecidedBy: "outsider",
 		},
 		[]ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
@@ -152,14 +152,14 @@ func TestCheckNoDanglingConflictRefs_FiresOnAllDanglingRefs(t *testing.T) {
 	shared := "A-ghost"
 	c := ontology.Conflict{
 		ID: "C-bad", Axis: "cost-vs-flexibility", Context: "ctx",
-		Members: []string{"R-ghost"}, Steward: "ghost-steward",
+		Members: []string{"R-ghost"}, Resolver: "ghost-resolver",
 		Lifecycle: "ACKNOWLEDGED", SharedAssumption: &shared,
 		Derived: []string{"R-derived-ghost"}, DecidedBy: "ghost-decider",
 	}
 	g := graphWithConflict(c, []ontology.Requirement{req("R-1", "sa")})
 	vs := runCheck(t, "check_no_dangling_conflict_refs", g)
 	if len(vs) < 5 {
-		t.Fatalf("expected >=5 violations (steward/member/shared/derived/decided_by), got %v", vs)
+		t.Fatalf("expected >=5 violations (resolver/member/shared/derived/decided_by), got %v", vs)
 	}
 }
 

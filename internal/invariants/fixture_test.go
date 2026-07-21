@@ -44,7 +44,7 @@ func variant(vid, behavior string) ontology.Variant {
 
 func decidedConflict() ontology.Conflict {
 	c := baseConflict()
-	c.Lifecycle = "DECIDED(steward chose option A)"
+	c.Lifecycle = "DECIDED(resolver chose option A)"
 	c.DecidedBy = "outsider"
 	return c
 }
@@ -68,7 +68,7 @@ func baseConflict() ontology.Conflict {
 		Axis:      axis,
 		Context:   context,
 		Members:   []string{"R-1", "R-2"},
-		Steward:   "outsider",
+		Resolver:  "outsider",
 		Lifecycle: "ACKNOWLEDGED",
 	}
 }

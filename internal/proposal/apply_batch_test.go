@@ -346,7 +346,7 @@ func TestApplyBatch_ProvenanceChecker_CompleteProvenanceSucceeds(t *testing.T) {
 			SourceRefs:     []string{"https://example.com/source"},
 			LastReviewedAt: today,
 			ReviewAfter:    "2027-01-01",
-			Evidence:       []string{"steward review"},
+			Evidence:       []string{"resolver review"},
 		},
 	}
 	if err := ApplyBatch(path, today, batch, nil, testProvenanceChecker); err != nil {
@@ -374,7 +374,7 @@ func TestApplyBatch_ProvenanceChecker_UpdatePreservingProvenanceSucceeds(t *test
 			SourceRefs:     []string{"https://example.com/rolling"},
 			LastReviewedAt: today,
 			ReviewAfter:    "2027-01-01",
-			Evidence:       []string{"steward review"},
+			Evidence:       []string{"resolver review"},
 		},
 		// UPDATE within the same batch: only claim changes, provenance omitted.
 		ProposedRequirement{

@@ -69,7 +69,7 @@
     {
       "id": "framework-reviewer",
       "name": "Framework reviewer",
-      "domain": "independent stewardship of tensions between author and AI",
+      "domain": "independent resolvership of tensions between author and AI",
       "decl_order": 3
     }
   ],
@@ -87,7 +87,7 @@
     },
     {
       "id": "A-bootstrap-self-applies",
-      "statement": "The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing. — [IMPLEMENTS] Steward verdict 2026-07-03 (verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. A-bootstrap-self-applies is not a fact under question but an aspiration we strive toward — re-typed from UNCERTAIN (58 dependents, top pulse line) to the volitional IMPLEMENTS род rather than re-affirmed HOLDS. Changes род and drops the P4 doubt signal honestly.",
+      "statement": "The framework can model its own design coherently — Hotam-Spec's own methodology fits its own ontology with no special-casing. — [IMPLEMENTS] Resolver verdict 2026-07-03 (verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. A-bootstrap-self-applies is not a fact under question but an aspiration we strive toward — re-typed from UNCERTAIN (58 dependents, top pulse line) to the volitional IMPLEMENTS род rather than re-affirmed HOLDS. Changes род and drops the P4 doubt signal honestly.",
       "status": "IMPLEMENTS",
       "owner": "framework-reviewer",
       "machine_check": null,
@@ -109,7 +109,7 @@
     },
     {
       "id": "A-conflict-is-a-node-not-an-edge",
-      "statement": "A contradiction can only carry its shared knowledge (axis, context, shared root) if it is modeled as a first-class NODE; a `conflicts_with` edge between requirements holds nothing and cannot be clustered or stewarded.",
+      "statement": "A contradiction can only carry its shared knowledge (axis, context, shared root) if it is modeled as a first-class NODE; a `conflicts_with` edge between requirements holds nothing and cannot be clustered or resolvered.",
       "status": "HOLDS",
       "owner": "framework-author",
       "machine_check": null,
@@ -175,7 +175,7 @@
     },
     {
       "id": "A-most-knowledge-crystallizable",
-      "statement": "Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type. — [IMPLEMENTS] Steward verdict 2026-07-03 (V3), variant B verbatim: «Б - мы к этому стремимся, при нахождении несоответствия пытаемся исправить на месте сами или через агента-руку». This is not a fact-claim about the world but a VOLITIONAL striving (R-assumption-implements-state): most knowledge is not KNOWN to be crystallizable, but the operator STRIVES to crystallize it and, on finding a mismatch, repairs it in place itself or via a hand-agent. Re-typing UNCERTAIN → IMPLEMENTS retires the standing P4 doubt signal and records the aspiration.",
+      "statement": "Most knowledge can be expressed as a node; where it cannot, that resistance is itself a signal of a missing ontology type. — [IMPLEMENTS] Resolver verdict 2026-07-03 (V3), variant B verbatim: «Б - мы к этому стремимся, при нахождении несоответствия пытаемся исправить на месте сами или через агента-руку». This is not a fact-claim about the world but a VOLITIONAL striving (R-assumption-implements-state): most knowledge is not KNOWN to be crystallizable, but the operator STRIVES to crystallize it and, on finding a mismatch, repairs it in place itself or via a hand-agent. Re-typing UNCERTAIN → IMPLEMENTS retires the standing P4 doubt signal and records the aspiration.",
       "status": "IMPLEMENTS",
       "owner": "framework-reviewer",
       "machine_check": null,
@@ -197,7 +197,7 @@
     },
     {
       "id": "A-prose-suffices",
-      "statement": "For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core. — [DEAD] Steward verdict 2026-07-03 (V2), verbatim: «кажется, теста никогда не достаточно. У всего должны быть модели, модели должны иметь простые методы (которые легко читаются (пару строчек), и текстовое поисание, по которому легко проверить, что имплементация метода соотвествует описанию. И должны быть тесты, которые вызывают эти методы. Еще должны быть стейты ... это мы в самом начале собуждали. Тексты сами по себе - это воздух без зелми». Prose alone never sufficed: a claim is trustworthy only when grounded in a model (short readable methods + description checkable against implementation + tests invoking them + states). REPLACED by the HOLDS assumption A-text-grounded-in-models; all 37 dependent requirements were re-linked onto it before this kill.",
+      "statement": "For the bulk of requirements, EARS-style prose claims plus structural invariants suffice; formal predicates are reserved for the critical core. — [DEAD] Resolver verdict 2026-07-03 (V2), verbatim: «кажется, теста никогда не достаточно. У всего должны быть модели, модели должны иметь простые методы (которые легко читаются (пару строчек), и текстовое поисание, по которому легко проверить, что имплементация метода соотвествует описанию. И должны быть тесты, которые вызывают эти методы. Еще должны быть стейты ... это мы в самом начале собуждали. Тексты сами по себе - это воздух без зелми». Prose alone never sufficed: a claim is trustworthy only when grounded in a model (short readable methods + description checkable against implementation + tests invoking them + states). REPLACED by the HOLDS assumption A-text-grounded-in-models; all 37 dependent requirements were re-linked onto it before this kill.",
       "status": "DEAD",
       "owner": "ai-agent",
       "machine_check": null,
@@ -219,7 +219,7 @@
     },
     {
       "id": "A-single-human-wears-all-hats",
-      "statement": "In the current phase all stakeholder roles (domain-user/framework-reviewer/framework-author in self, dev-steward/pipeline-operator in hotam-dev) are worn by one human; role-separation checks guard structure, not real independence",
+      "statement": "In the current phase all stakeholder roles (domain-user/framework-reviewer/framework-author in self, dev-resolver/pipeline-operator in hotam-dev) are worn by one human; role-separation checks guard structure, not real independence",
       "status": "HOLDS",
       "owner": "domain-user",
       "machine_check": null,
@@ -230,7 +230,7 @@
     },
     {
       "id": "A-stakeholders-care",
-      "statement": "At least two distinct human stakeholders exist who are willing to steward conflicts.",
+      "statement": "At least two distinct human stakeholders exist who are willing to resolver conflicts.",
       "status": "HOLDS",
       "owner": "framework-author",
       "machine_check": null,
@@ -257,7 +257,7 @@
       "claim": "A tool tools/apply_proposal.py shall consume an approved Proposed* JSON and mechanically apply the change to spec/content/.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "Atom of R-active-loop-playbooks (tool concern). tools/apply_proposal.py lands a steward-approved JSON proposal into spec/content/graph.py and runs the regen+verify pipeline.",
+      "why": "Atom of R-active-loop-playbooks (tool concern). tools/apply_proposal.py lands a resolver-approved JSON proposal into spec/content/graph.py and runs the regen+verify pipeline.",
       "assumptions": [],
       "relations": [
         {
@@ -312,7 +312,7 @@
     },
     {
       "id": "R-active-loop-playbooks",
-      "claim": "Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a steward-approved JSON proposal to spec/content/.",
+      "claim": "Each what_now priority band shall have a documented agent PLAYBOOK plus a tools/apply_proposal.py that mechanically applies a resolver-approved JSON proposal to spec/content/.",
       "owner": "ai-agent",
       "status": "REJECTED",
       "why": "REJECTED — REPLACES by R-active-loop-protocol + R-active-loop-apply-tool + R-active-loop-playbook-doc per atomicity discipline (R-requirement-claim-is-atomic). The original claim mixed three concerns: data-model, tool, documentation.",
@@ -337,7 +337,7 @@
     },
     {
       "id": "R-active-loop-protocol",
-      "claim": "Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for steward-approved operator changes.",
+      "claim": "Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for resolver-approved operator changes.",
       "owner": "ai-agent",
       "status": "SETTLED",
       "why": "Atom of R-active-loop-playbooks (data-model concern). hotam_spec/proposal.py defines the three types.",
@@ -432,7 +432,7 @@
     },
     {
       "id": "R-agent-declares-purpose",
-      "claim": "Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.",
+      "claim": "Every spec/agents/<name>/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent resolvers in one line.",
       "owner": "framework-author",
       "status": "SETTLED",
       "why": "An agent without a declared purpose is invisible to the operator-prompt — AGENT-MAP can't render its responsibility. PURPOSE in scope.py is machine-readable (vs README which is prose); placing it next to SCOPE keeps the agent's contract in one file. Enforced structurally so the absence of PURPOSE = missing operator visibility = red test, not silent gap.",
@@ -461,7 +461,7 @@
       "claim": "Every agent at spec/agents/<a>/ or domains/*/agents/<a>/ (including recursively-nested sub-agents) shall contain a docs/ subdirectory for the agent private notes, separate from any generated content.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Agents accumulate private reasoning — checkpoints, open questions, steward notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64).",
+      "why": "Agents accumulate private reasoning — checkpoints, open questions, resolver notes — that must not mix with generated content or the parent operator crystal. A dedicated docs/ directory provides a stable, predictable location that survives crystal regeneration. The scaffold creates docs/.gitkeep so the directory is tracked even when empty, matching the same pattern used for tools/ and agents/ subdirs. ENFORCED via check_agent_has_docs_subdir (task #64).",
       "assumptions": [
         "A-python-stack"
       ],
@@ -618,7 +618,7 @@
       "claim": "CLAUDE.md shall contain an AGENT-MAP block listing every spec/agents/<name>/ with its PURPOSE, SCOPE prefixes, count of SETTLED atoms in scope, count of private and shared tools, and crystal path.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The operator needs an automatic map of delegated authority -- who stewards what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)",
+      "why": "The operator needs an automatic map of delegated authority -- who resolvers what. Hand-maintained agent registries drift. PURPOSE (machine-readable in scope.py per R-agent-declares-purpose) + SCOPE (the filter) + atoms-count (the load) + tool counts (the capability) together give the director a one-glance view of the delegation graph without grep. (Wave 1 seed-coherence pass: enforced_by named a bare 'test_agent_map_complete' which is not a function or file -- corrected to the .py file that actually covers the AGENT-MAP block, caught by the new check_enforced_by_resolvable invariant.)",
       "assumptions": [
         "A-python-stack"
       ],
@@ -719,10 +719,10 @@
     },
     {
       "id": "R-ai-presents-not-decides",
-      "claim": "The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human steward.",
+      "claim": "The AI agent shall NEVER close a Conflict silently -- it presents with justification and defers every resolution to the human resolver.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "The hard boundary. If the AI resolves contradictions itself, invisibility returns — now AI-created. Made structural by check_steward_not_a_member_owner.",
+      "why": "The hard boundary. If the AI resolves contradictions itself, invisibility returns — now AI-created. Made structural by check_resolver_not_a_member_owner.",
       "assumptions": [
         "A-stakeholders-care"
       ],
@@ -813,7 +813,7 @@
       "claim": "An Assumption's status field shall admit a fourth value IMPLEMENTS denoting a VOLITIONAL aspiration (a claim we strive to make true), categorically distinct from the three epistemic fact-claim statuses HOLDS/UNCERTAIN/DEAD.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. Context: A-bootstrap-self-applies sat UNCERTAIN with 58 dependents — the single largest silent question in the graph and the top pulse line. Rather than re-affirm it HOLDS (a factual lie: it is NOT yet true), the steward introduced a fourth род of status: the aspiration. HOLDS/UNCERTAIN/DEAD are epistemic (they answer 'is this true?'); IMPLEMENTS is volitional (it answers 'do we want this to become true, and are we working toward it?'). Three consequences follow directly from its non-epistemic nature and are guaranteed by the existing status-keyed filters that use exact equality: (a) the UNCERTAIN-aging predicate (graph.uncertain_assumptions) does NOT touch it — an aspiration is not an unresolved doubt, so it raises no P4 review-debt; (b) it is NEVER DEAD-fallout (graph.dead_assumptions, reflection.reflect_dead_assumption_on_enforcer) — an aspiration is not a broken premise; (c) legitimate transitions and their signoff (the full table lives in proposal.ProposedAssumptionTransition): IMPLEMENTS to HOLDS ('achieved, became fact'), IMPLEMENTS to DEAD ('abandoned the striving'), UNCERTAIN to IMPLEMENTS ('we understood this is not a fact but a goal') and HOLDS to IMPLEMENTS ('declared fact too early') — ALL four require a human decided_by. Agent entry WITHOUT signoff remains UNCERTAIN-only. The UNCERTAIN to IMPLEMENTS move both CHANGES the род of the claim and REMOVES the live P4 doubt signal, so by the Wave-12 asymmetry (a transition that reduces live signal needs a named human) it carries the signoff lock, unlike the signal-raising move to plain UNCERTAIN. IMPLEMENTS is added to hotam_spec.assumption.ASSUMPTION_STATES and enforced first-class by check_assumption_status_valid (a per-Assumption set-membership invariant registered in ALL_INVARIANTS and RULES_AS_DATA_TABLE as TABLE_DRIVEN); apply_proposal._validate_assumption_transition adds IMPLEMENTS to the decided_by-required set (DEAD, HOLDS, IMPLEMENTS).",
+      "why": "Resolver verdict (2026-07-03, verbatim): 'нужно еще один статус - IMPLEMENTS - значит, что мы пытаемся это сделать, мы стремимся к этому, хотим этого'. Context: A-bootstrap-self-applies sat UNCERTAIN with 58 dependents — the single largest silent question in the graph and the top pulse line. Rather than re-affirm it HOLDS (a factual lie: it is NOT yet true), the resolver introduced a fourth род of status: the aspiration. HOLDS/UNCERTAIN/DEAD are epistemic (they answer 'is this true?'); IMPLEMENTS is volitional (it answers 'do we want this to become true, and are we working toward it?'). Three consequences follow directly from its non-epistemic nature and are guaranteed by the existing status-keyed filters that use exact equality: (a) the UNCERTAIN-aging predicate (graph.uncertain_assumptions) does NOT touch it — an aspiration is not an unresolved doubt, so it raises no P4 review-debt; (b) it is NEVER DEAD-fallout (graph.dead_assumptions, reflection.reflect_dead_assumption_on_enforcer) — an aspiration is not a broken premise; (c) legitimate transitions and their signoff (the full table lives in proposal.ProposedAssumptionTransition): IMPLEMENTS to HOLDS ('achieved, became fact'), IMPLEMENTS to DEAD ('abandoned the striving'), UNCERTAIN to IMPLEMENTS ('we understood this is not a fact but a goal') and HOLDS to IMPLEMENTS ('declared fact too early') — ALL four require a human decided_by. Agent entry WITHOUT signoff remains UNCERTAIN-only. The UNCERTAIN to IMPLEMENTS move both CHANGES the род of the claim and REMOVES the live P4 doubt signal, so by the Wave-12 asymmetry (a transition that reduces live signal needs a named human) it carries the signoff lock, unlike the signal-raising move to plain UNCERTAIN. IMPLEMENTS is added to hotam_spec.assumption.ASSUMPTION_STATES and enforced first-class by check_assumption_status_valid (a per-Assumption set-membership invariant registered in ALL_INVARIANTS and RULES_AS_DATA_TABLE as TABLE_DRIVEN); apply_proposal._validate_assumption_transition adds IMPLEMENTS to the decided_by-required set (DEAD, HOLDS, IMPLEMENTS).",
       "assumptions": [],
       "relations": [
         {
@@ -916,7 +916,7 @@
       "claim": "The attention core (hotam_spec.attention) shall name no agent-platform token (Claude/Anthropic/hook/model name) so a platform adapter is one consumer, never the owner.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The steward's verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothing of any one agent platform -- the platform adapter (tools/attention_hook.py) is a thin tool wrapper, not part of the core. This is the same backend-neutrality stance as R-core-imports-stdlib-or-hotam-spec-only, extended with a claim-specific platform-token scan. Enforced by tests/test_attention_core.py::test_core_names_no_platform_token (a source scan of src/hotam_spec/attention.py rejects any claude/anthropic/hook/model token) and covered structurally by test_backend_neutral_scope's core-import scan.",
+      "why": "The resolver's verdict (2026-07-03): 'make the solution universal for any agent, and at the seam make an API for Claude'. The core must therefore know nothing of any one agent platform -- the platform adapter (tools/attention_hook.py) is a thin tool wrapper, not part of the core. This is the same backend-neutrality stance as R-core-imports-stdlib-or-hotam-spec-only, extended with a claim-specific platform-token scan. Enforced by tests/test_attention_core.py::test_core_names_no_platform_token (a source scan of src/hotam_spec/attention.py rejects any claude/anthropic/hook/model token) and covered structurally by test_backend_neutral_scope's core-import scan.",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -947,7 +947,7 @@
       "claim": "The committed sensorium generator (tools/setup_hooks.py) shall wire the Claude attention adapter (tools/attention_hook.py) onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The steward's verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn. tools/attention_hook.py is that adapter -- a thin UserPromptSubmit hook that calls attention.collect() with the runtime-fs sources injected and prints render_flat() to stdout (which Claude Code injects into context). setup_hooks.py (the committed, portable sensorium, R-sensorium-committed) wires it so a fresh clone gets the pulse with zero edits. Enforced by tests/test_attention_claude_adapter.py (build_settings() emits attention_hook.py on UserPromptSubmit; the adapter imports the core, not its own sensing).",
+      "why": "The resolver's verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn. tools/attention_hook.py is that adapter -- a thin UserPromptSubmit hook that calls attention.collect() with the runtime-fs sources injected and prints render_flat() to stdout (which Claude Code injects into context). setup_hooks.py (the committed, portable sensorium, R-sensorium-committed) wires it so a fresh clone gets the pulse with zero edits. Enforced by tests/test_attention_claude_adapter.py (build_settings() emits attention_hook.py on UserPromptSubmit; the adapter imports the core, not its own sensing).",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -978,7 +978,7 @@
       "claim": "An agent-agnostic attention-code registry (hotam_spec.attention.ATTENTION_SOURCES) shall exist whose collect() runs every registered source and returns typed AttentionSignal records, with the graph-source diagnosis deterministic across runs.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The steward's verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in what_now.diagnose(g), half as CLI-only bands OWNED by tools/what_now.py -- with no single, agent-agnostic, importable-as-a-library place an arbitrary agent could call to learn what needs attention. This lifts them into ONE stdlib-only core (src/hotam_spec/attention.py) with an explicit registry of named sources, each an AttentionSource(id, reads, collect). collect(g) returns typed AttentionSignal(source, priority, target, message) the substrate and any agent share. The graph-source diagnosis (diagnose_signals) is deterministic (byte-identical across runs) so it can feed the byte-stable substrate. Enforced by tests/test_attention_core.py (registry non-empty and graph-only; diagnose_signals deterministic; collect(g) == diagnose_signals(g) with no runtime sources).",
+      "why": "The resolver's verdict (2026-07-03): the 'pay attention here' signals were scattered -- half in what_now.diagnose(g), half as CLI-only bands OWNED by tools/what_now.py -- with no single, agent-agnostic, importable-as-a-library place an arbitrary agent could call to learn what needs attention. This lifts them into ONE stdlib-only core (src/hotam_spec/attention.py) with an explicit registry of named sources, each an AttentionSource(id, reads, collect). collect(g) returns typed AttentionSignal(source, priority, target, message) the substrate and any agent share. The graph-source diagnosis (diagnose_signals) is deterministic (byte-identical across runs) so it can feed the byte-stable substrate. Enforced by tests/test_attention_core.py (registry non-empty and graph-only; diagnose_signals deterministic; collect(g) == diagnose_signals(g) with no runtime sources).",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -1109,7 +1109,7 @@
       "claim": "Axis-duplicate gatekeeping shall be a mandatory part of the axis-creation path (confront-style similarity check at creation time, tools/create_axis.py), refusing near-duplicate axes unless overridden by an explicit --force-new justification.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "M3. Steward accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. tools/create_axis.py now exists: it reuses confront.py's lexical token/stem overlap scorer against every existing Axis's slug+description, refuses (exit 1) on a score >= threshold (default 0.35, naming the nearest existing axis), and admits only via --force-new '<justification>' which is folded into the landed proposal's why field (never a silent override). Exact-slug duplicates are refused unconditionally (no --force-new escape -- that is re-declaration, not creation). ENFORCED by spec/tests/test_tool_create_axis.py covering: positive (novel axis passes), negative (near-duplicate refused, exit != 0, nearest match named), force-new override path (justification recorded), exact-slug duplicate always refused, and the apply-side writer (_apply_axis_to_source: insert + duplicate-slug refusal).",
+      "why": "M3. Resolver accepted the operator's recommendation 2026-07-02: the gatekeeper is born WITH the door -- it is not an optional toggle to switch on later, it is built into the axis-creation tool's own admission path from the moment that tool exists, exactly as create_entity_type.py validates its inputs before writing. tools/create_axis.py now exists: it reuses confront.py's lexical token/stem overlap scorer against every existing Axis's slug+description, refuses (exit 1) on a score >= threshold (default 0.35, naming the nearest existing axis), and admits only via --force-new '<justification>' which is folded into the landed proposal's why field (never a silent override). Exact-slug duplicates are refused unconditionally (no --force-new escape -- that is re-declaration, not creation). ENFORCED by spec/tests/test_tool_create_axis.py covering: positive (novel axis passes), negative (near-duplicate refused, exit != 0, nearest match named), force-new override path (justification recorded), exact-slug duplicate always refused, and the apply-side writer (_apply_axis_to_source: insert + duplicate-slug refusal).",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -1140,7 +1140,7 @@
       "claim": "The framework names no target backends: the core (graph/JSON proposals/CLI/pytest) stays backend-neutral by construction, and adapting the skin is the adopting agent's own concern.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "M37. Steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human steward): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the steward's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'no target backend is named' or 'adapting the skin is the adopting agent's own concern' as a runtime property of the committed graph (it is a design-stance/non-decision about scope, not a structural fact). This is the same honesty class as R-initiator-supplies-domain-content and R-observation-evidence-scope: a real, permanent positional discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this claim already reached ENFORCED separately: R-core-imports-stdlib-or-hotam-spec-only (SETTLED, ENFORCED) mechanically verifies the CONSTRUCTION half -- an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core -- that narrower, structural half is where the machine-checkable guarantee correctly lives; R-backend-scope itself states the broader naming/positional stance, which stays INHERENTLY_PROSE. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place.",
+      "why": "M37. Resolver verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). This settles M37 by declining to name concrete backends (CI runner / alternate coding agent / programmatic or human resolver): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime, so it stays backend-neutral by construction rather than by a designed OperatorBackend protocol. R-operator-backend-protocol remains gated/unbuilt -- the resolver's answer is that building it now would be speculative engineering against hypothetical backends R-speculative-aspects-frozen already warns against, not that the protocol is wrong in principle. REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'no target backend is named' or 'adapting the skin is the adopting agent's own concern' as a runtime property of the committed graph (it is a design-stance/non-decision about scope, not a structural fact). This is the same honesty class as R-initiator-supplies-domain-content and R-observation-evidence-scope: a real, permanent positional discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. The measurable SLICE of this claim already reached ENFORCED separately: R-core-imports-stdlib-or-hotam-spec-only (SETTLED, ENFORCED) mechanically verifies the CONSTRUCTION half -- an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core -- that narrower, structural half is where the machine-checkable guarantee correctly lives; R-backend-scope itself states the broader naming/positional stance, which stays INHERENTLY_PROSE. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place.",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -1361,7 +1361,7 @@
       "claim": "An operator's context budget shall measure the SIZE of its resident business content in bytes/chars (tokens when the host exposes them), not node counts.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "M17. Steward verdict 2026-07-02 (verbatim): «наверно, это размер бизнес-требований. Лучше в байтах или в токенах» (English: 'probably it's the size of the business requirements. Better in bytes or in tokens'). Landed reality already matches: hotam_spec.operator.CRYSTAL_CHARS ('measure = len(root CLAUDE.md) in characters') is the current byte-approximation of resident business content, wired into check_operator_within_budget and used by the live meta-domain operator (context_budget=ContextBudget(limit=150000, measure=\"CRYSTAL_CHARS\")). TOKEN_ESTIMATE is declared in BUDGET_MEASURES as the token-exact seam the steward names ('в токенах') for when the host exposes token counts, but is deferred (not measured yet) since no host API is wired. NODE_COUNT (the original M17 default, size = |requirements|+|conflicts|+|assumptions|) is DEMOTED to a legacy/backward-compat measure: it counts the crystallized SUBSTRATE, which R-working-vs-substrate-budget declares free, so it over-penalizes crystallizing; it remains selectable only for operators/tests that opted into it before CRYSTAL_CHARS existed. No wording change needed elsewhere: check_operator_within_budget's docstring already states this hierarchy verbatim.",
+      "why": "M17. Resolver verdict 2026-07-02 (verbatim): «наверно, это размер бизнес-требований. Лучше в байтах или в токенах» (English: 'probably it's the size of the business requirements. Better in bytes or in tokens'). Landed reality already matches: hotam_spec.operator.CRYSTAL_CHARS ('measure = len(root CLAUDE.md) in characters') is the current byte-approximation of resident business content, wired into check_operator_within_budget and used by the live meta-domain operator (context_budget=ContextBudget(limit=150000, measure=\"CRYSTAL_CHARS\")). TOKEN_ESTIMATE is declared in BUDGET_MEASURES as the token-exact seam the resolver names ('в токенах') for when the host exposes token counts, but is deferred (not measured yet) since no host API is wired. NODE_COUNT (the original M17 default, size = |requirements|+|conflicts|+|assumptions|) is DEMOTED to a legacy/backward-compat measure: it counts the crystallized SUBSTRATE, which R-working-vs-substrate-budget declares free, so it over-penalizes crystallizing; it remains selectable only for operators/tests that opted into it before CRYSTAL_CHARS existed. No wording change needed elsewhere: check_operator_within_budget's docstring already states this hierarchy verbatim.",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -1554,7 +1554,7 @@
     },
     {
       "id": "R-commit-boundary-checkable",
-      "claim": "tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a steward runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
+      "claim": "tools/gate_status.py shall answer, from spec/.runtime/land-log.jsonl, whether a full T2 verification has landed at-or-after the most recent T1-gated land, exiting 0 (boundary satisfied) or 1 (boundary not satisfied, printing the unverified T1-gated targets) -- this is the mechanically checkable SLICE of R-tiered-gate-not-a-commit-gate's claim; it does not itself verify that a resolver runs it, nor detect an imminent commit, nor replace R-tiered-gate-not-a-commit-gate's human-invoked procedural discipline.",
       "owner": "framework-author",
       "status": "SETTLED",
       "why": "R-tiered-gate-not-a-commit-gate is honestly INHERENTLY_PROSE: no check_* can force a human to run the full suite before `git commit`. But the trace introduced by R-land-tier-trace makes ONE part of that claim mechanically answerable after the fact -- whether the log shows a covering T2 run. Splitting this into its own atom (rather than flipping R-tiered-gate-not-a-commit-gate to ENFORCED) keeps both claims honest: the parent claim stays INHERENTLY_PROSE because it genuinely cannot be machine-verified end to end (the human-invocation half is unreachable by any test); this new atom claims only the reachable half, with real enforced_by tests -- avoiding the exact self-contradiction (ENFORCEABLE default vs. an admittedly-unenforceable claim) the 2026-07-02 honesty wave requalified the parent to fix.",
@@ -1624,7 +1624,7 @@
       "claim": "Conflict.lifecycle shall admit a HELD(reason) state, entered only via a human-signed ConflictTransition, for tensions not resolvable by amending the member requirements.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "Closes the design question in R-unresolvable-conflict-carries-variants (steward verdict, verbatim 2026-07-02): the axis 'turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties'. HELD is that resting point, added to CONFLICT_LIFECYCLE as a QUIESCENT state (mirrors DECIDED/REVISIT_WHEN's shape exactly -- prefix-parsed, cyclic back to DETECTED on condition-fires) rather than a new node type -- the conflict itself does not change identity, only its lifecycle value. Entry requires the same signoff lock as DECIDED (check_held_has_decided_by, R-decided-needs-human-signoff applied to HELD) so an AI cannot silently classify a tension as unresolvable-by-members.",
+      "why": "Closes the design question in R-unresolvable-conflict-carries-variants (resolver verdict, verbatim 2026-07-02): the axis 'turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties'. HELD is that resting point, added to CONFLICT_LIFECYCLE as a QUIESCENT state (mirrors DECIDED/REVISIT_WHEN's shape exactly -- prefix-parsed, cyclic back to DETECTED on condition-fires) rather than a new node type -- the conflict itself does not change identity, only its lifecycle value. Entry requires the same signoff lock as DECIDED (check_held_has_decided_by, R-decided-needs-human-signoff applied to HELD) so an AI cannot silently classify a tension as unresolvable-by-members.",
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
@@ -1648,7 +1648,7 @@
     },
     {
       "id": "R-conflict-is-connector-node",
-      "claim": "A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + steward, never as a `conflicts_with` edge between requirements.",
+      "claim": "A contradiction shall be modeled as a first-class Conflict NODE carrying axis + context + shared_assumption + resolver, never as a `conflicts_with` edge between requirements.",
       "owner": "framework-author",
       "status": "SETTLED",
       "why": "The central ontological insight. An edge holds nothing; a node holds knowledge belonging to neither party (the axis, the context, the shared root) -- that is what makes contradictions first-class and clusterable. REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-conflict-is-a-node-not-an-edge, which names this requirement's actual premise.",
@@ -1660,7 +1660,7 @@
       "enforced_by": [
         "check_conflict_has_axis",
         "check_conflict_has_context",
-        "check_conflict_has_steward",
+        "check_conflict_has_resolver",
         "test_invariants.py::test_conflicts_with_is_not_a_relation_kind"
       ],
       "m_tag": "",
@@ -1706,7 +1706,7 @@
       "claim": "A Conflict shall be resolved only through in-graph changes -- amending its conflicting member objects and/or introducing an additional mediating entity that dissolves the tension -- never by a decision taken outside the graph.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Names the legitimate resolution surface (amend members, add a mediating entity, or both) so 'solved in the chat / in the code, conflict left dangling' is a visible violation of the connector-node discipline (R-conflict-is-connector-node). Steward verdict 2026-07-05: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности' -- the paths are not exclusive. Labeled INHERENTLY_PROSE 2026-07-10 (Этап T): the claim's essence -- that a resolution happened INSIDE the graph and not somewhere in the real world -- requires comparing the graph against the world, which no check_* can do; any 'enforcer' would only measure form (the R-boot-cite-measured form-metric theatre, REJECTED). The honestly-checkable remainder is already covered by check_decided_has_rationale_or_derived + the signoff checks (a DECIDED conflict must carry rationale-or-derived and a human signoff). This is permanent discipline, not closeable debt.",
+      "why": "Names the legitimate resolution surface (amend members, add a mediating entity, or both) so 'solved in the chat / in the code, conflict left dangling' is a visible violation of the connector-node discipline (R-conflict-is-connector-node). Resolver verdict 2026-07-05: 'противоречия либо решают внутри конфликтующих объектов, либо дополнительным созданием сущности' -- the paths are not exclusive. Labeled INHERENTLY_PROSE 2026-07-10 (Этап T): the claim's essence -- that a resolution happened INSIDE the graph and not somewhere in the real world -- requires comparing the graph against the world, which no check_* can do; any 'enforcer' would only measure form (the R-boot-cite-measured form-metric theatre, REJECTED). The honestly-checkable remainder is already covered by check_decided_has_rationale_or_derived + the signoff checks (a DECIDED conflict must carry rationale-or-derived and a human signoff). This is permanent discipline, not closeable debt.",
       "assumptions": [],
       "relations": [],
       "enforcement": "PROSE",
@@ -1723,7 +1723,7 @@
       "history": [
         {
           "at": "2026-07-10",
-          "summary": "why: Steward verdict 2026-07-05, verbatim: '…→Names the legitimate resolution surface…; enforceability: ENFORCEABLE→INHERENTLY_PROSE",
+          "summary": "why: Resolver verdict 2026-07-05, verbatim: '…→Names the legitimate resolution surface…; enforceability: ENFORCEABLE→INHERENTLY_PROSE",
           "decided_by": ""
         }
       ],
@@ -1731,7 +1731,7 @@
     },
     {
       "id": "R-conflict-structurally-visible",
-      "claim": "Every Conflict node shall carry a non-empty axis, context, and steward.",
+      "claim": "Every Conflict node shall carry a non-empty axis, context, and resolver.",
       "owner": "framework-author",
       "status": "SETTLED",
       "why": "These three fields are the knowledge that makes the contradiction visible (R-conflict-is-connector-node). A Conflict missing any of them is an invisible contradiction. Atomized claim — one structural rule with three required fields, all enforced by the same check_*.",
@@ -1743,7 +1743,7 @@
       "enforced_by": [
         "check_conflict_has_axis",
         "check_conflict_has_context",
-        "check_conflict_has_steward"
+        "check_conflict_has_resolver"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -1762,7 +1762,7 @@
       "claim": "At the CONFRONT step the operator shall check every change not only against SETTLED rules but also against the graph's goals, IMPLEMENTS aspirations and values, surfacing any contradiction before writing.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-05, verbatim: 'кажется, не получится [таймер-будильник для IMPLEMENTS]. Это просто нужно модели помнить при внесении изменений - нет ли противоречий нашим целям, правилам, ценностям'. Context: the six-lens review flagged IMPLEMENTS aspirations as a silent corner (no aging, no fallout, no progress measure) and proposed a decay timer; the steward rejected the timer as unworkable -- aliveness of an aspiration is not measured by a calendar but verified at the moment of every change, by the operator's own conscience. So the duty lands on the CONFRONT step of the mediation loop: the confrontation scope explicitly includes goals, aspirations and values, not just SETTLED claims. INHERENTLY_PROSE: this is an operator-conscience discipline; the lexical confront tool cannot see semantic contradiction with values (its honesty boundary is already documented).",
+      "why": "Resolver verdict 2026-07-05, verbatim: 'кажется, не получится [таймер-будильник для IMPLEMENTS]. Это просто нужно модели помнить при внесении изменений - нет ли противоречий нашим целям, правилам, ценностям'. Context: the six-lens review flagged IMPLEMENTS aspirations as a silent corner (no aging, no fallout, no progress measure) and proposed a decay timer; the resolver rejected the timer as unworkable -- aliveness of an aspiration is not measured by a calendar but verified at the moment of every change, by the operator's own conscience. So the duty lands on the CONFRONT step of the mediation loop: the confrontation scope explicitly includes goals, aspirations and values, not just SETTLED claims. INHERENTLY_PROSE: this is an operator-conscience discipline; the lexical confront tool cannot see semantic contradiction with values (its honesty boundary is already documented).",
       "assumptions": [],
       "relations": [],
       "enforcement": "PROSE",
@@ -1784,7 +1784,7 @@
       "claim": "The set of SETTLED requirements composing the operator-prompt shall be pairwise consistent on declared axes, with structural contradictions between constituting atoms forbidden.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "SETTLED (BUILD-TRIGGER fired): R-operator-prompt-from-substrate has landed -- gen_spec generates the CONSTITUTION block from SETTLED requirements, making the constituting set explicit and machine-known. PROMOTED STRUCTURAL->ENFORCED (Wave 10, closeable->0): check_constituting_not_in_unresolved_conflict is the machine-checkable face of pairwise consistency -- no unresolved Conflict (DETECTED/ACKNOWLEDGED) may hold two SETTLED constituting atoms while the CONSTITUTION presents both as settled truth. Scoped to the self-host graph (the one that DEFINES this atom): a business domain's DETECTED conflict with SETTLED members is a NORMAL held tension awaiting its steward (e.g. hotam-dev C-ec1ec532), NOT incoherence, and those atoms do not compose the operator-prompt -- so the demand binds only to the self-host constitution index (honest scope per this atom's own claim 'composing the operator-prompt').",
+      "why": "SETTLED (BUILD-TRIGGER fired): R-operator-prompt-from-substrate has landed -- gen_spec generates the CONSTITUTION block from SETTLED requirements, making the constituting set explicit and machine-known. PROMOTED STRUCTURAL->ENFORCED (Wave 10, closeable->0): check_constituting_not_in_unresolved_conflict is the machine-checkable face of pairwise consistency -- no unresolved Conflict (DETECTED/ACKNOWLEDGED) may hold two SETTLED constituting atoms while the CONSTITUTION presents both as settled truth. Scoped to the self-host graph (the one that DEFINES this atom): a business domain's DETECTED conflict with SETTLED members is a NORMAL held tension awaiting its resolver (e.g. hotam-dev C-ec1ec532), NOT incoherence, and those atoms do not compose the operator-prompt -- so the demand binds only to the self-host constitution index (honest scope per this atom's own claim 'composing the operator-prompt').",
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
@@ -2069,7 +2069,7 @@
       "claim": "The project-local hook (context_producer.py, wired via PostToolUse + Stop in .claude/settings.local.json) shall read a context-cache.json written by the global statusline script and write spec/.runtime/context.json.",
       "owner": "framework-author",
       "status": "REJECTED",
-      "why": "REJECTED — REPLACES by R-work-within-launch-dir + the local-only context bridge. The claim required the project-local hook to READ a context-cache.json written by the global statusline script — i.e. it depended on patching/reading the sovereign host (~/.claude/cah-bin). Steward verdict 2026-07-05 (verbatim): 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств'. The --patch-global mechanism and the global-cache read were removed from setup_context_hook.py / context_producer.py; the honest local design is: context_producer reads ctx_pct ONLY from the local stdin payload, writing nothing when absent. This claim is now structurally impossible under R-work-within-launch-dir and is preserved for history. — (was: Design refined by the 2026-07-02 --patch-global investigation: the global cah-stamp/cah-status pipeline had NO existing on-disk cache for ctx_pct (rate-limits.json holds only 5h/weekly/effort, never context %) -- so this cannot honestly 'read the global cah-stamp cache' as originally worded. Instead spec/tools/setup_context_hook.py --patch-global (a separate, user-run, opt-in tool -- never applied automatically) surgically patches the global cah-status.js to ALSO write a sibling ~/.claude/cah-bin/cache/context-cache.json = {ctx_pct, model, stamp}; context_producer.py now reads that path (CAH_CONTEXT_CACHE override) as a fallback when its stdin payload lacks ctx_pct. Stays DRAFT: the patch exists and is tested hermetically, but no user has yet run --patch-global --apply against the real global script, so the end-to-end chain is not yet proven live. BUILD-TRIGGER unchanged: R-setup-claude-generates-settings has landed.)",
+      "why": "REJECTED — REPLACES by R-work-within-launch-dir + the local-only context bridge. The claim required the project-local hook to READ a context-cache.json written by the global statusline script — i.e. it depended on patching/reading the sovereign host (~/.claude/cah-bin). Resolver verdict 2026-07-05 (verbatim): 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств'. The --patch-global mechanism and the global-cache read were removed from setup_context_hook.py / context_producer.py; the honest local design is: context_producer reads ctx_pct ONLY from the local stdin payload, writing nothing when absent. This claim is now structurally impossible under R-work-within-launch-dir and is preserved for history. — (was: Design refined by the 2026-07-02 --patch-global investigation: the global cah-stamp/cah-status pipeline had NO existing on-disk cache for ctx_pct (rate-limits.json holds only 5h/weekly/effort, never context %) -- so this cannot honestly 'read the global cah-stamp cache' as originally worded. Instead spec/tools/setup_context_hook.py --patch-global (a separate, user-run, opt-in tool -- never applied automatically) surgically patches the global cah-status.js to ALSO write a sibling ~/.claude/cah-bin/cache/context-cache.json = {ctx_pct, model, stamp}; context_producer.py now reads that path (CAH_CONTEXT_CACHE override) as a fallback when its stdin payload lacks ctx_pct. Stays DRAFT: the patch exists and is tested hermetically, but no user has yet run --patch-global --apply against the real global script, so the end-to-end chain is not yet proven live. BUILD-TRIGGER unchanged: R-setup-claude-generates-settings has landed.)",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -2093,7 +2093,7 @@
       "claim": "Every top-level import in spec/src/hotam_spec/*.py shall resolve to the Python standard library or hotam_spec itself -- no third-party backend/runtime dependency.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 steward verdict) makes the broader design-stance claim that the core stays backend-neutral 'by construction' and names no target backends -- a claim that is largely a prose non-decision (declining to build an OperatorBackend protocol), not itself machine-checkable end-to-end. But the CONSTRUCTION half of 'by construction' IS mechanically checkable: an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core. Split out as its own atom (same slice pattern as R-no-observation-type / R-commit-boundary-checkable) so this narrow, mechanical guarantee can honestly reach ENFORCED while R-backend-scope itself remains PROSE.",
+      "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-backend-scope (PROSE, M37 resolver verdict) makes the broader design-stance claim that the core stays backend-neutral 'by construction' and names no target backends -- a claim that is largely a prose non-decision (declining to build an OperatorBackend protocol), not itself machine-checkable end-to-end. But the CONSTRUCTION half of 'by construction' IS mechanically checkable: an AST import scan proving spec/src/hotam_spec/*.py imports nothing beyond stdlib + itself, so no backend dependency has silently crept into the core. Split out as its own atom (same slice pattern as R-no-observation-type / R-commit-boundary-checkable) so this narrow, mechanical guarantee can honestly reach ENFORCED while R-backend-scope itself remains PROSE.",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -2215,7 +2215,7 @@
       "claim": "The set of requirement domains warranting the deferred formal layers (Z3 conflict-detector, Quint temporal, mutation testing) shall be declared.",
       "owner": "domain-user",
       "status": "REJECTED",
-      "why": "REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: M7 resolved (P6 — §Conscience): the critical core for the methodology's OWN domain is the six invariants in CRITICAL_CORE_INVARIANTS — check_steward_not_a_member_owner, check_operator_steward_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question. These six guard every path by which a contradiction could be introduced without being seen. Business-domain 'critical core' (money / access / SLA) is a separate per-domain calibration; the framework's own methodology critical core is now declared and property-tested via test_conscience.py.))",
+      "why": "REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-critical-core-methodology + R-critical-core-per-domain (wave 2, decided by framework-author 2026-06-30) — (was: M7 resolved (P6 — §Conscience): the critical core for the methodology's OWN domain is the six invariants in CRITICAL_CORE_INVARIANTS — check_resolver_not_a_member_owner, check_operator_resolver_not_self, check_decided_has_decided_by, check_typed_anchors, check_no_dangling_ids, check_open_has_question. These six guard every path by which a contradiction could be introduced without being seen. Business-domain 'critical core' (money / access / SLA) is a separate per-domain calibration; the framework's own methodology critical core is now declared and property-tested via test_conscience.py.))",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -2241,7 +2241,7 @@
       "claim": "Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop — ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND — each step naming its real tool command.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist — what_now.py (ORIENT), the Constitution index and generated docs (LOCATE), RECENTLY-REJECTED anti-relitigation scan (CONFRONT), Proposed* JSON (TRANSLATE), steward decision (PRESENT, R-ai-presents-not-decides), apply_proposal → gen_spec → pytest → closure (LAND, R-verify-closure-per-action). Naming real commands keeps the loop executable rather than aspirational; a pass that writes nothing is a valid conclusion.",
+      "why": "The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist — what_now.py (ORIENT), the Constitution index and generated docs (LOCATE), RECENTLY-REJECTED anti-relitigation scan (CONFRONT), Proposed* JSON (TRANSLATE), resolver decision (PRESENT, R-ai-presents-not-decides), apply_proposal → gen_spec → pytest → closure (LAND, R-verify-closure-per-action). Naming real commands keeps the loop executable rather than aspirational; a pass that writes nothing is a valid conclusion.",
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
@@ -2311,7 +2311,7 @@
       "claim": "Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (everything important-yet-invisible becomes a typed anchored node under a steward; tension is held, never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad).",
+      "why": "Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (everything important-yet-invisible becomes a typed anchored node under a resolver; tension is held, never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad).",
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
@@ -2342,7 +2342,7 @@
       "claim": "The crystal generator shall render every object using a meaningful short form (an explicit summary, else its first whole sentence) instead of mechanically truncating text mid-word.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed and covered exactly this claim (no-mid-word-cutoff, summary-priority, first-sentence fallback) but was never wired into enforced_by -- flipped STRUCTURAL -> ENFORCED, no new code written. Honest scope note: test_short_form.py enforces the short_form() MECHANISM itself; that the crystal generator actually CALLS it everywhere text is rendered is separately covered by the ENFORCED R-operator-crystal-embeds-* family, not re-verified here.",
+      "why": "Resolver verdict 2026-07-05: 'All that gets truncated must not be truncated but have a short version.' Mechanical truncation ([:96]+'...') creates mid-word stubs that look like knowledge but are illusions. This is the mechanical foundation for crystal diet (wave 2.2b). Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed and covered exactly this claim (no-mid-word-cutoff, summary-priority, first-sentence fallback) but was never wired into enforced_by -- flipped STRUCTURAL -> ENFORCED, no new code written. Honest scope note: test_short_form.py enforces the short_form() MECHANISM itself; that the crystal generator actually CALLS it everywhere text is rendered is separately covered by the ENFORCED R-operator-crystal-embeds-* family, not re-verified here.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -2486,7 +2486,7 @@
       "claim": "An operator shall continuously crystallize working knowledge into requirement-code (the substrate) as the offload instrument, since crystallized knowledge does not count against context.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "SETTLED (P4): the act of crystallization is now structurally supported. Every codified knowledge-piece flows through the proposal → approve → apply → verify-closure pipeline (tools/apply_proposal.py + tools/closure.py). The closure check makes crystallization audit-able: each applied proposal must prove it removed the triggering diagnosis, so the discipline is not merely claimed but structurally enforced at the feedback edge. STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a steward call; the pipeline + closure assert HOW it is done. Implementation: tools/apply_proposal.py + tools/closure.py + docs/playbooks/.",
+      "why": "SETTLED (P4): the act of crystallization is now structurally supported. Every codified knowledge-piece flows through the proposal → approve → apply → verify-closure pipeline (tools/apply_proposal.py + tools/closure.py). The closure check makes crystallization audit-able: each applied proposal must prove it removed the triggering diagnosis, so the discipline is not merely claimed but structurally enforced at the feedback edge. STRUCTURAL (not ENFORCED) because WHAT to crystallize remains a resolver call; the pipeline + closure assert HOW it is done. Implementation: tools/apply_proposal.py + tools/closure.py + docs/playbooks/.",
       "assumptions": [
         "A-compaction-loses-working"
       ],
@@ -2507,10 +2507,10 @@
     },
     {
       "id": "R-decided-by-verifiable-signature",
-      "claim": "Whether the decided_by steward signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review.",
+      "claim": "Whether the decided_by resolver signature shall be bound to a verifiable signal (git commit authorship, or a cryptographic signature) rather than remaining a free string trusted via review.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verification mechanism of its own. Verifying that a signature is unforgeable (git commit authorship, a cryptographic identity) is the job of an EXTERNAL authorization/identity system; a content-free discipline framework only holds the SEAM for one, it does not become the verifier. That seam already exists and is named: Signoff.instrument (spec/src/hotam_spec/signoff.py) records HOW a signoff was captured -- today 'personal' (a human approved it, trust the writer) or 'DEL-<n>' (a filed delegation authorizes the decider) -- and its docstring reserves 'git'/'crypto' explicitly for a future verifiable-signature wave. Because the record already carries this field, a future external system that supplies verifiable provenance changes only the VALUE of instrument, never the SHAPE of the Signoff record: a data edit, not a schema migration. Prior OPEN context is preserved as one revisit trigger among others, not the sole reason: the value of a verifiable signature is not yet FORCED under a single-human-wears-all-hats regime (A-single-human-wears-all-hats) -- when a second live human steward appears, the question of whether one steward's free-string signature can be trusted sharpens again and this decision should be revisited then (ties to the role model, #44). The original OPEN was recorded 2026-07-05 after DEL-1 (the standing campaign delegation) closed, which restored the requirement of an explicit steward signature per conflict resolution and first raised the 'signature is a blank form' concern (six-lens review Enf#2 / Vision#1).",
+      "why": "Resolver verdict 2026-07-10 (Etap M): RESOLVED as decided_by stays a free string trusted via review -- the framework will NOT build a signature-verification mechanism of its own. Verifying that a signature is unforgeable (git commit authorship, a cryptographic identity) is the job of an EXTERNAL authorization/identity system; a content-free discipline framework only holds the SEAM for one, it does not become the verifier. That seam already exists and is named: Signoff.instrument (spec/src/hotam_spec/signoff.py) records HOW a signoff was captured -- today 'personal' (a human approved it, trust the writer) or 'DEL-<n>' (a filed delegation authorizes the decider) -- and its docstring reserves 'git'/'crypto' explicitly for a future verifiable-signature wave. Because the record already carries this field, a future external system that supplies verifiable provenance changes only the VALUE of instrument, never the SHAPE of the Signoff record: a data edit, not a schema migration. Prior OPEN context is preserved as one revisit trigger among others, not the sole reason: the value of a verifiable signature is not yet FORCED under a single-human-wears-all-hats regime (A-single-human-wears-all-hats) -- when a second live human resolver appears, the question of whether one resolver's free-string signature can be trusted sharpens again and this decision should be revisited then (ties to the role model, #44). The original OPEN was recorded 2026-07-05 after DEL-1 (the standing campaign delegation) closed, which restored the requirement of an explicit resolver signature per conflict resolution and first raised the 'signature is a blank form' concern (six-lens review Enf#2 / Vision#1).",
       "assumptions": [],
       "relations": [],
       "enforcement": "PROSE",
@@ -2610,7 +2610,7 @@
       "claim": "Every task delegation to an agent shall be recorded as a versioned file under delegations/ (DG-<n>.md, created and closed only via tools/delegate.py), so git carries the who/when/what history of every hand-off.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их историю в гите'. REPLACES the graph-node Delegation design (R-domain-delegation-as-node, R-domain-delegation-persists): the steward chose file-based delegations over a new graph node type -- git history on committed files IS the audit trail, making a dedicated Delegation dataclass unnecessary. Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed (test_tool_delegate.py, docstring says 'Enforcer/lift for R-delegation-is-a-file') and R-trust-anchor-delegation-explicit-only already cited the same tests as a SHARED enforcer while itself being ENFORCED -- but this donor rule, the one that actually established the file mechanism, had stayed STRUCTURAL. Flipped STRUCTURAL -> ENFORCED to close that accounting mismatch; no new code written.",
+      "why": "Resolver verdict (2026-07-05, verbatim): 'давай делегировать все задачи через файлы, и вести их историю в гите'. REPLACES the graph-node Delegation design (R-domain-delegation-as-node, R-domain-delegation-persists): the resolver chose file-based delegations over a new graph node type -- git history on committed files IS the audit trail, making a dedicated Delegation dataclass unnecessary. Bookkeeping close (etap C, lens-5-quality #3, 2026-07-10): the enforcer already existed (test_tool_delegate.py, docstring says 'Enforcer/lift for R-delegation-is-a-file') and R-trust-anchor-delegation-explicit-only already cited the same tests as a SHARED enforcer while itself being ENFORCED -- but this donor rule, the one that actually established the file mechanism, had stayed STRUCTURAL. Flipped STRUCTURAL -> ENFORCED to close that accounting mismatch; no new code written.",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -2812,7 +2812,7 @@
       "claim": "Every generated doc shall name its reader as an existing Stakeholder id in its header.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Stage E: a generated doc with no named reader is an important-yet-invisible artifact -- nobody is accountable for reading it, so drift between the doc and its audience's actual needs goes unnoticed (the generative law applied to doc plumbing, not just graph nodes). hotam_spec.doc_readers.DOC_READER_ROLES maps each doc kind to a portable ROLE hint (operator / domain-steward / framework-maintainer); gen_spec.py resolves that hint against an EXPLICIT role -> Stakeholder.id binding the active domain declares in its own manifest.py (the DOC_READERS dict, read via hotam_spec.graph.active_domain_doc_readers()) and stamps a `reader: <id>` line into every generated doc's header (docs/gen/*.md, spec/docs/{thinking,tools}/*.md, docs/methodology/atoms/*.md). Resolution NEVER scans stakeholder ids for a role-shaped substring (R-doc-readers-declared-not-guessed) -- a stakeholder id that happens to contain a role word (e.g. a 'travel-agent' stakeholder in some future business domain) can no longer be silently captured as the reader of operator-facing docs; only a binding the domain author wrote down on purpose counts. check_doc_reader_resolves_to_stakeholder guards the mapping itself: a declared binding whose id is absent from the graph's Stakeholders, or a role with no binding at all, fires a Violation, mirroring the dangling-ref family applied to doc plumbing. Aspect-gated (no-op) for domains that have declared no DOC_READERS binding at all, mirroring the Process/Goal/Entity aspect-gating precedent.",
+      "why": "Stage E: a generated doc with no named reader is an important-yet-invisible artifact -- nobody is accountable for reading it, so drift between the doc and its audience's actual needs goes unnoticed (the generative law applied to doc plumbing, not just graph nodes). hotam_spec.doc_readers.DOC_READER_ROLES maps each doc kind to a portable ROLE hint (operator / domain-resolver / framework-maintainer); gen_spec.py resolves that hint against an EXPLICIT role -> Stakeholder.id binding the active domain declares in its own manifest.py (the DOC_READERS dict, read via hotam_spec.graph.active_domain_doc_readers()) and stamps a `reader: <id>` line into every generated doc's header (docs/gen/*.md, spec/docs/{thinking,tools}/*.md, docs/methodology/atoms/*.md). Resolution NEVER scans stakeholder ids for a role-shaped substring (R-doc-readers-declared-not-guessed) -- a stakeholder id that happens to contain a role word (e.g. a 'travel-agent' stakeholder in some future business domain) can no longer be silently captured as the reader of operator-facing docs; only a binding the domain author wrote down on purpose counts. check_doc_reader_resolves_to_stakeholder guards the mapping itself: a declared binding whose id is absent from the graph's Stakeholders, or a role with no binding at all, fires a Violation, mirroring the dangling-ref family applied to doc plumbing. Aspect-gated (no-op) for domains that have declared no DOC_READERS binding at all, mirroring the Process/Goal/Entity aspect-gating precedent.",
       "assumptions": [],
       "relations": [
         {
@@ -2903,7 +2903,7 @@
       "claim": "A domain-delegation shall be recorded as a `Delegation` substrate node with fields parent_op, child_op, scope, border, returns_contract, crystal_path.",
       "owner": "framework-author",
       "status": "REJECTED",
-      "why": "REJECTED — REPLACES by R-delegation-is-a-file: steward chose file-based delegations (delegations/DG-<n>.md, versioned in git) over a new Delegation graph-node type. Git history on committed files carries the audit trail; a dedicated dataclass is unnecessary overhead. — (was: Makes the delegation persistent and stewardable, unlike task-spawn ephemera. BUILD-TRIGGER: R-agent-is-a-directory through R-agent-imports-framework have landed (agents exist as directories) AND a first real delegation is performed.)",
+      "why": "REJECTED — REPLACES by R-delegation-is-a-file: resolver chose file-based delegations (delegations/DG-<n>.md, versioned in git) over a new Delegation graph-node type. Git history on committed files carries the audit trail; a dedicated dataclass is unnecessary overhead. — (was: Makes the delegation persistent and resolverable, unlike task-spawn ephemera. BUILD-TRIGGER: R-agent-is-a-directory through R-agent-imports-framework have landed (agents exist as directories) AND a first real delegation is performed.)",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -2927,7 +2927,7 @@
       "claim": "A domain-delegation shall persist as a directory + a substrate node (`Delegation`).",
       "owner": "framework-author",
       "status": "REJECTED",
-      "why": "REJECTED — REPLACES by R-delegation-is-a-file: steward chose file-based delegations (delegations/DG-<n>.md, versioned in git) over substrate-node persistence. The directory + tool mechanism replaces the envisioned Delegation node type. — (was: Distinct from task-spawn: domain-delegation is recorded in the graph and stewardable. BUILD-TRIGGER: the `Delegation` node type (R-domain-delegation-as-node) is built.)",
+      "why": "REJECTED — REPLACES by R-delegation-is-a-file: resolver chose file-based delegations (delegations/DG-<n>.md, versioned in git) over substrate-node persistence. The directory + tool mechanism replaces the envisioned Delegation node type. — (was: Distinct from task-spawn: domain-delegation is recorded in the graph and resolverable. BUILD-TRIGGER: the `Delegation` node type (R-domain-delegation-as-node) is built.)",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -3397,7 +3397,7 @@
       "claim": "Every SETTLED/ENFORCED requirement's enforced_by entries shall resolve to a concrete pytest node-id via the shared enforcer-resolution algorithm, and every bare test_* enforcer shall have real assertions (not a pass-only stub).",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Wave 1 (seed coherence audit): check_enforced_names_invariant only checks that enforced_by is NON-EMPTY -- a real typo in an entry (a renamed test file, a stale check_* name) passes that check silently and is only discovered when someone runs tools/gate.py by hand and it fails closed to the full suite. That is an honest but SILENT tax on the T1 tiered gate (R-verify-closure-per-action): the graph claims a targeted enforcer exists when it does not, and the steward never sees this as debt. check_enforced_by_resolvable makes the debt visible: it AST-parses tests/*.py to build the check_* -> test-file map (the same map gen_spec.py's CONCEPT-MAP block and tools/gate.py's T1 selector both build) and resolves every enforced_by entry against it, firing a Violation naming the exact unresolvable string. check_enforced_by_test_has_teeth is the companion lint: a test that exists but whose body is only pass/docstring (no assert, no call, no raise) is toothless -- it makes ENFORCED a lie. The resolution algorithm itself was extracted out of tools/gate.py into spec/src/hotam_spec/enforcer_resolution.py so this invariant (which lives in src/ and must not import from tools/) and gate.py (a tool) share ONE implementation rather than two hand-synced copies (R-prefer-tool-over-hand). AST-based, in-process, no subprocess spawn -- deterministic within a run.",
+      "why": "Wave 1 (seed coherence audit): check_enforced_names_invariant only checks that enforced_by is NON-EMPTY -- a real typo in an entry (a renamed test file, a stale check_* name) passes that check silently and is only discovered when someone runs tools/gate.py by hand and it fails closed to the full suite. That is an honest but SILENT tax on the T1 tiered gate (R-verify-closure-per-action): the graph claims a targeted enforcer exists when it does not, and the resolver never sees this as debt. check_enforced_by_resolvable makes the debt visible: it AST-parses tests/*.py to build the check_* -> test-file map (the same map gen_spec.py's CONCEPT-MAP block and tools/gate.py's T1 selector both build) and resolves every enforced_by entry against it, firing a Violation naming the exact unresolvable string. check_enforced_by_test_has_teeth is the companion lint: a test that exists but whose body is only pass/docstring (no assert, no call, no raise) is toothless -- it makes ENFORCED a lie. The resolution algorithm itself was extracted out of tools/gate.py into spec/src/hotam_spec/enforcer_resolution.py so this invariant (which lives in src/ and must not import from tools/) and gate.py (a tool) share ONE implementation rather than two hand-synced copies (R-prefer-tool-over-hand). AST-based, in-process, no subprocess spawn -- deterministic within a run.",
       "assumptions": [],
       "relations": [
         {
@@ -3989,7 +3989,7 @@
       "claim": "The framework body (`hotam_spec.*`) shall be owned by no single agent -- it is shared infrastructure any agent's code may import.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework (ENFORCED via test_agent_import_direction.py). No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that hotam_spec/ has exactly one owner field (framework-author, the framework's own steward) and no agent directory declares or claims exclusive ownership of any hotam_spec module. Landed as the missing REPLACES target flagged in the Wave 2 review (a REJECTED atom pointed at this id before it existed). REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-framework-shared-infra-no-owner, which names this requirement's actual premise.",
+      "why": "Second half of the split R-agent-imports-framework (R-requirement-claim-is-atomic). This is a non-code ownership/governance stance about the framework body -- distinct from the mechanically-checkable import-direction fact already split out as R-agent-code-imports-framework (ENFORCED via test_agent_import_direction.py). No check_* can verify 'owned by no single agent' -- ownership is a governance convention (no per-agent CODEOWNERS-style claim exists anywhere in the repo, and none should), so this stays honestly STRUCTURAL/INHERENTLY_PROSE, carried by the fact that hotam_spec/ has exactly one owner field (framework-author, the framework's own resolver) and no agent directory declares or claims exclusive ownership of any hotam_spec module. Landed as the missing REPLACES target flagged in the Wave 2 review (a REJECTED atom pointed at this id before it existed). REPOINTED 2026-07-02 (Wave 7 move 4, P5 latent-connector cluster fix): assumptions moved from A-content-free-honest (an over-broad, unrelated content-freeness assumption shared by coincidence with two other unrelated requirements, producing a false 3-way latent-connector cluster) to A-framework-shared-infra-no-owner, which names this requirement's actual premise.",
       "assumptions": [
         "A-framework-shared-infra-no-owner"
       ],
@@ -4045,7 +4045,7 @@
       "claim": "The framework tier (`pytest -m framework`) shall pass green under ANY active domain, or none, independent of which business domain is pinned.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. PROSE-enforced (not a single-run pytest invariant): proving it requires re-running `-m framework` under a FOREIGN pin (a nested pytest inside one run would recurse); the proof is executed at wave/commit boundary -- Wave 17 demonstrated 982 passed / 18 deselected under HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev.",
+      "why": "Resolver doctrine (verdict #8, verbatim): 'Бизнес всегда должен думать, что фреймворк работает. Быть рабочим — ответственность фреймворка.' The framework must PROVE its health without depending on a particular business domain's content. This is the DIRECTIONAL guarantee the tiering (R-framework-suite-tiered) exists to serve. PROSE-enforced (not a single-run pytest invariant): proving it requires re-running `-m framework` under a FOREIGN pin (a nested pytest inside one run would recurse); the proof is executed at wave/commit boundary -- Wave 17 demonstrated 982 passed / 18 deselected under HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev.",
       "assumptions": [],
       "relations": [],
       "enforcement": "PROSE",
@@ -4067,7 +4067,7 @@
       "claim": "The test suite shall partition every collected test into exactly one of two responsibility tiers -- `framework` (exercising hotam_spec.* mechanics) or `domain` (asserting concrete self-domain content) -- via the DOMAIN_COUPLED registry in spec/tests/conftest.py, so the framework tier is a separately selectable, self-contained subset.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin.",
+      "why": "Resolver doctrine (verdict #8, verbatim): being-working is the framework's OWN responsibility, its tests run 'до всего отдельно' -- first and separately. That is only possible if the framework tests are a named, selectable subset. Before Wave 17 the suite hard-coded self-domain content (C3): under a foreign active-domain pin (HOTAM_SPEC_ACTIVE_DOMAIN=hotam-dev) 18 tests reddened because they assume self-domain atoms/structure. Tagging each test framework-vs-domain (centralized, auditable registry; conftest pytest_collection_modifyitems) makes the framework tier `-m framework` selectable and the domain tier `-m domain` isolated to the self-domain pin.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -4220,7 +4220,7 @@
       "claim": "A controlled vocabulary of methodology terms shall be generated under docs/gen/GLOSSARY.md, with a sync test that fails on undefined or unused terms.",
       "owner": "framework-author",
       "status": "REJECTED",
-      "why": "REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: Terminology drift is its own kind of invisibility — 'axis' / 'dimension', 'steward' / 'owner', 'conflict' / 'tension' will fragment without it. Now ENFORCED: test_glossary_sync.py fires on any dead vocab or invented §-token, and test_docs_gen.py::test_glossary_md_up_to_date keeps GLOSSARY.md byte-stable.))",
+      "why": "REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: REJECTED — REPLACES split into R-glossary-generated + R-glossary-sync-fails-dead + R-glossary-sync-fails-unused + R-glossary-drift-stable (wave 2, decided by framework-author 2026-06-30) — (was: Terminology drift is its own kind of invisibility — 'axis' / 'dimension', 'resolver' / 'owner', 'conflict' / 'tension' will fragment without it. Now ENFORCED: test_glossary_sync.py fires on any dead vocab or invented §-token, and test_docs_gen.py::test_glossary_md_up_to_date keeps GLOSSARY.md byte-stable.))",
       "assumptions": [
         "A-text-grounded-in-models",
         "A-python-stack"
@@ -4515,7 +4515,7 @@
       "claim": "An agent shall receive its domain content from its initiator at boot and crystallize it into the domain code-spec.",
       "owner": "domain-user",
       "status": "SETTLED",
-      "why": "Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Steward decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human steward or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place.",
+      "why": "Resolves C-8600b1b8 (core-vs-aspect: R-content-free-framework vs R-agent-never-lost, shared assumption A-prose-suffices). Resolver decision (domain-user, 2026-07-02), verbatim: «Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке». The framework itself stays content-free (R-content-free-framework unbroken -- it ships no business data) AND an agent dropped into a domain is never lost (R-agent-never-lost unbroken) because the INITIATOR (human resolver or calling process) supplies domain content at boot time, and the agent's job is to crystallize that supplied content into the domain's code-spec (graph.py) via the existing proposal pipeline, not to invent it nor to find it absent. This is narrower than R-crystallize-knowledge-to-code (which covers crystallizing an operator's own working knowledge in general, source-agnostic); this requirement pins down the SOURCE of domain content specifically as the initiator-at-boot, closing the core-vs-aspect tension. REQUALIFIED 2026-07-02 (Wave 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'the initiator supplied content at boot' as a runtime event (it is a fact about a conversation/process outside the graph's own reach, not a property of the committed graph state). This is the same honesty class as R-ai-presents-not-decides and R-two-altitude-ontology: a real, permanent discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. Requalifying (not fabricating an enforcer) keeps the burn-down meter honest -- the debt this requirement represented was never real closeable debt in the first place.",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -4568,7 +4568,7 @@
     },
     {
       "id": "R-land-gate-tier-selector-fails-closed",
-      "claim": "The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY selection uncertainty or blast-radius-unbounded case -- an unknown/new target, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), any single enforced_by entry gate.py cannot resolve to a concrete pytest node-id, a ProposedRejection (a rejected atom's own enforced_by does not bound its removal blast radius), or the creation of a brand-new Requirement or Conflict node (a new node's enforced_by, if any, is steward-supplied and unverified) -- never returning a partial or best-effort subset in an uncertain or unbounded case.",
+      "claim": "The LAND tiering decision (tools/apply_proposal.py::apply, consulting tools/gate.py's T1 selector) shall fall back to the T2 full suite on ANY selection uncertainty or blast-radius-unbounded case -- an unknown/new target, an empty enforced_by tuple, a Conflict target (no per-instance enforced_by), any single enforced_by entry gate.py cannot resolve to a concrete pytest node-id, a ProposedRejection (a rejected atom's own enforced_by does not bound its removal blast radius), or the creation of a brand-new Requirement or Conflict node (a new node's enforced_by, if any, is resolver-supplied and unverified) -- never returning a partial or best-effort subset in an uncertain or unbounded case.",
       "owner": "framework-author",
       "status": "SETTLED",
       "why": "A tier selector that silently narrows verification under uncertainty would weaken R-verify-closure-per-action exactly where it matters most -- new nodes, rejections, and framework-code changes are precisely the changes least covered by an existing, trustworthy enforced_by tuple. Fail-closed-to-full-suite on ANY uncertainty or unbounded-blast-radius case (not merely gate.py's own resolution failures) keeps the honesty property end to end: T1 only ever runs when the FULL apply() decision -- not just gate.py's internal mapping -- can name the SAME enforcers a full run would have exercised for this specific, pre-existing target. Widened 2026-07-02 (honesty wave) after review found apply() let Rejections and new-node creations reach gate.select_tier1 even though neither case's target enforced_by bounds the real blast radius (a rejected atom's blast radius is its dependents, not itself; a brand-new node has no verified enforced_by at all).",
@@ -4966,7 +4966,7 @@
       "claim": "The operator's working-context fullness shall be MEASURED from a runtime stamp, not estimated, so the three-cipher pulse cites a real number.",
       "owner": "ai-agent",
       "status": "DRAFT",
-      "why": "tools/context.py reads spec/.runtime/context.json; the producing hook lives in the user's global ~/.claude settings (cah-stamp emits context %) — installing it is a STEWARD decision outside the framework body, so this stays DRAFT until the hook is approved and wired.",
+      "why": "tools/context.py reads spec/.runtime/context.json; the producing hook lives in the user's global ~/.claude settings (cah-stamp emits context %) — installing it is a RESOLVER decision outside the framework body, so this stays DRAFT until the hook is approved and wired.",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -5044,7 +5044,7 @@
       "claim": "hotam_spec shall define no Observation or Evidence class anywhere in its package -- Assumption remains the ontology's sole belief-carrying node type.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-observation-evidence-scope (STRUCTURAL, M21 steward verdict) makes a broader claim -- operator epistemics live in the working dialogue, crystallized only on request -- that is not fully machine-checkable (no static scan can verify 'lives in the dialogue'). But its NEGATIVE half -- no separate Observation/Evidence type exists -- IS mechanically checkable: a static AST scan of spec/src/hotam_spec/*.py for a class named Observation or Evidence. Split out as its own atom (R-commit-boundary-checkable's slice-of-a-broader-claim pattern) so the mechanical slice can honestly reach ENFORCED while the parent claim (R-observation-evidence-scope) stays STRUCTURAL, undiluted by a partial enforcer.",
+      "why": "Wave 1 mechanical-honesty pass (2026-07-02): R-observation-evidence-scope (STRUCTURAL, M21 resolver verdict) makes a broader claim -- operator epistemics live in the working dialogue, crystallized only on request -- that is not fully machine-checkable (no static scan can verify 'lives in the dialogue'). But its NEGATIVE half -- no separate Observation/Evidence type exists -- IS mechanically checkable: a static AST scan of spec/src/hotam_spec/*.py for a class named Observation or Evidence. Split out as its own atom (R-commit-boundary-checkable's slice-of-a-broader-claim pattern) so the mechanical slice can honestly reach ENFORCED while the parent claim (R-observation-evidence-scope) stays STRUCTURAL, undiluted by a partial enforcer.",
       "assumptions": [
         "A-most-knowledge-crystallizable"
       ],
@@ -5076,7 +5076,7 @@
       "claim": "Operator epistemics (observations, beliefs, reasoning) shall live in the working dialogue, crystallized into the substrate only on request.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "M21. Steward verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'an operator kept its reasoning in the dialogue and crystallized only on request' as a property of the committed graph (it is a fact about a conversation, not the graph state). This is the same honesty class as R-initiator-supplies-domain-content: a real, permanent dialogue discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND -- it also asserted 'Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types', which duplicates R-no-observation-type (SETTLED, ENFORCED) verbatim; that mechanically-checkable half already lives there per R-no-observation-type's own why field ('Split out as its own atom so the mechanical slice can honestly reach ENFORCED while the parent claim stays STRUCTURAL'). Trimmed this claim to the dialogue-discipline half only (the genuinely INHERENTLY_PROSE half with no duplicate owner) -- R-no-observation-type remains the sole, undiluted owner of the negative-existence half via its own relations. No semantic narrowing of what the operator actually promises: both halves are still live and enforced exactly as before, now under two non-overlapping atoms instead of one compound one; this is a wording-only re-atomization of the SAME id (not a rejection+new-id split -- both halves already had a distinct home, one pre-existing (R-no-observation-type) and one here, so no new sibling atom is needed).",
+      "why": "M21. Resolver verdict 2026-07-02 (verbatim): «нужно думать в чате. И по просьбе в чате записывать свои мысли» (English: 'need to think in chat. And on request in chat, write down one's thoughts'). This settles the M21 question against modeling belief-vs-reality drift as new first-class types: an operator's live reasoning stays in the session dialogue (the mediation loop's CONFRONT/TRANSLATE steps), and is crystallized into a typed node ONLY when explicitly asked to (mirrors R-crystallize-knowledge-to-code's on-demand discipline). REQUALIFIED 2026-07-02 (Wave 7 move 2 honesty pass): previously carried default enforceability=ENFORCEABLE, which listed it as closeable debt in UNENFORCED.md -- but no check_* can ever verify 'an operator kept its reasoning in the dialogue and crystallized only on request' as a property of the committed graph (it is a fact about a conversation, not the graph state). This is the same honesty class as R-initiator-supplies-domain-content: a real, permanent dialogue discipline that is INHERENTLY_PROSE, not ENFORCEABLE-but-unbuilt. RE-ATOMIZED Wave 8 move 2 (2026-07-03): audit_atomicity.py flagged the prior claim COMPOUND -- it also asserted 'Assumption remains the only belief-carrying node type -- no separate Observation/Evidence types', which duplicates R-no-observation-type (SETTLED, ENFORCED) verbatim; that mechanically-checkable half already lives there per R-no-observation-type's own why field ('Split out as its own atom so the mechanical slice can honestly reach ENFORCED while the parent claim stays STRUCTURAL'). Trimmed this claim to the dialogue-discipline half only (the genuinely INHERENTLY_PROSE half with no duplicate owner) -- R-no-observation-type remains the sole, undiluted owner of the negative-existence half via its own relations. No semantic narrowing of what the operator actually promises: both halves are still live and enforced exactly as before, now under two non-overlapping atoms instead of one compound one; this is a wording-only re-atomization of the SAME id (not a rejection+new-id split -- both halves already had a distinct home, one pre-existing (R-no-observation-type) and one here, so no new sibling atom is needed).",
       "assumptions": [
         "A-most-knowledge-crystallizable"
       ],
@@ -5126,7 +5126,7 @@
       "claim": "The what_now harness shall surface a CLI-only band summarising open (non-done) on-disk tickets broken down by status, read from the filesystem and never fed into diagnose().",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The steward's backlog moved onto disk; without a pulse band the queue is invisible until someone remembers to ls tickets/ (R-agent-never-lost). Like the pending-proposal / revisit-marker bands it reads the filesystem, so it stays OUT of diagnose() to keep generated docs byte-stable (R-deterministic-generation). Enforced by tests/test_open_tickets_band.py (reports open tickets by status; silent when none; excluded from diagnose).",
+      "why": "The resolver's backlog moved onto disk; without a pulse band the queue is invisible until someone remembers to ls tickets/ (R-agent-never-lost). Like the pending-proposal / revisit-marker bands it reads the filesystem, so it stays OUT of diagnose() to keep generated docs byte-stable (R-deterministic-generation). Enforced by tests/test_open_tickets_band.py (reports open tickets by status; silent when none; excluded from diagnose).",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -5173,10 +5173,10 @@
     },
     {
       "id": "R-operator-backend-protocol",
-      "claim": "The framework's tools shall talk to the acting agent through a single OperatorBackend protocol (get_context_state / request_steward_approval / delegate), so the methodology does not hard-depend on which coding-agent or model drives it.",
+      "claim": "The framework's tools shall talk to the acting agent through a single OperatorBackend protocol (get_context_state / request_resolver_approval / delegate), so the methodology does not hard-depend on which coding-agent or model drives it.",
       "owner": "framework-author",
       "status": "REJECTED",
-      "why": "REJECTED -- REPLACES by R-backend-scope (SETTLED). M37 steward verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). The steward explicitly declined to build a designed OperatorBackend protocol (get_context_state / request_steward_approval / delegate): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime and stays backend-neutral BY CONSTRUCTION, not by an abstraction layer built ahead of a second real backend. Building the protocol now would be exactly the speculative-engineering-against-hypothetical-backends R-speculative-aspects-frozen already warns against. R-backend-scope (SETTLED, PROSE) already carries this verdict verbatim in its why and is the surviving atom; R-operator-backend-protocol is rejected rather than left DRAFT so the graph does not carry a dead aspiration as open debt. — (was: Today tools/ implicitly assume Claude Code (Agent tool, Bash, chat-steward). BUILD-TRIGGER: a SECOND concrete backend becomes real (CI runner, a different coding agent, or a programmatic steward). Until then, abstracting for hypothetical backends is the big-bang-up-front antipattern (weight ∝ cost of an unnoticed conflict). See OPEN R-backend-scope (which backends are real?).)",
+      "why": "REJECTED -- REPLACES by R-backend-scope (SETTLED). M37 resolver verdict 2026-07-02 (verbatim): «не важно -- каждый умный агент под себя допишет» (English: 'it doesn't matter -- every smart agent will adapt it for itself'). The resolver explicitly declined to build a designed OperatorBackend protocol (get_context_state / request_resolver_approval / delegate): the core surface (spec/tools/*.py CLIs, JSON Proposed* shapes, pytest verification) already has no dependency on any one agent's runtime and stays backend-neutral BY CONSTRUCTION, not by an abstraction layer built ahead of a second real backend. Building the protocol now would be exactly the speculative-engineering-against-hypothetical-backends R-speculative-aspects-frozen already warns against. R-backend-scope (SETTLED, PROSE) already carries this verdict verbatim in its why and is the surviving atom; R-operator-backend-protocol is rejected rather than left DRAFT so the graph does not carry a dead aspiration as open debt. — (was: Today tools/ implicitly assume Claude Code (Agent tool, Bash, chat-resolver). BUILD-TRIGGER: a SECOND concrete backend becomes real (CI runner, a different coding agent, or a programmatic resolver). Until then, abstracting for hypothetical backends is the big-bang-up-front antipattern (weight ∝ cost of an unnoticed conflict). See OPEN R-backend-scope (which backends are real?).)",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -5429,18 +5429,18 @@
     },
     {
       "id": "R-operator-not-self-approve",
-      "claim": "An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.",
+      "claim": "An Operator shall not resolver a Conflict in which its underlying Stakeholder owns one of the members.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "M36 — the reflexive twin of check_steward_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the steward-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.",
+      "why": "M36 — the reflexive twin of check_resolver_not_a_member_owner. An Operator is the acting facet of a Stakeholder; the resolver-distinct boundary applies through that facet so an Operator cannot self-ratify decisions on its own party's side. Structurally enforced.",
       "assumptions": [
         "A-stakeholders-care"
       ],
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "check_operator_steward_not_self",
-        "test_operator.py::test_check_operator_steward_not_self_fires"
+        "check_operator_resolver_not_self",
+        "test_operator.py::test_check_operator_resolver_not_self_fires"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -5732,7 +5732,7 @@
       "claim": "The presented-awaiting-decision state shall live in a dedicated folder (spec/.runtime/proposals/pending/ vs applied/), surfaced by the harness -- not as a new graph node type.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). Landed: spec/.runtime/proposals/ now splits into pending/ (proposal awaiting steward verdict) and applied/ (landed proposal, moved there by tools/apply_proposal.py's apply() on a successful land -- write+regen+verify-tier green, closure advanced when --triggering-kind supplied). Backward compat preserved: files directly under proposals/ (the historical flat layout predating this split) are still treated as pending by pending_proposal_files(). tools/what_now.py gains a P6 PENDING_PROPOSAL band (pending_proposal_actions()) that lists each pending file with its age in days -- CLI-only (main()), deliberately NOT wired into diagnose(g) because diagnose() is pure-over-the-graph and gen_spec.py's generated docs must stay byte-stable (R-deterministic-generation); a filesystem-mtime-derived 'N days' figure would break that. No new graph node type was added -- Presented/Pending stays tooling ephemera in .runtime/ (gitignored), never crystallized substrate.",
+      "why": "Resolver verdict 2026-07-02 (verbatim): «да, нужно. наверно такие вещи нужно вести в отдельной папке» (English: 'yes, it's needed. probably such things should be tracked in a separate folder'). Landed: spec/.runtime/proposals/ now splits into pending/ (proposal awaiting resolver verdict) and applied/ (landed proposal, moved there by tools/apply_proposal.py's apply() on a successful land -- write+regen+verify-tier green, closure advanced when --triggering-kind supplied). Backward compat preserved: files directly under proposals/ (the historical flat layout predating this split) are still treated as pending by pending_proposal_files(). tools/what_now.py gains a P6 PENDING_PROPOSAL band (pending_proposal_actions()) that lists each pending file with its age in days -- CLI-only (main()), deliberately NOT wired into diagnose(g) because diagnose() is pure-over-the-graph and gen_spec.py's generated docs must stay byte-stable (R-deterministic-generation); a filesystem-mtime-derived 'N days' figure would break that. No new graph node type was added -- Presented/Pending stays tooling ephemera in .runtime/ (gitignored), never crystallized substrate.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -5846,7 +5846,7 @@
       "claim": "Every Goal.owner shall reference an existing Operator.id, validated by check_goal_owner_is_operator.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Atom of R-process-aspect-first (goal-owner concern). A Goal without a valid operator owner is unstewardable.",
+      "why": "Atom of R-process-aspect-first (goal-owner concern). A Goal without a valid operator owner is unresolverable.",
       "assumptions": [
         "A-text-grounded-in-models",
         "A-bootstrap-self-applies"
@@ -6065,7 +6065,7 @@
       "claim": "HotamSpec resolves the consumer's project root through a single function, project_root(), never through a raw Path(__file__).resolve().parents[N] guess at the consumer's files.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Today spec/ and its own domains (domains/hotam-spec-self/, domains/hotam-dev/) share one repo, and the core assumes this coincidence: 13+ call sites compute the 'consumer root' as spec_root().parent (Path(__file__).resolve().parents[N]). This blocks using HotamSpec as tooling for a separate project (e.g. a domain 'prat' living in D:/ai_dev/prat/) -- the framework forces that domain to live inside D:/dev/HotamSpec/domains/prat/, inside the framework's own repo, instead of the consumer's project. This requirement makes the coincidence OPTIONAL: self-hosting remains a legitimate, fully-tested working case (R6 fallback, R-domain-self-hosting-flag unaffected), but every path that reads/writes CONSUMER content (domains/, tickets/, delegations/, CLAUDE.md, .claude/settings.json, runtime state) is derived from project_root(), resolved once per call through the documented priority chain, never guessed from __file__. This is philosophically continuous with R-work-within-launch-dir (the framework only ever acts within the directory it was invoked for, never reaches outside it) -- portability generalizes that same discipline to a project root that need not equal the framework's own install location. Full specification (priority chain rationale R1-R6, complete file inventory, 4-wave migration path W1-W4 with acceptance criteria AC1-AC10, package-data/entry-point layout): D:/ai_dev/prat/REQUIREMENTS-hotamspec-portable.md. Steward verdict 2026-07-09: accept, land as SETTLED, begin wave W1. ENFORCEMENT (Etap V, #124, 2026-07-10) -- STRUCTURAL->ENFORCED via a narrow syntactic check, not theatre: tests/test_project_root_not_hardcoded.py AST-scans every committed framework .py (spec/tools/ + spec/src/hotam_spec/, top level) and fails RED if any file reaches the consumer's data by GUESSING the root from __file__ -- i.e. a Path(__file__).resolve().parents[N] climb (N>=2) or an equivalent .parent.parent... chain (depth>=2) joined in the SAME expression to a consumer-data segment (domains, tickets, delegations, CLAUDE.md, .claude, docs/gen). It is the JOIN of a __file__-climb to consumer data that constitutes the forbidden guess; a shallow framework-internal parents[1] (a tool locating spec/ to fix sys.path) and repo_paths' own framework-root climb (which serves framework-internal paths, never consumer data) are correctly NOT flagged. The live tree has ZERO offenders because the W1 migration already routed every consumer-root read through project_root_or_raise() (_ticket_store.py / _delegation_store.py / claude_md_diff_watch.py / repo_paths.py all delegate to the R1-R6 resolver); the enforcer nails that steady state so no future commit can silently reintroduce a hardcoded consumer-root climb. Honest scope, documented in the enforcer's docstring: top-level *.py only (matching the sibling R-work-within-launch-dir / R-core-periphery scanners; cli/_path_setup.py computes a framework-internal bundled _tools path, not consumer data, and is out of the swept set anyway); no cross-statement data-flow (the climb and the consumer-data join must appear in one expression, the exact literal shape the claim names). project_paths.py (the single sanctioned R1-R6 resolver) is allowlisted. A non-vacuity negative control (test_scanner_catches_a_hardcoded_root_negative_control) proves the predicate flags four synthetic hardcoded-root guesses (parents[2]/'domains', parents[3]/'CLAUDE.md', .parent.parent/'tickets', parents[2]/'docs'/'gen') and passes four in-bounds shapes (shallow spec/ climb, deep climb joined to non-consumer _tools, consumer path from project_root_or_raise(), bare deep climb with no consumer join).",
+      "why": "Today spec/ and its own domains (domains/hotam-spec-self/, domains/hotam-dev/) share one repo, and the core assumes this coincidence: 13+ call sites compute the 'consumer root' as spec_root().parent (Path(__file__).resolve().parents[N]). This blocks using HotamSpec as tooling for a separate project (e.g. a domain 'prat' living in D:/ai_dev/prat/) -- the framework forces that domain to live inside D:/dev/HotamSpec/domains/prat/, inside the framework's own repo, instead of the consumer's project. This requirement makes the coincidence OPTIONAL: self-hosting remains a legitimate, fully-tested working case (R6 fallback, R-domain-self-hosting-flag unaffected), but every path that reads/writes CONSUMER content (domains/, tickets/, delegations/, CLAUDE.md, .claude/settings.json, runtime state) is derived from project_root(), resolved once per call through the documented priority chain, never guessed from __file__. This is philosophically continuous with R-work-within-launch-dir (the framework only ever acts within the directory it was invoked for, never reaches outside it) -- portability generalizes that same discipline to a project root that need not equal the framework's own install location. Full specification (priority chain rationale R1-R6, complete file inventory, 4-wave migration path W1-W4 with acceptance criteria AC1-AC10, package-data/entry-point layout): D:/ai_dev/prat/REQUIREMENTS-hotamspec-portable.md. Resolver verdict 2026-07-09: accept, land as SETTLED, begin wave W1. ENFORCEMENT (Etap V, #124, 2026-07-10) -- STRUCTURAL->ENFORCED via a narrow syntactic check, not theatre: tests/test_project_root_not_hardcoded.py AST-scans every committed framework .py (spec/tools/ + spec/src/hotam_spec/, top level) and fails RED if any file reaches the consumer's data by GUESSING the root from __file__ -- i.e. a Path(__file__).resolve().parents[N] climb (N>=2) or an equivalent .parent.parent... chain (depth>=2) joined in the SAME expression to a consumer-data segment (domains, tickets, delegations, CLAUDE.md, .claude, docs/gen). It is the JOIN of a __file__-climb to consumer data that constitutes the forbidden guess; a shallow framework-internal parents[1] (a tool locating spec/ to fix sys.path) and repo_paths' own framework-root climb (which serves framework-internal paths, never consumer data) are correctly NOT flagged. The live tree has ZERO offenders because the W1 migration already routed every consumer-root read through project_root_or_raise() (_ticket_store.py / _delegation_store.py / claude_md_diff_watch.py / repo_paths.py all delegate to the R1-R6 resolver); the enforcer nails that steady state so no future commit can silently reintroduce a hardcoded consumer-root climb. Honest scope, documented in the enforcer's docstring: top-level *.py only (matching the sibling R-work-within-launch-dir / R-core-periphery scanners; cli/_path_setup.py computes a framework-internal bundled _tools path, not consumer data, and is out of the swept set anyway); no cross-statement data-flow (the climb and the consumer-data join must appear in one expression, the exact literal shape the claim names). project_paths.py (the single sanctioned R1-R6 resolver) is allowlisted. A non-vacuity negative control (test_scanner_catches_a_hardcoded_root_negative_control) proves the predicate flags four synthetic hardcoded-root guesses (parents[2]/'domains', parents[3]/'CLAUDE.md', .parent.parent/'tickets', parents[2]/'docs'/'gen') and passes four in-bounds shapes (shallow spec/ climb, deep climb joined to non-consumer _tools, consumer path from project_root_or_raise(), bare deep climb with no consumer join).",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -6096,7 +6096,7 @@
       "claim": "The proposal protocol shall include a ProposedConflict kind (kind='Conflict') that materializes a new Conflict node in the active domain's graph via tools/apply_proposal.py.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Closes recorded spec-tool drift: C-186c4347's DECIDED rationale already promised 'ProposedConflict' while only transitions existed, leaving surfaced tensions without a mechanical creation path (the loop could move conflicts but never materialize one). The writer computes id via conflict_identity(axis, context), never caller-supplied (R-stable-conflict-identity); requires the axis to already exist in the graph's axes tuple (R-axis-controlled-vocab; admitting a new axis is a separate act); requires >= 2 distinct existing members (R-conflict-min-two-members); refuses a steward who owns any member (R-steward-distinct-from-owners); lifecycle always starts DETECTED. Extends R-active-loop-protocol's floor exactly as EntityType and OperatorBudget did.",
+      "why": "Closes recorded spec-tool drift: C-186c4347's DECIDED rationale already promised 'ProposedConflict' while only transitions existed, leaving surfaced tensions without a mechanical creation path (the loop could move conflicts but never materialize one). The writer computes id via conflict_identity(axis, context), never caller-supplied (R-stable-conflict-identity); requires the axis to already exist in the graph's axes tuple (R-axis-controlled-vocab; admitting a new axis is a separate act); requires >= 2 distinct existing members (R-conflict-min-two-members); refuses a resolver who owns any member (R-resolver-distinct-from-owners); lifecycle always starts DETECTED. Extends R-active-loop-protocol's floor exactly as EntityType and OperatorBudget did.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -6122,7 +6122,7 @@
       "claim": "The proposal protocol shall include a ProposedStakeholder kind (kind='Stakeholder') that materializes a new Stakeholder node in the active domain's stakeholders tuple via tools/apply_proposal.py, refusing a duplicate id.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_steward_not_a_member_owner requires a steward who is NOT the owner of any member Requirement, i.e. at least two distinct Stakeholders must exist before any tension can be held. Yet every Requirement, Axis and Assumption already had a Proposed* door while Stakeholder did not, trapping the newcomer between R-no-hand-edit-graph (the graph is writable only through apply_proposal) and the absence of a door. ProposedStakeholder(id, name, domain) is that missing door: a frozen dataclass in proposal.py with kind='Stakeholder', a _validate_stakeholder parser (id/name/domain all required), and an _apply_stakeholder_to_source writer that appends a Stakeholder(...) into the stakeholders = (...) tuple, ensuring the import, and refusing a duplicate id as a re-declaration. Models the exact ProposedAxis/ProposedAssumption pattern (append-to-tuple, exact-id-uniqueness); extends R-active-loop-protocol's floor exactly as EntityType, OperatorBudget, Axis and Assumption did.",
+      "why": "Wave 13 (the stranger's door). A newcomer who clones the repo for their own business domain is locked out at the first Conflict: check_resolver_not_a_member_owner requires a resolver who is NOT the owner of any member Requirement, i.e. at least two distinct Stakeholders must exist before any tension can be held. Yet every Requirement, Axis and Assumption already had a Proposed* door while Stakeholder did not, trapping the newcomer between R-no-hand-edit-graph (the graph is writable only through apply_proposal) and the absence of a door. ProposedStakeholder(id, name, domain) is that missing door: a frozen dataclass in proposal.py with kind='Stakeholder', a _validate_stakeholder parser (id/name/domain all required), and an _apply_stakeholder_to_source writer that appends a Stakeholder(...) into the stakeholders = (...) tuple, ensuring the import, and refusing a duplicate id as a re-declaration. Models the exact ProposedAxis/ProposedAssumption pattern (append-to-tuple, exact-id-uniqueness); extends R-active-loop-protocol's floor exactly as EntityType, OperatorBudget, Axis and Assumption did.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -6336,7 +6336,7 @@
       "claim": "A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: tuple of HistoryEntry), where each HistoryEntry is written by apply_proposal.py from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.py -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Steward accepted all four fields + in-file per-node history. history is DERIVED by the mechanical writer from the old->new field diff on each UPDATE, mirroring the append-only ticket History form (tools/_ticket_store.py) so the two change-trails do not diverge into incompatible styles. The check is deliberately SYNTACTIC ONLY (non-empty fields + monotonic stamps): measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). This atom (Etap O, #117) lands only the ontology + writer + syntactic enforcer; the created_at/settled_at backfill of ~270 existing nodes is a separate act (Etap P, #118).",
+      "why": "External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's change history IN the committed graph.py -- not only in git blame (which tracks source lines, not semantic field transitions) and not only in gitignored .runtime JSON (ephemeral, R-task-spawn-log-runtime). Resolver accepted all four fields + in-file per-node history. history is DERIVED by the mechanical writer from the old->new field diff on each UPDATE, mirroring the append-only ticket History form (tools/_ticket_store.py) so the two change-trails do not diverge into incompatible styles. The check is deliberately SYNTACTIC ONLY (non-empty fields + monotonic stamps): measuring the SUBSTANCE of a freshness record would repeat the form-metric theatre that sank R-boot-cite-measured (REJECTED). This atom (Etap O, #117) lands only the ontology + writer + syntactic enforcer; the created_at/settled_at backfill of ~270 existing nodes is a separate act (Etap P, #118).",
       "assumptions": [
         "A-python-stack",
         "A-most-knowledge-crystallizable"
@@ -6359,11 +6359,37 @@
       "decl_order": 271
     },
     {
+      "id": "R-resolver-distinct-from-owners",
+      "claim": "Every Conflict's resolver shall be a Stakeholder who is NOT the owner of any of the conflict's members.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "A tension lives BETWEEN stakeholders; if the resolver owned a side, the tension would be judged by an interested party and quietly resolved in their favor. The structural twin of R-ai-presents-not-decides.",
+      "assumptions": [
+        "A-stakeholders-care"
+      ],
+      "relations": [],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_resolver_not_a_member_owner"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-06-30",
+      "settled_at": "2026-06-30",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [],
+      "history": [],
+      "decl_order": 6
+    },
+    {
       "id": "R-revisit-markers-evaluated",
       "claim": "The what_now harness shall surface a CLI-only action for each DECIDED conflict whose revisit_marker has never been evaluated or was last evaluated more than the staleness delta of SETTLED atoms ago.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but nothing tracked whether anyone LOOKED at it again -- an unread trigger lets the decision silently ossify while its stated revisit condition may already have come true. tools/mark_revisit_evaluated.py appends a {stamp, conflict, settled_count} record to spec/.runtime/revisit-eval.jsonl when the steward evaluates a marker; the harness reads the last evaluation per conflict and re-surfaces the marker as 'evaluate revisit marker' when never evaluated or stale by more than GENERATIVE_AUDIT_STALE_DELTA SETTLED atoms. The band is CLI-only (never in diagnose(g)) for the same determinism reason as the pending-proposal and generative-audit bands: it reads the filesystem, which gen_spec must not render. Evaluating a marker is an OBSERVATION; re-opening the conflict is a separate ProposedConflict the steward drafts (R-ai-presents-not-decides).",
+      "why": "A DECIDED conflict's revisit_marker names the CONDITION under which the decision should be re-opened (the historian's anti-relitigation trigger), but nothing tracked whether anyone LOOKED at it again -- an unread trigger lets the decision silently ossify while its stated revisit condition may already have come true. tools/mark_revisit_evaluated.py appends a {stamp, conflict, settled_count} record to spec/.runtime/revisit-eval.jsonl when the resolver evaluates a marker; the harness reads the last evaluation per conflict and re-surfaces the marker as 'evaluate revisit marker' when never evaluated or stale by more than GENERATIVE_AUDIT_STALE_DELTA SETTLED atoms. The band is CLI-only (never in diagnose(g)) for the same determinism reason as the pending-proposal and generative-audit bands: it reads the filesystem, which gen_spec must not render. Evaluating a marker is an OBSERVATION; re-opening the conflict is a separate ProposedConflict the resolver drafts (R-ai-presents-not-decides).",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -6443,7 +6469,7 @@
       "claim": "Regular invariant families (homogeneous per-entity structural checks such as dangling-refs, typed-anchors, and lifecycle-membership) shall be CLASSIFIED as table-driven data (RULES_AS_DATA_TABLE) with a coherence invariant distinguishing them from irreducibly bespoke invariants (identity derivation, cross-entity bijections, docstring/body coherence, budget arithmetic) -- derivation of check_* function bodies from the table is deferred until it can coexist with R-method-matches-docstring's per-function inspectable-source requirement.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "M22, decided 2026-07-02 by steward verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classify every check_* by family; the check_* bodies themselves remain hand-written, NOT derived from the table. Empirically verified blocker to body-derivation: check_method_matches_docstring (R-method-matches-docstring) calls inspect.getsource(fn) on every check_* to enforce literal, inspectable Violation(...) messages -- functions produced by a table-driven factory are closures, and inspect.getsource raises OSError on them (no source file to point at). The alternative, exec()-based codegen from the table, would satisfy inspect.getsource mechanically but produce opaque, non-diffable bodies -- LESS convenient for an agent auditing behavior, which is the steward's own stated criterion. So classification-as-data landed; derivation-of-bodies is deliberately deferred, not abandoned, until a mechanism exists that keeps generated check_* functions individually inspectable. Wave 8 move 2 atomicity pass: audit_atomicity.py flagged the claim's semicolon COMPOUND -- inspection shows the clause after the semicolon is a scope/status disclaimer about what this ONE classification promise deliberately does NOT yet cover (body derivation), not a second independent obligation; the claim never promised body-derivation, it explicitly defers it. Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention so audit_atomicity's _CLAIM_SCOPE_CLAUSE exemption recognizes it -- wording/classifier-alignment fix, no semantic change, not a split.",
+      "why": "M22, decided 2026-07-02 by resolver verdict HYBRID (criterion: whatever is most convenient for the agents). Landed reality: RULES_AS_DATA_TABLE (31 TABLE_DRIVEN / 32 BESPOKE rows) plus check_rules_as_data_classification_coherent classify every check_* by family; the check_* bodies themselves remain hand-written, NOT derived from the table. Empirically verified blocker to body-derivation: check_method_matches_docstring (R-method-matches-docstring) calls inspect.getsource(fn) on every check_* to enforce literal, inspectable Violation(...) messages -- functions produced by a table-driven factory are closures, and inspect.getsource raises OSError on them (no source file to point at). The alternative, exec()-based codegen from the table, would satisfy inspect.getsource mechanically but produce opaque, non-diffable bodies -- LESS convenient for an agent auditing behavior, which is the resolver's own stated criterion. So classification-as-data landed; derivation-of-bodies is deliberately deferred, not abandoned, until a mechanism exists that keeps generated check_* functions individually inspectable. Wave 8 move 2 atomicity pass: audit_atomicity.py flagged the claim's semicolon COMPOUND -- inspection shows the clause after the semicolon is a scope/status disclaimer about what this ONE classification promise deliberately does NOT yet cover (body derivation), not a second independent obligation; the claim never promised body-derivation, it explicitly defers it. Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention so audit_atomicity's _CLAIM_SCOPE_CLAUSE exemption recognizes it -- wording/classifier-alignment fix, no semantic change, not a split.",
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
@@ -6469,7 +6495,7 @@
       "claim": "Test-run duration shall not silently degrade: a self-calibrating guard (baseline = mean of the first 5 local runs * 1.2, stored per-machine off-git) fails the suite when a run exceeds the baseline.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward's verbatim need (2026-07-05): real speed must be guarded by code-law; machines differ so no hardcoded constant — first 5 runs calibrate, +20% headroom, per-machine gitignored file. Closes the speed-vs-verification tension (C-ec1ec532 in hotam-dev) with a mediating rule: speed cannot silently regress.",
+      "why": "Resolver's verbatim need (2026-07-05): real speed must be guarded by code-law; machines differ so no hardcoded constant — first 5 runs calibrate, +20% headroom, per-machine gitignored file. Closes the speed-vs-verification tension (C-ec1ec532 in hotam-dev) with a mediating rule: speed cannot silently regress.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -6705,7 +6731,7 @@
     },
     {
       "id": "R-signoff-preserved-in-substrate",
-      "claim": "A steward signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate.",
+      "claim": "A resolver signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate.",
       "owner": "framework-author",
       "status": "SETTLED",
       "why": "K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph, so the signature evaporated into gitignored JSON -- R-trust-anchor-mechanism [E] was not auditable from the substrate. K2(b): HELD->DECIDED erased Variants (the non-chosen implies/costs -- anti-relitigation cargo -- were overwritten with an empty tuple); the chosen variant lived only as prose inside DECIDED(...). This atom lands the Signoff frozen payload (spec/src/hotam_spec/signoff.py): a payload dataclass (NOT a new node type, anti-RDF -- mirrors Variant's rationale) attached to Conflict.signoff and Assumption.signoff, carrying decided_by + date + verbatim + instrument + chosen_variant. The writer (apply_proposal) now builds the Signoff from proposal fields and attaches it; variants are preserved across HELD->DECIDED. instrument is an explicit seam for the future verifiable-signature wave (R-decided-by-verifiable-signature is OPEN -- this atom does NOT bind to git/crypto, only names the seam). check_signoff_chosen_variant_resolves enforces a non-empty chosen_variant is the id of one of the conflict's variants; check_decided_conflict_carries_signoff enforces consistency (signoff.decided_by == conflict.decided_by) when a signoff is present, SOFT (pre-existing decisions without signoff are legitimate, no migration forcing).",
@@ -6762,7 +6788,7 @@
       "claim": "Every spawn-log.jsonl entry written by tools/spawn_agent.py shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits --isolation/--mutating.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "Wave 5 (measurable slices of discipline): the spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-runtime) but not the isolation posture under which a sub-agent ran, so a parallel-mutating-agent hazard had no trace at all. spawn_agent.py's freeze under R-speculative-aspects-frozen was PARTIALLY lifted by explicit steward act (GO given for Wave 5) to add these two additive CLI flags (--isolation, --mutating) and log fields, backward-compatible with every pre-existing caller. This is the writer half; the honest reader half (R-parallel-mutating-agents-use-worktree) is a separate atom because it can only check log-internal consistency, not runtime concurrency.",
+      "why": "Wave 5 (measurable slices of discipline): the spawn-log already recorded WHO/WHAT/WHEN (R-task-spawn-log-runtime) but not the isolation posture under which a sub-agent ran, so a parallel-mutating-agent hazard had no trace at all. spawn_agent.py's freeze under R-speculative-aspects-frozen was PARTIALLY lifted by explicit resolver act (GO given for Wave 5) to add these two additive CLI flags (--isolation, --mutating) and log fields, backward-compatible with every pre-existing caller. This is the writer half; the honest reader half (R-parallel-mutating-agents-use-worktree) is a separate atom because it can only check log-internal consistency, not runtime concurrency.",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -6816,7 +6842,7 @@
       "claim": "The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by steward 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending steward decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) now makes an inward edit to any frozen file (src/hotam_spec/entity.py; tools/create_agent.py, spawn_agent.py, invoke_agent.py; tools/create_domain.py) fail RED, with the failure message stating explicitly that unfreezing requires a recorded steward act (regenerating the baseline). Prose discipline alone could not detect a silent violation; the hash guard can.",
+      "why": "Built ahead of demand -- 0 entity_types/entities, exactly 1 domain, 0 active sub-agents against 12+10+8 atoms of supporting machinery: classic speculative generality (96% of that surface inert). Frozen by resolver 2026-07-02 after audit. Code/tests/atoms are PRESERVED (in the spirit of R-rejected-preserved-not-deleted), relocated into docs/gen/FRAMEWORK-INVARIANTS.md under R-constitution-separates-plumbing. Unfreeze trigger: Phase 5 (a real business domain). Note: the natural home for this freeze is C-8600b1b8 (core-vs-aspect, ACKNOWLEDGED, revisit_marker already reads 'REVISIT when a second opt-in behavioral aspect (Entity or Task) is proposed'). This conflict is now addressable by ConflictTransition proposals -- R-conflict-addressing-resolves-variables (landed 2026-07-02) taught tools/apply_proposal.py's _find_conflict_call to resolve axis/context kwargs bound through simple string-variable assignments (not just literals), which is how all six Conflict nodes in this graph bind axis/context (c1_axis..c6_axis / c1_ctx..c6_ctx). The freeze itself remains open pending resolver decision on when to formally move C-8600b1b8 to DECIDED; do not confuse 'now addressable' with 'already resolved.' Wave 1 mechanical-honesty pass (2026-07-02): promoted STRUCTURAL to ENFORCED -- a sha256 hash-baseline test (tests/frozen_aspects_baseline.json + test_frozen_aspects_snapshot.py) now makes an inward edit to any frozen file (src/hotam_spec/entity.py; tools/create_agent.py, spawn_agent.py, invoke_agent.py; tools/create_domain.py) fail RED, with the failure message stating explicitly that unfreezing requires a recorded resolver act (regenerating the baseline). Prose discipline alone could not detect a silent violation; the hash guard can.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -7068,32 +7094,6 @@
       "decl_order": 137
     },
     {
-      "id": "R-steward-distinct-from-owners",
-      "claim": "Every Conflict's steward shall be a Stakeholder who is NOT the owner of any of the conflict's members.",
-      "owner": "framework-author",
-      "status": "SETTLED",
-      "why": "A tension lives BETWEEN stakeholders; if the steward owned a side, the tension would be judged by an interested party and quietly resolved in their favor. The structural twin of R-ai-presents-not-decides.",
-      "assumptions": [
-        "A-stakeholders-care"
-      ],
-      "relations": [],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "check_steward_not_a_member_owner"
-      ],
-      "m_tag": "",
-      "enforceability": "ENFORCEABLE",
-      "summary": "",
-      "created_at": "2026-06-30",
-      "settled_at": "2026-06-30",
-      "last_reviewed_at": "",
-      "review_after": "",
-      "evidence": [],
-      "source_refs": [],
-      "history": [],
-      "decl_order": 6
-    },
-    {
       "id": "R-sub-agent-crystal-triad",
       "claim": "Every sub-agent's CLAUDE.md shall contain three parts: scope-filtered embedded methodology thinking, a reference to its parent/senior agent, and its own scope-filtered domain business (CONSTITUTION).",
       "owner": "framework-author",
@@ -7258,10 +7258,10 @@
     },
     {
       "id": "R-tension-audit-presents-only",
-      "claim": "tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/steward review, never a decided conflict.",
+      "claim": "tools/audit_tensions.py shall never mutate any domain graph.py: its only outputs are a printed shortlist and an append-only run stamp, and every surfaced pair is a SUSPECT for AI/resolver review, never a decided conflict.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The generative-audit tool performs the CONFRONT-adjacent first act of sight, but sight is not decision (R-ai-presents-not-decides). If the sweep could write a Conflict node it would be deciding a tension exists rather than presenting a candidate; the steward must draft any ProposedConflict from a row. Keeping the tool read-only over the graph preserves the present-never-decide boundary at the generation organ.",
+      "why": "The generative-audit tool performs the CONFRONT-adjacent first act of sight, but sight is not decision (R-ai-presents-not-decides). If the sweep could write a Conflict node it would be deciding a tension exists rather than presenting a candidate; the resolver must draft any ProposedConflict from a row. Keeping the tool read-only over the graph preserves the present-never-decide boundary at the generation organ.",
       "assumptions": [],
       "relations": [
         {
@@ -7377,7 +7377,7 @@
       "claim": "Every ticket shall carry an append-only ## History section in which each mutation (create, status move, comment, text change) records one machine-recognisable entry, with a text change snapshotting the prior text.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The steward asked that status history AND text-change history be kept automatically. Every ticket_* mutator appends exactly one History line; ticket_edit snapshots the OLD title/body into that line so the edit trail survives the edit. Enforced by the mutation tests asserting each action appends its History entry (tests/test_tool_ticket_create.py, tests/test_tool_ticket_move.py, tests/test_tool_ticket_comment.py, tests/test_tool_ticket_edit.py).",
+      "why": "The resolver asked that status history AND text-change history be kept automatically. Every ticket_* mutator appends exactly one History line; ticket_edit snapshots the OLD title/body into that line so the edit trail survives the edit. Enforced by the mutation tests asserting each action appends its History entry (tests/test_tool_ticket_create.py, tests/test_tool_ticket_move.py, tests/test_tool_ticket_comment.py, tests/test_tool_ticket_edit.py).",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -7406,7 +7406,7 @@
       "claim": "Work items shall be tracked as durable on-disk tickets under tickets/<status>/T-<n>.md, each a JSON-frontmatter header plus a Markdown body, created and moved between status folders by the ticket_* tools.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The steward's queue lived in chat and evaporated between sessions. A ticket is a committed file whose status is its folder, so a status change is a visible file move with a git footprint. JSON-between-sentinels frontmatter keeps the machine header exact under a stdlib-only parser (R-core-imports-stdlib-or-hotam-spec-only) instead of a hand-rolled YAML subset. Enforced by the engine tests exercising create + move (tests/test_tool_ticket_create.py, tests/test_tool_ticket_move.py).",
+      "why": "The resolver's queue lived in chat and evaporated between sessions. A ticket is a committed file whose status is its folder, so a status change is a visible file move with a git footprint. JSON-between-sentinels frontmatter keeps the machine header exact under a stdlib-only parser (R-core-imports-stdlib-or-hotam-spec-only) instead of a hand-rolled YAML subset. Enforced by the engine tests exercising create + move (tests/test_tool_ticket_create.py, tests/test_tool_ticket_move.py).",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -7433,7 +7433,7 @@
       "claim": "A ticket's frontmatter header and History shall be changed only through the ticket_* tools, never by hand-editing the file.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "The encapsulation the steward demanded: creation, status movement and auto-history must be owned by the tools so the History trail is never skipped. This is INHERENTLY_PROSE discipline, not closeable debt: a filesystem can always be hand-edited and no test can prove authorship of a line. Its enforceable teeth live in R-ticket-carries-history (each mutation demonstrably appends History); this atom names the discipline that keeps hands off the header.",
+      "why": "The encapsulation the resolver demanded: creation, status movement and auto-history must be owned by the tools so the History trail is never skipped. This is INHERENTLY_PROSE discipline, not closeable debt: a filesystem can always be hand-edited and no test can prove authorship of a line. Its enforceable teeth live in R-ticket-carries-history (each mutation demonstrably appends History); this atom names the discipline that keeps hands off the header.",
       "assumptions": [
         "A-text-grounded-in-models"
       ],
@@ -7454,10 +7454,10 @@
     },
     {
       "id": "R-tiered-gate-not-a-commit-gate",
-      "claim": "The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier applies only to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a steward or wave-closing agent performs before committing.",
+      "claim": "The full pytest suite (T2) shall remain the mandatory verification gate at wave and commit boundaries -- the T1 targeted-enforcer tier applies only to the per-proposal LAND step inside apply_proposal.py and is never substituted for the full-suite run a resolver or wave-closing agent performs before committing.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Tiering exists to relieve the redundant per-proposal tax, not to weaken the wave/commit-boundary guarantee that the WHOLE graph is still structurally sound after a batch of changes -- a targeted T1 pass on proposal N does not prove proposal N did not regress something proposal N-3 touched. This is inherently a discipline/procedural claim about WHEN each tier is invoked (spec/CLAUDE.md's Mediation loop step 6 LAND, vs. a separate steward-run `uv run pytest -q` at commit time) rather than a graph-checkable structural property, so it is marked STRUCTURAL rather than claiming a machine enforcer that cannot honestly exist for a human-invoked boundary. Requalified INHERENTLY_PROSE 2026-07-02 (honesty wave): the claim's own why already argues no machine check_* can honestly enforce a human-invoked commit-time boundary, yet enforceability defaulted to ENFORCEABLE, so it counted as closeable debt in UNENFORCED.md/reflect_unenforced_settled -- a self-contradiction between the claim's stated nature and its declared kind (R-enforceability-kind-declared). Wave 8 move 2 atomicity pass: the claim's own semicolon was flagged COMPOUND by audit_atomicity.py -- inspection shows the clause after the semicolon is NOT a second independent obligation, it is a scope/boundary clause of the SAME rule (defining exactly how far the T1 tier is allowed to reach, i.e. never further than LAND, never a substitute for T2). Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention (see R-commit-boundary-checkable) and extended audit_atomicity._audit_claim with a _CLAIM_SCOPE_CLAUSE exemption mirroring the invariant side's existing 'N sub-rules' self-declaration exemption -- same false-positive class, same fix shape. No semantic change to the promise; this is a wording/classifier-alignment fix, not a split (R-requirement-claim-is-atomic governs live obligations, and this claim always asserted exactly one).",
+      "why": "Tiering exists to relieve the redundant per-proposal tax, not to weaken the wave/commit-boundary guarantee that the WHOLE graph is still structurally sound after a batch of changes -- a targeted T1 pass on proposal N does not prove proposal N did not regress something proposal N-3 touched. This is inherently a discipline/procedural claim about WHEN each tier is invoked (spec/CLAUDE.md's Mediation loop step 6 LAND, vs. a separate resolver-run `uv run pytest -q` at commit time) rather than a graph-checkable structural property, so it is marked STRUCTURAL rather than claiming a machine enforcer that cannot honestly exist for a human-invoked boundary. Requalified INHERENTLY_PROSE 2026-07-02 (honesty wave): the claim's own why already argues no machine check_* can honestly enforce a human-invoked commit-time boundary, yet enforceability defaulted to ENFORCEABLE, so it counted as closeable debt in UNENFORCED.md/reflect_unenforced_settled -- a self-contradiction between the claim's stated nature and its declared kind (R-enforceability-kind-declared). Wave 8 move 2 atomicity pass: the claim's own semicolon was flagged COMPOUND by audit_atomicity.py -- inspection shows the clause after the semicolon is NOT a second independent obligation, it is a scope/boundary clause of the SAME rule (defining exactly how far the T1 tier is allowed to reach, i.e. never further than LAND, never a substitute for T2). Reworded the semicolon to the codebase's existing '--' scope-disclaimer convention (see R-commit-boundary-checkable) and extended audit_atomicity._audit_claim with a _CLAIM_SCOPE_CLAUSE exemption mirroring the invariant side's existing 'N sub-rules' self-declaration exemption -- same false-positive class, same fix shape. No semantic change to the promise; this is a wording/classifier-alignment fix, not a split (R-requirement-claim-is-atomic governs live obligations, and this claim always asserted exactly one).",
       "assumptions": [
         "A-python-stack"
       ],
@@ -7563,10 +7563,10 @@
     },
     {
       "id": "R-trust-anchor-delegation-explicit-only",
-      "claim": "Delegation of the steward's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default, recorded durably as a versioned file under delegations/DG-<n>.md (created and closed only via spec/tools/delegate.py, git history as the audit trail).",
+      "claim": "Delegation of the resolver's personal-signature duty to an agent shall be valid ONLY when granted EXPLICITLY -- per-case or for a declared campaign in advance -- never implied or standing by default, recorded durably as a versioned file under delegations/DG-<n>.md (created and closed only via spec/tools/delegate.py, git history as the audit trail).",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the EXCEPTION half: delegation is not the default and is not implicit from e.g. an agent being given repo write access -- it requires an explicit steward grant, scoped either to one case or to a named campaign declared in advance. RETIRED MECHANISM (steward triage decision B1, 2026-07-09, verbatim: «снести старую jsonl-систему делегаций полностью»): the original mechanism -- domains/hotam-spec-self/delegations.jsonl, a durable committed append-only JSONL ledger of {id, steward, verbatim, date, scope} records written by spec/tools/record_delegation.py, cross-checked against Conflict.lifecycle markers by spec/tests/test_delegation_marker_honesty.py -- has been torn down completely: the tool, its CLI wrapper, its tests, the marker-honesty cross-check, and the ledger file itself are all removed. The seed record DEL-1 (steward domain-user, date 2026-07-02, scope 'campaign: session pipeline decisions (C-be22cdd1 HELD + DECIDED)') that anchored the core-vs-aspect Conflict's DECIDED transition is preserved verbatim, not lost, in docs/development/DELEGATIONS-HISTORY.md and in the Conflict's own Signoff.instrument=\"DEL-1\" field (R-signoff-preserved-in-substrate) and lifecycle marker text -- both left as inert historical record, no longer mechanically cross-checked against a live ledger. CURRENT MECHANISM: this claim is now upheld by the SAME file-based mechanism R-delegation-is-a-file already established for every task hand-off -- a delegation (whether an operational task hand-off or a personal-signature campaign grant) is a versioned delegations/DG-<n>.md file, created and closed only via spec/tools/delegate.py, with git history as the audit trail; no dedicated ledger format or writer tool is needed for the signature-delegation case specifically. ENFORCED by the same tests that cover the file mechanism: spec/tests/test_tool_delegate.py (create allocates id + writes file; close sets done + records result) -- shared enforcers across R-delegation-is-a-file and this atom are acceptable per check_bijection_r_to_enforcer's documented SHARED-enforcer allowance.",
+      "why": "M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Resolver verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the EXCEPTION half: delegation is not the default and is not implicit from e.g. an agent being given repo write access -- it requires an explicit resolver grant, scoped either to one case or to a named campaign declared in advance. RETIRED MECHANISM (resolver triage decision B1, 2026-07-09, verbatim: «снести старую jsonl-систему делегаций полностью»): the original mechanism -- domains/hotam-spec-self/delegations.jsonl, a durable committed append-only JSONL ledger of {id, resolver, verbatim, date, scope} records written by spec/tools/record_delegation.py, cross-checked against Conflict.lifecycle markers by spec/tests/test_delegation_marker_honesty.py -- has been torn down completely: the tool, its CLI wrapper, its tests, the marker-honesty cross-check, and the ledger file itself are all removed. The seed record DEL-1 (resolver domain-user, date 2026-07-02, scope 'campaign: session pipeline decisions (C-be22cdd1 HELD + DECIDED)') that anchored the core-vs-aspect Conflict's DECIDED transition is preserved verbatim, not lost, in docs/development/DELEGATIONS-HISTORY.md and in the Conflict's own Signoff.instrument=\"DEL-1\" field (R-signoff-preserved-in-substrate) and lifecycle marker text -- both left as inert historical record, no longer mechanically cross-checked against a live ledger. CURRENT MECHANISM: this claim is now upheld by the SAME file-based mechanism R-delegation-is-a-file already established for every task hand-off -- a delegation (whether an operational task hand-off or a personal-signature campaign grant) is a versioned delegations/DG-<n>.md file, created and closed only via spec/tools/delegate.py, with git history as the audit trail; no dedicated ledger format or writer tool is needed for the signature-delegation case specifically. ENFORCED by the same tests that cover the file mechanism: spec/tests/test_tool_delegate.py (create allocates id + writes file; close sets done + records result) -- shared enforcers across R-delegation-is-a-file and this atom are acceptable per check_bijection_r_to_enforcer's documented SHARED-enforcer allowance.",
       "assumptions": [
         "A-stakeholders-care",
         "A-bootstrap-self-applies"
@@ -7596,10 +7596,10 @@
     },
     {
       "id": "R-trust-anchor-mechanism",
-      "claim": "Every decision shall be personally signed by the human steward -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship.",
+      "claim": "Every decision shall be personally signed by the human resolver -- today: a decided_by: Stakeholder.id field on the DECIDED Conflict plus git commit authorship.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Steward verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the DEFAULT (personal signature) half: R-decided-needs-human-signoff's decided_by field plus git commit authorship (the repo's own author trail) already implement the mechanism the OPEN question asked about (PGP/SSH/web-of-trust cadence) -- the steward's answer is that the existing decided_by + commit-author pairing IS the anchor; no additional cryptographic layer is required today. Cadence is 'per decision' (every DECIDED Conflict), not periodic -- the steward signs each contradiction resolution as it happens, which is stronger than 'quarterly/per-PR' polling. CORRECTION: enforced_by originally cited check_decided_has_decided_by, a thin non-registered delegator wrapping atomic sub-checks (see hotam_spec/invariants.py ~line 3415); the bijection check requires a real ALL_INVARIANTS member, so enforced_by is corrected to the two atomic checks that actually guard decided_by presence and validity.",
+      "why": "M5, REPLACES split into R-trust-anchor-mechanism + R-trust-anchor-delegation-explicit-only per atomicity discipline (R-requirement-claim-is-atomic). Resolver verdict 2026-07-02 (verbatim): «человек обязан сам подписать, если только явно не делегирует это в каждом случае или на кампанию вперед» (English: 'the human is obliged to sign personally, unless he explicitly delegates it, either per-case or for a campaign in advance'). This atom lands the DEFAULT (personal signature) half: R-decided-needs-human-signoff's decided_by field plus git commit authorship (the repo's own author trail) already implement the mechanism the OPEN question asked about (PGP/SSH/web-of-trust cadence) -- the resolver's answer is that the existing decided_by + commit-author pairing IS the anchor; no additional cryptographic layer is required today. Cadence is 'per decision' (every DECIDED Conflict), not periodic -- the resolver signs each contradiction resolution as it happens, which is stronger than 'quarterly/per-PR' polling. CORRECTION: enforced_by originally cited check_decided_has_decided_by, a thin non-registered delegator wrapping atomic sub-checks (see hotam_spec/invariants.py ~line 3415); the bijection check requires a real ALL_INVARIANTS member, so enforced_by is corrected to the two atomic checks that actually guard decided_by presence and validity.",
       "assumptions": [
         "A-stakeholders-care",
         "A-bootstrap-self-applies"
@@ -7648,10 +7648,10 @@
     },
     {
       "id": "R-uncertain-assumptions-surface",
-      "claim": "The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the steward to resolve the doubt.",
+      "claim": "The what_now harness shall surface every UNCERTAIN assumption carrying at least UNCERTAIN_AGING_MIN_DEPENDENTS dependent requirements as one P4 OPEN_ITEM action asking the resolver to resolve the doubt.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Blind spot found in the fxx assumption-life audit (2026-07-03): DEAD lights up P2 DRIFT_FALLOUT and HOLDS is calm, but an UNCERTAIN assumption aged invisibly — nowhere in the harness — even though the three real UNCERTAIN assumptions carry 58 / 37 / 9 dependent requirements (A-bootstrap-self-applies is the single largest silent question in the graph). uncertain_assumptions(g) is a pure status filter (peer of dead_assumptions); the K=UNCERTAIN_AGING_MIN_DEPENDENTS=5 threshold (chosen against the real graph so all three high-fan-out questions clear it and low-fan-out doubt stays quiet) gates one P4 action per aged assumption, pointing the steward at the AssumptionTransition kill-path (DEAD) or re-affirmation (HOLDS). Graph-only and deterministic, so it lives in what_now.diagnose(g) exactly like the P2 DEAD-fallout band, not as a CLI-only filesystem band.",
+      "why": "Blind spot found in the fxx assumption-life audit (2026-07-03): DEAD lights up P2 DRIFT_FALLOUT and HOLDS is calm, but an UNCERTAIN assumption aged invisibly — nowhere in the harness — even though the three real UNCERTAIN assumptions carry 58 / 37 / 9 dependent requirements (A-bootstrap-self-applies is the single largest silent question in the graph). uncertain_assumptions(g) is a pure status filter (peer of dead_assumptions); the K=UNCERTAIN_AGING_MIN_DEPENDENTS=5 threshold (chosen against the real graph so all three high-fan-out questions clear it and low-fan-out doubt stays quiet) gates one P4 action per aged assumption, pointing the resolver at the AssumptionTransition kill-path (DEAD) or re-affirmation (HOLDS). Graph-only and deterministic, so it lives in what_now.diagnose(g) exactly like the P2 DEAD-fallout band, not as a CLI-only filesystem band.",
       "assumptions": [],
       "relations": [
         {
@@ -7681,10 +7681,10 @@
     },
     {
       "id": "R-uncrystallizable-automated",
-      "claim": "Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the steward decides whether to add the ontology type.",
+      "claim": "Detection of 'uncrystallizable knowledge = missing type' is human judgment: the operator records the candidate in the graph as an OPEN requirement (or a DRAFT), and the resolver decides whether to add the ontology type.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "M30. DECIDED 2026-06-30: human judgment, not automated. Rationale: R-uncrystallizable-is-missing-type (SETTLED P6) already establishes that the operator records the signal as a node; the §Conscience property-sweep (test_conscience.py) surfaces the meta-signal structurally when a class of contradictions cannot be expressed by existing critical-core invariants. Automating the type-creation decision would violate R-ai-presents-not-decides. The whole audit-backlog-residue checkpoint pattern + the DRAFT queue IS the recording mechanism. The steward is the decider; the graph is the recorder. Evidence: R-uncrystallizable-is-missing-type SETTLED STRUCTURAL; test_conscience.py; R-ai-presents-not-decides SETTLED.",
+      "why": "M30. DECIDED 2026-06-30: human judgment, not automated. Rationale: R-uncrystallizable-is-missing-type (SETTLED P6) already establishes that the operator records the signal as a node; the §Conscience property-sweep (test_conscience.py) surfaces the meta-signal structurally when a class of contradictions cannot be expressed by existing critical-core invariants. Automating the type-creation decision would violate R-ai-presents-not-decides. The whole audit-backlog-residue checkpoint pattern + the DRAFT queue IS the recording mechanism. The resolver is the decider; the graph is the recorder. Evidence: R-uncrystallizable-is-missing-type SETTLED STRUCTURAL; test_conscience.py; R-ai-presents-not-decides SETTLED.",
       "assumptions": [
         "A-most-knowledge-crystallizable"
       ],
@@ -7708,10 +7708,10 @@
     },
     {
       "id": "R-uncrystallizable-is-missing-type",
-      "claim": "Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for steward review (not auto-acted).",
+      "claim": "Knowledge an operator cannot crystallize as any existing node shall be RECORDED as a candidate missing ontology type for resolver review (not auto-acted).",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "SETTLED (P6): the meta-signal surface exists — when the §Conscience Hypothesis property-sweep finds a class of contradictions that no existing critical-core invariant can express, the property-test failure IS the recording mechanism (a clear, machine-visible meta-signal that a new type is needed). The steward still decides whether to add the type; the recording itself is now structural, not manual.",
+      "why": "SETTLED (P6): the meta-signal surface exists — when the §Conscience Hypothesis property-sweep finds a class of contradictions that no existing critical-core invariant can express, the property-test failure IS the recording mechanism (a clear, machine-visible meta-signal that a new type is needed). The resolver still decides whether to add the type; the recording itself is now structural, not manual.",
       "assumptions": [
         "A-most-knowledge-crystallizable"
       ],
@@ -7738,7 +7738,7 @@
       "claim": "While the context cipher is UNMEASURED, the generated LIVE-STATE shall honestly explain that measuring working-context requires host cooperation the framework will not touch, naming no command-to-call.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "REPLACES R-unmeasured-cipher-names-user-action (steward verdict 2026-07-05). Measuring working-context would require the sovereign host's statusline / global ~/.claude to deliver ctx_pct — cooperation the framework will not reach for (R-work-within-launch-dir). The prior atom demanded the UNMEASURED line name the exact command to run; the only such command (setup_context_hook.py --patch-global --apply) patched the host and is now removed. Naming a nonexistent in-bounds command would be dishonest, so the cipher instead states the host boundary plainly: tools/context.py render_line() embeds the honest explanation, and gen_spec's LIVE-STATE + emit_cipher surface it verbatim. The cipher measures only if the local stdin payload honestly carries ctx_pct (R-work-within-launch-dir).",
+      "why": "REPLACES R-unmeasured-cipher-names-user-action (resolver verdict 2026-07-05). Measuring working-context would require the sovereign host's statusline / global ~/.claude to deliver ctx_pct — cooperation the framework will not reach for (R-work-within-launch-dir). The prior atom demanded the UNMEASURED line name the exact command to run; the only such command (setup_context_hook.py --patch-global --apply) patched the host and is now removed. Naming a nonexistent in-bounds command would be dishonest, so the cipher instead states the host boundary plainly: tools/context.py render_line() embeds the honest explanation, and gen_spec's LIVE-STATE + emit_cipher surface it verbatim. The cipher measures only if the local stdin payload honestly carries ctx_pct (R-work-within-launch-dir).",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -7765,7 +7765,7 @@
       "claim": "While the context cipher is UNMEASURED, the generated LIVE-STATE shall name the exact user-run command that activates measurement.",
       "owner": "ai-agent",
       "status": "REJECTED",
-      "why": "REJECTED — REPLACES by R-unmeasured-cipher-names-host-boundary. The claim required the UNMEASURED cipher to name the EXACT user-run command that activates measurement — but the only such command was setup_context_hook.py --patch-global --apply, which patched the sovereign host and is now forbidden (R-work-within-launch-dir, steward verdict 2026-07-05). There is no in-bounds command that activates measurement, so naming one would be dishonest. The replacement claims the honest form: while UNMEASURED, the cipher explains WHY there is no number (host cooperation the framework will not touch), naming no command-to-call. — (was: R-ai-presents-not-decides means the operator cannot self-install a hook that touches the user's GLOBAL ~/.claude config -- that is a steward decision (spec/tools/setup_context_hook.py --patch-global --apply). Leaving the UNMEASURED cipher as a bare status word made the gap invisible: the operator knew context was unmeasured but never told the user what to run to fix it, so the gap persisted turn after turn with no forcing function. tools/context.py's render_line() now embeds the exact command in the UNMEASURED line itself, and gen_spec's LIVE-STATE + emit_cipher's pulse both surface it verbatim (R-boot-cite-in-first-sentence then forces the operator to cite it every turn until the user runs the command and the cipher measures for real).)",
+      "why": "REJECTED — REPLACES by R-unmeasured-cipher-names-host-boundary. The claim required the UNMEASURED cipher to name the EXACT user-run command that activates measurement — but the only such command was setup_context_hook.py --patch-global --apply, which patched the sovereign host and is now forbidden (R-work-within-launch-dir, resolver verdict 2026-07-05). There is no in-bounds command that activates measurement, so naming one would be dishonest. The replacement claims the honest form: while UNMEASURED, the cipher explains WHY there is no number (host cooperation the framework will not touch), naming no command-to-call. — (was: R-ai-presents-not-decides means the operator cannot self-install a hook that touches the user's GLOBAL ~/.claude config -- that is a resolver decision (spec/tools/setup_context_hook.py --patch-global --apply). Leaving the UNMEASURED cipher as a bare status word made the gap invisible: the operator knew context was unmeasured but never told the user what to run to fix it, so the gap persisted turn after turn with no forcing function. tools/context.py's render_line() now embeds the exact command in the UNMEASURED line itself, and gen_spec's LIVE-STATE + emit_cipher's pulse both surface it verbatim (R-boot-cite-in-first-sentence then forces the operator to cite it every turn until the user runs the command and the cipher measures for real).)",
       "assumptions": [
         "A-finite-context-operators"
       ],
@@ -7792,7 +7792,7 @@
       "claim": "Classifying a Conflict as unresolvable-by-amending-its-members shall be a human judgment, never an automated AI inference.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "Answers the second open design question in R-unresolvable-conflict-carries-variants ('when is a conflict classified unresolvable-by-members?'): there is no proposed heuristic or detector for this -- it is the steward's call, made structural exactly the way R-uncrystallizable-automated makes 'missing type' detection a recorded human judgment rather than an algorithm. The AI's role is limited to PRESENTING elaborated variants once the steward has already decided the tension will not yield to amending R-a or R-b (R-ai-presents-not-decides); the ConflictTransition to HELD requires decided_by (check_held_has_decided_by) precisely so this classification act itself is never silent or AI-authored.",
+      "why": "Answers the second open design question in R-unresolvable-conflict-carries-variants ('when is a conflict classified unresolvable-by-members?'): there is no proposed heuristic or detector for this -- it is the resolver's call, made structural exactly the way R-uncrystallizable-automated makes 'missing type' detection a recorded human judgment rather than an algorithm. The AI's role is limited to PRESENTING elaborated variants once the resolver has already decided the tension will not yield to amending R-a or R-b (R-ai-presents-not-decides); the ConflictTransition to HELD requires decided_by (check_held_has_decided_by) precisely so this classification act itself is never silent or AI-authored.",
       "assumptions": [
         "A-stakeholders-care"
       ],
@@ -7813,10 +7813,10 @@
     },
     {
       "id": "R-unresolvable-conflict-carries-variants",
-      "claim": "A Conflict unresolvable by amending its member requirements shall carry at least two elaborated behavior variants; the operator presents the variants, the steward chooses.",
+      "claim": "A Conflict unresolvable by amending its member requirements shall carry at least two elaborated behavior variants; the operator presents the variants, the resolver chooses.",
       "owner": "framework-reviewer",
       "status": "REJECTED",
-      "why": "REJECTED -- REPLACES split+answered by R-conflict-held-state + R-held-carries-variants + R-variant-choice-is-decision + R-unresolvable-classified-by-human (Wave 3, decided by framework-reviewer 2026-07-02). Both OPEN design questions are now answered: (1) attachment shape -- Variant is a payload field on Conflict.variants (frozen dataclass, anti-RDF, NOT a new graph node), landed via R-held-carries-variants; (2) when a conflict is classified unresolvable-by-members -- this is a human judgment recorded via the HELD lifecycle's decided_by signoff lock (check_held_has_decided_by family), never an AI inference, landed via R-unresolvable-classified-by-human. The original claim's three concerns (variants attach to Conflict; operator presents; steward chooses) are now separately atomized: R-held-carries-variants (the payload shape), R-conflict-held-state (the lifecycle state that carries it), and R-variant-choice-is-decision (the steward's choice moving HELD to DECIDED). REJECTED rather than promoted to SETTLED because the original claim's own OPEN(question) is a compound design-question node whose answer is now four separate, atomic, honestly-graded requirements -- keeping the original as a live SETTLED atom would duplicate their claims (R-requirement-claim-is-atomic). — (was: Steward-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test).)",
+      "why": "REJECTED -- REPLACES split+answered by R-conflict-held-state + R-held-carries-variants + R-variant-choice-is-decision + R-unresolvable-classified-by-human (Wave 3, decided by framework-reviewer 2026-07-02). Both OPEN design questions are now answered: (1) attachment shape -- Variant is a payload field on Conflict.variants (frozen dataclass, anti-RDF, NOT a new graph node), landed via R-held-carries-variants; (2) when a conflict is classified unresolvable-by-members -- this is a human judgment recorded via the HELD lifecycle's decided_by signoff lock (check_held_has_decided_by family), never an AI inference, landed via R-unresolvable-classified-by-human. The original claim's three concerns (variants attach to Conflict; operator presents; resolver chooses) are now separately atomized: R-held-carries-variants (the payload shape), R-conflict-held-state (the lifecycle state that carries it), and R-variant-choice-is-decision (the resolver's choice moving HELD to DECIDED). REJECTED rather than promoted to SETTLED because the original claim's own OPEN(question) is a compound design-question node whose answer is now four separate, atomic, honestly-graded requirements -- keeping the original as a live SETTLED atom would duplicate their claims (R-requirement-claim-is-atomic). — (was: Resolver-approved draft, his idea verbatim 2026-07-02: «ось превращается в сущность, если невозможно разрешить противоречие через изменения в конфликтующих сторонах. Возможно нужно порождать варианты поведения -- т.е не один вариант, а два у каждой сущности. Т.к главное чтобы модель смогла это увидеть, а решать уже с пользователем» (English: 'the axis turns into an entity if the contradiction cannot be resolved through changes in the conflicting parties. Perhaps it is necessary to generate behavior variants -- i.e. not one variant, but two for each entity. Because the main thing is that the model be able to SEE this, and the deciding is then done with the user'). Design not yet done -- recorded as the candidate-missing-capability per R-uncrystallizable-is-missing-type: no code, no new type until the design questions in the OPEN status are answered (attachment shape on Conflict; the unresolvable-by-members classification test).)",
       "assumptions": [],
       "relations": [],
       "enforcement": "PROSE",
@@ -7838,7 +7838,7 @@
       "claim": "The operator shall, immediately on receiving a user request, decompose it into tickets in the dialogue and ask the addressee -- session tasks or the ticket engine -- before beginning any work.",
       "owner": "ai-agent",
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-03 (verbatim): 'всё, что просит пользователь - сразу декомпоизровать на тикеты в чате и справшить куда их оптравить - в таски сессии или в движок тикетов'. Decomposition-before-work is a behavioral discipline of the operator: it makes the unit of work explicit and routable BEFORE effort is spent, so a multi-part request is never silently collapsed into one undifferentiated action (R-anchor-everything at the work-item altitude; R-ai-presents-not-decides -- the routing choice is the steward's, presented not assumed). It is machine-unverifiable (INHERENTLY_PROSE): whether the operator actually paused to decompose and ask lives in the dialogue, not the graph.",
+      "why": "Resolver verdict 2026-07-03 (verbatim): 'всё, что просит пользователь - сразу декомпоизровать на тикеты в чате и справшить куда их оптравить - в таски сессии или в движок тикетов'. Decomposition-before-work is a behavioral discipline of the operator: it makes the unit of work explicit and routable BEFORE effort is spent, so a multi-part request is never silently collapsed into one undifferentiated action (R-anchor-everything at the work-item altitude; R-ai-presents-not-decides -- the routing choice is the resolver's, presented not assumed). It is machine-unverifiable (INHERENTLY_PROSE): whether the operator actually paused to decompose and ask lives in the dialogue, not the graph.",
       "assumptions": [],
       "relations": [],
       "enforcement": "STRUCTURAL",
@@ -7857,10 +7857,10 @@
     },
     {
       "id": "R-variant-choice-is-decision",
-      "claim": "A derived Requirement shall be spawned from a HELD Conflict only after the steward's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED.",
+      "claim": "A derived Requirement shall be spawned from a HELD Conflict only after the resolver's ConflictTransition names the chosen Variant, moving the conflict from HELD to DECIDED.",
       "owner": "framework-reviewer",
       "status": "SETTLED",
-      "why": "The HELD to DECIDED transition (steward-choose-variant, guard: 'rationale names the chosen variant') is where R-decided-needs-human-signoff and R-ai-presents-not-decides meet the variant machinery: the AI presents N elaborated variants, but ONLY the steward's DECIDED rationale selects which one becomes real (a derived= requirement). This is honestly STRUCTURAL, not fully mechanically checkable -- no check_* can verify the DECIDED rationale prose actually names one of the HELD conflict's variant ids (that is a semantic match, not a structural one); check_decided_has_rationale_or_derived enforces only that SOME rationale or derived requirement exists, the narrower claim that it names the chosen variant is carried by prose discipline and steward review, same honesty pattern as R-task-spawn-is-a-hand.",
+      "why": "The HELD to DECIDED transition (resolver-choose-variant, guard: 'rationale names the chosen variant') is where R-decided-needs-human-signoff and R-ai-presents-not-decides meet the variant machinery: the AI presents N elaborated variants, but ONLY the resolver's DECIDED rationale selects which one becomes real (a derived= requirement). This is honestly STRUCTURAL, not fully mechanically checkable -- no check_* can verify the DECIDED rationale prose actually names one of the HELD conflict's variant ids (that is a semantic match, not a structural one); check_decided_has_rationale_or_derived enforces only that SOME rationale or derived requirement exists, the narrower claim that it names the chosen variant is carried by prose discipline and resolver review, same honesty pattern as R-task-spawn-is-a-hand.",
       "assumptions": [
         "A-stakeholders-care"
       ],
@@ -7942,7 +7942,7 @@
       "claim": "The operator shall confine all file mutations to its launch working directory, never modifying anything outside it -- including the host harness (cah / Claude Code) and the global ~/.claude configuration -- unless the user explicitly requests otherwise.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Steward verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node). ENFORCEMENT (Etap S, #121, 2026-07-10) -- PROSE->ENFORCED via a HONEST PARTIAL check, not theatre: tests/test_launch_dir_write_scope.py AST-scans every committed framework .py (spec/tools/ + spec/src/hotam_spec/) and fails RED if any file co-locates a home-rooted path reference (Path.home() / os.path.expanduser('~...') / a literal starting with '~/') with a filesystem-write sink (open(...,'w'/'a'/'x'/'+'), write_text/write_bytes/mkdir/touch/rmtree/unlink/replace/rename/symlink_to/chmod/makedirs/remove/copy*/move). This closes EXACTLY the committed-code write vector that actually fired: the real incident was --patch-global physically patching ~/.claude/cah-bin/.../cah-status.js -- a machine-visible shape. The scan does NOT and cannot catch a live agent shelling out through bash at runtime; that residual half remains discipline-of-prose (R-agent-conduct-is-rules-not-tests). Honest scope, documented in the enforcer's docstring: no data-flow (a home reference co-located with any writer in the same file trips conservatively); prose ~/.claude mentions that do not start with '~/' are deliberately not path references; the allowlist is empty today because every current Claude-config tool (setup_hooks.py / setup_context_hook.py / _claude_settings.py) writes into the CONSUMER repo root's <repo>/.claude/ resolved via project_root_or_raise(), never the home global, so none reference a home path at all. A non-vacuity negative control (test_scanner_catches_a_home_write_negative_control) proves the predicate flags synthetic ~/.claude writes and passes in-bounds shapes.",
+      "why": "Resolver verdict 2026-07-05, verbatim: 'cah вообще нельзя трогать - он ведь обновится всё сотрет. И он в праве быть собой, без наших вмешательств' + 'нужно создать правило, что работаем строго в папке запуска, пока пользователь не попросил иного'. Trigger: the operator proposed setup_context_hook.py --patch-global --apply, which surgically patched the global ~/.claude/cah-bin/bin/cah-status.js to piggyback a context-cache -- a double fault: (1) it violates host sovereignty (the harness is a guest environment we inhabit, not own), and (2) it is futile, since a cah update overwrites the patch anyway. The framework is a guest in the host's home: it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. This is the missing rule that let a host-mutating tool be proposed at all (generative law: important-yet-invisible -> anchored node). ENFORCEMENT (Etap S, #121, 2026-07-10) -- PROSE->ENFORCED via a HONEST PARTIAL check, not theatre: tests/test_launch_dir_write_scope.py AST-scans every committed framework .py (spec/tools/ + spec/src/hotam_spec/) and fails RED if any file co-locates a home-rooted path reference (Path.home() / os.path.expanduser('~...') / a literal starting with '~/') with a filesystem-write sink (open(...,'w'/'a'/'x'/'+'), write_text/write_bytes/mkdir/touch/rmtree/unlink/replace/rename/symlink_to/chmod/makedirs/remove/copy*/move). This closes EXACTLY the committed-code write vector that actually fired: the real incident was --patch-global physically patching ~/.claude/cah-bin/.../cah-status.js -- a machine-visible shape. The scan does NOT and cannot catch a live agent shelling out through bash at runtime; that residual half remains discipline-of-prose (R-agent-conduct-is-rules-not-tests). Honest scope, documented in the enforcer's docstring: no data-flow (a home reference co-located with any writer in the same file trips conservatively); prose ~/.claude mentions that do not start with '~/' are deliberately not path references; the allowlist is empty today because every current Claude-config tool (setup_hooks.py / setup_context_hook.py / _claude_settings.py) writes into the CONSUMER repo root's <repo>/.claude/ resolved via project_root_or_raise(), never the home global, so none reference a home path at all. A non-vacuity negative control (test_scanner_catches_a_home_write_negative_control) proves the predicate flags synthetic ~/.claude writes and passes in-bounds shapes.",
       "assumptions": [],
       "relations": [],
       "enforcement": "ENFORCED",
@@ -7962,7 +7962,7 @@
       "history": [
         {
           "at": "2026-07-10",
-          "summary": "why: Steward verdict 2026-07-05, verbatim: '…→Steward verdict 2026-07-05, verbatim: '…; enforcement: PROSE→ENFORCED; enforced_by: []→[test_launch_dir_write_scope.py::test_n…; settled_at: 2026-07-05→2026-07-10",
+          "summary": "why: Resolver verdict 2026-07-05, verbatim: '…→Resolver verdict 2026-07-05, verbatim: '…; enforcement: PROSE→ENFORCED; enforced_by: []→[test_launch_dir_write_scope.py::test_n…; settled_at: 2026-07-05→2026-07-10",
           "decided_by": ""
         }
       ],
@@ -8009,7 +8009,7 @@
         "R-crystallize-knowledge-to-code",
         "R-content-free-framework"
       ],
-      "steward": "framework-reviewer",
+      "resolver": "framework-reviewer",
       "lifecycle": "DECIDED(crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/hotam_spec. The substrate grows; the framework code stays minimal.)",
       "shared_assumption": "A-content-free-honest",
       "derived": [],
@@ -8029,8 +8029,8 @@
         "R-agent-never-lost",
         "R-ai-presents-not-decides"
       ],
-      "steward": "framework-author",
-      "lifecycle": "DECIDED(structured proposal protocol — the AI emits ProposedRequirement / ProposedConflict / ProposedResolution as JSON; the human steward approves; tools/apply_proposal.py mechanically writes the change into spec/content/; see derived R-active-loop-playbooks)",
+      "resolver": "framework-author",
+      "lifecycle": "DECIDED(structured proposal protocol — the AI emits ProposedRequirement / ProposedConflict / ProposedResolution as JSON; the human resolver approves; tools/apply_proposal.py mechanically writes the change into spec/content/; see derived R-active-loop-playbooks)",
       "shared_assumption": "A-stakeholders-care",
       "derived": [
         "R-active-loop-playbooks"
@@ -8051,8 +8051,8 @@
         "R-operator-prompt-from-substrate",
         "R-budget-measure"
       ],
-      "steward": "framework-reviewer",
-      "lifecycle": "DECIDED(DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Steward verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.)",
+      "resolver": "framework-reviewer",
+      "lifecycle": "DECIDED(DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Resolver verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.)",
       "shared_assumption": "A-finite-context-operators",
       "derived": [],
       "revisit_marker": "",
@@ -8071,7 +8071,7 @@
         "R-content-free-framework",
         "R-agent-never-lost"
       ],
-      "steward": "domain-user",
+      "resolver": "domain-user",
       "lifecycle": "DECIDED(The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.)",
       "shared_assumption": "A-text-grounded-in-models",
       "derived": [],
@@ -8091,7 +8091,7 @@
         "R-speculative-aspects-frozen",
         "R-entity-derived-requirement"
       ],
-      "steward": "framework-reviewer",
+      "resolver": "framework-reviewer",
       "lifecycle": "DECIDED(chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 (\"все вопросы решай в сторону совершенства\"))",
       "shared_assumption": null,
       "derived": [],
@@ -8101,7 +8101,7 @@
         {
           "id": "V-unfreeze-entity-projection",
           "behavior": "Unfreeze the Entity->CLAUDE.md CONSTITUTION projection specifically (not the whole Entity aspect): allow new EntityType declarations to keep generating R-entity-<slug> constitution rows and enforced_by coverage, while the REST of the Entity aspect (create_entity_type.py inward edits, entity.py machinery growth) stays frozen under R-speculative-aspects-frozen's baseline hash guard.",
-          "implies": "R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the steward signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.",
+          "implies": "R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the resolver signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.",
           "costs": "The freeze's hash-baseline test (test_frozen_aspects_snapshot.py) currently covers src/hotam_spec/entity.py wholesale; carving out the projection path requires either a narrower baseline or a second frozen-surface declaration, adding one more piece of frozen-aspect bookkeeping. Slightly weakens the freeze's simplicity (one clean boundary becomes two)."
         },
         {
@@ -8130,7 +8130,7 @@
         "R-content-free-framework",
         "R-empty-content-is-legitimate"
       ],
-      "steward": "framework-reviewer",
+      "resolver": "framework-reviewer",
       "lifecycle": "DECIDED(the meta-domain lives in spec/content/graph.py exactly as any user's domain would; the framework code stays empty of business data; the worked-example fixture stays under spec/tests/fixtures/. The framework's own design is content for the methodology's reference domain.)",
       "shared_assumption": "A-content-free-honest",
       "derived": [],
@@ -8150,7 +8150,7 @@
         "R-context-bounded-delegation",
         "R-crystallize-knowledge-to-code"
       ],
-      "steward": "domain-user",
+      "resolver": "domain-user",
       "lifecycle": "DECIDED(crystallize-before-split — the operator crystallizes first and re-measures (see R-crystallize-before-split); delegation/splitting is the vertical lever of last resort, used only when knowledge is irreducible and the operator is still over budget.)",
       "shared_assumption": "A-finite-context-operators",
       "derived": [
@@ -8172,7 +8172,7 @@
         "R-context-bounded-delegation",
         "R-dependency-graph-parallelism"
       ],
-      "steward": "framework-reviewer",
+      "resolver": "framework-reviewer",
       "lifecycle": "DECIDED(the dependency graph decides — parallelize independent components, sequence coupled chains; cut the domain along lines of independence, never arbitrarily.)",
       "shared_assumption": "A-finite-context-operators",
       "derived": [],
@@ -8196,7 +8196,7 @@
       },
       "parent": null,
       "scope": [],
-      "why": "The director-operator: the human Framework author acting on the meta-domain. Reads CLAUDE.md as its crystal (R-operator-crystal-is-claude-md), runs the closed loop (R-agent-never-lost), proposes changes (R-ai-presents-not-decides), and ratifies steward decisions. The first instantiated Operator — the operator exists AS DATA in the graph it operates.",
+      "why": "The director-operator: the human Framework author acting on the meta-domain. Reads CLAUDE.md as its crystal (R-operator-crystal-is-claude-md), runs the closed loop (R-agent-never-lost), proposes changes (R-ai-presents-not-decides), and ratifies resolver decisions. The first instantiated Operator — the operator exists AS DATA in the graph it operates.",
       "decl_order": 0
     }
   ],
@@ -8229,7 +8229,7 @@
           {
             "name": "ABANDONED",
             "kind": "quiescent",
-            "why": "Steward retired the process."
+            "why": "Resolver retired the process."
           }
         ],
         "transitions": [
@@ -8263,7 +8263,7 @@
             "event": "abandon",
             "guard": "",
             "guard_assumption": null,
-            "why": "Steward retires the process."
+            "why": "Resolver retires the process."
           },
           {
             "src": "BLOCKED",
@@ -8279,7 +8279,7 @@
             "event": "abandon",
             "guard": "",
             "guard_assumption": null,
-            "why": "Steward retires while blocked."
+            "why": "Resolver retires while blocked."
           }
         ],
         "cyclic": false,
@@ -8300,9 +8300,9 @@
         },
         {
           "name": "approve",
-          "requires_role": "steward",
+          "requires_role": "resolver",
           "invokes": "",
-          "why": "Steward review + decided_by assignment."
+          "why": "Resolver review + decided_by assignment."
         },
         {
           "name": "apply",
@@ -8325,7 +8325,7 @@
       ],
       "roles_required": [
         "operator",
-        "steward"
+        "resolver"
       ],
       "drives_entities": [],
       "why": "The methodology's own process modeled as a Process node — eating its own dog food at the behavioral altitude (R-process-aspect-first).",

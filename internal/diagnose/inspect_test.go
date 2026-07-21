@@ -739,7 +739,7 @@ func TestInspect_PresentsOnly_NeverMutatesGraph(t *testing.T) {
 //     pre-fix behavior), none of them clears
 //     MinLexicalOverlapTokens/MinLexicalOverlapTokensWithMarker given their
 //     actual shared-token count, owner, and marker state. They were
-//     discovered by the steward through channels other than lexical overlap
+//     discovered by the resolver through channels other than lexical overlap
 //     (semantic judgment, shared-assumption/entity-state/axis signals, or
 //     plain human review) — exactly what R-tension-audit-shortlist-tool's own
 //     why documents as "0 of 8 conflicts machine-surfaced over its whole
@@ -783,7 +783,7 @@ var knownLexicalOverlapMissByDesign = map[[2]string]struct{}{
 
 // TestInspectLexicalClaimOverlap_KnownConflictGroundTruth is the honest
 // anti-false-negative pin task #99 asked for: it uses the graph's OWN
-// steward-confirmed Conflict nodes (domains/hotam-spec-self/graph.json's
+// resolver-confirmed Conflict nodes (domains/hotam-spec-self/graph.json's
 // `conflicts` array) as ground truth — not a synthetic fixture — and checks
 // every pairwise Conflict-member combination against
 // InspectLexicalClaimOverlap's real output on the real graph.
@@ -828,7 +828,7 @@ func TestInspectLexicalClaimOverlap_KnownConflictGroundTruth(t *testing.T) {
 				}
 
 				if !didFire {
-					t.Errorf("%s member pair %v (a real steward-confirmed Conflict) is NOT a lexical_claim_overlap candidate and is not in knownLexicalOverlapMissByDesign — this is either a new corpus-frequency false negative (investigate CorpusCommonTokenFraction impact) or a legitimately lexical-overlap-free conflict that needs documenting in knownLexicalOverlapMissByDesign with the reasoning", conflict.ID, key)
+					t.Errorf("%s member pair %v (a real resolver-confirmed Conflict) is NOT a lexical_claim_overlap candidate and is not in knownLexicalOverlapMissByDesign — this is either a new corpus-frequency false negative (investigate CorpusCommonTokenFraction impact) or a legitimately lexical-overlap-free conflict that needs documenting in knownLexicalOverlapMissByDesign with the reasoning", conflict.ID, key)
 				}
 			}
 		}

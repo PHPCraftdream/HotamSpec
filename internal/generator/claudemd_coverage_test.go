@@ -271,7 +271,7 @@ func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 	manifest := `{
   "self_hosting": false,
   "purpose": "a model of developing the Hotam-Spec repository itself: waves, commits, spawns, verification gates",
-  "goals": ["waves land atomically with a green T2 at the boundary", "push only on the steward's explicit word"],
+  "goals": ["waves land atomically with a green T2 at the boundary", "push only on the resolver's explicit word"],
   "director": "director"
 }`
 	if err := os.WriteFile(filepath.Join(root, "domains", "hotam-dev", "manifest.json"), []byte(manifest), 0o644); err != nil {
@@ -294,7 +294,7 @@ func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 	if !strings.Contains(out, "developing the Hotam-Spec repository itself") {
 		t.Errorf("manifest purpose not embedded for hotam-dev, got: %s", out)
 	}
-	if !strings.Contains(out, "- **goals** — waves land atomically with a green T2 at the boundary, push only on the steward's explicit word") {
+	if !strings.Contains(out, "- **goals** — waves land atomically with a green T2 at the boundary, push only on the resolver's explicit word") {
 		t.Errorf("manifest goals not embedded for hotam-dev, got: %s", out)
 	}
 	if !strings.Contains(out, "- **director** — director") {

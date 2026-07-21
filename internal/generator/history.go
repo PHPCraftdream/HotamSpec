@@ -96,7 +96,7 @@ func BuildHistory(g *ontology.Graph) string {
 			lines = append(lines, "")
 			lines = append(lines, "- **context:** "+c.Context)
 			lines = append(lines, "- **members:** "+backtickedList(c.Members))
-			lines = append(lines, "- **steward:** `"+c.Steward+"`")
+			lines = append(lines, "- **resolver:** `"+c.Resolver+"`")
 			lines = append(lines, "- **rationale:** "+rationale)
 			if c.SharedAssumption != nil && *c.SharedAssumption != "" {
 				lines = append(lines, "- **shared assumption:** `"+*c.SharedAssumption+"`")
@@ -130,7 +130,7 @@ func BuildHistory(g *ontology.Graph) string {
 			lines = append(lines, "")
 			lines = append(lines, "- **context:** "+c.Context)
 			lines = append(lines, "- **members:** "+backtickedList(c.Members))
-			lines = append(lines, "- **steward:** `"+c.Steward+"`")
+			lines = append(lines, "- **resolver:** `"+c.Resolver+"`")
 			lines = append(lines, "- **condition:** "+condition)
 			if c.SharedAssumption != nil && *c.SharedAssumption != "" {
 				lines = append(lines, "- **shared assumption:** `"+*c.SharedAssumption+"`")

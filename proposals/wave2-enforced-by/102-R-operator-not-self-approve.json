@@ -1,10 +1,10 @@
 {
   "kind": "Requirement",
   "id": "R-operator-not-self-approve",
-  "claim": "An Operator shall not steward a Conflict in which its underlying Stakeholder owns one of the members.",
+  "claim": "An Operator shall not resolver a Conflict in which its underlying Stakeholder owns one of the members.",
   "owner": "framework-author",
   "status": "SETTLED",
   "enforced_by": [
-    "check_operator_steward_not_self"
+    "check_operator_resolver_not_self"
   ]
 }

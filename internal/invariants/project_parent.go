@@ -37,14 +37,14 @@ import (
 //     No violation.
 //
 // This check fires ONE violation when g.ManifestExists && !g.ParentDeclared,
-// naming the domain and instructing the steward to add "parent": null (root)
+// naming the domain and instructing the resolver to add "parent": null (root)
 // or "parent": "<parent-domain-name>" (child) to manifest.json.
 //
 // WHY THIS IS NOT AN OPT-IN / HONEST-NO-OP CHECK IN THE check_settled_requires_scenario
 // SENSE, BUT DOES still bail via g.ManifestExists: the package's opt-in
 // manifest-field checks (check_settled_requires_scenario, gated on
 // discipline:"full") are honest no-ops because the METHODOLOGY only
-// recommends the behavior and lets a steward migrate per-domain -- a domain
+// recommends the behavior and lets a resolver migrate per-domain -- a domain
 // that has a manifest.json and simply hasn't opted in stays silently clean.
 // D6 is different: "обязательное поле" (mandatory field) -- for any domain
 // that HAS a manifest.json, the obligation is universal, not opt-in; there is
@@ -126,7 +126,7 @@ func checkProjectParentDeclared(g *ontology.Graph) []Violation {
 		// siblings inside the temp dir). The crystal's
 		// RenderParentProjectBlock (internal/generator/claudemd.go)
 		// renders whatever parent value is declared, unvalidated --
-		// a steward reading the crystal sees the declaration as-is.
+		// a resolver reading the crystal sees the declaration as-is.
 		// This scoping is deliberately LOUDLY documented here (matching
 		// this codebase's convention of never leaving an honesty boundary
 		// silent -- see checkScenarioExecutesImpl's own doc comment and
@@ -163,7 +163,7 @@ var _ = All.MustRegister("check_project_parent_declared", Invariant{
 		"a non-empty string naming the parent domain (a child-domain declaration) -- this check fires ZERO violations: both " +
 		"are valid declarations, D6's obligation is satisfied. OTHERWISE (g.ManifestExists is true but g.ParentDeclared is " +
 		"false -- the \"parent\" key is absent from an EXISTING manifest.json; ResolveParent also returns this for malformed " +
-		"JSON or a non-string value), this check fires ONE violation naming the domain and instructing the steward to add " +
+		"JSON or a non-string value), this check fires ONE violation naming the domain and instructing the resolver to add " +
 		"\"parent\": null (root) or \"parent\": \"<parent-domain-name>\" (child). This is NOT an opt-in / honest-no-op check " +
 		"like check_settled_requires_scenario (which no-ops for every domain that HAS a manifest but has not declared " +
 		"discipline:\"full\"): D6 makes parent MANDATORY (\"обязательное поле\") for any domain that has a manifest at all, so " +

@@ -64,7 +64,7 @@ func TestEmptyContentCalmBanner_NotNoisyOnContent(t *testing.T) {
 			ID:        "C-1",
 			Axis:      "cost-vs-flexibility",
 			Context:   "scenario",
-			Steward:   "steward",
+			Resolver:  "resolver",
 			Lifecycle: ontology.ConflictDETECTED,
 			Members:   []string{"R-1", "R-2"},
 		}},

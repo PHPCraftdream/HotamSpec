@@ -48,7 +48,7 @@ func buildSmokeGraph() *Graph {
 	conflicts := []Conflict{
 		{
 			ID: "C-12", Axis: "latency-vs-completeness", Context: "checkout peak load",
-			Members: []string{"R-1", "R-3"}, Steward: "platform", Lifecycle: ConflictDETECTED,
+			Members: []string{"R-1", "R-3"}, Resolver: "platform", Lifecycle: ConflictDETECTED,
 		},
 	}
 
@@ -324,10 +324,10 @@ func TestConflictLifecycle(t *testing.T) {
 	if st, ok := lc.Matches("DECIDED(rationale)"); !ok || st.Name != "DECIDED" {
 		t.Fatalf("DECIDED(...) should match DECIDED, got %+v", st)
 	}
-	if t1, ok := lc.TransitionFor("DETECTED", "steward-acknowledge"); !ok || t1.Dst != "ACKNOWLEDGED" {
+	if t1, ok := lc.TransitionFor("DETECTED", "resolver-acknowledge"); !ok || t1.Dst != "ACKNOWLEDGED" {
 		t.Fatalf("DETECTED+ack -> ACKNOWLEDGED, got %+v", t1)
 	}
-	if t1, ok := lc.TransitionFor("ACKNOWLEDGED", "steward-decide"); !ok || t1.Dst != "DECIDED" {
+	if t1, ok := lc.TransitionFor("ACKNOWLEDGED", "resolver-decide"); !ok || t1.Dst != "DECIDED" {
 		t.Fatalf("ACKNOWLEDGED+decide -> DECIDED, got %+v", t1)
 	}
 	if !lc.Cyclic {

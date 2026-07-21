@@ -34,14 +34,14 @@ re-run the (not-yet-built) `tools/audit_atomicity.py`.
 | R-conflict-is-connector-node | one ontological rule: Conflict = NODE not edge |
 | R-deterministic-generation | one rule: two runs over unchanged graph = identical bytes |
 | R-ai-presents-not-decides | single hard-boundary claim |
-| R-steward-distinct-from-owners | single structural rule: steward ∉ member-owner |
+| R-resolver-distinct-from-owners | single structural rule: resolver ∉ member-owner |
 | R-open-states-question | one rule: OPEN must carry non-empty question |
 | R-rejected-preserved-not-deleted | one rule: REJECTED kept, never deleted |
 | R-axis-controlled-vocab | one rule: Conflict.axis must be declared Axis slug |
 | R-stable-conflict-identity | one rule: id = conflict_identity(axis, context) |
 | R-decided-needs-human-signoff | one rule: DECIDED must carry decided_by |
 | R-context-budget-rule | one rule: size(domain) <= budget.limit |
-| R-operator-not-self-approve | one rule: Operator ≠ steward of own-stakeholder conflict |
+| R-operator-not-self-approve | one rule: Operator ≠ resolver of own-stakeholder conflict |
 | R-delegation-conclusions-only | one rule: sub-operator returns conclusions, not raw |
 | R-context-bounded-delegation | one rule: overloaded operator relieved by sub-operator |
 | R-task-vs-action-distinct-altitudes | one discipline: Task and Action stay separable |
@@ -95,7 +95,7 @@ re-run the (not-yet-built) `tools/audit_atomicity.py`.
 
 ### ATOMIC (11 — kept as-is)
 
-`check_conflict_min_two_members`, `check_axis_in_registry`, `check_conflict_id_matches_identity`, `check_steward_not_a_member_owner`, `check_open_has_question`, `check_operator_steward_not_self`, `check_operator_within_budget`, `check_process_lifecycle_wellformed`, `check_process_roles_declared`, `check_goal_target_kind_known`, `check_goal_owner_is_operator`, `check_section_anchors_known`.
+`check_conflict_min_two_members`, `check_axis_in_registry`, `check_conflict_id_matches_identity`, `check_resolver_not_a_member_owner`, `check_open_has_question`, `check_operator_resolver_not_self`, `check_operator_within_budget`, `check_process_lifecycle_wellformed`, `check_process_roles_declared`, `check_goal_target_kind_known`, `check_goal_owner_is_operator`, `check_section_anchors_known`.
 
 (Note: 12 names listed — `check_section_anchors_known` was added later in P5/P6 and the audit ran against earlier state; treat as atomic-by-construction.)
 
@@ -103,8 +103,8 @@ re-run the (not-yet-built) `tools/audit_atomicity.py`.
 
 | check_* | sub-checks | maps to R-… (after split) |
 |---------|-----------|---------------------------|
-| check_no_dangling_ids | 12 sub-checks (one per reference type: assumption-owner, requirement-owner, requirement-assumptions, relation-kind, relation-target, conflict-steward, conflict-members, conflict-shared-assumption, conflict-derived, conflict-decided-by, operator-stakeholder, operator-parent) | each → corresponding new atomic R; all roll up under R-agent-never-lost + R-operator-acting-facet's atomized successors |
-| check_conflict_has_axis_context_steward | 3 sub-checks (axis + context + steward) | R-conflict-structurally-visible (added af051e8) |
+| check_no_dangling_ids | 12 sub-checks (one per reference type: assumption-owner, requirement-owner, requirement-assumptions, relation-kind, relation-target, conflict-resolver, conflict-members, conflict-shared-assumption, conflict-derived, conflict-decided-by, operator-stakeholder, operator-parent) | each → corresponding new atomic R; all roll up under R-agent-never-lost + R-operator-acting-facet's atomized successors |
+| check_conflict_has_axis_context_resolver | 3 sub-checks (axis + context + resolver) | R-conflict-structurally-visible (added af051e8) |
 | check_decided_has_rationale_or_derived | 2 sufficiency conditions (rationale OR derived) | R-decided-conflict-justifies-itself (added af051e8) |
 | check_decided_has_decided_by | 3 sub-checks (non-empty + known-stakeholder + not-member-owner) | R-decided-needs-human-signoff (compound enforcer for atomic R) |
 | check_typed_anchors | 6 sub-checks (one per prefix: R-/A-/C-/OP-/PR-/GOAL-) | R-anchor-everything |
@@ -118,7 +118,7 @@ re-run the (not-yet-built) `tools/audit_atomicity.py`.
 
 ### Clean one-to-one (8 pairs at audit time)
 
-R-steward-distinct-from-owners ↔ check_steward_not_a_member_owner; R-open-states-question ↔ check_open_has_question; R-axis-controlled-vocab ↔ check_axis_in_registry; R-stable-conflict-identity ↔ check_conflict_id_matches_identity; R-decided-needs-human-signoff ↔ check_decided_has_decided_by; R-operator-not-self-approve ↔ check_operator_steward_not_self; R-context-budget-rule ↔ check_operator_within_budget; R-verify-closure-per-action ↔ check_closure + test_closure.
+R-resolver-distinct-from-owners ↔ check_resolver_not_a_member_owner; R-open-states-question ↔ check_open_has_question; R-axis-controlled-vocab ↔ check_axis_in_registry; R-stable-conflict-identity ↔ check_conflict_id_matches_identity; R-decided-needs-human-signoff ↔ check_decided_has_decided_by; R-operator-not-self-approve ↔ check_operator_resolver_not_self; R-context-budget-rule ↔ check_operator_within_budget; R-verify-closure-per-action ↔ check_closure + test_closure.
 
 ### Many enforcers per R (healthy redundancy — kept) (~7 cases)
 
@@ -132,7 +132,7 @@ R-drift-structurally-impossible has 4 docs × 1 test each; R-empty-content-is-le
 
 | check_* | new R created (af051e8) |
 |---------|-------------------------|
-| check_conflict_has_axis_context_steward | R-conflict-structurally-visible |
+| check_conflict_has_axis_context_resolver | R-conflict-structurally-visible |
 | check_conflict_min_two_members | R-conflict-min-two-members |
 | check_decided_has_rationale_or_derived | R-decided-conflict-justifies-itself |
 | check_m_tag_format | R-m-tag-format-valid |

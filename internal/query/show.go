@@ -42,7 +42,7 @@ type ConflictCard struct {
 	Axis             string             `json:"axis"`
 	Context          string             `json:"context"`
 	Members          []string           `json:"members"`
-	Steward          string             `json:"steward"`
+	Resolver         string             `json:"resolver"`
 	Lifecycle        string             `json:"lifecycle"`
 	SharedAssumption *string            `json:"shared_assumption"`
 	Derived          []string           `json:"derived"`
@@ -167,7 +167,7 @@ func conflictToCard(c ontology.Conflict) ConflictCard {
 		Axis:             c.Axis,
 		Context:          c.Context,
 		Members:          nonNilStrings(c.Members),
-		Steward:          c.Steward,
+		Resolver:         c.Resolver,
 		Lifecycle:        c.Lifecycle,
 		SharedAssumption: c.SharedAssumption,
 		Derived:          nonNilStrings(c.Derived),

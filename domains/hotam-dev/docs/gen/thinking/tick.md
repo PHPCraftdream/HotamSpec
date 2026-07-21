@@ -4,12 +4,12 @@
 
 ## Canon
 
-The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention.
+The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for resolver attention.
 
 ## Narrative
 
-The Drive organ runs the closed loop one cycle: load the graph, call diagnose() (all_violations + reflection findings + attention signals), and emit a TickReport. It is ADVISORY (M32 conservative): it presents the prioritized next-action surface to the steward; it does not itself mutate the graph.
+The Drive organ runs the closed loop one cycle: load the graph, call diagnose() (all_violations + reflection findings + attention signals), and emit a TickReport. It is ADVISORY (M32 conservative): it presents the prioritized next-action surface to the resolver; it does not itself mutate the graph.
 
 ## Why
 
-WHY advisory (not auto-acting): the hard boundary forbids the AI from closing anything silently; the Tick's job is to make the operator's state and next correct action visible, not to take the steward's decision. A structural failure in all_violations outranks every softer signal because a malformed graph makes all downstream diagnosis unreliable.
+WHY advisory (not auto-acting): the hard boundary forbids the AI from closing anything silently; the Tick's job is to make the operator's state and next correct action visible, not to take the resolver's decision. A structural failure in all_violations outranks every softer signal because a malformed graph makes all downstream diagnosis unreliable.

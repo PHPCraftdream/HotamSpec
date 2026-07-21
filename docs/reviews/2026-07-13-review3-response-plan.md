@@ -23,9 +23,9 @@ Make the LIVE-STATE `resident crystal N chars` measurement a **fixpoint computed
 
 ### 2. P1 — 42 closeable debt: implement short-form rendering (review item 3) → task
 
-The review names one concrete, already-steward-briefed item: `R-crystal-carries-short-form` (generator still uses `runeTruncate`, mechanically truncating mid-word, which the SETTLED claim prohibits). This was item #1 in the C2 decision brief (`2026-07-13-category-c2-decision-brief.md`) with recommendation (a): implement summary-first/first-sentence-fallback short-form rendering. The review independently pushes the same direction — take it as a task now, coupled with brief item #5 (`R-operator-crystal-embeds-thinking-distilled`) ONLY if budget allows after measuring; primary scope is replacing `runeTruncate` call sites in crystal rendering with a short-form helper + test + flipping the requirement to ENFORCED.
+The review names one concrete, already-resolver-briefed item: `R-crystal-carries-short-form` (generator still uses `runeTruncate`, mechanically truncating mid-word, which the SETTLED claim prohibits). This was item #1 in the C2 decision brief (`2026-07-13-category-c2-decision-brief.md`) with recommendation (a): implement summary-first/first-sentence-fallback short-form rendering. The review independently pushes the same direction — take it as a task now, coupled with brief item #5 (`R-operator-crystal-embeds-thinking-distilled`) ONLY if budget allows after measuring; primary scope is replacing `runeTruncate` call sites in crystal rendering with a short-form helper + test + flipping the requirement to ENFORCED.
 
-The other ~40 debt items stay as-is this wave: 33 are C1 (feature-blocked: tickets/hooks/agents/delegation — honest roadmap debt), the rest are C2 steward-decision items already presented in the decision brief. No mass reclassification without steward picks.
+The other ~40 debt items stay as-is this wave: 33 are C1 (feature-blocked: tickets/hooks/agents/delegation — honest roadmap debt), the rest are C2 resolver-decision items already presented in the decision brief. No mass reclassification without resolver picks.
 
 ### 3. P2 — evidence on 4/236 SETTLED (review item 4) → declined this wave, policy already stated
 
@@ -38,7 +38,7 @@ Mass re-attestation of ~232 historical requirements would be exactly the adminis
 
 ### 5. P2 — release tag (review item 6) → task, gated on explicit user push approval
 
-`go install ...@latest` can't resolve without a git tag. Tag `v0.1.0` on a green HEAD after items 1-2 land. Pushing a tag is an outward-facing action — requires the steward's explicit go-ahead at execution time (per standing rules, never push without explicit request).
+`go install ...@latest` can't resolve without a git tag. Tag `v0.1.0` on a green HEAD after items 1-2 land. Pushing a tag is an outward-facing action — requires the resolver's explicit go-ahead at execution time (per standing rules, never push without explicit request).
 
 ## Execution
 

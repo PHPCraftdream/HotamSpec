@@ -131,7 +131,7 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 	if crystalPath == "" {
 		// The domain declared an orientation contract but has no generated
 		// crystal on disk to satisfy it from — every declared question is
-		// unreachable. Report one violation per entry so a steward can see
+		// unreachable. Report one violation per entry so a resolver can see
 		// the full break, rather than a single "no crystal" line that
 		// hides how many questions that blocks.
 		out := make([]Violation, 0, len(entries))
@@ -216,7 +216,7 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 		}
 
 		// Diagnose WHY this entry failed, naming the missing signal(s) so a
-		// steward can fix the crystal or the manifest entry directly.
+		// resolver can fix the crystal or the manifest entry directly.
 		var missing []string
 		if hasKeywords {
 			missing = append(missing, "none of the declared keywords appear inline in the crystal")
@@ -263,7 +263,7 @@ var _ = All.MustRegister("check_orientation_faq_answered", Invariant{
 		"operator must be able to answer, and this invariant PROVES each declared answer is reachable from the crystal the " +
 		"agent actually boots from — never silently absent, never buried behind a chain of pointers an agent would have to " +
 		"follow blind. This is the orientation showcase property made drift-proof the same way every other check_* in this " +
-		"package makes its own property drift-proof: a steward who edits the crystal, moves a doc, or rewords a section in a " +
+		"package makes its own property drift-proof: a resolver who edits the crystal, moves a doc, or rewords a section in a " +
 		"way that orphans a declared answer sees it in `hotam all-violations` immediately, not after a confused demo session. " +
 		"The opt-in shape (honest no-op when the list is absent) is deliberate: orientability-as-invariant is a domain's own " +
 		"public promise, not an engine-wide mandate — exactly the boundary discipline:\"full\" / the committed SPEC.md / the " +

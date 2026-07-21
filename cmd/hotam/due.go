@@ -20,7 +20,7 @@ const neverReviewedTopN = 10
 // an advisory report of SETTLED requirements whose review is OVERDUE or
 // that have NEVER been reviewed at all. It never gates — exit code is 0
 // whether or not stale requirements are found, because freshness is a
-// housekeeping signal for the steward, not a structural invariant
+// housekeeping signal for the resolver, not a structural invariant
 // (R-requirement-freshness-fields exists on the model; whether the fields
 // are populated is a backlog item, not a violation).
 func cmdDue(args []string) error {

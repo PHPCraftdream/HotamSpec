@@ -17,13 +17,13 @@ import (
 //     Members plausibly cover the tension between the new requirement and the
 //     SETTLED requirement(s) it contradicts. The tool validates EXISTENCE only
 //     (the node is graph ground truth — its coverage of this specific tension
-//     is the steward's judgment, not the tool's, per R-ai-presents-not-decides
+//     is the resolver's judgment, not the tool's, per R-ai-presents-not-decides
 //     and R-decided-needs-human-signoff). The Conflict node itself is the
 //     durable record; the requirement additionally gets a HistoryEntry audit
 //     trail noting which Conflict was cited (see appendAckHistory).
 //
 //   - DecisionRef: a free-text reference to where a human decision was
-//     recorded (a ticket link, a meeting note, a steward's name+date). The
+//     recorded (a ticket link, a meeting note, a resolver's name+date). The
 //     CONTENT is not validated, only its PRESENCE — persisted as a HistoryEntry
 //     on the landed requirement so the audit trail lives on the node it
 //     concerns, avoiding the heavier Conflict-node machinery when a full
@@ -63,7 +63,7 @@ func (o landAckOptions) hasAck() bool {
 //   - No pure-score fallback threshold is used. This is the conservative
 //     choice the task asks for ("err toward few false positives, clear escape
 //     hatches"): the opposite-marker controlled vocabulary (established in
-//     inspect.go's oppositeMarkerPairs) is narrow enough that a steward who
+//     inspect.go's oppositeMarkerPairs) is narrow enough that a resolver who
 //     triggers it almost always has a real tension on their hands, while the
 //     overwhelming majority of ordinary requirement lands (which never carry
 //     an opposite marker against an existing SETTLED requirement) pass through
@@ -105,7 +105,7 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 	// Validate --ack-conflict references a real Conflict node BEFORE using it
 	// to override the gate, so a typo'd C-id does not silently bypass the
 	// refusal. Existence-only: the node is graph ground truth; whether it
-	// plausibly covers THIS tension is the steward's judgment.
+	// plausibly covers THIS tension is the resolver's judgment.
 	if ackOpts.AckConflict != "" {
 		found := false
 		for _, c := range g.Conflicts {
@@ -159,7 +159,7 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 	}
 	b.WriteString("a human decision must be recorded before this can land. Use one of:\n")
 	b.WriteString("  --ack-conflict <C-id>   cite an existing Conflict node whose members cover this tension\n")
-	b.WriteString(fmt.Sprintf("  --decision-ref <text>   record a free-text reference to where the decision was made (e.g. ticket, meeting, steward+date)\n"))
+	b.WriteString(fmt.Sprintf("  --decision-ref <text>   record a free-text reference to where the decision was made (e.g. ticket, meeting, resolver+date)\n"))
 	b.WriteString("\nThis gate does not decide correctness — it requires that a decision be RECORDED first ")
 	b.WriteString("(R-ai-presents-not-decides, R-decided-needs-human-signoff).")
 	return true, fmt.Errorf("%s", b.String())

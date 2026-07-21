@@ -72,7 +72,7 @@ Most compound:
 - `check_decided_has_decided_by` — 3 sub-rules (non-empty + known +
   not-member-owner).
 - `check_m_tag_format` — 3 sub-rules (format + unique + OPEN-only).
-- `check_conflict_has_axis_context_steward` — 3 fields checked.
+- `check_conflict_has_axis_context_resolver` — 3 fields checked.
 - `check_decided_has_rationale_or_derived` — 2 sufficiency conditions
   (rationale OR derived).
 
@@ -106,7 +106,7 @@ Most compound:
 
 ## Three director-irreducible ambiguities
 
-These are STEWARD decisions, not operator decisions (hard-boundary):
+These are RESOLVER decisions, not operator decisions (hard-boundary):
 
 1. **R-content-free-framework**: "ships ZERO business content — no example
    requirements, no example axes, no seed graph". Atomic claim (rule +

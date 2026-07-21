@@ -13,7 +13,7 @@ type moduleEntry struct {
 
 var ModuleOrder = []moduleEntry{
 	{Mod: "__init__", Label: "Methodology overview + the closed loop"},
-	{Mod: "stakeholder", Label: "§Stakeholder — owners and stewards"},
+	{Mod: "stakeholder", Label: "§Stakeholder — owners and resolvers"},
 	{Mod: "axis", Label: "§Axis — controlled vocabulary of tension dimensions"},
 	{Mod: "assumption", Label: "§Assumption — beliefs with a lifecycle"},
 	{Mod: "requirement", Label: "§Requirement — the requirement node"},

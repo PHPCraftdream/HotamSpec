@@ -4,11 +4,11 @@
 
 ## Canon
 
-Who owns requirements and stewards conflicts.
+Who owns requirements and resolvers conflicts.
 
 ## Narrative
 
-A Stakeholder is the human (or role) accountable for a piece of the requirement graph. Two distinct accountabilities exist and MUST stay separate: OWNER of a Requirement (defends that requirement's claim) and STEWARD of a Conflict (holds the tension between requirements; by construction the steward is NOT the owner of any member requirement, because a conflict lives BETWEEN stakeholders).
+A Stakeholder is the human (or role) accountable for a piece of the requirement graph. Two distinct accountabilities exist and MUST stay separate: OWNER of a Requirement (defends that requirement's claim) and RESOLVER of a Conflict (holds the tension between requirements; by construction the resolver is NOT the owner of any member requirement, because a conflict lives BETWEEN stakeholders).
 
 ## Why
 

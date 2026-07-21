@@ -12,8 +12,8 @@ Pre-2026-07-08 entries with no live cross-references live under `archive/`; file
 | 2026-07-12 | [2026-07-12-1221.md](2026-07-12-1221.md) | review-score-uplift-wave |
 | 2026-07-12 | [2026-07-12-1008.md](2026-07-12-1008.md) | go-port-recovery-and-review |
 | 2026-07-10 | [2026-07-10-1632.md](2026-07-10-1632.md) | Closing Этапы A-F chain + five-lens re-review + external review CONFRONT + Этапы G-K execution |
-| 2026-07-10 | [2026-07-10-0300.md](2026-07-10-0300.md) | Closing original Etap chain + five-lens review + simplification plan + steward triage + triage execution waves |
-| 2026-07-08 | [2026-07-08-0000.md](2026-07-08-0000.md) | Six-lens review execution + simplification plan + interactive steward signoff session |
+| 2026-07-10 | [2026-07-10-0300.md](2026-07-10-0300.md) | Closing original Etap chain + five-lens review + simplification plan + resolver triage + triage execution waves |
+| 2026-07-08 | [2026-07-08-0000.md](2026-07-08-0000.md) | Six-lens review execution + simplification plan + interactive resolver signoff session |
 | 2026-07-03 | [2026-07-03-1959.md](archive/2026-07-03-1959.md) | pre-shabbat, авто |
 | 2026-07-03 | [2026-07-03-1958-pre-shabbat.md](archive/2026-07-03-1958-pre-shabbat.md) | pre-shabbat пауза |
 | 2026-07-03 | [2026-07-03-1605.md](archive/2026-07-03-1605.md) | Waves 10–13 committed and pushed (fxx research on blind spots + self-model/external referent) |

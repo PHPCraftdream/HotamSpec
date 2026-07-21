@@ -7,7 +7,7 @@
   "stakeholders": [
     { "id": "S-ai-agent", "name": "AI agent", "domain": "fixture-domain", "decl_order": 0 },
     { "id": "S-domain-user", "name": "Domain user", "domain": "fixture-domain", "decl_order": 1 },
-    { "id": "S-steward", "name": "Steward", "domain": "fixture-domain", "decl_order": 2 }
+    { "id": "S-resolver", "name": "Resolver", "domain": "fixture-domain", "decl_order": 2 }
   ],
   "assumptions": [
     {
@@ -77,7 +77,7 @@
       "source_refs": ["docs/fixture-notes.md#enforced"],
       "history": [
         { "at": "2026-01-01", "summary": "drafted", "decided_by": "" },
-        { "at": "2026-01-05", "summary": "settled by steward", "decided_by": "S-steward" }
+        { "at": "2026-01-05", "summary": "settled by resolver", "decided_by": "S-resolver" }
       ],
       "decl_order": 0
     },
@@ -196,7 +196,7 @@
       "source_refs": [],
       "history": [
         { "at": "2025-12-01", "summary": "drafted", "decided_by": "" },
-        { "at": "2025-12-15", "summary": "rejected in favor of R-fixture-settled-prose", "decided_by": "S-steward" }
+        { "at": "2025-12-15", "summary": "rejected in favor of R-fixture-settled-prose", "decided_by": "S-resolver" }
       ],
       "decl_order": 5
     }
@@ -207,18 +207,18 @@
       "axis": "speed-vs-safety",
       "context": "fixture decided conflict context",
       "members": ["R-fixture-settled-enforced", "R-fixture-settled-prose"],
-      "steward": "S-steward",
+      "resolver": "S-resolver",
       "lifecycle": "DECIDED(fixture chose safety for the render path)",
       "shared_assumption": "A-holds-example",
       "derived": ["R-fixture-settled-inherent-prose"],
       "revisit_marker": "",
-      "decided_by": "S-steward",
+      "decided_by": "S-resolver",
       "variants": [
         { "id": "V-fast", "behavior": "skip verification", "implies": "faster iteration", "costs": "risk of drift" },
         { "id": "V-safe", "behavior": "verify before render", "implies": "slower iteration", "costs": "more CI time" }
       ],
       "signoff": {
-        "decided_by": "S-steward",
+        "decided_by": "S-resolver",
         "date": "2026-01-08",
         "verbatim": "we choose safety",
         "instrument": "personal",
@@ -233,12 +233,12 @@
       "axis": "centralize-vs-delegate",
       "context": "fixture held conflict context, unresolved variant choice",
       "members": ["R-fixture-draft", "R-fixture-open-question"],
-      "steward": "S-steward",
+      "resolver": "S-resolver",
       "lifecycle": "HELD",
       "shared_assumption": null,
       "derived": [],
       "revisit_marker": "",
-      "decided_by": "S-steward",
+      "decided_by": "S-resolver",
       "variants": [
         { "id": "V-central", "behavior": "one operator owns fixture growth", "implies": "simpler ownership", "costs": "single point of failure" },
         { "id": "V-delegate", "behavior": "sub-operators own fixture slices", "implies": "parallelism", "costs": "coordination overhead" }
@@ -253,7 +253,7 @@
       "axis": "speed-vs-safety",
       "context": "fixture freshly detected conflict, not yet acknowledged",
       "members": ["R-fixture-rejected", "R-fixture-settled-inherent-prose"],
-      "steward": "S-steward",
+      "resolver": "S-resolver",
       "lifecycle": "DETECTED",
       "shared_assumption": null,
       "derived": [],
@@ -297,7 +297,7 @@
       },
       "steps": [
         { "name": "draft-proposal", "requires_role": "S-ai-agent", "invokes": "fixture-entity.activate", "why": "drives the fixture entity forward" },
-        { "name": "steward-review", "requires_role": "S-domain-user", "invokes": "", "why": "" }
+        { "name": "resolver-review", "requires_role": "S-domain-user", "invokes": "", "why": "" }
       ],
       "roles_required": ["S-ai-agent", "S-domain-user"],
       "drives_entities": ["fixture-entity"],

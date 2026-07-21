@@ -77,7 +77,7 @@ package `ontology`
 | `Axis` | `string` |
 | `Context` | `string` |
 | `Members` | `[]string` |
-| `Steward` | `string` |
+| `Resolver` | `string` |
 | `Lifecycle` | `string` |
 | `SharedAssumption` | `*string` |
 | `Derived` | `[]string` |

@@ -299,11 +299,11 @@ func TestCheckCanonicalLifecyclesWellformed_FrameworkSelfTest(t *testing.T) {
 	}
 }
 
-func TestCheckOperatorStewardNotSelf_OK(t *testing.T) {
+func TestCheckOperatorResolverNotSelf_OK(t *testing.T) {
 	t.Parallel()
 	c := baseConflict()
 	c.Members = []string{"R-1", "R-2"}
-	c.Steward = "OP-out"
+	c.Resolver = "OP-out"
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sOut, sA, sB},
 		Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
@@ -314,16 +314,16 @@ func TestCheckOperatorStewardNotSelf_OK(t *testing.T) {
 			op("OP-out", "outsider", "ACTIVE"),
 		},
 	}
-	if vs := runCheck(t, "check_operator_steward_not_self", g); len(vs) != 0 {
-		t.Fatalf("operator outside the member-owners may steward; expected no violations, got %v", vs)
+	if vs := runCheck(t, "check_operator_resolver_not_self", g); len(vs) != 0 {
+		t.Fatalf("operator outside the member-owners may resolver; expected no violations, got %v", vs)
 	}
 }
 
-func TestCheckOperatorStewardNotSelf_FiresWhenStewardOwnsMember(t *testing.T) {
+func TestCheckOperatorResolverNotSelf_FiresWhenResolverOwnsMember(t *testing.T) {
 	t.Parallel()
 	c := baseConflict()
 	c.Members = []string{"R-1", "R-2"}
-	c.Steward = "OP-1"
+	c.Resolver = "OP-1"
 	g := &ontology.Graph{
 		Stakeholders: []ontology.Stakeholder{sOut, sA, sB},
 		Requirements: []ontology.Requirement{req("R-1", "sa"), req("R-2", "sb")},
@@ -333,9 +333,9 @@ func TestCheckOperatorStewardNotSelf_FiresWhenStewardOwnsMember(t *testing.T) {
 			op("OP-2", "sb", "ACTIVE"),
 		},
 	}
-	vs := runCheck(t, "check_operator_steward_not_self", g)
+	vs := runCheck(t, "check_operator_resolver_not_self", g)
 	if !hasViolationFor(vs, c.ID) {
-		t.Fatalf("expected violation when operator stewards a conflict its stakeholder owns a member of, got %v", vs)
+		t.Fatalf("expected violation when operator resolvers a conflict its stakeholder owns a member of, got %v", vs)
 	}
 }
 

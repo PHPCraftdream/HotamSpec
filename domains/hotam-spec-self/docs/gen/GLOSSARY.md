@@ -17,10 +17,10 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | slug | definition |
 |---|---|
 | `§Requirement` | The requirement node — a claim the system shall satisfy. |
-| `§Conflict` | The first-class connector NODE between requirements, carrying axis+context+steward. |
+| `§Conflict` | The first-class connector NODE between requirements, carrying axis+context+resolver. |
 | `§Assumption` | A belief with its own lifecycle (HOLDS/UNCERTAIN/DEAD). |
 | `§Axis` | A controlled-vocabulary entry naming a tension dimension. |
-| `§Stakeholder` | Accountability facet: who owns a requirement or stewards a conflict. |
+| `§Stakeholder` | Accountability facet: who owns a requirement or resolvers a conflict. |
 | `§Invariants` | Structural form of the tension graph (check_* functions). |
 | `§Graph` | The TensionGraph container + traversal + loader. |
 | `§Lifecycle` | The generic state-machine value-type — keystone for Requirement.status / Conflict.lifecycle / future Operator/Process lifecycles. |
@@ -30,9 +30,9 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Glossary` | The methodology's controlled vocabulary (this module). |
 | `§Scope` | An operator's sub-domain as a PROJECTION (id-set view) over the shared graph, not a copy; overlaps with another operator's projection are computed and rendered, never hidden. |
 | `§Ticket` | A durable on-disk work item (tickets/<status>/T-<n>.md): frontmatter header + Markdown body, mutated only through the ticket_* tools which auto-maintain its status-and-text History. |
-| `§Proposal` | Structured operator-→-steward change proposals: the closed loop's ACT half. |
+| `§Proposal` | Structured operator-→-resolver change proposals: the closed loop's ACT half. |
 | `§Closure` | Per-action verify: after apply-proposal writes + regens + tests-green, asserts the triggering diagnosis was actually removed. |
-| `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for steward attention. |
+| `§Tick` | The closed-loop diagnostic driver (advisory, M32 conservative): one cycle loads the graph, diagnoses, and emits a TickReport for resolver attention. |
 | `§Conscience` | The Hypothesis property-test sweep over the critical-core invariants (M7) — does my OWN edit introduce a contradiction? |
 | `§Constitution` | The operator's boot sequence — the generated reconstitution from the substrate's SETTLED laws. |
 | `§Reflection` | The operator self-diagnosis band (P0) — diagnoses the operator's OWN readiness: DRAFT-overhang, UNENFORCED-SETTLED debt, over-budget operators, dead-assumption-on-enforcer, derived-but-unbuilt. |
@@ -43,14 +43,14 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `§Agent` | A scoped sub-operator directory (domains/<domain>/agents/<name>/) with a scope definition, CLAUDE.md, tools/, agents/, and docs/ subdirectories. |
 | `§Domain` | A self-contained business domain directory (domains/<name>/) with manifest.json, graph.json, tools/, agents/director/, docs/gen/, and CLAUDE.md. |
 | `§Entity` | Domain-declared business concept with its own lifecycle (M12 opt-in aspect): EntityType + EntityField + EntityInstance; check_entity_* covers every declared type by iteration. |
-| `§Signoff` | The frozen provenance payload (decided_by + date + verbatim + instrument + chosen_variant) attached to a node a human steward decided on; not a node type, a payload like Variant. |
+| `§Signoff` | The frozen provenance payload (decided_by + date + verbatim + instrument + chosen_variant) attached to a node a human resolver decided on; not a node type, a payload like Variant. |
 | `§Attention` | The agent-agnostic registry of attention-codes (ATTENTION_SOURCES): collect() runs the sources and returns typed AttentionSignals. Graph sources are deterministic (the diagnose subset the substrate consumes); runtime-fs sources are injected by the live consumer to form the agent superset. |
 
 ## Lifecycle states
 | slug | definition |
 |---|---|
-| `DETECTED` | A conflict has been surfaced but no steward action yet. |
-| `ACKNOWLEDGED` | Steward accepts the conflict is real and owns it. |
+| `DETECTED` | A conflict has been surfaced but no resolver action yet. |
+| `ACKNOWLEDGED` | Resolver accepts the conflict is real and owns it. |
 | `DECIDED` | Resolved with recorded rationale and/or a derived requirement. |
 | `REVISIT_WHEN` | Parked with an explicit revisit condition (anti-relitigation). |
 
@@ -71,7 +71,7 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 ## Roles
 | slug | definition |
 |---|---|
-| `steward` | Holds a conflict; by construction NOT the owner of any of its members. |
+| `resolver` | Holds a conflict; by construction NOT the owner of any of its members. |
 | `owner` | Stakeholder who defends a requirement or an assumption. |
 | `operator` | An acting agent that owns a bounded sub-domain of the graph. |
 
@@ -84,8 +84,8 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 | `anchor` | A stable, short, typed identifier (R-/C-/A-/§) the operator references rather than re-carries. |
 | `substrate` | The durable, enforced/regenerable/addressable store — free of context cost. |
 | `burn-down` | Promotion of DRAFT requirements to ENFORCED; the methodology's honesty governor. |
-| `playbook` | A band-specific procedure the AI operator follows to convert a what_now action into a structured proposal for steward approval. |
-| `apply_proposal` | The mechanical writer (`hotam apply-proposal`) that lands a steward-approved proposal into the domain's graph.json; the AI never edits the graph by hand. |
+| `playbook` | A band-specific procedure the AI operator follows to convert a what_now action into a structured proposal for resolver approval. |
+| `apply_proposal` | The mechanical writer (`hotam apply-proposal`) that lands a resolver-approved proposal into the domain's graph.json; the AI never edits the graph by hand. |
 | `critical core` | The set of invariants whose violation would silently break the hard boundary or anti-drift — the conscience's narrow scope (M7). |
 | `Step` | One step in a Process — a verb requiring a declared role (requires_role must be in Process.roles_required). |
 | `Gap` | The distance between a Goal's target_state and the current state — drives Process execution and is the measurable work remaining. |

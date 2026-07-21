@@ -86,7 +86,7 @@ none (babysit-крон снят; /goal не устанавливался)
 ```
 
 ```
-f5073b5 feat: signature-wave -- 6 steward verdicts landed + pending-proposal machinery + global-patch tool
+f5073b5 feat: signature-wave -- 6 resolver verdicts landed + pending-proposal machinery + global-patch tool
 70ee197 feat: seed coherence + LAND-tier trace + explicit doc-reader bindings
 ccac757 feat: DECIDE C-8600b1b8 + M22 rules-as-data classification + context hook installer
 6807a9e feat: tiered LAND gates + 3x regen speedup + doc readers + honesty wave

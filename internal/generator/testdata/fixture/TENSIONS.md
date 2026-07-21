@@ -15,11 +15,11 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** fixture decided conflict context
 - **members:** `R-fixture-settled-enforced`, `R-fixture-settled-prose`
-- **steward:** `S-steward`
+- **resolver:** `S-resolver`
 - **lifecycle:** DECIDED(fixture chose safety for the render path)
 - **shared assumption:** `A-holds-example`
 - **spawned (lineage):** `R-fixture-settled-inherent-prose`
-- **variants** (steward chooses one):
+- **variants** (resolver chooses one):
   - `V-fast`
     - behavior: skip verification
     - implies: faster iteration
@@ -33,7 +33,7 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** fixture freshly detected conflict, not yet acknowledged
 - **members:** `R-fixture-rejected`, `R-fixture-settled-inherent-prose`
-- **steward:** `S-steward`
+- **resolver:** `S-resolver`
 - **lifecycle:** DETECTED
 
 ### Axis `centralize-vs-delegate` — 1 conflict(s), single tension
@@ -42,9 +42,9 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** fixture held conflict context, unresolved variant choice
 - **members:** `R-fixture-draft`, `R-fixture-open-question`
-- **steward:** `S-steward`
+- **resolver:** `S-resolver`
 - **lifecycle:** HELD
-- **variants** (steward chooses one):
+- **variants** (resolver chooses one):
   - `V-central`
     - behavior: one operator owns fixture growth
     - implies: simpler ownership

@@ -16,9 +16,9 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
    axes they would close (R-axis-controlled-vocab).
 4. Names the impact: which DRAFT requirements would be unblocked, which
    conflicts would spawn or close, what burn-down delta to expect.
-5. Hands the steward a `ProposedRequirement` JSON for the variant the steward
-   selects. Steward review is OUT-OF-BAND (here in chat, or a PR).
-6. On steward approval: call `hotam land <approved.json> --domain <path> --today YYYY-MM-DD`
+5. Hands the resolver a `ProposedRequirement` JSON for the variant the resolver
+   selects. Resolver review is OUT-OF-BAND (here in chat, or a PR).
+6. On resolver approval: call `hotam land <approved.json> --domain <path> --today YYYY-MM-DD`
    (or `hotam apply-proposal` + `hotam gen-spec` separately) to mechanically
    land the change. Verify the pipeline runs green (`hotam all-violations`).
 
@@ -44,7 +44,7 @@ R-ai-presents-not-decides binds. For each P4 action the operator:
 }
 ```
 
-## Checklist before handing to steward
+## Checklist before handing to resolver
 
 - [ ] The OPEN requirement's id, claim, and question are cited exactly (R-speak-by-reference).
 - [ ] At least one assumption is named and its status (HOLDS/UNCERTAIN/DEAD) is stated.

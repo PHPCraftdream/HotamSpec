@@ -59,4 +59,4 @@ R-tool-what-now [S]
 
 **Entity-derived requirements**
 
-- **R-entity-wave** — *A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed steward review and a commit.* [STRUCTURAL·entity · §Entity] [enforced_by: `check_entity_type_lifecycle_wellformed`, `check_entity_instance_state_in_lifecycle`, `check_entity_instance_required_fields`, `check_entity_instance_id_prefix`, `check_entity_instance_refs_resolve`, `check_entity_field_kind_known`, `check_typed_anchors_entity`]
+- **R-entity-wave** — *A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed resolver review and a commit.* [STRUCTURAL·entity · §Entity] [enforced_by: `check_entity_type_lifecycle_wellformed`, `check_entity_instance_state_in_lifecycle`, `check_entity_instance_required_fields`, `check_entity_instance_id_prefix`, `check_entity_instance_refs_resolve`, `check_entity_field_kind_known`, `check_typed_anchors_entity`]

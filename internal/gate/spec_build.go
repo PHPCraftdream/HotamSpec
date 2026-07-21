@@ -80,18 +80,18 @@ const specEmptyNotice = "_No domain content loaded — no `domains/<name>/graph.
 
 const specUnresolvedReader = "(unresolved-reader)"
 
-const specRoleDomainSteward = "domain-steward"
+const specRoleDomainResolver = "domain-resolver"
 
 // specReaderHeaderLine mirrors generator.ReaderHeaderLine("SPEC", g) exactly:
-// SPEC.md's DocReaderRoles entry is RoleDomainSteward, and its
+// SPEC.md's DocReaderRoles entry is RoleDomainResolver, and its
 // DomainDocReaders binding is "domain-user" -- both hardcoded here since
 // this file only ever renders the one "SPEC" docKind, unlike
 // generator.ReaderHeaderLine's general docKind lookup table.
 func specReaderHeaderLine(g *ontology.Graph) string {
-	role := specRoleDomainSteward
+	role := specRoleDomainResolver
 	boundID := "domain-user"
 	stakeholderIDs := ontology.StakeholderIDs(g)
-	roleBindings := map[string]string{specRoleDomainSteward: boundID}
+	roleBindings := map[string]string{specRoleDomainResolver: boundID}
 	bound, ok := roleBindings[role]
 	if !ok {
 		return "reader: " + specUnresolvedReader

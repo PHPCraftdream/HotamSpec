@@ -125,7 +125,7 @@ ProposedRequirement.relations`.)
 ## Stakeholder
 
 Adds a new accountable party. Usually the *first* thing you create — a
-Conflict's steward must not own any of its members, so you need at least two
+Conflict's resolver must not own any of its members, so you need at least two
 distinct stakeholders before you can hold a tension.
 
 **Required:** `id`, `name`, `domain`
@@ -283,7 +283,7 @@ writer computes it as `conflict_identity(axis, context)`
 (`R-stable-conflict-identity`).
 
 **Required:** `axis` (must already exist in the graph's axes), `context`,
-`members` (list of >= 2 distinct Requirement ids), `steward` (a Stakeholder id
+`members` (list of >= 2 distinct Requirement ids), `resolver` (a Stakeholder id
 that owns none of the members)
 **Optional:** `shared_assumption` (an Assumption id, default `""`), `note`
 (presentation-only, never written to the graph, default `""`),
@@ -297,7 +297,7 @@ edge case may start elsewhere — see `internal/proposal/mutate.go`),
   "axis": "speed-vs-rigor",
   "context": "first release cadence",
   "members": ["R-ship-fast", "R-verify-all"],
-  "steward": "carol",
+  "resolver": "carol",
   "shared_assumption": "",
   "note": "surfaced while scaffolding the demo domain"
 }
@@ -318,7 +318,7 @@ leave untouched), `derived` (list of R-ids spawned by this decision, default
 `[]`), `variants` (list of `{id, behavior, implies, costs}` objects; required
 with >= 2 entries when `new_lifecycle` starts with `HELD`, and must be
 repeated unchanged on a later `HELD` -> `DECIDED` move to preserve them),
-`date` (ISO date, defaults to today), `verbatim` (the steward's own words,
+`date` (ISO date, defaults to today), `verbatim` (the resolver's own words,
 default `""`), `instrument` (`"personal"` default, or `"DEL-<n>"` for a filed
 delegation), `chosen_variant` (a `V-id` from `variants`, when resolving
 `HELD` -> `DECIDED`)
@@ -406,7 +406,7 @@ Stamps an EXISTING Requirement's freshness metadata (`last_reviewed_at`,
 (`claim`/`why`/`status`/`enforcement`/... are all left untouched — see
 `ProposedReviewMark` in `internal/proposal/types.go`). It exists as its own
 narrow kind rather than going through a `Requirement` UPDATE so a review act
-(the steward re-affirmed a claim is still true) stays distinguishable from a
+(the resolver re-affirmed a claim is still true) stays distinguishable from a
 content edit.
 
 **Required:** `requirement_id`, `evidence` (list of strings; at least one
@@ -434,7 +434,7 @@ SETTLED requirements that already carry empty `evidence`). Whether the
 corpus's existing empty-evidence requirements should be left to accumulate
 real evidence naturally as each one comes up for its own `review_after` date
 (the patient reading), or whether some other forward-looking policy is
-warranted, is a steward call, not decided here.
+warranted, is a resolver call, not decided here.
 
 ## OperatorBudget
 
@@ -555,9 +555,9 @@ is rejected with a clear error naming it), `why` (default `""`)
   "id": "PR-release-review",
   "steps": [
     {"name": "propose", "requires_role": "operator", "invokes": "", "why": "draft the release for review"},
-    {"name": "approve", "requires_role": "steward", "invokes": "", "why": "steward signs off before ship"}
+    {"name": "approve", "requires_role": "resolver", "invokes": "", "why": "resolver signs off before ship"}
   ],
-  "roles_required": ["operator", "steward"],
+  "roles_required": ["operator", "resolver"],
   "drives_entities": ["release"],
   "why": "models the release-review behavioral flow as a first-class Process"
 }

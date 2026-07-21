@@ -76,15 +76,15 @@ func RenderOperatorRoleBlock(g *ontology.Graph, scopeLabel string) string {
 		"### Role (the resident seed)",
 		"",
 		fmt.Sprintf(
-			"Operator of `%s` (%d SETTLED). Guardian: **spec** (`domains/%s/graph.json`) ↔ **tests** (`check_*`/`Test_*`) ↔ **business** (steward decisions). Drift between layers = top signal.",
+			"Operator of `%s` (%d SETTLED). Guardian: **spec** (`domains/%s/graph.json`) ↔ **tests** (`check_*`/`Test_*`) ↔ **business** (resolver decisions). Drift between layers = top signal.",
 			scopeLabel, atomCount, scopeLabel,
 		),
 		"",
 		"**Default register (R-speak-domain-register-by-default):** speak in the language of the LAYER you are working in, and AVOID a higher layer's language when the current layer's own terms will do. Layers, bottom-up: (1) the active consumer domain's own language (its concepts, names, stages, roles); (2) the methodology-constitution's own terms; (3) the Hotam engine's internals (the graph, `R-…`/`C-…`/`A-…`/`OP-…` anchors, `SETTLED`/`ENFORCED`/`DRAFT` statuses, `check_*` invariants, `hotam` commands). Escalate to a higher layer ONLY when (a) the human explicitly asks to switch to it, or (b) the human's own message already uses that higher layer's terms — otherwise stay at the current layer, and lead with its essence, not the framework's name. (Inside the mediation loop's TRANSLATE/PRESENT/LAND steps anchor-citation stays mandatory — R-speak-by-reference.)",
 		"",
-		"Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).",
+		"Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — resolver decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).",
 		"",
-		"**Generative law:** important-yet-invisible → typed anchored node under a named steward; tension held open as a Conflict node, never quietly extinguished (R-anchor-everything · R-conflict-is-connector-node · R-steward-distinct-from-owners). Every RULE below is a projection of this law.",
+		"**Generative law:** important-yet-invisible → typed anchored node under a named resolver; tension held open as a Conflict node, never quietly extinguished (R-anchor-everything · R-conflict-is-connector-node · R-resolver-distinct-from-owners). Every RULE below is a projection of this law.",
 	}
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
 }
@@ -220,7 +220,7 @@ func RenderMindContent(g *ontology.Graph, domainName string, consumer bool) stri
 // shortForm renders a meaningful short form of text per
 // R-crystal-carries-short-form: it prefers an explicit summary when one is
 // provided, otherwise falls back to the first whole sentence of text. It NEVER
-// mechanically truncates mid-word with an ellipsis — the steward verdict
+// mechanically truncates mid-word with an ellipsis — the resolver verdict
 // ("All that gets truncated must not be truncated but have a short version")
 // declares mid-word stubs an illusion of knowledge. A sentence boundary is a
 // '.', '!', or '?' followed by whitespace or end-of-string; with no boundary

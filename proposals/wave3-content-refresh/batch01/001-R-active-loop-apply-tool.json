@@ -4,7 +4,7 @@
   "claim": "A CLI command (`hotam apply-proposal`, `cmd/hotam`) shall consume an approved Proposed* JSON proposal and mechanically apply the change to the domain's graph.json (`domains/<name>/graph.json`) via `internal/proposal.Apply`, never by a hand-edit.",
   "owner": "ai-agent",
   "status": "SETTLED",
-  "why": "Atom of R-active-loop-playbooks (tool concern). `hotam apply-proposal` (and the `hotam land` pipeline that wraps apply + gen-spec + all-violations) lands a steward-approved JSON proposal into domains/<name>/graph.json and runs the regen+verify pipeline (internal/proposal + internal/generator + internal/invariants). Replaces the pre-port tools/apply_proposal.py + spec/content/graph.py path; the Go graph is plain JSON data, not source code spliced by AST.",
+  "why": "Atom of R-active-loop-playbooks (tool concern). `hotam apply-proposal` (and the `hotam land` pipeline that wraps apply + gen-spec + all-violations) lands a resolver-approved JSON proposal into domains/<name>/graph.json and runs the regen+verify pipeline (internal/proposal + internal/generator + internal/invariants). Replaces the pre-port tools/apply_proposal.py + spec/content/graph.py path; the Go graph is plain JSON data, not source code spliced by AST.",
   "source_refs": [
     "cmd/hotam/apply_proposal.go",
     "cmd/hotam/land.go",

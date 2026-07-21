@@ -1,5 +1,5 @@
 {
-  "sha256": "1dfd8c96a9a79a12897c4eb68bf5e4f0600117553a8a7d69ac8282d9a5bb102d",
-  "updated_at": "2026-07-21T05:02:45Z",
-  "note": "Requirement R-orientation-faq-answerable applied (hand-landed replicating loader.WriteLock exactly via cmd/wlock_tmp; apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with committed SPEC.md -- see requirement History for full explanation). Adds manifest orientation_faq opt-in field + check_orientation_faq_answered invariant."
+  "sha256": "de97ef36edf3ca48072841c62c9d22dd8aa1f0eaa2a145dbef3ca0d927032b27",
+  "updated_at": "2026-07-21T12:24:10Z",
+  "note": "Mechanical rename: steward -\u003e resolver (Conflict.Steward field, R-steward-distinct-from-owners -\u003e R-resolver-distinct-from-owners), user-directed full sweep (R1, task #294)"
 }

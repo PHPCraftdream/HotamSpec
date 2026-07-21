@@ -23,7 +23,7 @@ func TestRenderProjectEssenceBlock_FieldsPresent(t *testing.T) {
 	manifest := `{
   "purpose": "Demo consumer domain.",
   "goals": ["ship feature A", "close debt B"],
-  "director": "steward-role"
+  "director": "resolver-role"
 }`
 	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
 		t.Fatalf("write manifest: %v", err)
@@ -34,7 +34,7 @@ func TestRenderProjectEssenceBlock_FieldsPresent(t *testing.T) {
 		"### Project essence",
 		"- **purpose** — Demo consumer domain.",
 		"- **goals** — ship feature A, close debt B",
-		"- **director** — steward-role",
+		"- **director** — resolver-role",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("PROJECT-ESSENCE missing %q, got:\n%s", want, out)

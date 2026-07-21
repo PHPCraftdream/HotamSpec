@@ -30,7 +30,7 @@ Requirements with no `implemented_by`/`verified_by` AND no `enforced_by` — hon
 | `R-spawn-logged` | SETTLED | STRUCTURAL | Every sub-agent spawn shall be appended to the runtime spawn-log (.runtime/spawn-log.jsonl). |
 | `R-land-leaves-trace` | SETTLED | PROSE | Every applied proposal shall leave a trace entry in the runtime land-log (.runtime/land-log.jsonl). |
 | `R-commit-follows-review` | SETTLED | PROSE | A commit shall land only after review of the diff by a human or an agent code-review step. |
-| `R-push-only-on-request` | SETTLED | PROSE | Push to remote shall occur only on the dev-steward's explicit request, never autonomously. |
+| `R-push-only-on-request` | SETTLED | PROSE | Push to remote shall occur only on the dev-resolver's explicit request, never autonomously. |
 | `R-wave-strictly-sequential` | SETTLED | STRUCTURAL | Waves touching overlapping files or scopes shall run strictly sequentially, never concurrently. |
 | `R-host-spawn-leaves-trace` | SETTLED | STRUCTURAL | Every host-level agent spawn shall leave a row in the runtime spawn-log (.runtime/spawn-log.jsonl), via the spawn_agent tool's log-only path or an equivalent host hook. |
 | `R-worktree-parallel-permitted` | SETTLED | PROSE | Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide. |

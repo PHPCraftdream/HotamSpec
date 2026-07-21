@@ -26,7 +26,7 @@ func TestAllViolations_DeterministicOrder(t *testing.T) {
 	t.Parallel()
 	bad := baseConflict()
 	bad.Members = []string{"R-1"}
-	bad.Steward = "sa"
+	bad.Resolver = "sa"
 	bad.ID = "C-bad"
 	g := graphWithConflict(bad, nil)
 	first := AllViolations(g)

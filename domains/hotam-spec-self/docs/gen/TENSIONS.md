@@ -15,8 +15,8 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** the agent develops requirements, integrates new ones, finds contradictions, proposes resolutions, formalizes back into code, runs tests
 - **members:** `R-agent-never-lost`, `R-ai-presents-not-decides`
-- **steward:** `framework-author`
-- **lifecycle:** DECIDED(structured proposal protocol — the AI emits ProposedRequirement / ProposedConflict / ProposedResolution as JSON; the human steward approves; tools/apply_proposal.py mechanically writes the change into spec/content/; see derived R-active-loop-playbooks)
+- **resolver:** `framework-author`
+- **lifecycle:** DECIDED(structured proposal protocol — the AI emits ProposedRequirement / ProposedConflict / ProposedResolution as JSON; the human resolver approves; tools/apply_proposal.py mechanically writes the change into spec/content/; see derived R-active-loop-playbooks)
 - **shared assumption:** `A-stakeholders-care`
 - **spawned (lineage):** `R-active-loop-playbooks`
 - **revisit marker:** REVISIT if domain-users report the playbook overhead negates the harness's directness (the loop becomes slower than free manual editing) — then re-calibrate band-by-band.
@@ -27,7 +27,7 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** the methodology's own design needs to be modeled to demonstrate the framework end-to-end
 - **members:** `R-content-free-framework`, `R-empty-content-is-legitimate`
-- **steward:** `framework-reviewer`
+- **resolver:** `framework-reviewer`
 - **lifecycle:** DECIDED(the meta-domain lives in spec/content/graph.py exactly as any user's domain would; the framework code stays empty of business data; the worked-example fixture stays under spec/tests/fixtures/. The framework's own design is content for the methodology's reference domain.)
 - **shared assumption:** `A-content-free-honest`
 - **revisit marker:** REVISIT if a fresh framework clone needs the meta-domain to self-bootstrap (cf. M8 content-layout evolution).
@@ -38,7 +38,7 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** extending the framework to surface behavioral contradictions (dead states, two processes one entity)
 - **members:** `R-content-free-framework`, `R-agent-never-lost`
-- **steward:** `domain-user`
+- **resolver:** `domain-user`
 - **lifecycle:** DECIDED(The framework ships content-free and the agent still never gets lost: the initiator supplies the agent its domain content at boot, and the agent crystallizes that content into the domain code-spec. Агент должен получать от инициатора контент о своей области и должен его кристаллизовать в код-спеке. Decided by domain-user, 2026-07-02.)
 - **shared assumption:** `A-text-grounded-in-models`
 - **revisit marker:** REVISIT when a fifth opt-in aspect is proposed OR the first inter-aspect conflict is observed — at that point the core-vs-aspect boundary must be formally re-decided. Boundary re-affirmed at three aspects (2026-07-03): no inter-aspect conflict observed; alarm re-armed. shared_assumption re-pointed from the now-DEAD A-prose-suffices onto its live replacement A-text-grounded-in-models (V2).
@@ -47,12 +47,12 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** R-speculative-aspects-frozen freezes the Entity aspect (no inward development until a real business domain demonstrates concrete need), while R-entity-derived-requirement's own enforcement expects EntityType declarations to keep projecting into the domain's CLAUDE.md CONSTITUTION block -- new domain content under the Entity aspect is exactly the kind of inward development the freeze forbids, yet the aspect's enforceability claim presumes it stays live enough to receive new EntityType projections as domains populate it.
 - **members:** `R-speculative-aspects-frozen`, `R-entity-derived-requirement`
-- **steward:** `framework-reviewer`
+- **resolver:** `framework-reviewer`
 - **lifecycle:** DECIDED(chosen variant V-unfreeze-entity-projection per explicit campaign delegation 2026-07-02 ("все вопросы решай в сторону совершенства"))
-- **variants** (steward chooses one):
+- **variants** (resolver chooses one):
   - `V-unfreeze-entity-projection`
     - behavior: Unfreeze the Entity->CLAUDE.md CONSTITUTION projection specifically (not the whole Entity aspect): allow new EntityType declarations to keep generating R-entity-<slug> constitution rows and enforced_by coverage, while the REST of the Entity aspect (create_entity_type.py inward edits, entity.py machinery growth) stays frozen under R-speculative-aspects-frozen's baseline hash guard.
-    - implies: R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the steward signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.
+    - implies: R-speculative-aspects-frozen is narrowed from 'the Entity aspect' to 'the Entity aspect's machinery, excluding the CLAUDE.md projection path' -- a scope amendment to the freeze's own claim, landed as its own atomized requirement change (not a hand-edit) once the resolver signs. R-entity-derived-requirement keeps its ENFORCED claim exactly as written with no honesty gap.
     - costs: The freeze's hash-baseline test (test_frozen_aspects_snapshot.py) currently covers src/hotam_spec/entity.py wholesale; carving out the projection path requires either a narrower baseline or a second frozen-surface declaration, adding one more piece of frozen-aspect bookkeeping. Slightly weakens the freeze's simplicity (one clean boundary becomes two).
   - `V-keep-freeze-defer-enforce`
     - behavior: Keep R-speculative-aspects-frozen exactly as-is (the whole Entity aspect frozen, zero inward development) and demote R-entity-derived-requirement's enforcement from its current STRUCTURAL/claimed-guarantee posture to an explicitly conditional claim: 'this SHALL hold once the Entity aspect unfreezes; until then it is dormant-by-construction (0 entity_types in the graph makes the claim vacuously true, not falsely enforced).'
@@ -65,7 +65,7 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** crystallizing the full accumulated design into the methodology vs keeping the framework minimal
 - **members:** `R-crystallize-knowledge-to-code`, `R-content-free-framework`
-- **steward:** `framework-reviewer`
+- **resolver:** `framework-reviewer`
 - **lifecycle:** DECIDED(crystallize the design as DRAFT/OPEN requirements — recorded but UNBUILT; the status itself marks them proposed-not-built, so coverage rises without adding apparatus weight to src/hotam_spec. The substrate grows; the framework code stays minimal.)
 - **shared assumption:** `A-content-free-honest`
 - **revisit marker:** REVISIT if the DRAFT backlog grows faster than it is built — then prune or promote.
@@ -76,7 +76,7 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** an operator approaching its context budget must choose how to relieve pressure
 - **members:** `R-context-bounded-delegation`, `R-crystallize-knowledge-to-code`
-- **steward:** `domain-user`
+- **resolver:** `domain-user`
 - **lifecycle:** DECIDED(crystallize-before-split — the operator crystallizes first and re-measures (see R-crystallize-before-split); delegation/splitting is the vertical lever of last resort, used only when knowledge is irreducible and the operator is still over budget.)
 - **shared assumption:** `A-finite-context-operators`
 - **spawned (lineage):** `R-crystallize-before-split`
@@ -87,7 +87,7 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** splitting an over-budget operator domain for parallel sub-operators when some sub-parts are coupled by dependencies
 - **members:** `R-context-bounded-delegation`, `R-dependency-graph-parallelism`
-- **steward:** `framework-reviewer`
+- **resolver:** `framework-reviewer`
 - **lifecycle:** DECIDED(the dependency graph decides — parallelize independent components, sequence coupled chains; cut the domain along lines of independence, never arbitrarily.)
 - **shared assumption:** `A-finite-context-operators`
 
@@ -97,8 +97,8 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 
 - **context:** every newly SETTLED atom adds resident weight to the operator crystal: R-operator-prompt-from-substrate + R-constitution-is-index project ALL SETTLED requirements into root CLAUDE.md (~64k chars at 198 atoms), while R-budget-measure caps that same crystal at 130000 warn / 150000 hard (CRYSTAL_CHARS) -- crystallization pressure and the residency cap collide monotonically as the graph grows, with no eviction mechanic beyond tiered distillation
 - **members:** `R-operator-prompt-from-substrate`, `R-budget-measure`
-- **steward:** `framework-reviewer`
-- **lifecycle:** DECIDED(DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Steward verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.)
+- **resolver:** `framework-reviewer`
+- **lifecycle:** DECIDED(DECIDED by tree-of-links law: the root instruction holds only links; when a level is full, links descend to second-level docs and deeper -- growth is unbounded because eviction is structural. Resolver verdict 2026-07-03 (V4), verbatim: «у нас есть файлы, на которые только ссылкается коренвая инстуркуция. Если корневая инсррукуция полна ссылками до предела, то нужно писать ссылки в доках второго уровня и тд». The crystallization-pressure vs residency-cap collision (R-operator-prompt-from-substrate vs R-budget-measure) is resolved not by evicting knowledge but by making the resident crystal a tree of links: the root CLAUDE.md carries references, and when it saturates, references cascade into second-level docs (and deeper), so total addressable substrate grows without bound while the RESIDENT char-count stays under the cap. Decided by domain-user, 2026-07-03.)
 - **shared assumption:** `A-finite-context-operators`
 
 ## Hotam-Specn map (Mermaid)

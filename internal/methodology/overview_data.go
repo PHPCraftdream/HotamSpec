@@ -25,7 +25,7 @@ THE CENTRAL INVERSION (vs the dev-coin reference):
   dev-coin proves CONSISTENCY — one canon, drift forbidden, conflicts closed
   forever (0 open mechanisms). Hotam-Spec does the OPPOSITE — it makes contradictions
   visible and KEEPS them visible. A contradiction is never silently "fixed"; it
-  is a node that transitions through a lifecycle under a human steward.
+  is a node that transitions through a lifecycle under a human resolver.
 
 THE CENTRAL INSIGHT — Conflict is a connector NODE, not an edge:
   A naive model makes conflict an edge ` + "`conflicts_with`" + ` between R-87 and R-203.
@@ -70,7 +70,7 @@ THE AI'S THREE ROLES + THE HARD BOUNDARY:
   - Socratic partner — surfaces hidden assumptions, never resolves.
   - Historian — recalls decision rationale + revisit-conditions that have triggered.
   HARD BOUNDARY: the AI NEVER closes a conflict silently. It presents, justifies,
-  asks. The decision and its recording stay with the human steward — otherwise
+  asks. The decision and its recording stay with the human resolver — otherwise
   invisibility returns, now AI-created.
 
 STORAGE: the store is a JSON graph file (domains/<name>/graph.json), loaded into
@@ -89,16 +89,16 @@ framework, in a test fixture graph.json, and is loaded only via the explicit
 ` + "`--demo`" + ` flag of the tools or by the tests.
 
 Package structure (module = ontology section / methodology chapter):
-  stakeholder — Stakeholder: who owns requirements and stewards conflicts.
+  stakeholder — Stakeholder: who owns requirements and resolvers conflicts.
   axis        — Axis: one entry of the controlled tension vocabulary.
   assumption  — Assumption: a claim with its own lifecycle (HOLDS/DEAD/UNCERTAIN).
   requirement — Requirement: the claim, its assumptions, owner, typed relations.
-  conflict    — Conflict: the first-class connector NODE (axis, context, steward).
+  conflict    — Conflict: the first-class connector NODE (axis, context, resolver).
   graph       — Graph container + content loader + traversal helpers
                 (no business data here; internal/loader reads domains/<name>/graph.json).
   invariants  — structural graph invariants (check_* functions returning the
                 violation list): the form of the tension graph that must always
-                hold (a stewardless conflict, a dangling member, an OPEN with no
+                hold (a resolverless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 
 CANON-SECTION SCHEME (every public object carries a ` + "`Canon: §<name>`" + ` label):

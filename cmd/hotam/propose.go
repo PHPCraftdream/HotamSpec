@@ -142,7 +142,7 @@ func cmdProposeRequirement(args []string) error {
 	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<id>.json relative to cwd)")
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal (only meaningful with --land)")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, steward+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History (only meaningful with --land)")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History (only meaningful with --land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
 	fs.Parse(args)
@@ -322,7 +322,7 @@ func cmdProposeConflict(args []string) error {
 	axis := fs.String("axis", "", "existing axis slug, e.g. latency-vs-cost (required)")
 	context := fs.String("context", "", "free-text context describing the tension (required)")
 	members := fs.String("members", "", "comma-separated requirement ids (R-...) in tension, at least two distinct (required)")
-	steward := fs.String("steward", "", "stakeholder id who stewards this conflict — must NOT own any member (required)")
+	resolver := fs.String("resolver", "", "stakeholder id who resolvers this conflict — must NOT own any member (required)")
 	sharedAssumption := fs.String("shared-assumption", "", "assumption id (A-...) shared by the conflict members")
 	note := fs.String("note", "", "free-text note")
 	initialLifecycle := fs.String("initial-lifecycle", "", "initial lifecycle: DETECTED (default) or DECIDED(...)")
@@ -336,7 +336,7 @@ func cmdProposeConflict(args []string) error {
 	fs.Parse(args)
 
 	for _, c := range []struct{ flag, label string }{
-		{*axis, "axis"}, {*context, "context"}, {*members, "members"}, {*steward, "steward"},
+		{*axis, "axis"}, {*context, "context"}, {*members, "members"}, {*resolver, "resolver"},
 	} {
 		if strings.TrimSpace(c.flag) == "" {
 			return fmt.Errorf("--%s is required for propose conflict", c.label)
@@ -347,7 +347,7 @@ func cmdProposeConflict(args []string) error {
 		Axis:             *axis,
 		Context:          *context,
 		Members:          splitCSV(*members),
-		Steward:          *steward,
+		Resolver:         *resolver,
 		SharedAssumption: *sharedAssumption,
 		Note:             *note,
 		InitialLifecycle: *initialLifecycle,

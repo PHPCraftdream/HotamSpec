@@ -18,15 +18,15 @@ Coverage needs one process row rendering steps/roles/drives.
 | Стадия | Вход | Выход | Gate | Кто утверждает |
 |---|---|---|---|---|
 | draft-proposal (`fixture-entity.activate`) | — | [`fixture-entity`](ENTITIES.md#fixture-entity) | — | `S-ai-agent` |
-| steward-review | [`fixture-entity`](ENTITIES.md#fixture-entity) | — | — | `S-domain-user` |
+| resolver-review | [`fixture-entity`](ENTITIES.md#fixture-entity) | — | — | `S-domain-user` |
 
 ### Flow
 
 ```mermaid
 flowchart LR
     SPR_fixture_review_draft_proposal["draft-proposal"]
-    SPR_fixture_review_steward_review["steward-review"]
-    SPR_fixture_review_draft_proposal --> SPR_fixture_review_steward_review
+    SPR_fixture_review_resolver_review["resolver-review"]
+    SPR_fixture_review_draft_proposal --> SPR_fixture_review_resolver_review
 ```
 
 ### Artifacts moved through this process

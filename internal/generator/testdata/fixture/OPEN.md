@@ -3,7 +3,7 @@ reader: (unresolved-reader)
 
 # OPEN.md — Open registry (Hotam-Spec)
 
-Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `hotam what-now` for the prioritized next actions that close these.
+Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a resolver (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `hotam what-now` for the prioritized next actions that close these.
 
 Open requirements: **1**. Unresolved conflicts: **1**.
 
@@ -15,8 +15,8 @@ Open requirements: **1**. Unresolved conflicts: **1**.
 |---|---|---|
 | `R-fixture-open-question` | `S-domain-user` | should the fixture graph grow past 25 nodes? |
 
-## Unresolved conflicts (no steward resolution yet)
+## Unresolved conflicts (no resolver resolution yet)
 
-| id | axis | lifecycle | steward | members |
+| id | axis | lifecycle | resolver | members |
 |---|---|---|---|---|
-| `C-b1bb5c91` | `speed-vs-safety` | DETECTED | `S-steward` | R-fixture-rejected, R-fixture-settled-inherent-prose |
+| `C-b1bb5c91` | `speed-vs-safety` | DETECTED | `S-resolver` | R-fixture-rejected, R-fixture-settled-inherent-prose |

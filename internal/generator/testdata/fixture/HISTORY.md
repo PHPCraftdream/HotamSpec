@@ -28,7 +28,7 @@ substrate (R-history-from-rejected-markers).
 
 - **context:** fixture decided conflict context
 - **members:** `R-fixture-settled-enforced`, `R-fixture-settled-prose`
-- **steward:** `S-steward`
+- **resolver:** `S-resolver`
 - **rationale:** fixture chose safety for the render path
 - **shared assumption:** `A-holds-example`
 - **spawned (derived):** `R-fixture-settled-inherent-prose`

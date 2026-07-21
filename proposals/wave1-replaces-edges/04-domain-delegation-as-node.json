@@ -1,6 +1,6 @@
 {
   "kind": "Rejection",
-  "reason": "REJECTED — REPLACES by R-delegation-is-a-file: steward chose file-based delegations (delegations/DG-\u003cn\u003e.md, versioned in git) over a new Delegation graph-node type. Git history on committed files carries the audit trail; a dedicated dataclass is unnecessary overhead. — (was: Makes the delegation persistent and stewardable, unlike task-spawn ephemera. BUILD-TRIGGER: R-agent-is-a-directory through R-agent-imports-framework have landed (agents exist as directories) AND a first real delegation is performed.)",
+  "reason": "REJECTED — REPLACES by R-delegation-is-a-file: resolver chose file-based delegations (delegations/DG-\u003cn\u003e.md, versioned in git) over a new Delegation graph-node type. Git history on committed files carries the audit trail; a dedicated dataclass is unnecessary overhead. — (was: Makes the delegation persistent and resolverable, unlike task-spawn ephemera. BUILD-TRIGGER: R-agent-is-a-directory through R-agent-imports-framework have landed (agents exist as directories) AND a first real delegation is performed.)",
   "replaced_by": [
     "R-delegation-is-a-file"
   ],

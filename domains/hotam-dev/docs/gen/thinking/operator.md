@@ -12,4 +12,4 @@ An Operator is the acting facet of a Stakeholder (§Stakeholder). Where a Stakeh
 
 ## Why
 
-WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing Stakeholder) preserves the steward-distinct boundary at the methodology altitude. A Stakeholder is an accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge accountability with action and re-introduce the invisibility the boundary forbids.
+WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing Stakeholder) preserves the resolver-distinct boundary at the methodology altitude. A Stakeholder is an accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge accountability with action and re-introduce the invisibility the boundary forbids.

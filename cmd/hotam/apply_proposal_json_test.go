@@ -99,13 +99,13 @@ func TestParseProposal_AllKinds_SnakeCaseRoundTrip(t *testing.T) {
 			name: "Conflict",
 			json: `{
 				"kind": "Conflict", "axis": "speed-vs-rigor", "context": "ctx",
-				"members": ["R-1","R-2"], "steward": "carol",
+				"members": ["R-1","R-2"], "resolver": "carol",
 				"shared_assumption": "A-1", "note": "n",
 				"initial_lifecycle": "DETECTED", "decided_by": "carol"
 			}`,
 			check: func(t *testing.T, p proposal.Proposal) {
 				c := p.(proposal.ProposedConflict)
-				if c.Axis != "speed-vs-rigor" || c.Context != "ctx" || c.Steward != "carol" {
+				if c.Axis != "speed-vs-rigor" || c.Context != "ctx" || c.Resolver != "carol" {
 					t.Fatalf("identity fields not populated: %+v", c)
 				}
 				if c.SharedAssumption != "A-1" || c.Note != "n" {

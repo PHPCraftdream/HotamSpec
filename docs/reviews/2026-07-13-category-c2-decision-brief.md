@@ -2,12 +2,12 @@
 
 **Date:** 2026-07-13
 **Author:** AI agent (task #87), re-verifying an earlier fm consultation against current graph/code state
-**Audience:** human steward
+**Audience:** human resolver
 **Rule in force:** R-ai-presents-not-decides / R-decided-needs-human-signoff — this document presents options with anchors; it does not decide anything. No `enforcement`/`enforceability`/`status` field on any of the 9 requirements below has been changed by this task, and no proposal has been written or landed.
 
 ## How to read this
 
-Each section: **current verified state** (re-fetched today via `hotam req show <id> --domain domains/hotam-spec-self --json`, cross-checked against code/filesystem) → **options** (corrected where re-verification changed the picture) → **scope/risk read** per option that implies work → **recommendation** (opinion, not a decision — the steward picks).
+Each section: **current verified state** (re-fetched today via `hotam req show <id> --domain domains/hotam-spec-self --json`, cross-checked against code/filesystem) → **options** (corrected where re-verification changed the picture) → **scope/risk read** per option that implies work → **recommendation** (opinion, not a decision — the resolver picks).
 
 All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enforcement: STRUCTURAL` or `PROSE` (i.e., still-open closeable debt — none were touched by this session's A/B batches). Verified via direct `req show --json` calls on 2026-07-13.
 
@@ -27,7 +27,7 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 - (a) — **Medium.** Touches one function area (`internal/generator/claudemd.go`), needs a short-form helper (summary-first, first-sentence fallback) and a focused test. Contained blast radius (crystal rendering only), but requires care that no existing crystal-size/budget invariant (R-context-budget-rule, ENFORCED, CRYSTAL_CHARS-gated) regresses — the LIVE-STATE budget line depends on the exact rendered length. Also intersects item 5 below (same rendering path).
 - (b) — **Small.** Reword-only.
 
-**Recommendation:** (a) is worth doing — the steward's own 2026-07-05 verdict ("all that gets truncated must not be truncated but have a short version") is explicit and the `Summary` field already exists as the natural hook, so the work is mostly wiring, not design. Note the coupling to item 5 (both touch the same crystal-rendering surface) — if the steward picks (a) here, doing items 1 and 5 together in one pass avoids touching `claudemd.go` twice.
+**Recommendation:** (a) is worth doing — the resolver's own 2026-07-05 verdict ("all that gets truncated must not be truncated but have a short version") is explicit and the `Summary` field already exists as the natural hook, so the work is mostly wiring, not design. Note the coupling to item 5 (both touch the same crystal-rendering surface) — if the resolver picks (a) here, doing items 1 and 5 together in one pass avoids touching `claudemd.go` twice.
 
 ---
 
@@ -47,7 +47,7 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 **Scope/risk:**
 - (a) — **Small.** One error-path branch in `gen_spec.go`/`loader.go`: detect `os.IsNotExist` on the graph.json read, render a placeholder into `docs/gen/*.md` instead of propagating the error, plus one test. Directly analogous to the just-landed A5 pattern (`TestEmptyContentWellFormed`, `TestEmptyContentCalmBanner`), so there's a fresh in-repo template to copy.
 
-**Recommendation:** (a). This is the cheapest, most template-ready item on the whole list — the sibling pair landed this session shows exactly the shape of enforcer + test to write, and the remaining gap is real and narrow (confirmed by the two landed items' own text, not assumed). Worth flagging to the steward that the identical gap also exists in `what-now` (per `R-empty-content-calm-banner`'s own why-text) even though that's not tracked under this anchor — the steward may want to fold that in as a twin fix rather than leaving it to surface as its own future finding.
+**Recommendation:** (a). This is the cheapest, most template-ready item on the whole list — the sibling pair landed this session shows exactly the shape of enforcer + test to write, and the remaining gap is real and narrow (confirmed by the two landed items' own text, not assumed). Worth flagging to the resolver that the identical gap also exists in `what-now` (per `R-empty-content-calm-banner`'s own why-text) even though that's not tracked under this anchor — the resolver may want to fold that in as a twin fix rather than leaving it to surface as its own future finding.
 
 ---
 
@@ -63,7 +63,7 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 - (c) REJECT with REPLACES to `R-claude-md-consolidates-when-single-agent`.
 
 **Scope/risk:**
-- (a) — **Small for the scaffolding itself** (two empty dirs + two `.gitkeep` files), but the "new filesystem-aware check" part is a **category change**: every other invariant check in `internal/invariants` operates on the in-memory `ontology.Graph`, never touches disk. Adding one that does is a small architectural precedent-setter (worth the steward's awareness, not necessarily a blocker).
+- (a) — **Small for the scaffolding itself** (two empty dirs + two `.gitkeep` files), but the "new filesystem-aware check" part is a **category change**: every other invariant check in `internal/invariants` operates on the in-memory `ontology.Graph`, never touches disk. Adding one that does is a small architectural precedent-setter (worth the resolver's awareness, not necessarily a blocker).
 - (b) — **Small.** Reword only; consistent with the actually-observed pattern (`R-claude-md-consolidates-when-single-agent`, cited in CLAUDE.md's own Recursion section: *"Sub-agent crystals materialize only at real spawn time"*) — this is the same lazy-materialization philosophy already SETTLED elsewhere in the graph.
 - (c) — **Small** (a REPLACES edge + status change), but weakens the requirement's standalone claim about `tools/`+`agents/` specifically (that RULE targets domain-level dirs; `R-claude-md-consolidates-when-single-agent` targets CLAUDE.md consolidation) — the two are adjacent, not identical, so REJECT risks losing a distinct, still-true claim.
 
@@ -75,17 +75,17 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 
 **Claim:** project name shall be `Hotam-Spec` (display) and `hotam-spec` kebab-case for filesystem/repository/**Go module path suffix**.
 
-**Current verified state — this item has visibly drifted since fm's original pass and needs re-framing.** The claim text itself already changed this session (history shows a 2026-07-13 edit from a Python-era wording to the current Go-module wording), and its own `why` field now states: *"Renames completed in three sequential passes (#89 package, #90 domain, #91 prose)"* — referencing tasks that already landed (verified in git log: `465b778` rename #1 Python package, `2ba9c96` rename #2 domain, `d5f3206` rename #3 prose). **But the module path itself was separately and deliberately changed** in commit `4325ac8` "chore: rename Go module to match the real git remote (P1-6)" — confirmed today: `go.mod` reads `module github.com/PHPCraftdream/HotamSpec`. So the current mismatch is real and intentional-on-both-sides: the claim demands kebab-case (`hotam-spec`), the actual module path uses `HotamSpec` (PascalCase suffix) matching the real GitHub remote name `PHPCraftdream/HotamSpec`. This was a conscious choice (commit message says "to match the real git remote"), not an oversight — worth the steward knowing this wasn't accidental drift.
+**Current verified state — this item has visibly drifted since fm's original pass and needs re-framing.** The claim text itself already changed this session (history shows a 2026-07-13 edit from a Python-era wording to the current Go-module wording), and its own `why` field now states: *"Renames completed in three sequential passes (#89 package, #90 domain, #91 prose)"* — referencing tasks that already landed (verified in git log: `465b778` rename #1 Python package, `2ba9c96` rename #2 domain, `d5f3206` rename #3 prose). **But the module path itself was separately and deliberately changed** in commit `4325ac8` "chore: rename Go module to match the real git remote (P1-6)" — confirmed today: `go.mod` reads `module github.com/PHPCraftdream/HotamSpec`. So the current mismatch is real and intentional-on-both-sides: the claim demands kebab-case (`hotam-spec`), the actual module path uses `HotamSpec` (PascalCase suffix) matching the real GitHub remote name `PHPCraftdream/HotamSpec`. This was a conscious choice (commit message says "to match the real git remote"), not an oversight — worth the resolver knowing this wasn't accidental drift.
 
 **Options:**
 - (a) Rename the Go module path suffix to kebab-case (`github.com/PHPCraftdream/hotam-spec` or similar) to match the claim.
 - (b) Amend claim to legalize the current module suffix (match the real repo name) while keeping kebab-case for domain-level artifacts (folder names, CLI binary name, etc., which already are kebab/lowercase).
 
 **Scope/risk:**
-- (a) — **Large, genuinely repo-wide, real risk of missing a spot.** Verified count today: **119 `.go` files** reference `PHPCraftdream/HotamSpec` in their import paths, **178 total occurrences** (some files have multiple imports of internal packages). This spans every `internal/*` package plus all of `cmd/hotam/*.go` — essentially the whole compiled surface. A module rename requires: updating `go.mod`, updating every import statement (mechanical but total-coverage-dependent — a single missed import breaks the build, not silently), likely `go build ./...` + full test suite to catch every miss, and separately confirming the real GitHub remote name matches (or renaming the remote too, which is outside this repo's control surface and steward-only). This also reverses a **conscious decision made in the same session-family** (`4325ac8` explicitly renamed *to* match the remote) — doing (a) would be an explicit reversal of recent intentional work, which the steward should weigh, not just a technical risk.
+- (a) — **Large, genuinely repo-wide, real risk of missing a spot.** Verified count today: **119 `.go` files** reference `PHPCraftdream/HotamSpec` in their import paths, **178 total occurrences** (some files have multiple imports of internal packages). This spans every `internal/*` package plus all of `cmd/hotam/*.go` — essentially the whole compiled surface. A module rename requires: updating `go.mod`, updating every import statement (mechanical but total-coverage-dependent — a single missed import breaks the build, not silently), likely `go build ./...` + full test suite to catch every miss, and separately confirming the real GitHub remote name matches (or renaming the remote too, which is outside this repo's control surface and resolver-only). This also reverses a **conscious decision made in the same session-family** (`4325ac8` explicitly renamed *to* match the remote) — doing (a) would be an explicit reversal of recent intentional work, which the resolver should weigh, not just a technical risk.
 - (b) — **Small.** Reword-only; the claim already documents the current module path as a parenthetical historical note, so this is tightening language to match already-accepted reality.
 
-**Recommendation:** (b), with an explicit flag that (a) is the highest-risk option in this entire batch of 9 — a 119-file/178-occurrence mechanical rename that also reverses a deliberate recent commit (`4325ac8`). I am not recommending (a); if the steward wants the module path to be kebab-case badly enough to justify that reversal and the migration risk, that's a call only the steward should make, with eyes open to the scope above.
+**Recommendation:** (b), with an explicit flag that (a) is the highest-risk option in this entire batch of 9 — a 119-file/178-occurrence mechanical rename that also reverses a deliberate recent commit (`4325ac8`). I am not recommending (a); if the resolver wants the module path to be kebab-case badly enough to justify that reversal and the migration risk, that's a call only the resolver should make, with eyes open to the scope above.
 
 ---
 
@@ -98,14 +98,14 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 **Options:**
 - (a) Add a `ShortForm` field to the relevant struct + implement full one-RULE-per-topic distillation.
 - (b) Amend claim to match the shipped compact-index behavior (slug-index only, no per-topic RULE sentence).
-- (c) Defer, bundled with item 1's short-form work if the steward picks (a) there.
+- (c) Defer, bundled with item 1's short-form work if the resolver picks (a) there.
 
 **Scope/risk:**
 - (a) — **Medium-to-large.** This is the more ambitious sibling of item 1: item 1 needs a short-form *string* per object; this item needs that string *embedded into the live CLAUDE.md render* for every one of the ~30 `§`-topics, which touches the generator's CLAUDE.md-assembly logic and the char-budget accounting (the whole point of the REPLACES history here is that the fuller form blew the budget once already — 19k vs 2.4k chars). Real risk of budget regression if not done carefully against `R-context-budget-rule` (ENFORCED, CRYSTAL_CHARS-gated).
 - (b) — **Small.** Reword-only, and arguably the more honest state given the REPLACES history already explains *why* the compact form was chosen deliberately.
 - (c) — **N/A cost by itself** — just sequencing advice.
 
-**Recommendation:** (c) if the steward picks (a) on item 1; otherwise (b). This item's claim is aspirational against a budget constraint the project already hit once and deliberately backed off from (that's what the REPLACES chain records) — re-attempting the fuller distillation should not happen in isolation from item 1's short-form primitive, and should be watched closely against the char budget given the documented history of blowing it.
+**Recommendation:** (c) if the resolver picks (a) on item 1; otherwise (b). This item's claim is aspirational against a budget constraint the project already hit once and deliberately backed off from (that's what the REPLACES chain records) — re-attempting the fuller distillation should not happen in isolation from item 1's short-form primitive, and should be watched closely against the char budget given the documented history of blowing it.
 
 ---
 
@@ -127,7 +127,7 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 - (a') — **Small for the split** (a proposal + REPLACES edges, same mechanical pattern as the 7 already-landed category-B atomicity splits), **small-to-medium for re-porting the AST scanner** (a Go source-scanner over `internal/`+`cmd/hotam/` for `os.UserHomeDir`/`~`-literal usage co-located with write-sink calls — self-contained, one new test file, no risk to other subsystems).
 - (b) — Explicitly C1 (feature-blocked) territory; not really a C2 action today.
 
-**Recommendation:** (a') — re-splitting this into a structural half (re-enforce the AST scanner, it's cheap and it already worked once) and a PROSE half (the live-conduct discipline) is more honest than a blanket INHERENTLY_PROSE reclassification, and reuses the exact atomicity-split pattern this session already validated 7 times in category B. Flagging that plain "reclassify whole thing INHERENTLY_PROSE" (fm's original (a)) would actually be a regression from the requirement's state 3 days ago, not a neutral move — the steward should know that before picking it.
+**Recommendation:** (a') — re-splitting this into a structural half (re-enforce the AST scanner, it's cheap and it already worked once) and a PROSE half (the live-conduct discipline) is more honest than a blanket INHERENTLY_PROSE reclassification, and reuses the exact atomicity-split pattern this session already validated 7 times in category B. Flagging that plain "reclassify whole thing INHERENTLY_PROSE" (fm's original (a)) would actually be a regression from the requirement's state 3 days ago, not a neutral move — the resolver should know that before picking it.
 
 ---
 
@@ -166,11 +166,11 @@ All 9 items are currently `status: SETTLED`, `enforceability: ENFORCEABLE`, `enf
 - (c) Retire when a real business domain unfreezes the aspects (i.e., leave as-is, doesn't require action today).
 
 **Scope/risk:**
-- (a) — **Medium**, and specifically **not clearly worth doing standalone**: building a one-off hash-pin just for the 2-3 frozen files (`entity.go`, `tools_data.go`'s frozen entries, scope_process.go's no-op checks) when the *general* enforcement-perimeter hash-pin (`R-enforcement-perimeter-visible`) doesn't exist yet either means either duplicating work later or scoping this narrowly now and redoing it. If the steward wants both, doing `R-enforcement-perimeter-visible`'s general mechanism first and covering the frozen files as one instance of it is the efficient order — but that's a two-item bundle, bigger than "just this C2 item."
+- (a) — **Medium**, and specifically **not clearly worth doing standalone**: building a one-off hash-pin just for the 2-3 frozen files (`entity.go`, `tools_data.go`'s frozen entries, scope_process.go's no-op checks) when the *general* enforcement-perimeter hash-pin (`R-enforcement-perimeter-visible`) doesn't exist yet either means either duplicating work later or scoping this narrowly now and redoing it. If the resolver wants both, doing `R-enforcement-perimeter-visible`'s general mechanism first and covering the frozen files as one instance of it is the efficient order — but that's a two-item bundle, bigger than "just this C2 item."
 - (b) — **Small**, one-line reclassification — but this item is *not* purely a design-principle claim like items 6/7's INHERENTLY_PROSE candidates; it's a concrete "don't touch these files" operational rule that genuinely *could* be hash-pinned (unlike, say, `R-working-vs-substrate-budget`'s architectural principle). Reclassifying INHERENTLY_PROSE here would be less honest than items 6/7 — flagging this distinction explicitly.
 - (c) — **No cost**, status quo.
 
-**Recommendation:** (c), leave as debt for now, with a note that if the steward independently wants to invest in `R-enforcement-perimeter-visible`'s general hash-pin mechanism (item 8's sibling, not in this batch of 9), the frozen-aspects guard should ride along as one instance of that rather than being built twice. Not recommending (b) — unlike items 6/7, this claim is concretely mechanizable, so INHERENTLY_PROSE would understate what's actually possible here.
+**Recommendation:** (c), leave as debt for now, with a note that if the resolver independently wants to invest in `R-enforcement-perimeter-visible`'s general hash-pin mechanism (item 8's sibling, not in this batch of 9), the frozen-aspects guard should ride along as one instance of that rather than being built twice. Not recommending (b) — unlike items 6/7, this claim is concretely mechanizable, so INHERENTLY_PROSE would understate what's actually possible here.
 
 ---
 
@@ -204,10 +204,10 @@ That's **9 top-level waves**, several with multiple sub-batches, and **wave6 alo
 - (c) Leave as debt until proposal volume justifies it.
 
 **Scope/risk:**
-- (a) — **Medium.** Needs: a `.runtime/proposals/pending/` writer (something writes a proposal there before steward approval — today proposals are written straight into `proposals/waveN-.../` after approval, with no separate pre-approval staging step in the current workflow), a mover on `apply-proposal`/`land` (pending→applied), and a `what-now` signal producer to fill the already-stubbed `P6`/`PENDING_PROPOSAL` label. The mover/signal parts are small; the bigger open question is workflow — the current practice (per the mediation loop in CLAUDE.md itself: TRANSLATE drafts a `.json` file, PRESENT shows the steward, LAND applies after approval) doesn't have an obvious "pending" state distinct from "not yet written" — proposals seem to go from idea straight to steward review to applied, without an intermediate on-disk pending artifact today. Implementing (a) faithfully would mean also changing *when* a proposal file gets written (before vs. after approval), which is a workflow change, not just a folder-mover.
+- (a) — **Medium.** Needs: a `.runtime/proposals/pending/` writer (something writes a proposal there before resolver approval — today proposals are written straight into `proposals/waveN-.../` after approval, with no separate pre-approval staging step in the current workflow), a mover on `apply-proposal`/`land` (pending→applied), and a `what-now` signal producer to fill the already-stubbed `P6`/`PENDING_PROPOSAL` label. The mover/signal parts are small; the bigger open question is workflow — the current practice (per the mediation loop in CLAUDE.md itself: TRANSLATE drafts a `.json` file, PRESENT shows the resolver, LAND applies after approval) doesn't have an obvious "pending" state distinct from "not yet written" — proposals seem to go from idea straight to resolver review to applied, without an intermediate on-disk pending artifact today. Implementing (a) faithfully would mean also changing *when* a proposal file gets written (before vs. after approval), which is a workflow change, not just a folder-mover.
 - (b) — **Small.** Reword-only, and the precedent argument is now much stronger than fm's original pass had available (9 waves vs. presumably fewer at the time of the original consultation).
 
-**Recommendation:** (b). The observed practice — wave-numbered folders under `proposals/`, now with 9 top-level waves and multiple multi-batch waves landed in this session alone — already serves the practical need this claim was reaching for, and legalizing it is cheap. (a)'s "real" pending/applied split would require a workflow change (an on-disk pre-approval staging artifact that doesn't exist in current practice) on top of the mechanical folder-mover, which is more invasive than it first appears — flagging that the true cost of (a) is a workflow redesign question for the steward, not just an engineering task.
+**Recommendation:** (b). The observed practice — wave-numbered folders under `proposals/`, now with 9 top-level waves and multiple multi-batch waves landed in this session alone — already serves the practical need this claim was reaching for, and legalizing it is cheap. (a)'s "real" pending/applied split would require a workflow change (an on-disk pre-approval staging artifact that doesn't exist in current practice) on top of the mechanical folder-mover, which is more invasive than it first appears — flagging that the true cost of (a) is a workflow redesign question for the resolver, not just an engineering task.
 
 ---
 

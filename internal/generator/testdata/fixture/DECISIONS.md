@@ -11,7 +11,7 @@ dev-coin Param.status + HOLES.md precedent: one source of truth,
 generated mirror.
 
 A requirement carries an M-tag iff it mirrors an open methodology
-decision the steward must ratify. Requirements without an M-tag are
+decision the resolver must ratify. Requirements without an M-tag are
 domain-level open holes that have not been elevated to
 methodology-altitude decisions.
 

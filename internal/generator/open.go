@@ -28,7 +28,7 @@ func BuildOpen(g *ontology.Graph) string {
 	lines = append(lines, "")
 	lines = append(lines,
 		"Generated mirror of what is still open: OPEN(question) requirements and "+
-			"conflicts not yet resolved by a steward (DETECTED / ACKNOWLEDGED). This is "+
+			"conflicts not yet resolved by a resolver (DETECTED / ACKNOWLEDGED). This is "+
 			"the visibility-of-the-open layer; run `hotam what-now` for the "+
 			"prioritized next actions that close these.")
 	lines = append(lines, "")
@@ -61,17 +61,17 @@ func BuildOpen(g *ontology.Graph) string {
 		lines = append(lines, "")
 	}
 
-	lines = append(lines, "## Unresolved conflicts (no steward resolution yet)")
+	lines = append(lines, "## Unresolved conflicts (no resolver resolution yet)")
 	lines = append(lines, "")
 	if len(unresolved) == 0 {
 		lines = append(lines, "_None._")
 		lines = append(lines, "")
 	} else {
-		lines = append(lines, "| id | axis | lifecycle | steward | members |")
+		lines = append(lines, "| id | axis | lifecycle | resolver | members |")
 		lines = append(lines, "|---|---|---|---|---|")
 		for _, c := range unresolved {
 			mem := strings.Join(c.Members, ", ")
-			lines = append(lines, "| `"+c.ID+"` | `"+c.Axis+"` | "+c.Lifecycle+" | `"+c.Steward+"` | "+Cell(mem)+" |")
+			lines = append(lines, "| `"+c.ID+"` | `"+c.Axis+"` | "+c.Lifecycle+" | `"+c.Resolver+"` | "+Cell(mem)+" |")
 		}
 		lines = append(lines, "")
 	}

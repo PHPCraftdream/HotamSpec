@@ -14,8 +14,8 @@
   ],
   "stakeholders": [
     {
-      "id": "dev-steward",
-      "name": "Dev steward",
+      "id": "dev-resolver",
+      "name": "Dev resolver",
       "domain": "reviews and approves waves/commits; sole authority to request a push",
       "decl_order": 0
     },
@@ -39,10 +39,10 @@
       "decl_order": 0
     },
     {
-      "id": "A-single-steward-session",
-      "statement": "At most one human dev-steward session drives waves at a time -- no concurrent multi-steward editing of the same graph.",
+      "id": "A-single-resolver-session",
+      "statement": "At most one human dev-resolver session drives waves at a time -- no concurrent multi-resolver editing of the same graph.",
       "status": "HOLDS",
-      "owner": "dev-steward",
+      "owner": "dev-resolver",
       "machine_check": null,
       "signoff": null,
       "created_at": "",
@@ -54,11 +54,11 @@
     {
       "id": "R-commit-follows-review",
       "claim": "A commit shall land only after review of the diff by a human or an agent code-review step.",
-      "owner": "dev-steward",
+      "owner": "dev-resolver",
       "status": "SETTLED",
       "why": "Review is the last human-in-the-loop check before a change becomes permanent history; this is a judgment call about diff quality and intent that no mechanical check can substitute for, so enforcement stays honestly PROSE.",
       "assumptions": [
-        "A-single-steward-session"
+        "A-single-resolver-session"
       ],
       "relations": [
         {
@@ -183,12 +183,12 @@
     },
     {
       "id": "R-push-only-on-request",
-      "claim": "Push to remote shall occur only on the dev-steward's explicit request, never autonomously.",
-      "owner": "dev-steward",
+      "claim": "Push to remote shall occur only on the dev-resolver's explicit request, never autonomously.",
+      "owner": "dev-resolver",
       "status": "SETTLED",
-      "why": "A push is externally visible and hard to undo cleanly (shared history); reserving it strictly to explicit steward request keeps the irreversible action under human authority, mirroring the project's global CLAUDE.md discipline. Not mechanically checkable from inside this repo (no push actually happens in tests), so PROSE.",
+      "why": "A push is externally visible and hard to undo cleanly (shared history); reserving it strictly to explicit resolver request keeps the irreversible action under human authority, mirroring the project's global CLAUDE.md discipline. Not mechanically checkable from inside this repo (no push actually happens in tests), so PROSE.",
       "assumptions": [
-        "A-single-steward-session"
+        "A-single-resolver-session"
       ],
       "relations": [
         {
@@ -306,10 +306,10 @@
       "claim": "A wave shall land as a whole with a green T2 (go test ./...) run at its boundary before the next wave starts.",
       "owner": "pipeline-operator",
       "status": "SETTLED",
-      "why": "Reworded 2026-07-12 to describe the current implementation. T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. `hotam land --batch` (cmd/hotam/land.go -> proposal.ApplyBatch) lands a whole directory of proposals atomically (all-or-nothing) with one apply -> gen-spec -> all-violations pass, and spec/CLAUDE.md's Mediation loop step 6 LAND names `go test ./...` as MANDATORY at wave/commit boundaries. Enforcement is honestly STRUCTURAL: what-now/land make the T2 boundary visible and addressable but no single check_* fires automatically if a steward skips a wave-boundary `go test ./...` by hand outside the tool (the gate_status / land-log.jsonl tier trace that would have made this auditable is not yet implemented -- see R-land-leaves-trace).",
+      "why": "Reworded 2026-07-12 to describe the current implementation. T1 alone (see R-t1-gate-is-default) only checks the targeted enforcer subset per move; without a mandatory full-suite gate at the wave boundary, cross-cutting regressions between moves in the same wave could slip through undetected. `hotam land --batch` (cmd/hotam/land.go -> proposal.ApplyBatch) lands a whole directory of proposals atomically (all-or-nothing) with one apply -> gen-spec -> all-violations pass, and spec/CLAUDE.md's Mediation loop step 6 LAND names `go test ./...` as MANDATORY at wave/commit boundaries. Enforcement is honestly STRUCTURAL: what-now/land make the T2 boundary visible and addressable but no single check_* fires automatically if a resolver skips a wave-boundary `go test ./...` by hand outside the tool (the gate_status / land-log.jsonl tier trace that would have made this auditable is not yet implemented -- see R-land-leaves-trace).",
       "assumptions": [
         "A-runtime-logs-append-only",
-        "A-single-steward-session"
+        "A-single-resolver-session"
       ],
       "relations": [
         {
@@ -354,7 +354,7 @@
       "status": "SETTLED",
       "why": "Concurrent edits to the same files/scope would race and corrupt state (the graph, the docs, the .runtime logs); git history in this repo is evidence of sequential waves but is not itself a cheap mechanical gate, so enforcement stays honestly STRUCTURAL/PROSE rather than a fabricated git-log parser.",
       "assumptions": [
-        "A-single-steward-session"
+        "A-single-resolver-session"
       ],
       "relations": [],
       "enforcement": "STRUCTURAL",
@@ -384,7 +384,7 @@
       "status": "SETTLED",
       "why": "This atom reflects, inside the hotam-dev domain, the self-practice crystallized by the framework atom R-parallel-mutating-agents-use-worktree (hotam-spec-self): after the 2026-06-30/07-01 incident where two parallel agents in one shared tree lost work to a history-rewrite, the pipeline adopted per-agent worktree isolation (isolation:'worktree') as the sanctioned way to run mutating agents concurrently. It is honestly modeled here as a hotam-dev requirement (not a cross-domain reference) because a Conflict's members must be co-domain: it lets the sequential-vs-isolated-parallel tension between overlapping-scope waves (R-wave-strictly-sequential) and isolated parallelism be modeled as a first-class Conflict node in the domain that actually runs the pipeline. Enforcement is PROSE: whether an agent ACTUALLY runs in a worktree is operator discipline, not mechanically provable from this graph.",
       "assumptions": [
-        "A-single-steward-session"
+        "A-single-resolver-session"
       ],
       "relations": [],
       "enforcement": "PROSE",
@@ -417,12 +417,12 @@
         "R-wave-strictly-sequential",
         "R-worktree-parallel-permitted"
       ],
-      "steward": "dev-steward",
-      "lifecycle": "DECIDED(no real tension: worktree isolation removes the shared-files premise; the sequentiality rule governs shared working copies only. Steward verdict 2026-07-03 (V5), verbatim: «здесь нет противоерчия. Worktree - это как бы не параллельно». A worktree is not truly parallel work on the same files -- each worktree is an isolated copy, so the strict-sequential wave rule (which exists to prevent two agents clobbering one shared working tree) simply does not apply there; the two requirements never actually collide. Decided by dev-steward, 2026-07-03.)",
-      "shared_assumption": "A-single-steward-session",
+      "resolver": "dev-resolver",
+      "lifecycle": "DECIDED(no real tension: worktree isolation removes the shared-files premise; the sequentiality rule governs shared working copies only. Resolver verdict 2026-07-03 (V5), verbatim: «здесь нет противоерчия. Worktree - это как бы не параллельно». A worktree is not truly parallel work on the same files -- each worktree is an isolated copy, so the strict-sequential wave rule (which exists to prevent two agents clobbering one shared working tree) simply does not apply there; the two requirements never actually collide. Decided by dev-resolver, 2026-07-03.)",
+      "shared_assumption": "A-single-resolver-session",
       "derived": [],
       "revisit_marker": "",
-      "decided_by": "dev-steward",
+      "decided_by": "dev-resolver",
       "variants": [],
       "signoff": null,
       "created_at": "",
@@ -437,12 +437,12 @@
         "R-t1-gate-is-default",
         "R-wave-lands-atomically"
       ],
-      "steward": "dev-steward",
-      "lifecycle": "DECIDED(Resolved 2026-07-05 both ways per R-conflict-resolved-in-members-or-mediator: members amended (test suite sped 223s->~55s, gen_spec 20s->3s) AND a mediating rule created (R-run-speed-guarded self-calibrating guard) so the speed need cannot silently regress. Steward verdict.)",
+      "resolver": "dev-resolver",
+      "lifecycle": "DECIDED(Resolved 2026-07-05 both ways per R-conflict-resolved-in-members-or-mediator: members amended (test suite sped 223s->~55s, gen_spec 20s->3s) AND a mediating rule created (R-run-speed-guarded self-calibrating guard) so the speed need cannot silently regress. Resolver verdict.)",
       "shared_assumption": "A-runtime-logs-append-only",
       "derived": [],
       "revisit_marker": "REVISIT if at larger scale (600+ atoms / 5+ domains) the run-speed guard trips persistently despite Python-side optimizations -- then reconsider deeper (compiled snapshot / language).",
-      "decided_by": "dev-steward",
+      "decided_by": "dev-resolver",
       "variants": [],
       "signoff": null,
       "created_at": "",
@@ -456,7 +456,7 @@
   "entity_types": [
     {
       "slug": "wave",
-      "description": "A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed steward review and a commit.",
+      "description": "A development wave of the Hotam-Spec repository: a bundle of proposals landed and verified together, closed by a signed resolver review and a commit.",
       "lifecycle": {
         "slug": "wave-lifecycle",
         "states": [

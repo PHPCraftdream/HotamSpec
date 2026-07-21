@@ -115,7 +115,7 @@ func TestCmdPropose_Requirement_LastReviewedAtReviewAfter(t *testing.T) {
 		"--owner", "framework-author",
 		"--status", "DRAFT",
 		"--why", "unit coverage for --last-reviewed-at/--review-after",
-		"--evidence", "steward review",
+		"--evidence", "resolver review",
 		"--source-refs", "doc.md",
 		"--last-reviewed-at", "2026-07-15",
 		"--review-after", "2027-07-15",
@@ -700,7 +700,7 @@ func TestProposeHelp_RealBinary_PerKindPerFlagHelp(t *testing.T) {
 		{"stakeholder", []string{"-id", "-name", "-stakeholder-domain"}},
 		{"axis", []string{"-slug", "-description"}},
 		{"assumption", []string{"-id", "-statement", "-status", "-owner"}},
-		{"conflict", []string{"-axis", "-context", "-members", "-steward"}},
+		{"conflict", []string{"-axis", "-context", "-members", "-resolver"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.kind, func(t *testing.T) {
@@ -865,7 +865,7 @@ func TestCmdPropose_Assumption_ConstructsValidJSON(t *testing.T) {
 }
 
 // TestCmdPropose_Conflict_ConstructsValidJSON covers the conflict subcommand:
-// --axis + --context + --members + --steward produce a valid Conflict proposal
+// --axis + --context + --members + --resolver produce a valid Conflict proposal
 // JSON. Members are split from the --members CSV.
 func TestCmdPropose_Conflict_ConstructsValidJSON(t *testing.T) {
 	t.Parallel()
@@ -877,7 +877,7 @@ func TestCmdPropose_Conflict_ConstructsValidJSON(t *testing.T) {
 		"--axis", "core-vs-aspect",
 		"--context", "propose conflict test fixture context",
 		"--members", "R-active-loop-apply-tool, R-agent-code-imports-framework",
-		"--steward", "domain-user",
+		"--resolver", "domain-user",
 		"--shared-assumption", "A-propose-test-shared",
 		"--note", "coverage for propose conflict",
 		"--domain", domainDir,
@@ -911,7 +911,7 @@ func TestCmdPropose_Conflict_ConstructsValidJSON(t *testing.T) {
 	for _, want := range []string{
 		`"kind": "Conflict"`,
 		`"axis": "core-vs-aspect"`,
-		`"steward": "domain-user"`,
+		`"resolver": "domain-user"`,
 		`"R-active-loop-apply-tool"`,
 		`"R-agent-code-imports-framework"`,
 		`"shared_assumption": "A-propose-test-shared"`,
@@ -924,7 +924,7 @@ func TestCmdPropose_Conflict_ConstructsValidJSON(t *testing.T) {
 
 // TestCmdPropose_Axis_Land_AppliesRegeneratesReverifies is the --land test for
 // the axis kind: after writing, --land must apply the axis to the graph and
-// regenerate docs. Axis has no interaction with other nodes (no member/steward
+// regenerate docs. Axis has no interaction with other nodes (no member/resolver
 // checks), so a fresh slug is sufficient.
 func TestCmdPropose_Axis_Land_AppliesRegeneratesReverifies(t *testing.T) {
 	t.Parallel()
@@ -986,7 +986,7 @@ func TestCmdPropose_Assumption_Land_AppliesRegeneratesReverifies(t *testing.T) {
 // TestCmdPropose_Conflict_Land_AppliesRegeneratesReverifies is the --land test
 // for the conflict kind. Unlike axis/assumption, a Conflict's Members must
 // already exist as real Requirements in the target graph, the axis must exist,
-// and the steward must NOT own any member — ProposedConflict.mutate enforces
+// and the resolver must NOT own any member — ProposedConflict.mutate enforces
 // all three. Additionally, the self-host invariant
 // check_constituting_not_in_unresolved_conflict refuses a DETECTED conflict
 // holding two SETTLED requirements, so the fixture lands the conflict in a
@@ -1002,8 +1002,8 @@ func TestCmdPropose_Conflict_Land_AppliesRegeneratesReverifies(t *testing.T) {
 		"--axis", "core-vs-aspect",
 		"--context", "propose conflict land e2e unique context fixture",
 		"--members", "R-active-loop-apply-tool,R-agent-code-imports-framework",
-		"--steward", "domain-user",
-		"--initial-lifecycle", "DECIDED(human-steward-2026-07-14)",
+		"--resolver", "domain-user",
+		"--initial-lifecycle", "DECIDED(human-resolver-2026-07-14)",
 		"--decided-by", "framework-reviewer",
 		"--note", "e2e coverage for propose conflict --land",
 		"--domain", domainDir,
@@ -1019,13 +1019,13 @@ func TestCmdPropose_Conflict_Land_AppliesRegeneratesReverifies(t *testing.T) {
 		t.Fatalf("read graph.json: %v", err)
 	}
 	// A Conflict's anchor is its ConflictIdentity (a C-<hash>), which is
-	// deterministic on axis+context. Verify both members and the steward are
+	// deterministic on axis+context. Verify both members and the resolver are
 	// recorded in the graph.
 	body := string(graphData)
 	for _, want := range []string{
 		"R-active-loop-apply-tool",
 		"R-agent-code-imports-framework",
-		`"steward": "domain-user"`,
+		`"resolver": "domain-user"`,
 		`"axis": "core-vs-aspect"`,
 	} {
 		if !strings.Contains(body, want) {
@@ -1128,7 +1128,7 @@ func TestCmdPropose_Requirement_Land_RequireProvenance_WithFlags_Succeeds(t *tes
 		"--owner", "owner",
 		"--status", "SETTLED",
 		"--source-refs", "https://example.com/source",
-		"--evidence", "steward review",
+		"--evidence", "resolver review",
 		"--last-reviewed-at", "2026-07-15",
 		"--review-after", "2027-07-15",
 		"--domain", domainDir,

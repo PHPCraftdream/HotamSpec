@@ -54,6 +54,6 @@ Requirements no `check_*` could ever mechanically verify, by design — not coun
 
 | id | enforcement | owner | claim |
 |---|---|---|---|
-| `R-commit-follows-review` | PROSE | `dev-steward` | A commit shall land only after review of the diff by a human or an agent code-review step. |
-| `R-push-only-on-request` | PROSE | `dev-steward` | Push to remote shall occur only on the dev-steward's explicit request, never autonomously. |
+| `R-commit-follows-review` | PROSE | `dev-resolver` | A commit shall land only after review of the diff by a human or an agent code-review step. |
+| `R-push-only-on-request` | PROSE | `dev-resolver` | Push to remote shall occur only on the dev-resolver's explicit request, never autonomously. |
 | `R-worktree-parallel-permitted` | PROSE | `pipeline-operator` | Mutating pipeline agents may run in parallel when each is isolated in its own git worktree, so their edits to tracked files cannot collide. |

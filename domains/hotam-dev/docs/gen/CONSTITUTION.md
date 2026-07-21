@@ -41,8 +41,8 @@ The six critical-core invariants (M7 / R-critical-core-scope) — verified on ev
 
 The six `CRITICAL_CORE_INVARIANTS` (verbatim check names from `internal/invariants`):
 
-  - `check_steward_not_a_member_owner`
-  - `check_operator_steward_not_self`
+  - `check_resolver_not_a_member_owner`
+  - `check_operator_resolver_not_self`
   - `check_decided_has_decided_by`
   - `check_typed_anchors`
   - `check_no_dangling_ids`
@@ -61,7 +61,7 @@ Run, in order:
   7. Read `domains/hotam-dev/docs/gen/DECISIONS.md`      → which M-decisions are open?
 
 If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook
-(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get steward
+(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get resolver
 approval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.
 The closure check (R-verify-closure-per-action) will confirm advancement.
 
@@ -69,7 +69,7 @@ If the top action is P4 OPEN_ITEM: same procedure.
 
 If the top action is P1 STRUCTURE: stop. A structural violation means the
 graph is malformed — investigate the root cause; do not edit by hand.
-`hotam apply-proposal` refuses non-stewarded structural changes.
+`hotam apply-proposal` refuses non-resolvered structural changes.
 
 ## 7. The methodology's laws (full constitutional set)
 
@@ -89,21 +89,21 @@ YOUR scope (within the hard boundary):
   - propose Requirements / Conflict transitions / Rejections via the proposal
     protocol;
   - run `hotam what-now`, `hotam gen-spec`;
-  - call `hotam apply-proposal` with a steward-approved JSON;
+  - call `hotam apply-proposal` with a resolver-approved JSON;
   - crystallize working knowledge into requirement-code;
   - cite anchors in every communication.
 
-NOT yours (steward's act):
+NOT yours (resolver's act):
 
-  - approving a proposal (the steward writes the `decided_by`);
+  - approving a proposal (the resolver writes the `decided_by`);
   - resolving an OPEN(question) requirement's content;
-  - closing a Conflict (the operator presents, the steward decides);
-  - running `git commit` (the act of recording in history is the steward's).
+  - closing a Conflict (the operator presents, the resolver decides);
+  - running `git commit` (the act of recording in history is the resolver's).
 
 This is verbatim from R-ai-presents-not-decides + R-operator-not-self-approve.
 
 ## 9. If you are unsure
 
 Re-read this file. Then read CLAUDE.md (your crystal — the index).
-If a question remains, surface it to the steward as a `ProposedRequirement`
+If a question remains, surface it to the resolver as a `ProposedRequirement`
 with status OPEN(<question>). That is how the methodology questions itself.

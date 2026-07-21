@@ -75,7 +75,7 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// discipline:"full" (pinned in graph.lock's DisciplineFullObserved by
 	// loader.WriteLock), a later manifest that no longer resolves
 	// discipline:"full" is a regression violation, closing the gap where a
-	// steward could silently delete/downgrade the discipline key and every
+	// resolver could silently delete/downgrade the discipline key and every
 	// discipline-gated check became an honest no-op again with zero
 	// all-violations signal.
 	// The orientation-faq task added a fifteenth domain-wide opt-in check,

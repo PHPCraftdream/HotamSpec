@@ -45,11 +45,11 @@ go build -ldflags "-X main.version=v0.1.0 -X main.commit=abc1234 -X main.buildDa
 
 ### Tagging a release (process, not done in this wave)
 
-When the steward decides to publish a version: confirm the module path ↔ remote
+When the resolver decides to publish a version: confirm the module path ↔ remote
 match (see `go.mod`) → run `go test ./...` on a clean tree → place a git tag of
 the form `v0.x.y` on the commit → (optionally) build release binaries with
 `-ldflags "-X main.version=v0.x.y ..."` for the target platforms. Tagging is a
-manual steward step, not something this document performs.
+manual resolver step, not something this document performs.
 
 ## Build
 
@@ -165,7 +165,7 @@ hotam propose <requirement|rejection|stakeholder|axis|assumption|conflict> [flag
         rejection (--requirement-id, --reason, --replaced-by), stakeholder
         (--id, --name, --domain, --why), axis (--slug, --description),
         assumption (--id, --statement, --status, --owner), conflict (--axis,
-        --context, --members, --steward). Other complex kinds
+        --context, --members, --resolver). Other complex kinds
         (ConflictTransition, EntityType, …) keep the hand-authored-JSON path
         (hotam land <file.json>).
 

@@ -4,12 +4,12 @@
 
 ## Canon
 
-Structured operator→steward change proposals.
+Structured operator→resolver change proposals.
 
 ## Narrative
 
-The closed loop's ACT half: the AI operator emits a structured proposal (ProposedRequirement / ProposedConflictTransition / ProposedRejection / ProposedConflict), the steward approves it out-of-band (review + greenlight), and `hotam apply-proposal` (internal/proposal) mechanically writes the change to the active domain's graph.json + runs the regen+verify pipeline. No free-text AI editing of source.
+The closed loop's ACT half: the AI operator emits a structured proposal (ProposedRequirement / ProposedConflictTransition / ProposedRejection / ProposedConflict), the resolver approves it out-of-band (review + greenlight), and `hotam apply-proposal` (internal/proposal) mechanically writes the change to the active domain's graph.json + runs the regen+verify pipeline. No free-text AI editing of source.
 
 ## Why
 
-This honors R-ai-presents-not-decides (the AI never closes a conflict silently) AND R-active-loop-playbooks (each what_now band has a playbook + a mechanical apply path). The AI TRANSLATES outcomes into typed proposals but never decides; the steward decides and the mechanical writer lands it deterministically.
+This honors R-ai-presents-not-decides (the AI never closes a conflict silently) AND R-active-loop-playbooks (each what_now band has a playbook + a mechanical apply path). The AI TRANSLATES outcomes into typed proposals but never decides; the resolver decides and the mechanical writer lands it deterministically.

@@ -1,7 +1,7 @@
 {
   "kind": "Requirement",
   "id": "R-agent-declares-purpose",
-  "claim": "Every spec/agents/\u003cname\u003e/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent stewards in one line.",
+  "claim": "Every spec/agents/\u003cname\u003e/scope.py shall define a non-empty module-level constant PURPOSE describing what the agent resolvers in one line.",
   "owner": "framework-author",
   "status": "SETTLED",
   "enforcement": "PROSE",

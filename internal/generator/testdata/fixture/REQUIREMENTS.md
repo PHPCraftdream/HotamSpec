@@ -24,7 +24,7 @@ Generated from the executable model: the methodology narrative comes from the fr
 |---|---|---|
 | `S-ai-agent` | AI agent | fixture-domain |
 | `S-domain-user` | Domain user | fixture-domain |
-| `S-steward` | Steward | fixture-domain |
+| `S-resolver` | Resolver | fixture-domain |
 
 ## Assumptions
 
@@ -45,7 +45,7 @@ Generated from the executable model: the methodology narrative comes from the fr
 
 | id | lifecycle | steps | roles | drives |
 |---|---|---|---|---|
-| `PR-fixture-review` | process-lifecycle | draft-proposal, steward-review | S-ai-agent, S-domain-user | fixture-entity |
+| `PR-fixture-review` | process-lifecycle | draft-proposal, resolver-review | S-ai-agent, S-domain-user | fixture-entity |
 
 ## Goals
 
@@ -60,7 +60,7 @@ Generated from the executable model: the methodology narrative comes from the fr
 Projected from the tool registry, one entry per tool whose first doc line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). Tools without a Go CLI port yet are tracked here as not-yet-enforced. The doc line IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R.
 
 - **R-tool-all-violations** — *prints all invariant violations for a domain graph, exiting 1 if any are found.* [STRUCTURAL·tool · §Invariants] [enforcer: (none)]
-- **R-tool-apply-proposal** — *mechanical writer for steward-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
+- **R-tool-apply-proposal** — *mechanical writer for resolver-approved JSON proposals.* [STRUCTURAL·tool · §Proposal] [enforcer: (none)]
 - **R-tool-attention** — *the agent-agnostic CLI over the attention core.* [STRUCTURAL·tool · §Attention] [enforcer: (none)]
 - **R-tool-attention-hook** — *the Claude adapter: inject the attention list into context.* [STRUCTURAL·tool · §Attention] [enforcer: (none)]
 - **R-tool-audit-atomicity** — *surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.* [STRUCTURAL·tool · §Invariants] [enforcer: `test_tool_audit_atomicity`]
@@ -123,7 +123,7 @@ THE CENTRAL INVERSION (vs the dev-coin reference):
   dev-coin proves CONSISTENCY — one canon, drift forbidden, conflicts closed
   forever (0 open mechanisms). Hotam-Spec does the OPPOSITE — it makes contradictions
   visible and KEEPS them visible. A contradiction is never silently "fixed"; it
-  is a node that transitions through a lifecycle under a human steward.
+  is a node that transitions through a lifecycle under a human resolver.
 
 THE CENTRAL INSIGHT — Conflict is a connector NODE, not an edge:
   A naive model makes conflict an edge `conflicts_with` between R-87 and R-203.
@@ -168,7 +168,7 @@ THE AI'S THREE ROLES + THE HARD BOUNDARY:
   - Socratic partner — surfaces hidden assumptions, never resolves.
   - Historian — recalls decision rationale + revisit-conditions that have triggered.
   HARD BOUNDARY: the AI NEVER closes a conflict silently. It presents, justifies,
-  asks. The decision and its recording stay with the human steward — otherwise
+  asks. The decision and its recording stay with the human resolver — otherwise
   invisibility returns, now AI-created.
 
 STORAGE: the store is a JSON graph file (domains/<name>/graph.json), loaded into
@@ -187,16 +187,16 @@ framework, in a test fixture graph.json, and is loaded only via the explicit
 `--demo` flag of the tools or by the tests.
 
 Package structure (module = ontology section / methodology chapter):
-  stakeholder — Stakeholder: who owns requirements and stewards conflicts.
+  stakeholder — Stakeholder: who owns requirements and resolvers conflicts.
   axis        — Axis: one entry of the controlled tension vocabulary.
   assumption  — Assumption: a claim with its own lifecycle (HOLDS/DEAD/UNCERTAIN).
   requirement — Requirement: the claim, its assumptions, owner, typed relations.
-  conflict    — Conflict: the first-class connector NODE (axis, context, steward).
+  conflict    — Conflict: the first-class connector NODE (axis, context, resolver).
   graph       — Graph container + content loader + traversal helpers
                 (no business data here; internal/loader reads domains/<name>/graph.json).
   invariants  — structural graph invariants (check_* functions returning the
                 violation list): the form of the tension graph that must always
-                hold (a stewardless conflict, a dangling member, an OPEN with no
+                hold (a resolverless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 
 CANON-SECTION SCHEME (every public object carries a `Canon: §<name>` label):
@@ -230,11 +230,11 @@ OPERATOR / SUBSTRATE CONCEPTS (deferred layers, terminology anchored here):
              the operator from the substrate so every reply is grounded in the live
              substrate rather than session memory.
 
-### 2. §Stakeholder — owners and stewards — `hotam_spec.stakeholder`
+### 2. §Stakeholder — owners and resolvers — `hotam_spec.stakeholder`
 
-Canon: §Stakeholder — Who owns requirements and stewards conflicts.
+Canon: §Stakeholder — Who owns requirements and resolvers conflicts.
 
-A Stakeholder is the human (or role) accountable for a piece of the requirement graph. Two distinct accountabilities exist and MUST stay separate: OWNER of a Requirement (defends that requirement's claim) and STEWARD of a Conflict (holds the tension between requirements; by construction the steward is NOT the owner of any member requirement, because a conflict lives BETWEEN stakeholders).
+A Stakeholder is the human (or role) accountable for a piece of the requirement graph. Two distinct accountabilities exist and MUST stay separate: OWNER of a Requirement (defends that requirement's claim) and RESOLVER of a Conflict (holds the tension between requirements; by construction the resolver is NOT the owner of any member requirement, because a conflict lives BETWEEN stakeholders).
 
 WHY a first-class node (not a free-text 'owner: Finance'): accountability is the external anchor of the whole internal loop. Every OPEN question, every undecided conflict, every dead-assumption fallout resolves to a named stakeholder the harness can point at. Without a stable id there is nobody to escalate to and the loop floats free of reality.
 
@@ -264,7 +264,7 @@ WHY Relations are typed tuple-of-id fields (not a generic graph): refines and de
 
 ### 6. §Conflict — the connector node — `hotam_spec.conflict`
 
-Canon: §Conflict — The first-class connector NODE between requirements, carrying axis+context+steward.
+Canon: §Conflict — The first-class connector NODE between requirements, carrying axis+context+resolver.
 
 A Conflict is NOT an edge between requirements. It is a mediator node through which two otherwise-unconnectable requirements first come to lie in one structure (R-87 -> C-12 <- R-203). The node carries knowledge belonging to NEITHER member: axis (the tension dimension), context (the colliding scenario), and shared_assumption (the assumption they interpret differently — often the real root).
 
@@ -292,7 +292,7 @@ Canon: §Operator — The acting facet of a Stakeholder (M20: NEW TYPE).
 
 An Operator is the acting facet of a Stakeholder (§Stakeholder). Where a Stakeholder answers 'who is accountable', an Operator answers 'who can act, within what context, over which slice of the graph'. The two facets MUST stay separate. Every Operator carries a typed anchor starting with 'OP-', references a Stakeholder.id, has a lifecycle matched by OPERATOR_LIFECYCLE, carries a ContextBudget bounding its WORKING store, and optionally has a parent Operator (the delegation hierarchy).
 
-WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing Stakeholder) preserves the steward-distinct boundary at the methodology altitude. A Stakeholder is an accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge accountability with action and re-introduce the invisibility the boundary forbids.
+WHY a new type (M20 = new type, not a Stakeholder facet): separating them (Operator is a NEW TYPE referencing Stakeholder) preserves the resolver-distinct boundary at the methodology altitude. A Stakeholder is an accountability node; the acting/context/domain facet lives on Operator. Conflating them would merge accountability with action and re-introduce the invisibility the boundary forbids.
 
 ### 10. §Process / §Goal — behavioral aspect (M12) and Goal type (M19) — `hotam_spec.process`
 
@@ -306,6 +306,6 @@ WHY a behavioral aspect: before §Process the ontology could only express static
 
 Canon: §Invariants — Structural form of the tension graph (the check_* layer).
 
-These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a steward; no edge dangles; every open hole states its question; every decision justifies itself. A conflict that is invisible (stewardless, axis-less) is the one thing forbidden.
+These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a resolver; no edge dangles; every open hole states its question; every decision justifies itself. A conflict that is invisible (resolverless, axis-less) is the one thing forbidden.
 
 WHY return violations, not bool: dev-coin's check_* return bool because there the goal is a single pass/fail gate. Here the SAME functions feed the 'what now' diagnosis, which needs the offending id and a human imperative — so the richer return type (Violation) is load-bearing, and holds() recovers the boolean when a test just wants pass/fail.

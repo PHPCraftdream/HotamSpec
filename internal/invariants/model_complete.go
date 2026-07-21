@@ -66,7 +66,7 @@ import (
 // pass over verified_by) and gate.ScanAuthoredModels' object inventory (no
 // second spec/ walk), so the three checks share one scenario-detection
 // logic and one model-scan choke point. The genuinely new value is the
-// model-grouped diagnostic: a steward building models general->specific
+// model-grouped diagnostic: a resolver building models general->specific
 // sees "model Risk is incomplete: method Validate has no scenario", not
 // three unrelated per-requirement violations that happen to share an
 // object they would have to reconstruct by hand.
@@ -355,7 +355,7 @@ var _ = All.MustRegister("check_model_complete", Invariant{
 		"narratively-dangling) reads as a complete object in every per-requirement view, even though it is exactly the " +
 		"kind of incomplete general->specific progression D5 polices. This check regroups the SAME W2.1 scenario signal " +
 		"and the SAME gate.ScanAuthoredModels inventory (no new coverage run, no second spec/ walk) by OWNING OBJECT, " +
-		"so a steward building models general->specific sees 'model Risk is incomplete: method Validate has no scenario' " +
+		"so a resolver building models general->specific sees 'model Risk is incomplete: method Validate has no scenario' " +
 		"-- an actionable, object-centered diagnostic -- instead of reconstructing the half-bound object by hand from " +
 		"scattered per-requirement violations. SCOPE: only a discipline:full domain's SETTLED requirements' cited " +
 		"EXPORTED methods -- every domain today is an honest no-op (this wave deliberately flips discipline:full on no " +

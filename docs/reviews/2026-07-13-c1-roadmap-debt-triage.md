@@ -1,21 +1,21 @@
 # C1 roadmap-debt triage — feature-blocked PROSE is honest, not neglected
 
 **Date:** 2026-07-13
-**Author:** AI agent (task #117), documenting an already-steward-approved classification surfaced via `@fm` advisory consultation this session
+**Author:** AI agent (task #117), documenting an already-resolver-approved classification surfaced via `@fm` advisory consultation this session
 **Audience:** future external reviewer · `hotam what-now`'s P0 signal reader · the operator's own ORIENT step
-**Rule in force:** R-speculative-aspects-frozen (SETTLED, steward-approved 2026-07-02) — the principle this document applies, not introduces. No `enforcement`/`enforceability`/`status` field on any requirement was changed by this task, no proposal was written, and no Go source or graph.json was touched.
+**Rule in force:** R-speculative-aspects-frozen (SETTLED, resolver-approved 2026-07-02) — the principle this document applies, not introduces. No `enforcement`/`enforceability`/`status` field on any requirement was changed by this task, no proposal was written, and no Go source or graph.json was touched.
 
 ## How to read this
 
-This document is NOT presenting options for a steward decision (unlike its sibling `2026-07-13-category-c2-decision-brief.md`, which laid out choices the steward then picked). It documents an **already-settled classification** and explains why its current state is correct and will persist until a real business-domain need unfreezes the underlying features.
+This document is NOT presenting options for a resolver decision (unlike its sibling `2026-07-13-category-c2-decision-brief.md`, which laid out choices the resolver then picked). It documents an **already-settled classification** and explains why its current state is correct and will persist until a real business-domain need unfreezes the underlying features.
 
-The problem it solves: `docs/gen/UNENFORCED.md`'s burn-down line is one-dimensional — a single `closeable debt: N` number that does not visually separate *closeable-now* items (genuinely enforceable today, just no test written yet) from *feature-blocked* items (the feature the requirement describes does not exist in the codebase at all). This conflation is why an external reviewer, `what-now`'s own P0 `enforcement-gradient` signal, or the burn-down line itself keeps re-flagging the same set as if it were neglected debt. It is not — it is honestly-documented future-feature roadmap, correctly labeled `enforcement: PROSE`, `enforceability: ENFORCEABLE`, blocked on features whose implementation is itself frozen by an already-approved steward decision.
+The problem it solves: `docs/gen/UNENFORCED.md`'s burn-down line is one-dimensional — a single `closeable debt: N` number that does not visually separate *closeable-now* items (genuinely enforceable today, just no test written yet) from *feature-blocked* items (the feature the requirement describes does not exist in the codebase at all). This conflation is why an external reviewer, `what-now`'s own P0 `enforcement-gradient` signal, or the burn-down line itself keeps re-flagging the same set as if it were neglected debt. It is not — it is honestly-documented future-feature roadmap, correctly labeled `enforcement: PROSE`, `enforceability: ENFORCEABLE`, blocked on features whose implementation is itself frozen by an already-approved resolver decision.
 
 ---
 
 ## The anchor principle — R-speculative-aspects-frozen
 
-The entire framing rests on one SETTLED requirement the steward already approved (2026-07-02, frozen after audit). Its current claim text, fetched verbatim via `hotam req show R-speculative-aspects-frozen --domain domains/hotam-spec-self --json`:
+The entire framing rests on one SETTLED requirement the resolver already approved (2026-07-02, frozen after audit). Its current claim text, fetched verbatim via `hotam req show R-speculative-aspects-frozen --domain domains/hotam-spec-self --json`:
 
 > "The Entity aspect, multi-domain federation, and sub-agent recursion machinery shall receive no inward development while frozen, unfreezing only when a real business domain demonstrates concrete need."
 
@@ -37,15 +37,15 @@ The 37 items in `docs/gen/UNENFORCED.md`'s "Closeable debt (ENFORCEABLE, no enfo
 | Category | Count | What it is |
 |---|---|---|
 | **C1 — feature-blocked roadmap** | **33** | The requirement describes a feature that does not exist in the codebase. Correctly `ENFORCEABLE` + `PROSE`. No honest test can be written until the feature is built. |
-| **C2 residual — steward-decided, claim-corrected** | **4** | Resolved this wave by task #113 (steward-approved claim amendments). The steward chose to correct the claim text to match reality rather than build an enforcer or reclassify. They remain honest debt by design — the steward is aware and decided to leave them. |
+| **C2 residual — resolver-decided, claim-corrected** | **4** | Resolved this wave by task #113 (resolver-approved claim amendments). The resolver chose to correct the claim text to match reality rather than build an enforcer or reclassify. They remain honest debt by design — the resolver is aware and decided to leave them. |
 
 The 4 C2-residual items (NOT part of the C1 set documented below — included here only to account for the full 37):
 
 | id | Why it stays debt |
 |---|---|
-| `R-domain-owns-tools-and-agents` | Claim amended to lazy-materialization semantics ("dirs appear only at real spawn time"). Steward picked option (b) from the C2 brief. Still ENFORCEABLE + PROSE. |
+| `R-domain-owns-tools-and-agents` | Claim amended to lazy-materialization semantics ("dirs appear only at real spawn time"). Resolver picked option (b) from the C2 brief. Still ENFORCEABLE + PROSE. |
 | `R-project-name-hotam-spec` | Claim amended to legalize the current Go module path (`github.com/PHPCraftdream/HotamSpec`, PascalCase per commit `4325ac8`). Module rename (119 files/178 imports) explicitly rejected as high-risk. |
-| `R-speculative-aspects-frozen` | Steward picked option (c) "leave as debt." The freeze guard (sha256 hash-pin) overlaps the unbuilt `R-enforcement-perimeter-visible` general mechanism — not worth building twice. |
+| `R-speculative-aspects-frozen` | Resolver picked option (c) "leave as debt." The freeze guard (sha256 hash-pin) overlaps the unbuilt `R-enforcement-perimeter-visible` general mechanism — not worth building twice. |
 | `R-presented-pending-decision-type` | Claim amended to legalize the observed wave-folder `proposals/` practice (9+ waves of real precedent). No separate pending/applied runtime split needed. |
 
 ---
@@ -84,7 +84,7 @@ Each cluster names the specific feature that does not exist yet, cross-reference
 | `R-subagent-gets-its-claude-md` | A delegated sub-operator receives its OWN crystal, a CLAUDE.md generated from its sub-domain. | `create_agent` tool (Planned) + per-agent crystal rendering in gen-spec. |
 | `R-crystal-tree-hierarchy` | The delegation hierarchy is a tree of CLAUDE.md crystals, one per operator, each budget-bounded. | `create_agent`/`spawn_agent`/`invoke_agent` (all Planned) — no second operator exists to form a tree. |
 | `R-agent-scoped-constitution` | `gen-spec` regenerates an agent's CLAUDE.md CONSTITUTION block filtered by the agent's SCOPE tuple. | `create_agent` tool + scoped-rendering path in `internal/generator` (not implemented). |
-| `R-agent-declares-purpose` | Every agent declares a non-empty PURPOSE describing what it stewards (machine-readable, alongside SCOPE). | `create_agent` tool — no non-director agent exists to carry a PURPOSE. |
+| `R-agent-declares-purpose` | Every agent declares a non-empty PURPOSE describing what it resolvers (machine-readable, alongside SCOPE). | `create_agent` tool — no non-director agent exists to carry a PURPOSE. |
 | `R-agent-references-shared-docs` | Each agent CLAUDE.md contains a SHARED-DOCS block listing paths to shared thinking/tool docs. | `create_agent` tool + agent-crystal rendering path. |
 | `R-sub-agent-crystal-triad` | Every sub-agent's CLAUDE.md contains three parts: scope-filtered thinking, parent reference, scope-filtered constitution. | `create_agent` tool — the triad structure is only renderable once a real sub-agent exists. |
 | `R-task-spawn-log-runtime` | `spawn_agent` appends a spawn-log entry to `.runtime/spawn-log.jsonl` on every invocation. | `spawn_agent` tool (Planned) + `.runtime/` directory (does not exist). |
@@ -175,7 +175,7 @@ Each cluster names the specific feature that does not exist yet, cross-reference
 | J — Performance guard | 1 | Timing harness + per-machine baseline (absent) |
 | **Total C1** | **33** | |
 
-**Why this state is correct and will persist:** every one of these 33 requirements describes behavior of a feature that is registered as `Planned` (not implemented) in `internal/methodology/tools_data.go` or depends on a package/directory that does not exist on disk. They carry `enforceability: ENFORCEABLE` (correct — they ARE mechanically enforceable once the feature is built) and `enforcement: PROSE` (correct — no honest test exists today). Reclassifying to `INHERENTLY_PROSE` would be factually wrong; writing mock-enforcement tests would be theatre. The freeze on building these features is itself a steward-approved decision (`R-speculative-aspects-frozen`), not an oversight.
+**Why this state is correct and will persist:** every one of these 33 requirements describes behavior of a feature that is registered as `Planned` (not implemented) in `internal/methodology/tools_data.go` or depends on a package/directory that does not exist on disk. They carry `enforceability: ENFORCEABLE` (correct — they ARE mechanically enforceable once the feature is built) and `enforcement: PROSE` (correct — no honest test exists today). Reclassifying to `INHERENTLY_PROSE` would be factually wrong; writing mock-enforcement tests would be theatre. The freeze on building these features is itself a resolver-approved decision (`R-speculative-aspects-frozen`), not an oversight.
 
 ---
 
@@ -188,12 +188,12 @@ This is a real, separate, larger change touching:
 - **Generator:** `docs/gen/UNENFORCED.md` rendering two sub-tables under "Closeable debt" instead of one flat table.
 - **Diagnose:** `what-now`'s `enforcement-gradient` reflection counting only *closeable-now* items, not feature-blocked ones.
 
-It requires its own steward-approved proposal (a new `Requirement` field is an ontology change, not a docs-only edit) and is a candidate for a genuinely future wave, not this one. Flagging it here so the next reviewer who re-encounters the burn-down number knows the fix is identified and deliberately deferred, not missed.
+It requires its own resolver-approved proposal (a new `Requirement` field is an ontology change, not a docs-only edit) and is a candidate for a genuinely future wave, not this one. Flagging it here so the next reviewer who re-encounters the burn-down number knows the fix is identified and deliberately deferred, not missed.
 
 ### Update (task #123, 2026-07-13) — IMPLEMENTED
 
-The metric split described above as future work has now been implemented in task #123 (this same review-response wave, steward-approved). The `Requirement` struct gained an optional `blocked_on` field (`internal/ontology/requirement.go`, serialized as `json:"blocked_on,omitempty"`, schema_version bumped 1→2 with a lossless additive v1→v2 migration). The 33 C1 items below were backfilled with a one-line `blocked_on` naming their blocking feature via `proposals/wave14-burndown-split-backfill/`. Consequently `docs/gen/UNENFORCED.md` now renders two tables — "Closeable debt — closeable now" and "Closeable debt — feature-blocked (honest roadmap, not neglected)" — and its burn-down line reads `closeable-now 4; feature-blocked 33` (the 4 are the C2-residual items that honestly remain closeable-now debt by steward choice). `hotam what-now`'s `enforcement-gradient` P0 reflection now counts ONLY closeable-now items (4 ≤ 5, so the P0 signal is silent), while the 33 feature-blocked items surface as a separate lower-priority Advisory (`reflect_feature_blocked_debt`, P7) pointing back at this document — so the re-flagging cycle this section predicted is now structurally discharged.
+The metric split described above as future work has now been implemented in task #123 (this same review-response wave, resolver-approved). The `Requirement` struct gained an optional `blocked_on` field (`internal/ontology/requirement.go`, serialized as `json:"blocked_on,omitempty"`, schema_version bumped 1→2 with a lossless additive v1→v2 migration). The 33 C1 items below were backfilled with a one-line `blocked_on` naming their blocking feature via `proposals/wave14-burndown-split-backfill/`. Consequently `docs/gen/UNENFORCED.md` now renders two tables — "Closeable debt — closeable now" and "Closeable debt — feature-blocked (honest roadmap, not neglected)" — and its burn-down line reads `closeable-now 4; feature-blocked 33` (the 4 are the C2-residual items that honestly remain closeable-now debt by resolver choice). `hotam what-now`'s `enforcement-gradient` P0 reflection now counts ONLY closeable-now items (4 ≤ 5, so the P0 signal is silent), while the 33 feature-blocked items surface as a separate lower-priority Advisory (`reflect_feature_blocked_debt`, P7) pointing back at this document — so the re-flagging cycle this section predicted is now structurally discharged.
 
 ---
 
-*No graph.json, no generated docs, and no Go source file was touched in the course of producing this document. The C1 item list was derived freshly from `docs/gen/UNENFORCED.md`'s current "Closeable debt" section (37 items) minus the 4 C2-residual items (steward-decided claim-amendments from task #113 that honestly remain debt) = 33. All blocking-feature claims cross-checked against `internal/methodology/tools_data.go` (Planned/Implemented status) and filesystem state (`internal/attention` absent, `.runtime/` absent, no `ticket_*`/`gate_status`/`create_agent` Go implementations).*
+*No graph.json, no generated docs, and no Go source file was touched in the course of producing this document. The C1 item list was derived freshly from `docs/gen/UNENFORCED.md`'s current "Closeable debt" section (37 items) minus the 4 C2-residual items (resolver-decided claim-amendments from task #113 that honestly remain debt) = 33. All blocking-feature claims cross-checked against `internal/methodology/tools_data.go` (Planned/Implemented status) and filesystem state (`internal/attention` absent, `.runtime/` absent, no `ticket_*`/`gate_status`/`create_agent` Go implementations).*
