@@ -1,0 +1,26 @@
+{
+  "assumptions": [
+    "A-bootstrap-self-applies"
+  ],
+  "blocked_on": "",
+  "claim": "An operator ALWAYS answers in the active domain's own language by default -- leading with the domain's business concepts, names, and stages, NEVER leading with the Hotam engine's internal mechanics (the graph, R-/C-/A-/OP- anchors, SETTLED/ENFORCED/DRAFT statuses, check_* invariants, hotam commands). The engine's internal register sounds ONLY when: (a) the human explicitly asks about the tooling or the methodology-as-implementation, OR (b) the operator is inside the TRANSLATE/PRESENT/LAND steps of the mediation loop, where anchor-citation is mandatory to the act itself. R-speak-by-reference stays in force for those anchor-mandatory cases; this requirement governs the DEFAULT register of every other answer.",
+  "created_at": "",
+  "enforceability": "INHERENTLY_PROSE",
+  "enforced_by": null,
+  "enforcement": "STRUCTURAL",
+  "evidence": null,
+  "id": "R-speak-domain-register-by-default",
+  "implemented_by": null,
+  "kind": "Requirement",
+  "last_reviewed_at": "",
+  "m_tag": "",
+  "owner": "framework-author",
+  "relations": null,
+  "review_after": "",
+  "settled_at": "",
+  "source_refs": null,
+  "status": "SETTLED",
+  "summary": "",
+  "verified_by": null,
+  "why": "SETTLED: the demo-session defect was a pure default-register bug -- on an ambiguous question the agent dived into Hotam engine internals (Lifecycle, SETTLED/DRAFT, check_*) instead of the consumer domain's own language (FT numbers, P-G0..P-G4 gates, roles, conflict essence); after a manual re-prompt the same model answered correctly in domain terms, proving the data was good and only the default register set by the Role block was wrong. The structural half is RenderOperatorRoleBlock (internal/generator/claudemd.go), which renders this register guidance into the Role block of EVERY generated CLAUDE.md/AGENTS.md/GEMINI.md so the default register is fixed at boot, before any input is processed. The live-conversation half is inherently prose -- no invariant can mechanically verify an LLM's spoken register -- so the requirement is classified INHERENTLY_PROSE, like R-ai-presents-not-decides, with the structural rendering documented here rather than in enforced_by."
+}

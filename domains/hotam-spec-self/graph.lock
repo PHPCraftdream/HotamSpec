@@ -1,5 +1,5 @@
 {
-  "sha256": "b185ab160369845644c619bd1efac06375b017466f1d4a0e41054f950a7fd316",
-  "updated_at": "2026-07-20T14:07:49Z",
-  "note": "Requirement R-scenario-spec-obligations-mechanically-enforced applied"
+  "sha256": "3ba74725314402e6727a9fc75f78b09f486fc2e91ca571c0a11583046be0b58e",
+  "updated_at": "2026-07-21T00:50:30Z",
+  "note": "Requirement R-speak-domain-register-by-default applied (hand-landed replicating loader.WriteLock exactly; apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with committed SPEC.md -- see requirement History for full explanation)"
 }

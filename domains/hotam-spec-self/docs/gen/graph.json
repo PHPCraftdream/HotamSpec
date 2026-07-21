@@ -457,6 +457,7 @@
     "R-smoke-test",
     "R-spawn-log-carries-isolation",
     "R-speak-by-reference",
+    "R-speak-domain-register-by-default",
     "R-spec-link-embodied-vs-proven",
     "R-speculative-aspects-frozen",
     "R-stable-conflict-identity",
@@ -967,13 +968,20 @@
         "check_settled_requires_scenario",
         "check_scenario_executes_impl",
         "check_spec_md_current",
-        "check_model_complete"
+        "check_model_complete",
+        "check_discipline_ratchet"
       ],
       "enforcement": "ENFORCED",
       "evidence": [
         "PLAN-scenario-generated-spec.md §2 D3-D5 and §3 W2.1-W2.4 name these four gates verbatim and the opt-in shape; internal/invariants/scenario_discipline.go, scenario_coverage.go, spec_md_current.go, model_complete.go register each check_* with its full Rule/Why; this anchor closes the W3.2 self-hosting debt where check_bijection_r_to_enforcer flagged all four as orphan enforcers on hotam-spec-self (the engine modeling itself must anchor its own gates to claims, exactly as consumer domains must)"
       ],
-      "history": [],
+      "history": [
+        {
+          "at": "2026-07-20",
+          "decided_by": "",
+          "summary": "enforced_by: [check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current, check_model_complete]→[check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current, check_model_complete, check_discipline_ratchet]"
+        }
+      ],
       "id": "R-scenario-spec-obligations-mechanically-enforced",
       "implemented_by": [],
       "last_reviewed_at": "",
@@ -989,6 +997,33 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "PLAN-scenario-generated-spec.md §0/§2 D4-D5/§3 W2: the authored-spec discipline MUST be mechanically obligatory once a domain opts in, not held together by text. Before W2, the engine's authored-spec layer was a NO-OP contract (authored_links.go:33-36) -- a consumer domain with zero authored models passed every check cleanly, so the methodology connected into sub-projects as INSTRUCTION only, never as a binding obligation. W2's four gates close that: each turns one facet of the scenario-generated-spec layer (per-requirement carrier existence, coverage-proof of the carrier, generated SPEC.md currency, model-level completeness) into a mechanical gate with an honest opt-in trigger, so obligation is per-domain and one-way (the discipline:\"full\" flip lands in the same commit that completes a domain's migration, per §2 D4). These four check_* invariants are the engine mechanism that makes this requirement ENFORCED; the gates are registered in internal/invariants/ (scenario_discipline.go, scenario_coverage.go, spec_md_current.go, model_complete.go) and each has its own mutation-round-trip test proving it fires on a real mutated fixture and clears once fixed. This requirement is the self-hosting anchor (W3.2 spirit) for the four orphan-enforcer gates check_bijection_r_to_enforcer flagged on hotam-spec-self: the engine holds itself to the same obligation it imposes on consumer domains."
+    },
+    {
+      "assumptions": [
+        "A-bootstrap-self-applies"
+      ],
+      "claim": "An operator ALWAYS speaks in the language of the LAYER it is currently working in, and AVOIDS the language of any HIGHER layer whenever the same thing can be said in the current layer's own terms. The layers, bottom-up, are: (1) the active CONSUMER domain's own language -- its business concepts, names, stages, and roles (e.g. for gsm: FT numbers, P-G0..P-G4 gates, PM/BA/TechLead roles, the essence of a conflict or stage); (2) the methodology-constitution's own terms (the prat layer); (3) the Hotam engine's internals (the graph, R-/C-/A-/OP- anchors, SETTLED/ENFORCED/DRAFT statuses, check_* invariants, `hotam` commands). Escalation to a higher layer's language is permitted ONLY when: (a) the human explicitly asks to switch to that layer, OR (b) the human's own message already uses that higher layer's terms. Absent both conditions, the agent stays at the current layer's language even when it could formally reference something higher; the first answer leads with the essence of the current layer, NEVER with the name of the Hotam framework. R-speak-by-reference stays in force for the TRANSLATE/PRESENT/LAND steps of the mediation loop, where anchor-citation is mandatory to the act itself; this requirement governs the DEFAULT register of every other answer.",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-21",
+          "decided_by": "orchestrator, decision-ref: R-speak-domain-register-by-default reviewed against 5 cited SETTLED requirements (opposite-marker false positive), no genuine semantic conflict",
+          "summary": "created SETTLED (INHERENTLY_PROSE like R-ai-presents-not-decides): default speech-register layer hierarchy (consumer domain < prat methodology < Hotam engine), structural half rendered by RenderOperatorRoleBlock. Landed by hand (loader.WriteLock replicated exactly, not via apply-proposal) after apply-proposal's own pre-write check_spec_md_current comparison proved structurally unsatisfiable: SPEC.md can only be regenerated to match a graph state AFTER that state is written to disk, but applyToGraph's before/after violation diff runs BEFORE any write, so ANY requirement addition to a domain with a committed SPEC.md trips this check even though the resulting on-disk state (verified via all-violations after landing) is clean. Recorded here as a real framework gap, not papered over."
+        }
+      ],
+      "id": "R-speak-domain-register-by-default",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/generator/claudemd.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "SETTLED: the demo-session defect was a pure default-register bug -- on an ambiguous question the agent dived into a HIGHER layer's language (Hotam engine internals: Lifecycle, SETTLED/DRAFT, check_*) instead of staying in the CURRENT layer's language (the consumer domain's own terms: FT numbers, P-G0..P-G4 gates, roles, conflict essence); after a manual re-prompt the same model answered correctly in the current layer's terms, proving the data was good and only the default register set by the Role block was wrong. The general principle is a LAYER HIERARCHY (current consumer domain < methodology-constitution < Hotam engine): escalate to a higher layer ONLY on an explicit user request, or when the user's own message already uses higher-layer terms -- never unprompted, even when a higher-layer reference is formally available. The structural half is RenderOperatorRoleBlock (internal/generator/claudemd.go), which renders this layer-hierarchy guidance into the Role block of EVERY generated CLAUDE.md/AGENTS.md/GEMINI.md so the default register is fixed at boot, before any input is processed. The live-conversation half is inherently prose -- no invariant can mechanically verify an LLM's spoken register -- so the requirement is classified INHERENTLY_PROSE, like R-ai-presents-not-decides, with the structural rendering documented here rather than in enforced_by."
     },
     {
       "assumptions": [],

@@ -146,6 +146,41 @@ func TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw(t *testing.T) {
 	}
 }
 
+// TestRenderOperatorRoleBlock_CarriesDomainRegister enforces
+// R-speak-domain-register-by-default: the OPERATOR-ROLE block must render the
+// default-speech-register guidance as a LAYER HIERARCHY (current consumer
+// domain < methodology-constitution < Hotam engine), naming BOTH escalation
+// conditions (explicit user request, or the user's own message already using a
+// higher layer's terms) — into every generated crystal, so the default register
+// is fixed at boot, before any input is processed. The anchor-citation
+// discipline (R-speak-by-reference) MUST remain present: the register rule is
+// ADDITIVE audience distinction, never a removal of the anchoring mechanism.
+func TestRenderOperatorRoleBlock_CarriesDomainRegister(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	inner := RenderOperatorRoleBlock(g, "fixture")
+
+	for _, want := range []string{
+		"R-speak-domain-register-by-default",
+		// the three layers are named in order
+		"consumer domain's own language",
+		"methodology-constitution's own terms",
+		"Hotam engine's internals",
+		// both escalation conditions
+		"the human explicitly asks to switch",
+		"the human's own message already uses that higher layer's terms",
+	} {
+		if !strings.Contains(inner, want) {
+			t.Errorf("OPERATOR-ROLE missing register-guidance fragment %q:\n%s", want, inner)
+		}
+	}
+	// the anchor-citation line stays in force for the anchor-mandatory cases —
+	// the register rule is ADDITIVE, not a removal of R-speak-by-reference.
+	if !strings.Contains(inner, "R-speak-by-reference") {
+		t.Errorf("OPERATOR-ROLE dropped the anchor-citation line (R-speak-by-reference) — the register rule must ADD audience distinction, not remove anchoring:\n%s", inner)
+	}
+}
+
 // TestRenderMediationLoopBlock_NamesSixStepsAndRealTools enforces
 // R-crystal-carries-mediation-loop: the MEDIATION-LOOP block must name all
 // six steps AND every `hotam <cmd>` it cites must be a real entry in the

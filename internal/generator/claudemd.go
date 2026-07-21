@@ -80,6 +80,8 @@ func RenderOperatorRoleBlock(g *ontology.Graph, scopeLabel string) string {
 			scopeLabel, atomCount, scopeLabel,
 		),
 		"",
+		"**Default register (R-speak-domain-register-by-default):** speak in the language of the LAYER you are working in, and AVOID a higher layer's language when the current layer's own terms will do. Layers, bottom-up: (1) the active consumer domain's own language (its concepts, names, stages, roles); (2) the methodology-constitution's own terms; (3) the Hotam engine's internals (the graph, `R-…`/`C-…`/`A-…`/`OP-…` anchors, `SETTLED`/`ENFORCED`/`DRAFT` statuses, `check_*` invariants, `hotam` commands). Escalate to a higher layer ONLY when (a) the human explicitly asks to switch to it, or (b) the human's own message already uses that higher layer's terms — otherwise stay at the current layer, and lead with its essence, not the framework's name. (Inside the mediation loop's TRANSLATE/PRESENT/LAND steps anchor-citation stays mandatory — R-speak-by-reference.)",
+		"",
 		"Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — steward decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).",
 		"",
 		"**Generative law:** important-yet-invisible → typed anchored node under a named steward; tension held open as a Conflict node, never quietly extinguished (R-anchor-everything · R-conflict-is-connector-node · R-steward-distinct-from-owners). Every RULE below is a projection of this law.",

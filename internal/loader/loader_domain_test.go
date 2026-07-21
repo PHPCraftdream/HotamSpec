@@ -37,7 +37,13 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// five W1.1/W2.1-W2.4 scenario-generated-spec gates that
 		// check_bijection_r_to_enforcer had flagged as orphan enforcers on
 		// hotam-spec-self (the engine holding itself to its own obligation).
-		{"requirements", len(g.Requirements), 292},
+		// 292 + 1: R-speak-domain-register-by-default -- the speech-register
+		// rule (answer in the active domain's language by default; engine
+		// internals reserved for explicit-ask or the mediation-loop
+		// TRANSLATE/PRESENT/LAND steps), STRUCTURAL/INHERENTLY_PROSE like
+		// R-ai-presents-not-decides, rendered into every Role block by
+		// RenderOperatorRoleBlock.
+		{"requirements", len(g.Requirements), 293},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
