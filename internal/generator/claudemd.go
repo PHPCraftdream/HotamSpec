@@ -584,26 +584,138 @@ func RenderParentProjectBlock(g *ontology.Graph) string {
 	return strings.Join([]string{generatedHeaderComment, "", line, "", body}, "\n")
 }
 
-// RenderBusinessContent renders the BUSINESS bucket: the domain-specific
-// "what this claims" layer. Order: LIVE-STATE, DOMAIN-MAP, PARENT-PROJECT,
-// CONSTITUTION, AGENT-MAP, CONCEPT-MAP (full profile only), RECENTLY-REJECTED.
+// RenderProjectEssenceBlock renders the PROJECT-ESSENCE block content
+// (without sentinels): a compact purpose/goals/director summary for the
+// CURRENT (active) domain only — the same three manifest fields
+// RenderDomainMapBlock projects PER domain across the whole domains/ tree,
+// narrowed here to just the active domain so a consumer-profile crystal
+// opens with "what this project is" on the first screen.
 //
-// consumer gates the CONCEPT-MAP block: it maps §-sections to framework
-// SOURCE FILE paths (internal/ontology/*.go) that do not exist in an external
-// consumer's project, so the entire block is omitted under consumer. Full
-// profile renders byte-identical to before.
+// Source of truth: the active domain's own manifest.json, resolved via
+// loader.ResolveDomainPresentation (the same loader already used by
+// RenderDomainMapBlock for every sibling domain) — never a new data
+// source. A manifest without these fields (or a missing/malformed
+// manifest) yields em-dash placeholders, mirroring RenderDomainMapBlock's
+// fallback shape exactly.
+//
+// repoRoot is the repository root (the parent of domains/); domainName is
+// the active domain's directory name. Together they locate the manifest at
+// domains/<domainName>/manifest.json — the same path ResolveDomainPresentation
+// derives from its graphPath argument.
+func RenderProjectEssenceBlock(repoRoot, domainName string) string {
+	description := "—"
+	goalsText := "—"
+	director := "—"
+	if domainName != "" {
+		m := loader.ResolveDomainPresentation(filepath.Join(repoRoot, "domains", domainName, "graph.json"))
+		if m.Purpose != "" {
+			description = m.Purpose
+		}
+		if len(m.Goals) > 0 {
+			goalsText = strings.Join(m.Goals, ", ")
+		}
+		if m.Director != "" {
+			director = m.Director
+		}
+	}
+	lines := []string{
+		generatedHeaderComment,
+		"",
+		"### Project essence",
+		"",
+		"- **purpose** — " + description,
+		"- **goals** — " + goalsText,
+		"- **director** — " + director,
+	}
+	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
+}
+
+// RenderStakeholdersBlock renders the STAKEHOLDERS block content (without
+// sentinels): a compact who's-who table over the active domain's
+// g.Stakeholders (id/name/domain), so a consumer-profile crystal opens
+// with the project's roles on the first screen. Reuses the same graph
+// slice BuildRequirements already projects into REQUIREMENTS.md's
+// Stakeholders section (NarrativeOrder by DeclOrder, Cell for safe table
+// interpolation) — no new data source.
+//
+// A graph with no Stakeholders renders an explicit empty marker (never
+// nothing) so the sentinel pair always has honest inner content, matching
+// AGENT-MAP / CONSTITUTION's empty-state contract.
+func RenderStakeholdersBlock(g *ontology.Graph) string {
+	lines := []string{
+		generatedHeaderComment,
+		"",
+		"### Stakeholders & roles",
+		"",
+	}
+	stakeholders := NarrativeOrder(g.Stakeholders, func(s ontology.Stakeholder) int { return s.DeclOrder })
+	if len(stakeholders) == 0 {
+		lines = append(lines, "_(no stakeholders declared in this domain yet.)_")
+		return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
+	}
+	lines = append(lines, "| id | name | domain |")
+	lines = append(lines, "|---|---|---|")
+	for _, s := range stakeholders {
+		lines = append(lines, "| `"+s.ID+"` | "+Cell(s.Name)+" | "+Cell(s.Domain)+" |")
+	}
+	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
+}
+
+// RenderBusinessContent renders the BUSINESS bucket: the domain-specific
+// "what this claims" layer. The block ORDER is profile-dependent:
+//
+//   - consumer == false (full profile, the default, backward-compatible
+//     case): LIVE-STATE, DOMAIN-MAP, PARENT-PROJECT, CONSTITUTION,
+//     AGENT-MAP, CONCEPT-MAP, RECENTLY-REJECTED — byte-identical to the
+//     pre-consumer-profile-reorder output. The full profile targets the
+//     engine's own self-hosting domains (hotam-spec-self / hotam-dev),
+//     where the operational order (engine state first) is the one the
+//     framework's own developers want.
+//   - consumer == true (consumer profile, for external business domains
+//     like gsm/prat): PROJECT-ESSENCE, STAKEHOLDERS, LIVE-STATE,
+//     CONSTITUTION, DOMAIN-MAP, PARENT-PROJECT, AGENT-MAP,
+//     RECENTLY-REJECTED. Opens with the project's essence (purpose/roles/
+//     where-we-are/requirements-map) so a freshly-booted operator answers
+//     "what is this project" and "what is blocked" from the first screen
+//     of the crystal alone — the operational router (DOMAIN-MAP),
+//     PARENT-PROJECT, AGENT-MAP and anti-relitigation history move below
+//     the essence layer. CONCEPT-MAP stays omitted (it maps §-sections to
+//     framework source-file paths that do not exist in an external
+//     consumer's project — same gate as before, just stated here in the
+//     order doc).
+//
+// consumer is threaded from cmd/hotam/gen_spec.go's profile resolution
+// (R-gen-spec-profile) and propagates the same way through every
+// consumer-aware renderer in this package.
 func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claudeMDCharCount int, domainGraphs map[string]*ontology.Graph, today string, consumer bool) string {
+	if !consumer {
+		// Full profile: preserve byte-identical historical order.
+		parts := []string{
+			WrapBlock("LIVE-STATE", BuildLiveState(g, domainName, claudeMDCharCount, today)),
+			WrapBlock("DOMAIN-MAP", RenderDomainMapBlock(repoRoot, domainGraphs, today)),
+			WrapBlock("PARENT-PROJECT", RenderParentProjectBlock(g)),
+			WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
+			WrapBlock("AGENT-MAP", RenderAgentMapBlock()),
+			WrapBlock("CONCEPT-MAP", RenderConceptMapBlock(consumer)),
+		}
+		parts = append(parts, WrapBlock("RECENTLY-REJECTED", RenderRecentlyRejectedBlock(g)))
+		return strings.Join(parts, "\n")
+	}
+	// Consumer profile: essence-first reorder. PROJECT-ESSENCE and
+	// STAKEHOLDERS open the crystal; LIVE-STATE surfaces "where we are /
+	// what's blocked"; CONSTITUTION carries the requirements map; then
+	// the operational layer (DOMAIN-MAP router, PARENT-PROJECT, AGENT-MAP,
+	// RECENTLY-REJECTED) follows. CONCEPT-MAP stays omitted under consumer.
 	parts := []string{
+		WrapBlock("PROJECT-ESSENCE", RenderProjectEssenceBlock(repoRoot, domainName)),
+		WrapBlock("STAKEHOLDERS", RenderStakeholdersBlock(g)),
 		WrapBlock("LIVE-STATE", BuildLiveState(g, domainName, claudeMDCharCount, today)),
+		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
 		WrapBlock("DOMAIN-MAP", RenderDomainMapBlock(repoRoot, domainGraphs, today)),
 		WrapBlock("PARENT-PROJECT", RenderParentProjectBlock(g)),
-		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
 		WrapBlock("AGENT-MAP", RenderAgentMapBlock()),
+		WrapBlock("RECENTLY-REJECTED", RenderRecentlyRejectedBlock(g)),
 	}
-	if !consumer {
-		parts = append(parts, WrapBlock("CONCEPT-MAP", RenderConceptMapBlock(consumer)))
-	}
-	parts = append(parts, WrapBlock("RECENTLY-REJECTED", RenderRecentlyRejectedBlock(g)))
 	return strings.Join(parts, "\n")
 }
 
