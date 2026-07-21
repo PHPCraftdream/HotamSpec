@@ -178,7 +178,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-spec-self/docs/gen/UNENFORCED.md.
 - **debt:** 172/249 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 317 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21023 chars (headroom 128977)
+- **graph:** 317 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21069 chars (headroom 128931)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -192,6 +192,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — waves land atomically with a green T2 at the boundary, every spawn and every apply leaves a trace in the .runtime logs, push only on the steward's explicit word
 - **director** — director
 - **path** — `domains/hotam-dev/`
+- **crystal** — `domains/hotam-dev/CLAUDE.md`
 - **atoms-count** — 9 SETTLED
 - **open actions** — 3 (top: [P0] enforcement-gradient: 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt.)
 

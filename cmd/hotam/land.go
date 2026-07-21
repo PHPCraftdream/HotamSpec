@@ -214,65 +214,82 @@ func landProposalFile(proposalFile, domainDir, claudeMDPath, today string, ackOp
 	return landProposalValue(p, domainDir, claudeMDPath, today, ackOpts, asJSON)
 }
 
-// resolveClaudeMDPath returns the effective root-crystal path a land operation
-// should regenerate. An explicit non-empty path always wins (operator
-// override). Otherwise, if domainDir resolves to a real project root (via
-// repoRootForDomain) that already carries a root CLAUDE.md or a
-// .hotam-spec-project marker, land defaults to regenerating
-// <repoRoot>/CLAUDE.md automatically — closing the class of bug where
-// graph.json + docs/gen/*.md are fresh but the crystal an agent actually boots
-// from is stale. A domain NOT linked to any such project root (e.g. an isolated
-// test fixture, or a bare domain nobody has run init-project / hotam use on)
-// gets no auto-write — this only activates where a crystal convention already
-// exists.
+// resolveClaudeMDPath returns the effective crystal path a land/gen-spec
+// operation should regenerate. An explicit non-empty path always wins
+// (operator override). Otherwise two defaults apply, both GATED on the project
+// root already carrying a crystal convention (a root CLAUDE.md or a
+// .hotam-spec-project marker) — the same conservative boundary the root
+// crystal always respected, so a bare test fixture or an un-adopted project
+// stays crystal-free:
+//
+//  1. ROOT crystal — <repoRoot>/CLAUDE.md: when the domain being generated IS
+//     the active/unambiguous one (review-7 R7-b gate — the root crystal's
+//     Role/identity content is domain-specific, "Operator of `<domain>`", so
+//     auto-regenerating it from a non-active domain would hijack that
+//     identity). Safe when repoRoot == domainDir, when exactly one domain
+//     exists under <repoRoot>/domains/, or when the domain matches the
+//     active domain resolveActiveDomainName resolves.
+//  2. LOCAL crystal — <domainDir>/CLAUDE.md (task A2): when the domain is a
+//     NON-active consumer domain laid out under <repoRoot>/domains/. This is
+//     the systematic default that previously required a one-off
+//     `gen-spec --claude-md <domainDir>/CLAUDE.md` per domain — now every
+//     consumer domain in a convention-carrying project gets its own fresh
+//     local crystal alongside docs/gen/*, instead of a static README that
+//     silently rots. This branch never hijacks the root crystal (branch 1
+//     owns that); it writes alongside the domain it speaks for.
 //
 // The CLAUDE.md / marker checks are DIRECT os.Stat calls at repoRoot itself,
 // not an upward walk, so this function is not vulnerable to the ancestor-
 // marker contamination shape (a stray marker several levels above) — only
 // repoRootForDomain's own internal tier-2 ProjectRootOrRaise() call walks
 // upward, and only for non-domains/<name> layouts.
-//
-// A second gate (review-7 R7-b, fixing task #134's own regression) then
-// confirms the domain actually being landed is the one the root crystal
-// speaks FOR before auto-writing — the crystal's Role/identity content is
-// domain-specific ("Operator of `<domain>`"), so auto-regenerating it from a
-// non-active domain would silently hijack the root crystal's identity to
-// whichever domain happened to run `land` last. Auto-write proceeds only
-// when one of these holds:
-//
-//  1. repoRoot == domainDir — the bare/single-domain-is-root tier-3 layout,
-//     where there is only ever one domain and nothing to disambiguate.
-//  2. Exactly one directory exists under <repoRoot>/domains/ — a
-//     single-domain project is unambiguous even with no recorded
-//     active-domain preference.
-//  3. The domain being landed (domainNameFromDir) matches the active domain
-//     resolveActiveDomainName resolves for repoRoot (HOTAM_DOMAIN env, then
-//     the .hotam-spec-project marker's active_domain, then the legacy
-//     default name) — this is the genuinely-active-domain case.
-//
-// Everything else (2+ domains under repoRoot/domains/, landing domain not the
-// active one) returns "" — same as the no-convention case — so the operator
-// must pass an explicit --claude-md to update the crystal from a non-active
-// domain's content.
 func resolveClaudeMDPath(domainDir, explicit string) string {
 	if explicit != "" {
 		return explicit
 	}
 	repoRoot := repoRootForDomain(domainDir)
-	candidate := filepath.Join(repoRoot, "CLAUDE.md")
-	hasConvention := false
-	if _, err := os.Stat(candidate); err == nil {
-		hasConvention = true
-	} else if _, err := os.Stat(filepath.Join(repoRoot, paths.MarkerFilename)); err == nil {
-		hasConvention = true
-	}
-	if !hasConvention {
+	if !crystalConventionExists(repoRoot) {
 		return ""
 	}
-	if !isActiveOrUnambiguousDomain(repoRoot, domainDir) {
-		return ""
+	rootCandidate := filepath.Join(repoRoot, "CLAUDE.md")
+	if isActiveOrUnambiguousDomain(repoRoot, domainDir) {
+		return rootCandidate
 	}
-	return candidate
+	// Task A2: non-active consumer domain under <repoRoot>/domains/ defaults
+	// to its OWN local crystal. isDomainUnderDomainsDir guards the
+	// multi-domain layout (repoRootForDomain tier-1: domainDir's parent is
+	// literally "domains"); a bare domain dir without that layout falls
+	// through to "" (no auto-write).
+	if isDomainUnderDomainsDir(domainDir) {
+		return filepath.Join(domainDir, "CLAUDE.md")
+	}
+	return ""
+}
+
+// crystalConventionExists reports whether repoRoot already carries a root-
+// crystal convention: either a CLAUDE.md or a .hotam-spec-project marker. This
+// is the shared gate for BOTH the root-crystal and the local-crystal defaults
+// in resolveClaudeMDPath — a project that has adopted the crystal convention
+// gets crystals (root for the active domain, local for consumer domains),
+// while a bare test fixture or an un-adopted project stays crystal-free.
+func crystalConventionExists(repoRoot string) bool {
+	if _, err := os.Stat(filepath.Join(repoRoot, "CLAUDE.md")); err == nil {
+		return true
+	}
+	if _, err := os.Stat(filepath.Join(repoRoot, paths.MarkerFilename)); err == nil {
+		return true
+	}
+	return false
+}
+
+// isDomainUnderDomainsDir reports whether domainDir follows the multi-domain
+// <repoRoot>/domains/<name> layout (repoRootForDomain's tier-1 signal: the
+// domain's parent directory is literally "domains"). Only such a domain
+// qualifies for the local-crystal default in resolveClaudeMDPath — a bare
+// domain directory (tier-3, e.g. an isolated `hotam init` scaffold with no
+// domains/ parent) does not.
+func isDomainUnderDomainsDir(domainDir string) bool {
+	return filepath.Base(filepath.Dir(domainDir)) == "domains"
 }
 
 // isActiveOrUnambiguousDomain reports whether landing domainDir is safe to

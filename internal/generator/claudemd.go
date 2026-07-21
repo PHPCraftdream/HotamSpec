@@ -382,6 +382,21 @@ func RenderDomainMapBlock(repoRoot string, domainGraphs map[string]*ontology.Gra
 		lines = append(lines, "- **goals** — "+goalsText)
 		lines = append(lines, "- **director** — "+director)
 		lines = append(lines, "- **path** — `domains/"+name+"/`")
+		// Crystal link (task A2 router): when this domain carries a LOCAL
+		// crystal at <domainDir>/CLAUDE.md on disk, surface a direct pointer
+		// to it so the root crystal (the active domain's boot file) acts as a
+		// router to its consumer-domain siblings. The active domain itself —
+		// whose crystal lives at the repo ROOT, not under domains/ — has no
+		// local file and so gets no link (exactly the "router to the OTHER
+		// domains" shape the task asks for). A domain that has never been
+		// generated gets no link either: honest "no committed file = no lie",
+		// the same opt-in shape check_spec_md_current/check_recorder_current
+		// use, so the router is self-populating as each domain is generated
+		// and the root re-rendered.
+		crystalPath := filepath.Join(domainsRoot, name, "CLAUDE.md")
+		if _, err := os.Stat(crystalPath); err == nil {
+			lines = append(lines, "- **crystal** — `domains/"+name+"/CLAUDE.md`")
+		}
 		lines = append(lines, fmt.Sprintf("- **atoms-count** — %d SETTLED", atomsCount))
 		if openActions > 0 {
 			lines = append(lines, fmt.Sprintf("- **open actions** — %d (top: %s)", openActions, topActionLine))

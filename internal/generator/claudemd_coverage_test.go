@@ -304,6 +304,46 @@ func TestRenderDomainMapBlock_PopulatedKnown(t *testing.T) {
 	if !strings.Contains(out, "3 SETTLED") {
 		t.Errorf("atoms-count should reflect the fixture's 3 SETTLED reqs, got: %s", out)
 	}
+	// No local CLAUDE.md was placed in the domain dir → no crystal link
+	// (honest "no committed file = no lie", task A2 router).
+	if strings.Contains(out, "**crystal**") {
+		t.Errorf("DOMAIN-MAP should NOT carry a crystal link when no local CLAUDE.md exists, got: %s", out)
+	}
+}
+
+// TestRenderDomainMapBlock_CrystalLinkWhenLocalCrystalExists is the task A2
+// router proof: when a consumer domain carries a LOCAL crystal at
+// <domainDir>/CLAUDE.md on disk, the DOMAIN-MAP entry surfaces a direct
+// pointer to it so the root crystal routes an agent to that domain's boot
+// file. A domain WITHOUT a local crystal (the active domain, whose crystal
+// lives at the repo root; or a domain never generated) gets no link.
+func TestRenderDomainMapBlock_CrystalLinkWhenLocalCrystalExists(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	// "consumer" has a local crystal on disk; "bare" does not.
+	consumerDir := filepath.Join(root, "domains", "consumer")
+	bareDir := filepath.Join(root, "domains", "bare")
+	for _, d := range []string{consumerDir, bareDir} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(consumerDir, "CLAUDE.md"), []byte("# consumer crystal\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := RenderDomainMapBlock(root, map[string]*ontology.Graph{
+		"consumer": &ontology.Graph{},
+		"bare":     &ontology.Graph{},
+	}, "2026-07-12")
+
+	if !strings.Contains(out, "- **crystal** — `domains/consumer/CLAUDE.md`") {
+		t.Errorf("DOMAIN-MAP should link the consumer domain's local crystal, got: %s", out)
+	}
+	// "bare" has no local crystal → it must NOT get a crystal link (and the
+	// string "domains/bare/CLAUDE.md" must not appear anywhere for it).
+	if strings.Contains(out, "domains/bare/CLAUDE.md") {
+		t.Errorf("DOMAIN-MAP should NOT link a crystal for a domain with no local CLAUDE.md, got: %s", out)
+	}
 }
 
 func TestRenderDomainMapBlock_UnknownDomainFallbacks(t *testing.T) {

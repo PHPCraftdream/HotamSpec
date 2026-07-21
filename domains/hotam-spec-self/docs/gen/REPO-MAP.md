@@ -66,7 +66,6 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/hotam-spec-self/docs/gen/PIPELINE.md` — Domain overview: how this is put together, stage by stage
 - `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index
 - `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/hotam-spec-self/docs/gen/SPEC.md` — generated normative text
 - `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
 - `domains/hotam-spec-self/docs/gen/TRACEABILITY.md` — requirement -> implemented_by -> verified_by
 - `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter

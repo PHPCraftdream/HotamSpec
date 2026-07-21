@@ -165,3 +165,63 @@ func TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir(t *testing.T) {
 		t.Errorf("repoRootForDomain(%q) = %q, want domainDir itself (tier-3 fallback when no project root resolves)", domainDir, got)
 	}
 }
+
+// TestCmdGenSpec_LocalCrystalDefaultForNonActiveDomain is the task A2
+// practical proof: `hotam gen-spec` (cmdGenSpec) against a NON-active consumer
+// domain, in a convention-carrying multi-domain project, MUST write that
+// domain's OWN local <domainDir>/CLAUDE.md (+ AGENTS.md + GEMINI.md) WITHOUT
+// an explicit --claude-md flag — the systematic default that previously
+// required the one-off `gen-spec --claude-md <path>` (task A0). It also
+// asserts the ROOT crystal (for the active domain) is NOT touched, proving
+// the local write is not a root hijack.
+func TestCmdGenSpec_LocalCrystalDefaultForNonActiveDomain(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	// Two domains under domains/: "active" (named in the marker) and
+	// "consumer" (the non-active one gen-spec is run against).
+	activeDir := filepath.Join(root, "domains", "active")
+	consumerDir := filepath.Join(root, "domains", "consumer")
+	for _, d := range []string{activeDir, consumerDir} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", d, err)
+		}
+		copyFile(t, selfDomainGraph, filepath.Join(d, "graph.json"))
+		copyFile(t, selfDomainManifest, filepath.Join(d, "manifest.json"))
+	}
+	// Crystal convention: a root CLAUDE.md (baseline, must stay untouched) +
+	// marker naming "active" as the active domain.
+	rootBaseline := []byte("ROOT-CRYSTAL-FOR-ACTIVE\n")
+	if err := os.WriteFile(filepath.Join(root, "CLAUDE.md"), rootBaseline, 0o644); err != nil {
+		t.Fatalf("write root CLAUDE.md: %v", err)
+	}
+	if err := paths.WriteActiveDomain(filepath.Join(root, paths.MarkerFilename), "active"); err != nil {
+		t.Fatalf("write marker: %v", err)
+	}
+
+	// gen-spec against the NON-active "consumer" domain, NO --claude-md.
+	if err := cmdGenSpec([]string{"--domain", consumerDir, "--today", "2026-07-14"}); err != nil {
+		t.Fatalf("cmdGenSpec: %v", err)
+	}
+
+	// The local crystal must now exist at <consumerDir>/CLAUDE.md (+ fan-out).
+	for _, name := range []string{"CLAUDE.md", "AGENTS.md", "GEMINI.md"} {
+		p := filepath.Join(consumerDir, name)
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Errorf("local crystal %s not written by default (task A2): %v", p, err)
+			continue
+		}
+		if len(b) == 0 {
+			t.Errorf("local crystal %s written but empty", p)
+		}
+	}
+
+	// Root crystal must be UNTOUCHED — the local write is not a root hijack.
+	got, err := os.ReadFile(filepath.Join(root, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read root CLAUDE.md: %v", err)
+	}
+	if string(got) != string(rootBaseline) {
+		t.Errorf("root CLAUDE.md was modified by gen-spec against the non-active domain — local-crystal default must not hijack the root")
+	}
+}

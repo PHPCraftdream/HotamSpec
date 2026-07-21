@@ -493,6 +493,53 @@ func TestResolveClaudeMDPath(t *testing.T) {
 			t.Errorf("no convention: got %q, want \"\"", got)
 		}
 	})
+
+	// Task A2: a non-active consumer domain under <repoRoot>/domains/, in a
+	// project that DOES carry the crystal convention (root CLAUDE.md or
+	// marker), defaults to its OWN local crystal at <domainDir>/CLAUDE.md —
+	// not the root crystal (which would hijack the active domain's identity)
+	// and not silence.
+	t.Run("non_active_consumer_domain_gets_local_crystal", func(t *testing.T) {
+		t.Parallel()
+		root := t.TempDir()
+		// Two domains: "active" (named in the marker) and "consumer" (the
+		// non-active one being resolved).
+		activeDir := filepath.Join(root, "domains", "active")
+		consumerDir := filepath.Join(root, "domains", "consumer")
+		for _, d := range []string{activeDir, consumerDir} {
+			if err := os.MkdirAll(d, 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		// Convention: root CLAUDE.md + marker naming "active" (NOT consumer).
+		if err := os.WriteFile(filepath.Join(root, "CLAUDE.md"), []byte("root"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := paths.WriteActiveDomain(filepath.Join(root, paths.MarkerFilename), "active"); err != nil {
+			t.Fatal(err)
+		}
+		want := filepath.Join(consumerDir, "CLAUDE.md")
+		if got := resolveClaudeMDPath(consumerDir, ""); got != want {
+			t.Errorf("non-active consumer domain: got %q, want local crystal %q", got, want)
+		}
+	})
+
+	// Task A2 conservative boundary: a consumer domain under domains/ in a
+	// project with NO crystal convention (no root CLAUDE.md, no marker) gets
+	// no auto-write — the same gate the root crystal always respected, so a
+	// bare test fixture or un-adopted project stays crystal-free.
+	t.Run("consumer_domain_no_convention_returns_empty", func(t *testing.T) {
+		t.Parallel()
+		root := t.TempDir()
+		consumerDir := filepath.Join(root, "domains", "consumer")
+		if err := os.MkdirAll(consumerDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		// No root CLAUDE.md, no marker.
+		if got := resolveClaudeMDPath(consumerDir, ""); got != "" {
+			t.Errorf("consumer domain without convention: got %q, want \"\"", got)
+		}
+	})
 }
 
 // TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD is the positive case for
@@ -767,10 +814,17 @@ func addSecondDomain(t *testing.T, projectRoot, domainName string) string {
 // project root, never checking whether that domain was the marker's recorded
 // active_domain — so landing a non-active domain silently hijacked the root
 // crystal's identity). Two domains exist under one project root; the marker
-// records "main" as active; landing the OTHER domain ("second") without
-// --claude-md must leave the root CLAUDE.md byte-identical to its pre-land
-// content. This test FAILS on the pre-fix code (which does not consult the
-// active domain at all).
+// records "hotam-spec-self" as active; landing the OTHER domain ("second")
+// without --claude-md must leave the root CLAUDE.md byte-identical to its
+// pre-land content. This test FAILS on the pre-fix code (which does not
+// consult the active domain at all).
+//
+// Task A2 extends the assertion: landing a non-active consumer domain must
+// now write its OWN LOCAL crystal at <secondDomainDir>/CLAUDE.md (the
+// systematic default that previously required --claude-md), NOT hijack the
+// root crystal. The positive local-crystal assertions at the end prove the
+// new default fires; the root-untouched assertions above prove it is not a
+// root hijack.
 func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 	t.Parallel()
 	// copySelfDomainUnderRoot scaffolds the FIRST domain as
@@ -826,6 +880,24 @@ func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 	for _, name := range []string{"AGENTS.md", "GEMINI.md"} {
 		if _, err := os.Stat(filepath.Join(projectRoot, name)); err == nil {
 			t.Errorf("%s was spontaneously created at the project root while landing the non-active domain", name)
+		}
+	}
+
+	// Task A2: landing a non-active consumer domain must now write its OWN
+	// LOCAL crystal at <domainDir>/CLAUDE.md (+ AGENTS.md + GEMINI.md), the
+	// systematic default that previously required a one-off --claude-md.
+	// The root crystal staying untouched (asserted above) proves this is NOT
+	// a root hijack — the local crystal writes alongside the domain it
+	// speaks for.
+	for _, name := range []string{"CLAUDE.md", "AGENTS.md", "GEMINI.md"} {
+		p := filepath.Join(secondDomainDir, name)
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Errorf("expected local crystal %s for the non-active domain, not written: %v", p, err)
+			continue
+		}
+		if len(b) == 0 {
+			t.Errorf("local crystal %s was written but is empty", p)
 		}
 	}
 }
