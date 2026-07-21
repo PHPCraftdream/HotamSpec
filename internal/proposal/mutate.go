@@ -583,6 +583,69 @@ func (p ProposedConflictMemberUpdate) mutate(g *ontology.Graph, today string) er
 	return nil
 }
 
+// mutate applies every entry of the batch to its own Requirement, appending
+// ONE new ontology.GateSignoff to that Requirement's GateSignoffs list per
+// entry — all within this single mutate() call, so ApplyBatch/Apply write
+// the graph exactly once for the whole wave of transitions (see
+// ProposedGateSignoffBatch's doc comment in types.go for why this is its
+// own Proposal kind rather than N separate proposals).
+//
+// Each entry's requirement_id MUST resolve to an EXISTING Requirement —
+// unlike ProposedRequirement, a GateSignoffBatch entry never CREATES a
+// Requirement; it only records a gate-passage fact against one that already
+// exists. A single unresolvable requirement_id aborts the WHOLE mutate()
+// call (an error return here means g is left partially mutated for entries
+// processed before the failing one — but applyToGraph's caller (Apply/
+// ApplyBatch) never persists a graph after mutate() returns an error, so a
+// partially-mutated in-memory g is never written to disk; this mirrors
+// every other multi-step mutate() in this file, e.g. ProposedRejection's
+// per-successor loop, which has the same in-memory-only-on-error property).
+//
+// A HistoryEntry is appended to each AFFECTED Requirement recording its own
+// GateSignoffs diff, via the SAME summarizeFieldDiff/snapshotFrom machinery
+// ProposedRequirement.mutate and ProposedReviewMark.mutate already use —
+// gate_signoffs is just one more field summarizeFieldDiff now diffs (see
+// history.go), so no bespoke history-writing code lives here.
+func (p ProposedGateSignoffBatch) mutate(g *ontology.Graph, today string) error {
+	for i, e := range p.Entries {
+		idx := findRequirementIndex(g, e.RequirementID)
+		if idx < 0 {
+			return fmt.Errorf("entry %d: %w", i, errNotFound("requirement_id", e.RequirementID))
+		}
+		r := g.Requirements[idx]
+		old := snapshotFrom(r)
+
+		var sp *ontology.Signoff
+		if strings.TrimSpace(e.DecidedBy) != "" {
+			sp = &ontology.Signoff{
+				DecidedBy:     strings.TrimSpace(e.DecidedBy),
+				Date:          defaultStr(e.Date, today),
+				Verbatim:      e.Verbatim,
+				Instrument:    defaultStr(e.Instrument, ontology.SignoffInstrumentPersonal),
+				ChosenVariant: "",
+			}
+		}
+		r.GateSignoffs = append(r.GateSignoffs, ontology.GateSignoff{
+			Stage:          strings.TrimSpace(e.Stage),
+			State:          strings.TrimSpace(e.State),
+			DeferredReason: e.DeferredReason,
+			Evidence:       append([]string(nil), e.Evidence...),
+			PipelineRun:    strings.TrimSpace(e.PipelineRun),
+			Signoff:        sp,
+		})
+
+		summary := summarizeFieldDiff(old, snapshotFrom(r))
+		if summary != "" {
+			r.History = append(r.History, ontology.HistoryEntry{
+				At:      today,
+				Summary: summary,
+			})
+		}
+		g.Requirements[idx] = r
+	}
+	return nil
+}
+
 func (p ProposedReviewMark) mutate(g *ontology.Graph, today string) error {
 	idx := findRequirementIndex(g, p.RequirementID)
 	if idx < 0 {

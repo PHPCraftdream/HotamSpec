@@ -217,6 +217,7 @@ package `ontology`
 | `BlockedOn` | `string` |
 | `ImplementedBy` | `[]string` |
 | `VerifiedBy` | `[]string` |
+| `GateSignoffs` | `[]GateSignoff` |
 
 **Methods:**
 

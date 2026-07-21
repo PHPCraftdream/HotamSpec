@@ -90,7 +90,17 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// hotam-spec-self, which carries the real self-example), mirroring the
 	// identical opt-in shape check_settled_requires_scenario /
 	// check_spec_md_current / check_recorder_current already establish.
-	const expected = 104
+	// The gate-signoff task added three more, check_gate_signoff_monotonic /
+	// check_gate_signoff_deferred_reason_present /
+	// check_gate_signoff_deferred_conflict_resolves (gate_signoff_checks.go):
+	// the single typed carrier for per-Requirement gate-passage facts
+	// (ontology.Requirement.GateSignoffs) and its three invariants --
+	// monotonic SIGNED stage order within one pipeline_run (opt-in via a
+	// domain's manifest.json "gate_stage_order", an honest no-op otherwise),
+	// a DEFERRED entry always carrying a non-empty deferred_reason, and a
+	// deferred_reason that references a Conflict id (C-[0-9a-f]{8}) always
+	// resolving to a real Conflict node.
+	const expected = 107
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

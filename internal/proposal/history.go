@@ -27,6 +27,7 @@ type snapshot struct {
 	BlockedOn      string
 	ImplementedBy  []string
 	VerifiedBy     []string
+	GateSignoffs   []ontology.GateSignoff
 }
 
 func snapshotFrom(r ontology.Requirement) snapshot {
@@ -38,6 +39,7 @@ func snapshotFrom(r ontology.Requirement) snapshot {
 	vb := append([]string(nil), r.VerifiedBy...)
 	ev := append([]string(nil), r.Evidence...)
 	sr := append([]string(nil), r.SourceRefs...)
+	gs := append([]ontology.GateSignoff(nil), r.GateSignoffs...)
 	return snapshot{
 		Claim:          r.Claim,
 		Owner:          r.Owner,
@@ -59,6 +61,7 @@ func snapshotFrom(r ontology.Requirement) snapshot {
 		BlockedOn:      r.BlockedOn,
 		ImplementedBy:  ib,
 		VerifiedBy:     vb,
+		GateSignoffs:   gs,
 	}
 }
 
@@ -118,6 +121,7 @@ func summarizeFieldDiff(old snapshot, applied snapshot) string {
 		{"blocked_on", old.BlockedOn, applied.BlockedOn},
 		{"implemented_by", sliceKey(old.ImplementedBy), sliceKey(applied.ImplementedBy)},
 		{"verified_by", sliceKey(old.VerifiedBy), sliceKey(applied.VerifiedBy)},
+		{"gate_signoffs", gateSignoffKey(old.GateSignoffs), gateSignoffKey(applied.GateSignoffs)},
 	}
 	var parts []string
 	for _, d := range diffs {
@@ -134,6 +138,22 @@ func sliceKey(in []string) string {
 		return abbrevSlice(nil)
 	}
 	return abbrevSlice(in)
+}
+
+// gateSignoffKey renders a Requirement's GateSignoffs list into a stable,
+// comparable string for summarizeFieldDiff's before/after diff, mirroring
+// relationKey's shape for ontology.Relation. Deferred entries include their
+// reason (a deferred_reason change on an otherwise-identical stage/state
+// pair is itself a meaningful edit worth surfacing in History).
+func gateSignoffKey(in []ontology.GateSignoff) string {
+	if len(in) == 0 {
+		return "[]"
+	}
+	parts := make([]string, len(in))
+	for i, gs := range in {
+		parts[i] = "(" + gs.Stage + ", " + gs.State + ", " + gs.PipelineRun + ", " + gs.DeferredReason + ")"
+	}
+	return "[" + strings.Join(parts, ", ") + "]"
 }
 
 func relationKey(in []ontology.Relation) string {

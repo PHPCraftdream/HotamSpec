@@ -94,6 +94,15 @@ type Requirement struct {
 	// Purely additive and optional (omitempty) — see
 	// PLAN-authored-spec-discipline.md §4/§12.
 	VerifiedBy []string `json:"verified_by,omitempty"`
+	// GateSignoffs carries this requirement's per-stage gate-passage facts
+	// (see GateSignoff in gate_signoff.go) — the single typed carrier for
+	// "which staged-gate methodology stages has this requirement passed (or
+	// had explicitly deferred), and in which pipeline run." Purely additive
+	// and optional (omitempty) — the same zero-migration pattern BlockedOn/
+	// ImplementedBy/VerifiedBy already use — a domain that has no staged-gate
+	// methodology (no gate_stage_order in its manifest.json) never
+	// populates this field and its JSON output is unchanged.
+	GateSignoffs []GateSignoff `json:"gate_signoffs,omitempty"`
 }
 
 func (r Requirement) IsCloseableDebt() bool {

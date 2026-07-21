@@ -1,6 +1,10 @@
 package proposal
 
-import "github.com/PHPCraftdream/HotamSpec/internal/ontology"
+import (
+	"strings"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+)
 
 const (
 	KindRequirement          = "Requirement"
@@ -16,6 +20,7 @@ const (
 	KindEntityType           = "EntityType"
 	KindReviewMark           = "ReviewMark"
 	KindProcess              = "Process"
+	KindGateSignoffBatch     = "GateSignoffBatch"
 )
 
 type Proposal interface {
@@ -259,3 +264,58 @@ type ProposedProcess struct {
 
 func (p ProposedProcess) Kind() string         { return KindProcess }
 func (p ProposedProcess) TargetAnchor() string { return p.ID }
+
+// GateSignoffEntry is one transition inside a ProposedGateSignoffBatch: "this
+// Requirement's gate_signoffs gains one new ontology.GateSignoff entry."
+// Stage/State/DeferredReason/Evidence/PipelineRun mirror
+// ontology.GateSignoff's own fields (see internal/ontology/gate_signoff.go);
+// DecidedBy/Date/Verbatim/Instrument mirror ontology.Signoff's fields (see
+// internal/ontology/signoff.go) — the same wire-shape-decoupling pattern
+// ProposedConflictTransition already uses to carry Signoff's fields flat on
+// the proposal rather than nesting an ontology.Signoff literal in the JSON.
+type GateSignoffEntry struct {
+	RequirementID  string   `json:"requirement_id"`
+	Stage          string   `json:"stage"`
+	State          string   `json:"state"`
+	DeferredReason string   `json:"deferred_reason"`
+	Evidence       []string `json:"evidence"`
+	PipelineRun    string   `json:"pipeline_run"`
+	DecidedBy      string   `json:"decided_by"`
+	Date           string   `json:"date"`
+	Verbatim       string   `json:"verbatim"`
+	Instrument     string   `json:"instrument"`
+}
+
+// ProposedGateSignoffBatch is a MULTI-TARGET proposal: it applies N
+// GateSignoffEntry transitions, each appending ONE new ontology.GateSignoff
+// to the named Requirement's GateSignoffs list, in a SINGLE apply-proposal —
+// the shape a staged-gate methodology (e.g. prat/gpsm-sm's P-G0..P-G4) needs
+// when an entire wave of requirements clears the same stage together (32
+// requirements signing off P-G1 in one sitting should not require 32
+// separate single-target proposals). It is intentionally its OWN Proposal
+// kind (rather than, say, N separate ProposedRequirement UPDATEs folded into
+// one JSON array) because "one Kind, one TargetAnchor, one atomic mutate"
+// matches how apply-proposal / ApplyBatch already treat every OTHER Proposal
+// value — see mutate.go's ProposedGateSignoffBatch.mutate for how each entry
+// is applied to its own Requirement inside ONE mutate() call, and
+// history.go's summarizeFieldDiff extension for how each affected
+// Requirement gets its own HistoryEntry recording the GateSignoffs diff.
+//
+// TargetAnchor() joins every entry's RequirementID (comma-separated, stable
+// input order, no de-duplication) rather than picking one — every other
+// Proposal kind's TargetAnchor names the ONE node it targets; this kind
+// targets several, so the join is the honest representation for the log
+// lines / lock-file notes that read TargetAnchor() (see apply.go's
+// `p.Kind() + " " + p.TargetAnchor() + " applied"`).
+type ProposedGateSignoffBatch struct {
+	Entries []GateSignoffEntry `json:"entries"`
+}
+
+func (p ProposedGateSignoffBatch) Kind() string { return KindGateSignoffBatch }
+func (p ProposedGateSignoffBatch) TargetAnchor() string {
+	ids := make([]string, len(p.Entries))
+	for i, e := range p.Entries {
+		ids[i] = e.RequirementID
+	}
+	return strings.Join(ids, ",")
+}

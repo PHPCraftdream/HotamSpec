@@ -1,5 +1,5 @@
 {
-  "sha256": "de97ef36edf3ca48072841c62c9d22dd8aa1f0eaa2a145dbef3ca0d927032b27",
-  "updated_at": "2026-07-21T12:24:10Z",
-  "note": "Mechanical rename: steward -\u003e resolver (Conflict.Steward field, R-steward-distinct-from-owners -\u003e R-resolver-distinct-from-owners), user-directed full sweep (R1, task #294)"
+  "sha256": "87ece5f3f61fc269c32aa96a20026489bade78f82635713fa01c4248a9dba629",
+  "updated_at": "2026-07-21T21:43:46Z",
+  "note": "E1: add R-gate-signoff-single-carrier anchoring the 3 new GateSignoff checks (self-hosting bijection)"
 }

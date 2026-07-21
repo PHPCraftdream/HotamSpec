@@ -470,6 +470,48 @@ func sortedRoleList(m map[string]struct{}) []string {
 	return out
 }
 
+// validate checks the SHAPE of every entry in the batch: each entry's
+// requirement_id/stage/state must be non-empty, state must be a known
+// ontology.GateSignoffState, a DEFERRED entry must carry a non-empty
+// deferred_reason (the same rule check_gate_signoff_deferred_reason_present
+// polices post-land — validating it here means a malformed batch is
+// rejected BEFORE it ever reaches mutate(), with a message naming the
+// offending entry's position), and pipeline_run must be non-empty (the unit
+// check_gate_signoff_monotonic groups by). validate() has no graph access,
+// so it cannot check that requirement_id actually resolves to a real
+// Requirement — that referential check happens in mutate() (see
+// ProposedGateSignoffBatch.mutate in mutate.go), mirroring the split every
+// other multi-step proposal in this package already draws between
+// shape-only validate() and graph-aware mutate().
+func (p ProposedGateSignoffBatch) validate() error {
+	if len(p.Entries) == 0 {
+		return validationError(
+			"'entries' must be a non-empty list — a GateSignoffBatch proposal with no entries is a no-op.")
+	}
+	for i, e := range p.Entries {
+		if strings.TrimSpace(e.RequirementID) == "" {
+			return validationError("entry %d: 'requirement_id' is required and must be non-empty.", i)
+		}
+		if strings.TrimSpace(e.Stage) == "" {
+			return validationError("entry %d (%s): 'stage' is required and must be non-empty.", i, e.RequirementID)
+		}
+		state := strings.TrimSpace(e.State)
+		if _, ok := ontology.GateSignoffStates[state]; !ok {
+			return validationError(
+				"entry %d (%s): 'state' must be one of SIGNED/DEFERRED; got %q.", i, e.RequirementID, e.State)
+		}
+		if state == ontology.GateSignoffStateDeferred && strings.TrimSpace(e.DeferredReason) == "" {
+			return validationError(
+				"entry %d (%s): 'deferred_reason' is required and must be non-empty when state=DEFERRED — a "+
+					"deferral with no recorded reason is drift, not a decision.", i, e.RequirementID)
+		}
+		if strings.TrimSpace(e.PipelineRun) == "" {
+			return validationError("entry %d (%s): 'pipeline_run' is required and must be non-empty.", i, e.RequirementID)
+		}
+	}
+	return nil
+}
+
 func (p ProposedReviewMark) validate() error {
 	if strings.TrimSpace(p.RequirementID) == "" {
 		return validationError("'requirement_id' is required for a ReviewMark proposal.")

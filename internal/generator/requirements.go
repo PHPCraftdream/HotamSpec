@@ -143,6 +143,18 @@ func BuildRequirements(g *ontology.Graph, domainName string, consumer bool) stri
 		lines = append(lines, "")
 	}
 
+	gateSignoffRows := gateSignoffRows(reqs)
+	if len(gateSignoffRows) > 0 {
+		lines = append(lines, "## Gate signoffs")
+		lines = append(lines, "")
+		lines = append(lines, "Per-requirement gate-passage facts declared via `gate_signoffs` (see `ontology.GateSignoff`) — the single typed carrier for a domain's staged-gate methodology, when it declares one.")
+		lines = append(lines, "")
+		lines = append(lines, "| requirement | stage | state | pipeline_run | deferred_reason |")
+		lines = append(lines, "|---|---|---|---|---|")
+		lines = append(lines, gateSignoffRows...)
+		lines = append(lines, "")
+	}
+
 	if len(goals) > 0 {
 		lines = append(lines, "## Goals")
 		lines = append(lines, "")
@@ -182,6 +194,27 @@ func BuildRequirements(g *ontology.Graph, domainName string, consumer bool) stri
 	}
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
+}
+
+// gateSignoffRows renders one table row per (requirement, GateSignoff) pair,
+// in requirement narrative order then GateSignoffs declaration order —
+// purely additive: a domain that has never populated GateSignoffs on any
+// requirement contributes zero rows, so BuildRequirements's "## Gate
+// signoffs" section is skipped entirely (see the len(gateSignoffRows) > 0
+// guard at its call site), leaving REQUIREMENTS.md byte-identical for every
+// domain that predates this field.
+func gateSignoffRows(reqs []ontology.Requirement) []string {
+	var rows []string
+	for _, r := range reqs {
+		for _, gs := range r.GateSignoffs {
+			reason := "—"
+			if gs.DeferredReason != "" {
+				reason = Cell(gs.DeferredReason)
+			}
+			rows = append(rows, "| `"+r.ID+"` | "+Cell(gs.Stage)+" | "+gs.State+" | `"+gs.PipelineRun+"` | "+reason+" |")
+		}
+	}
+	return rows
 }
 
 // consumerClosingSection renders the short closing section that REPLACES
