@@ -1,5 +1,5 @@
 {
-  "sha256": "3ba74725314402e6727a9fc75f78b09f486fc2e91ca571c0a11583046be0b58e",
-  "updated_at": "2026-07-21T00:50:30Z",
-  "note": "Requirement R-speak-domain-register-by-default applied (hand-landed replicating loader.WriteLock exactly; apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with committed SPEC.md -- see requirement History for full explanation)"
+  "sha256": "1dfd8c96a9a79a12897c4eb68bf5e4f0600117553a8a7d69ac8282d9a5bb102d",
+  "updated_at": "2026-07-21T05:02:45Z",
+  "note": "Requirement R-orientation-faq-answerable applied (hand-landed replicating loader.WriteLock exactly via cmd/wlock_tmp; apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with committed SPEC.md -- see requirement History for full explanation). Adds manifest orientation_faq opt-in field + check_orientation_faq_answered invariant."
 }

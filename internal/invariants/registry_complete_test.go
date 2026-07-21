@@ -78,7 +78,19 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// steward could silently delete/downgrade the discipline key and every
 	// discipline-gated check became an honest no-op again with zero
 	// all-violations signal.
-	const expected = 103
+	// The orientation-faq task added a fifteenth domain-wide opt-in check,
+	// check_orientation_faq_answered (orientation_faq.go): the MECHANICAL
+	// orientability gate -- for every question a domain declares in its
+	// manifest.json "orientation_faq" list, the answer must be reachable
+	// from the generated crystal in at most ONE hop (either all declared
+	// keywords appear inline in the crystal's text, OR the crystal contains
+	// a reference to a declared link that resolves to a real existing file
+	// under the repo root). An honest no-op for a domain that has not
+	// declared an orientation_faq list (every domain today except
+	// hotam-spec-self, which carries the real self-example), mirroring the
+	// identical opt-in shape check_settled_requires_scenario /
+	// check_spec_md_current / check_recorder_current already establish.
+	const expected = 104
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

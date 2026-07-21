@@ -173,10 +173,19 @@ func TestCmdLandJSON_FailureStdoutClean(t *testing.T) {
 	domainDir := copySelfDomain(t)
 
 	proposalPath := filepath.Join(t.TempDir(), "land-json-fail.json")
+	// Claim wording deliberately avoids the "must (not)" reserved-marker
+	// vocabulary (internal/diagnose.oppositeMarkerPairs): "must not
+	// contaminate ... under json" collided with R-orientation-faq-answerable
+	// and R-vendored-recorder-matches-engine-canon's "MUST be reachable/
+	// byte-identical ... path" via the opposite-marker + shared-topical-
+	// token semantic gate (must vs must not, shared token "path"), blocking
+	// the land at the confront gate before genSpec even ran — a different,
+	// INCIDENTAL failure mode than the genSpec failure this test exists to
+	// exercise.
 	proposalJSON := `{
 		"kind": "Requirement",
 		"id": "R-land-json-fail-contract",
-		"claim": "failure path must not contaminate stdout under json",
+		"claim": "the failure path keeps stdout empty under json",
 		"owner": "framework-author",
 		"status": "DRAFT",
 		"why": "failure-path stdout cleanliness"

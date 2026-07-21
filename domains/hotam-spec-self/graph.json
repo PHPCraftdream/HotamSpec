@@ -9239,6 +9239,42 @@
       "decl_order": 62
     },
     {
+      "id": "R-orientation-faq-answerable",
+      "claim": "An AI agent (or a new human reader) orients in this project fast: for every basic onboarding question a domain DECLARES in its own manifest.json \"orientation_faq\" opt-in list (e.g. what is this project / what is the requirement lifecycle / who decides what / what is currently blocked / where is the full requirements list), the answer MUST be reachable from the domain's generated crystal in at most ONE hop -- NEVER buried behind a chain of pointers the agent would have to follow blind. An answer is reachable in <=1 hop when EITHER (a) the manifest entry's declared keywords ALL appear inline in the crystal's text (the answer is present with ZERO hops), OR (b) the manifest entry's declared link (a repo-root-relative path, the SAME convention the crystal's own cross-references use) appears in the crystal's text (as a markdown link OR a bare path) AND resolves to a REAL EXISTING FILE on disk. A domain that has NOT declared an orientation_faq list makes NO orientation promise and this requirement is an honest no-op for it -- exactly the same opt-in boundary discipline:\"full\" / the committed SPEC.md / the vendored recorder already draw between the engine's structural floor and a domain's own stricter, explicitly-declared contract.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "SETTLED: making 'an agent orients fast' a MECHANICALLY CHECKABLE property (not a hope or a demo-session feeling) is the orientation showcase the framework sells to a customer -- a measurable, drift-proof guarantee that declared onboarding answers cannot silently disappear when a crystal is rewritten, a doc is moved, or a section is reworded. The structural half is check_orientation_faq_answered (internal/invariants/orientation_faq.go), which reads each declared manifest entry via loader.ResolveOrientationFAQ (internal/loader/orientation_faq.go -- the SAME opt-in reader shape ResolveDiscipline/ResolveGenProfile already establish: honest no-op when the field is absent, real per-entry gate when present) and proves each declared question is answerable from the crystal in <=1 hop. The check mirrors the established filesystem-aware, honest-no-op-when-absent shape of check_recorder_current / check_spec_md_current / check_settled_requires_scenario: a domain without an orientation_faq list contributes ZERO violations regardless of how sparse its crystal is ('no committed opt-in = no lie'), and a domain WITH the list is held to its own declared contract. The crystal-path resolution (resolveCrystalPath: local <domainDir>/CLAUDE.md for a consumer domain, else repo-root CLAUDE.md for the active domain) mirrors cmd/hotam.resolveClaudeMDPath's intent via a robust existing-file priority. This domain (hotam-spec-self) carries the real self-example: 5 questions covering purpose / lifecycle / decision-authority / current-blockers / full-requirements-list, each answerable inline (keywords) or via a one-hop link to a real docs/gen file.",
+      "assumptions": [
+        "A-bootstrap-self-applies"
+      ],
+      "relations": [],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_orientation_faq_answered"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-21",
+      "settled_at": "2026-07-21",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [],
+      "source_refs": [
+        "internal/invariants/orientation_faq.go",
+        "internal/loader/orientation_faq.go",
+        "domains/hotam-spec-self/manifest.json"
+      ],
+      "history": [
+        {
+          "at": "2026-07-21",
+          "summary": "created SETTLED (ENFORCED via check_orientation_faq_answered): orientation_faq opt-in manifest field + check_orientation_faq_answered invariant making 'agent orients fast' a mechanically-checkable, drift-proof property (each declared onboarding question answerable from the crystal in <=1 hop, honest no-op when the list is absent). Landed by hand (loader.WriteLock replicated exactly via a temporary go program, not via apply-proposal) for the SAME structural reason R-speak-domain-register-by-default (this session, commits b64e3e1/26c1f89) was: apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with a committed SPEC.md -- SPEC.md can only be regenerated to match a graph state AFTER that state is written to disk, but applyToGraph's before/after violation diff runs BEFORE any write, so ANY requirement addition trips this check even though the resulting on-disk state (verified via all-violations after landing + gen-spec --spec regen) is clean. Recorded here as a real, pre-existing framework gap, not papered over.",
+          "decided_by": "orchestrator"
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-overlap-single-presenter",
       "claim": "Every node contested by two or more operators' overlapping scope projections shall resolve to exactly one deterministic presenter.",
       "owner": "framework-author",

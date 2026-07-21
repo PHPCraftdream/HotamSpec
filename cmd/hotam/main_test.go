@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -51,7 +52,7 @@ func copySelfDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
 		t.Fatalf("mkdir domain: %v", err)
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
-	copyFile(t, selfDomainManifest, filepath.Join(domainDir, "manifest.json"))
+	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
 	return projectRoot, domainDir
 }
 
@@ -62,6 +63,50 @@ func copyFile(t *testing.T, src, dst string) {
 		t.Fatalf("read %s: %v", src, err)
 	}
 	if err := os.WriteFile(dst, data, 0o644); err != nil {
+		t.Fatalf("write %s: %v", dst, err)
+	}
+}
+
+// copySelfDomainManifestSansOrientationFAQ copies selfDomainManifest to dst
+// with its "orientation_faq" field stripped. The real hotam-spec-self
+// manifest.json opts into that field (R-orientation-faq-answerable /
+// check_orientation_faq_answered): every declared question's answer must be
+// reachable in <=1 hop from THIS domain's OWN generated crystal, via links
+// that are literally "domains/hotam-spec-self/docs/gen/....md" — a promise
+// that is only true for the real domain at its real repo path with its real
+// docs/gen/ tree and a real generated crystal on disk.
+//
+// The many test fixtures across this package that copy selfDomainManifest are
+// generic "any invariant-clean graph+manifest pair will do" doubles for
+// unrelated mechanics (land/gen-spec/propose/confront plumbing) — they place
+// the domain under throwaway temp roots, frequently under a DIFFERENT domain
+// name/path (e.g. "marked-domain"), frequently without ever running gen-spec
+// to produce a crystal at all (e.g. the --json contract tests, which assert
+// on stdout shape, not on crystal content). Carrying the opt-in into those
+// copies would make check_orientation_faq_answered fire spuriously against
+// fixtures that were never meant to exercise — let alone satisfy — the
+// orientation-showcase contract, which is exclusively covered by the real
+// self-example (TestCheckOrientationFAQAnswered_RealHotamSpecSelfSelfExample
+// in internal/invariants, plus `all-violations` against the real domain).
+// Stripping the field here keeps every one of those fixtures an honest no-op
+// for this check, the same "no committed opt-in = no lie" boundary the check
+// itself documents.
+func copySelfDomainManifestSansOrientationFAQ(t *testing.T, dst string) {
+	t.Helper()
+	data, err := os.ReadFile(selfDomainManifest)
+	if err != nil {
+		t.Fatalf("read %s: %v", selfDomainManifest, err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("unmarshal %s: %v", selfDomainManifest, err)
+	}
+	delete(m, "orientation_faq")
+	out, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal stripped manifest: %v", err)
+	}
+	if err := os.WriteFile(dst, out, 0o644); err != nil {
 		t.Fatalf("write %s: %v", dst, err)
 	}
 }

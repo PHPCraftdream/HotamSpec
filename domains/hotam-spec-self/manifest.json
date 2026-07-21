@@ -7,5 +7,28 @@
     "every CLAUDE.md section auto-generated from substrate"
   ],
   "director": "director",
-  "parent": null
+  "parent": null,
+  "orientation_faq": [
+    {
+      "question": "What is this project (purpose)?",
+      "keywords": ["methodology modeling itself", "tension graph"]
+    },
+    {
+      "question": "What is the requirement / feature lifecycle (pipeline)?",
+      "link": "domains/hotam-spec-self/docs/gen/PIPELINE.md"
+    },
+    {
+      "question": "Who decides what (decision authority / roles)?",
+      "keywords": ["steward decides", "R-ai-presents-not-decides"]
+    },
+    {
+      "question": "What is currently blocked / where is the live debt pulse?",
+      "keywords": ["top action", "debt"],
+      "link": "domains/hotam-spec-self/docs/gen/UNENFORCED.md"
+    },
+    {
+      "question": "Where is the full requirements list?",
+      "link": "domains/hotam-spec-self/docs/gen/REQUIREMENTS.md"
+    }
+  ]
 }

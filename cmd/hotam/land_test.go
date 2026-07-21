@@ -804,7 +804,7 @@ func addSecondDomain(t *testing.T, projectRoot, domainName string) string {
 		t.Fatalf("mkdir second domain: %v", err)
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
-	copyFile(t, selfDomainManifest, filepath.Join(domainDir, "manifest.json"))
+	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
 	return domainDir
 }
 
@@ -845,10 +845,18 @@ func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 	}
 
 	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	// Claim wording deliberately avoids the "must (not)" reserved-marker
+	// vocabulary (internal/diagnose.oppositeMarkerPairs): a phrasing like
+	// "must not hijack ... crystal" collides with R-orientation-faq-
+	// answerable's "MUST be reachable ... crystal" via the opposite-marker +
+	// shared-topical-token semantic gate (must vs must not, shared token
+	// "crystal") — a real but INCIDENTAL lexical collision, unrelated to
+	// this test's actual regression coverage (R7-b: non-active-domain land
+	// leaves the root crystal alone).
 	proposalJSON := `{
 		"kind": "Requirement",
 		"id": "R-land-non-active-domain",
-		"claim": "landing a non-active domain must not hijack the root crystal",
+		"claim": "landing a non-active domain leaves the root crystal alone, writing its own local crystal instead",
 		"owner": "framework-author",
 		"status": "DRAFT",
 		"why": "R7-b regression coverage"
@@ -1026,7 +1034,7 @@ func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
 	// from the isolated empty dir.
 	root := t.TempDir()
 	copyFile(t, selfDomainGraph, filepath.Join(root, "graph.json"))
-	copyFile(t, selfDomainManifest, filepath.Join(root, "manifest.json"))
+	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(root, "manifest.json"))
 
 	empty := t.TempDir()
 	chdirAndRestore(t, empty)

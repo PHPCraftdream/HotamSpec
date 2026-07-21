@@ -186,7 +186,7 @@ func TestCmdGenSpec_LocalCrystalDefaultForNonActiveDomain(t *testing.T) {
 			t.Fatalf("mkdir %s: %v", d, err)
 		}
 		copyFile(t, selfDomainGraph, filepath.Join(d, "graph.json"))
-		copyFile(t, selfDomainManifest, filepath.Join(d, "manifest.json"))
+		copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(d, "manifest.json"))
 	}
 	// Crystal convention: a root CLAUDE.md (baseline, must stay untouched) +
 	// marker naming "active" as the active domain.

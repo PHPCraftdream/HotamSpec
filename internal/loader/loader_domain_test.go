@@ -43,7 +43,16 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// TRANSLATE/PRESENT/LAND steps), STRUCTURAL/INHERENTLY_PROSE like
 		// R-ai-presents-not-decides, rendered into every Role block by
 		// RenderOperatorRoleBlock.
-		{"requirements", len(g.Requirements), 293},
+		// 293 + 1: R-orientation-faq-answerable -- the orientation
+		// showcase requirement (an AI agent orients in this project fast
+		// is mechanically checkable, not a hope): ENFORCED via the new
+		// check_orientation_faq_answered invariant, which proves each
+		// declared manifest.json orientation_faq question is answerable
+		// from the generated crystal in <=1 hop (keywords inline OR a
+		// one-hop link resolving to a real file). Hand-landed (same
+		// apply-proposal / check_spec_md_current structural-defect
+		// workaround as R-speak-domain-register-by-default above).
+		{"requirements", len(g.Requirements), 294},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},

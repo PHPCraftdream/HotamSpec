@@ -121,7 +121,7 @@ func TestCmdLand_OmittedDomainUsesMarkerTier3(t *testing.T) {
 		t.Fatalf("mkdir domain: %v", err)
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
-	copyFile(t, selfDomainManifest, filepath.Join(domainDir, "manifest.json"))
+	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
 
 	markerPath := filepath.Join(projectRoot, paths.MarkerFilename)
 	if err := paths.WriteActiveDomain(markerPath, "marked-domain"); err != nil {
