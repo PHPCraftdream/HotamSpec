@@ -201,7 +201,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 251 SETTLED
+- **atoms-count** — 252 SETTLED
 - **open actions** — 3 (top: [P0] enforcement-gradient: 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt.)
 <!-- DOMAIN-MAP:END -->
 <!-- PARENT-PROJECT:BEGIN -->

@@ -100,7 +100,18 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// a DEFERRED entry always carrying a non-empty deferred_reason, and a
 	// deferred_reason that references a Conflict id (C-[0-9a-f]{8}) always
 	// resolving to a real Conflict node.
-	const expected = 107
+	// E4 (external review P1) added a 108th, check_domain_claude_md_current
+	// (claude_md_current.go): the sibling freshness gate to
+	// check_spec_md_current, this time for a domain's committed root/local
+	// CLAUDE.md rather than docs/gen/SPEC.md. Registered here with an honest
+	// no-op PostProcessCheck placeholder (Check stays nil BY DESIGN -- see
+	// invariant_test.go's TestRegisteredInvariantsHaveCanon, which accepts
+	// either field); the real comparison logic is wired in from cmd/hotam
+	// (claude_md_current_wiring.go) via registry.Update, mirroring
+	// tool_wiring.go's identical pattern for methodology.Tools' Run field --
+	// see claude_md_current.go's own package doc comment for the full
+	// import-cycle rationale this indirection exists to route around.
+	const expected = 108
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

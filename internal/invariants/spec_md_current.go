@@ -156,8 +156,9 @@ func checkSpecMDCurrent(g *ontology.Graph) []Violation {
 }
 
 var _ = All.MustRegister("check_spec_md_current", Invariant{
-	Name:  "check_spec_md_current",
-	Canon: methodology.Domain,
+	Name:                     "check_spec_md_current",
+	ComparesOnDiskProjection: true,
+	Canon:                    methodology.Domain,
 	Claim: "a domain's committed docs/gen/SPEC.md, if present, is byte-identical to what a fresh `hotam gen-spec --spec` run " +
 		"(gate.CollectSpecRows + gate.BuildSpecFromRows, a real `go test` execution of every verified_by entry) produces " +
 		"right now; a domain with no SPEC.md yet is an honest no-op.",

@@ -60,7 +60,21 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// domain declares no gate_stage_order and carries no gate_signoffs
 		// itself, so the checks are honest no-ops here (task E1, same
 		// hand-land workaround as the two entries above).
-		{"requirements", len(g.Requirements), 295},
+		// 295 + 1: R-claude-md-current -- anchors check_domain_claude_md_current
+		// (internal/invariants/claude_md_current.go, real implementation
+		// wired in from cmd/hotam/claude_md_current_wiring.go via
+		// registry.Update) for this repo's own self-hosting
+		// check_bijection_r_to_enforcer discipline (task E4, external review
+		// P1: the sibling freshness gate to check_spec_md_current, this time
+		// for a domain's committed CLAUDE.md rather than docs/gen/SPEC.md).
+		// Landed via `hotam apply-proposal` (not `hotam land`, which still
+		// runs the post-apply all-violations verification step this
+		// requirement's own check needed check_domain_claude_md_current
+		// AND check_spec_md_current to already exist and be wired for --
+		// applied in two steps: SETTLED+PROSE first, then a second
+		// apply-proposal to flip enforcement to ENFORCED once the wiring
+		// was confirmed reachable).
+		{"requirements", len(g.Requirements), 296},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},

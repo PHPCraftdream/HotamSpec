@@ -1,5 +1,5 @@
 {
-  "sha256": "87ece5f3f61fc269c32aa96a20026489bade78f82635713fa01c4248a9dba629",
-  "updated_at": "2026-07-21T21:43:46Z",
-  "note": "E1: add R-gate-signoff-single-carrier anchoring the 3 new GateSignoff checks (self-hosting bijection)"
+  "sha256": "f917965c5917a6b56d38d9b80294fe24b590af8e145c7a9ed241eb67309f67c7",
+  "updated_at": "2026-07-22T03:12:19Z",
+  "note": "Requirement R-claude-md-current applied"
 }

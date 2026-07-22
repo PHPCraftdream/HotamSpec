@@ -581,7 +581,7 @@ func TestDomainPulse_SummaryPreferredWhenTargetResolves(t *testing.T) {
 	if signals[0].Target != "R-enforced-target" {
 		t.Fatalf("test setup invariant: top signal target = %q, want R-enforced-target", signals[0].Target)
 	}
-	_, line := domainPulse(g, today)
+	_, line := domainPulse(g, today, nil)
 	if !strings.Contains(line, "INJECTED_SUMMARY_MARKER") {
 		t.Errorf("domainPulse should prefer the resolved Requirement's Summary, got: %s", line)
 	}
@@ -618,7 +618,7 @@ func TestDomainPulse_LongMessageUsesFirstSentence(t *testing.T) {
 	if signals[0].Target != "enforcement-gradient" {
 		t.Fatalf("test setup invariant: top signal target = %q, want enforcement-gradient", signals[0].Target)
 	}
-	_, line := domainPulse(g, today)
+	_, line := domainPulse(g, today, nil)
 	if strings.Contains(line, "...") {
 		t.Errorf("domainPulse must never emit mid-word '...', got: %s", line)
 	}

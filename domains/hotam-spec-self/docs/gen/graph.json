@@ -259,6 +259,7 @@
     "R-check-method-is-atomic",
     "R-claude-md-budget-phi-cap",
     "R-claude-md-consolidates-when-single-agent",
+    "R-claude-md-current",
     "R-claude-md-live-state-generated",
     "R-claude-md-template-driven",
     "R-claude-md-tree-of-crystals",
@@ -704,6 +705,31 @@
     },
     {
       "assumptions": [],
+      "claim": "A domain's committed root or local CLAUDE.md, once the crystal convention is adopted for its project, shall keep its generated portion (everything up to and including the durable-notes marker line) byte-identical to a fresh hotam gen-spec render of the current graph, mechanically checked by check_domain_claude_md_current; content the operator authors below that marker line is outside this check's scope.",
+      "enforced_by": [
+        "check_domain_claude_md_current"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-22",
+          "decided_by": "",
+          "summary": "enforcement: PROSE→ENFORCED"
+        }
+      ],
+      "id": "R-claude-md-current",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "External review P1: check_spec_md_current closed the staleness gap for docs/gen/SPEC.md, but CLAUDE.md -- the resident boot crystal every operator session actually reads first -- had no equivalent freshness invariant at all. check_domain_claude_md_current (internal/invariants/claude_md_current.go, real implementation wired in from cmd/hotam/claude_md_current_wiring.go via registry.Update -- the same pattern tool_wiring.go already establishes for methodology.Tools' Run field, needed here because internal/invariants must never import internal/generator, a real, mechanically-enforced import cycle) closes that gap by comparing the committed crystal's generated span against a fresh render on every all-violations pass, ignoring the durable-notes tail the template's own text invites operators to write below the marker line. This requirement is the self-hosting anchor (mirrors R-orientation-faq-answerable's and R-scenario-spec-obligations-mechanically-enforced's identical role for their own check_* gates) that satisfies check_bijection_r_to_enforcer for this new check."
+    },
+    {
+      "assumptions": [],
       "claim": "Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home.",
       "enforced_by": [
         "TestLaunchDirWriteScope_NoHomeWriteColocation"
@@ -841,6 +867,39 @@
     },
     {
       "assumptions": [],
+      "claim": "A domain that runs its Requirements through a staged review methodology (e.g. prat/gpsm-sm's P-G0..P-G4 planning gates) has ONE typed carrier on the graph recording per-Requirement, per-stage gate passage -- Requirement.gate_signoffs -- instead of that fact being reconstructed from prose scattered across History entries, manifest goals, and Process why-fields (a drift that has already recurred once in this framework's own consumer domains). Within one Requirement and one pipeline_run, SIGNED gate_signoffs MUST appear in the domain-declared gate_stage_order (a manifest.json opt-in DATA field, never an engine-known enum -- the engine serves domains with no staged-gate discipline at all) -- no stage SIGNED before every earlier stage is SIGNED too. Every DEFERRED gate_signoff MUST carry a non-empty deferred_reason, and when that reason references a Conflict id (C-[0-9a-f]{8}), that id MUST resolve to a real Conflict node in the graph.",
+      "enforced_by": [
+        "check_gate_signoff_monotonic",
+        "check_gate_signoff_deferred_reason_present",
+        "check_gate_signoff_deferred_conflict_resolves"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-21",
+          "decided_by": "orchestrator",
+          "summary": "created SETTLED (ENFORCED via check_gate_signoff_monotonic/check_gate_signoff_deferred_reason_present/check_gate_signoff_deferred_conflict_resolves): typed per-Requirement gate-passage carrier (Requirement.GateSignoffs) closing the History/manifest/Process-why drift found by external review of the gpsm-sm consumer domain (task D1, this same wave). Landed by hand (loader.WriteLock replicated via a temporary go program, not via apply-proposal) for the SAME structural reason R-orientation-faq-answerable was (this session, commit 9c71e50): apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with a committed SPEC.md. Recorded here as a real, pre-existing framework gap, not papered over."
+        }
+      ],
+      "id": "R-gate-signoff-single-carrier",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/ontology/gate_signoff.go",
+        "internal/loader/gate_stage_order.go",
+        "internal/invariants/gate_signoff_checks.go",
+        "internal/proposal/types.go",
+        "internal/proposal/history.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "SETTLED: an external review of the gpsm-sm consumer domain found its 'current gate-passage stage' scattered across graph.json History entries (hand-written after each test run), manifest.json goals, and a Process why-field -- three independent text sources that had already drifted out of sync with each other (fixed by hand in this same wave, task D1). The structural fix is Requirement.GateSignoffs (internal/ontology/gate_signoff.go): a typed, append-only list of {stage, state, deferred_reason, evidence, pipeline_run, signoff} entries, landed exclusively via the new ProposedGateSignoffBatch proposal kind (internal/proposal/types.go) so History entries are AUTO-GENERATED from the structural diff (internal/proposal/history.go's summarizeFieldDiff, the SAME mechanism already used for Requirement/EntityType field updates) rather than hand-written -- closing the exact drift class the review found. Stage is a bare string, not an engine enum: the engine also serves hotam-spec-self and hotam-dev, which have no staged-gate methodology at all, so a domain that wants monotonic-order checking declares gate_stage_order itself (internal/loader/gate_stage_order.go, the same tolerant opt-in-resolver shape as ResolveOrientationFAQ/ResolveDiscipline -- honest no-op for every domain that never declares it, exactly like check_orientation_faq_answered's identical boundary). The three checks -- check_gate_signoff_monotonic, check_gate_signoff_deferred_reason_present, check_gate_signoff_deferred_conflict_resolves (internal/invariants/gate_signoff_checks.go) -- make 'gate passage is monotonic and every deferral has a real, resolvable reason' a mechanically verified property of the graph rather than a convention a resolver must remember to honor by hand across dozens of Requirements. This domain (hotam-spec-self) itself declares no gate_stage_order and carries no gate_signoffs, so all three checks are honest no-ops here -- this requirement exists to anchor the checks for the bijection discipline (R-bijection-r-to-enforcer), not to claim hotam-spec-self uses the feature."
+    },
+    {
+      "assumptions": [],
       "claim": "Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).",
       "enforced_by": [],
       "enforcement": "PROSE",
@@ -935,39 +994,6 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "SETTLED: making 'an agent orients fast' a MECHANICALLY CHECKABLE property (not a hope or a demo-session feeling) is the orientation showcase the framework sells to a customer -- a measurable, drift-proof guarantee that declared onboarding answers cannot silently disappear when a crystal is rewritten, a doc is moved, or a section is reworded. The structural half is check_orientation_faq_answered (internal/invariants/orientation_faq.go), which reads each declared manifest entry via loader.ResolveOrientationFAQ (internal/loader/orientation_faq.go -- the SAME opt-in reader shape ResolveDiscipline/ResolveGenProfile already establish: honest no-op when the field is absent, real per-entry gate when present) and proves each declared question is answerable from the crystal in <=1 hop. The check mirrors the established filesystem-aware, honest-no-op-when-absent shape of check_recorder_current / check_spec_md_current / check_settled_requires_scenario: a domain without an orientation_faq list contributes ZERO violations regardless of how sparse its crystal is ('no committed opt-in = no lie'), and a domain WITH the list is held to its own declared contract. The crystal-path resolution (resolveCrystalPath: local <domainDir>/CLAUDE.md for a consumer domain, else repo-root CLAUDE.md for the active domain) mirrors cmd/hotam.resolveClaudeMDPath's intent via a robust existing-file priority. This domain (hotam-spec-self) carries the real self-example: 5 questions covering purpose / lifecycle / decision-authority / current-blockers / full-requirements-list, each answerable inline (keywords) or via a one-hop link to a real docs/gen file."
-    },
-    {
-      "assumptions": [],
-      "claim": "A domain that runs its Requirements through a staged review methodology (e.g. prat/gpsm-sm's P-G0..P-G4 planning gates) has ONE typed carrier on the graph recording per-Requirement, per-stage gate passage -- Requirement.gate_signoffs -- instead of that fact being reconstructed from prose scattered across History entries, manifest goals, and Process why-fields (a drift that has already recurred once in this framework's own consumer domains). Within one Requirement and one pipeline_run, SIGNED gate_signoffs MUST appear in the domain-declared gate_stage_order (a manifest.json opt-in DATA field, never an engine-known enum -- the engine serves domains with no staged-gate discipline at all) -- no stage SIGNED before every earlier stage is SIGNED too. Every DEFERRED gate_signoff MUST carry a non-empty deferred_reason, and when that reason references a Conflict id (C-[0-9a-f]{8}), that id MUST resolve to a real Conflict node in the graph.",
-      "enforced_by": [
-        "check_gate_signoff_monotonic",
-        "check_gate_signoff_deferred_reason_present",
-        "check_gate_signoff_deferred_conflict_resolves"
-      ],
-      "enforcement": "ENFORCED",
-      "evidence": [],
-      "history": [
-        {
-          "at": "2026-07-21",
-          "decided_by": "orchestrator",
-          "summary": "created SETTLED (ENFORCED via check_gate_signoff_monotonic/check_gate_signoff_deferred_reason_present/check_gate_signoff_deferred_conflict_resolves): typed per-Requirement gate-passage carrier (Requirement.GateSignoffs) closing the History/manifest/Process-why drift found by external review of the gpsm-sm consumer domain (task D1, this same wave). Landed by hand (loader.WriteLock replicated via a temporary go program, not via apply-proposal) for the SAME structural reason R-orientation-faq-answerable was (this session, commit 9c71e50): apply-proposal's pre-write check_spec_md_current comparison is structurally unsatisfiable for any addition to a domain with a committed SPEC.md. Recorded here as a real, pre-existing framework gap, not papered over."
-        }
-      ],
-      "id": "R-gate-signoff-single-carrier",
-      "implemented_by": [],
-      "last_reviewed_at": "",
-      "owner": "framework-author",
-      "review_after": "",
-      "source_refs": [
-        "internal/ontology/gate_signoff.go",
-        "internal/loader/gate_stage_order.go",
-        "internal/invariants/gate_signoff_checks.go",
-        "internal/proposal/types.go",
-        "internal/proposal/history.go"
-      ],
-      "status": "SETTLED",
-      "verified_by": [],
-      "why": "SETTLED: an external review of the gpsm-sm consumer domain found its 'current gate-passage stage' scattered across graph.json History entries (hand-written after each test run), manifest.json goals, and a Process why-field -- three independent text sources that had already drifted out of sync with each other (fixed by hand in this same wave, task D1). The structural fix is Requirement.GateSignoffs (internal/ontology/gate_signoff.go): a typed, append-only list of {stage, state, deferred_reason, evidence, pipeline_run, signoff} entries, landed exclusively via the new ProposedGateSignoffBatch proposal kind (internal/proposal/types.go) so History entries are AUTO-GENERATED from the structural diff (internal/proposal/history.go's summarizeFieldDiff, the SAME mechanism already used for Requirement/EntityType field updates) rather than hand-written -- closing the exact drift class the review found. Stage is a bare string, not an engine enum: the engine also serves hotam-spec-self and hotam-dev, which have no staged-gate methodology at all, so a domain that wants monotonic-order checking declares gate_stage_order itself (internal/loader/gate_stage_order.go, the same tolerant opt-in-resolver shape as ResolveOrientationFAQ/ResolveDiscipline -- honest no-op for every domain that never declares it, exactly like check_orientation_faq_answered's identical boundary). The three checks -- check_gate_signoff_monotonic, check_gate_signoff_deferred_reason_present, check_gate_signoff_deferred_conflict_resolves (internal/invariants/gate_signoff_checks.go) -- make 'gate passage is monotonic and every deferral has a real, resolvable reason' a mechanically verified property of the graph rather than a convention a resolver must remember to honor by hand across dozens of Requirements. This domain (hotam-spec-self) itself declares no gate_stage_order and carries no gate_signoffs, so all three checks are honest no-ops here -- this requirement exists to anchor the checks for the bijection discipline (R-bijection-r-to-enforcer), not to claim hotam-spec-self uses the feature."
     },
     {
       "assumptions": [],

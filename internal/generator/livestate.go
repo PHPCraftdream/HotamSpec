@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -25,10 +26,31 @@ var bandLabel = map[int]string{
 const ctxLineStatic = "context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary"
 
 func BuildLiveState(g *ontology.Graph, domainName string, claudeMDCharCount int, today string) string {
+	return BuildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, invariants.AllViolations(g))
+}
+
+// BuildLiveStateWithViolations is BuildLiveState's core, parameterized over
+// an already-computed violations slice instead of computing
+// invariants.AllViolations(g) itself. Exported (not merely
+// package-private) so cmd/hotam/gen_spec.go's genSpec can compute
+// invariants.AllViolations(g) exactly ONCE and thread the SAME result
+// through every render that needs it (live-state.md, AGENT-CONTEXT.md, the
+// crystal's own LIVE-STATE block AND its DOMAIN-MAP self-entry) — both for
+// efficiency (removes what used to be a redundant second/third/fourth
+// AllViolations(g) pass per gen-spec run) and correctness (see
+// ViolationsOverride's doc comment in claudemd.go: DOMAIN-MAP's per-domain
+// pulse, including the active domain's OWN self-entry, must use this exact
+// SAME violations value or its "open actions" count can silently disagree
+// with LIVE-STATE's for the identical domain, one block apart in the same
+// file — a real bug found while implementing check_domain_claude_md_current,
+// E4). BuildLiveState above remains the entry point every caller that does
+// NOT need this consistency (a standalone BuildLiveState call with no
+// DOMAIN-MAP block alongside it) uses unchanged.
+func BuildLiveStateWithViolations(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, violations []invariants.Violation) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
-	signals := diagnose.DiagnoseSignals(g, today)
+	signals := diagnose.DiagnoseSignalsWithViolations(g, today, violations)
 	var topLine string
 	if len(signals) > 0 {
 		sig := signals[0]

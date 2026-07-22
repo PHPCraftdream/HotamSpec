@@ -53,7 +53,72 @@ func extractOpenQuestion(status string) string {
 // and byte-identical when regenerated twice with the same today (R-...
 // idempotency; see gen-spec's --today flag). Every caller not itself
 // exposing a --today flag defaults to time.Now().Format("2006-01-02").
+//
+// This is a thin wrapper over DiagnoseSignalsWithViolations, computing its
+// own invariants.AllViolations(g) pass — the right default for every
+// existing caller (hotam what-now/status, internal/generator's doc
+// projections), all of which want signals derived from a FRESH violation
+// scan of g. See DiagnoseSignalsWithViolations's own doc comment for the one
+// caller that must NOT take this path (check_domain_claude_md_current,
+// internal/invariants/claude_md_current.go), which supplies an
+// already-computed violation set instead to avoid re-entering
+// invariants.AllViolations while it is itself still running.
 func DiagnoseSignals(g *ontology.Graph, today string) []Signal {
+	return DiagnoseSignalsWithViolations(g, today, invariants.AllViolations(g))
+}
+
+// DiagnoseSignalsExcludingDiskProjection is DiagnoseSignals' EXCLUDING-variant
+// sibling: it computes signals from
+// invariants.AllViolationsExcludingDiskProjection(g) instead of the full
+// invariants.AllViolations(g) — i.e. every ComparesOnDiskProjection check
+// (check_spec_md_current, check_domain_claude_md_current) is left out of the
+// violation set feeding this signal list.
+//
+// The ONLY caller is internal/generator's domainPulse, for a SIBLING
+// domain's pulse line inside a DOMAIN-MAP block render (see
+// invariants.AllViolationsExcludingDiskProjection's own doc comment for the
+// full rationale: a sibling pulse line has never needed
+// check_spec_md_current/check_domain_claude_md_current's byte-comparison
+// staleness signal, and calling the FULL AllViolations there created real,
+// observed mutual recursion between sibling domains once
+// check_domain_claude_md_current existed — confirmed via a captured
+// goroutine stack trace). The ACTIVE domain's own LIVE-STATE block (this
+// function's sibling, DiagnoseSignalsWithViolations via BuildLiveState) is
+// unaffected — it always receives the full, precise violation set, either
+// computed fresh (BuildLiveState's own plain path) or supplied via
+// ViolationsOverride when check_domain_claude_md_current itself is the
+// caller.
+func DiagnoseSignalsExcludingDiskProjection(g *ontology.Graph, today string) []Signal {
+	return DiagnoseSignalsWithViolations(g, today, invariants.AllViolationsExcludingDiskProjection(g))
+}
+
+// DiagnoseSignalsWithViolations is DiagnoseSignals' core, parameterized over
+// an already-computed violations slice instead of calling
+// invariants.AllViolations(g) itself. It exists for exactly one reason:
+// internal/invariants/claude_md_current.go's check_domain_claude_md_current
+// needs a fresh render of the domain's CLAUDE.md (via
+// internal/generator.RenderClaudeMDFromTemplate, which embeds this same
+// signal list in its LIVE-STATE block and, when the active domain also
+// appears in its own DOMAIN-MAP, in that domain's pulse line too) to compare
+// against the committed file — but that check itself runs FROM INSIDE
+// invariants.AllViolations(g)'s own fan-out. If the render path called plain
+// DiagnoseSignals (which calls invariants.AllViolations(g) again, for the
+// SAME g), the result would be unbounded same-process recursion: AllViolations
+// -> check_domain_claude_md_current -> render -> DiagnoseSignals ->
+// AllViolations -> check_domain_claude_md_current -> ... (a genuinely
+// different, harder problem than check_spec_md_current's own recursion
+// concern, which is bounded by a subprocess boundary — see
+// internal/gate/test_exec.go's recursionGuardEnv doc comment — because
+// go test spawns a NEW process, whereas this is all in-process).
+//
+// Passing the ALREADY-COMPUTED violations list (the very set
+// invariants.AllViolations(g) is in the middle of assembling when this
+// check's own Check func runs) breaks the cycle: the render this check
+// verifies against is computed from the same violation snapshot every OTHER
+// check in the same AllViolations pass sees, so the comparison stays
+// meaningful (not a stale or partial view) while never calling back into
+// AllViolations for g itself.
+func DiagnoseSignalsWithViolations(g *ontology.Graph, today string, violations []invariants.Violation) []Signal {
 	var out []Signal
 
 	for _, f := range AllFindings(g) {
@@ -70,7 +135,7 @@ func DiagnoseSignals(g *ontology.Graph, today string) []Signal {
 		})
 	}
 
-	for _, v := range invariants.AllViolations(g) {
+	for _, v := range violations {
 		out = append(out, Signal{
 			Source:   "diagnose",
 			Priority: PStructure,

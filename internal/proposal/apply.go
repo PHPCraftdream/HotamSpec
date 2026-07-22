@@ -133,13 +133,26 @@ func applyToGraph(g *ontology.Graph, today string, p Proposal) error {
 		return err
 	}
 
-	before := indexViolations(invariants.AllViolations(g))
+	// AllViolationsForProposalGate (not AllViolations): a ComparesOnDiskProjection
+	// check (check_spec_md_current, check_domain_claude_md_current) compares
+	// the graph against an on-disk artifact regenerated ONLY by `hotam
+	// gen-spec` -- never by this in-memory mutation -- so it is structurally
+	// unusable as a pre/post-mutation diff signal here: the "after" state
+	// below is captured before any gen-spec run, so a committed SPEC.md/
+	// CLAUDE.md is guaranteed to disagree with a fresh render immediately
+	// after ANY substantive mutation, regardless of whether the proposal
+	// itself is sound. See Invariant.ComparesOnDiskProjection's doc comment
+	// (internal/invariants/invariant.go) for the full false-positive/
+	// false-negative analysis. AllViolations itself is UNCHANGED and keeps
+	// reporting this staleness debt for every other caller (`all-violations`,
+	// `status`, internal/diagnose).
+	before := indexViolations(invariants.AllViolationsForProposalGate(g))
 
 	if err := a.mutate(g, today); err != nil {
 		return err
 	}
 
-	after := invariants.AllViolations(g)
+	after := invariants.AllViolationsForProposalGate(g)
 	newViolations := newViolationsSince(before, after)
 	if len(newViolations) > 0 {
 		return fmt.Errorf(

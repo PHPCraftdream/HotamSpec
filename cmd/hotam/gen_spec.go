@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -129,10 +130,24 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// (closing the former mode-dependent "0 chars" disagreement).
 	repoRoot := repoRootForDomain(domainDir)
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
-	charCount, err := generator.ComputeCrystalCharCountFixpoint(g, domainName, repoRoot, domainGraphs, today, consumer)
-	if err != nil {
-		return nil, nil, err
-	}
+
+	// activeViolations/activeOverride/charCount are computed LATER in this
+	// function (right before live-state.md/AGENT-CONTEXT.md/the crystal are
+	// rendered), NOT here at the top — see that later computation's own doc
+	// comment for why: a real ordering bug (found while implementing
+	// check_domain_claude_md_current, E4) meant computing them here, before
+	// SPEC.md (and every other doc) is actually written to disk, embedded a
+	// STALE violation snapshot into LIVE-STATE -- e.g. check_spec_md_current
+	// correctly reporting "SPEC.md does not exist" because, at THIS point in
+	// the function, it genuinely does not exist yet even on a `--spec` run
+	// that is about to create it moments later in the SAME genSpec call. A
+	// separate, independent `hotam all-violations` process running
+	// immediately afterward would then see SPEC.md already on disk and
+	// disagree with the just-written CLAUDE.md, producing a permanent,
+	// non-regenerable check_domain_claude_md_current false positive
+	// (observed directly via TestExternal_InitProjectBornObligated, whose
+	// `hotam init-project` + `hotam all-violations` two-subprocess sequence
+	// caught exactly this gap).
 
 	var written []string
 
@@ -269,10 +284,11 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	if shouldWriteAtoms(atomsCheck) {
 		mdDocs = append(mdDocs, docEntry{"atoms-check.md", atomsCheck})
 	}
-	mdDocs = append(mdDocs,
-		docEntry{"live-state.md", generator.BuildLiveState(g, domainName, charCount, today)},
-		docEntry{"AGENT-CONTEXT.md", generator.BuildAgentContext(g, domainName, charCount, today)},
-	)
+	// live-state.md/AGENT-CONTEXT.md are deliberately NOT included here —
+	// see the SECOND WRITE PHASE below (after writeFilesParallel(mdPaths,
+	// mdContents) completes) for why: they need activeViolations, which
+	// must be computed AFTER SPEC.md (and everything else in this batch) is
+	// actually on disk, not before.
 	if decisionsWritten {
 		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", decisionsMD})
 	}
@@ -298,6 +314,91 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		return written, nil, err
 	}
 	written = append(written, mdPaths...)
+
+	// SECOND WRITE PHASE: live-state.md, AGENT-CONTEXT.md, and (below) the
+	// root/local crystal itself all embed a violation snapshot of g, and
+	// that snapshot MUST be computed AFTER every other doc this function
+	// writes (SPEC.md above all — a `--spec` run creates it in the FIRST
+	// write phase) is actually on disk. Computing activeViolations any
+	// earlier reads a filesystem state this SAME genSpec call has not
+	// finished producing yet — see the (now-removed) comment this
+	// computation used to carry at the top of the function for the real,
+	// found-in-practice bug that produced: check_spec_md_current correctly
+	// reporting "SPEC.md does not exist" (true AT THAT MOMENT) embedded into
+	// a freshly-written CLAUDE.md/live-state.md, which then permanently
+	// disagreed with any LATER, independent violations scan (e.g. a
+	// `hotam all-violations` subprocess run moments afterward) that
+	// correctly saw the now-existing SPEC.md and reported clean — a
+	// structural, non-regenerable mismatch, not a real staleness signal.
+	//
+	// activeViolations: ONE invariants.PriorToPostProcessViolations(g) pass,
+	// threaded through EVERY render below that needs g's own violation set
+	// (the fixpoint loop, the crystal render, live-state.md,
+	// AGENT-CONTEXT.md) via the *WithViolations entry points and a
+	// ViolationsOverride{For: g, ...}. This ALSO closes a related internal-
+	// consistency bug found while implementing check_domain_claude_md_current
+	// (E4): without it, the crystal's LIVE-STATE block and the SAME domain's
+	// own self-entry inside its own DOMAIN-MAP block (RenderDomainMapBlock ->
+	// domainPulse, whose "no override" fallback deliberately computes a
+	// NARROWER invariants.AllViolationsExcludingDiskProjection(g) set -- see
+	// that function's own doc comment for why: the sibling-pulse fallback
+	// must never trigger a full AllViolations run for OTHER domains, to
+	// avoid real, observed mutual recursion between sibling domains once
+	// check_domain_claude_md_current existed) could silently disagree on
+	// open-action counts for the SAME domain, one block apart in the same
+	// file. Supplying the override here makes DOMAIN-MAP's self-entry use
+	// the exact SAME already-computed violations LIVE-STATE uses (via
+	// domainPulse's forGraph pointer match), while every OTHER (sibling)
+	// domain entry still safely falls through to the narrower, non-recursive
+	// fallback.
+	//
+	// invariants.PriorToPostProcessViolations (NOT plain invariants.AllViolations)
+	// is deliberate: it must return EXACTLY the same violation set
+	// check_domain_claude_md_current's own PostProcessCheck receives as its
+	// priorViolations argument inside a real invariants.AllViolations(g) run
+	// (runViolations' phase 1, excluding every PostProcessCheck-based
+	// invariant's OWN output) — see that function's own doc comment for the
+	// real, found-in-practice structural mismatch this avoids: using the
+	// LARGER plain-AllViolations set here (which additionally includes
+	// check_domain_claude_md_current's own verdict about the file THIS very
+	// render is about to overwrite) would make a freshly-written, genuinely
+	// current CLAUDE.md permanently fail check_domain_claude_md_current on
+	// every subsequent all-violations run, because the two sides of that
+	// check's byte comparison would be fed different violation counts by
+	// construction, forever, with no way to regenerate into a passing state.
+	activeViolations := invariants.PriorToPostProcessViolations(g)
+	activeOverride := &generator.ViolationsOverride{For: g, Violations: activeViolations}
+
+	// selfCrystalPath == claudeMDPath: when this genSpec run IS writing a
+	// crystal (claudeMDPath != ""), that path is exactly the one
+	// renderDomainMapBlockWithViolations's SELF-ENTRY SPECIAL CASE needs —
+	// see that function's doc comment for the real, found-in-practice
+	// os.Stat time-of-check/time-of-write race this avoids (a domain's own
+	// first-ever local-crystal write would otherwise omit its own
+	// DOMAIN-MAP crystal-link line, since the file does not exist YET at
+	// render time, producing a non-deterministic render that disagreed with
+	// a LATER re-render of the identical, unchanged graph). When
+	// claudeMDPath == "" (this run is not writing a crystal at all — e.g.
+	// most test/library callers), selfCrystalPath stays "" too, so every
+	// DOMAIN-MAP entry falls through to the real (unaffected, correct)
+	// os.Stat check, exactly as before this fix.
+	charCount, err := generator.ComputeCrystalCharCountFixpointWithViolations(g, domainName, repoRoot, domainGraphs, today, consumer, activeOverride, claudeMDPath)
+	if err != nil {
+		return written, nil, err
+	}
+
+	liveStateAndAgentContextPaths := []string{
+		filepath.Join(genDir, "live-state.md"),
+		filepath.Join(genDir, "AGENT-CONTEXT.md"),
+	}
+	liveStateAndAgentContextContents := [][]byte{
+		[]byte(generator.BuildLiveStateWithViolations(g, domainName, charCount, today, activeViolations)),
+		[]byte(generator.BuildAgentContext(g, domainName, charCount, today)),
+	}
+	if err := writeFilesParallel(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
+		return written, nil, err
+	}
+	written = append(written, liveStateAndAgentContextPaths...)
 
 	graphJSON, err := generator.BuildGraphJSON(g)
 	if err != nil {
@@ -386,7 +487,24 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// stale pre-existing-file size — and two consecutive --claude-md passes
 	// over the same tree now converge byte-for-byte.
 	if claudeMDPath != "" {
-		claudeMD := generator.RenderClaudeMDFromTemplate(g, domainName, repoRoot, charCount, domainGraphs, today, consumer)
+		claudeMD := generator.RenderClaudeMDFromTemplateWithViolations(g, domainName, repoRoot, charCount, domainGraphs, today, consumer, activeOverride, claudeMDPath)
+
+		// Durable-notes tail preservation: the template's own trailing marker
+		// line (generator.DurableNotesMarkerLine) promises "Anything you write
+		// below this line survives every regeneration verbatim" — honoring
+		// that promise requires reading whatever tail the PRE-EXISTING
+		// claudeMDPath file already carries (if any) and re-appending it to
+		// this fresh render, rather than the unconditional overwrite this
+		// code used to perform (which silently discarded any tail an
+		// operator had actually written, contradicting the template's own
+		// text — see generator.DurableNotesMarkerLine's doc comment). A
+		// missing file, a file with no marker line at all (not template-
+		// shaped, e.g. a hand-authored README some project already had), or
+		// any read error all fall back to "no tail to carry forward" — the
+		// fresh render's own generated part is used as-is, exactly the prior
+		// behavior, so this is purely additive for the one case (a marker
+		// line IS present) it changes.
+		claudeMD = claudeMD + preserveDurableNotesTail(claudeMDPath)
 		claudeMDBytes := []byte(claudeMD)
 
 		// CLAUDE.md, AGENTS.md and GEMINI.md all receive the identical
@@ -445,6 +563,30 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		return written, nil, err
 	}
 	return written, removed, nil
+}
+
+// preserveDurableNotesTail reads the pre-existing file at path (if any) and
+// returns whatever content sits AFTER its generator.DurableNotesMarkerLine —
+// the operator's own durable notes, per the template's own promise (see that
+// const's doc comment). Returns "" for every case that means "nothing to
+// carry forward": the file does not exist yet, it exists but cannot be read
+// (permissions, etc. — genSpec's crystal write already tolerates a from-
+// scratch write in these cases, so a read failure here degrades the same
+// way rather than aborting the whole gen-spec run over a best-effort
+// preservation step), or it exists but carries no marker line at all (not
+// template-shaped — e.g. a hand-authored file some project already had at
+// that path before adopting the crystal convention; overwriting it wholesale
+// on first adoption is the existing, unchanged behavior).
+func preserveDurableNotesTail(path string) string {
+	existing, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	_, tail, ok := generator.SplitAtDurableNotesMarker(string(existing))
+	if !ok {
+		return ""
+	}
+	return tail
 }
 
 // cleanupStaleGenFiles deletes generator-owned files under <domainDir>/docs/gen/

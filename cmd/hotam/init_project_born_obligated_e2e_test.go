@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestExternal_InitProjectBornObligated is the end-to-end proof for the W6.2
@@ -67,7 +68,24 @@ func TestExternal_InitProjectBornObligated(t *testing.T) {
 	domainDir := filepath.Join(projDir, "domains", "main")
 
 	// (1) hotam init-project: full bootstrap from nothing.
-	out, err := runAt(workDir, "init-project", projDir, "--today", "2026-07-20")
+	//
+	// --today is pinned to the REAL current date (time.Now()), not a fixed
+	// past literal like most other fixtures in this package use, because
+	// step (3) below runs `hotam all-violations` in a SEPARATE subprocess
+	// immediately afterward, and check_domain_claude_md_current
+	// (internal/invariants/claude_md_current.go, wired from
+	// cmd/hotam/claude_md_current_wiring.go) has no --today input of its own
+	// at all — it always sources today from time.Now() internally (a
+	// deliberate design choice: the crystal's LIVE-STATE freshness/OVERDUE
+	// signals are supposed to reflect real calendar time). Pinning
+	// init-project's OWN --today to a fixed past date while the verification
+	// step computes its comparison target against the REAL current date
+	// would introduce a spurious day-boundary mismatch unrelated to what
+	// this test actually means to prove (the "born obligated, zero
+	// violations from birth" contract) — using time.Now() here keeps both
+	// subprocess calls on the same calendar day.
+	today := time.Now().Format("2006-01-02")
+	out, err := runAt(workDir, "init-project", projDir, "--today", today)
 	if err != nil {
 		t.Fatalf("init-project failed: %v\nOUTPUT:\n%s", err, out)
 	}

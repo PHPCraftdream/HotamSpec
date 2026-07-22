@@ -47,8 +47,15 @@ func TestRegisteredInvariantsHaveCanon(t *testing.T) {
 		if inv.Canon == nil {
 			t.Errorf("invariant %q has nil Canon section", inv.Name)
 		}
-		if inv.Check == nil {
-			t.Errorf("invariant %q has nil Check function", inv.Name)
+		// A POST-PROCESS invariant (Invariant.PostProcessCheck, see
+		// invariant.go's doc comment) carries its logic in PostProcessCheck
+		// instead of Check -- Check stays nil BY DESIGN for such an entry
+		// (e.g. check_domain_claude_md_current, whose real implementation is
+		// wired in from cmd/hotam via registry.Update and therefore is not
+		// present at all when this test runs in isolation within package
+		// invariants). Exactly one of the two must be non-nil.
+		if inv.Check == nil && inv.PostProcessCheck == nil {
+			t.Errorf("invariant %q has neither a Check nor a PostProcessCheck function", inv.Name)
 		}
 	}
 }
