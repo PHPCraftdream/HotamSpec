@@ -1,4 +1,4 @@
-// gate_signoff_checks.go holds the three invariants for
+// gate_signoff_checks.go holds the invariants for
 // ontology.Requirement.GateSignoffs, the single typed carrier for
 // per-Requirement gate-passage facts (see internal/ontology/gate_signoff.go).
 //
@@ -8,12 +8,29 @@
 // regardless of how many GateSignoff entries its requirements carry —
 // exactly like check_orientation_faq_answered (no orientation_faq list = no
 // orientability obligation) and check_settled_requires_scenario (no
-// discipline:"full" = no scenario obligation). check_gate_signoff_deferred_
-// reason_present and check_gate_signoff_deferred_conflict_resolves are NOT
-// gated on gate_stage_order (they police GateSignoff shape, not stage
-// order) but are themselves a no-op whenever no requirement in the graph
-// carries any GateSignoffs at all — the same "opt in by using the field"
-// honesty the rest of this package's optional-field checks share.
+// discipline:"full" = no scenario obligation). Every other check in this
+// file (check_gate_signoff_deferred_reason_present,
+// check_gate_signoff_deferred_conflict_resolves,
+// check_gate_signoff_signed_has_provenance,
+// check_gate_signoff_decided_by_is_known_stakeholder) is NOT gated on
+// gate_stage_order (they police GateSignoff shape, not stage order) but are
+// themselves a no-op whenever no requirement in the graph carries any
+// GateSignoffs at all — the same "opt in by using the field" honesty the
+// rest of this package's optional-field checks share.
+//
+// check_gate_signoff_signed_has_provenance and
+// check_gate_signoff_decided_by_is_known_stakeholder (task #319,
+// R3-signoff-strict) are deliberately ONGOING all-violations invariants,
+// not proposal-time-only checks — mirroring
+// check_gate_signoff_deferred_reason_present's own choice to run
+// unconditionally over the graph rather than only at
+// ProposedGateSignoffBatch.validate() time. This is safe against existing
+// landed data: prat/gpsm-sm's 64 SIGNED gate_signoffs (P-G1, task #312/#318)
+// already carry a full signoff (decided_by/verbatim) and non-empty evidence
+// on every entry, and every decided_by used ("gpsm-pm", "marat-karamullin")
+// resolves to a real Stakeholder in that domain's graph — verified by
+// direct inspection of domains/gpsm-sm/graph.json in a sibling repo before
+// this check was wired up as ongoing rather than proposal-time-only.
 package invariants
 
 import (
@@ -171,6 +188,119 @@ var _ = All.MustRegister("check_gate_signoff_deferred_reason_present", Invariant
 		"('reason' is required and must be non-empty — an assumption status change with no recorded reason is drift, not " +
 		"a decision'). Applying the identical rule to GateSignoff keeps the two record-a-decision shapes consistent.",
 	Check: checkGateSignoffDeferredReasonPresent,
+})
+
+// checkGateSignoffSignedHasProvenance requires a SIGNED GateSignoff to carry
+// a populated Signoff with non-empty DecidedBy/Verbatim, plus a non-empty
+// Evidence list on the GateSignoff itself (task #319, R3-signoff-strict) — a
+// SIGNED gate passage records a genuine human decision (WHO decided, WHAT
+// they said, WHY it is trustworthy), and before this check the engine
+// allowed a SIGNED record with none of that: only Stage/State/PipelineRun
+// were required. Mirrors checkGateSignoffDeferredReasonPresent's shape
+// exactly (unconditional, not gated on gate_stage_order — this polices the
+// GateSignoff payload itself, independent of whether the domain has
+// declared a stage order) and is ALSO enforced at proposal-validate() time
+// (ProposedGateSignoffBatch.validate in internal/proposal/validate.go) so a
+// malformed batch is rejected before it ever lands — this invariant is the
+// ongoing all-violations twin that also catches any already-landed record,
+// the same belt-and-suspenders relationship
+// check_gate_signoff_deferred_reason_present already has with its own
+// proposal-time validate() check.
+func checkGateSignoffSignedHasProvenance(g *ontology.Graph) []Violation {
+	var out []Violation
+	for _, r := range g.Requirements {
+		for _, gs := range r.GateSignoffs {
+			if gs.State != ontology.GateSignoffStateSigned {
+				continue
+			}
+			var missing []string
+			if gs.Signoff == nil || gs.Signoff.DecidedBy == "" {
+				missing = append(missing, "signoff.decided_by")
+			}
+			if gs.Signoff == nil || gs.Signoff.Verbatim == "" {
+				missing = append(missing, "signoff.verbatim")
+			}
+			if len(gs.Evidence) == 0 {
+				missing = append(missing, "evidence")
+			}
+			if len(missing) > 0 {
+				out = append(out, Violation{
+					Check: "check_gate_signoff_signed_has_provenance",
+					ID:    r.ID,
+					Message: fmt.Sprintf(
+						"requirement %s has a SIGNED gate_signoff for stage %q (pipeline_run %q) missing %v — a "+
+							"SIGNED gate passage with no recorded provenance (who decided, what they said, "+
+							"supporting evidence) is indistinguishable from an unattributed silent pass",
+						r.ID, gs.Stage, gs.PipelineRun, missing),
+				})
+			}
+		}
+	}
+	return out
+}
+
+var _ = All.MustRegister("check_gate_signoff_signed_has_provenance", Invariant{
+	Name:  "check_gate_signoff_signed_has_provenance",
+	Canon: methodology.Requirement,
+	Claim: "every GateSignoff with state=SIGNED carries a populated Signoff (decided_by + verbatim) and non-empty evidence.",
+	Rule: "for every Requirement.gate_signoffs[*] entry with state==\"SIGNED\", `signoff` MUST be non-nil with non-empty " +
+		"decided_by and verbatim, AND `evidence` MUST be a non-empty list. No-ops trivially when no requirement carries " +
+		"any gate_signoffs.",
+	Why: "a SIGNED gate passage represents a genuine human decision the same way a DECIDED Conflict does " +
+		"(R-decided-needs-human-signoff) — before this check the engine required NOTHING beyond the bare " +
+		"stage/state/pipeline_run fields for SIGNED, letting a gate-signoff land with zero provenance about who decided " +
+		"it, what they said, or why. This matters most for a domain whose gate signoffs represent real personal " +
+		"decisions (not just process bookkeeping), where provenance must be guaranteed before the record lands.",
+	Check: checkGateSignoffSignedHasProvenance,
+})
+
+// checkGateSignoffDecidedByIsKnownStakeholder requires a SIGNED
+// GateSignoff's signoff.decided_by, when non-empty, to resolve to a real
+// ontology.Stakeholder.id — mirrors checkDecidedByIsKnownStakeholder
+// (conflict_decided_held.go), applied to GateSignoff's own DecidedBy field.
+// Deliberately does NOT also mirror checkDecidedByNotMemberOwner: that check
+// exists because a Conflict has MEMBERS (requirements whose owners must stay
+// outside the decision to keep the resolver-distinct rule intact) — a
+// GateSignoff has no such membership concept, it is a single-Requirement
+// fact, so there is no analogous "owner of a member" to exclude the decider
+// from. Left to checkGateSignoffSignedHasProvenance to require decided_by
+// non-empty in the first place; this check only adds the referential-
+// integrity half once it is present.
+func checkGateSignoffDecidedByIsKnownStakeholder(g *ontology.Graph) []Violation {
+	sids := ontology.StakeholderIDs(g)
+	var out []Violation
+	for _, r := range g.Requirements {
+		for _, gs := range r.GateSignoffs {
+			if gs.State != ontology.GateSignoffStateSigned || gs.Signoff == nil || gs.Signoff.DecidedBy == "" {
+				continue
+			}
+			if _, ok := sids[gs.Signoff.DecidedBy]; !ok {
+				out = append(out, Violation{
+					Check: "check_gate_signoff_decided_by_is_known_stakeholder",
+					ID:    r.ID,
+					Message: fmt.Sprintf(
+						"requirement %s has a SIGNED gate_signoff for stage %q (pipeline_run %q) whose "+
+							"signoff.decided_by %q is not a known Stakeholder",
+						r.ID, gs.Stage, gs.PipelineRun, gs.Signoff.DecidedBy),
+				})
+			}
+		}
+	}
+	return out
+}
+
+var _ = All.MustRegister("check_gate_signoff_decided_by_is_known_stakeholder", Invariant{
+	Name:  "check_gate_signoff_decided_by_is_known_stakeholder",
+	Canon: methodology.Requirement,
+	Claim: "a SIGNED GateSignoff's signoff.decided_by resolves to a known Stakeholder.",
+	Rule: "for every Requirement.gate_signoffs[*] entry with state==\"SIGNED\" and a non-nil signoff with non-empty " +
+		"decided_by, decided_by MUST be in stakeholder_ids(g). An unresolvable decider is a dangling reference that " +
+		"cannot be audited.",
+	Why: "mirrors check_decided_by_is_known_stakeholder (Conflict) applied to GateSignoff — free-text decided_by (a " +
+		"typo'd name, an email address, a role label with no Stakeholder node) cannot be traced back to a real " +
+		"accountable person, exactly the gap check_decided_by_is_known_stakeholder already closes for Conflict " +
+		"resolution.",
+	Check: checkGateSignoffDecidedByIsKnownStakeholder,
 })
 
 // conflictIDPattern matches the exact shape ontology.ConflictIdentity

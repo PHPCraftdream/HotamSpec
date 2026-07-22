@@ -111,7 +111,17 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// tool_wiring.go's identical pattern for methodology.Tools' Run field --
 	// see claude_md_current.go's own package doc comment for the full
 	// import-cycle rationale this indirection exists to route around.
-	const expected = 108
+	// Task #319 (R3-signoff-strict) added two more,
+	// check_gate_signoff_signed_has_provenance and
+	// check_gate_signoff_decided_by_is_known_stakeholder
+	// (gate_signoff_checks.go): a SIGNED GateSignoff now MUST carry a
+	// populated Signoff (decided_by + verbatim) and non-empty evidence, and
+	// decided_by, when present, MUST resolve to a known Stakeholder --
+	// mirroring Conflict's check_decided_by_is_known_stakeholder. Both are
+	// ongoing all-violations invariants (like check_gate_signoff_deferred_
+	// reason_present), not proposal-time-only, since prat/gpsm-sm's existing
+	// landed SIGNED records already satisfy the stricter rule.
+	const expected = 110
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

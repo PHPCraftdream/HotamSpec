@@ -504,11 +504,19 @@ func sortedRoleList(m map[string]struct{}) []string {
 // deferred_reason (the same rule check_gate_signoff_deferred_reason_present
 // polices post-land — validating it here means a malformed batch is
 // rejected BEFORE it ever reaches mutate(), with a message naming the
-// offending entry's position), and pipeline_run must be non-empty (the unit
-// check_gate_signoff_monotonic groups by). validate() has no graph access,
-// so it cannot check that requirement_id actually resolves to a real
-// Requirement — that referential check happens in mutate() (see
-// ProposedGateSignoffBatch.mutate in mutate.go), mirroring the split every
+// offending entry's position), a SIGNED entry must carry non-empty
+// decided_by/verbatim/evidence (task #319, R3-signoff-strict: a SIGNED
+// gate-signoff records a genuine human decision — WHO decided, WHAT they
+// said, WHY it is trustworthy — mirroring the DEFERRED branch's own
+// deferred_reason requirement immediately below; before this rule the
+// engine allowed a SIGNED record with zero provenance beyond the bare
+// stage/state/pipeline_run fields), and pipeline_run must be non-empty (the
+// unit check_gate_signoff_monotonic groups by). validate() has no graph
+// access, so it cannot check that requirement_id actually resolves to a
+// real Requirement, nor that decided_by resolves to a known Stakeholder
+// (see check_gate_signoff_decided_by_is_known_stakeholder in
+// internal/invariants/gate_signoff_checks.go for that referential check) —
+// those happen in mutate()/the invariant layer, mirroring the split every
 // other multi-step proposal in this package already draws between
 // shape-only validate() and graph-aware mutate().
 func (p ProposedGateSignoffBatch) validate() error {
@@ -532,6 +540,27 @@ func (p ProposedGateSignoffBatch) validate() error {
 			return validationError(
 				"entry %d (%s): 'deferred_reason' is required and must be non-empty when state=DEFERRED — a "+
 					"deferral with no recorded reason is drift, not a decision.", i, e.RequirementID)
+		}
+		if state == ontology.GateSignoffStateSigned {
+			if strings.TrimSpace(e.DecidedBy) == "" {
+				return validationError(
+					"entry %d (%s): 'decided_by' is required and must be non-empty when state=SIGNED — a "+
+						"SIGNED gate passage with no named human decider is an AI-silently-closeable hole "+
+						"(R-decided-needs-human-signoff applied to GateSignoff).", i, e.RequirementID)
+			}
+			if strings.TrimSpace(e.Verbatim) == "" {
+				return validationError(
+					"entry %d (%s): 'verbatim' is required and must be non-empty when state=SIGNED — a "+
+						"decision with no record of what the decider actually said cannot be audited later.",
+					i, e.RequirementID)
+			}
+			if len(trimNonEmpty(e.Evidence)) == 0 {
+				return validationError(
+					"entry %d (%s): 'evidence' is required and must be non-empty when state=SIGNED — it is "+
+						"the attestation the resolver inspects to confirm the gate passage was substantive, "+
+						"the same discipline ProposedReviewMark already requires of its own evidence field "+
+						"(R-review-mark-carries-evidence applied to GateSignoff).", i, e.RequirementID)
+			}
 		}
 		if strings.TrimSpace(e.PipelineRun) == "" {
 			return validationError("entry %d (%s): 'pipeline_run' is required and must be non-empty.", i, e.RequirementID)

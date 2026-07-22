@@ -27,6 +27,25 @@ History predating this file is not backfilled — see `git log` and
   deferred-reason presence, deferred-conflict resolution. New batch proposal
   kind `ProposedGateSignoffBatch` applies N transitions across possibly-
   different Requirements in one `apply-proposal` call.
+- **SIGNED gate-signoffs now require human provenance** (task #319,
+  R3-signoff-strict — external review): `ProposedGateSignoffBatch.validate()`
+  (`internal/proposal/validate.go`) now rejects a `state=SIGNED` entry that
+  is missing `decided_by`, `verbatim`, or `evidence` — mirroring the
+  DEFERRED branch's existing `deferred_reason` requirement. Before this
+  change a SIGNED gate-signoff could land with zero provenance about who
+  decided it, what they said, or why. Two new ongoing `all-violations`
+  invariants (`internal/invariants/gate_signoff_checks.go`) enforce the same
+  rule against already-landed data: `check_gate_signoff_signed_has_provenance`
+  (SIGNED requires a populated `Signoff` with `decided_by`/`verbatim` plus
+  non-empty `evidence`) and `check_gate_signoff_decided_by_is_known_stakeholder`
+  (when present, `decided_by` must resolve to a real `Stakeholder.id`,
+  mirroring `Conflict`'s existing `check_decided_by_is_known_stakeholder`).
+  Both are ongoing invariants rather than proposal-time-only, matching
+  `check_gate_signoff_deferred_reason_present`'s own precedent — verified
+  safe against `prat/gpsm-sm`'s 64 already-landed SIGNED gate-signoffs,
+  which already carry full provenance. This was blocking task #323
+  (life-domain work), which needs provenance guaranteed before real
+  personal signoffs land.
 - **Crystal freshness invariant** (`check_domain_claude_md_current`,
   `internal/invariants/claude_md_current.go` +
   `cmd/hotam/claude_md_current_wiring.go`): a committed `CLAUDE.md` whose

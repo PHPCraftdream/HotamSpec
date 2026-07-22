@@ -673,6 +673,10 @@ func (p ProposedGateSignoffBatch) mutate(g *ontology.Graph, today string) error 
 		r := g.Requirements[idx]
 		old := snapshotFrom(r)
 
+		// validate() (task #319) guarantees DecidedBy is non-empty for every
+		// SIGNED entry that reaches here, so sp is always populated for
+		// SIGNED and stays nil only for a DEFERRED entry with no decision
+		// recorded yet.
 		var sp *ontology.Signoff
 		if strings.TrimSpace(e.DecidedBy) != "" {
 			sp = &ontology.Signoff{

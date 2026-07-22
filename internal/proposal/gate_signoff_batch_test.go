@@ -58,8 +58,8 @@ func TestApply_GateSignoffBatch_AppliesAllEntries(t *testing.T) {
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedGateSignoffBatch{
 		Entries: []GateSignoffEntry{
-			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider"},
-			{RequirementID: "R-2", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider"},
+			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
+			{RequirementID: "R-2", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
 		},
 	}
 	if err := Apply(path, today, p); err != nil {
@@ -90,8 +90,8 @@ func TestApply_GateSignoffBatch_MultipleEntriesSameRequirement(t *testing.T) {
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedGateSignoffBatch{
 		Entries: []GateSignoffEntry{
-			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1"},
-			{RequirementID: "R-1", Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1"},
+			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
+			{RequirementID: "R-1", Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
 		},
 	}
 	if err := Apply(path, today, p); err != nil {
@@ -122,6 +122,7 @@ func TestApply_GateSignoffBatch_SignoffPayloadCarried(t *testing.T) {
 			{
 				RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1",
 				DecidedBy: "outsider", Date: "2026-01-01", Verbatim: "approved", Instrument: ontology.SignoffInstrumentDEL,
+				Evidence: []string{"docs/review.md"},
 			},
 			{RequirementID: "R-2", Stage: "P-G0", State: ontology.GateSignoffStateDeferred, PipelineRun: "run-1", DeferredReason: "awaiting review"},
 		},
@@ -162,7 +163,7 @@ func TestApply_GateSignoffBatch_GeneratesHistoryEntry(t *testing.T) {
 
 	p := ProposedGateSignoffBatch{
 		Entries: []GateSignoffEntry{
-			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1"},
+			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
 		},
 	}
 	if err := Apply(path, today, p); err != nil {
@@ -191,8 +192,8 @@ func TestApply_GateSignoffBatch_UnknownRequirementFails_GraphUnchanged(t *testin
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedGateSignoffBatch{
 		Entries: []GateSignoffEntry{
-			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1"},
-			{RequirementID: "R-does-not-exist", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1"},
+			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
+			{RequirementID: "R-does-not-exist", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
 		},
 	}
 	assertApplyFails(t, path, p, "not found")
@@ -247,7 +248,10 @@ func TestApply_GateSignoffBatch_MissingPipelineRunFails(t *testing.T) {
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedGateSignoffBatch{
 		Entries: []GateSignoffEntry{
-			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned},
+			{
+				RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned,
+				DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"},
+			},
 		},
 	}
 	assertApplyFails(t, path, p, "pipeline_run")
@@ -265,6 +269,112 @@ func TestApply_GateSignoffBatch_MissingStageFails(t *testing.T) {
 	assertApplyFails(t, path, p, "stage")
 }
 
+// TestApply_GateSignoffBatch_SignedWithoutDecidedByFails proves a SIGNED
+// entry with no decided_by is rejected at validate() time (task #319,
+// R3-signoff-strict: a SIGNED gate passage must name a human decider,
+// mirroring the DEFERRED branch's own deferred_reason requirement).
+func TestApply_GateSignoffBatch_SignedWithoutDecidedByFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedGateSignoffBatch{
+		Entries: []GateSignoffEntry{
+			{
+				RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1",
+				Verbatim: "approved", Evidence: []string{"docs/review.md"},
+			},
+		},
+	}
+	assertApplyFails(t, path, p, "decided_by")
+}
+
+// TestApply_GateSignoffBatch_SignedWithoutVerbatimFails proves a SIGNED
+// entry with no verbatim is rejected at validate() time.
+func TestApply_GateSignoffBatch_SignedWithoutVerbatimFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedGateSignoffBatch{
+		Entries: []GateSignoffEntry{
+			{
+				RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1",
+				DecidedBy: "outsider", Evidence: []string{"docs/review.md"},
+			},
+		},
+	}
+	assertApplyFails(t, path, p, "verbatim")
+}
+
+// TestApply_GateSignoffBatch_SignedWithoutEvidenceFails proves a SIGNED
+// entry with no evidence is rejected at validate() time.
+func TestApply_GateSignoffBatch_SignedWithoutEvidenceFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedGateSignoffBatch{
+		Entries: []GateSignoffEntry{
+			{
+				RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1",
+				DecidedBy: "outsider", Verbatim: "approved",
+			},
+		},
+	}
+	assertApplyFails(t, path, p, "evidence")
+}
+
+// TestApply_GateSignoffBatch_SignedFullyPopulatedSucceeds proves a SIGNED
+// entry carrying decided_by/verbatim/evidence is accepted and lands with a
+// populated Signoff and non-empty Evidence on the resulting GateSignoff.
+func TestApply_GateSignoffBatch_SignedFullyPopulatedSucceeds(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedGateSignoffBatch{
+		Entries: []GateSignoffEntry{
+			{
+				RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1",
+				DecidedBy: "outsider", Date: "2026-07-22", Verbatim: "approved at review",
+				Instrument: ontology.SignoffInstrumentPersonal, Evidence: []string{"docs/review.md"},
+			},
+		},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	r1, ok := findReq(g, "R-1")
+	if !ok {
+		t.Fatal("R-1 missing")
+	}
+	if len(r1.GateSignoffs) != 1 {
+		t.Fatalf("R-1.GateSignoffs len = %d, want 1", len(r1.GateSignoffs))
+	}
+	gs := r1.GateSignoffs[0]
+	if gs.Signoff == nil || gs.Signoff.DecidedBy != "outsider" || gs.Signoff.Verbatim != "approved at review" {
+		t.Errorf("GateSignoffs[0].Signoff = %+v, want decided_by=outsider verbatim=%q", gs.Signoff, "approved at review")
+	}
+	if len(gs.Evidence) != 1 || gs.Evidence[0] != "docs/review.md" {
+		t.Errorf("GateSignoffs[0].Evidence = %v, want [docs/review.md]", gs.Evidence)
+	}
+}
+
+// TestApply_GateSignoffBatch_DeferredStillWorksWithoutSignedFields proves
+// the new SIGNED-only provenance rule does not regress the DEFERRED path:
+// a DEFERRED entry with no decided_by/verbatim/evidence still lands.
+func TestApply_GateSignoffBatch_DeferredStillWorksWithoutSignedFields(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedGateSignoffBatch{
+		Entries: []GateSignoffEntry{
+			{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateDeferred, PipelineRun: "run-1", DeferredReason: "awaiting review"},
+		},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	r1, _ := findReq(g, "R-1")
+	if len(r1.GateSignoffs) != 1 || r1.GateSignoffs[0].Signoff != nil {
+		t.Errorf("R-1.GateSignoffs = %+v, want one DEFERRED entry with nil Signoff", r1.GateSignoffs)
+	}
+}
+
 // TestApply_GateSignoffBatch_ViaApplyBatch proves the new kind also works
 // through the multi-proposal ApplyBatch entry point (alongside other
 // proposal kinds in the same call), not just the single-proposal Apply path.
@@ -275,7 +385,7 @@ func TestApply_GateSignoffBatch_ViaApplyBatch(t *testing.T) {
 		ProposedRequirement{ID: "R-new", Claim: "a new requirement", Owner: "sa", Status: ontology.StatusDRAFT},
 		ProposedGateSignoffBatch{
 			Entries: []GateSignoffEntry{
-				{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1"},
+				{RequirementID: "R-1", Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-1", DecidedBy: "outsider", Verbatim: "approved", Evidence: []string{"docs/review.md"}},
 			},
 		},
 	}

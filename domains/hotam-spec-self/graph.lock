@@ -1,5 +1,5 @@
 {
-  "sha256": "f917965c5917a6b56d38d9b80294fe24b590af8e145c7a9ed241eb67309f67c7",
-  "updated_at": "2026-07-22T03:12:19Z",
-  "note": "Requirement R-claude-md-current applied"
+  "sha256": "1d07e1620fc13ebccaaafa8f506b5c35dbc7bbba75f86969f95515c883dfda36",
+  "updated_at": "2026-07-22T22:16:12Z",
+  "note": "task #319: extended R-gate-signoff-single-carrier.enforced_by with check_gate_signoff_signed_has_provenance/check_gate_signoff_decided_by_is_known_stakeholder"
 }

@@ -34,6 +34,16 @@ func gsSigned(stage, run string) ontology.GateSignoff {
 	return ontology.GateSignoff{Stage: stage, State: ontology.GateSignoffStateSigned, PipelineRun: run}
 }
 
+func gsSignedWithProvenance(stage, run, decidedBy, verbatim string, evidence ...string) ontology.GateSignoff {
+	return ontology.GateSignoff{
+		Stage:       stage,
+		State:       ontology.GateSignoffStateSigned,
+		PipelineRun: run,
+		Evidence:    evidence,
+		Signoff:     &ontology.Signoff{DecidedBy: decidedBy, Verbatim: verbatim},
+	}
+}
+
 func gsDeferred(stage, run, reason string) ontology.GateSignoff {
 	return ontology.GateSignoff{Stage: stage, State: ontology.GateSignoffStateDeferred, PipelineRun: run, DeferredReason: reason}
 }
@@ -201,6 +211,157 @@ func TestCheckGateSignoffDeferredReasonPresent_SignedNeverFires(t *testing.T) {
 	}
 	if vs := runCheck(t, "check_gate_signoff_deferred_reason_present", g); len(vs) != 0 {
 		t.Fatalf("expected a SIGNED entry to never trigger the deferred-reason check, got %v", vs)
+	}
+}
+
+// --- check_gate_signoff_signed_has_provenance ---
+
+func TestCheckGateSignoffSignedHasProvenance_PassesWithFullProvenance(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				gsSignedWithProvenance("P-G1", "run-1", "outsider", "approved at review", "docs/review.md"),
+			}},
+		},
+	}
+	if vs := runCheck(t, "check_gate_signoff_signed_has_provenance", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for a SIGNED entry with decided_by/verbatim/evidence, got %v", vs)
+	}
+}
+
+func TestCheckGateSignoffSignedHasProvenance_FiresWithNilSignoff(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{gsSigned("P-G1", "run-1")}},
+		},
+	}
+	vs := runCheck(t, "check_gate_signoff_signed_has_provenance", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a SIGNED entry with no Signoff and no evidence, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "R-1") {
+		t.Errorf("expected the violation to name R-1, got %v", vs)
+	}
+}
+
+func TestCheckGateSignoffSignedHasProvenance_FiresWithEmptyDecidedBy(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				gsSignedWithProvenance("P-G1", "run-1", "", "approved at review", "docs/review.md"),
+			}},
+		},
+	}
+	vs := runCheck(t, "check_gate_signoff_signed_has_provenance", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a SIGNED entry with empty decided_by, got %d: %v", len(vs), vs)
+	}
+}
+
+func TestCheckGateSignoffSignedHasProvenance_FiresWithEmptyVerbatim(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				gsSignedWithProvenance("P-G1", "run-1", "outsider", "", "docs/review.md"),
+			}},
+		},
+	}
+	vs := runCheck(t, "check_gate_signoff_signed_has_provenance", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a SIGNED entry with empty verbatim, got %d: %v", len(vs), vs)
+	}
+}
+
+func TestCheckGateSignoffSignedHasProvenance_FiresWithNoEvidence(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				gsSignedWithProvenance("P-G1", "run-1", "outsider", "approved at review"),
+			}},
+		},
+	}
+	vs := runCheck(t, "check_gate_signoff_signed_has_provenance", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a SIGNED entry with no evidence, got %d: %v", len(vs), vs)
+	}
+}
+
+func TestCheckGateSignoffSignedHasProvenance_DeferredNeverFires(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{gsDeferred("P-G1", "run-1", "awaiting review")}},
+		},
+	}
+	if vs := runCheck(t, "check_gate_signoff_signed_has_provenance", g); len(vs) != 0 {
+		t.Fatalf("expected a DEFERRED entry (no provenance required) to never trigger the SIGNED-provenance check, got %v", vs)
+	}
+}
+
+// --- check_gate_signoff_decided_by_is_known_stakeholder ---
+
+func TestCheckGateSignoffDecidedByIsKnownStakeholder_PassesWithKnownStakeholder(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Stakeholders: []ontology.Stakeholder{sOut},
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				gsSignedWithProvenance("P-G1", "run-1", "outsider", "approved at review", "docs/review.md"),
+			}},
+		},
+	}
+	if vs := runCheck(t, "check_gate_signoff_decided_by_is_known_stakeholder", g); len(vs) != 0 {
+		t.Fatalf("expected no violations when decided_by resolves to a known Stakeholder, got %v", vs)
+	}
+}
+
+func TestCheckGateSignoffDecidedByIsKnownStakeholder_FiresWithUnknownStakeholder(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Stakeholders: []ontology.Stakeholder{sOut},
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				gsSignedWithProvenance("P-G1", "run-1", "nobody-known", "approved at review", "docs/review.md"),
+			}},
+		},
+	}
+	vs := runCheck(t, "check_gate_signoff_decided_by_is_known_stakeholder", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for decided_by naming an unknown Stakeholder, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "R-1") {
+		t.Errorf("expected the violation to name R-1, got %v", vs)
+	}
+}
+
+func TestCheckGateSignoffDecidedByIsKnownStakeholder_NoOpWhenSignoffNil(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Stakeholders: []ontology.Stakeholder{sOut},
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{gsSigned("P-G1", "run-1")}},
+		},
+	}
+	if vs := runCheck(t, "check_gate_signoff_decided_by_is_known_stakeholder", g); len(vs) != 0 {
+		t.Fatalf("expected no violations when Signoff is nil (a different check polices provenance presence), got %v", vs)
+	}
+}
+
+func TestCheckGateSignoffDecidedByIsKnownStakeholder_DeferredNeverFires(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Stakeholders: []ontology.Stakeholder{sOut},
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{gsDeferred("P-G1", "run-1", "awaiting review")}},
+		},
+	}
+	if vs := runCheck(t, "check_gate_signoff_decided_by_is_known_stakeholder", g); len(vs) != 0 {
+		t.Fatalf("expected a DEFERRED entry to never trigger the decided_by-stakeholder check, got %v", vs)
 	}
 }
 
