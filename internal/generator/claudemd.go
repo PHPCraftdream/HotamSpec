@@ -843,6 +843,7 @@ func RenderProjectEssenceBlock(repoRoot, domainName string) string {
 	description := "—"
 	goalsText := "—"
 	director := "—"
+	charter := ""
 	if domainName != "" {
 		m := loader.ResolveDomainPresentation(filepath.Join(repoRoot, "domains", domainName, "graph.json"))
 		if m.Purpose != "" {
@@ -854,6 +855,7 @@ func RenderProjectEssenceBlock(repoRoot, domainName string) string {
 		if m.Director != "" {
 			director = m.Director
 		}
+		charter = m.Charter
 	}
 	lines := []string{
 		generatedHeaderComment,
@@ -861,9 +863,14 @@ func RenderProjectEssenceBlock(repoRoot, domainName string) string {
 		"### Project essence",
 		"",
 		"- **purpose** — " + description,
-		"- **goals** — " + goalsText,
-		"- **director** — " + director,
 	}
+	if charter != "" {
+		lines = append(lines, "- **charter** — "+charter)
+	}
+	lines = append(lines,
+		"- **goals** — "+goalsText,
+		"- **director** — "+director,
+	)
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
 }
 

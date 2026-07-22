@@ -42,6 +42,11 @@ a direct anchor-cited answer — steps 2-6 are for graph/code changes
    RECENTLY-REJECTED below, cite replacement, don't re-derive (anti-relitigation).
    Tool: `hotam confront <candidate-text>` ranks the candidate's lexical overlap
    against SETTLED claims (duplicate guard) and REJECTED history (anti-relitigation).
+   When the input cites a real-world event/deadline/party (a contractor's date, a real
+   security review, a real integration), ask first whether it blocks the MODEL
+   (graph/code/tests) or only the deployed reality it represents — if only the latter,
+   resolve it by modeling (a typed object with methods), not by waiting on the real
+   event, unless the domain's charter explicitly says otherwise.
 4. **TRANSLATE** — outcome → typed nodes: ProposedRequirement /
    ProposedConflictTransition / ProposedRejection / ProposedConflict /
    ProposedOperatorBudget / ProposedEntityType JSON, drafted as a `.json` file.
@@ -178,7 +183,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-spec-self/docs/gen/UNENFORCED.md.
 - **debt:** 175/252 SETTLED ENFORCED · 2 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 320 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21082 chars (headroom 128918)
+- **graph:** 320 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21484 chars (headroom 128516)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->

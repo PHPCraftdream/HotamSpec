@@ -88,6 +88,7 @@ package `ontology`
 | `CreatedAt` | `string` |
 | `DecidedAt` | `string` |
 | `DeclOrder` | `int` |
+| `SourceRefs` | `[]string` |
 
 **Methods:**
 

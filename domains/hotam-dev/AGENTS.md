@@ -42,6 +42,11 @@ a direct anchor-cited answer — steps 2-6 are for graph/code changes
    RECENTLY-REJECTED below, cite replacement, don't re-derive (anti-relitigation).
    Tool: `hotam confront <candidate-text>` ranks the candidate's lexical overlap
    against SETTLED claims (duplicate guard) and REJECTED history (anti-relitigation).
+   When the input cites a real-world event/deadline/party (a contractor's date, a real
+   security review, a real integration), ask first whether it blocks the MODEL
+   (graph/code/tests) or only the deployed reality it represents — if only the latter,
+   resolve it by modeling (a typed object with methods), not by waiting on the real
+   event, unless the domain's charter explicitly says otherwise.
 4. **TRANSLATE** — outcome → typed nodes: ProposedRequirement /
    ProposedConflictTransition / ProposedRejection / ProposedConflict /
    ProposedOperatorBudget / ProposedEntityType JSON, drafted as a `.json` file.
