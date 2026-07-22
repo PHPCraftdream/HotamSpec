@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // OrientationFAQEntry is one declared orientation question in a domain's
@@ -73,6 +74,83 @@ type OrientationFAQEntry struct {
 // satisfied" is diagnosed, because that is a graph-level invariant
 // violation, not a load error).
 func ResolveOrientationFAQ(graphPath string) []OrientationFAQEntry {
+	diag := ResolveOrientationFAQDiagnostic(graphPath)
+	return diag.Entries
+}
+
+// DroppedOrientationFAQEntry names one raw "orientation_faq" list entry that
+// ResolveOrientationFAQDiagnostic dropped, plus WHY — the diagnosis
+// ResolveOrientationFAQ's tolerant contract deliberately discards (see its
+// doc comment: "the check, not the loader, is where 'this entry cannot be
+// satisfied' is diagnosed"). The invariant layer uses this to turn a silent
+// drop into a reported violation instead of quietly shrinking the list.
+type DroppedOrientationFAQEntry struct {
+	// Index is the entry's position (0-based) in the raw "orientation_faq"
+	// JSON array, used to name the entry in a violation message when it has
+	// no usable Question (e.g. it is not even a JSON object).
+	Index int
+	// Raw is the original raw JSON for the dropped entry, truncated for
+	// display if long.
+	Raw string
+	// Reason is a short human-readable diagnosis ("not a JSON object", "the
+	// question field is empty").
+	Reason string
+}
+
+// OrientationFAQDiagnostic is ResolveOrientationFAQDiagnostic's return
+// value: the same tolerant Entries list ResolveOrientationFAQ returns, PLUS
+// the diagnostic detail the invariant layer needs to fail closed rather than
+// silently accept a shrunken list: whether manifest.json exists, whether it
+// parsed as valid JSON, and which raw entries (if the field parsed) were
+// dropped and why.
+type OrientationFAQDiagnostic struct {
+	// Entries is byte-identical to ResolveOrientationFAQ's return value
+	// (nil when nothing is checkable).
+	Entries []OrientationFAQEntry
+	// ManifestExists is false when manifest.json itself is absent (a
+	// synthetic fixture or a genuinely un-manifested domain) — the loader's
+	// oldest, most tolerated honest no-op.
+	ManifestExists bool
+	// ManifestParsed is false when manifest.json exists but is not valid
+	// JSON. Combined with ManifestDeclaresIntent, this is what lets the
+	// invariant tell "malformed manifest, domain never touched
+	// orientation_faq" (still an honest no-op) apart from "malformed
+	// manifest, domain's raw bytes show it tried to declare
+	// orientation_faq" (a fail-closed violation).
+	ManifestParsed bool
+	// ManifestDeclaresIntent is true when the raw manifest bytes contain the
+	// literal substring "orientation_faq" — a coarse, JSON-parse-independent
+	// signal checked BEFORE attempting to parse, so it still fires when the
+	// parse itself fails. Only meaningful when ManifestParsed is false
+	// (when the manifest parses cleanly, the parsed OrientationFAQ field
+	// itself is the authoritative signal, not this heuristic).
+	ManifestDeclaresIntent bool
+	// Dropped lists every raw "orientation_faq" array entry that did not
+	// survive per-entry validation, in array order.
+	Dropped []DroppedOrientationFAQEntry
+}
+
+// ResolveOrientationFAQDiagnostic is ResolveOrientationFAQ's diagnostic
+// twin: same tolerant parsing, same nil-when-nothing-checkable Entries
+// contract (every existing caller of ResolveOrientationFAQ is unaffected —
+// that function now just forwards to this one's Entries field), but it ALSO
+// preserves the detail the tolerant path throws away, so the invariant layer
+// (internal/invariants/orientation_faq.go's checkOrientationFAQAnswered) can
+// diagnose two cases the loader itself must stay silent about by design:
+//
+//  1. A manifest that fails to parse as JSON but whose raw bytes contain the
+//     literal "orientation_faq" substring — the domain evidently TRIED to
+//     declare an orientation contract and a JSON typo elsewhere in the file
+//     silently destroyed it. The loader still returns nil Entries (its
+//     documented, reused-by-other-resolvers contract), but
+//     ManifestDeclaresIntent is now visible so the check can fail closed
+//     instead of silently no-op'ing.
+//  2. Individual malformed/unsatisfiable raw entries inside an otherwise
+//     well-parsed list — still dropped from Entries exactly as before, but
+//     now named in Dropped with a reason, so the check can report "N entries
+//     were dropped" as a violation instead of quietly working with a
+//     shortened list.
+func ResolveOrientationFAQDiagnostic(graphPath string) OrientationFAQDiagnostic {
 	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
 	data, err := os.ReadFile(manifestPath)
 	if err != nil {
@@ -80,42 +158,80 @@ func ResolveOrientationFAQ(graphPath string) []OrientationFAQEntry {
 		// directly in Go without loader.LoadGraph, or a genuinely
 		// un-manifested domain) — honest no-op, mirroring every sibling
 		// resolver's missing-manifest default.
-		return nil
+		return OrientationFAQDiagnostic{}
 	}
+
 	var raw struct {
 		OrientationFAQ []json.RawMessage `json:"orientation_faq"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
-		// manifest.json exists but is malformed JSON — honest no-op,
-		// mirroring ResolveDiscipline's identical malformed-manifest default
-		// (a manifest that cannot even be parsed has certainly not validly
-		// declared an orientation_faq list).
-		return nil
+		// manifest.json exists but is malformed JSON. ResolveOrientationFAQ's
+		// documented, reused-by-other-resolvers contract (honest no-op) is
+		// preserved for Entries — but a coarse pre-parse heuristic on the RAW
+		// bytes (does the literal field name even appear?) tells the
+		// invariant layer whether this domain looks like it TRIED to declare
+		// the field, so the check can fail closed instead of silently
+		// treating "declared but broken" the same as "never declared".
+		return OrientationFAQDiagnostic{
+			ManifestExists:         true,
+			ManifestParsed:         false,
+			ManifestDeclaresIntent: strings.Contains(string(data), `"orientation_faq"`),
+		}
 	}
+
 	out := make([]OrientationFAQEntry, 0, len(raw.OrientationFAQ))
-	for _, entryRaw := range raw.OrientationFAQ {
+	var dropped []DroppedOrientationFAQEntry
+	for i, entryRaw := range raw.OrientationFAQ {
 		var entry OrientationFAQEntry
 		if err := json.Unmarshal(entryRaw, &entry); err != nil {
-			// One malformed entry (not a JSON object) — drop it, keep the
-			// rest. See doc comment: per-entry honest no-op, not a hard
-			// error.
+			// One malformed entry (not a JSON object) — drop it from
+			// Entries, keep the rest. See doc comment: per-entry honest
+			// no-op at load time, diagnosed as a violation at check time.
+			dropped = append(dropped, DroppedOrientationFAQEntry{
+				Index:  i,
+				Raw:    truncateForDiagnostic(string(entryRaw)),
+				Reason: "not a JSON object",
+			})
 			continue
 		}
 		if entry.Question == "" {
 			// An entry with no Question cannot be named in a violation
-			// message, so it carries no checkable contract — drop it.
+			// message by itself, so it carries no checkable contract — drop
+			// it from Entries, but still report the index so the domain can
+			// find and fix it.
+			dropped = append(dropped, DroppedOrientationFAQEntry{
+				Index:  i,
+				Raw:    truncateForDiagnostic(string(entryRaw)),
+				Reason: "the question field is empty",
+			})
 			continue
 		}
 		out = append(out, entry)
 	}
-	// Collapse every "no checkable questions" outcome (absent field,
-	// explicit empty list, all entries dropped) to a nil return — the SAME
-	// honest-no-op shape every sibling resolver already establishes
-	// (ResolveDiscipline returns "", ResolveGenProfile returns the default),
-	// so the invariant check's `len(entries) == 0` no-op gate holds and the
-	// resolver's own contract reads "nil = nothing declared".
+	// Collapse "no checkable questions" (absent field, explicit empty list,
+	// all entries dropped) to a nil Entries — the SAME honest-no-op shape
+	// every sibling resolver already establishes (ResolveDiscipline returns
+	// "", ResolveGenProfile returns the default), so
+	// ResolveOrientationFAQ's/the invariant check's `len(entries) == 0`
+	// no-op gate holds.
 	if len(out) == 0 {
-		return nil
+		out = nil
 	}
-	return out
+	return OrientationFAQDiagnostic{
+		Entries:        out,
+		ManifestExists: true,
+		ManifestParsed: true,
+		Dropped:        dropped,
+	}
+}
+
+// truncateForDiagnostic caps a raw-JSON snippet embedded in a violation
+// message so one absurdly long malformed entry cannot blow up diagnostic
+// output.
+func truncateForDiagnostic(s string) string {
+	const maxLen = 120
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "...(truncated)"
 }

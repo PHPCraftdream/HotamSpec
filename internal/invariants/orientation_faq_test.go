@@ -272,6 +272,190 @@ func TestCheckOrientationFAQAnswered_MUTATION_BrokenAnswerFiresThenRestores(t *t
 	}
 }
 
+func TestCheckOrientationFAQAnswered_FiresWhenManifestMalformedButDeclaresIntent(t *testing.T) {
+	t.Parallel()
+	// manifest.json exists, does NOT parse as JSON (a stray trailing comma
+	// breaks the whole document), but its raw bytes still contain the
+	// literal "orientation_faq" field name -- the domain evidently tried to
+	// declare the contract and lost it to an unrelated JSON typo. This must
+	// fail closed (a violation), not silently no-op like a domain that never
+	// touched the field at all.
+	tmp := t.TempDir()
+	domainDir := filepath.Join(tmp, "domains", "testdomain")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	malformed := `{
+  "purpose": "test domain",
+  "orientation_faq": [
+    {"question": "q", "keywords": ["a"]},
+  ]
+}
+`
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(malformed), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(domainDir, "CLAUDE.md"), []byte("# crystal\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile CLAUDE.md: %v", err)
+	}
+	g := &ontology.Graph{DomainDir: domainDir}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a malformed manifest that declares orientation_faq intent, got %d: %v", len(vs), vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_NoOpWhenManifestMalformedWithoutDeclaringIntent(t *testing.T) {
+	t.Parallel()
+	// manifest.json exists and does NOT parse as JSON, and its raw bytes
+	// contain NO mention of "orientation_faq" at all -- this domain never
+	// tried to declare the field, so the malformed manifest is unrelated to
+	// this check. Must remain an honest no-op (this is exactly the
+	// pre-existing tolerant behavior every other malformed-manifest resolver
+	// already establishes, and must not regress).
+	tmp := t.TempDir()
+	domainDir := filepath.Join(tmp, "domains", "testdomain")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	malformed := `{ this is not valid json at all, no orientation field mentioned`
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(malformed), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	g := &ontology.Graph{DomainDir: domainDir}
+	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for a malformed manifest that never mentions orientation_faq, got %v", vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_FiresWhenAllKeywordsBlank(t *testing.T) {
+	t.Parallel()
+	// The keywords list is declared (non-empty in JSON) but every element is
+	// blank/whitespace -- must NOT pass as a fake "allPresent" (the P1 bug):
+	// a declared-but-empty keywords list is a violation, the same shape as
+	// "declares neither keywords nor a link".
+	faq := `[{"question": "blank kw", "keywords": ["", "   "]}]`
+	crystal := "# Crystal\n\nAnything at all.\n"
+	domainDir := orientationFAQFixture(t, faq, crystal, nil)
+	g := &ontology.Graph{DomainDir: domainDir}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation for an all-blank keywords list, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "blank kw") {
+		t.Errorf("expected the violation to name the question, got %v", vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_FiresWhenLinkedFileEmpty(t *testing.T) {
+	t.Parallel()
+	// The link is referenced in the crystal and resolves to a real file on
+	// disk, but that file is EMPTY -- os.Stat alone (the old check) would
+	// have passed this; content must actually be checked.
+	faq := `[{"question": "empty link", "link": "domains/testdomain/docs/gen/EMPTY.md"}]`
+	crystal := "# Crystal\n\nSee [empty](domains/testdomain/docs/gen/EMPTY.md).\n"
+	linkFiles := map[string]string{"domains/testdomain/docs/gen/EMPTY.md": ""}
+	domainDir := orientationFAQFixture(t, faq, crystal, linkFiles)
+	g := &ontology.Graph{DomainDir: domainDir}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation when the linked file exists but is empty, got %d: %v", len(vs), vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_FiresWhenLinkedFileIrrelevant(t *testing.T) {
+	t.Parallel()
+	// The entry declares BOTH keywords and a link; the link resolves to a
+	// real, non-empty file, but that file's content contains NONE of the
+	// declared keywords -- an existing-but-irrelevant file must not satisfy
+	// the one-hop contract (minimal relevance check).
+	faq := `[{"question": "irrelevant link", "keywords": ["tension graph"], "link": "domains/testdomain/docs/gen/OTHER.md"}]`
+	crystal := "# Crystal\n\nSee [other](domains/testdomain/docs/gen/OTHER.md).\n"
+	linkFiles := map[string]string{"domains/testdomain/docs/gen/OTHER.md": "# Unrelated content about widgets and gears.\n"}
+	domainDir := orientationFAQFixture(t, faq, crystal, linkFiles)
+	g := &ontology.Graph{DomainDir: domainDir}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation when the linked file's content is irrelevant to the declared keywords, got %d: %v", len(vs), vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_PassesWhenLinkedFileContainsKeyword(t *testing.T) {
+	t.Parallel()
+	// Positive counterpart: the linked file's content DOES contain one of
+	// the declared keywords -- must pass.
+	faq := `[{"question": "relevant link", "keywords": ["tension graph"], "link": "domains/testdomain/docs/gen/REL.md"}]`
+	crystal := "# Crystal\n\nSee [rel](domains/testdomain/docs/gen/REL.md).\n"
+	linkFiles := map[string]string{"domains/testdomain/docs/gen/REL.md": "# This project models a tension graph.\n"}
+	domainDir := orientationFAQFixture(t, faq, crystal, linkFiles)
+	g := &ontology.Graph{DomainDir: domainDir}
+	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
+		t.Fatalf("expected no violations when the linked file's content contains a declared keyword, got %v", vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_FiresWhenEntryDropped(t *testing.T) {
+	t.Parallel()
+	// A malformed raw entry (not a JSON object) inside an otherwise
+	// well-parsed list is silently dropped by the loader (its documented,
+	// unchanged contract) but must now surface as a violation at check
+	// time, alongside the surviving entry passing cleanly.
+	tmp := t.TempDir()
+	domainDir := filepath.Join(tmp, "domains", "testdomain")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	manifest := `{
+  "purpose": "test domain",
+  "orientation_faq": [
+    "not-an-object",
+    {"question": "kept", "keywords": ["tension graph"]}
+  ]
+}
+`
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	crystal := "# Crystal\n\nThis is a tension graph.\n"
+	if err := os.WriteFile(filepath.Join(domainDir, "CLAUDE.md"), []byte(crystal), 0o644); err != nil {
+		t.Fatalf("WriteFile CLAUDE.md: %v", err)
+	}
+	g := &ontology.Graph{DomainDir: domainDir}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation (for the dropped entry; the kept entry passes), got %d: %v", len(vs), vs)
+	}
+	if hasViolationFor(vs, "kept") {
+		t.Errorf("the surviving, satisfiable entry should NOT have fired, got %v", vs)
+	}
+}
+
+func TestCheckOrientationFAQAnswered_FiresWhenEntryDroppedForEmptyQuestion(t *testing.T) {
+	t.Parallel()
+	// A raw entry with an empty "question" field is dropped by the loader
+	// (documented contract) but must surface as a violation at check time.
+	tmp := t.TempDir()
+	domainDir := filepath.Join(tmp, "domains", "testdomain")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	manifest := `{
+  "purpose": "test domain",
+  "orientation_faq": [
+    {"question": "", "keywords": ["a"]}
+  ]
+}
+`
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("WriteFile manifest.json: %v", err)
+	}
+	g := &ontology.Graph{DomainDir: domainDir}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a dropped empty-question entry, got %d: %v", len(vs), vs)
+	}
+}
+
 // TestCheckOrientationFAQAnswered_RealHotamSpecSelfSelfExample passes the
 // REAL self-hosting domain's own declared orientation_faq against its own
 // generated crystal (the repo root CLAUDE.md) -- the integration proof that
