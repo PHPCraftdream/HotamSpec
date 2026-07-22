@@ -26,7 +26,23 @@ import (
 // CONSTITUTION, AGENT-MAP, CONCEPT-MAP, RECENTLY-REJECTED) respectively.
 // Every individual block still carries its own BEGIN/END sentinel-comment
 // pair (WrapBlock); MIND/BUSINESS are concatenations of those blocks.
-
+//
+// Under the FULL profile the template places <!-- mind --> BEFORE
+// <!-- business --> (methodology-first — the engine's own self-hosting
+// domains want the operator seed ahead of domain state). Under the CONSUMER
+// profile (external business domains) the placeholder ORDER FLIPS —
+// <!-- business --> before <!-- mind --> — via claudeMDTemplateConsumer, so
+// the domain's own essence (purpose/stakeholders/live-state/…) is the first
+// thing a freshly-booted operator reads, with the Hotam-Spec methodology
+// seed appearing as a compact "how we work" block afterward (external
+// review P1: a consumer-profile crystal opening with ~178 lines of
+// framework methodology before any domain content buries the "what is this
+// project" answer past the first screen). RenderBusinessContent already
+// reorders the BUSINESS bucket's OWN internals for consumer (task A3); this
+// template split additionally reorders the two BUCKETS relative to each
+// other and swaps the file's opening header line — both gated the same way,
+// by the same consumer bool, so the two reorders (intra-bucket, inter-bucket)
+// compose into one coherent "business first, methodology second" document.
 const mindPlaceholder = "<!-- mind -->"
 const businessPlaceholder = "<!-- business -->"
 
@@ -43,7 +59,18 @@ const businessPlaceholder = "<!-- business -->"
 // directory that was never generated.
 const deepDiveClauseSentinel = " Deep-dives: `spec/docs/thinking/`."
 
-const claudeMDTemplate = "# CLAUDE.md — Hotam-Spec framework\n" +
+// claudeMDHeaderSentinel is the FULL-profile file title, isolated as its own
+// token so it can be swapped out wholesale for claudeMDConsumerHeaderPlaceholder
+// under the consumer profile without touching any other template byte. It is
+// never a legitimate substring of generated content, so a plain ReplaceAll is
+// safe (mirrors deepDiveClauseSentinel's isolation pattern).
+const claudeMDHeaderSentinel = "# CLAUDE.md — Hotam-Spec framework"
+
+// claudeMDTemplate is the FULL-profile template (self_hosting domains:
+// hotam-spec-self, hotam-dev, and every other non-consumer domain): fixed
+// framework-identity header, then MIND (methodology) before BUSINESS
+// (domain state) — preserved byte-identical to the pre-task-E2 layout.
+const claudeMDTemplate = claudeMDHeaderSentinel + "\n" +
 	"\n" +
 	"**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.\n" +
 	"\n" +
@@ -52,6 +79,30 @@ const claudeMDTemplate = "# CLAUDE.md — Hotam-Spec framework\n" +
 	mindPlaceholder + "\n" +
 	"\n" +
 	businessPlaceholder + "\n" +
+	"\n" +
+	"<!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->\n"
+
+// claudeMDTemplateConsumer is the CONSUMER-profile template (external
+// business domains: gpsm-sm, prat, …): the domain-identity header line
+// (claudeMDHeaderSentinel, later replaced with the domain's own name by
+// RenderClaudeMDFromTemplate) leads, then <!-- business --> renders BEFORE
+// <!-- mind -->, and a short transition sentence introduces the methodology
+// seed as the file's closing "how we work" section rather than its opener.
+// Every other line — the Hotam-Spec tagline, the boot sentence, the
+// trailing durable-notes marker — is preserved verbatim from the full
+// template so the two profiles diverge ONLY in header text and placeholder
+// order, nothing else.
+const claudeMDTemplateConsumer = claudeMDHeaderSentinel + "\n" +
+	"\n" +
+	"**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.\n" +
+	"\n" +
+	"Boot: Role + Mediation-loop blocks below = operating seed." + deepDiveClauseSentinel + "\n" +
+	"\n" +
+	businessPlaceholder + "\n" +
+	"\n" +
+	"General Hotam-Spec discipline applied below:\n" +
+	"\n" +
+	mindPlaceholder + "\n" +
 	"\n" +
 	"<!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->\n"
 
@@ -719,11 +770,32 @@ func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claud
 	return strings.Join(parts, "\n")
 }
 
+// consumerHeaderLine renders the consumer-profile crystal's opening header
+// line: "# <domainName> — <purpose one-liner>" when the active domain's
+// manifest carries a purpose (loader.ResolveDomainPresentation — the same
+// source RenderProjectEssenceBlock reads), or bare "# <domainName>" when it
+// does not (mirrors RenderProjectEssenceBlock's own "manifest absent/without
+// these fields" fallback path, R-... honest-placeholder discipline, but a
+// header line reads better degrading to just the name than to an em-dash).
+// The purpose is passed through shortForm/firstWholeSentence (the same
+// short-form discipline RenderOperatorRoleBlock/domainPulse already use for
+// crystal one-liners, R-crystal-carries-short-form) so a multi-sentence
+// manifest purpose does not blow the header out into a paragraph.
+func consumerHeaderLine(repoRoot, domainName string) string {
+	m := loader.ResolveDomainPresentation(filepath.Join(repoRoot, "domains", domainName, "graph.json"))
+	purpose := strings.TrimSpace(m.Purpose)
+	if purpose == "" {
+		return "# " + domainName
+	}
+	return "# " + domainName + " — " + firstWholeSentence(purpose)
+}
+
 // RenderClaudeMDFromTemplate renders root CLAUDE.md by substituting the two
-// template placeholder lines ("<!-- mind -->" / "<!-- business -->") in
-// claudeMDTemplate with the rendered MIND and BUSINESS content
-// respectively. Every other line of the template — including the trailing
-// human-notes marker comment — is preserved byte-for-byte.
+// template placeholder lines ("<!-- mind -->" / "<!-- business -->") in the
+// active profile's template (claudeMDTemplate for full, claudeMDTemplateConsumer
+// for consumer) with the rendered MIND and BUSINESS content respectively.
+// Every other line of the template — including the trailing human-notes
+// marker comment — is preserved byte-for-byte.
 //
 // claudeMDCharCount feeds the LIVE-STATE CRYSTAL_CHARS budget line (the
 // resident crystal's own character count — supplied by the caller to avoid
@@ -739,6 +811,14 @@ func RenderBusinessContent(g *ontology.Graph, domainName, repoRoot string, claud
 // full otherwise — mirrors genSpec's own `consumer` local in
 // cmd/hotam/gen_spec.go). It gates:
 //
+//  0. (task E2) The TEMPLATE itself — claudeMDTemplateConsumer instead of
+//     claudeMDTemplate — which flips the <!-- business --> / <!-- mind -->
+//     placeholder order (business bucket opens the file under consumer,
+//     methodology bucket closes it) — and the opening header line, swapped
+//     from the fixed "# CLAUDE.md — Hotam-Spec framework" to
+//     consumerHeaderLine's domain-first "# <domainName> — <purpose>" via a
+//     single targeted string replace on claudeMDHeaderSentinel, same pattern
+//     as the deep-dive-clause / spec-docs-thinking replaces below.
 //  1. The "Deep-dives: `spec/docs/thinking/`" clause on the boot line, and
 //     the "full Canon/Narrative/Why at .../thinking/<slug>.md" clause in the
 //     EMBEDDED-THINKING intro (RenderEmbeddedThinkingBlock) — both dropped
@@ -771,7 +851,18 @@ func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, 
 	mind := RenderMindContent(g, domainName, consumer)
 	business := RenderBusinessContent(g, domainName, repoRoot, claudeMDCharCount, domainGraphs, today, consumer)
 
-	srcLines := strings.Split(claudeMDTemplate, "\n")
+	// Template + placeholder order is profile-dependent (task E2): the full
+	// profile keeps MIND before BUSINESS (claudeMDTemplate, byte-identical to
+	// the pre-E2 layout); the consumer profile flips to BUSINESS before MIND
+	// (claudeMDTemplateConsumer) so a freshly-booted operator on an external
+	// business domain reads "what is this project" before the Hotam-Spec
+	// methodology seed.
+	activeTemplate := claudeMDTemplate
+	if consumer {
+		activeTemplate = claudeMDTemplateConsumer
+	}
+
+	srcLines := strings.Split(activeTemplate, "\n")
 	outLines := make([]string, 0, len(srcLines))
 	for _, line := range srcLines {
 		switch strings.TrimSpace(line) {
@@ -784,6 +875,17 @@ func RenderClaudeMDFromTemplate(g *ontology.Graph, domainName, repoRoot string, 
 		}
 	}
 	out := strings.Join(outLines, "\n")
+
+	// Consumer profile: swap the framework-identity header line for a
+	// domain-first title carrying the active domain's own purpose (task E2 —
+	// external review P1: the file must open with the domain's essence, not
+	// "Hotam-Spec framework"). Falls back to the bare domain name when no
+	// manifest purpose is on record (mirrors RenderProjectEssenceBlock's own
+	// em-dash-placeholder fallback shape, but a header line reads better
+	// without a bare em-dash, so it degrades to just the domain name).
+	if consumer {
+		out = strings.Replace(out, claudeMDHeaderSentinel, consumerHeaderLine(repoRoot, effectiveDomain), 1)
+	}
 
 	// Consumer profile: drop the boot line's deep-dive clause entirely (rather
 	// than domain-qualify a path that was never written) so the line ends

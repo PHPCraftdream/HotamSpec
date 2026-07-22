@@ -52,7 +52,15 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// one-hop link resolving to a real file). Hand-landed (same
 		// apply-proposal / check_spec_md_current structural-defect
 		// workaround as R-speak-domain-register-by-default above).
-		{"requirements", len(g.Requirements), 294},
+		// 294 + 1: R-gate-signoff-single-carrier -- anchors the three new
+		// GateSignoff invariants (check_gate_signoff_monotonic/
+		// _deferred_reason_present/_deferred_conflict_resolves,
+		// internal/invariants/gate_signoff_checks.go) for this repo's own
+		// self-hosting check_bijection_r_to_enforcer discipline; this
+		// domain declares no gate_stage_order and carries no gate_signoffs
+		// itself, so the checks are honest no-ops here (task E1, same
+		// hand-land workaround as the two entries above).
+		{"requirements", len(g.Requirements), 295},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},

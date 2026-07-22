@@ -262,3 +262,112 @@ func TestRenderClaudeMDFromTemplate_ConsumerProfileOpensWithEssence(t *testing.T
 		t.Errorf("consumer crystal must NOT carry CONCEPT-MAP (framework source-file paths absent in external consumer repos)")
 	}
 }
+
+// TestConsumerHeaderLine_PurposePresent proves the GREEN path: a manifest
+// carrying a purpose renders "# <domainName> — <purpose>", the domain-first
+// header external review P1 (task E2) requires — the file's first line
+// must name the DOMAIN, not "Hotam-Spec framework".
+func TestConsumerHeaderLine_PurposePresent(t *testing.T) {
+	t.Parallel()
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "acme-widgets")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	manifest := `{"purpose": "Ships widgets to acme customers."}`
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+	got := consumerHeaderLine(repoRoot, "acme-widgets")
+	want := "# acme-widgets — Ships widgets to acme customers."
+	if got != want {
+		t.Errorf("consumerHeaderLine = %q, want %q", got, want)
+	}
+}
+
+// TestConsumerHeaderLine_MissingManifestFallsBackToBareDomainName proves the
+// degrade path: no manifest / no purpose still yields an honest, non-empty
+// header — just the domain name, no dangling em-dash.
+func TestConsumerHeaderLine_MissingManifestFallsBackToBareDomainName(t *testing.T) {
+	t.Parallel()
+	repoRoot := t.TempDir()
+	got := consumerHeaderLine(repoRoot, "never-existed")
+	want := "# never-existed"
+	if got != want {
+		t.Errorf("consumerHeaderLine = %q, want %q", got, want)
+	}
+}
+
+// TestRenderClaudeMDFromTemplate_ConsumerProfileDomainFirstHeader is the
+// end-to-end regression guard for task E2 (external review P1): the
+// consumer-profile crystal's FIRST LINE must open with the domain's own
+// name/purpose, not the framework-identity "# CLAUDE.md — Hotam-Spec
+// framework" header, and the business cluster (PROJECT-ESSENCE) must
+// render BEFORE the methodology seed (OPERATOR-ROLE) — the inverse of the
+// full-profile ordering asserted by
+// TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest.
+func TestRenderClaudeMDFromTemplate_ConsumerProfileDomainFirstHeader(t *testing.T) {
+	t.Parallel()
+	repoRoot := t.TempDir()
+	domainDir := filepath.Join(repoRoot, "domains", "acme-widgets")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	manifest := `{"purpose": "Ships widgets to acme customers."}`
+	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+	g := loadFixtureGraph(t)
+	out := RenderClaudeMDFromTemplate(g, "acme-widgets", repoRoot, 4200, nil, "2026-07-12", true)
+
+	firstLine := strings.SplitN(out, "\n", 2)[0]
+	wantFirstLine := "# acme-widgets — Ships widgets to acme customers."
+	if firstLine != wantFirstLine {
+		t.Errorf("consumer crystal first line = %q, want %q", firstLine, wantFirstLine)
+	}
+	if strings.Contains(out, "# CLAUDE.md — Hotam-Spec framework") {
+		t.Errorf("consumer crystal must NOT carry the framework-identity header line")
+	}
+
+	// The business cluster must render BEFORE the methodology seed.
+	essenceAt := strings.Index(out, BeginSentinel("PROJECT-ESSENCE"))
+	roleAt := strings.Index(out, BeginSentinel("OPERATOR-ROLE"))
+	if essenceAt == -1 || roleAt == -1 {
+		t.Fatalf("consumer crystal missing PROJECT-ESSENCE or OPERATOR-ROLE sentinel")
+	}
+	if essenceAt > roleAt {
+		t.Errorf("consumer crystal must render PROJECT-ESSENCE (pos %d) BEFORE OPERATOR-ROLE (pos %d)", essenceAt, roleAt)
+	}
+	// RECENTLY-REJECTED (last business block) must still precede OPERATOR-ROLE.
+	rejectedAt := strings.Index(out, BeginSentinel("RECENTLY-REJECTED"))
+	if rejectedAt == -1 {
+		t.Fatalf("consumer crystal missing RECENTLY-REJECTED sentinel")
+	}
+	if rejectedAt > roleAt {
+		t.Errorf("consumer crystal must render the full business cluster (through RECENTLY-REJECTED, pos %d) BEFORE the methodology seed (OPERATOR-ROLE, pos %d)", rejectedAt, roleAt)
+	}
+}
+
+// TestRenderClaudeMDFromTemplate_FullProfileHeaderUnchanged is the
+// regression guard for the FULL profile: the framework-identity header and
+// MIND-before-BUSINESS ordering must stay exactly as before task E2 — only
+// the consumer profile reorders.
+func TestRenderClaudeMDFromTemplate_FullProfileHeaderUnchanged(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	repoRoot := t.TempDir()
+	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", false)
+
+	firstLine := strings.SplitN(out, "\n", 2)[0]
+	if firstLine != "# CLAUDE.md — Hotam-Spec framework" {
+		t.Errorf("full-profile crystal first line = %q, want the framework-identity header", firstLine)
+	}
+	roleAt := strings.Index(out, BeginSentinel("OPERATOR-ROLE"))
+	liveStateAt := strings.Index(out, BeginSentinel("LIVE-STATE"))
+	if roleAt == -1 || liveStateAt == -1 {
+		t.Fatalf("full-profile crystal missing OPERATOR-ROLE or LIVE-STATE sentinel")
+	}
+	if roleAt > liveStateAt {
+		t.Errorf("full-profile crystal must keep MIND (OPERATOR-ROLE, pos %d) BEFORE BUSINESS (LIVE-STATE, pos %d)", roleAt, liveStateAt)
+	}
+}

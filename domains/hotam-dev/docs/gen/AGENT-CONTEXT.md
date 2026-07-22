@@ -20,7 +20,7 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 ## Status counters
 
-SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-07-21)
+SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-07-22)
 
 ## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)
 
