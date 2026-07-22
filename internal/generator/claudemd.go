@@ -14,6 +14,7 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/query"
 )
 
 // Canon: §Graph — root CLAUDE.md generation (R-claude-md-template-driven).
@@ -573,63 +574,33 @@ func renderDomainMapBlockWithViolations(repoRoot string, domainGraphs map[string
 			}
 		}
 		if dg != nil {
-			// gate-progress (task Q-domain-map-gates): computed in this SAME
-			// pass over dg.Requirements that already tallies atomsCount — a
-			// pure read of the already-in-memory graph's typed
-			// Requirement.GateSignoffs carrier, never a fresh
-			// AllViolations/Diagnose call for a sibling domain (see this
-			// function's own doc comment + domainPulse's for the mutual-
-			// recursion hazard that would reintroduce). order is nil (honest
-			// no-op) for a domain with no declared gate_stage_order, mirroring
-			// checkGateSignoffMonotonic's identical guard.
+			for _, r := range dg.Requirements {
+				if r.Status == ontology.StatusSETTLED {
+					atomsCount++
+				}
+			}
+			// gate-progress (task Q-domain-map-gates): a pure read of the
+			// already-in-memory graph's typed Requirement.GateSignoffs
+			// carrier via query.GateFrontier (internal/query/facts.go),
+			// never a fresh AllViolations/Diagnose call for a sibling domain
+			// (see this function's own doc comment + domainPulse's for the
+			// mutual-recursion hazard that would reintroduce). order is nil
+			// (honest no-op) for a domain with no declared gate_stage_order,
+			// mirroring checkGateSignoffMonotonic's identical guard.
+			// GateFrontier extracts (task #321) the SAME last-entry-per-
+			// Requirement-per-stage dedup rule this loop used to compute
+			// inline — a Requirement can carry both a superseded DEFERRED
+			// and a later SIGNED entry at the same stage
+			// (GateSignoffBatch is append-only), so only the LAST entry
+			// counts.
 			var order []string
 			if dg.DomainDir != "" {
 				order = loader.ResolveGateStageOrder(filepath.Join(dg.DomainDir, "graph.json"))
 			}
-			stageIndex := make(map[string]int, len(order))
-			for i, s := range order {
-				stageIndex[s] = i
-			}
-			// lastAtStage tracks, per Requirement (by index into
-			// dg.Requirements) and stage, the LAST (highest-index, i.e. most
-			// recently appended — GateSignoffBatch.mutate only ever appends,
-			// see proposal/mutate.go) GateSignoff.State seen for that stage.
-			// A stage can carry more than one entry for the same Requirement
-			// across pipeline re-runs (e.g. an early DEFERRED superseded by a
-			// later SIGNED once its blocking Conflict resolved) — counting
-			// every entry would double-count that Requirement at the stage;
-			// only the LAST entry reflects its CURRENT gate state.
-			type reqStage struct {
-				reqIdx int
-				stage  string
-			}
-			lastAtStage := make(map[reqStage]string)
-			frontierIdx := -1
-			for ri, r := range dg.Requirements {
-				if r.Status == ontology.StatusSETTLED {
-					atomsCount++
-				}
-				for _, gs := range r.GateSignoffs {
-					idx, known := stageIndex[gs.Stage]
-					if !known {
-						continue
-					}
-					if idx > frontierIdx {
-						frontierIdx = idx
-					}
-					lastAtStage[reqStage{reqIdx: ri, stage: gs.Stage}] = gs.State
-				}
-			}
-			if frontierIdx >= 0 {
-				gateStage = order[frontierIdx]
-				for ri := range dg.Requirements {
-					switch lastAtStage[reqStage{reqIdx: ri, stage: gateStage}] {
-					case ontology.GateSignoffStateSigned:
-						gateSigned++
-					case ontology.GateSignoffStateDeferred:
-						gateDeferred++
-					}
-				}
+			if stage, tally, ok := query.GateFrontier(dg, order); ok {
+				gateStage = stage
+				gateSigned = tally.Signed
+				gateDeferred = tally.Deferred
 			}
 			openActions, topActionLine = domainPulse(dg, today, violations.forGraph(dg))
 		}

@@ -17,6 +17,41 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Live-graph-fact assertions for Orientation-FAQ entries** (task #321,
+  R3-semantic-faq — external review): the Orientation-FAQ invariant
+  (`check_orientation_faq_answered`) previously proved only that a declared
+  keyword phrase is lexically PRESENT in the crystal, never that the phrase
+  is still semantically TRUE relative to the graph's current state — this
+  session hit exactly this bug (a manifest FAQ entry claimed "27 of 32
+  requirements" and kept passing the keyword check long after the graph
+  reached 32/32, fixed by hand in tasks #318/#322 without closing the
+  underlying design gap). New package `internal/query`
+  (`internal/query/facts.go`) adds four pure, LIVE graph-fact readers —
+  `GateSignoffTally`/`GateFrontier` (extracted, not reimplemented, from the
+  gate-tally logic `internal/generator/claudemd.go`'s DOMAIN-MAP renderer
+  already computed inline — proven byte-identical before/after the
+  extraction), `ConflictLifecycleTally`, `RequirementStatusTally`. A new
+  optional `assert` field on an `OrientationFAQEntry`
+  (`internal/loader/orientation_faq.go`) ties an entry to one of these live
+  tallies instead of, or ADDITIVELY alongside, the existing keyword/link
+  signals: `expect` (`"all"` / `"none"` / `{"op":"gte"|"eq","value":N}`)
+  and/or a `phrase` template (`{count}`/`{total}` placeholders,
+  live-substituted, then required present in the crystal or linked file —
+  closing the exact "27/32 stays lexically present forever" bug class). New
+  `internal/invariants/orientation_faq_assert.go` (`evalOrientationAssert`)
+  evaluates the assert, failing closed on an unrecognized `kind`, an
+  undeclared gate `stage`, a malformed `expect`, or an assert declaring
+  neither `expect` nor `phrase`. Fully backward-compatible: `Assert == nil`
+  (every entry written before this field existed) behaves byte-identically
+  to the pre-existing two-signal check. The self-hosting `hotam-spec-self`
+  domain's own `orientation_faq` entries remain keyword/link-only — 0
+  violations against `hotam all-violations --domain domains/hotam-spec-self`
+  confirms the change is a pure additive capability for this domain;
+  migrating consumer-domain manifests (`PRAT-hotam`) to use `assert` is a
+  separate follow-up task. A drafted (not landed) `ProposedRequirement`
+  UPDATE reflecting the new three-signal claim text lives at
+  `proposals/draft-R-orientation-faq-answerable-assert.json`, pending human
+  review per `R-decided-needs-human-signoff`/`R-ai-presents-not-decides`.
 - **Typed per-Requirement gate-signoff carrier** (`GateSignoff`,
   `internal/ontology/gate_signoff.go`): `Requirement.GateSignoffs[]` records
   `Stage`/`State`/`DeferredReason`/`Evidence`/`PipelineRun`/`Signoff` per

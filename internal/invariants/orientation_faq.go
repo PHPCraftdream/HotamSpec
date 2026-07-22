@@ -249,13 +249,15 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 		declaresKeywords := len(e.Keywords) > 0
 		hasKeywords := len(normalizedKeywords) > 0
 		hasLink := strings.TrimSpace(e.Link) != ""
+		hasAssert := e.Assert != nil
 
-		// An entry with neither signal declares no checkable contract.
-		if !declaresKeywords && !hasLink {
+		// An entry with none of the three signals (keywords, link, assert)
+		// declares no checkable contract.
+		if !declaresKeywords && !hasLink && !hasAssert {
 			out = append(out, Violation{
 				Check:   "check_orientation_faq_answered",
 				ID:      e.Question,
-				Message: fmt.Sprintf("orientation_faq question %q declares neither keywords nor a link — it has no checkable answer contract", e.Question),
+				Message: fmt.Sprintf("orientation_faq question %q declares neither keywords, a link, nor an assert — it has no checkable answer contract", e.Question),
 			})
 			continue
 		}
@@ -265,9 +267,9 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 		// logic as "declares neither keywords nor a link": a keywords list
 		// with no real keyword in it is not a checkable contract, and must
 		// not be silently treated as "no keywords declared, fall through to
-		// link" — the domain explicitly tried to declare inline-answer
+		// link/assert" — the domain explicitly tried to declare inline-answer
 		// keywords and failed to declare any real ones.
-		if declaresKeywords && !hasKeywords && !hasLink {
+		if declaresKeywords && !hasKeywords && !hasLink && !hasAssert {
 			out = append(out, Violation{
 				Check:   "check_orientation_faq_answered",
 				ID:      e.Question,
@@ -306,13 +308,22 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 		// declared — but it only BLOCKS satisfaction here, never overrides
 		// an inline keyword pass.
 		linkResolves := false
+		// linkText holds the linked file's lowercased content whenever the
+		// link resolves to a real file on disk, regardless of the
+		// relevance-check outcome above — used below by evalOrientationAssert
+		// as the second phrase-matching surface (crystal-or-link, mirroring
+		// the same two-signal shape plain keyword matching already uses),
+		// so a Phrase assert on an entry that ALSO declares link can be
+		// satisfied by either the crystal or the linked file's content.
+		var linkText string
 		if hasLink {
 			link := strings.TrimSpace(e.Link)
 			if strings.Contains(crystalText, strings.ToLower(link)) {
 				target := filepath.Join(repoRoot, filepath.FromSlash(link))
 				if linkBytes, statErr := os.ReadFile(target); statErr == nil {
-					linkText := strings.ToLower(string(linkBytes))
-					if strings.TrimSpace(linkText) != "" {
+					candidateLinkText := strings.ToLower(string(linkBytes))
+					if strings.TrimSpace(candidateLinkText) != "" {
+						linkText = candidateLinkText
 						if !hasKeywords {
 							// Link-only entry: non-empty content is the only
 							// checkable signal (nothing to cross-check it
@@ -320,7 +331,7 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 							linkResolves = true
 						} else {
 							for _, kw := range normalizedKeywords {
-								if strings.Contains(linkText, strings.ToLower(kw)) {
+								if strings.Contains(candidateLinkText, strings.ToLower(kw)) {
 									linkResolves = true
 									break
 								}
@@ -334,43 +345,62 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 			}
 		}
 
-		if satisfied {
+		// Keywords/link is satisfied either by the pre-existing OR-signal
+		// above, or — when the entry declares NEITHER keywords nor a link at
+		// all (an assert-only entry) — vacuously true: there is no
+		// keywords/link contract to fail, so it must not block an
+		// assert-only entry from passing.
+		keywordsOrLinkSatisfied := satisfied || (!hasKeywords && !hasLink)
+
+		// Assert is ADDITIVE, not an alternative: when the entry declares an
+		// assert, it must ALSO pass (alongside any declared keywords/link)
+		// for the entry to be satisfied — see loader.OrientationFAQAssert's
+		// doc comment and evalOrientationAssert (orientation_faq_assert.go).
+		var assertViolations []Violation
+		if hasAssert {
+			assertViolations = evalOrientationAssert(g, e, crystalText, linkText)
+		}
+
+		if keywordsOrLinkSatisfied && len(assertViolations) == 0 {
 			continue
 		}
 
 		// Diagnose WHY this entry failed, naming the missing signal(s) so a
 		// resolver can fix the crystal, the linked file, or the manifest
 		// entry directly.
-		var missing []string
-		if hasKeywords {
-			missing = append(missing, "none of the declared keywords appear inline in the crystal")
-		}
-		if hasLink {
-			link := strings.TrimSpace(e.Link)
-			target := filepath.Join(repoRoot, filepath.FromSlash(link))
-			switch {
-			case !strings.Contains(crystalText, strings.ToLower(link)):
-				missing = append(missing, fmt.Sprintf("the crystal contains no reference to link %q", link))
-			default:
-				linkBytes, statErr := os.ReadFile(target)
+		if !keywordsOrLinkSatisfied {
+			var missing []string
+			if hasKeywords {
+				missing = append(missing, "none of the declared keywords appear inline in the crystal")
+			}
+			if hasLink {
+				link := strings.TrimSpace(e.Link)
+				target := filepath.Join(repoRoot, filepath.FromSlash(link))
 				switch {
-				case statErr != nil:
-					missing = append(missing, fmt.Sprintf("link %q appears in the crystal but resolves to no real file at %s", link, target))
-				case strings.TrimSpace(string(linkBytes)) == "":
-					missing = append(missing, fmt.Sprintf("link %q resolves to %s, but that file is empty", link, target))
-				case hasKeywords:
-					missing = append(missing, fmt.Sprintf("link %q resolves to %s, but that file's content contains none of the declared keywords", link, target))
+				case !strings.Contains(crystalText, strings.ToLower(link)):
+					missing = append(missing, fmt.Sprintf("the crystal contains no reference to link %q", link))
+				default:
+					linkBytes, statErr := os.ReadFile(target)
+					switch {
+					case statErr != nil:
+						missing = append(missing, fmt.Sprintf("link %q appears in the crystal but resolves to no real file at %s", link, target))
+					case strings.TrimSpace(string(linkBytes)) == "":
+						missing = append(missing, fmt.Sprintf("link %q resolves to %s, but that file is empty", link, target))
+					case hasKeywords:
+						missing = append(missing, fmt.Sprintf("link %q resolves to %s, but that file's content contains none of the declared keywords", link, target))
+					}
 				}
 			}
+			out = append(out, Violation{
+				Check: "check_orientation_faq_answered",
+				ID:    e.Question,
+				Message: fmt.Sprintf(
+					"orientation_faq question %q is not answerable from the crystal %s in <=1 hop: %s — "+
+						"either add the answer inline (keywords) to the crystal or point a one-hop link at a real, non-empty, relevant file that holds the answer",
+					e.Question, crystalPath, strings.Join(missing, "; ")),
+			})
 		}
-		out = append(out, Violation{
-			Check: "check_orientation_faq_answered",
-			ID:    e.Question,
-			Message: fmt.Sprintf(
-				"orientation_faq question %q is not answerable from the crystal %s in <=1 hop: %s — "+
-					"either add the answer inline (keywords) to the crystal or point a one-hop link at a real, non-empty, relevant file that holds the answer",
-				e.Question, crystalPath, strings.Join(missing, "; ")),
-		})
+		out = append(out, assertViolations...)
 	}
 	return out
 }
@@ -378,26 +408,35 @@ func checkOrientationFAQAnswered(g *ontology.Graph) []Violation {
 var _ = All.MustRegister("check_orientation_faq_answered", Invariant{
 	Name:  "check_orientation_faq_answered",
 	Canon: methodology.Domain,
-	Claim: "for every question a domain declares in its manifest.json orientation_faq list, the answer is reachable from the generated crystal in at most one hop.",
+	Claim: "for every question a domain declares in its manifest.json orientation_faq list, the answer is reachable from the generated crystal in at most one hop, and — when the entry declares an \"assert\" — the answer is also LIVE-TRUE against the current graph state, not merely a lexical leftover.",
 	Rule: "for each entry in a domain's manifest.json \"orientation_faq\" list (an HONEST NO-OP when the field is absent — " +
 		"\"no committed opt-in = no lie\", the same shape check_settled_requires_scenario / check_spec_md_current / " +
-		"check_recorder_current establish for their own opt-in fields), AT LEAST ONE of two satisfaction signals MUST hold " +
-		"against the domain's generated crystal (the active domain's repo-root CLAUDE.md, or a consumer domain's own " +
-		"<domainDir>/CLAUDE.md — the SAME file resolveClaudeMDPath writes during gen-spec/land): (a) KEYWORDS INLINE — every " +
-		"non-blank keyword in the entry's \"keywords\" list appears (case-insensitive) in the crystal's text, i.e. the answer " +
-		"is present with ZERO hops; OR (b) LINK ONE-HOP — the entry's \"link\" (a repo-root-relative path, the SAME " +
-		"convention the crystal's own cross-references use, e.g. \"domains/<name>/docs/gen/PIPELINE.md\") appears in the " +
-		"crystal's text (as a markdown [text](path) link OR a bare path string) AND resolves to a REAL, NON-EMPTY, EXISTING " +
-		"FILE under the repo root whose content contains at least one of the entry's own keywords when the entry declares " +
-		"any (a minimal relevance check; a link-only entry needs only non-empty content). A chain of links (crystal -> index " +
-		"-> answer) does NOT satisfy this check by design: the answer must be at most ONE hop from the crystal. FAIL CLOSED " +
-		"beyond the opt-in boundary: an entry declaring NEITHER keywords nor a link fires a violation (no checkable " +
-		"contract); a \"keywords\" list present but entirely blank fires a violation (not silently treated as absent); a " +
-		"manifest.json that fails to parse as JSON but whose raw bytes contain the literal \"orientation_faq\" field name " +
-		"fires a violation (the domain evidently tried to declare the contract and lost it to an unrelated JSON error, " +
-		"rather than silently becoming a no-op); a raw list entry that per-entry validation drops (not a JSON object, or an " +
-		"empty \"question\") fires a violation naming its index, rather than silently shrinking the checked list. A domain " +
-		"with no crystal on disk fires one violation per declared question.",
+		"check_recorder_current establish for their own opt-in fields), the entry declares up to THREE satisfaction " +
+		"signals against the domain's generated crystal (the active domain's repo-root CLAUDE.md, or a consumer domain's " +
+		"own <domainDir>/CLAUDE.md — the SAME file resolveClaudeMDPath writes during gen-spec/land): (a) KEYWORDS INLINE — " +
+		"every non-blank keyword in the entry's \"keywords\" list appears (case-insensitive) in the crystal's text, i.e. " +
+		"the answer is present with ZERO hops; (b) LINK ONE-HOP — the entry's \"link\" (a repo-root-relative path, the " +
+		"SAME convention the crystal's own cross-references use, e.g. \"domains/<name>/docs/gen/PIPELINE.md\") appears in " +
+		"the crystal's text (as a markdown [text](path) link OR a bare path string) AND resolves to a REAL, NON-EMPTY, " +
+		"EXISTING FILE under the repo root whose content contains at least one of the entry's own keywords when the entry " +
+		"declares any (a minimal relevance check; a link-only entry needs only non-empty content); (c) ASSERT LIVE-TRUE — " +
+		"the entry's \"assert\" (internal/query-backed: gate_signoff_count / conflict_count_by_lifecycle / " +
+		"requirement_count_by_status) computes a LIVE (count, total) pair off the current graph and requires it satisfy a " +
+		"declared \"expect\" (\"all\" / \"none\" / {\"op\":\"gte\"|\"eq\",\"value\":N}) and/or a declared \"phrase\" " +
+		"(a {count}/{total}-templated string, live-substituted, then required present in the crystal or link text — " +
+		"closing the class of bug where a static phrase like \"27 of 32\" stays lexically present long after the graph " +
+		"moved to 32/32). (a)/(b) are ALTERNATIVES (either satisfies the keywords/link contract); (c), when declared, is " +
+		"ADDITIVE — it must ALSO pass alongside whatever (a)/(b) contract the entry carries, never a substitute for it. A " +
+		"chain of links (crystal -> index -> answer) does NOT satisfy (b) by design: the answer must be at most ONE hop " +
+		"from the crystal. FAIL CLOSED beyond the opt-in boundary: an entry declaring NONE of keywords/link/assert fires a " +
+		"violation (no checkable contract); a \"keywords\" list present but entirely blank (with no link or assert to " +
+		"fall back on) fires a violation (not silently treated as absent); an \"assert\" with an unrecognized \"kind\", an " +
+		"out-of-declared-order gate \"stage\", a malformed \"expect\", or neither \"expect\" nor \"phrase\" present fires a " +
+		"violation naming the entry's question; a manifest.json that fails to parse as JSON but whose raw bytes contain " +
+		"the literal \"orientation_faq\" field name fires a violation (the domain evidently tried to declare the contract " +
+		"and lost it to an unrelated JSON error, rather than silently becoming a no-op); a raw list entry that per-entry " +
+		"validation drops (not a JSON object, or an empty \"question\") fires a violation naming its index, rather than " +
+		"silently shrinking the checked list. A domain with no crystal on disk fires one violation per declared question.",
 	Why: "R-orientation-faq-answerable makes 'an AI agent orients in this project fast' a MECHANICALLY CHECKABLE property " +
 		"rather than a hope: the domain DECLARES, in its own manifest, the basic onboarding questions a freshly-spawned " +
 		"operator must be able to answer, and this invariant PROVES each declared answer is reachable from the crystal the " +
@@ -412,6 +451,13 @@ var _ = All.MustRegister("check_orientation_faq_answered", Invariant{
 		"a domain that DID declare orientation_faq must not be able to silently lose the guarantee to a malformed manifest, " +
 		"an empty or irrelevant linked file, an all-blank keywords list, or a quietly-dropped malformed entry — each of " +
 		"those is a domain that BELIEVES it proved orientability while the check actually verified nothing, which is worse " +
-		"than never having opted in at all.",
+		"than never having opted in at all. The optional \"assert\" leg (task #321/R3-semantic-faq) closes a DISTINCT gap " +
+		"pure keyword matching structurally cannot: a phrase's lexical PRESENCE in the crystal proves nothing about " +
+		"whether the phrase is still semantically TRUE — this session's own manifest carried a FAQ entry claiming '27 of " +
+		"32 requirements' that kept passing the keyword check long after the graph reached 32/32 (fixed by hand, tasks " +
+		"#318/#322, but the underlying design gap stayed open until this requirement). An entry that opts into \"assert\" " +
+		"gets a LIVE truth check the static keyword signal alone can never provide, without breaking any existing " +
+		"keyword/link-only entry (Assert is nil for every pre-existing entry, and the loader/check both treat that nil " +
+		"as the exact pre-existing two-signal behavior, byte-for-byte).",
 	Check: checkOrientationFAQAnswered,
 })

@@ -46,6 +46,94 @@ type OrientationFAQEntry struct {
 	Question string   `json:"question"`
 	Keywords []string `json:"keywords"`
 	Link     string   `json:"link,omitempty"`
+	// Assert ties this entry to a LIVE graph-fact query (internal/query)
+	// instead of (or alongside) the static Keywords/Link signals above —
+	// see OrientationFAQAssert's own doc comment. nil (the default, and the
+	// ONLY possible value for every entry written before this field
+	// existed) preserves the exact pre-existing two-signal (keywords/link)
+	// behavior byte-for-byte: this field is purely additive.
+	Assert *OrientationFAQAssert `json:"assert,omitempty"`
+}
+
+// OrientationFAQAssert declares a LIVE graph-fact assertion an
+// orientation_faq entry can carry, closing a real gap the keyword-only
+// check cannot: a keyword phrase can stay lexically PRESENT in the crystal
+// long after the graph itself moved past what the phrase claims (task
+// #321/R3-semantic-faq — this session hit exactly this bug: a manifest FAQ
+// entry claimed "27 of 32 requirements" and kept passing the keyword check
+// long after the graph reached 32/32, fixed by hand in tasks #318/#322
+// without closing the underlying design gap).
+//
+// Kind selects which internal/query tally function computes the live
+// (count, total) pair:
+//
+//   - "gate_signoff_count" — query.GateSignoffTally(g, order, Stage), where
+//     order is the domain's declared gate_stage_order
+//     (loader.ResolveGateStageOrder). Stage must name a real declared
+//     stage.
+//   - "conflict_count_by_lifecycle" — query.ConflictLifecycleTally(g,
+//     LifecycleClass) ("DECIDED" | "HELD" | "UNRESOLVED").
+//   - "requirement_count_by_status" — query.RequirementStatusTally(g,
+//     Status, Enforcement) (Enforcement optional — "" matches any
+//     enforcement level).
+//
+// Once (count, total) is computed, AT LEAST ONE of Expect/Phrase must be
+// present (an Assert with neither declares no checkable predicate):
+//
+//   - Expect (a raw JSON value) is parsed as either the literal string
+//     "all" (count == total), the literal string "none" (count == 0), or
+//     an object {"op": "gte"|"eq", "value": N}. An unrecognized or
+//     malformed Expect fails closed.
+//   - Phrase is a template string with "{count}"/"{total}" placeholders,
+//     substituted with the LIVE values, then required present
+//     (case-insensitive) in the crystal (or the linked file, when this
+//     entry also declares Link) — the exact "27 of 32" bug class this
+//     field exists to close: a stale phrase like "27 of {total}" with
+//     {total} now live-substituted to 32 will fail to match if the
+//     crystal's actual prose still says "27 of 32" is stale, e.g. the
+//     graph moved to 30 of 32 real Requirements but the assert computes
+//     "30/32" and the crystal text says "27/32" — no match, violation
+//     fires.
+//
+// Loader parsing of this field stays TOLERANT/LENIENT — the loader never
+// invents a new "Dropped" reason for a malformed Assert (matching this
+// file's own established convention: "the check, not the loader, is where
+// 'this entry cannot be satisfied' is diagnosed" — see
+// ResolveOrientationFAQDiagnostic's doc comment). Full semantic validation
+// (unknown Kind, Stage not in the domain's declared order, malformed
+// Expect, an Assert with neither Expect nor Phrase) happens at CHECK time
+// in internal/invariants/orientation_faq_assert.go's evalOrientationAssert,
+// which fails closed on every one of those cases.
+type OrientationFAQAssert struct {
+	// Kind selects the query dispatch: "gate_signoff_count" |
+	// "conflict_count_by_lifecycle" | "requirement_count_by_status".
+	Kind string `json:"kind"`
+	// Stage names a gate stage (required, and must resolve against the
+	// domain's declared gate_stage_order) when Kind is
+	// "gate_signoff_count".
+	Stage string `json:"stage,omitempty"`
+	// State is currently unused by any Kind but reserved for a future
+	// per-signoff-state assertion kind; carried here so a manifest author
+	// can declare it without a loader round-trip break later.
+	State string `json:"state,omitempty"`
+	// LifecycleClass names one of "DECIDED" | "HELD" | "UNRESOLVED" when
+	// Kind is "conflict_count_by_lifecycle".
+	LifecycleClass string `json:"lifecycle_class,omitempty"`
+	// Status names one of the ontology.Status* constants when Kind is
+	// "requirement_count_by_status".
+	Status string `json:"status,omitempty"`
+	// Enforcement optionally narrows Status by one of the
+	// ontology.Enforcement* constants when Kind is
+	// "requirement_count_by_status"; "" means "any enforcement level."
+	Enforcement string `json:"enforcement,omitempty"`
+	// Expect is the raw JSON of an expectation against the live (count,
+	// total) pair — see this type's own doc comment for the accepted
+	// shapes ("all", "none", {"op":...,"value":...}).
+	Expect json.RawMessage `json:"expect,omitempty"`
+	// Phrase is a template string ("{count}"/"{total}" placeholders)
+	// checked for live-substituted presence in the crystal/link text — see
+	// this type's own doc comment.
+	Phrase string `json:"phrase,omitempty"`
 }
 
 // ResolveOrientationFAQ reads the optional "orientation_faq" field from the
