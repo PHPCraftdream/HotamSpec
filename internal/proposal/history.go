@@ -67,8 +67,9 @@ func snapshotFrom(r ontology.Requirement) snapshot {
 
 func abbrev(s string, limit int) string {
 	text := strings.Join(strings.Fields(s), " ")
-	if len(text) > limit {
-		text = text[:limit-1] + "…"
+	runes := []rune(text)
+	if len(runes) > limit {
+		text = string(runes[:limit-1]) + "…"
 	}
 	return text
 }
