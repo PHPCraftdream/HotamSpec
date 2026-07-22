@@ -62,19 +62,26 @@ import (
 //
 // INVALIDATION (no content hash in the key, deliberately): unlike the
 // verdict cache, this cache's key does NOT carry a whole-module content
-// hash. Within ONE production run (one `hotam all-violations` / `hotam
-// gen-spec --spec` invocation) the codebase does not recompile source
-// between calls -- there is no mid-run edit to invalidate against, so a
-// content-hash check would be pure cost (hashPackageInputs walks EVERY
-// file under moduleRoot on every call) for zero benefit. The cache is
-// instead PROCESS-LIFETIME only: ResetRunCacheForTest (the test-reset
-// helper that already resets the verdict cache for the mutation tests)
-// resets this cache too, and CleanupCompileCache (the end-of-run hook
-// cmd/hotam's top-level command handlers defer) removes every compiled
-// binary from disk. A test that mutates source mid-process
-// (TestRunVerifiedByTest_MUTATION_*) calls ResetRunCacheForTest before
-// its second pass, exactly as it already does for the verdict cache --
-// see ResetRunCacheForTest's updated doc comment.
+// hash. That is a DIFFERENT thing from claiming source never mutates
+// mid-run -- it does, for `hotam land`'s pipeline specifically (the
+// proposal-apply gate hashes moduleRoot BEFORE writing graph.json/graph.
+// lock/generated docs, then a post-write verification pass hashes it
+// again -- a genuine mismatch). When that happens, RunVerifiedByTest's own
+// verdict-cache hash check (not a hash carried by THIS cache's key) notices
+// the mismatch and calls invalidateCompileCacheForModule, which drops this
+// cache's in-memory entries for that module so the next compileTestBinary
+// call misses and recompiles from the CURRENT source -- see that
+// function's doc comment for why the drop is map-only (no os.Remove of the
+// binary file) and why doCompileTestBinary's per-compile-unique filenames
+// (compileBinaryName) make that safe under concurrent execs. Outside of
+// invalidation, the cache is PROCESS-LIFETIME: ResetRunCacheForTest (the
+// test-reset helper that already resets the verdict cache for the
+// mutation tests) resets this cache too, and CleanupCompileCache (the
+// end-of-run hook cmd/hotam's top-level command handlers defer) removes
+// every compiled binary from disk at true process exit. A test that
+// mutates source mid-process (TestRunVerifiedByTest_MUTATION_*) calls
+// ResetRunCacheForTest before its second pass, exactly as it already does
+// for the verdict cache -- see ResetRunCacheForTest's updated doc comment.
 
 // compileCacheKey identifies one unit of COMPILATION: the (owning module,
 // package pattern, coverage-package pattern) triple. coverPkgPattern is
@@ -144,6 +151,16 @@ var (
 	// for the cache-correctness tests (proving N tests in the same
 	// package compile exactly ONCE, not N times).
 	compileInvocations int64
+
+	// compileBinarySeq is a process-wide, monotonically increasing counter
+	// used ONLY to make each compiled binary's filename unique per actual
+	// compile invocation (see compileBinaryName). Distinct from
+	// compileInvocations: that one is a test-observable miss-counter with
+	// its own reset semantics (resetCompileCacheForTest zeroes it);
+	// compileBinarySeq must NEVER be allowed to reissue a value that could
+	// collide with a binary still referenced by an in-flight exec, so it
+	// is deliberately never reset, even by resetCompileCacheForTest.
+	compileBinarySeq int64
 )
 
 // compileInFlightCall is one in-progress compile that other goroutines
@@ -187,9 +204,16 @@ func CompileInvocationCount() int64 {
 // they executed `go test`'s in-process build before; only the
 // compile+link work is shared. The worst a tampered binary could do is
 // run the wrong test binary, which `go test` itself would have built --
-// and within one process run (the cache's entire lifetime) no source
-// mutation happens, so "the cached binary" and "what `go test` would
-// build now" are byte-identical by construction.
+// and on the common path (no mid-run source mutation) "the cached binary"
+// and "what `go test` would build now" are byte-identical by construction.
+// On the path where source DOES mutate mid-run (`hotam land`'s
+// proposal-apply-then-verify pipeline, see invalidateCompileCacheForModule's
+// doc comment), the verdict cache's own hash check detects the mutation
+// and drops the stale compile cache entries before any post-mutation
+// caller can be served a pre-mutation binary -- so the byte-identity
+// property still holds for every verdict actually returned, it is just no
+// longer true that the cache's binaries as a SET stay static for the
+// cache's whole lifetime.
 func CleanupCompileCache() {
 	compileCache.Range(func(k, v any) bool {
 		compileCache.Delete(k)
@@ -227,27 +251,44 @@ func removeCompileTmpDir() {
 }
 
 // invalidateCompileCacheForModule drops EVERY compile cache entry whose
-// key carries the given moduleRoot, and removes the corresponding compiled
-// .test binaries from disk. Called by RunVerifiedByTest on a verdict-cache
-// hash mismatch (its existing content-hash mechanism -- hashPackageInputs
-// hashes the WHOLE module, so a hash change means ANY cached binary for
-// that module could be stale, not just the one for the named package).
+// key carries the given moduleRoot. Called by RunVerifiedByTest on a
+// verdict-cache hash mismatch (its existing content-hash mechanism --
+// hashPackageInputs hashes the WHOLE module, so a hash change means ANY
+// cached binary for that module could be stale, not just the one for the
+// named package).
 //
-// This is the compile cache's ONLY invalidation path, and it is FREE in
-// production: source never changes within one CLI run (no mid-run edits),
-// so RunVerifiedByTest's hash always matches its verdict-cache entry and
-// this function is never reached. It exists solely so the existing
-// mutation tests (which DO edit source mid-process between two
-// RunVerifiedByTest calls) observe a fresh compile on the second call
-// rather than a stale cached binary built from the pre-mutation source --
-// the same correctness property the verdict cache's hash check already
-// provides at its layer, mirrored here at the compile layer.
+// This is the compile cache's ONLY invalidation path, and it IS reached in
+// production: `hotam land`'s pipeline runs the proposal-apply gate (which
+// calls RunVerifiedByTest, hashing moduleRoot BEFORE any writes) and THEN
+// writes graph.json/graph.lock/generated docs into that same moduleRoot,
+// so a subsequent verification pass within the SAME process hashes AFTER
+// the writes -- a genuine mid-run hash mismatch, not merely a test
+// artifact. This function must therefore be safe to call while OTHER
+// goroutines may be concurrently executing an already-Loaded (now stale)
+// binary for the same module (internal/invariants/all_violations.go's
+// runViolations runs invariants in parallel, and the record-mode and
+// verdict-cache paths share this same process-wide compileCache).
+//
+// Deliberately map-entry-only: this function used to also os.Remove the
+// stale binary from disk, but that raced with any goroutine that had
+// already Loaded the binary's path and was about to exec.Command it --
+// removing the file out from under an in-flight exec makes the exec fail
+// with "no such file or directory" instead of just running the
+// (harmlessly stale) pre-mutation binary. Dropping only the map entry
+// lets any such in-flight exec finish against the binary it already
+// holds; a NEW caller with the new hash simply misses the (now-empty)
+// cache entry and recompiles fresh via doCompileTestBinary, whose unique
+// per-compile filename (see compileBinaryName) also means that fresh
+// compile can never overwrite the path a concurrent holder is mid-exec
+// against. Orphaned binaries are reclaimed later, in bulk, by
+// CleanupCompileCache/removeCompileTmpDir wiping the whole compileTmpDir
+// at true process exit -- by which point no exec can still be in flight.
 //
 // RunVerifiedByTestRecording has NO content hash and therefore does NOT
-// call this function: no existing test mutates source between two
-// recording calls (the recording tests use fresh fixtures per test), and
-// production never mutates mid-run, so a stale recording-path binary is
-// never observable within one process. See the file doc comment.
+// call this function directly, but it shares the SAME compileCache map
+// that this function mutates, so a concurrent recording call against the
+// same moduleRoot is exposed to the same race and benefits from the same
+// map-only-deletion safety.
 func invalidateCompileCacheForModule(moduleRoot string) {
 	cleaned := filepath.Clean(moduleRoot)
 	var toDelete []compileCacheKey
@@ -255,9 +296,6 @@ func invalidateCompileCacheForModule(moduleRoot string) {
 		key := k.(compileCacheKey)
 		if key.moduleRoot == cleaned {
 			toDelete = append(toDelete, key)
-			if bin, ok := v.(*compiledBinary); ok && bin.path != "" {
-				_ = os.Remove(bin.path)
-			}
 		}
 		return true
 	})
@@ -386,7 +424,8 @@ func doCompileTestBinary(ctx context.Context, moduleRoot, pkgPattern, coverPkgPa
 		return &compiledBinary{err: fmt.Errorf("could not create compile-cache tmp dir: %w", err)}
 	}
 
-	binaryPath := filepath.Join(compileTmpDir, compileBinaryName(moduleRoot, pkgPattern, coverPkgPattern))
+	seq := atomic.AddInt64(&compileBinarySeq, 1)
+	binaryPath := filepath.Join(compileTmpDir, compileBinaryName(moduleRoot, pkgPattern, coverPkgPattern, seq))
 
 	// The compile runs under its own context (NOT the caller's per-test
 	// ctx): see compileTimeout's doc comment.
@@ -462,21 +501,31 @@ func ensureCompileTmpDir() error {
 	return compileTmpErr
 }
 
-// compileBinaryName returns a deterministic, filesystem-safe filename for
-// one compiled binary inside compileTmpDir, derived from the same triple
-// that keys the cache. The pkgPattern's slashes would be illegal in a
-// filename on Windows, and two different (pkgPattern, coverPkgPattern)
-// pairs could otherwise collide on a short hash, so the full triple is
-// hashed (sha256, hex) -- two compiles for the same triple always produce
-// the same filename (deterministic, so a cache-hit check could os.Stat
-// the path directly), and two compiles for different triples never
-// collide.
-func compileBinaryName(moduleRoot, pkgPattern, coverPkgPattern string) string {
+// compileBinaryName returns a filesystem-safe, UNIQUE-PER-COMPILE filename
+// for one compiled binary inside compileTmpDir. The name is derived from
+// the (moduleRoot, pkgPattern, coverPkgPattern) triple that keys the cache
+// (the pkgPattern's slashes would be illegal in a filename on Windows, and
+// two different (pkgPattern, coverPkgPattern) pairs could otherwise
+// collide on a short hash, so the full triple is hashed with sha256/hex)
+// PLUS seq, a process-wide monotonic counter supplied by the caller
+// (compileBinarySeq via atomic.AddInt64) that makes the resulting filename
+// unique to THIS compile invocation, never reused.
+//
+// Deliberately NOT purely deterministic on the triple alone (an earlier
+// version was): a deterministic path means a recompile of the SAME triple
+// -- which happens after invalidateCompileCacheForModule drops a stale map
+// entry but leaves the old binary file on disk (see that function's doc
+// comment) -- would write to the EXACT SAME path a concurrent goroutine
+// might still be mid-exec against, corrupting or truncating the file out
+// from under that exec. Suffixing with seq means every compile, even of
+// the identical triple, gets its own never-reused path, so a fresh compile
+// can never collide with a binary another goroutine is currently running.
+func compileBinaryName(moduleRoot, pkgPattern, coverPkgPattern string, seq int64) string {
 	h := sha256.New()
 	h.Write([]byte(moduleRoot + "\n"))
 	h.Write([]byte(pkgPattern + "\n"))
 	h.Write([]byte(coverPkgPattern + "\n"))
-	return hex.EncodeToString(h.Sum(nil)) + ".test"
+	return hex.EncodeToString(h.Sum(nil)) + "-" + fmt.Sprintf("%d", seq) + ".test"
 }
 
 // packageDirFromPattern converts a "./"-relative package pattern (as

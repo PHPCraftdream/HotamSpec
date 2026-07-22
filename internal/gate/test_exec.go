@@ -971,12 +971,22 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 		// would silently mask the change the verdict cache just detected.
 		// Drop every compile cache entry for this module before
 		// re-running, so runGoTest's compileTestBinary call below
-		// recompiles from the CURRENT (post-mutation) source. This is
-		// the compile cache's ONLY invalidation path; it is FREE in
-		// production (source never changes within one CLI run, so this
-		// branch is unreachable) and exists solely for the mutation
-		// tests + any hypothetical mid-run edit. See
-		// invalidateCompileCacheForModule's doc comment.
+		// recompiles from the CURRENT (post-mutation) source. This is the
+		// compile cache's ONLY invalidation path, and it IS reached in
+		// production: `hotam land`'s pipeline hashes moduleRoot in the
+		// proposal-apply gate BEFORE writing graph.json/graph.lock/
+		// generated docs, then a post-write verification pass hashes it
+		// again within the SAME process -- a genuine mid-run mismatch, not
+		// just a mutation-test artifact. Because other goroutines may be
+		// concurrently executing an already-cached (now-stale) binary for
+		// this same module at the moment this fires (runViolations runs
+		// invariants in parallel), invalidateCompileCacheForModule is
+		// deliberately exec-safe: it drops only the in-memory map entries,
+		// never os.Remove-ing the binary file out from under a concurrent
+		// exec, and doCompileTestBinary gives every fresh compile a
+		// never-reused filename so a post-invalidation recompile cannot
+		// overwrite a path a concurrent holder is mid-exec against either.
+		// See invalidateCompileCacheForModule's doc comment.
 		invalidateCompileCacheForModule(moduleRoot)
 	}
 
