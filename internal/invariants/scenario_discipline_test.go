@@ -316,7 +316,7 @@ func TestCheckSettledRequiresScenario_GreenWithInherentlyProse(t *testing.T) {
 func TestCheckSettledRequiresScenario_OrdinaryEnforceableStillFires(t *testing.T) {
 	t.Parallel()
 	domainDir := writeScenarioDisciplineFixture(t, authoredRiskTestGoodSrc, "full")
-	r := settledReq("R-ordinary", "sa") // same empty shape as above ...
+	r := settledReq("R-ordinary", "sa")                   // same empty shape as above ...
 	r.Enforceability = ontology.EnforceabilityENFORCEABLE // ... but the ordinary default
 	g := graphForDiscipline(t, domainDir, []ontology.Requirement{r})
 	if g.Discipline != loader.DisciplineFull {

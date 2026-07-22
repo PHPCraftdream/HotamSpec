@@ -1079,8 +1079,8 @@ func TestLooksLikeRecorderArtifact_ValidShape(t *testing.T) {
 func TestLooksLikeRecorderArtifact_RejectsMalformed(t *testing.T) {
 	t.Parallel()
 	cases := map[string][]byte{
-		"empty req_id": []byte(`{"req_id":"","test":"T","title":"t","steps":[],"verdict":"pass"}` + "\n"),
-		"bad verdict":  []byte(`{"req_id":"R","test":"T","title":"t","steps":[],"verdict":"maybe"}` + "\n"),
+		"empty req_id":        []byte(`{"req_id":"","test":"T","title":"t","steps":[],"verdict":"pass"}` + "\n"),
+		"bad verdict":         []byte(`{"req_id":"R","test":"T","title":"t","steps":[],"verdict":"maybe"}` + "\n"),
 		"missing steps field": []byte(`{"req_id":"R","test":"T","title":"t","verdict":"pass"}` + "\n"),
 		"not even json":       []byte(`hello world`),
 		"wrong structure":     []byte(`{"foo": "bar"}`),
