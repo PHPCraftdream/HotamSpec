@@ -7,6 +7,10 @@
 *.test
 *.out
 vendor/
+# internal/recorder/vendor/ is this project's own package (the scenario
+# recorder's vendoring target for consumer domains), not a third-party Go
+# vendor/ directory -- exempt it from the blanket rule above.
+!internal/recorder/vendor/
 .idea/
 .vscode/
 *.swp
