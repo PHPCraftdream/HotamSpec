@@ -420,7 +420,7 @@ var _ = All.MustRegister("check_orientation_faq_answered", Invariant{
 		"the crystal's text (as a markdown [text](path) link OR a bare path string) AND resolves to a REAL, NON-EMPTY, " +
 		"EXISTING FILE under the repo root whose content contains at least one of the entry's own keywords when the entry " +
 		"declares any (a minimal relevance check; a link-only entry needs only non-empty content); (c) ASSERT LIVE-TRUE — " +
-		"the entry's \"assert\" (internal/query-backed: gate_signoff_count / conflict_count_by_lifecycle / " +
+		"the entry's \"assert\" (internal/graphfacts-backed: gate_signoff_count / conflict_count_by_lifecycle / " +
 		"requirement_count_by_status) computes a LIVE (count, total) pair off the current graph and requires it satisfy a " +
 		"declared \"expect\" (\"all\" / \"none\" / {\"op\":\"gte\"|\"eq\",\"value\":N}) and/or a declared \"phrase\" " +
 		"(a {count}/{total}-templated string, live-substituted, then required present in the crystal or link text — " +

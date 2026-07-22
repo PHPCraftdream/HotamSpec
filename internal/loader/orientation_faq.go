@@ -46,7 +46,7 @@ type OrientationFAQEntry struct {
 	Question string   `json:"question"`
 	Keywords []string `json:"keywords"`
 	Link     string   `json:"link,omitempty"`
-	// Assert ties this entry to a LIVE graph-fact query (internal/query)
+	// Assert ties this entry to a LIVE graph-fact query (internal/graphfacts)
 	// instead of (or alongside) the static Keywords/Link signals above —
 	// see OrientationFAQAssert's own doc comment. nil (the default, and the
 	// ONLY possible value for every entry written before this field
@@ -64,7 +64,7 @@ type OrientationFAQEntry struct {
 // long after the graph reached 32/32, fixed by hand in tasks #318/#322
 // without closing the underlying design gap).
 //
-// Kind selects which internal/query tally function computes the live
+// Kind selects which internal/graphfacts tally function computes the live
 // (count, total) pair:
 //
 //   - "gate_signoff_count" — query.GateSignoffTally(g, order, Stage), where

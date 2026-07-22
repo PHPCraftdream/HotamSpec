@@ -10,11 +10,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/graphfacts"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpec/internal/query"
 )
 
 // Canon: §Graph — root CLAUDE.md generation (R-claude-md-template-driven).
@@ -581,7 +581,7 @@ func renderDomainMapBlockWithViolations(repoRoot string, domainGraphs map[string
 			}
 			// gate-progress (task Q-domain-map-gates): a pure read of the
 			// already-in-memory graph's typed Requirement.GateSignoffs
-			// carrier via query.GateFrontier (internal/query/facts.go),
+			// carrier via graphfacts.GateFrontier (internal/graphfacts/facts.go),
 			// never a fresh AllViolations/Diagnose call for a sibling domain
 			// (see this function's own doc comment + domainPulse's for the
 			// mutual-recursion hazard that would reintroduce). order is nil
@@ -597,7 +597,7 @@ func renderDomainMapBlockWithViolations(repoRoot string, domainGraphs map[string
 			if dg.DomainDir != "" {
 				order = loader.ResolveGateStageOrder(filepath.Join(dg.DomainDir, "graph.json"))
 			}
-			if stage, tally, ok := query.GateFrontier(dg, order); ok {
+			if stage, tally, ok := graphfacts.GateFrontier(dg, order); ok {
 				gateStage = stage
 				gateSigned = tally.Signed
 				gateDeferred = tally.Deferred

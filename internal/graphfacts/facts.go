@@ -1,5 +1,5 @@
-// Package query holds LIVE graph-fact readers: small, pure functions that
-// tally a current, computed truth off *ontology.Graph — as opposed to a
+// Package graphfacts holds LIVE graph-fact readers: small, pure functions
+// that tally a current, computed truth off *ontology.Graph — as opposed to a
 // static keyword string frozen at authoring time. It exists to close a real
 // gap the Orientation-FAQ invariant exposed (task #321/R3-semantic-faq): a
 // manifest FAQ entry's keyword phrase (e.g. "27 of 32 requirements") can stay
@@ -9,12 +9,18 @@
 // the phrase is still semantically TRUE.
 //
 // This package imports ONLY internal/ontology (a leaf package with no
-// project-internal imports of its own), so it introduces no import-cycle
-// risk for any caller: internal/generator already imports internal/loader
-// and internal/invariants, both of which are free to import this package in
-// turn (internal/ontology -> internal/query -> {internal/generator,
-// internal/invariants} is a strict DAG, never a cycle).
-package query
+// project-internal imports of its own). It is deliberately placed OUTSIDE
+// internal/query: internal/query is a PERIPHERY consumer package
+// (internal/selfcheck/imports_test.go's peripheryConsumers set —
+// R-core-periphery-import-ratchet), and internal/invariants is CORE
+// (corePackages) — the core/periphery dependency arrow must point one way
+// only (consumers depend on core, never the reverse), so a core package
+// (invariants) may never import a periphery package (query). graphfacts is
+// instead "shared low-level machinery" like gate/methodology/registry/paths
+// (see peripheryConsumers' own doc comment): it is in neither set, so both
+// internal/invariants (core) and internal/generator (periphery) may import
+// it freely, and it may never itself import either.
+package graphfacts
 
 import "github.com/PHPCraftdream/HotamSpec/internal/ontology"
 
@@ -206,7 +212,7 @@ type UnknownPredicateError struct {
 }
 
 func (e *UnknownPredicateError) Error() string {
-	return "query: unknown " + e.Kind + " value " + quote(e.Value)
+	return "graphfacts: unknown " + e.Kind + " value " + quote(e.Value)
 }
 
 func quote(s string) string {

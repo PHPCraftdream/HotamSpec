@@ -25,12 +25,20 @@ History predating this file is not backfilled — see `git log` and
   session hit exactly this bug (a manifest FAQ entry claimed "27 of 32
   requirements" and kept passing the keyword check long after the graph
   reached 32/32, fixed by hand in tasks #318/#322 without closing the
-  underlying design gap). New package `internal/query`
-  (`internal/query/facts.go`) adds four pure, LIVE graph-fact readers —
+  underlying design gap). New package `internal/graphfacts`
+  (`internal/graphfacts/facts.go`) adds four pure, LIVE graph-fact readers —
   `GateSignoffTally`/`GateFrontier` (extracted, not reimplemented, from the
   gate-tally logic `internal/generator/claudemd.go`'s DOMAIN-MAP renderer
   already computed inline — proven byte-identical before/after the
-  extraction), `ConflictLifecycleTally`, `RequirementStatusTally`. A new
+  extraction), `ConflictLifecycleTally`, `RequirementStatusTally`. Placed
+  outside the pre-existing `internal/query` package deliberately: `query` is
+  a PERIPHERY consumer per `internal/selfcheck/imports_test.go`'s
+  `R-core-periphery-import-ratchet`, and `internal/invariants` (a consumer
+  of these tallies) is CORE — a core package may never import a periphery
+  package, so `graphfacts` sits in neither set, importable from both sides
+  of that one-way arrow (caught by `TestCorePeriphery_ImportRatchet`
+  itself on the first CI push of this change; fixed by relocating the
+  package rather than weakening the ratchet). A new
   optional `assert` field on an `OrientationFAQEntry`
   (`internal/loader/orientation_faq.go`) ties an entry to one of these live
   tallies instead of, or ADDITIVELY alongside, the existing keyword/link

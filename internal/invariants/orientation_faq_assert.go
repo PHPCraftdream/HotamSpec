@@ -5,9 +5,15 @@
 // nothing about whether the phrase is still semantically TRUE relative to
 // the graph's current state (task #321/R3-semantic-faq — see
 // loader.OrientationFAQAssert's doc comment for the real "27 of 32" bug this
-// closes). Dispatches on Assert.Kind to the matching internal/query tally
-// function, then checks the live (count, total) pair against the entry's
-// declared Expect and/or Phrase — fail-closed on every malformed or
+// closes). Dispatches on Assert.Kind to the matching internal/graphfacts
+// tally function (graphfacts, NOT internal/query: internal/query is a
+// PERIPHERY consumer package per internal/selfcheck/imports_test.go's
+// R-core-periphery-import-ratchet, and this package — internal/invariants —
+// is CORE; a core package must never import a periphery package, so the
+// live-fact tallies live in internal/graphfacts instead, a package in
+// neither the core nor periphery set, importable from both sides of that
+// one-way arrow), then checks the live (count, total) pair against the
+// entry's declared Expect and/or Phrase — fail-closed on every malformed or
 // unrecognized shape, matching this package's existing "the check, not the
 // loader, diagnoses" convention (see orientation_faq.go's own doc comment).
 package invariants
@@ -19,9 +25,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/graphfacts"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpec/internal/query"
 )
 
 // evalOrientationAssert evaluates e.Assert (which MUST be non-nil — callers
@@ -52,18 +58,18 @@ func evalOrientationAssert(g *ontology.Graph, e loader.OrientationFAQEntry, crys
 				"assert kind \"gate_signoff_count\" names stage %q, which is not present in the domain's declared gate_stage_order %v",
 				a.Stage, order))}
 		}
-		tally := query.GateSignoffTally(g, order, a.Stage)
+		tally := graphfacts.GateSignoffTally(g, order, a.Stage)
 		count, total = tally.Signed, tally.Signed+tally.Deferred
 
 	case "conflict_count_by_lifecycle":
-		c, t, err := query.ConflictLifecycleTally(g, a.LifecycleClass)
+		c, t, err := graphfacts.ConflictLifecycleTally(g, a.LifecycleClass)
 		if err != nil {
 			return []Violation{assertViolation(e, fmt.Sprintf("assert kind \"conflict_count_by_lifecycle\": %v", err))}
 		}
 		count, total = c, t
 
 	case "requirement_count_by_status":
-		c, t, err := query.RequirementStatusTally(g, a.Status, a.Enforcement)
+		c, t, err := graphfacts.RequirementStatusTally(g, a.Status, a.Enforcement)
 		if err != nil {
 			return []Violation{assertViolation(e, fmt.Sprintf("assert kind \"requirement_count_by_status\": %v", err))}
 		}
