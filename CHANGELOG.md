@@ -187,6 +187,43 @@ History predating this file is not backfilled — see `git log` and
   re-serialization.
 
 ### Fixed
+- **CI was silently red for 5+ days, then exposed three real concurrency
+  bugs once fixed enough to run to completion** (task #317, R3-ci — external
+  review): `.gitignore`'s blanket `vendor/` rule was accidentally excluding
+  this project's OWN `internal/recorder/vendor/` package (introduced
+  2026-07-17) from git — files existed on disk (so local `go build` always
+  passed) but were never tracked, breaking CI's Build step on every push
+  since introduction; fixed via a `!internal/recorder/vendor/` exception and
+  tracking the previously-untracked files. Once Build passed, CI progressed
+  far enough to expose, in turn: (1) two files not `gofmt`-formatted
+  (`internal/gate/test_exec_test.go`, `internal/invariants/scenario_
+  discipline_test.go`), never caught before because Build always failed
+  first; (2) `TestCmdLand_AutoCrystal_RepoRootIsDomainDir` fixed to bootstrap
+  via the minimal `initDomain()` scaffold instead of copying the production
+  self-hosting graph — the real graph's `internal/...` symbol links depend
+  on `internal/gate.engineRoot()`'s CWD-based `go.mod` fallback, which this
+  test's own `chdirAndRestore` (needed to exercise `repoRootForDomain`'s
+  tier-3 branch) breaks as an unavoidable side effect; (3) a genuine TOCTOU
+  race in `internal/gate/compile_cache.go`'s compiled-test-binary cache —
+  `invalidateCompileCacheForModule` used to `os.Remove` a stale binary file
+  out from under a concurrent goroutine that had already `compileCache.Load`ed
+  its path and was mid-`exec.Command` (triggered because `hotam land`'s
+  proposal-apply gate hashes the module BEFORE writing graph.json/generated
+  docs, then re-verifies AFTER — every verdict-cache entry from the pre-write
+  hash mismatches post-write and independently fires invalidation); fixed by
+  making invalidation map-only (never delete the file — an orphaned binary
+  simply outlives its cache entry until process-exit cleanup) plus giving
+  every compiled binary a unique, non-deterministic filename (a process-wide
+  atomic counter) so a post-invalidation recompile can never overwrite a
+  path a concurrent holder is still executing; (4) `TestRunVerifiedByTest
+  Recording_TmpDirCleanedUpAfterReturn` was itself racy — it compared
+  whole-`os.TempDir()` `hotam-record-*` directory counts before/after ONE
+  call, which any concurrently-running sibling test in the same package
+  (several run under `t.Parallel()`) could pollute; fixed by redirecting the
+  test's own `TMPDIR`/`TMP`/`TEMP` to a private `t.TempDir()` so its
+  before/after glob is isolated from concurrent siblings by construction.
+  None of these four were reachable in CI until the ones before them were
+  fixed — each was masked by an earlier-failing step for as long as 5 days.
 - **Shared `docs/gen/` projections made mode-independent** (continuing task
   #317, CI fix chain): `hotam land`'s own routine regeneration
   (`cmd/hotam/land.go`) always calls plain `genSpec` (never `--spec`), so a
