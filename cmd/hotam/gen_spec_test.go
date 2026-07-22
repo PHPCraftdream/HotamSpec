@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
@@ -223,5 +225,95 @@ func TestCmdGenSpec_LocalCrystalDefaultForNonActiveDomain(t *testing.T) {
 	}
 	if string(got) != string(rootBaseline) {
 		t.Errorf("root CLAUDE.md was modified by gen-spec against the non-active domain — local-crystal default must not hijack the root")
+	}
+}
+
+// TestGenSpec_SharedProjectionsModeIndependent is the end-to-end regression
+// this fix (continuing task #317, CI's "gen-spec idempotency" step) actually
+// depends on: `hotam land`'s own routine regeneration (cmd/hotam/land.go)
+// ALWAYS calls plain genSpec (includeSpec == false), never --spec — so any
+// docs/gen/ projection whose rendered bytes differ depending on --spec would
+// be silently reverted by the very next `hotam land`, making a
+// `--spec`-shaped commit of that projection inherently unstable. This test
+// proves TRACEABILITY.md, COVERAGE.md, and REPO-MAP.md are NOT such a
+// projection any more: running genSpec with includeSpec=true (which also
+// exercises the real go-test recording pass CollectSpecRows performs) then
+// again with includeSpec=false, against the SAME unchanged graph, must leave
+// all three files byte-identical across both runs.
+//
+// The fixture graph deliberately carries a SETTLED requirement with NO
+// verified_by entry at all (zero resolvable scenarios) — CollectSpecRows
+// then does zero go-test subprocess invocations (it only ever iterates
+// requirements that DO carry verified_by), so the --spec pass here is cheap
+// while still exercising the real includeSpec=true code path end-to-end
+// (SPEC.md is rendered and written, TRACEABILITY.md/COVERAGE.md/REPO-MAP.md
+// are rendered from the SAME genSpec call that did so).
+func TestGenSpec_SharedProjectionsModeIndependent(t *testing.T) {
+	t.Parallel()
+	domainDir := t.TempDir()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{
+				ID:             "R-mode-independent-trivial",
+				Claim:          "A trivial SETTLED requirement with no code carrier yet.",
+				Owner:          "spec-author",
+				Status:         ontology.StatusSETTLED,
+				Enforcement:    ontology.EnforcementPROSE,
+				Enforceability: ontology.EnforceabilityENFORCEABLE,
+			},
+		},
+	}
+	if err := loader.WriteGraph(filepath.Join(domainDir, "graph.json"), g); err != nil {
+		t.Fatalf("write graph.json: %v", err)
+	}
+
+	const today = "2026-07-19"
+	projections := []string{"TRACEABILITY.md", "COVERAGE.md", "REPO-MAP.md"}
+
+	if _, _, err := genSpec(domainDir, "", today, "", true); err != nil {
+		t.Fatalf("genSpec(includeSpec=true): %v", err)
+	}
+	withSpec := make(map[string][]byte, len(projections))
+	for _, name := range projections {
+		b, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", name))
+		if err != nil {
+			t.Fatalf("read %s after includeSpec=true run: %v", name, err)
+		}
+		withSpec[name] = b
+	}
+	// Sanity: the --spec run must have actually rendered SPEC.md (proving
+	// includeSpec=true really took the real recording-pass code path, not a
+	// no-op), and TRACEABILITY.md must acknowledge --spec-shaped machinery
+	// exists (pointing at SPEC.md), even though it renders no verdict itself.
+	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); err != nil {
+		t.Fatalf("precondition: SPEC.md must exist after includeSpec=true run: %v", err)
+	}
+
+	if _, _, err := genSpec(domainDir, "", today, "", false); err != nil {
+		t.Fatalf("genSpec(includeSpec=false): %v", err)
+	}
+	for _, name := range projections {
+		b, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", name))
+		if err != nil {
+			t.Fatalf("read %s after includeSpec=false run: %v", name, err)
+		}
+		if string(b) != string(withSpec[name]) {
+			t.Errorf("%s is NOT byte-identical between includeSpec=true and includeSpec=false runs (continuing task #317's CI idempotency fix) — got %d bytes, want %d bytes matching the --spec run", name, len(b), len(withSpec[name]))
+		}
+	}
+
+	// SPEC.md itself must survive the plain run untouched on disk (the
+	// cleanupStaleGenFiles exemption, W2.3) AND still be acknowledged by
+	// REPO-MAP.md's own listing (the stat-based fix this task adds) — a
+	// plain run must never silently make REPO-MAP.md forget SPEC.md exists.
+	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); err != nil {
+		t.Fatalf("SPEC.md must still exist after includeSpec=false run (cleanupStaleGenFiles exemption): %v", err)
+	}
+	repoMap, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "REPO-MAP.md"))
+	if err != nil {
+		t.Fatalf("read REPO-MAP.md: %v", err)
+	}
+	if !strings.Contains(string(repoMap), "SPEC.md") {
+		t.Errorf("REPO-MAP.md must still list SPEC.md after a plain (includeSpec=false) run, since SPEC.md still exists on disk:\n%s", string(repoMap))
 	}
 }

@@ -95,6 +95,23 @@ History predating this file is not backfilled — see `git log` and
   re-serialization.
 
 ### Fixed
+- **Shared `docs/gen/` projections made mode-independent** (continuing task
+  #317, CI fix chain): `hotam land`'s own routine regeneration
+  (`cmd/hotam/land.go`) always calls plain `genSpec` (never `--spec`), so a
+  committed `TRACEABILITY.md`/`COVERAGE.md` rendered in `--spec`-shaped form
+  (narration-verdict suffixes) was inherently unstable — the very next
+  `hotam land` silently reverted it, which is what broke CI's `gen-spec
+  idempotency` step. `BuildTraceability`/`BuildCoverage`
+  (`internal/generator/traceability.go`/`coverage.go`) are now pure,
+  mode-independent functions of the graph plus a cheap AST scan (their
+  `verdicts ...map[string]ScenarioVerdict` variadic parameter is removed
+  entirely); `REPO-MAP.md`'s `SPEC.md` listing is now stat-based (reads real
+  on-disk content when present) instead of write-set-based, so a plain run
+  still acknowledges an existing `SPEC.md` without rewriting it. `SPEC.md`
+  remains the sole `--spec`-shaped artifact, whose freshness is separately
+  enforced by `check_spec_md_current`. New regression test:
+  `TestGenSpec_SharedProjectionsModeIndependent`
+  (`cmd/hotam/gen_spec_test.go`).
 - **Durable-notes tail preservation**: `gen-spec` regeneration was silently
   dropping an operator's hand-written notes below the durable-notes marker
   in `CLAUDE.md`, despite the template's own promise to preserve them.

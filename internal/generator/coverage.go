@@ -15,6 +15,15 @@
 // is not itself an enforcement gate (that remains
 // internal/invariants/authored_links.go's job; a doc projection must not be
 // a second source of truth for pass/fail).
+//
+// BuildCoverage is a pure, mode-independent function of the graph plus a
+// read-only AST scan: every scenario signal it renders (the Layer table's
+// scenarios column, the scenario ratchet) is the CHEAP AST-only
+// gate.ResolveSpecTest.HasScenario detection, never a real executed
+// verdict, so this document renders byte-identically on every `gen-spec`
+// run regardless of --spec. The REAL, executed narrative lives in
+// docs/gen/SPEC.md (hotam gen-spec --spec only), whose freshness is
+// separately enforced by check_spec_md_current.
 package generator
 
 import (
@@ -37,10 +46,9 @@ import (
 // ladder -- objects -> fields -> methods -> tests -> SCENARIOS -- and a
 // ratchet counter of how many SETTLED+verified_by requirements still lack a
 // scenario narrative. Both additions are CHEAP (AST-only, gate.ResolveSpecTest's
-// HasScenario) on a default `gen-spec`; verdicts is OPTIONAL (nil on every
-// pre-existing caller) and, when supplied (gen-spec --spec only, the same
-// generator.ScenarioVerdictsFromRows map BuildTraceability accepts), overlays
-// the REAL executed verdict alongside the AST count.
+// HasScenario) and mode-independent: they never overlay a real executed
+// verdict, so BuildCoverage renders byte-identically on every `gen-spec`
+// run regardless of --spec.
 //
 // DISCIPLINE-EXEMPT SECTION (PLAN-scenario-generated-spec.md §2 D4/§5): for
 // a discipline:full domain only (g.Discipline == loader.DisciplineFull), the
@@ -53,11 +61,7 @@ import (
 // "0 violations". A non-discipline:full domain produces no such section at
 // all (the exemption is dormant there -- the same honest-no-op shape
 // loader.DisciplineFull's own doc comment establishes).
-func BuildCoverage(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) string {
-	var verdictMap map[string]ScenarioVerdict
-	if len(verdicts) > 0 {
-		verdictMap = verdicts[0]
-	}
+func BuildCoverage(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("COVERAGE", g), ""}
 	lines = append(lines, "# COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)")
 	lines = append(lines, "")
@@ -72,7 +76,13 @@ func BuildCoverage(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) st
 			"performs. Not an enforcement gate itself — "+
 			"`internal/invariants/authored_links.go` is the actual mechanical floor; "+
 			"this doc only reports its verdict for orientation "+
-			"(R-authored-spec-projections-are-derived).")
+			"(R-authored-spec-projections-are-derived). Every scenario signal below "+
+			"(the Layer table's scenarios column, the scenario ratchet) is the CHEAP, "+
+			"AST-only `hotamspec.NewScenario(...)` detection — never a real executed "+
+			"verdict — so this document stays byte-identical regardless of mode; the "+
+			"REAL, executed narrative lives in `docs/gen/SPEC.md` "+
+			"(`hotam gen-spec --spec` only), whose freshness is separately enforced by "+
+			"`check_spec_md_current`.")
 	lines = append(lines, "")
 
 	if g.IsEmpty() {
@@ -116,7 +126,7 @@ func BuildCoverage(g *ontology.Graph, verdicts ...map[string]ScenarioVerdict) st
 	}
 
 	layer, layerErr := ScanModelLayerCounts(g)
-	ratchet := computeScenarioRatchet(g, verdictMap)
+	ratchet := computeScenarioRatchet(g)
 
 	lines = append(lines,
 		"**"+strconv.Itoa(len(settled))+" SETTLED requirement(s): "+
@@ -430,13 +440,13 @@ func layerVerdict(c ModelLayerCounts, ratchet scenarioRatchet) string {
 // scenarioRatchet is the reduction computeScenarioRatchet returns: how many
 // SETTLED requirements carry at least one verified_by entry (total), how
 // many of THOSE already have at least one entry whose test body calls
-// `hotamspec.NewScenario` (withScenario, AST-only by default; overridden by
-// a supplied ScenarioVerdict's real Narrated flag when verdicts is
-// non-nil — the REAL, executed signal takes precedence over the AST guess
-// for the SAME reason applyScenarioVerdict overlays TRACEABILITY.md's
-// cells), and the honest remaining tail (withoutScenario) plus the actual
-// requirement rows in that tail (tailRows, DeclOrder-sorted like every other
-// COVERAGE.md table) for the ratchet section's own listing.
+// `hotamspec.NewScenario` (withScenario, via the CHEAP AST-only
+// gate.ResolveSpecTest.HasScenario signal -- the only scenario signal this
+// document ever computes, never a real executed verdict, so BuildCoverage
+// stays mode-independent), and the honest remaining tail (withoutScenario)
+// plus the actual requirement rows in that tail (tailRows, DeclOrder-sorted
+// like every other COVERAGE.md table) for the ratchet section's own
+// listing.
 type scenarioRatchet struct {
 	total           int
 	withScenario    int
@@ -445,18 +455,13 @@ type scenarioRatchet struct {
 }
 
 // computeScenarioRatchet walks every SETTLED requirement carrying at least
-// one verified_by entry and classifies it narrated/not: by default (verdicts
-// == nil, every pre-existing/default `gen-spec` caller) via the CHEAP
+// one verified_by entry and classifies it narrated/not via the CHEAP
 // AST-only gate.ResolveSpecTest.HasScenario signal (any ONE verified_by
-// entry narrating is enough to count the requirement as "with scenario");
-// when verdicts is supplied (gen-spec --spec, ScenarioVerdictsFromRows) the
-// REAL executed Narrated flag is used instead, since it is strictly more
-// trustworthy than the AST guess for a requirement whose test the caller
-// already actually ran. tailRows is built in the SAME NarrativeOrder
-// (DeclOrder) every other COVERAGE.md/TRACEABILITY.md table uses, so a
-// SETTLED requirement's position in the ratchet table matches its founding
-// position elsewhere.
-func computeScenarioRatchet(g *ontology.Graph, verdicts map[string]ScenarioVerdict) scenarioRatchet {
+// entry narrating is enough to count the requirement as "with scenario").
+// tailRows is built in the SAME NarrativeOrder (DeclOrder) every other
+// COVERAGE.md/TRACEABILITY.md table uses, so a SETTLED requirement's
+// position in the ratchet table matches its founding position elsewhere.
+func computeScenarioRatchet(g *ontology.Graph) scenarioRatchet {
 	specRoot := gate.SpecRootForGraph(g)
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 
@@ -468,14 +473,10 @@ func computeScenarioRatchet(g *ontology.Graph, verdicts map[string]ScenarioVerdi
 		ratchet.total++
 
 		narrated := false
-		if v, ok := verdicts[r.ID]; ok {
-			narrated = v.Narrated
-		} else {
-			for _, l := range resolveTraceabilityLinks(specRoot, r.VerifiedBy, false) {
-				if l.hasScenario {
-					narrated = true
-					break
-				}
+		for _, l := range resolveTraceabilityLinks(specRoot, r.VerifiedBy, false) {
+			if l.hasScenario {
+				narrated = true
+				break
 			}
 		}
 

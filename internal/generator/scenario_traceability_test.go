@@ -52,14 +52,16 @@ func scenarioFixtureGraph(domainDir string) *ontology.Graph {
 	}
 }
 
-// TestBuildTraceability_DefaultScenarioColumnIsASTOnly proves the cost
-// decision this task made: with NO verdicts argument (the default `gen-spec`
-// path, PLAN-scenario-generated-spec.md §3 W1.4), BuildTraceability still
-// reports the "scenario" tag for a verified_by entry whose test body calls
-// hotamspec.NewScenario -- via the cheap AST scan (gate.ResolveSpecTest's
-// HasScenario) alone, WITHOUT ever invoking `go test`. A plain (non-scenario)
-// verified_by test must NOT be tagged.
-func TestBuildTraceability_DefaultScenarioColumnIsASTOnly(t *testing.T) {
+// TestBuildTraceability_ScenarioColumnIsASTOnly proves BuildTraceability's
+// scenario column is ALWAYS the cheap AST scan (gate.ResolveSpecTest's
+// HasScenario) alone, WITHOUT ever invoking `go test` -- there is no
+// verdict-overlay mode any more (continuing task #317: `hotam land`'s own
+// routine regeneration always calls plain BuildTraceability, so any
+// --spec-shaped rendering would be inherently unstable, silently reverted by
+// the very next `hotam land`; see TestGenSpec_SharedProjectionsModeIndependent
+// for the end-to-end regression this property backs). A plain
+// (non-scenario) verified_by test must NOT be tagged.
+func TestBuildTraceability_ScenarioColumnIsASTOnly(t *testing.T) {
 	root := writeSpecFixtureModule(t)
 	g := scenarioFixtureGraph(root)
 
@@ -75,14 +77,13 @@ func TestBuildTraceability_DefaultScenarioColumnIsASTOnly(t *testing.T) {
 	if !strings.Contains(narratedRow, "scenario") {
 		t.Errorf("R-spec-narrated's row does not carry the scenario tag:\n%s", narratedRow)
 	}
-	// No verdicts were supplied -- no real verdict text should appear IN THE
-	// TABLE ROW (the document's own explanatory intro prose legitimately
-	// names the verdict vocabulary in the abstract -- "narrated, pass /
-	// narrated, another entry not passing / no narrative recorded" -- as
-	// part of documenting what --spec WOULD add; only the row itself must
-	// stay silent about a verdict it was never asked to compute).
+	// No real recorded verdict text should ever appear IN THE TABLE ROW (the
+	// document's own explanatory intro prose legitimately points to SPEC.md
+	// as where the real narrative lives; only the row itself must stay
+	// silent about any executed verdict, since BuildTraceability never
+	// executes a test).
 	if strings.Contains(narratedRow, "(narrated") || strings.Contains(narratedRow, "(no narrative recorded)") {
-		t.Errorf("BuildTraceability rendered a REAL verdict in R-spec-narrated's row with no verdicts map supplied (should be AST-only):\n%s", narratedRow)
+		t.Errorf("BuildTraceability rendered a REAL verdict in R-spec-narrated's row (should be AST-only, no verdict overlay exists):\n%s", narratedRow)
 	}
 
 	plainIdx := strings.Index(got, "R-scenario-plain")
@@ -96,36 +97,37 @@ func TestBuildTraceability_DefaultScenarioColumnIsASTOnly(t *testing.T) {
 	}
 }
 
-// TestBuildTraceability_WithVerdicts_OverlaysRealOutcome proves the --spec
-// opt-in path: when a verdicts map (generator.ScenarioVerdictsFromRows,
-// derived from CollectSpecRows -- the same real go-test recording pass
-// BuildSpec itself uses) is supplied, BuildTraceability renders the REAL
-// executed verdict alongside the AST tag, not just the AST guess alone.
-func TestBuildTraceability_WithVerdicts_OverlaysRealOutcome(t *testing.T) {
+// TestBuildTraceability_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput
+// proves the actual property this task's fix depends on: running the SAME
+// real go-test recording pass a `gen-spec --spec` invocation would perform
+// (CollectSpecRows/ScenarioVerdictsFromRows -- still real, live APIs used to
+// render SPEC.md itself) has ZERO effect on BuildTraceability's own output,
+// because BuildTraceability no longer accepts or consumes that data at all.
+// This replaces the former "verdict overlay" test this fix removed: instead
+// of asserting an overlay renders correctly, it now asserts no such overlay
+// exists to render.
+func TestBuildTraceability_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput(t *testing.T) {
 	root := writeSpecFixtureModule(t)
 	g := scenarioFixtureGraph(root)
 
+	before := BuildTraceability(g)
+
+	// Run the same real recording pass gen-spec --spec performs -- proves
+	// its side effects (if any) cannot leak into BuildTraceability's output,
+	// since BuildTraceability has no parameter left to receive it through.
 	rows := CollectSpecRows(g)
-	verdicts := ScenarioVerdictsFromRows(rows)
+	_ = ScenarioVerdictsFromRows(rows)
 
-	got := BuildTraceability(g, verdicts)
-
-	narratedIdx := strings.Index(got, "R-spec-narrated")
-	if narratedIdx < 0 {
-		t.Fatalf("BuildTraceability output missing R-spec-narrated:\n%s", got)
-	}
-	narratedRowEnd := strings.Index(got[narratedIdx:], "\n")
-	narratedRow := got[narratedIdx : narratedIdx+narratedRowEnd]
-	if !strings.Contains(narratedRow, "(narrated, pass)") {
-		t.Errorf("R-spec-narrated's row did not report the real narrated+pass verdict:\n%s", narratedRow)
+	after := BuildTraceability(g)
+	if before != after {
+		diffReport(t, "TRACEABILITY.md (before/after a real --spec-shaped recording pass)", after, before)
 	}
 }
 
 // TestBuildTraceability_ScenarioColumn_ByteIdenticalAcrossRuns proves the
-// default (no verdicts, AST-only) scenario column is exactly as
-// byte-identical-across-runs as every other cheap projection this package
-// generates -- no incidental nondeterminism (map iteration order, etc.)
-// leaked in by the new column.
+// AST-only scenario column is exactly as byte-identical-across-runs as every
+// other cheap projection this package generates -- no incidental
+// nondeterminism (map iteration order, etc.) leaked in by the new column.
 func TestBuildTraceability_ScenarioColumn_ByteIdenticalAcrossRuns(t *testing.T) {
 	root := writeSpecFixtureModule(t)
 	g := scenarioFixtureGraph(root)
@@ -170,20 +172,28 @@ func TestBuildCoverage_ScenarioRatchet_ASTOnlyByDefault(t *testing.T) {
 	}
 }
 
-// TestBuildCoverage_ScenarioRatchet_WithVerdicts proves the ratchet counter
-// also honors a supplied verdicts map (gen-spec --spec), using the REAL
-// Narrated flag instead of the AST guess.
-func TestBuildCoverage_ScenarioRatchet_WithVerdicts(t *testing.T) {
+// TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput
+// mirrors TestBuildTraceability_ModeIndependent_...: running the same real
+// go-test recording pass a `gen-spec --spec` invocation would perform
+// (CollectSpecRows/ScenarioVerdictsFromRows -- still real, live APIs used to
+// render SPEC.md itself) has ZERO effect on BuildCoverage's own output,
+// because BuildCoverage no longer accepts or consumes that data at all --
+// the ratchet counter is always the AST-only signal.
+func TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput(t *testing.T) {
 	root := writeSpecFixtureModule(t)
 	g := scenarioFixtureGraph(root)
 
+	before := BuildCoverage(g)
+
 	rows := CollectSpecRows(g)
-	verdicts := ScenarioVerdictsFromRows(rows)
+	_ = ScenarioVerdictsFromRows(rows)
 
-	got := BuildCoverage(g, verdicts)
-
-	if !strings.Contains(got, "**1/2 SETTLED requirement(s) with `verified_by` carry a scenario narrative; 1 remain in the ratchet tail.**") {
-		t.Errorf("BuildCoverage (with verdicts) ratchet summary line did not match expected 1/2 narrated, 1 tail:\n%s", got)
+	after := BuildCoverage(g)
+	if before != after {
+		diffReport(t, "COVERAGE.md (before/after a real --spec-shaped recording pass)", after, before)
+	}
+	if !strings.Contains(after, "**1/2 SETTLED requirement(s) with `verified_by` carry a scenario narrative; 1 remain in the ratchet tail.**") {
+		t.Errorf("BuildCoverage ratchet summary line did not match expected 1/2 narrated, 1 tail:\n%s", after)
 	}
 }
 

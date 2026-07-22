@@ -171,23 +171,24 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// must list exactly this set to stay byte-identical, even though
 	// atoms-*.md/live-state.md are additionally written alongside them on
 	// disk (see mdDocs below).
-	// includeSpec's real recording pass (RunVerifiedByTestRecording, one go
-	// test per verified_by entry) is collected ONCE here, before
-	// TRACEABILITY.md/COVERAGE.md/SPEC.md are rendered, and shared by all
-	// three verified_by-consuming projections (generator.CollectSpecRows's
-	// own doc comment) — so a `gen-spec --spec` run pays the ~90s record
-	// price exactly once, not three times over, and TRACEABILITY.md's/
-	// COVERAGE.md's scenario-verdict column reports the SAME executed
-	// outcome SPEC.md's narrative was rendered from. When includeSpec is
-	// false (the default, every pre-existing caller), specVerdictsArg stays
-	// an empty (nil-backed) slice and BuildTraceability/BuildCoverage's
-	// variadic parameter receives zero arguments, falling back to their
-	// cheap AST-only signal — see those functions' own doc comments.
+	// SPEC.md's real recording pass (RunVerifiedByTestRecording, one go test
+	// per verified_by entry) is collected here, before SPEC.md is rendered,
+	// via generator.CollectSpecRows -- gated behind includeSpec for cost
+	// reasons alone (see includeSpec's own doc comment above). Unlike
+	// before this fix, TRACEABILITY.md and COVERAGE.md no longer consume
+	// this recording pass at all: BuildTraceability/BuildCoverage are now
+	// pure, mode-independent functions of the graph plus a cheap AST scan,
+	// so they render byte-identically whether or not this run passed
+	// --spec -- the REAL executed narrative lives solely in SPEC.md, whose
+	// own freshness is separately enforced by check_spec_md_current. This
+	// is what makes TRACEABILITY.md/COVERAGE.md/REPO-MAP.md safe for
+	// `hotam land`'s own routine regeneration (which always calls plain
+	// genSpec, never --spec) to commit: they are no longer shaped by
+	// whichever mode last regenerated them (see
+	// TestGenSpec_SharedProjectionsModeIndependent).
 	var specRows map[string]generator.SpecRow
-	var specVerdictsArg []map[string]generator.ScenarioVerdict
 	if includeSpec {
 		specRows = generator.CollectSpecRows(g)
-		specVerdictsArg = []map[string]generator.ScenarioVerdict{generator.ScenarioVerdictsFromRows(specRows)}
 	}
 
 	repoMapDocs := []generator.GenDocEntry{
@@ -200,9 +201,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName, consumer)},
 		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
 		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName)},
-		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g, specVerdictsArg...)},
+		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
 		{Filename: "MODELS.md", Content: generator.BuildModels(g)},
-		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g, specVerdictsArg...)},
+		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g)},
 	}
 	// SPEC.md (BuildSpec, W1.3) is the one docs/gen/ projection that EXECUTES
 	// real `go test` subprocesses (one per verified_by entry) rather than
@@ -222,6 +223,27 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// heading is enough for mdTitle() to extract "Repository file index".
 	repoMapSelfEntry := generator.GenDocEntry{Filename: "REPO-MAP.md", Content: "# REPO-MAP.md — Repository file index (Hotam-Spec)"}
 	fullRepoMapDocs := append(append([]generator.GenDocEntry{}, repoMapDocs...), repoMapSelfEntry)
+	// SPEC.md acknowledgment on a plain run (mode-independence fix,
+	// continuing task #317): when this run did NOT render SPEC.md
+	// (!includeSpec), but a SPEC.md already exists on disk from a prior
+	// `--spec` run, REPO-MAP.md must still list it — cleanupStaleGenFiles's
+	// exemptFromCleanup below already guarantees a plain run never DELETES
+	// an existing SPEC.md (see that call's own doc comment), so REPO-MAP.md
+	// omitting its bullet would be a stale, self-contradictory listing
+	// (files on disk that REPO-MAP.md's own "Generated docs" section does
+	// not mention). Reading the real on-disk content (rather than a
+	// placeholder) lets mdTitle() extract SPEC.md's actual H1 exactly like
+	// every other entry — this ONLY feeds fullRepoMapDocs (REPO-MAP.md's
+	// own listing); it is deliberately never added to repoMapDocs/mdDocs,
+	// so a plain run never rewrites SPEC.md's own content, only
+	// acknowledges its presence. A missing or unreadable file is silently
+	// skipped (nothing to acknowledge — the honest "not written yet" case
+	// every fresh domain starts in).
+	if !includeSpec {
+		if existing, err := os.ReadFile(filepath.Join(genDir, "SPEC.md")); err == nil {
+			fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "SPEC.md", Content: string(existing)})
+		}
+	}
 	var decisionsMD, entitiesMD string
 	if decisionsWritten {
 		decisionsMD = generator.BuildDecisions(g)
@@ -604,15 +626,19 @@ func preserveDurableNotesTail(path string) string {
 // (e.g. "SPEC.md") that this call must NEVER remove, regardless of whether
 // they appear in written — distinct from every other candidate, whose
 // absence from written IS staleness. This is for a projection that is
-// KNOWN to the generator (its filename is still in topLevelFiles below, so
-// REPO-MAP.md keeps listing it — see genSpec's own repoMapDocs comment) but
+// KNOWN to the generator (its filename is still in topLevelFiles below) but
 // whose regeneration this particular run deliberately skipped for cost
-// reasons, not because it stopped being wanted. An exempt name that genSpec
-// DID write this run (e.g. a `--spec` invocation) is harmless to also list
-// here — it is already in writtenSet and would never have been a deletion
-// candidate anyway, so callers are free to pass a fixed exemption list
-// without conditioning it on whether this particular run happened to write
-// that file.
+// reasons, not because it stopped being wanted. On a plain run that skips
+// it, genSpec separately stats the file and, if present, feeds its real
+// on-disk content into fullRepoMapDocs (see the REPO-MAP.md "SPEC.md
+// acknowledgment" block above) so REPO-MAP.md's own listing stays honest
+// about what actually exists on disk — this exemption alone does not cause
+// that; it only stops cleanup from deleting the file this run left alone.
+// An exempt name that genSpec DID write this run (e.g. a `--spec`
+// invocation) is harmless to also list here — it is already in writtenSet
+// and would never have been a deletion candidate anyway, so callers are
+// free to pass a fixed exemption list without conditioning it on whether
+// this particular run happened to write that file.
 func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames []string) ([]string, error) {
 	writtenSet := make(map[string]bool, len(written))
 	for _, p := range written {
