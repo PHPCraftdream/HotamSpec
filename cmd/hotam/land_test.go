@@ -1027,14 +1027,29 @@ func TestCmdLand_AutoCrystal_SingleDomainNoMarker(t *testing.T) {
 // changes the process CWD via chdirAndRestore, exactly like
 // TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir (gen_spec_test.go),
 // whose isolation pattern this test mirrors.
+//
+// Fixture: initDomain (NOT copySelfDomainUnderRoot/selfDomainGraph) — a
+// minimal, non-self-hosting, invariant-clean domain whose one seed
+// Requirement is PROSE-enforced with no implemented_by/verified_by at all.
+// This test's own subject is CLAUDE.md auto-write via repoRootForDomain's
+// tier-3 fallback, nothing about self-hosting symbol resolution — but the
+// production hotam-spec-self graph (self_hosting: true) carries real
+// internal/...-relative implemented_by/verified_by links, and resolving
+// those during gen-spec's post-land structural-floor validation depends on
+// internal/gate.engineRoot's os.Getwd()-based fallback to find this
+// engine's go.mod when the copied domainDir itself has none above it. This
+// test's own chdirAndRestore below (needed for the tier-3 isolation this
+// test DOES care about) moves CWD to a hermetic dir with no reachable
+// go.mod either, so that fallback can't succeed — spuriously failing
+// structural-floor resolution for links this test was never meant to
+// exercise. initDomain's seed requirement has no such links, sidestepping
+// the CWD dependency entirely while still giving cmdLand a real
+// SETTLED/PROSE requirement to land and a real graph to validate.
 func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
-	// Fixture source paths (selfDomainGraph/selfDomainManifest) are CWD-relative
-	// ("../../domains/..."), so they must be copied out BEFORE chdirAndRestore
-	// below repoints the process CWD — otherwise copyFile fails to find them
-	// from the isolated empty dir.
 	root := t.TempDir()
-	copyFile(t, selfDomainGraph, filepath.Join(root, "graph.json"))
-	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(root, "manifest.json"))
+	if _, err := initDomain(root, "bare-root-is-domain", "2026-07-14"); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
 
 	empty := t.TempDir()
 	chdirAndRestore(t, empty)
@@ -1064,7 +1079,7 @@ func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
 		"kind": "Requirement",
 		"id": "R-land-bare-root-is-domain",
 		"claim": "a bare root-is-the-domain layout auto-writes with nothing to disambiguate",
-		"owner": "framework-author",
+		"owner": "owner",
 		"status": "DRAFT",
 		"why": "R7-b repoRoot-equals-domainDir coverage"
 	}`
