@@ -247,14 +247,17 @@ func parseProposal(data []byte) (proposal.Proposal, error) {
 	case proposal.KindGateSignoffBatch:
 		var p proposal.ProposedGateSignoffBatch
 		return p, unmarshalProposal(data, &p)
+	case proposal.KindAssumptionRewrite:
+		var p proposal.ProposedAssumptionRewrite
+		return p, unmarshalProposal(data, &p)
 	default:
-		return nil, fmt.Errorf("unknown proposal kind %q (expected one of: %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+		return nil, fmt.Errorf("unknown proposal kind %q (expected one of: %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
 			probe.Kind,
 			proposal.KindRequirement, proposal.KindConflictTransition, proposal.KindRejection,
 			proposal.KindConflict, proposal.KindOperatorBudget, proposal.KindAxis,
 			proposal.KindStakeholder, proposal.KindAssumption, proposal.KindAssumptionTransition,
 			proposal.KindConflictMemberUpdate, proposal.KindEntityType, proposal.KindReviewMark,
-			proposal.KindProcess, proposal.KindGateSignoffBatch)
+			proposal.KindProcess, proposal.KindGateSignoffBatch, proposal.KindAssumptionRewrite)
 	}
 }
 

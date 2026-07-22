@@ -362,6 +362,9 @@ func (p ProposedConflictTransition) mutate(g *ontology.Graph, today string) erro
 	if len(p.Variants) > 0 {
 		c.Variants = append([]ontology.Variant(nil), p.Variants...)
 	}
+	if len(p.SourceRefs) > 0 {
+		c.SourceRefs = append([]string(nil), p.SourceRefs...)
+	}
 	isDecision := strings.HasPrefix(c.Lifecycle, ontology.ConflictDECIDEDPrefix) ||
 		strings.HasPrefix(c.Lifecycle, ontology.ConflictHELDPrefix)
 	if isDecision && c.DecidedBy != "" {
@@ -448,13 +451,14 @@ func (p ProposedConflict) mutate(g *ontology.Graph, today string) error {
 		lifecycle = ontology.ConflictDETECTED
 	}
 	c := ontology.Conflict{
-		ID:        id,
-		Axis:      strings.TrimSpace(p.Axis),
-		Context:   p.Context,
-		Members:   members,
-		Resolver:  strings.TrimSpace(p.Resolver),
-		Lifecycle: lifecycle,
-		CreatedAt: today,
+		ID:         id,
+		Axis:       strings.TrimSpace(p.Axis),
+		Context:    p.Context,
+		Members:    members,
+		Resolver:   strings.TrimSpace(p.Resolver),
+		Lifecycle:  lifecycle,
+		CreatedAt:  today,
+		SourceRefs: append([]string(nil), p.SourceRefs...),
 	}
 	if strings.TrimSpace(p.DecidedBy) != "" {
 		c.DecidedBy = strings.TrimSpace(p.DecidedBy)
@@ -482,10 +486,34 @@ func (p ProposedOperatorBudget) mutate(g *ontology.Graph, today string) error {
 	return nil
 }
 
+func findAxisIndex(g *ontology.Graph, slug string) int {
+	for i, a := range g.Axes {
+		if a.Slug == slug {
+			return i
+		}
+	}
+	return -1
+}
+
+// mutate implements CREATE for a new Axis (p.Slug not yet in g) and UPDATE
+// for an already-existing one -- see ProposedAxis's doc comment in types.go.
 func (p ProposedAxis) mutate(g *ontology.Graph, today string) error {
 	slug := strings.TrimSpace(p.Slug)
-	if _, ok := ontology.AxisSlugs(g)[slug]; ok {
-		return errDuplicate("Axis", slug)
+	if idx := findAxisIndex(g, slug); idx >= 0 {
+		existing := g.Axes[idx]
+		oldDescription := existing.Description
+		existing.Description = coalesceStr(p.Description, "", existing.Description)
+		if existing.Description != oldDescription {
+			existing.History = append(existing.History, ontology.HistoryEntry{
+				At:      today,
+				Summary: "description: " + abbrev(oldDescription, 150) + "→" + abbrev(existing.Description, 150),
+			})
+		}
+		g.Axes[idx] = existing
+		return nil
+	}
+	if strings.TrimSpace(p.Description) == "" {
+		return validationError("'description' is required for a new Axis %q.", slug)
 	}
 	g.Axes = append(g.Axes, ontology.Axis{
 		Slug:        slug,
@@ -513,12 +541,42 @@ func (p ProposedAssumption) mutate(g *ontology.Graph, today string) error {
 		return errDuplicate("Assumption", id)
 	}
 	g.Assumptions = append(g.Assumptions, ontology.Assumption{
-		ID:        id,
-		Statement: p.Statement,
-		Status:    strings.TrimSpace(p.Status),
-		Owner:     strings.TrimSpace(p.Owner),
-		CreatedAt: defaultStr(p.CreatedAt, today),
+		ID:         id,
+		Statement:  p.Statement,
+		Status:     strings.TrimSpace(p.Status),
+		Owner:      strings.TrimSpace(p.Owner),
+		CreatedAt:  defaultStr(p.CreatedAt, today),
+		SourceRefs: append([]string(nil), p.SourceRefs...),
 	})
+	return nil
+}
+
+// mutate is a CLEAN REWRITE of an existing Assumption's Statement -- see
+// ProposedAssumptionRewrite's doc comment in types.go for how this differs
+// from ProposedAssumptionTransition (which changes Status and appends a
+// suffix onto Statement as a side effect). A HistoryEntry recording the
+// before/after Statement (plus Reason) is ALWAYS appended here, unlike the
+// summarizeFieldDiff-gated History appends elsewhere in this file --
+// validate() already requires NewStatement non-empty (see validate.go), so
+// mutate() never reaches this point with a no-op rewrite, and unconditional
+// appending is what makes the History trail non-negotiable: a caller cannot
+// silently rewrite Statement and have the History write skipped because the
+// diff happened to look empty under some future refactor of the diff
+// machinery (unlike Requirement/Axis's diff-gated History, which tolerates a
+// no-op UPDATE producing no entry).
+func (p ProposedAssumptionRewrite) mutate(g *ontology.Graph, today string) error {
+	idx := findAssumptionIndex(g, p.AssumptionID)
+	if idx < 0 {
+		return errNotFound("assumption_id", p.AssumptionID)
+	}
+	a := g.Assumptions[idx]
+	oldStatement := a.Statement
+	a.Statement = p.NewStatement
+	a.History = append(a.History, ontology.HistoryEntry{
+		At:      today,
+		Summary: "statement: " + abbrev(oldStatement, 150) + "→" + abbrev(a.Statement, 150) + "; reason: " + p.Reason,
+	})
+	g.Assumptions[idx] = a
 	return nil
 }
 

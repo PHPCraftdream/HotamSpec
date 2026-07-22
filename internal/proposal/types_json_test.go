@@ -116,7 +116,7 @@ func TestProposedConflictTransition_SnakeCaseFields(t *testing.T) {
 		"revisit_marker": "REVISIT if y", "shared_assumption": "A-1",
 		"derived": ["R-new"], "variants": [{"id":"V-1","behavior":"b","implies":"i","costs":"c"}],
 		"date": "2026-07-01", "verbatim": "verbatim text", "instrument": "personal",
-		"chosen_variant": "V-1"
+		"chosen_variant": "V-1", "source_refs": ["docs/decision.md"]
 	}`)
 	var p ProposedConflictTransition
 	if err := json.Unmarshal(data, &p); err != nil {

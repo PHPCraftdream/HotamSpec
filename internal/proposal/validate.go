@@ -213,6 +213,14 @@ func (p ProposedOperatorBudget) validate() error {
 	return nil
 }
 
+// ProposedAxis.validate is a SHAPE-only check: slug is always required, but
+// whether 'description' is also required depends on CREATE vs UPDATE, which
+// validate() cannot know (no graph access) -- an empty description is valid
+// on an UPDATE (patch semantics: omitted means "preserve") but invalid on a
+// CREATE (a brand-new Axis with no description is never valid). That
+// create-vs-update call is deferred to mutate() (see ProposedAxis.mutate in
+// mutate.go), mirroring the same validate()/mutate() split ProposedEntityType
+// and ProposedProcess already use for their own ambiguous shapes.
 func (p ProposedAxis) validate() error {
 	slug := strings.TrimSpace(p.Slug)
 	if slug == "" {
@@ -222,9 +230,6 @@ func (p ProposedAxis) validate() error {
 		return validationError(
 			"'slug' must be kebab-case (lowercase letters, digits, hyphens, "+
 				"starting with a letter); got %q.", slug)
-	}
-	if strings.TrimSpace(p.Description) == "" {
-		return validationError("'description' is required and must be non-empty.")
 	}
 	return nil
 }
@@ -283,6 +288,29 @@ func (p ProposedAssumptionTransition) validate() error {
 		return validationError(
 			"'decided_by' is required when new_status is %q: a transition that "+
 				"reduces live signal needs a named human signoff.", newStatus)
+	}
+	return nil
+}
+
+// ProposedAssumptionRewrite.validate requires assumption_id, a non-empty
+// new_statement (a rewrite to an empty statement is never valid -- an
+// Assumption with no statement at all is a malformed node, and "clear the
+// statement" has no honest CLEARED-sentinel meaning the way blocked_on/
+// enforced_by's clearSentinel does, since a bare Assumption node is defined
+// by its Statement), and a non-empty reason (mirrors
+// ProposedAssumptionTransition's identical requirement: a content change
+// with no recorded reason is drift, not a decision).
+func (p ProposedAssumptionRewrite) validate() error {
+	if strings.TrimSpace(p.AssumptionID) == "" {
+		return validationError("'assumption_id' is required for an AssumptionRewrite proposal.")
+	}
+	if strings.TrimSpace(p.NewStatement) == "" {
+		return validationError("'new_statement' is required and must be non-empty.")
+	}
+	if strings.TrimSpace(p.Reason) == "" {
+		return validationError(
+			"'reason' is required and must be non-empty — a statement rewrite " +
+				"with no recorded reason is drift, not a decision.")
 	}
 	return nil
 }

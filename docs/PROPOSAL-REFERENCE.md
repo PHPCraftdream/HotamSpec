@@ -137,17 +137,35 @@ distinct stakeholders before you can hold a tension.
 
 ## Axis
 
-Adds a new controlled-vocabulary tension dimension (e.g. "speed vs rigor").
-Conflicts cluster around axes. There is no dedicated `hotam create-axis`
-scaffolding command in this Go CLI yet (unlike the historical Python
-prototype) — an Axis proposal is written and applied the same way as every
-other kind below, via `hotam apply-proposal`.
+Adds a new controlled-vocabulary tension dimension (e.g. "speed vs rigor"),
+or UPDATES an existing one's `description` (when `slug` already resolves to
+a node in the graph). Conflicts cluster around axes. There is no dedicated
+`hotam create-axis` scaffolding command in this Go CLI yet (unlike the
+historical Python prototype) — an Axis proposal is written and applied the
+same way as every other kind below, via `hotam apply-proposal`.
 
-**Required:** `slug` (kebab-case, must not already exist), `description`
-**Optional:** `why` (default `""`)
+**Required:** `slug` (kebab-case; on CREATE must not already exist and
+`description` is then also required; on UPDATE must match an existing Axis)
+**Optional:** `description` (required on CREATE; on UPDATE, patch semantics —
+omitted or empty preserves the existing value, a non-empty value REPLACES
+it), `why` (default `""`)
 
 ```json
 {"kind": "Axis", "slug": "speed-vs-rigor", "description": "ship fast vs verify thoroughly", "why": ""}
+```
+
+### UPDATE semantics (description only)
+
+When `slug` already names an existing Axis, the proposal UPDATES its
+`description` in place instead of being rejected as a duplicate. Patch
+semantics (same idiom as `ProposedRequirement`'s optional fields): an empty
+or omitted `description` leaves the existing value untouched; a non-empty
+value replaces it outright. A successful UPDATE appends one `HistoryEntry`
+to the Axis's `history` (mirroring `ProposedRequirement`'s History-on-
+mutation pattern) recording the before/after description.
+
+```json
+{"kind": "Axis", "slug": "speed-vs-rigor", "description": "ship fast, verify continuously not up-front", "why": "sharpened after the async-verification decision"}
 ```
 
 ## Requirement
@@ -289,7 +307,13 @@ that owns none of the members)
 (presentation-only, never written to the graph, default `""`),
 `initial_lifecycle` (default `"DETECTED"`; only a DECIDED constituting-atoms
 edge case may start elsewhere — see `internal/proposal/mutate.go`),
-`decided_by` (required only if `initial_lifecycle` starts with `DECIDED`)
+`decided_by` (required only if `initial_lifecycle` starts with `DECIDED`),
+`source_refs` (list of pointers to where the conflict's context/evidence
+originated — doc paths, URLs, review ids, commit hashes; default `[]`. The
+same free-form provenance shape `Requirement.source_refs` already
+establishes — no `check_*` invariant validates these entries resolve to
+anything real, mirroring the Requirement precedent rather than inventing a
+stricter rule for Conflict alone.)
 
 ```json
 {
@@ -299,7 +323,8 @@ edge case may start elsewhere — see `internal/proposal/mutate.go`),
   "members": ["R-ship-fast", "R-verify-all"],
   "resolver": "carol",
   "shared_assumption": "",
-  "note": "surfaced while scaffolding the demo domain"
+  "note": "surfaced while scaffolding the demo domain",
+  "source_refs": ["docs/roadmap.md"]
 }
 ```
 
@@ -321,7 +346,10 @@ repeated unchanged on a later `HELD` -> `DECIDED` move to preserve them),
 `date` (ISO date, defaults to today), `verbatim` (the resolver's own words,
 default `""`), `instrument` (`"personal"` default, or `"DEL-<n>"` for a filed
 delegation), `chosen_variant` (a `V-id` from `variants`, when resolving
-`HELD` -> `DECIDED`)
+`HELD` -> `DECIDED`), `source_refs` (list of provenance refs; default `[]` =
+leave untouched; a non-empty value REPLACES the Conflict's existing
+`source_refs` outright — same "empty preserves, non-empty replaces" idiom as
+`derived`/`variants` above)
 
 ```json
 {
@@ -354,10 +382,14 @@ Adds a new falsifiable belief that Requirements or Conflicts can rest on.
 **Required:** `id` (must start with `A-`), `statement`, `status` (one of
 `HOLDS` | `UNCERTAIN` | `DEAD` | `IMPLEMENTS` — see [Enum reference](#enum-reference)
 above for what each means), `owner` (a Stakeholder id)
-**Optional:** `why` (default `""`), `created_at` (ISO date, defaults to today)
+**Optional:** `why` (default `""`), `created_at` (ISO date, defaults to today),
+`source_refs` (list of pointers to where the assumption originated — doc
+paths, URLs, review ids, commit hashes; default `[]`. The same free-form
+provenance shape `Requirement.source_refs` already establishes — no `check_*`
+invariant validates these entries resolve to anything real.)
 
 ```json
-{"kind": "Assumption", "id": "A-weekly-cadence-tolerated", "statement": "Customers tolerate a weekly release cadence.", "status": "HOLDS", "owner": "alice", "why": "stated in the last customer survey"}
+{"kind": "Assumption", "id": "A-weekly-cadence-tolerated", "statement": "Customers tolerate a weekly release cadence.", "status": "HOLDS", "owner": "alice", "why": "stated in the last customer survey", "source_refs": ["docs/customer-survey-2026-07.md"]}
 ```
 
 ## AssumptionTransition
@@ -380,6 +412,32 @@ today), `verbatim` (default `""`), `instrument` (default `"personal"`)
   "new_status": "DEAD",
   "reason": "the latest survey shows customers now expect daily releases",
   "decided_by": "alice"
+}
+```
+
+## AssumptionRewrite
+
+A CLEAN REWRITE of an existing Assumption's `statement` — distinct from
+`AssumptionTransition` above, which changes `status` and APPENDS a
+`" — [STATUS] reason"` suffix onto `statement` as a side effect of a status
+decision. Use `AssumptionRewrite` when the assumption's WORDING needs
+correcting (a typo, an ambiguity, a scope clarification) with no status
+change involved at all. A successful rewrite ALWAYS appends one
+`HistoryEntry` to the Assumption's `history` recording the before/after
+statement plus the reason — a rewrite with no History trail would be silent,
+unaudited drift of what the assumption even claims.
+
+**Required:** `assumption_id`, `new_statement` (non-empty — replaces
+`statement` outright), `reason` (non-empty — a rewrite with no recorded
+reason is drift, not a decision, mirroring `AssumptionTransition`'s own
+`reason` requirement)
+
+```json
+{
+  "kind": "AssumptionRewrite",
+  "assumption_id": "A-weekly-cadence-tolerated",
+  "new_statement": "Most customers tolerate a weekly release cadence; a vocal minority want daily.",
+  "reason": "the original wording overstated the survey's actual finding"
 }
 ```
 

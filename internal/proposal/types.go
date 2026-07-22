@@ -21,6 +21,7 @@ const (
 	KindReviewMark           = "ReviewMark"
 	KindProcess              = "Process"
 	KindGateSignoffBatch     = "GateSignoffBatch"
+	KindAssumptionRewrite    = "AssumptionRewrite"
 )
 
 type Proposal interface {
@@ -72,6 +73,13 @@ type ProposedConflictTransition struct {
 	Verbatim         string             `json:"verbatim"`
 	Instrument       string             `json:"instrument"`
 	ChosenVariant    string             `json:"chosen_variant"`
+	// SourceRefs, when non-empty, REPLACES the target Conflict's existing
+	// SourceRefs (same "empty preserves, non-empty replaces" idiom Derived/
+	// Variants above already use on this same proposal kind) -- lets a
+	// transition attach provenance for the decision it is recording (e.g.
+	// the doc/ticket that documents a DECIDED lifecycle) without a separate
+	// proposal kind.
+	SourceRefs []string `json:"source_refs"`
 }
 
 func (p ProposedConflictTransition) Kind() string         { return KindConflictTransition }
@@ -95,6 +103,7 @@ type ProposedConflict struct {
 	Note             string   `json:"note"`
 	InitialLifecycle string   `json:"initial_lifecycle"`
 	DecidedBy        string   `json:"decided_by"`
+	SourceRefs       []string `json:"source_refs"`
 }
 
 func (p ProposedConflict) Kind() string { return KindConflict }
@@ -112,6 +121,18 @@ type ProposedOperatorBudget struct {
 func (p ProposedOperatorBudget) Kind() string         { return KindOperatorBudget }
 func (p ProposedOperatorBudget) TargetAnchor() string { return p.OperatorID }
 
+// ProposedAxis is a CREATE-or-UPDATE proposal for an Axis node.
+//
+// CREATE (p.Slug not yet in the graph): unchanged since Axis's introduction
+// -- description is required, a duplicate slug is rejected via errDuplicate.
+//
+// UPDATE (p.Slug already names an Axis in the graph): REPLACES the existing
+// Axis.Description with p.Description (coalesceStr's "empty preserves,
+// non-empty replaces" idiom -- the same one ProposedRequirement.mutate
+// already uses for Why/Summary/etc). A HistoryEntry recording the
+// description diff is appended, mirroring the History-on-mutation pattern
+// ProposedRequirement/ProposedEntityType/ProposedProcess already use -- see
+// ProposedAxis.mutate's doc comment in mutate.go.
 type ProposedAxis struct {
 	Slug        string `json:"slug"`
 	Description string `json:"description"`
@@ -132,12 +153,13 @@ func (p ProposedStakeholder) Kind() string         { return KindStakeholder }
 func (p ProposedStakeholder) TargetAnchor() string { return p.ID }
 
 type ProposedAssumption struct {
-	ID        string `json:"id"`
-	Statement string `json:"statement"`
-	Status    string `json:"status"`
-	Owner     string `json:"owner"`
-	Why       string `json:"why"`
-	CreatedAt string `json:"created_at"`
+	ID         string   `json:"id"`
+	Statement  string   `json:"statement"`
+	Status     string   `json:"status"`
+	Owner      string   `json:"owner"`
+	Why        string   `json:"why"`
+	CreatedAt  string   `json:"created_at"`
+	SourceRefs []string `json:"source_refs"`
 }
 
 func (p ProposedAssumption) Kind() string         { return KindAssumption }
@@ -155,6 +177,32 @@ type ProposedAssumptionTransition struct {
 
 func (p ProposedAssumptionTransition) Kind() string         { return KindAssumptionTransition }
 func (p ProposedAssumptionTransition) TargetAnchor() string { return p.AssumptionID }
+
+// ProposedAssumptionRewrite is a CLEAN REWRITE of an EXISTING Assumption's
+// Statement -- distinct from ProposedAssumptionTransition, which changes
+// Status and appends a "[STATUS] reason" suffix onto Statement as a SIDE
+// EFFECT of a status decision (see ProposedAssumptionTransition.mutate).
+// A rewrite REPLACES Statement outright with NewStatement, touching no
+// other field, for the case where an assumption's WORDING needs correcting
+// (a typo, an ambiguity, a scope clarification) with no status change
+// involved at all.
+//
+// Reason is REQUIRED (non-empty): a rewrite with no recorded reason is
+// silent, unaudited drift of what the assumption even claims -- the exact
+// failure mode ProposedAssumptionTransition's own Reason requirement
+// already guards against for status changes (see validate.go), applied
+// here to content changes instead. A HistoryEntry recording the statement
+// diff (old -> new) plus Reason is appended to the Assumption's History on
+// every apply -- see ProposedAssumptionRewrite.mutate's doc comment in
+// mutate.go for why this is non-negotiable, not merely a convention.
+type ProposedAssumptionRewrite struct {
+	AssumptionID string `json:"assumption_id"`
+	NewStatement string `json:"new_statement"`
+	Reason       string `json:"reason"`
+}
+
+func (p ProposedAssumptionRewrite) Kind() string         { return KindAssumptionRewrite }
+func (p ProposedAssumptionRewrite) TargetAnchor() string { return p.AssumptionID }
 
 type ProposedConflictMemberUpdate struct {
 	ConflictID    string   `json:"conflict_id"`

@@ -51,6 +51,16 @@ type Conflict struct {
 	CreatedAt        string    `json:"created_at"`
 	DecidedAt        string    `json:"decided_at"`
 	DeclOrder        int       `json:"decl_order"`
+	// SourceRefs lists supporting provenance references for this conflict
+	// (a doc path, a ticket id, a decision record, ...) -- the same
+	// free-form, unresolved-by-invariant shape Requirement.SourceRefs
+	// already establishes (internal/ontology/requirement.go): no check_*
+	// validates these entries resolve to anything real, mirroring
+	// Requirement's own precedent rather than inventing a stricter rule for
+	// this node type alone. Purely additive and optional (omitempty) -- a
+	// Conflict that predates this field has no source_refs and its JSON is
+	// unchanged.
+	SourceRefs []string `json:"source_refs,omitempty"`
 }
 
 func (c Conflict) IsUnresolved() bool {

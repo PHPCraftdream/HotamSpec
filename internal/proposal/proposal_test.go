@@ -891,14 +891,28 @@ func TestApply_Axis(t *testing.T) {
 	}
 }
 
-func TestApply_Axis_DuplicateSlugFails(t *testing.T) {
+// TestApply_Axis_ExistingSlugUpdatesRatherThanFails documents a deliberate
+// semantic shift: before Axis gained an UPDATE path, a proposal naming an
+// already-existing slug was rejected as errDuplicate (this test used to be
+// named TestApply_Axis_DuplicateSlugFails and asserted exactly that). Now
+// that Axis is CREATE-or-UPDATE (mirroring EntityType/Process, which made
+// the identical shift when they gained UPDATE modes -- see
+// TestApply_EntityType_UpdateAppendsNewField / TestApply_Process_Create's
+// sibling UPDATE tests, neither of which has a surviving "duplicate slug
+// fails" test either), an existing slug is a valid UPDATE target, not an
+// error. See TestApply_Axis_UpdateDescriptionAppendsHistory for the full
+// UPDATE-path assertion; this test's role is narrower: prove Apply no
+// longer errors for this shape.
+func TestApply_Axis_ExistingSlugUpdatesRatherThanFails(t *testing.T) {
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	p := ProposedAxis{
 		Slug:        "cost-vs-flexibility",
-		Description: "dup",
+		Description: "updated, not duplicated",
 	}
-	assertApplyFails(t, path, p, "duplicate")
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v, want success (existing slug is now a valid UPDATE target)", err)
+	}
 }
 
 func TestApply_Stakeholder(t *testing.T) {
@@ -1018,6 +1032,285 @@ func TestApply_AssumptionTransition_DeadWithoutDecidedByFails(t *testing.T) {
 		Reason:       "falsified",
 	}
 	assertApplyFails(t, path, p, "decided_by")
+}
+
+// TestApply_Axis_UpdateDescriptionAppendsHistory proves the Axis UPDATE path
+// (mirroring TestApply_Requirement_UpdateAppendsHistory's shape for
+// Requirement): a proposal whose slug already names an existing Axis
+// REPLACES its description and appends exactly one HistoryEntry, rather
+// than being rejected as a duplicate.
+func TestApply_Axis_UpdateDescriptionAppendsHistory(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAxis{
+		Slug:        "cost-vs-flexibility",
+		Description: "revised: cost vs flexibility, now weighted toward flexibility",
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	var a ontology.Axis
+	found := false
+	for _, x := range g.Axes {
+		if x.Slug == "cost-vs-flexibility" {
+			a = x
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("axis cost-vs-flexibility missing after UPDATE")
+	}
+	if a.Description != "revised: cost vs flexibility, now weighted toward flexibility" {
+		t.Errorf("Description = %q, want revised", a.Description)
+	}
+	if len(a.History) != 1 {
+		t.Fatalf("History len = %d, want 1", len(a.History))
+	}
+	if a.History[0].At != today {
+		t.Errorf("History[0].At = %q, want %q", a.History[0].At, today)
+	}
+}
+
+// TestApply_Axis_UpdateOmittedDescriptionPreservesExisting proves patch
+// semantics on the Axis UPDATE path: omitting description on an UPDATE
+// leaves the existing value untouched and appends no History (a no-op
+// UPDATE, mirroring how ProposedRequirement's coalesceStr fields behave
+// when omitted).
+func TestApply_Axis_UpdateOmittedDescriptionPreservesExisting(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAxis{
+		Slug: "cost-vs-flexibility",
+		Why:  "no content change, just touching the node",
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	var a ontology.Axis
+	for _, x := range g.Axes {
+		if x.Slug == "cost-vs-flexibility" {
+			a = x
+		}
+	}
+	if a.Description != "cost vs flexibility" {
+		t.Errorf("Description = %q, want preserved original", a.Description)
+	}
+	if len(a.History) != 0 {
+		t.Errorf("History = %v, want empty (no-op UPDATE)", a.History)
+	}
+}
+
+// TestApply_Axis_CreateWithoutDescriptionFails proves validate()/mutate()'s
+// deferred create-vs-update split still rejects a genuine CREATE (a
+// brand-new slug) with no description -- the UPDATE path's relaxed
+// validate() must not accidentally let a malformed CREATE through.
+func TestApply_Axis_CreateWithoutDescriptionFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAxis{
+		Slug: "brand-new-axis",
+	}
+	assertApplyFails(t, path, p, "description")
+}
+
+// TestApply_Assumption_SourceRefs proves ProposedAssumption's new
+// source_refs field lands on CREATE, and TestApply_Assumption_Create above
+// already proves the rest of the CREATE shape unaffected.
+func TestApply_Assumption_SourceRefs(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAssumption{
+		ID:         "A-with-refs",
+		Statement:  "a belief with attached provenance",
+		Status:     ontology.AssumptionHOLDS,
+		Owner:      "sa",
+		SourceRefs: []string{"docs/survey.md", "review-2026-07"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	var a ontology.Assumption
+	found := false
+	for _, x := range g.Assumptions {
+		if x.ID == "A-with-refs" {
+			a = x
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("assumption A-with-refs missing")
+	}
+	if len(a.SourceRefs) != 2 || a.SourceRefs[0] != "docs/survey.md" || a.SourceRefs[1] != "review-2026-07" {
+		t.Errorf("SourceRefs = %v, want [docs/survey.md review-2026-07]", a.SourceRefs)
+	}
+}
+
+// TestApply_AssumptionRewrite_ReplacesStatementAndAppendsHistory is the
+// carrier test for AssumptionRewrite's central claim (see its doc comment
+// in types.go/mutate.go): a rewrite REPLACES Statement outright (unlike
+// AssumptionTransition, which appends a suffix) and ALWAYS leaves a History
+// trace -- the audit requirement the task's constraint singles out
+// explicitly (a rewrite is a silent drift risk without it).
+func TestApply_AssumptionRewrite_ReplacesStatementAndAppendsHistory(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAssumptionRewrite{
+		AssumptionID: "A-base",
+		NewStatement: "the substrate is stable under normal load, unverified under burst load",
+		Reason:       "the original statement overstated the verified scope",
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	var a ontology.Assumption
+	found := false
+	for _, x := range g.Assumptions {
+		if x.ID == "A-base" {
+			a = x
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("assumption A-base missing")
+	}
+	if a.Statement != "the substrate is stable under normal load, unverified under burst load" {
+		t.Errorf("Statement = %q, want clean replacement (no suffix appended)", a.Statement)
+	}
+	if a.Status != ontology.AssumptionHOLDS {
+		t.Errorf("Status = %q, want unchanged HOLDS -- a rewrite must not touch status", a.Status)
+	}
+	if len(a.History) != 1 {
+		t.Fatalf("History len = %d, want 1 -- a rewrite must always leave an audit trace", len(a.History))
+	}
+	if a.History[0].At != today {
+		t.Errorf("History[0].At = %q, want %q", a.History[0].At, today)
+	}
+	if !strings.Contains(a.History[0].Summary, "the original statement overstated the verified scope") {
+		t.Errorf("History[0].Summary = %q, want it to contain the reason", a.History[0].Summary)
+	}
+}
+
+func TestApply_AssumptionRewrite_UnknownIDFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAssumptionRewrite{
+		AssumptionID: "A-does-not-exist",
+		NewStatement: "irrelevant",
+		Reason:       "irrelevant",
+	}
+	assertApplyFails(t, path, p, "not found")
+}
+
+func TestApply_AssumptionRewrite_EmptyReasonFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAssumptionRewrite{
+		AssumptionID: "A-base",
+		NewStatement: "a rewrite with no reason",
+	}
+	assertApplyFails(t, path, p, "reason")
+}
+
+func TestApply_AssumptionRewrite_EmptyNewStatementFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedAssumptionRewrite{
+		AssumptionID: "A-base",
+		Reason:       "trying to clear the statement",
+	}
+	assertApplyFails(t, path, p, "new_statement")
+}
+
+// TestApply_Conflict_SourceRefs proves ProposedConflict's new source_refs
+// field lands on CREATE.
+func TestApply_Conflict_SourceRefs(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	p := ProposedConflict{
+		Axis:       "cost-vs-flexibility",
+		Context:    "a brand new scenario for source_refs",
+		Members:    []string{"R-1", "R-3"},
+		Resolver:   "outsider",
+		SourceRefs: []string{"docs/incident-2026-07.md"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	cid := ontology.ConflictIdentity("cost-vs-flexibility", "a brand new scenario for source_refs")
+	c, ok := findConflict(g, cid)
+	if !ok {
+		t.Fatalf("conflict missing")
+	}
+	if len(c.SourceRefs) != 1 || c.SourceRefs[0] != "docs/incident-2026-07.md" {
+		t.Errorf("SourceRefs = %v, want [docs/incident-2026-07.md]", c.SourceRefs)
+	}
+}
+
+// TestApply_ConflictTransition_SourceRefsReplacesExisting proves
+// ProposedConflictTransition's new source_refs field replaces the existing
+// Conflict's SourceRefs when non-empty (the same "empty preserves,
+// non-empty replaces" idiom Derived/Variants already use on this proposal
+// kind).
+func TestApply_ConflictTransition_SourceRefsReplacesExisting(t *testing.T) {
+	t.Parallel()
+	seed := baseGraph()
+	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
+	for i, c := range seed.Conflicts {
+		if c.ID == cid {
+			seed.Conflicts[i].SourceRefs = []string{"docs/original.md"}
+		}
+	}
+	path := writeTempGraph(t, seed)
+	p := ProposedConflictTransition{
+		ConflictID:   cid,
+		NewLifecycle: ontology.ConflictACKNOWLEDGED,
+		SourceRefs:   []string{"docs/updated.md"},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	c, ok := findConflict(g, cid)
+	if !ok {
+		t.Fatalf("conflict missing")
+	}
+	if len(c.SourceRefs) != 1 || c.SourceRefs[0] != "docs/updated.md" {
+		t.Errorf("SourceRefs = %v, want [docs/updated.md]", c.SourceRefs)
+	}
+}
+
+// TestApply_ConflictTransition_OmittedSourceRefsPreservesExisting proves the
+// "empty preserves" half of the same idiom.
+func TestApply_ConflictTransition_OmittedSourceRefsPreservesExisting(t *testing.T) {
+	t.Parallel()
+	seed := baseGraph()
+	cid := ontology.ConflictIdentity("cost-vs-flexibility", "shared scenario")
+	for i, c := range seed.Conflicts {
+		if c.ID == cid {
+			seed.Conflicts[i].SourceRefs = []string{"docs/original.md"}
+		}
+	}
+	path := writeTempGraph(t, seed)
+	p := ProposedConflictTransition{
+		ConflictID:   cid,
+		NewLifecycle: ontology.ConflictACKNOWLEDGED,
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	c, ok := findConflict(g, cid)
+	if !ok {
+		t.Fatalf("conflict missing")
+	}
+	if len(c.SourceRefs) != 1 || c.SourceRefs[0] != "docs/original.md" {
+		t.Errorf("SourceRefs = %v, want preserved [docs/original.md]", c.SourceRefs)
+	}
 }
 
 func TestApply_ConflictMemberUpdate_Add(t *testing.T) {

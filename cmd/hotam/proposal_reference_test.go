@@ -85,6 +85,7 @@ var proposalKindsSample = []proposal.Proposal{
 	proposal.ProposedRejection{},
 	proposal.ProposedAssumption{},
 	proposal.ProposedAssumptionTransition{},
+	proposal.ProposedAssumptionRewrite{},
 	proposal.ProposedConflictMemberUpdate{},
 	proposal.ProposedReviewMark{},
 	proposal.ProposedOperatorBudget{},
