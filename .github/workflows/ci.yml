@@ -8,7 +8,14 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  # Fast shared gate: build + gofmt + vet. Kept as its own job (not folded
+  # into the test jobs below) so a broken build/format/vet fails in ~15-20s
+  # instead of waiting on the much longer test jobs to discover the same
+  # thing. GitHub Actions jobs run in parallel by default (no `needs:`
+  # between siblings) -- this job has no `needs:` itself, and every job
+  # below `needs: lint-and-build` so they don't burn CI minutes running the
+  # full test suite against code that doesn't even build.
+  lint-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,15 +41,110 @@ jobs:
       - name: go vet
         run: go vet ./...
 
-      - name: go test -race
-        # -timeout 30m: see Makefile's test-race target for the measured
-        # rationale (two dev-machine runs of `go test ./cmd/hotam/` took
-        # 1079s/1174s even with the shared-binary build already in place;
-        # the floor is now a handful of serial t.Setenv tests, not
-        # per-test rebuilds). -race adds further instrumentation cost on
-        # top, and CI runners are typically slower than dev hardware, so
-        # 30m keeps real margin here too.
-        run: go test -race -timeout 30m ./...
+  # -race, scoped to the packages that actually have real in-process
+  # concurrency (goroutines/channels/sync primitives in non-test code):
+  # internal/gate (compile cache + singleflight test-exec), internal/
+  # generator (parallel doc rendering), internal/invariants (parallel
+  # violation runners + worker-pooled verified_by exec). Every other
+  # internal/* package (diagnose, freshness, loader, methodology, ontology,
+  # paths, proposal, query, recorder/canon, recorder/vendor, registry,
+  # selfcheck) has NO goroutine/channel/sync usage in its own non-test code
+  # (verified via `grep -l "go func\|sync\." internal/*/*.go` across the
+  # whole tree, task #327 stage 1) -- -race buys nothing there, so they run
+  # in the plain (non-race) job below instead, alongside cmd/hotam.
+  test-race:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go test -race (concurrency-bearing packages)
+        run: go test -race -timeout 30m ./internal/gate/... ./internal/generator/... ./internal/invariants/...
+
+  # cmd/hotam's own tests, WITHOUT -race, run separately from the race job
+  # above and from the rest of internal/* below. Two reasons this package
+  # gets its own job:
+  #   1. Its e2e tests (killswitch_e2e_test.go, external_e2e_test.go,
+  #      init_project_e2e_test.go, etc.) build a real `hotam` binary once
+  #      per process (buildSharedHotamBinary, sync.Once-memoized) and spawn
+  #      it as a SUBPROCESS. `-race` instruments the parent test process,
+  #      NOT the plain `go build`-produced child binary -- so for these
+  #      subprocess-based e2e tests, -race in the parent buys close to zero
+  #      extra bug-catching power while still paying full instrumentation
+  #      overhead on the parent's own comparatively small in-process work.
+  #      Real in-process concurrency worth -race lives in internal/gate and
+  #      internal/invariants (both covered by the test-race job above), not
+  #      in cmd/hotam's own package code.
+  #   2. It is overwhelmingly the dominant cost of the whole suite (every
+  #      other package combined is under 100s on an unloaded box) because
+  #      of these same e2e tests' real init/land/gen-spec cycles against
+  #      on-disk fixtures -- giving it its own job lets it run in parallel
+  #      with test-race and test-other instead of serializing behind them.
+  test-cmd-hotam:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go test (cmd/hotam, no -race)
+        # -timeout 30m: see Makefile's test-cmd-hotam target for the
+        # measured rationale (this package's e2e/killswitch tests spawn
+        # real `go build`/`go test` subprocesses; the wall-clock floor is a
+        # small set of tests that call t.Setenv and so cannot use
+        # t.Parallel, run serially, each doing a real gen-spec
+        # regeneration / `land` verified_by gate against the full
+        # hotam-spec-self domain graph). 30m keeps real headroom without
+        # masking a genuine hang.
+        run: go test -timeout 30m ./cmd/hotam/...
+
+  # Every remaining internal/* package: small (each under a few seconds
+  # observed on an unloaded box, task #327 stage 1 measurement) and, per
+  # the grep above, none has real goroutine/sync usage in non-test code --
+  # so plain `go test` here is not a coverage regression versus -race, just
+  # a cost saving.
+  test-other:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go test (remaining internal/* packages)
+        run: |
+          go test -timeout 30m $(go list ./... | grep -v -E 'cmd/hotam$|internal/gate$|internal/generator$|internal/invariants$')
+
+  gen-spec-idempotency:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
       - name: gen-spec idempotency
         run: |
@@ -66,14 +168,20 @@ jobs:
           # (cmd/hotam/land.go) always calls plain genSpec too, so this is
           # the mode this repo's committed docs/gen/ tree must match.
           # SPEC.md's own freshness is separately enforced by
-          # check_spec_md_current (runs inside `go test` above, not here);
-          # every OTHER docs/gen/ projection (TRACEABILITY.md, COVERAGE.md,
-          # REPO-MAP.md) is now provably mode-independent — see
-          # TestGenSpec_SharedProjectionsModeIndependent
+          # check_spec_md_current (runs inside the test jobs above, not
+          # here); every OTHER docs/gen/ projection (TRACEABILITY.md,
+          # COVERAGE.md, REPO-MAP.md) is now provably mode-independent —
+          # see TestGenSpec_SharedProjectionsModeIndependent
           # (cmd/hotam/gen_spec_test.go), which proves includeSpec=true and
           # includeSpec=false produce byte-identical output for these three
           # files, so committing a plain-mode baseline here is safe and
           # stable regardless of which mode last regenerated it locally.
+          #
+          # This job only `needs: lint-and-build` (a successful `go build`),
+          # not the test jobs -- it doesn't consume their results, it just
+          # runs `go run ./cmd/hotam gen-spec` and diffs the tree, so it
+          # runs in parallel with test-race/test-cmd-hotam/test-other
+          # rather than waiting behind them (task #327 stage 2).
           pinned_today=$(grep -oE '\(as of [0-9]{4}-[0-9]{2}-[0-9]{2}\)' domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
           if [ -z "$pinned_today" ]; then
             echo "::error::could not extract the committed today-date from docs/gen/AGENT-CONTEXT.md"

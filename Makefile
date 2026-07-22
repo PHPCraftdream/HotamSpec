@@ -1,4 +1,4 @@
-.PHONY: build test test-race vet fmt fmt-check check gen
+.PHONY: build test test-race test-fast test-cmd-hotam test-race-scoped test-other vet fmt fmt-check check gen
 
 build:
 	go build -o bin/hotam ./cmd/hotam
@@ -25,6 +25,29 @@ test:
 
 test-race:
 	go test -race -timeout 30m ./...
+
+# The following three targets mirror CI's split (.github/workflows/ci.yml,
+# task #327 stage 2) for local-dev parity: run just the slice you're
+# iterating on instead of the full `test`/`test-race` (which stay as-is
+# above for anyone/anything that already invokes them for full-suite
+# semantics). See ci.yml's own job comments for the full "why" on the
+# race/no-race package split.
+test-race-scoped:
+	go test -race -timeout 30m ./internal/gate/... ./internal/generator/... ./internal/invariants/...
+
+test-cmd-hotam:
+	go test -timeout 30m ./cmd/hotam/...
+
+test-other:
+	go test -timeout 30m $(shell go list ./... | grep -v -E 'cmd/hotam$$|internal/gate$$|internal/generator$$|internal/invariants$$')
+
+# Quick local iteration loop: skips cmd/hotam's slow e2e/killswitch tests
+# entirely (they self-skip under -short, see testing.Short() checks in
+# cmd/hotam/*_e2e_test.go) and skips -race, so this is the fastest possible
+# "did I obviously break something" signal. NOT a substitute for `check`
+# before pushing.
+test-fast:
+	go test -timeout 5m -short ./...
 
 vet:
 	go vet ./...
