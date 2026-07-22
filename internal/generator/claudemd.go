@@ -561,6 +561,9 @@ func renderDomainMapBlockWithViolations(repoRoot string, domainGraphs map[string
 		atomsCount := 0
 		openActions := 0
 		topActionLine := ""
+		gateStage := ""
+		gateSigned := 0
+		gateDeferred := 0
 
 		dg := domainGraphs[name]
 		if dg == nil {
@@ -570,9 +573,62 @@ func renderDomainMapBlockWithViolations(repoRoot string, domainGraphs map[string
 			}
 		}
 		if dg != nil {
-			for _, r := range dg.Requirements {
+			// gate-progress (task Q-domain-map-gates): computed in this SAME
+			// pass over dg.Requirements that already tallies atomsCount — a
+			// pure read of the already-in-memory graph's typed
+			// Requirement.GateSignoffs carrier, never a fresh
+			// AllViolations/Diagnose call for a sibling domain (see this
+			// function's own doc comment + domainPulse's for the mutual-
+			// recursion hazard that would reintroduce). order is nil (honest
+			// no-op) for a domain with no declared gate_stage_order, mirroring
+			// checkGateSignoffMonotonic's identical guard.
+			var order []string
+			if dg.DomainDir != "" {
+				order = loader.ResolveGateStageOrder(filepath.Join(dg.DomainDir, "graph.json"))
+			}
+			stageIndex := make(map[string]int, len(order))
+			for i, s := range order {
+				stageIndex[s] = i
+			}
+			// lastAtStage tracks, per Requirement (by index into
+			// dg.Requirements) and stage, the LAST (highest-index, i.e. most
+			// recently appended — GateSignoffBatch.mutate only ever appends,
+			// see proposal/mutate.go) GateSignoff.State seen for that stage.
+			// A stage can carry more than one entry for the same Requirement
+			// across pipeline re-runs (e.g. an early DEFERRED superseded by a
+			// later SIGNED once its blocking Conflict resolved) — counting
+			// every entry would double-count that Requirement at the stage;
+			// only the LAST entry reflects its CURRENT gate state.
+			type reqStage struct {
+				reqIdx int
+				stage  string
+			}
+			lastAtStage := make(map[reqStage]string)
+			frontierIdx := -1
+			for ri, r := range dg.Requirements {
 				if r.Status == ontology.StatusSETTLED {
 					atomsCount++
+				}
+				for _, gs := range r.GateSignoffs {
+					idx, known := stageIndex[gs.Stage]
+					if !known {
+						continue
+					}
+					if idx > frontierIdx {
+						frontierIdx = idx
+					}
+					lastAtStage[reqStage{reqIdx: ri, stage: gs.Stage}] = gs.State
+				}
+			}
+			if frontierIdx >= 0 {
+				gateStage = order[frontierIdx]
+				for ri := range dg.Requirements {
+					switch lastAtStage[reqStage{reqIdx: ri, stage: gateStage}] {
+					case ontology.GateSignoffStateSigned:
+						gateSigned++
+					case ontology.GateSignoffStateDeferred:
+						gateDeferred++
+					}
 				}
 			}
 			openActions, topActionLine = domainPulse(dg, today, violations.forGraph(dg))
@@ -635,6 +691,19 @@ func renderDomainMapBlockWithViolations(repoRoot string, domainGraphs map[string
 			lines = append(lines, "- **crystal** — `domains/"+name+"/CLAUDE.md`")
 		}
 		lines = append(lines, fmt.Sprintf("- **atoms-count** — %d SETTLED", atomsCount))
+		// gates (task Q-domain-map-gates): the frontier gate stage's
+		// SIGNED/DEFERRED tally, surfaced ALONGSIDE atoms-count/open-actions
+		// so a sibling domain's Domain Map entry carries actual gate-passage
+		// progress, not just its top-action headline — the gap V1's black-box
+		// evaluation found (a root-level "what stage is gpsm-sm at" answer
+		// was less accurate than the same question asked from inside
+		// gpsm-sm, because this line did not exist yet). Honest no-op
+		// (line omitted entirely, not rendered empty) when the domain never
+		// declared gate_stage_order or has never recorded a single
+		// GateSignoff — same pattern as the crystal-link line above.
+		if gateStage != "" {
+			lines = append(lines, fmt.Sprintf("- **gates** — %s: %d/%d SIGNED · %d DEFERRED", gateStage, gateSigned, gateSigned+gateDeferred, gateDeferred))
+		}
 		if openActions > 0 {
 			lines = append(lines, fmt.Sprintf("- **open actions** — %d (top: %s)", openActions, topActionLine))
 		} else {
