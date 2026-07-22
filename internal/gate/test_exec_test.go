@@ -997,9 +997,30 @@ func TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly(t *testing.T
 // internal), so it instead asserts on os.TempDir()'s own root: no directory
 // matching the "hotam-record-*" prefix this function uses may survive after
 // a call returns.
+//
+// This test deliberately does NOT run in parallel and, more importantly,
+// redirects the process's temp-dir env vars (TMPDIR on Unix -- what
+// os.MkdirTemp("", ...) / os.TempDir() actually consult on the ubuntu-latest
+// CI runner this repo builds on; TMP/TEMP thrown in too for local Windows
+// dev) to a t.TempDir() private to this test for the duration of the call
+// under test. Without this, os.TempDir() resolves to the single OS-wide
+// shared temp root, and this package's OTHER tests that also call
+// RunVerifiedByTestRecording under t.Parallel() (e.g.
+// TestRunVerifiedByTestRecording_RealScenario_AssertPlusArtifactPlusCoverage)
+// create and remove their own "hotam-record-*" dirs there concurrently --
+// a raw before/after count on that shared root is then racy: unrelated
+// sibling dirs can appear or disappear between this test's two globs even
+// though THIS call's own dir was correctly cleaned up. Pointing this call
+// at a private root removes the shared namespace entirely, so any
+// survivor found there is unambiguously attributable to this call.
 func TestRunVerifiedByTestRecording_TmpDirCleanedUpAfterReturn(t *testing.T) {
 	const modulePath = "example.com/tmpcleanupmod"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	privateTmp := t.TempDir()
+	t.Setenv("TMPDIR", privateTmp)
+	t.Setenv("TMP", privateTmp)
+	t.Setenv("TEMP", privateTmp)
 
 	before, err := filepath.Glob(filepath.Join(os.TempDir(), "hotam-record-*"))
 	if err != nil {
