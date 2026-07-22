@@ -71,6 +71,36 @@ History predating this file is not backfilled — see `git log` and
   (`os.ReadFile`, not a bare `os.Stat`).
 
 ### Changed
+- **CI pipeline split into parallel jobs, ~2.1x wall-clock speedup** (task
+  #327): the single `build-and-test` job (`.github/workflows/ci.yml`) that
+  ran Build → gofmt → vet → `go test -race -timeout 30m ./...` → gen-spec
+  idempotency serially — 9m19s total on the last green baseline run
+  (29954625735), of which `go test -race ./...` alone was 8m53s (~95%) —
+  is now five jobs: a fast shared `lint-and-build` gate (Build/gofmt/vet,
+  ~26s) fanning out via `needs:` to four parallel jobs — `test-race`
+  (`-race`, scoped to `internal/gate`/`internal/generator`/
+  `internal/invariants`, the only packages with real goroutine/sync usage
+  in non-test code, ~100s), `test-cmd-hotam` (`cmd/hotam`'s own tests
+  without `-race` — its e2e tests spawn a real compiled subprocess binary
+  that `-race` on the parent process doesn't instrument, so `-race` there
+  bought near-zero extra coverage for full instrumentation cost, ~169s),
+  `test-other` (every remaining small `internal/*` package, no `-race`
+  needed, ~40s), and `gen-spec-idempotency` (now depends only on a
+  successful build, not on the test jobs finishing, ~35s). First real
+  post-split CI run (29960077353): **4m24s total**, down from 9m19s.
+  `Makefile` gained `test-race-scoped`/`test-cmd-hotam`/`test-other`
+  targets mirroring the new CI jobs, plus `test-fast` (`-short`, no
+  `-race`) for quick local iteration; existing `test`/`test-race`/`check`
+  targets are unchanged. Stage-3 (`t.Parallel()` expansion) and stage-4
+  (killswitch fixture sharing) from the task plan were evaluated against
+  real per-test CI timing and not pursued: `test-cmd-hotam`'s actual CI
+  cost (169s) no longer dominates the pipeline post-split, the package
+  already carries 255 `t.Parallel()` calls, and its few remaining serial
+  `t.Setenv`-bound tests are slow because of the real gen-spec/invariant
+  work they do against a full 320-node domain graph, not `t.Setenv`
+  overhead itself — de-serializing them would require injecting env into
+  `resolveDomain` instead of reading `os.Getenv` directly, a production-
+  code design change disproportionate to the remaining payoff.
 - **`apply-proposal`'s structural false-positive class fixed**: checks that
   compare against an on-disk projection only `gen-spec` regenerates
   (`check_spec_md_current`, `check_domain_claude_md_current`) are now
