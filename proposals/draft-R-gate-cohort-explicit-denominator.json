@@ -1,0 +1,39 @@
+{
+  "kind": "Requirement",
+  "id": "R-gate-cohort-explicit-denominator",
+  "claim": "A `gate_signoff_count` orientation_faq assert (loader.OrientationFAQAssert) that ALSO declares a manifest-level `gate_cohort` ({\"statuses\": [...], \"exclude\": [...]}) answers a STRONGER question than the assert's pre-existing bare form: 'have ALL cohort requirements passed this stage' -- a cohort member that was NEVER ASSESSED at the target stage (no GateSignoff record at all, neither SIGNED nor DEFERRED) MUST count AGAINST `expect:\"all\"`, never be silently invisible to it. Absent a declared `gate_cohort`, the assert's denominator stays `total = tally.Signed + tally.Deferred` (today's semantics, byte-identical -- a Requirement never evaluated at the stage is invisible to that sum by construction, and this weaker form remains valid for a domain that has not opted into an explicit cohort declaration). Separately, a `gate_signoff_count` assert MUST tally FAIL CLOSED -- refuse to silently conflate distinct pipeline executions -- when its target stage carries GateSignoffs from more than one distinct `pipeline_run` and the assert itself does not declare which `pipeline_run` it means; declaring `pipeline_run` on the assert disambiguates and tallies only that one run's signoffs.",
+  "owner": "framework-author",
+  "status": "DRAFT",
+  "why": "Task #330 (R4-cohort), fourth external review: `gate_signoff_count`'s pre-existing denominator (`tally.Signed + tally.Deferred`) is blind to a Requirement with NO gate-signoff record at all at a stage -- it was never evaluated, so it contributes to neither Signed nor Deferred, and `expect:\"all\"` can pass while that requirement was silently never assessed. Confirmed live in `gpsm-sm`: 35 requirements total, only 32 carry any gate signoff at all at the relevant stage -- the other 3 (`R-domain-exists` REJECTED, `R-gpsm-pg1-passage`/`R-gpsm-project` SETTLED meta-requirements describing the pipeline itself rather than passing through it) are legitimately out of cohort, which is exactly why the simpler alternative (`total = all Requirements` regardless of role) was rejected during this task's design consult in favor of an explicit, domain-declared cohort. `loader.ResolveGateCohort` (`internal/loader/gate_cohort.go`) reads the optional manifest `gate_cohort` field (statuses default `[\"SETTLED\"]` when declared-but-empty); `graphfacts.CohortCount` (`internal/graphfacts/facts.go`) is the trivial counted-filter extraction (matching this package's own 'extracted so divergent reimplementations can't creep' discipline, mirroring `lastSignoffAtStage`'s identical rationale for the gate-tally dedup rule); `evalOrientationAssert` (`internal/invariants/orientation_faq_assert.go`) wires the cohort denominator in when declared, fails closed on an `exclude` id that matches no real Requirement or a `statuses` entry that is not a recognized status (reusing `graphfacts.RequirementStatusTally`'s own exact-match + OPEN-prefix matching rule, not a new one), and also wires the previously-unused `OrientationFAQAssert.State` field (`\"\"`/`\"SIGNED\"` byte-identical default vs `\"DEFERRED\"`). The multi-run half closes a second, related gap: `GateSignoff.PipelineRun` was already mandatory/populated on every signoff but `graphfacts` silently conflated every run's signoffs when tallying a stage -- `lastSignoffAtStage`/`GateSignoffTally` now take a `run` parameter (`\"\"` = all runs = the exact pre-existing behavior, still the default for `internal/generator/pipeline.go`'s Live-state renderer and `internal/generator/claudemd.go`'s DOMAIN-MAP renderer, both unchanged), and a new `graphfacts.PipelineRunsAtStage` plus `OrientationFAQAssert.PipelineRun` field let an assert either disambiguate a genuinely multi-run stage or fail closed when it does not. Actually declaring `gate_cohort` in `gpsm-sm`'s own manifest.json (activating the stronger check there) is intentionally a SEPARATE follow-up, out of this requirement's scope -- this requirement claims only the engine-portion capability now existing and regression-tested.",
+  "assumptions": [],
+  "relations": [
+    {"kind": "refines", "target": "R-orientation-faq-answerable"}
+  ],
+  "enforcement": "PROSE",
+  "enforced_by": [],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-23",
+  "settled_at": "",
+  "last_reviewed_at": "",
+  "review_after": "",
+  "evidence": [
+    "internal/graphfacts/facts_test.go",
+    "internal/invariants/orientation_faq_assert_test.go"
+  ],
+  "source_refs": [
+    "internal/loader/gate_cohort.go",
+    "internal/loader/orientation_faq.go",
+    "internal/graphfacts/facts.go",
+    "internal/invariants/orientation_faq_assert.go"
+  ],
+  "blocked_on": "",
+  "implemented_by": [
+    "internal/graphfacts/facts.go:CohortCount",
+    "internal/invariants/orientation_faq_assert.go:evalOrientationAssert"
+  ],
+  "verified_by": [
+    "internal/invariants/orientation_faq_assert_test.go:TestCheckOrientationFAQAnswered_GateCohort_NeverEvaluatedMemberFailsAll"
+  ]
+}

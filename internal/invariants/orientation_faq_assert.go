@@ -58,8 +58,45 @@ func evalOrientationAssert(g *ontology.Graph, e loader.OrientationFAQEntry, crys
 				"assert kind \"gate_signoff_count\" names stage %q, which is not present in the domain's declared gate_stage_order %v",
 				a.Stage, order))}
 		}
-		tally := graphfacts.GateSignoffTally(g, order, a.Stage)
-		count, total = tally.Signed, tally.Signed+tally.Deferred
+
+		// Multi-pipeline-run guard (task #330): a stage that has recorded
+		// GateSignoffs from more than one distinct pipeline_run cannot be
+		// tallied honestly without knowing WHICH run this assert means —
+		// fail closed rather than silently conflating runs.
+		if strings.TrimSpace(a.PipelineRun) == "" {
+			if runs := graphfacts.PipelineRunsAtStage(g, order, a.Stage); len(runs) > 1 {
+				return []Violation{assertViolation(e, fmt.Sprintf(
+					"assert kind \"gate_signoff_count\" targets stage %q, which has signoffs from %d distinct pipeline_runs %v — declare \"pipeline_run\" on this assert to disambiguate",
+					a.Stage, len(runs), runs))}
+			}
+		}
+
+		tally := graphfacts.GateSignoffTally(g, order, a.Stage, a.PipelineRun)
+
+		switch a.State {
+		case "", ontology.GateSignoffStateSigned:
+			count = tally.Signed
+		case ontology.GateSignoffStateDeferred:
+			count = tally.Deferred
+		default:
+			return []Violation{assertViolation(e, fmt.Sprintf(
+				"assert kind \"gate_signoff_count\" declares unrecognized \"state\" %q — must be \"\", \"SIGNED\", or \"DEFERRED\"",
+				a.State))}
+		}
+
+		if spec := loader.ResolveGateCohort(filepath.Join(g.DomainDir, "graph.json")); spec != nil {
+			member, violation := gateCohortMemberPredicate(e, g, spec)
+			if violation != nil {
+				return []Violation{*violation}
+			}
+			total = graphfacts.CohortCount(g, member)
+		} else {
+			// No gate_cohort declared — today's semantics, byte-identical:
+			// the denominator is whatever this stage has actually recorded
+			// (Signed+Deferred), blind to any Requirement never evaluated
+			// at this stage at all.
+			total = tally.Signed + tally.Deferred
+		}
 
 	case "conflict_count_by_lifecycle":
 		c, t, err := graphfacts.ConflictLifecycleTally(g, a.LifecycleClass)
@@ -176,4 +213,69 @@ func stringInSlice(ss []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// gateCohortMemberPredicate validates spec against g's live Requirements
+// (fail-closed — never silently no-ops a malformed spec, matching this
+// package's own "the check, not the loader, diagnoses" convention already
+// established for gate_stage_order/orientation_faq) and, when valid, returns
+// a membership predicate for graphfacts.CohortCount: r is a cohort member
+// when r.Status matches spec.Statuses (mirroring
+// graphfacts.RequirementStatusTally's own exact-match + OPEN-prefix
+// matching rule — reused, not reinvented) AND r.ID is not named in
+// spec.Exclude.
+//
+// Two validation failures fail closed with a named violation instead of
+// silently proceeding:
+//
+//   - Any spec.Exclude id that does not match a real g.Requirements id (a
+//     typo, a since-renamed/removed requirement).
+//   - Any spec.Statuses entry that is not a recognized status value
+//     (ontology.StatusDRAFT/StatusSETTLED/StatusREJECTED/StatusOPENPrefix).
+func gateCohortMemberPredicate(e loader.OrientationFAQEntry, g *ontology.Graph, spec *loader.GateCohortSpec) (func(r ontology.Requirement) bool, *Violation) {
+	knownIDs := make(map[string]struct{}, len(g.Requirements))
+	for _, r := range g.Requirements {
+		knownIDs[r.ID] = struct{}{}
+	}
+	for _, id := range spec.Exclude {
+		if _, ok := knownIDs[id]; !ok {
+			v := assertViolation(e, fmt.Sprintf(
+				"assert kind \"gate_signoff_count\" declares a gate_cohort \"exclude\" entry %q, which does not match any Requirement id in this domain's graph",
+				id))
+			return nil, &v
+		}
+	}
+
+	for _, status := range spec.Statuses {
+		if status != ontology.StatusDRAFT && status != ontology.StatusSETTLED &&
+			status != ontology.StatusREJECTED && status != ontology.StatusOPENPrefix {
+			v := assertViolation(e, fmt.Sprintf(
+				"assert kind \"gate_signoff_count\" declares a gate_cohort \"statuses\" entry %q, which is not a recognized requirement status",
+				status))
+			return nil, &v
+		}
+	}
+
+	excluded := make(map[string]struct{}, len(spec.Exclude))
+	for _, id := range spec.Exclude {
+		excluded[id] = struct{}{}
+	}
+
+	return func(r ontology.Requirement) bool {
+		if _, isExcluded := excluded[r.ID]; isExcluded {
+			return false
+		}
+		for _, status := range spec.Statuses {
+			if status == ontology.StatusOPENPrefix {
+				if r.IsOpen() {
+					return true
+				}
+				continue
+			}
+			if r.Status == status {
+				return true
+			}
+		}
+		return false
+	}, nil
 }

@@ -67,13 +67,36 @@ type OrientationFAQEntry struct {
 // Kind selects which internal/graphfacts tally function computes the live
 // (count, total) pair:
 //
-//   - "gate_signoff_count" — query.GateSignoffTally(g, order, Stage), where
-//     order is the domain's declared gate_stage_order
+//   - "gate_signoff_count" — graphfacts.GateSignoffTally(g, order, Stage,
+//     PipelineRun), where order is the domain's declared gate_stage_order
 //     (loader.ResolveGateStageOrder). Stage must name a real declared
-//     stage.
-//   - "conflict_count_by_lifecycle" — query.ConflictLifecycleTally(g,
+//     stage. count/total are further shaped by two task #330 additions:
+//
+//     (1) Cohort denominator: when the domain's manifest.json declares a
+//     "gate_cohort" (loader.ResolveGateCohort), total = the count of
+//     Requirements matching that cohort's Statuses/Exclude spec
+//     (graphfacts.CohortCount) — NOT total = Signed+Deferred. This closes a
+//     real blind spot the old denominator carried: a Requirement with NO
+//     GateSignoff record at all at this stage (never evaluated) was
+//     invisible to Signed+Deferred, so expect:"all" could silently pass
+//     even though some cohort member was never assessed. Absent a declared
+//     gate_cohort, total = Signed+Deferred exactly as before task #330 —
+//     100% backward compatible for every manifest.json that predates this
+//     field.
+//
+//     (2) Multi-run disambiguation: PipelineRun (below), when declared,
+//     narrows the tally to GateSignoffs from that ONE pipeline_run only. A
+//     stage that has recorded GateSignoffs from more than one distinct
+//     pipeline_run (graphfacts.PipelineRunsAtStage) and does NOT declare
+//     PipelineRun fails closed — the tally would otherwise silently
+//     conflate runs (the SAME last-entry-per-requirement dedup rule
+//     lastSignoffAtStage already applies, but across every run at once,
+//     which stops being the right question once a stage has been run more
+//     than once).
+//
+//   - "conflict_count_by_lifecycle" — graphfacts.ConflictLifecycleTally(g,
 //     LifecycleClass) ("DECIDED" | "HELD" | "UNRESOLVED").
-//   - "requirement_count_by_status" — query.RequirementStatusTally(g,
+//   - "requirement_count_by_status" — graphfacts.RequirementStatusTally(g,
 //     Status, Enforcement) (Enforcement optional — "" matches any
 //     enforcement level).
 //
@@ -100,9 +123,11 @@ type OrientationFAQEntry struct {
 // file's own established convention: "the check, not the loader, is where
 // 'this entry cannot be satisfied' is diagnosed" — see
 // ResolveOrientationFAQDiagnostic's doc comment). Full semantic validation
-// (unknown Kind, Stage not in the domain's declared order, malformed
-// Expect, an Assert with neither Expect nor Phrase) happens at CHECK time
-// in internal/invariants/orientation_faq_assert.go's evalOrientationAssert,
+// (unknown Kind, Stage not in the domain's declared order, an invalid
+// gate_cohort Statuses/Exclude entry, an ambiguous multi-run stage with no
+// declared PipelineRun, malformed Expect, an Assert with neither Expect nor
+// Phrase) happens at CHECK time in
+// internal/invariants/orientation_faq_assert.go's evalOrientationAssert,
 // which fails closed on every one of those cases.
 type OrientationFAQAssert struct {
 	// Kind selects the query dispatch: "gate_signoff_count" |
@@ -112,10 +137,27 @@ type OrientationFAQAssert struct {
 	// domain's declared gate_stage_order) when Kind is
 	// "gate_signoff_count".
 	Stage string `json:"stage,omitempty"`
-	// State is currently unused by any Kind but reserved for a future
-	// per-signoff-state assertion kind; carried here so a manifest author
-	// can declare it without a loader round-trip break later.
+	// State selects which side of the live gate tally this assert's "count"
+	// reads, when Kind is "gate_signoff_count": "" (the default) or
+	// "SIGNED" both mean count=tally.Signed (today's behavior byte-
+	// identical, for every assert authored before this field was wired up
+	// — task #329's gpsm-sm migration already writes "state":"SIGNED"
+	// explicitly); "DEFERRED" means count=tally.Deferred, for an assert
+	// that wants to answer "how many are explicitly deferred" rather than
+	// "how many passed". Any other value fails closed at check time. Unused
+	// by every other Kind.
 	State string `json:"state,omitempty"`
+	// PipelineRun, when declared and Kind is "gate_signoff_count",
+	// disambiguates WHICH pipeline execution's GateSignoffs this assert
+	// tallies (graphfacts.GateSignoffTally's run parameter) — required once
+	// a stage has recorded GateSignoffs from more than one distinct
+	// pipeline_run (see this type's own doc comment, "(2) Multi-run
+	// disambiguation"). "" (the default) tallies across ALL runs, exactly
+	// the pre-task-#330 behavior — fine for a domain whose pipeline has
+	// only ever run once per stage, but fails closed at check time the
+	// moment a second distinct pipeline_run shows up at a stage this assert
+	// targets without PipelineRun set.
+	PipelineRun string `json:"pipeline_run,omitempty"`
 	// LifecycleClass names one of "DECIDED" | "HELD" | "UNRESOLVED" when
 	// Kind is "conflict_count_by_lifecycle".
 	LifecycleClass string `json:"lifecycle_class,omitempty"`

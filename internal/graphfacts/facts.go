@@ -22,7 +22,11 @@
 // it freely, and it may never itself import either.
 package graphfacts
 
-import "github.com/PHPCraftdream/HotamSpec/internal/ontology"
+import (
+	"sort"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+)
 
 // GateTally is a live SIGNED/DEFERRED count pair for one gate stage.
 type GateTally struct {
@@ -44,11 +48,19 @@ type GateTally struct {
 // existed — extracted here verbatim, not reimplemented, so a subtle
 // double-counting bug cannot creep in via divergent reimplementations.
 //
+// run, when non-empty, restricts every considered GateSignoff to those whose
+// PipelineRun exactly equals run — the dedup rule then applies WITHIN that
+// one run only, never mixing entries across distinct pipeline_run values. An
+// empty run considers every GateSignoff regardless of PipelineRun — the
+// exact pre-existing (task #321-era) behavior, byte-identical, preserved as
+// the default for every call site that has not opted into run-scoping.
+//
 // frontierIdx is the highest stage index (into order) at which ANY
-// Requirement carries a recorded GateSignoff — the "furthest stage the
-// pipeline has touched so far" — or -1 if no Requirement carries any
-// GateSignoff whose Stage is known to order at all.
-func lastSignoffAtStage(g *ontology.Graph, order []string) (last map[reqStage]string, frontierIdx int) {
+// Requirement carries a recorded GateSignoff (matching run, when declared) —
+// the "furthest stage the pipeline has touched so far" — or -1 if no
+// Requirement carries any matching GateSignoff whose Stage is known to order
+// at all.
+func lastSignoffAtStage(g *ontology.Graph, order []string, run string) (last map[reqStage]string, frontierIdx int) {
 	stageIndex := make(map[string]int, len(order))
 	for i, s := range order {
 		stageIndex[s] = i
@@ -57,6 +69,9 @@ func lastSignoffAtStage(g *ontology.Graph, order []string) (last map[reqStage]st
 	frontierIdx = -1
 	for ri, r := range g.Requirements {
 		for _, gs := range r.GateSignoffs {
+			if run != "" && gs.PipelineRun != run {
+				continue
+			}
 			idx, known := stageIndex[gs.Stage]
 			if !known {
 				continue
@@ -85,8 +100,16 @@ type reqStage struct {
 // in order is simply never matched by any Requirement's GateSignoff.Stage,
 // so it tallies (0, 0), the honest empty result for an unknown/undeclared
 // stage.
-func GateSignoffTally(g *ontology.Graph, order []string, stage string) GateTally {
-	last, _ := lastSignoffAtStage(g, order)
+//
+// run, when non-empty, restricts the tally to GateSignoffs whose PipelineRun
+// exactly equals run — see lastSignoffAtStage's doc comment. An empty run
+// tallies across ALL pipeline runs, the exact pre-existing behavior every
+// call site predating task #330's multi-run guard relies on
+// (internal/generator/claudemd.go's DOMAIN-MAP renderer and
+// internal/generator/pipeline.go's Live-state renderer both pass "" here,
+// unchanged).
+func GateSignoffTally(g *ontology.Graph, order []string, stage, run string) GateTally {
+	last, _ := lastSignoffAtStage(g, order, run)
 	var t GateTally
 	for ri := range g.Requirements {
 		switch last[reqStage{reqIdx: ri, stage: stage}] {
@@ -99,6 +122,54 @@ func GateSignoffTally(g *ontology.Graph, order []string, stage string) GateTally
 	return t
 }
 
+// PipelineRunsAtStage returns the distinct GateSignoff.PipelineRun values
+// among every Requirement in g whose GateSignoff.Stage equals stage (Stage
+// need not be known to order — this reader answers "which runs touched this
+// stage name at all", the raw signal the multi-run ambiguity guard in
+// internal/invariants/orientation_faq_assert.go needs BEFORE it can even
+// decide whether order/stage validation is the relevant failure). Results
+// are sorted for deterministic, reproducible output (gen-spec/violation
+// output must never depend on map iteration order). An empty/nil order does
+// not affect this reader — it scans every GateSignoff on every Requirement
+// directly by Stage string match, independent of any declared stage
+// vocabulary.
+func PipelineRunsAtStage(g *ontology.Graph, order []string, stage string) []string {
+	_ = order // stage is matched directly; order is accepted for call-site symmetry with GateSignoffTally/GateFrontier, not consulted.
+	seen := make(map[string]struct{})
+	for _, r := range g.Requirements {
+		for _, gs := range r.GateSignoffs {
+			if gs.Stage != stage {
+				continue
+			}
+			seen[gs.PipelineRun] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for run := range seen {
+		out = append(out, run)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// CohortCount returns the count of Requirements in g for which member(r) is
+// true — a trivial counted filter, extracted here (rather than inlined at
+// each call site) so a "which requirements count toward a declared cohort"
+// predicate has exactly ONE implementation, matching this package's own
+// established "extracted so divergent reimplementations can't creep"
+// discipline (see this file's package doc comment, and lastSignoffAtStage's
+// doc comment for the identical rationale applied to the gate-tally dedup
+// rule).
+func CohortCount(g *ontology.Graph, member func(r ontology.Requirement) bool) int {
+	count := 0
+	for _, r := range g.Requirements {
+		if member(r) {
+			count++
+		}
+	}
+	return count
+}
+
 // GateFrontier returns the FRONTIER gate stage — the furthest stage (by
 // position in order) any Requirement in g has recorded a GateSignoff for —
 // plus that stage's live SIGNED/DEFERRED tally. ok is false when no
@@ -108,7 +179,7 @@ func GateSignoffTally(g *ontology.Graph, order []string, stage string) GateTally
 // establishes for "this domain has no staged-gate methodology, or has never
 // recorded a single matching GateSignoff yet."
 func GateFrontier(g *ontology.Graph, order []string) (stage string, t GateTally, ok bool) {
-	last, frontierIdx := lastSignoffAtStage(g, order)
+	last, frontierIdx := lastSignoffAtStage(g, order, "")
 	if frontierIdx < 0 {
 		return "", GateTally{}, false
 	}

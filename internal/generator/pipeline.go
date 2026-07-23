@@ -301,7 +301,7 @@ func renderPipelineLiveState(g *ontology.Graph, order []string) []string {
 				lines = append(lines, "- **"+stage+"** — not started")
 				continue
 			}
-			tally := graphfacts.GateSignoffTally(g, order, stage)
+			tally := graphfacts.GateSignoffTally(g, order, stage, "")
 			total := tally.Signed + tally.Deferred
 			lines = append(lines, fmt.Sprintf("- **%s** — %d/%d SIGNED · %d DEFERRED", stage, tally.Signed, total, tally.Deferred))
 		}

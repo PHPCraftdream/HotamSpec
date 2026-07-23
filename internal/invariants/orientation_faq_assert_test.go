@@ -16,6 +16,16 @@ import (
 // anything written to the manifest.
 func orientationFAQAssertFixture(t *testing.T, manifestOrientationFAQ, crystal string, gateStageOrder []string) string {
 	t.Helper()
+	return orientationFAQAssertFixtureWithCohort(t, manifestOrientationFAQ, crystal, gateStageOrder, "")
+}
+
+// orientationFAQAssertFixtureWithCohort is orientationFAQAssertFixture's
+// twin, additionally accepting a raw "gate_cohort" JSON fragment (e.g.
+// `{"statuses":["SETTLED"]}`) to embed in the written manifest.json — "" (the
+// default orientationFAQAssertFixture always passes) omits the field
+// entirely, the honest-no-op backward-compat path.
+func orientationFAQAssertFixtureWithCohort(t *testing.T, manifestOrientationFAQ, crystal string, gateStageOrder []string, gateCohortJSON string) string {
+	t.Helper()
 	tmp := t.TempDir()
 	domainDir := filepath.Join(tmp, "domains", "testdomain")
 	if err := os.MkdirAll(domainDir, 0o755); err != nil {
@@ -29,11 +39,16 @@ func orientationFAQAssertFixture(t *testing.T, manifestOrientationFAQ, crystal s
 		}
 		gateOrderJSON += `]`
 	}
+	gateCohortField := ""
+	if gateCohortJSON != "" {
+		gateCohortField = `,
+  "gate_cohort": ` + gateCohortJSON
+	}
 	manifest := `{
   "purpose": "test domain",
   "parent": null,
   "gate_stage_order": ` + gateOrderJSON + `,
-  "orientation_faq": ` + manifestOrientationFAQ + `
+  "orientation_faq": ` + manifestOrientationFAQ + gateCohortField + `
 }
 `
 	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
@@ -262,5 +277,222 @@ func TestCheckOrientationFAQAnswered_AssertNilIsBackwardCompatible(t *testing.T)
 	g := &ontology.Graph{DomainDir: domainDir}
 	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
 		t.Fatalf("expected 0 violations for a plain keyword-only entry (Assert nil), got %v", vs)
+	}
+}
+
+// --- task #330 (R4-cohort): gate_cohort denominator + pipeline_run guard ---
+
+// TestCheckOrientationFAQAnswered_GateCohort_NeverEvaluatedMemberFailsAll is
+// THE core regression test this task exists to prove: with a gate_cohort
+// declared (statuses:["SETTLED"]), a cohort member that carries NO
+// gate-signoff record AT ALL at the target stage (never evaluated, neither
+// SIGNED nor DEFERRED) must make expect:"all" FAIL. Before task #330's fix,
+// total was Signed+Deferred — a never-evaluated Requirement was invisible to
+// that sum, so expect:"all" could silently pass with this exact graph shape
+// (2 of 3 cohort members SIGNED, the third never assessed) — this test
+// proves that bug is closed.
+func TestCheckOrientationFAQAnswered_GateCohort_NeverEvaluatedMemberFailsAll(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 all cohort members signed?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixtureWithCohort(t, faq, crystal, []string{"P-G0", "P-G1"}, `{"statuses":["SETTLED"]}`)
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Status: ontology.StatusSETTLED, GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}},
+			{ID: "R-2", Status: ontology.StatusSETTLED, GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}},
+			// R-3 is a SETTLED cohort member with NO gate-signoff record at
+			// P-G1 at all — never evaluated. The pre-fix denominator
+			// (Signed+Deferred=2) would be blind to this and expect:"all"
+			// would wrongly pass (2==2). The cohort denominator
+			// (CohortCount of SETTLED=3) makes it visible: 2 != 3, fails.
+			{ID: "R-3", Status: ontology.StatusSETTLED},
+		},
+	}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation: R-3 is a cohort member never evaluated at P-G1, so 2 of 3 != all, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "gate P-G1 all cohort members signed?") {
+		t.Errorf("expected the violation to name the question, got %v", vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_GateCohort_AbsentFallsBackToSignedPlusDeferred
+// proves that with NO gate_cohort declared, behavior is byte-identical to
+// the pre-task-#330 total=Signed+Deferred semantics — this is the exact
+// fixture/graph shape TestCheckOrientationFAQAnswered_AssertGateSignoffCount_LivePass
+// already exercises, re-run here to pin the backward-compat contract
+// explicitly for this task.
+func TestCheckOrientationFAQAnswered_GateCohort_AbsentFallsBackToSignedPlusDeferred(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 all signed?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixture(t, faq, crystal, []string{"P-G0", "P-G1"})
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{
+				{Stage: "P-G1", State: ontology.GateSignoffStateDeferred, DeferredReason: "x"},
+				{Stage: "P-G1", State: ontology.GateSignoffStateSigned},
+			}},
+			{ID: "R-2", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}},
+			// R-3 carries NO gate-signoff at all — but since NO gate_cohort
+			// is declared, it is simply invisible to the old
+			// Signed+Deferred denominator too, exactly like before task
+			// #330 — expect:"all" still passes (2 Signed == total 2).
+			{ID: "R-3"},
+		},
+	}
+	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
+		t.Fatalf("expected 0 violations: no gate_cohort declared, so total=Signed+Deferred=2 and count=Signed=2, byte-identical to pre-#330 behavior, got %v", vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_GateCohort_ExcludeTypoFailsClosed proves an
+// "exclude" list entry naming a Requirement id that does not exist in the
+// live graph fails closed with a named violation, rather than silently
+// matching nothing.
+func TestCheckOrientationFAQAnswered_GateCohort_ExcludeTypoFailsClosed(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 all cohort members signed?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixtureWithCohort(t, faq, crystal, []string{"P-G0", "P-G1"}, `{"statuses":["SETTLED"],"exclude":["R-does-not-exist"]}`)
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Status: ontology.StatusSETTLED, GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}},
+		},
+	}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation for an exclude id that matches no Requirement in the graph, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "gate P-G1 all cohort members signed?") {
+		t.Errorf("expected the violation to name the question, got %v", vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_GateCohort_RejectedNotCounted proves a
+// REJECTED requirement is correctly excluded from a statuses:["SETTLED"]
+// cohort — the exact gpsm-sm shape (R-domain-exists REJECTED, legitimately
+// out of cohort).
+func TestCheckOrientationFAQAnswered_GateCohort_RejectedNotCounted(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 all cohort members signed?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixtureWithCohort(t, faq, crystal, []string{"P-G0", "P-G1"}, `{"statuses":["SETTLED"]}`)
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Status: ontology.StatusSETTLED, GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}},
+			// REJECTED, no gate signoff at all — must NOT count toward the
+			// SETTLED-only cohort, so total stays 1 (just R-1) and the
+			// assert still passes.
+			{ID: "R-2", Status: ontology.StatusREJECTED},
+		},
+	}
+	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
+		t.Fatalf("expected 0 violations: R-2 is REJECTED, not a SETTLED cohort member, so total=1 (R-1 only) and count=1, got %v", vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_MultiRun_AmbiguousStageFailsClosedWithoutDeclaredRun
+// proves the multi-pipeline-run guard: a stage carrying signoffs from two
+// distinct pipeline_run values, with no PipelineRun declared on the assert,
+// must fail closed rather than silently conflating the runs.
+func TestCheckOrientationFAQAnswered_MultiRun_AmbiguousStageFailsClosedWithoutDeclaredRun(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 all signed?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixture(t, faq, crystal, []string{"P-G0", "P-G1"})
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"}}},
+			{ID: "R-2", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-b"}}},
+		},
+	}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation: stage P-G1 has signoffs from 2 distinct pipeline_runs and no PipelineRun declared, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "gate P-G1 all signed?") {
+		t.Errorf("expected the violation to name the question, got %v", vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_MultiRun_DeclaredRunTalliesOnlyThatRun is
+// the positive counterpart: the SAME ambiguous-stage graph as the previous
+// test, but with PipelineRun declared — the assert must tally ONLY that
+// run's signoffs and pass.
+func TestCheckOrientationFAQAnswered_MultiRun_DeclaredRunTalliesOnlyThatRun(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 all signed in run-a?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "pipeline_run": "run-a", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixture(t, faq, crystal, []string{"P-G0", "P-G1"})
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"}}},
+			// R-2 only has a run-b signoff — invisible when this assert
+			// targets run-a, so it does not count against run-a's total.
+			{ID: "R-2", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-b"}}},
+		},
+	}
+	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
+		t.Fatalf("expected 0 violations: pipeline_run=run-a declared, tallies only run-a's 1 SIGNED (count=1,total=1), got %v", vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_AssertState_DeferredCountsDeferredNotSigned
+// proves Assert.State: "DEFERRED" makes the assert's "count" read
+// tally.Deferred instead of tally.Signed.
+func TestCheckOrientationFAQAnswered_AssertState_DeferredCountsDeferredNotSigned(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "gate P-G1 how many deferred?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "state": "DEFERRED", "expect": {"op": "eq", "value": 1}}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixture(t, faq, crystal, []string{"P-G0", "P-G1"})
+	g := &ontology.Graph{
+		DomainDir: domainDir,
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}},
+			{ID: "R-2", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateDeferred, DeferredReason: "x"}}},
+		},
+	}
+	if vs := runCheck(t, "check_orientation_faq_answered", g); len(vs) != 0 {
+		t.Fatalf("expected 0 violations: state=DEFERRED reads count=tally.Deferred=1, matching expect eq 1, got %v", vs)
+	}
+
+	// Negative counterpart: pin count at 2 (wrong — only 1 is DEFERRED) to
+	// prove state=DEFERRED is actually being read, not silently ignored in
+	// favor of Signed (which is also 1, so a sloppy test could pass by
+	// accident without this negative check).
+	faqWrong := `[{"question": "gate P-G1 how many deferred?", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "state": "DEFERRED", "expect": {"op": "eq", "value": 2}}}]`
+	domainDir2 := orientationFAQAssertFixture(t, faqWrong, crystal, []string{"P-G0", "P-G1"})
+	g2 := &ontology.Graph{DomainDir: domainDir2, Requirements: g.Requirements}
+	vs := runCheck(t, "check_orientation_faq_answered", g2)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation: only 1 requirement is DEFERRED, not the pinned 2, got %d: %v", len(vs), vs)
+	}
+}
+
+// TestCheckOrientationFAQAnswered_AssertState_UnrecognizedFailsClosed proves
+// an unrecognized Assert.State value fails closed.
+func TestCheckOrientationFAQAnswered_AssertState_UnrecognizedFailsClosed(t *testing.T) {
+	t.Parallel()
+	faq := `[{"question": "bogus state", "assert": {"kind": "gate_signoff_count", "stage": "P-G1", "state": "BOGUS", "expect": "all"}}]`
+	crystal := "# Crystal\n"
+	domainDir := orientationFAQAssertFixture(t, faq, crystal, []string{"P-G0", "P-G1"})
+	g := &ontology.Graph{
+		DomainDir:    domainDir,
+		Requirements: []ontology.Requirement{{ID: "R-1", GateSignoffs: []ontology.GateSignoff{{Stage: "P-G1", State: ontology.GateSignoffStateSigned}}}},
+	}
+	vs := runCheck(t, "check_orientation_faq_answered", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected 1 violation for an unrecognized assert.state, got %d: %v", len(vs), vs)
+	}
+	if !hasViolationFor(vs, "bogus state") {
+		t.Errorf("expected the violation to name the question, got %v", vs)
 	}
 }

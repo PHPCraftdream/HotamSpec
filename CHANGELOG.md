@@ -17,6 +17,53 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`gate_signoff_count` assert: explicit cohort denominator + multi-run
+  guard** (task #330, R4-cohort — fourth external review): the
+  `gate_signoff_count` orientation_faq assert kind
+  (`internal/invariants/orientation_faq_assert.go`) computed
+  `total = tally.Signed + tally.Deferred` — a Requirement with NO gate
+  signoff record at all at a stage (never evaluated) was invisible to that
+  sum, so `expect:"all"` could silently pass even though some requirement
+  was never assessed. Confirmed live in `gpsm-sm`: 35 requirements total,
+  only 32 carry any gate signoff at all (the other 3 legitimately
+  out-of-cohort). Two-part fix. (1) New optional manifest-level
+  `gate_cohort` declaration (`internal/loader/gate_cohort.go`,
+  `ResolveGateCohort`, mirroring `ResolveGateStageOrder`'s exact
+  loader-stays-lenient pattern) names WHICH Requirements form the
+  denominator via `{"statuses": [...], "exclude": [...]}` (`Statuses`
+  defaults to `["SETTLED"]` when declared-but-empty). New
+  `graphfacts.CohortCount(g, member)` (`internal/graphfacts/facts.go`) is a
+  trivial counted filter. When a domain declares `gate_cohort`,
+  `evalOrientationAssert` uses `total = graphfacts.CohortCount(...)` instead
+  of `Signed+Deferred` — fail-closed validation of the spec at CHECK time
+  (an `exclude` id that matches no real Requirement, or a `statuses` entry
+  that is not a recognized status, both fire a named violation, reusing
+  `graphfacts.RequirementStatusTally`'s own exact-match + `OPEN`-prefix
+  matching rule rather than inventing a new one). Absent `gate_cohort`,
+  behavior is byte-identical to before this task. Also wires the
+  previously-unused `OrientationFAQAssert.State` field: `""`/`"SIGNED"` (the
+  default, byte-identical to before) reads `count=tally.Signed`,
+  `"DEFERRED"` reads `count=tally.Deferred`; any other value fails closed.
+  (2) Multi-pipeline-run guard: `GateSignoff.PipelineRun` was already
+  mandatory/populated but `graphfacts` silently conflated every run when
+  tallying. `lastSignoffAtStage`/`GateSignoffTally` now take a `run string`
+  parameter (`""` = all runs = 100% backward-compatible default — every
+  existing call site, `internal/generator/pipeline.go`'s Live-state
+  renderer and `internal/generator/claudemd.go`'s `GateFrontier`-based
+  DOMAIN-MAP renderer, keeps passing `""`, unchanged rendered output). New
+  `graphfacts.PipelineRunsAtStage(g, order, stage)` returns the distinct
+  `pipeline_run` values recorded at a stage. New
+  `OrientationFAQAssert.PipelineRun` field
+  (`internal/loader/orientation_faq.go`) lets an assert declare which run to
+  tally; when a stage has signoffs from more than one distinct
+  `pipeline_run` and the assert does not declare `PipelineRun`,
+  `evalOrientationAssert` fails closed rather than silently conflating runs.
+  A drafted (not landed) `ProposedRequirement`
+  (`proposals/draft-R-gate-cohort-explicit-denominator.json`) claims this
+  discipline as a graph-level requirement, pending human review per
+  `R-decided-needs-human-signoff`/`R-ai-presents-not-decides`. Actually
+  declaring `gate_cohort` in `gpsm-sm`'s own manifest.json (activating the
+  stronger check there) is a separate follow-up, out of scope here.
 - **PIPELINE.md generated "Live state" section + advisory Process-why
   snapshot lint** (task #331, R4-process-why — fourth external review): a
   domain's `Process.Why` (durable authored prose) can carry a stale

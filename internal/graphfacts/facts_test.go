@@ -31,7 +31,7 @@ func TestGateSignoffTally_DedupsLastEntryPerRequirementPerStage(t *testing.T) {
 			reqWithGates("R-5"),
 		},
 	}
-	tally := GateSignoffTally(g, order, "P-G1")
+	tally := GateSignoffTally(g, order, "P-G1", "")
 	if tally.Signed != 2 {
 		t.Errorf("Signed = %d, want 2 (R-1's LAST entry + R-2)", tally.Signed)
 	}
@@ -48,7 +48,7 @@ func TestGateSignoffTally_UnknownStageTalliesZero(t *testing.T) {
 			reqWithGates("R-1", ontology.GateSignoff{Stage: "P-G0", State: ontology.GateSignoffStateSigned}),
 		},
 	}
-	tally := GateSignoffTally(g, order, "P-G99")
+	tally := GateSignoffTally(g, order, "P-G99", "")
 	if tally.Signed != 0 || tally.Deferred != 0 {
 		t.Errorf("expected (0,0) for an undeclared stage, got %+v", tally)
 	}
@@ -96,6 +96,135 @@ func TestGateFrontier_NotOkWhenOrderNil(t *testing.T) {
 	_, _, ok := GateFrontier(g, nil)
 	if ok {
 		t.Error("expected ok=false when order is nil (no declared gate_stage_order)")
+	}
+}
+
+// TestGateSignoffTally_RunFilteredDedupsWithinRunOnly proves the run
+// parameter both (a) restricts the tally to ONE pipeline_run's signoffs and
+// (b) still applies the last-entry dedup rule WITHIN that run — never
+// leaking a later entry from a DIFFERENT run into the dedup computation.
+func TestGateSignoffTally_RunFilteredDedupsWithinRunOnly(t *testing.T) {
+	t.Parallel()
+	order := []string{"P-G1"}
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			// R-1: DEFERRED then SIGNED, both in run "run-a" — dedup within
+			// run-a must resolve to SIGNED (the last entry in that run).
+			reqWithGates("R-1",
+				ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateDeferred, DeferredReason: "x", PipelineRun: "run-a"},
+				ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"},
+			),
+			// R-2: SIGNED in run-a, but DEFERRED in a LATER run-b entry — when
+			// filtering to run-a only, run-b's entry must be invisible, so
+			// R-2 tallies SIGNED (run-a's own last/only entry), not DEFERRED.
+			reqWithGates("R-2",
+				ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"},
+				ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateDeferred, DeferredReason: "y", PipelineRun: "run-b"},
+			),
+			// R-3: only a run-b entry — invisible when filtering to run-a.
+			reqWithGates("R-3", ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-b"}),
+		},
+	}
+
+	tallyA := GateSignoffTally(g, order, "P-G1", "run-a")
+	if tallyA.Signed != 2 || tallyA.Deferred != 0 {
+		t.Errorf("run-a tally = %+v, want {Signed:2 Deferred:0} (R-1 dedup'd to SIGNED, R-2's run-a entry is SIGNED, R-3 invisible)", tallyA)
+	}
+
+	tallyB := GateSignoffTally(g, order, "P-G1", "run-b")
+	if tallyB.Signed != 1 || tallyB.Deferred != 1 {
+		t.Errorf("run-b tally = %+v, want {Signed:1 Deferred:1} (R-2's run-b entry DEFERRED, R-3's SIGNED, R-1 invisible)", tallyB)
+	}
+
+	// Empty run string still tallies across ALL runs (backward compat) —
+	// R-1 dedups to SIGNED across its own two run-a entries; R-2 dedups to
+	// its LAST appended entry overall (run-b's DEFERRED, since it was
+	// appended after the run-a entry); R-3 is SIGNED.
+	tallyAll := GateSignoffTally(g, order, "P-G1", "")
+	if tallyAll.Signed != 2 || tallyAll.Deferred != 1 {
+		t.Errorf("all-runs tally = %+v, want {Signed:2 Deferred:1}", tallyAll)
+	}
+}
+
+// TestPipelineRunsAtStage_ReturnsDistinctSortedRuns proves the distinct-run
+// reader the multi-run ambiguity guard relies on.
+func TestPipelineRunsAtStage_ReturnsDistinctSortedRuns(t *testing.T) {
+	t.Parallel()
+	order := []string{"P-G1"}
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			reqWithGates("R-1", ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-b"}),
+			reqWithGates("R-2", ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"}),
+			reqWithGates("R-3", ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"}),
+			// Different stage — must not appear.
+			reqWithGates("R-4", ontology.GateSignoff{Stage: "P-G0", State: ontology.GateSignoffStateSigned, PipelineRun: "run-c"}),
+		},
+	}
+	runs := PipelineRunsAtStage(g, order, "P-G1")
+	if len(runs) != 2 || runs[0] != "run-a" || runs[1] != "run-b" {
+		t.Errorf("PipelineRunsAtStage = %v, want [run-a run-b] (sorted, deduped, P-G0's run-c excluded)", runs)
+	}
+}
+
+// TestPipelineRunsAtStage_SingleRunReturnsOne proves the common, unambiguous
+// case: one distinct run recorded at the stage.
+func TestPipelineRunsAtStage_SingleRunReturnsOne(t *testing.T) {
+	t.Parallel()
+	order := []string{"P-G1"}
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			reqWithGates("R-1", ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateSigned, PipelineRun: "run-a"}),
+			reqWithGates("R-2", ontology.GateSignoff{Stage: "P-G1", State: ontology.GateSignoffStateDeferred, DeferredReason: "x", PipelineRun: "run-a"}),
+		},
+	}
+	runs := PipelineRunsAtStage(g, order, "P-G1")
+	if len(runs) != 1 || runs[0] != "run-a" {
+		t.Errorf("PipelineRunsAtStage = %v, want [run-a]", runs)
+	}
+}
+
+// TestCohortCount_BasicFilter proves CohortCount is a trivial counted
+// filter: it counts exactly the Requirements for which member(r) is true.
+func TestCohortCount_BasicFilter(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Status: ontology.StatusSETTLED},
+			{ID: "R-2", Status: ontology.StatusSETTLED},
+			{ID: "R-3", Status: ontology.StatusDRAFT},
+			{ID: "R-4", Status: ontology.StatusREJECTED},
+		},
+	}
+	count := CohortCount(g, func(r ontology.Requirement) bool { return r.Status == ontology.StatusSETTLED })
+	if count != 2 {
+		t.Errorf("CohortCount(SETTLED) = %d, want 2", count)
+	}
+}
+
+// TestCohortCount_EmptyGraphIsZero proves the trivial empty-input case.
+func TestCohortCount_EmptyGraphIsZero(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{}
+	count := CohortCount(g, func(r ontology.Requirement) bool { return true })
+	if count != 0 {
+		t.Errorf("CohortCount on empty graph = %d, want 0", count)
+	}
+}
+
+// TestCohortCount_AllMatchOrNoneMatch proves both saturation extremes.
+func TestCohortCount_AllMatchOrNoneMatch(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-1", Status: ontology.StatusSETTLED},
+			{ID: "R-2", Status: ontology.StatusSETTLED},
+		},
+	}
+	if count := CohortCount(g, func(r ontology.Requirement) bool { return true }); count != 2 {
+		t.Errorf("CohortCount(always-true) = %d, want 2", count)
+	}
+	if count := CohortCount(g, func(r ontology.Requirement) bool { return false }); count != 0 {
+		t.Errorf("CohortCount(always-false) = %d, want 0", count)
 	}
 }
 
