@@ -17,6 +17,90 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`internal/selfspec`: Phase A full-coverage requirements-as-code registry
+  (task #345, RAC-A)**: scales Phase 0's (task #344, RAC-0) proven
+  byte-identity mechanism from an 18-requirement hand-picked pilot subset to
+  ALL 301 `domains/hotam-spec-self/graph.json` Requirement nodes (253
+  SETTLED + 42 REJECTED + 6 DRAFT). NO authority flip — `graph.json` remains
+  the sole runtime-trusted, universally-read format (that is task #346,
+  RAC-B, deliberately out of scope here).
+  - Replaced the single `requirements_pilot.go` file with 27 thematic
+    `internal/selfspec/requirements_<topic>.go` files (`operator`, `agent`,
+    `domain`, `entity`, `process`, `crystal`, `lifecycle`, `conflict`,
+    `gate`, `goal`, `docs`, `framework`, `enforcement`, `anchor`, `boot`,
+    `authoredspec`, `attention`, `activeloop`, `ticket`, `tension`,
+    `critical`, `budget`, `trust`, `scope`, `reflection`, `empty`,
+    `deterministic`) — mirroring `internal/invariants`' many-files-by-topic
+    layout instead of one ~10k-line file. Each requirement ID is classified
+    into exactly one bucket by a deterministic, reviewable prefix-match rule
+    table (`.scratch/selfspec-codegen/main.go`'s `topicRules`, not committed
+    — throwaway codegen, same "generate once, review the diff, discard the
+    generator" precedent as Phase 0); every one of the real graph's 301 IDs
+    matched a rule on the first design pass except 8 (`R-axes-as-module-
+    constant`, `R-director-agent-required-per-domain`, `R-proposed-conflict-
+    kind-exists`, `R-proposed-stakeholder-kind-exists`, `R-sensorium-
+    committed`, `R-spawn-log-carries-isolation`, `R-speculative-aspects-
+    frozen`, `R-verify-closure-per-action`), each placed by hand into its
+    nearest thematic neighbor.
+  - `internal/selfspec/merge_test.go`: `TestMergeIntoGraph_
+    ByteIdenticalRoundTrip` passed on the FIRST full-scale run — no fix
+    cycle needed, confirming Phase 0's `decl_order` per-node preservation,
+    nil-vs-`[]string{}` slice handling, and `%q` Cyrillic/typographic-dash
+    escaping generalize cleanly to the full 301-node scale. Added
+    `TestMergeIntoGraph_AllRequirementsRegistered`, a stronger claim than
+    Phase 0's non-vacuity check: pins the registry at exactly 301 entries
+    and asserts set-equality between the registry's IDs and the graph's IDs
+    (not just "whatever is registered round-trips cleanly").
+  - Manual spot-check: 15 requirement IDs chosen by a seeded random
+    permutation (not cherry-picked) were compared field-by-field against
+    the registry and found byte-for-byte identical on every structural
+    field — a secondary check layered on top of the exhaustive automated
+    round-trip, which remains the primary correctness guarantee for a
+    ~9500-line generated diff no one reads line-by-line.
+  - `internal/selfcheck/contentfree_test.go`'s existing `isContentIntakeSite`
+    exemption for `internal/selfspec/*` (added in Phase 0) covers all 27 new
+    files unchanged — it is a path-substring check, not a per-file allowlist,
+    so no widening was needed for the ~16x file-count increase.
+  - Value of this phase: authority-by-construction now covers the WHOLE
+    `hotam-spec-self` constitution, not a curated slice — every one of the
+    301 requirements' structural fields is a reviewed Go diff waiting to
+    happen, not a hand-edited JSON blob, with the byte-identical round-trip
+    test as the standing proof the mirror has not drifted.
+
+- **`check_self_requirements_match_registry`: SHADOW-mode drift detector
+  between `internal/selfspec.Requirements` and `hotam-spec-self`'s graph
+  (task #345, RAC-A)**: `internal/invariants/selfspec_shadow.go` compares
+  the Phase A registry against `g.Requirements` and reports three drift
+  classes — a registered ID missing from the graph, a graph ID missing from
+  the registry, or a structural-field mismatch (Claim/Owner/Status/Why/
+  Assumptions/Relations/Enforcement/EnforcedBy/MTag/Enforceability/Summary/
+  CreatedAt/SettledAt/SourceRefs/DeclOrder/BlockedOn/ImplementedBy/
+  VerifiedBy — exactly the fields `selfspec.MergeIntoGraph` replaces,
+  deliberately excluding event fields) between an ID present in both.
+  - SHADOW, never a gate: mirrors `HonoredSkipWarnings`/
+    `AuthoredProseSnapshotWarnings`'s established "advisory band" pattern —
+    a plain exported function (`SelfRequirementsMatchRegistryWarnings`),
+    deliberately NOT registered via `All.MustRegister`, wired into
+    `cmd/hotam/all_violations.go`'s non-blocking `printAdvisorySection`
+    alongside the other two. Never appears in `invariants.AllViolations`,
+    never blocks `hotam all-violations`'s exit code or `internal/proposal/
+    apply.go`'s proposal gate — the registry is a mirror, not yet the
+    authority, so its own staleness is a visible signal, not a CI failure.
+  - `g.SelfHosting`-gated (an honest no-op otherwise): the registry mirrors
+    exactly ONE graph — this repo's own `domains/hotam-spec-self/
+    graph.json` — so running the comparison against any other domain
+    (a consumer's `prat`/`gpsm-sm`, or even this repo's own non-self-hosting
+    `hotam-dev`) would report all 301 registered IDs as spuriously
+    "missing", pure noise from comparing unrelated domains' requirement
+    sets. Verified clean (zero advisory output) against the real
+    `hotam-spec-self` graph, `hotam-dev`, and the sibling `PRAT-hotam`
+    repo's `prat`/`gpsm-sm` domains (read-only `all-violations` runs).
+  - 8 tests in `internal/invariants/selfspec_shadow_test.go`: a clean-pass
+    proof against the real committed graph, a non-SelfHosting/nil-graph
+    no-op proof, three mutation-based non-vacuity controls (one per drift
+    class), an exported-wrapper-matches-internal-check proof, and the
+    never-registered-in-`All` contract test — all pass under `-race`.
+
 - **`internal/selfspec`: Phase 0 pilot of the requirements-as-code migration
   (task #344, RAC-0)**: a Go registry proving the byte-identity mechanism
   that later phases will scale to all 301 `hotam-spec-self` Requirements. NO
