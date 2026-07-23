@@ -11393,7 +11393,7 @@
       "claim": "A resolver signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate.",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph, so the signature evaporated into gitignored JSON -- R-trust-anchor-mechanism was not auditable from the substrate. K2(b): HELD->DECIDED erased Variants (the non-chosen implies/costs -- anti-relitigation cargo -- were overwritten); the chosen variant lived only as prose inside DECIDED(...). The Signoff payload is ontology.Signoff (internal/ontology/signoff.go): a struct (NOT a new node type, anti-RDF -- mirrors Variant's rationale) carrying DecidedBy + Date + Verbatim + Instrument + ChosenVariant, attached as *Signoff on Conflict.Signoff and Assumption.Signoff (internal/ontology/conflict.go, internal/ontology/assumption.go). The proposal writer builds it: ProposedConflictTransition.mutate (internal/proposal/mutate.go) sets c.Signoff = &ontology.Signoff{...} when the transition is a decision with a non-empty DecidedBy (Instrument defaults to SignoffInstrumentPersonal), and ProposedAssumptionTransition.mutate does the equivalent for assumptions; variants are preserved across HELD->DECIDED. Instrument (SignoffInstrumentPersonal / SignoffInstrumentDEL, internal/ontology/signoff.go) is an explicit seam for the future verifiable-signature wave (R-decided-by-verifiable-signature is OPEN -- this atom does NOT bind to git/crypto, only names the seam). check_signoff_chosen_variant_resolves (internal/invariants/typed_anchors.go) enforces a non-empty chosen_variant is the id of one of the conflict's variants; check_decided_conflict_carries_signoff enforces consistency (signoff.decided_by == conflict.decided_by) when a signoff is present, SOFT (pre-existing decisions without signoff are legitimate, no migration forcing).",
+      "why": "K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph, so the signature evaporated into gitignored JSON -- R-trust-anchor-mechanism was not auditable from the substrate. K2(b): HELD->DECIDED erased Variants (the non-chosen implies/costs -- anti-relitigation cargo -- were overwritten); the chosen variant lived only as prose inside DECIDED(...). The Signoff payload is ontology.Signoff (internal/ontology/signoff.go): a struct (NOT a new node type, anti-RDF -- mirrors Variant's rationale) carrying DecidedBy + Date + Verbatim + Instrument + ChosenVariant, attached as *Signoff on Conflict.Signoff and Assumption.Signoff (internal/ontology/conflict.go, internal/ontology/assumption.go). The proposal writer builds it: ProposedConflictTransition.mutate (internal/proposal/mutate.go) sets c.Signoff = &ontology.Signoff{...} when the transition is a decision with a non-empty DecidedBy (Instrument defaults to SignoffInstrumentPersonal), and ProposedAssumptionTransition.mutate does the equivalent for assumptions; variants are preserved across HELD->DECIDED. Instrument (SignoffInstrumentPersonal / SignoffInstrumentDEL, internal/ontology/signoff.go) is an explicit seam for the future verifiable-signature wave (R-decided-by-verifiable-signature is OPEN -- this atom does NOT bind to git/crypto, only names the seam). check_signoff_chosen_variant_resolves (internal/invariants/typed_anchors.go) enforces a non-empty chosen_variant is the id of one of the conflict's variants; check_decided_conflict_carries_signoff enforces consistency (signoff.decided_by == conflict.decided_by) when a signoff is present, SOFT (pre-existing decisions without signoff are legitimate, no migration forcing). Task #335 (R4F-req-signoff, fourth external review) EXTENDED this requirement's enforced_by with two more checks -- check_history_signoff_has_provenance and check_history_signoff_decided_by_is_known_stakeholder (internal/invariants/history_signoff_checks.go) -- mirroring the EXACT precedent task #319 set on the sibling anchor R-gate-signoff-single-carrier (extend an existing Signoff-topic anchor's enforced_by rather than create a new standalone-claim requirement just to satisfy check_bijection_r_to_enforcer). These two checks generalize this requirement's own \"a signoff is auditable from the substrate\" claim to the shared ontology.HistoryEntry.Signoff field (Requirement/Assumption/Axis/EntityType/Process History) that ProposedRequirement/ProposedAssumptionRewrite can now optionally carry on an UPDATE (task #335): any HistoryEntry with a non-nil Signoff MUST carry non-empty decided_by/verbatim, and decided_by, when present, MUST resolve to a known Stakeholder -- the same auditability guarantee this requirement already makes for Conflict.Signoff/Assumption.Signoff, extended to the newer HistoryEntry.Signoff carrier. This domain (hotam-spec-self) currently has no landed HistoryEntry carrying a signoff (task #328's R-shared-projections-mode-independent/R-orientation-faq-answerable entries record real human decisions as free-text History.Summary with DecidedBy==\"\", the exact gap this task's new typed-signoff capability exists to close for FUTURE UPDATEs -- neither check retroactively flags those two entries, since Signoff is nil on both), so both new checks are honest zero-violation passes here today -- this UPDATE exists only to anchor them for the bijection discipline (R-bijection-r-to-enforcer), not to claim hotam-spec-self has adopted the new authoring obligation (that adoption decision is deliberately left DRAFT, unlanded, in proposals/task335-r4f-req-signoff/001-R-requirement-update-signoff-typed.json, pending resolver review).",
       "assumptions": [
         "A-stakeholders-care",
         "A-bootstrap-self-applies"
@@ -11402,7 +11402,9 @@
       "enforcement": "ENFORCED",
       "enforced_by": [
         "check_signoff_chosen_variant_resolves",
-        "check_decided_conflict_carries_signoff"
+        "check_decided_conflict_carries_signoff",
+        "check_history_signoff_has_provenance",
+        "check_history_signoff_decided_by_is_known_stakeholder"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -11415,8 +11417,11 @@
       "source_refs": [
         "internal/ontology/signoff.go",
         "internal/ontology/conflict.go",
+        "internal/ontology/requirement.go",
         "internal/proposal/mutate.go",
-        "internal/invariants/typed_anchors.go"
+        "internal/proposal/validate.go",
+        "internal/invariants/typed_anchors.go",
+        "internal/invariants/history_signoff_checks.go"
       ],
       "history": [
         {
@@ -11432,6 +11437,16 @@
         {
           "at": "2026-07-13",
           "summary": "why: K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph,…→K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph,…; last_reviewed_at: 2026-07-12→2026-07-13",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-23",
+          "summary": "why: K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph,…→K2(a) from lens-1-ontology review: AssumptionTransition's decided_by was required at validation but the writer wrote only status+reason to the graph,…; enforced_by: [check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff]→[check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff, check_history_signoff_has_provenance, check_history_signoff_decided_b…; source_refs: [internal/ontology/signoff.go, internal/ontology/conflict.go, internal/proposal/mutate.go, internal/invariants/typed_anchors.go]→[internal/ontology/signoff.go, internal/ontology/conflict.go, internal/ontology/requirement.go, internal/proposal/mutate.go, internal/proposal/valida…",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-23",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #335 (R4F-req-signoff): mechanical bijection-anchor extension mirroring task #319's identical precedent on R-gate-signoff-single-carrier -- anchoring two new check_* names to an existing SETTLED/ENFORCED Signoff-topic requirement, not a new judgment call",
           "decided_by": ""
         }
       ],

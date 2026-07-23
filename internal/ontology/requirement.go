@@ -46,6 +46,18 @@ type HistoryEntry struct {
 	At        string `json:"at"`
 	Summary   string `json:"summary"`
 	DecidedBy string `json:"decided_by"`
+	// Signoff, when non-nil, carries the typed provenance (decided_by + date
+	// + verbatim + instrument; chosen_variant is Conflict-variant-only and
+	// MUST stay empty here — see ProposedRequirement/ProposedAssumptionRewrite
+	// validate() in internal/proposal) for a real human decision this History
+	// entry records. Purely additive and optional (omitempty) — the same
+	// zero-migration pattern BlockedOn/ImplementedBy/VerifiedBy/GateSignoffs
+	// already use on Requirement: every History entry landed before task #335
+	// has no signoff field at all and round-trips byte-identically. This type
+	// is SHARED across Requirement/Assumption/Axis/EntityType/Process
+	// History, so the field is available to every one of those node kinds,
+	// not just Requirement.
+	Signoff *Signoff `json:"signoff,omitempty"`
 }
 
 type Requirement struct {

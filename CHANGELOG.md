@@ -16,6 +16,75 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Added
+- **Typed signoff on Requirement/Assumption History entries**
+  (task #335, R4F-req-signoff — fourth external review's final synthesis
+  §4.4): task #328's landed `R-shared-projections-mode-independent`/
+  `R-orientation-faq-answerable` Requirement UPDATEs recorded a real human
+  approval (Marat Karamullin, project owner/resolver, verbatim quote «Да,
+  приземлить оба как есть») only as free text in `History.summary` —
+  `History.decided_by` ended up `""` despite the real quote, confirmed by
+  direct read of `domains/hotam-spec-self/graph.json`. `Conflict`/
+  `GateSignoff` already required typed `decided_by`/`verbatim` (task #319);
+  `ProposedRequirement`/`ProposedAssumptionRewrite` had no equivalent
+  structure. `ontology.HistoryEntry` (`internal/ontology/requirement.go`)
+  gains an optional `Signoff *ontology.Signoff` field (`omitempty`, zero
+  migration — shared across Requirement/Assumption/Axis/EntityType/Process
+  History, every pre-existing entry round-trips byte-identically).
+  `ProposedRequirement`/`ProposedAssumptionRewrite` (`internal/proposal/types.go`)
+  gain an optional `signoff` field; shape validation
+  (`internal/proposal/validate.go`'s `validateHistorySignoffShape`) requires
+  non-empty `decided_by`/`verbatim` when set and rejects a non-empty
+  `chosen_variant` (Conflict-variant-only, unauditable junk on a History
+  signoff). `internal/proposal/mutate.go`'s `resolveHistorySignoff` resolves
+  `decided_by` against the domain's declared Stakeholder ids — deliberately
+  UNGATED (unlike `ProposedConflict.mutate`'s zero-Stakeholder escape hatch):
+  a typed signoff is per-proposal opt-in, so a domain choosing to use it must
+  have named its humans. A `ProposedRequirement` UPDATE with a signoff
+  appends its `HistoryEntry` UNCONDITIONALLY (even with an otherwise-empty
+  field diff, using a `"(no field changes) — signoff recorded"` fallback
+  summary), mirroring `ProposedAssumptionRewrite.mutate`'s pre-existing
+  unconditional-append discipline (task #306); the `Signoff == nil` path
+  stays byte-identical to pre-#335 behavior. CREATE-time signoff is
+  explicitly out of scope and rejected with a clear error. Two new ongoing
+  `check_*` invariants (`internal/invariants/history_signoff_checks.go`):
+  `check_history_signoff_has_provenance` (every `HistoryEntry.Signoff`, when
+  non-nil, carries non-empty `decided_by`/`verbatim`) and
+  `check_history_signoff_decided_by_is_known_stakeholder` (a non-empty
+  `decided_by` resolves to a known Stakeholder; skips when `decided_by` is
+  empty, owned by the provenance check instead) — both sweep every
+  HistoryEntry-carrying node type (Requirement/Assumption/Axis/EntityType/
+  Process), anchored to the existing `R-signoff-preserved-in-substrate`
+  requirement's `enforced_by` (mirroring task #319's identical precedent of
+  extending `R-gate-signoff-single-carrier` rather than minting a new
+  standalone-claim requirement just to satisfy
+  `check_bijection_r_to_enforcer`); both start at 0 violations against the
+  real `hotam-spec-self` graph (no landed HistoryEntry there carries a
+  signoff yet). `cmd/hotam/semantic_gate.go`'s `hasOverride` now accepts a
+  typed `ProposedRequirement.Signoff` on par with `--ack-conflict`/
+  `--decision-ref` for overriding the semantic-conflict gate — a typed,
+  Stakeholder-resolved decision is strictly stronger evidence than free
+  text; `appendAckHistory` skips writing a redundant free-text duplicate for
+  the decision itself when only a Signoff (no ack flag) overrode the gate,
+  since `mutate()` already wrote the real HistoryEntry. `--decision-ref`'s
+  help text across `apply-proposal`/`land`/`propose` now points to the typed
+  `signoff` field as the preferred mechanism for a real judgment-call
+  decision, keeping `--decision-ref` for lighter mechanical acknowledgments
+  (task #334's traceability-completion fix is a worked example of the
+  latter). A DRAFT `ProposedRequirement`
+  (`proposals/task335-r4f-req-signoff/001-R-requirement-update-signoff-typed.json`)
+  proposes making typed signoff MANDATORY for a real human decision on a
+  Requirement UPDATE/Assumption rewrite — deliberately left unlanded,
+  pending resolver review (adopting a new authoring obligation is a judgment
+  call, not something the same task that built the capability should also
+  mandate). Note: `hotam-spec-self`'s own domain declares only
+  `ai-agent`/`domain-user`/`framework-author`/`framework-reviewer`
+  Stakeholders — there is no Stakeholder entry for Marat Karamullin in THIS
+  domain (unlike `PRAT-hotam`'s `gpsm-sm` domain, which has one) — so the
+  first real use of typed signoff in `hotam-spec-self` itself needs either a
+  new `ProposedStakeholder` or a resolver decision that `domain-user`/
+  `framework-author` is the honest id to use.
+
 ### Fixed
 - **`R-shared-projections-mode-independent` bound to its own regression test**
   (task #334, R4F-bind-test — fourth external review §4.3 synthesis): task

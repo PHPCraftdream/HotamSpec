@@ -179,6 +179,7 @@ package `ontology`
 | `At` | `string` |
 | `Summary` | `string` |
 | `DecidedBy` | `string` |
+| `Signoff` | `*Signoff` |
 
 ### `Relation` (struct)
 

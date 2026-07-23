@@ -173,6 +173,42 @@ func containsRelation(rels []ontology.Relation, target ontology.Relation) bool {
 	return false
 }
 
+// resolveHistorySignoff validates s.DecidedBy against the domain's declared
+// Stakeholder ids (task #335, R4F-req-signoff) and returns the
+// ontology.Signoff to attach to a new HistoryEntry, with Date/Instrument
+// defaulted when omitted (Date -> today, Instrument ->
+// ontology.SignoffInstrumentPersonal, the same default
+// ProposedConflictTransition.mutate/ProposedAssumptionTransition.mutate
+// already use for a personal/manual signoff).
+//
+// Deliberately UNGATED: unlike ProposedConflict.mutate's resolver check
+// (`if len(g.Stakeholders) > 0`, which lets a domain with zero declared
+// Stakeholders skip resolver validation entirely), this lookup always runs.
+// A typed History signoff is per-proposal OPT-IN — nothing forces an author
+// to set it — so a domain choosing to use it has, by that very choice,
+// committed to naming its humans; there is no honest "this domain hasn't
+// adopted Stakeholders yet" escape hatch the way there is for a Conflict's
+// resolver (which every Conflict must have, whether or not the domain has
+// opted into Stakeholder-typed provenance yet). An unresolvable decided_by
+// here always errors, in every domain, at every graph state.
+func resolveHistorySignoff(g *ontology.Graph, s *ontology.Signoff, today string) (*ontology.Signoff, error) {
+	if s == nil {
+		return nil, nil
+	}
+	decidedBy := strings.TrimSpace(s.DecidedBy)
+	if _, ok := ontology.StakeholderIDs(g)[decidedBy]; !ok {
+		return nil, validationError(
+			"signoff.decided_by %q is not a known Stakeholder in this domain — land a "+
+				"ProposedStakeholder for this person first, then retry.", decidedBy)
+	}
+	return &ontology.Signoff{
+		DecidedBy:  decidedBy,
+		Date:       defaultStr(s.Date, today),
+		Verbatim:   s.Verbatim,
+		Instrument: defaultStr(s.Instrument, ontology.SignoffInstrumentPersonal),
+	}, nil
+}
+
 func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 	idx := findRequirementIndex(g, p.ID)
 	if idx >= 0 {
@@ -233,8 +269,30 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.SourceRefs = coalesceSlice(p.SourceRefs, existing.SourceRefs)
 		applied.BlockedOn = resolveBlockedOn(p.BlockedOn, existing.BlockedOn)
 
+		resolvedSignoff, err := resolveHistorySignoff(g, p.Signoff, today)
+		if err != nil {
+			return err
+		}
+
 		summary := summarizeFieldDiff(old, snapshotFrom(applied))
-		if summary != "" {
+		// A non-nil Signoff appends its HistoryEntry UNCONDITIONALLY, even
+		// when the field-diff summary is empty — mirroring
+		// ProposedAssumptionRewrite.mutate's "History entry appended
+		// unconditionally" discipline (task #306) so a signoff-bearing
+		// update can never silently skip its own audit trail. When Signoff
+		// is nil, this is byte-identical to the pre-#335 behavior: only
+		// append when summary is non-empty.
+		if resolvedSignoff != nil {
+			if summary == "" {
+				summary = "(no field changes) — signoff recorded"
+			}
+			applied.History = append(applied.History, ontology.HistoryEntry{
+				At:        today,
+				Summary:   summary,
+				DecidedBy: resolvedSignoff.DecidedBy,
+				Signoff:   resolvedSignoff,
+			})
+		} else if summary != "" {
 			applied.History = append(applied.History, ontology.HistoryEntry{
 				At:      today,
 				Summary: summary,
@@ -258,6 +316,20 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 			"blocked_on is %q (the clear-sentinel) on a CREATE proposal for %q — "+
 				"a new requirement has no existing blocked_on to clear; omit "+
 				"blocked_on or set a real value.", clearSentinel, p.ID)
+	}
+
+	// A typed History signoff records a decision about an EXISTING
+	// requirement's change (task #335, R4F-req-signoff) — a brand-new
+	// requirement has no prior state to decide ON, and CREATE-time signoff
+	// is explicitly out of scope for this task. Reject outright rather than
+	// silently ignore, mirroring the blocked_on clear-sentinel rejection
+	// immediately above.
+	if p.Signoff != nil {
+		return validationError(
+			"'signoff' is set on a CREATE proposal for %q — a typed signoff records a decision "+
+				"about an existing requirement's UPDATE; CREATE-time signoff is not supported. "+
+				"Land the requirement first, then land a separate UPDATE proposal carrying the "+
+				"signoff.", p.ID)
 	}
 
 	created := defaultStr(p.CreatedAt, today)
@@ -570,12 +642,23 @@ func (p ProposedAssumptionRewrite) mutate(g *ontology.Graph, today string) error
 		return errNotFound("assumption_id", p.AssumptionID)
 	}
 	a := g.Assumptions[idx]
+
+	resolvedSignoff, err := resolveHistorySignoff(g, p.Signoff, today)
+	if err != nil {
+		return err
+	}
+
 	oldStatement := a.Statement
 	a.Statement = p.NewStatement
-	a.History = append(a.History, ontology.HistoryEntry{
+	entry := ontology.HistoryEntry{
 		At:      today,
 		Summary: "statement: " + abbrev(oldStatement, 150) + "→" + abbrev(a.Statement, 150) + "; reason: " + p.Reason,
-	})
+	}
+	if resolvedSignoff != nil {
+		entry.DecidedBy = resolvedSignoff.DecidedBy
+		entry.Signoff = resolvedSignoff
+	}
+	a.History = append(a.History, entry)
 	g.Assumptions[idx] = a
 	return nil
 }

@@ -60,7 +60,7 @@ func cmdLand(args []string) error {
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (passed through to gen-spec)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
 	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History; for a real judgment-call decision, prefer a typed 'signoff' field on the ProposedRequirement/ProposedAssumptionRewrite itself (decided_by resolved against declared Stakeholders) — --decision-ref remains best for lighter mechanical acknowledgments")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 

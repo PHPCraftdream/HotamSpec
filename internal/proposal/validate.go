@@ -46,6 +46,46 @@ func (p ProposedRequirement) validate() error {
 				"indistinguishable from an administrative date backfill riding along a routine " +
 				"content edit (R-review-mark-carries-evidence).")
 	}
+	if err := validateHistorySignoffShape(p.Signoff); err != nil {
+		return err
+	}
+	return nil
+}
+
+// validateHistorySignoffShape is the shape-only check (no graph access, per
+// this file's established validate()/mutate() split) shared by
+// ProposedRequirement and ProposedAssumptionRewrite's optional Signoff field
+// (task #335, R4F-req-signoff). Mirrors ProposedGateSignoffBatch.validate's
+// SIGNED-branch requirements (non-empty decided_by/verbatim; date/instrument
+// are optional, defaulted at mutate time), plus one rule specific to a
+// History-attached signoff: chosen_variant MUST be empty. ChosenVariant is a
+// Conflict-variant-only concept (which of several named Variants the
+// resolver picked) — a Requirement UPDATE or Assumption rewrite has no
+// Variant list to choose from, so a non-empty ChosenVariant here is
+// unauditable junk, not a real record, and is rejected outright rather than
+// silently ignored.
+func validateHistorySignoffShape(s *ontology.Signoff) error {
+	if s == nil {
+		return nil
+	}
+	if strings.TrimSpace(s.DecidedBy) == "" {
+		return validationError(
+			"'signoff.decided_by' is required and must be non-empty when 'signoff' is set — a " +
+				"signoff with no named human decider is an AI-silently-closeable hole " +
+				"(R-decided-needs-human-signoff applied to History.Signoff).")
+	}
+	if strings.TrimSpace(s.Verbatim) == "" {
+		return validationError(
+			"'signoff.verbatim' is required and must be non-empty when 'signoff' is set — a " +
+				"decision with no record of what the decider actually said cannot be audited later.")
+	}
+	if strings.TrimSpace(s.ChosenVariant) != "" {
+		return validationError(
+			"'signoff.chosen_variant' must be empty on a History-attached signoff — chosen_variant " +
+				"is a Conflict-variant-only concept (which of several named Variants the resolver " +
+				"picked); a Requirement/Assumption signoff has no Variant list to choose from, so a " +
+				"non-empty chosen_variant here is unauditable junk, got %q.", s.ChosenVariant)
+	}
 	return nil
 }
 
@@ -311,6 +351,9 @@ func (p ProposedAssumptionRewrite) validate() error {
 		return validationError(
 			"'reason' is required and must be non-empty — a statement rewrite " +
 				"with no recorded reason is drift, not a decision.")
+	}
+	if err := validateHistorySignoffShape(p.Signoff); err != nil {
+		return err
 	}
 	return nil
 }

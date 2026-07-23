@@ -38,6 +38,27 @@ func (o landAckOptions) hasAck() bool {
 	return o.AckConflict != "" || o.DecisionRef != ""
 }
 
+// hasOverride reports whether EITHER a landAckOptions flag (--ack-conflict /
+// --decision-ref) OR a typed ProposedRequirement.Signoff (task #335,
+// R4F-req-signoff) was supplied — the full set of evidence forms that can
+// override semanticConflictGate's refusal. A typed, Stakeholder-resolved
+// signoff is strictly stronger evidence than free text (its decided_by is
+// mechanically verified against the domain's declared Stakeholders at
+// mutate time, and check_history_signoff_has_provenance /
+// check_history_signoff_decided_by_is_known_stakeholder keep it honest going
+// forward), so it is accepted on par with the CLI flags: a resolver who
+// already recorded a typed signoff on the requirement itself should not also
+// have to pass --decision-ref to get past this gate.
+func hasOverride(o landAckOptions, p proposal.Proposal) bool {
+	if o.hasAck() {
+		return true
+	}
+	if pr, ok := p.(proposal.ProposedRequirement); ok && pr.Signoff != nil {
+		return true
+	}
+	return false
+}
+
 // semanticConflictGate is the land-time gate that closes the review-8 R8-d gap:
 // "the system checks structure but not meaning." When landing a
 // ProposedRequirement whose claim triggers a HIGH-CONFIDENCE semantic-conflict
@@ -140,16 +161,17 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 		return false, nil // no high-confidence semantic conflict
 	}
 
-	// Ack provided (either form) → proceed. The tool required a decision to be
-	// recorded; it does not verify the decision's correctness. hadConflict is
-	// true: a real signal WAS found, even though the ack overrides the refusal,
-	// so the audit trail is legitimately written.
-	if ackOpts.hasAck() {
+	// Override provided (an ack flag OR a typed Requirement Signoff) →
+	// proceed. The tool required a decision to be recorded; it does not
+	// verify the decision's correctness. hadConflict is true: a real signal
+	// WAS found, even though the override overrides the refusal, so the
+	// audit trail is legitimately written.
+	if hasOverride(ackOpts, pr) {
 		return true, nil
 	}
 
 	// Refuse: name the SPECIFIC conflicting anchor(s) and their claims, and
-	// suggest BOTH remediation paths.
+	// suggest remediation paths.
 	var b strings.Builder
 	fmt.Fprintf(&b, "refusing to land %s: its claim semantically contradicts %d SETTLED requirement(s) "+
 		"(opposite-marker signal):\n", pr.ID, len(blockers))
@@ -158,8 +180,9 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 			h.ID, h.Claim, h.OppositeMarker, strings.Join(h.Shared, ", "))
 	}
 	b.WriteString("a human decision must be recorded before this can land. Use one of:\n")
-	b.WriteString("  --ack-conflict <C-id>   cite an existing Conflict node whose members cover this tension\n")
-	b.WriteString(fmt.Sprintf("  --decision-ref <text>   record a free-text reference to where the decision was made (e.g. ticket, meeting, resolver+date)\n"))
+	b.WriteString("  'signoff' on the proposal itself   the PREFERRED mechanism for a real human decision — a typed, Stakeholder-resolved signoff (decided_by/date/verbatim/instrument) attached to the UPDATE (see internal/ontology.Signoff, task #335)\n")
+	b.WriteString("  --ack-conflict <C-id>               cite an existing Conflict node whose members cover this tension\n")
+	b.WriteString(fmt.Sprintf("  --decision-ref <text>               record a free-text reference to where the decision was made (e.g. ticket, meeting, resolver+date) — reserved for lighter mechanical acknowledgments (e.g. task #334's traceability-completion fix), not a substitute for a typed signoff on a real judgment-call decision\n"))
 	b.WriteString("\nThis gate does not decide correctness — it requires that a decision be RECORDED first ")
 	b.WriteString("(R-ai-presents-not-decides, R-decided-needs-human-signoff).")
 	return true, fmt.Errorf("%s", b.String())
@@ -210,9 +233,33 @@ func batchConflictChecker(g *ontology.Graph, claim string) error {
 // Only ProposedRequirement carries a claim the gate can fire on, so only
 // ProposedRequirement gets an audit entry; a non-Requirement proposal with ack
 // options set (a user error) is a silent no-op here.
+// appendAckHistory writes the --ack-conflict / --decision-ref free-text
+// audit entry described above appendAckHistory's declaration (see the
+// landAckOptions doc comment). It is a no-op — for BOTH the "not a
+// Requirement" case and the "no ack flag set" case — when ackOpts.hasAck()
+// is false: a ProposedRequirement carrying its OWN typed Signoff (task
+// #335, R4F-req-signoff) is a separate, stronger override that
+// semanticConflictGate/hasOverride already accepts on its own, and its
+// HistoryEntry (DecidedBy + Signoff, with the real decided_by/verbatim) was
+// already written by ProposedRequirement.mutate at apply time — writing a
+// SECOND, free-text "semantic conflict acknowledged" entry for the SAME
+// decision here would be a redundant duplicate, not a complementary record.
+// When BOTH ackOpts.AckConflict and a Requirement Signoff are present for
+// the same landing (a resolver citing an existing Conflict node ALONGSIDE
+// their own typed signoff), this function still fires for the
+// --ack-conflict citation — that citation is about a DIFFERENT concern (a
+// Conflict node whose Members plausibly cover the tension) than the
+// Requirement's own signoff (a decision record about THIS specific
+// UPDATE), so it is not a duplicate the way --decision-ref-alone would be.
 func appendAckHistory(graphPath string, p proposal.Proposal, today string, ackOpts landAckOptions) error {
 	pr, ok := p.(proposal.ProposedRequirement)
 	if !ok {
+		return nil
+	}
+	if !ackOpts.hasAck() {
+		// Only a Requirement Signoff overrode the gate (no --ack-conflict /
+		// --decision-ref flag) — its own HistoryEntry was already written by
+		// mutate(); nothing further to append here.
 		return nil
 	}
 

@@ -142,7 +142,7 @@ func cmdProposeRequirement(args []string) error {
 	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<id>.json relative to cwd)")
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal (only meaningful with --land)")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History (only meaningful with --land)")
+	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History (only meaningful with --land); for a real judgment-call decision, prefer a typed 'signoff' field on the ProposedRequirement/ProposedAssumptionRewrite itself (decided_by resolved against declared Stakeholders) — --decision-ref remains best for lighter mechanical acknowledgments")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
 	fs.Parse(args)

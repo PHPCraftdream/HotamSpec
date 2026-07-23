@@ -56,6 +56,14 @@ type ProposedRequirement struct {
 	BlockedOn      string              `json:"blocked_on"`
 	ImplementedBy  []string            `json:"implemented_by"`
 	VerifiedBy     []string            `json:"verified_by"`
+	// Signoff, when non-nil, carries a typed human-decision record (task
+	// #335, R4F-req-signoff) for THIS UPDATE — a Requirement UPDATE that
+	// records a real human decision should carry a typed signoff rather than
+	// relying on the free-text --decision-ref land-time flag alone.
+	// UPDATE-only: see mutate.go's ProposedRequirement.mutate CREATE branch,
+	// which rejects a non-nil Signoff on a CREATE-kind proposal. See
+	// ontology.Signoff (internal/ontology/signoff.go) for its fields.
+	Signoff *ontology.Signoff `json:"signoff,omitempty"`
 }
 
 func (p ProposedRequirement) Kind() string         { return KindRequirement }
@@ -199,6 +207,12 @@ type ProposedAssumptionRewrite struct {
 	AssumptionID string `json:"assumption_id"`
 	NewStatement string `json:"new_statement"`
 	Reason       string `json:"reason"`
+	// Signoff, when non-nil, carries a typed human-decision record (task
+	// #335, R4F-req-signoff) supplementing this rewrite's already-required
+	// Reason — it never replaces Reason, which stays required regardless of
+	// whether Signoff is also present. See ontology.Signoff
+	// (internal/ontology/signoff.go) for its fields.
+	Signoff *ontology.Signoff `json:"signoff,omitempty"`
 }
 
 func (p ProposedAssumptionRewrite) Kind() string         { return KindAssumptionRewrite }

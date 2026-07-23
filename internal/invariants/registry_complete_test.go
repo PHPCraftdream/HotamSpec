@@ -121,7 +121,19 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// ongoing all-violations invariants (like check_gate_signoff_deferred_
 	// reason_present), not proposal-time-only, since prat/gpsm-sm's existing
 	// landed SIGNED records already satisfy the stricter rule.
-	const expected = 110
+	// Task #335 (R4F-req-signoff) added two more,
+	// check_history_signoff_has_provenance and
+	// check_history_signoff_decided_by_is_known_stakeholder
+	// (history_signoff_checks.go): the shared ontology.HistoryEntry.Signoff
+	// field (Requirement/Assumption/Axis/EntityType/Process History) now MUST
+	// carry non-empty decided_by/verbatim when a signoff is present, and
+	// decided_by, when present, MUST resolve to a known Stakeholder --
+	// mirroring check_gate_signoff_signed_has_provenance /
+	// check_gate_signoff_decided_by_is_known_stakeholder's identical rule for
+	// GateSignoff.Signoff. Both are ongoing all-violations invariants, not
+	// proposal-time-only, since no landed HistoryEntry anywhere in
+	// hotam-spec-self's own graph carries a signoff yet.
+	const expected = 112
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

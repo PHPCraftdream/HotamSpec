@@ -1,0 +1,43 @@
+{
+  "kind": "Requirement",
+  "id": "R-requirement-update-signoff-typed",
+  "claim": "A Requirement UPDATE or Assumption rewrite that records a real human decision MUST carry a typed signoff (ontology.Signoff -- decided_by/date/verbatim/instrument) on the resulting HistoryEntry, whose decided_by resolves to a declared Stakeholder; free-text --decision-ref remains only for mechanical acknowledgments (e.g. a traceability-completion fix binding an existing test to an existing requirement), never a substitute for a typed signoff on a real judgment-call decision.",
+  "owner": "framework-author",
+  "status": "DRAFT",
+  "why": "Task #335 (R4F-req-signoff), fourth external review's final synthesis (§4.4): task #328's landed Requirement UPDATEs (R-shared-projections-mode-independent, R-orientation-faq-answerable) recorded real human approval only as free text in History.Summary -- History.DecidedBy ended up \"\" even though a real human (Marat Karamullin, project owner/resolver) approved with a real verbatim quote («Da, prizemlit oba kak est»), confirmed by direct read of domains/hotam-spec-self/graph.json. Conflict/GateSignoff already REQUIRE typed decided_by/verbatim (task #319); ProposedRequirement/ProposedAssumptionRewrite had no equivalent structure until this task added HistoryEntry.Signoff (internal/ontology/requirement.go), the optional Signoff field on ProposedRequirement/ProposedAssumptionRewrite (internal/proposal/types.go), shape validation (internal/proposal/validate.go's validateHistorySignoffShape -- decided_by/verbatim required, chosen_variant rejected as Conflict-variant-only junk), Stakeholder-resolution at mutate time (internal/proposal/mutate.go's resolveHistorySignoff, deliberately UNGATED unlike ProposedConflict.mutate's zero-Stakeholder escape hatch -- a typed signoff is per-proposal opt-in, so a domain choosing to use it must have named its humans), and two new ongoing invariants (internal/invariants/history_signoff_checks.go): check_history_signoff_has_provenance and check_history_signoff_decided_by_is_known_stakeholder. cmd/hotam/semantic_gate.go's hasOverride now accepts a typed Requirement Signoff on par with --ack-conflict/--decision-ref for overriding the semantic-conflict gate. This requirement is DRAFT, not applied, pending resolver review -- per R-ai-presents-not-decides/R-decided-needs-human-signoff, adopting a NEW authoring obligation (not just a NEW capability) is a judgment call for the resolver, not something the same task that built the capability should also unilaterally mandate. NOTE (surfaced, not resolved, by this same task): hotam-spec-self's own domain declares only ai-agent/domain-user/framework-author/framework-reviewer Stakeholders -- there is NO Stakeholder for Marat Karamullin in THIS domain (unlike PRAT-hotam's gpsm-sm domain, which does have one) -- so the first REAL use of this feature in hotam-spec-self itself needs either a new ProposedStakeholder or a resolver decision that domain-user/framework-author is the honest id to use.",
+  "assumptions": [],
+  "relations": [
+    {"kind": "refines", "target": "R-signoff-preserved-in-substrate"},
+    {"kind": "depends_on", "target": "R-decided-needs-human-signoff"}
+  ],
+  "enforcement": "PROSE",
+  "enforced_by": [],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-23",
+  "settled_at": "",
+  "last_reviewed_at": "",
+  "review_after": "",
+  "evidence": [
+    "internal/proposal/proposal_test.go",
+    "internal/invariants/history_signoff_checks_test.go"
+  ],
+  "source_refs": [
+    "internal/ontology/requirement.go",
+    "internal/ontology/signoff.go",
+    "internal/proposal/types.go",
+    "internal/proposal/validate.go",
+    "internal/proposal/mutate.go",
+    "internal/invariants/history_signoff_checks.go",
+    "cmd/hotam/semantic_gate.go"
+  ],
+  "blocked_on": "",
+  "implemented_by": [
+    "internal/proposal/mutate.go:resolveHistorySignoff",
+    "internal/proposal/validate.go:validateHistorySignoffShape"
+  ],
+  "verified_by": [
+    "internal/invariants/history_signoff_checks_test.go:TestHistorySignoffChecks_CleanOnRealGraph"
+  ]
+}

@@ -37,7 +37,8 @@ func TestProposedStructs_JSONTagsRoundTrip(t *testing.T) {
 				"review_after": "2026-06-01", "evidence": ["e1"],
 				"source_refs": ["doc.md"], "blocked_on": "blocked on Planned tool T",
 				"implemented_by": ["spec/model/risk.go:NewRisk"],
-				"verified_by": ["spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"]
+				"verified_by": ["spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"],
+				"signoff": {"decided_by": "sa", "date": "2026-01-04", "verbatim": "approved", "instrument": "personal"}
 			}`,
 			into: func() (any, error) {
 				var p ProposedRequirement
@@ -52,7 +53,8 @@ func TestProposedStructs_JSONTagsRoundTrip(t *testing.T) {
 				"review_after": "2026-06-01", "evidence": ["e1"],
 				"source_refs": ["doc.md"], "blocked_on": "blocked on Planned tool T",
 				"implemented_by": ["spec/model/risk.go:NewRisk"],
-				"verified_by": ["spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"]
+				"verified_by": ["spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"],
+				"signoff": {"decided_by": "sa", "date": "2026-01-04", "verbatim": "approved", "instrument": "personal"}
 			}`), &p)
 				return p, err
 			},
