@@ -78,7 +78,13 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// (human signoff, resolver Marat Karamullin 2026-07-23) alongside an
 		// UPDATE to the existing R-orientation-faq-answerable (no count
 		// change for an update, only the new Requirement moves this pin).
-		{"requirements", len(g.Requirements), 297},
+		// 297 + 4: R-gate-cohort-explicit-denominator,
+		// R-authored-prose-no-live-tallies,
+		// R-pipeline-live-state-from-typed-carriers,
+		// R-requirement-update-signoff-typed -- landed task #339 (human
+		// signoff, resolver Marat Karamullin 2026-07-23, four drafts from
+		// tasks #330/#331/#333/#335 landed in one batch).
+		{"requirements", len(g.Requirements), 301},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
