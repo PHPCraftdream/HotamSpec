@@ -16,9 +16,18 @@ import (
 // real, messy, 300+-node production data, not a small synthetic fixture.
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 
-// TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase 0:
-// load the REAL committed graph.json, run MergeIntoGraph over it (replacing
-// the Phase 0 pilot subset's structural fields with the registry's own
+// wantRequirementCount is the full domains/hotam-spec-self/graph.json
+// Requirement count as of task #345 (RAC-A): 253 SETTLED + 42 REJECTED + 6
+// DRAFT = 301. TestMergeIntoGraph_AllRequirementsRegistered pins this exact
+// number so a future requirement landing in the graph without a matching
+// registry entry (or vice versa) fails loudly here instead of silently
+// leaving the registry's coverage incomplete.
+const wantRequirementCount = 301
+
+// TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase A
+// (RAC-A, task #345, scaling Phase 0/RAC-0's proof to full coverage): load
+// the REAL committed graph.json, run MergeIntoGraph over it (replacing EVERY
+// registered requirement's structural fields with the registry's own
 // values), re-serialize via loader.WriteGraph — REUSING the exact same
 // canonical-marshal path graph.json is always written through, not a
 // reimplementation of it — and assert the output is BYTE-IDENTICAL to the
@@ -37,7 +46,7 @@ func TestMergeIntoGraph_ByteIdenticalRoundTrip(t *testing.T) {
 	}
 
 	if len(Requirements.All()) == 0 {
-		t.Fatal("selfspec.Requirements is empty — the Phase 0 pilot subset registered nothing, this test would be vacuous")
+		t.Fatal("selfspec.Requirements is empty — registered nothing, this test would be vacuous")
 	}
 
 	if err := MergeIntoGraph(g); err != nil {
@@ -46,6 +55,45 @@ func TestMergeIntoGraph_ByteIdenticalRoundTrip(t *testing.T) {
 
 	got := writeGraphBytes(t, g)
 	diffReport(t, domainGraphPath, string(got), string(want))
+}
+
+// TestMergeIntoGraph_AllRequirementsRegistered proves Phase A's full-coverage
+// claim directly: every one of the graph's 301 Requirement nodes has a
+// matching selfspec.Requirements entry, and the registry carries no more and
+// no fewer than that — not merely that MergeIntoGraph succeeds on whatever
+// subset happens to be registered (that weaker property is what Phase 0's
+// original test proved; this test is Phase A's stronger claim).
+func TestMergeIntoGraph_AllRequirementsRegistered(t *testing.T) {
+	g, err := loader.LoadGraph(domainGraphPath)
+	if err != nil {
+		t.Fatalf("LoadGraph(%s): %v", domainGraphPath, err)
+	}
+
+	inGraph := make(map[string]bool, len(g.Requirements))
+	for _, r := range g.Requirements {
+		inGraph[r.ID] = true
+	}
+
+	registered := Requirements.All()
+	if len(registered) != wantRequirementCount {
+		t.Errorf("selfspec.Requirements has %d entries, want exactly %d (the full domains/hotam-spec-self/graph.json Requirement count)", len(registered), wantRequirementCount)
+	}
+	if len(g.Requirements) != wantRequirementCount {
+		t.Fatalf("domains/hotam-spec-self/graph.json has %d Requirement nodes, want %d — wantRequirementCount is stale, update it (and re-run the codegen if the registry also needs to change)", len(g.Requirements), wantRequirementCount)
+	}
+
+	inRegistry := make(map[string]bool, len(registered))
+	for _, r := range registered {
+		inRegistry[r.ID] = true
+		if !inGraph[r.ID] {
+			t.Errorf("selfspec.Requirements has %q, absent from domains/hotam-spec-self/graph.json", r.ID)
+		}
+	}
+	for id := range inGraph {
+		if !inRegistry[id] {
+			t.Errorf("domains/hotam-spec-self/graph.json has %q, missing from selfspec.Requirements", id)
+		}
+	}
 }
 
 // TestMergeIntoGraph_Idempotent proves running the merge twice produces
@@ -73,7 +121,7 @@ func TestMergeIntoGraph_Idempotent(t *testing.T) {
 	diffReport(t, "idempotence (pass1 vs pass2)", string(twice), string(once))
 }
 
-// TestMergeIntoGraph_MissingRegistryIDIsError proves Phase 0's narrow
+// TestMergeIntoGraph_MissingRegistryIDIsError proves the narrow
 // creation-forbidden contract: a registered ID absent from the graph is a
 // hard error, never a silent skip or a graph mutation that invents a node.
 func TestMergeIntoGraph_MissingRegistryIDIsError(t *testing.T) {
@@ -82,9 +130,10 @@ func TestMergeIntoGraph_MissingRegistryIDIsError(t *testing.T) {
 			{ID: "R-not-the-one-youre-looking-for"},
 		},
 	}
-	// Requirements is the package-level, already-populated pilot registry;
-	// none of its ~18 IDs match the single node above, so MergeIntoGraph
-	// must fail on the first registered ID it cannot find.
+	// Requirements is the package-level, already-populated full registry
+	// (all 301 domains/hotam-spec-self/graph.json requirement IDs); none of
+	// them match the single node above, so MergeIntoGraph must fail on the
+	// first registered ID it cannot find.
 	if err := MergeIntoGraph(g); err == nil {
 		t.Fatal("MergeIntoGraph: want error when a registered ID is absent from the graph, got nil")
 	}
@@ -97,21 +146,24 @@ func TestMergeIntoGraph_NilGraphIsError(t *testing.T) {
 	}
 }
 
-// TestMergeIntoGraph_UnregisteredNodesUntouched proves the other ~280+ graph
-// requirements outside the Phase 0 pilot subset are byte-for-byte unaffected
-// by MergeIntoGraph. It does NOT assert on the registered subset's own
-// before/after diff against the real graph: the whole point of Phase 0 is
-// that the registry is a proven byte-identical mirror, so on a healthy
-// pilot subset that diff is legitimately zero — asserting it must be
-// nonzero would make this test fail exactly when the codegen is doing its
-// job correctly. Instead this test proves non-vacuity a different way: it
-// builds a synthetic graph containing every registered ID PLUS one
-// deliberately unregistered "control" node carrying a distinctive sentinel
-// claim, runs MergeIntoGraph, and asserts the sentinel node's claim (and
-// every other field) is untouched while at least one registered node's
-// claim now matches the registry (not the synthetic placeholder claim it
-// started with) — proving both halves of the contract: registered nodes ARE
-// overwritten, unregistered nodes are NOT.
+// TestMergeIntoGraph_UnregisteredNodesUntouched proves a node whose ID is
+// NOT in the registry is byte-for-byte unaffected by MergeIntoGraph — even
+// though, as of Phase A (task #345), the registry covers all 301 real graph
+// requirements, a caller can still construct a graph containing IDs the
+// registry does not know about (e.g. a not-yet-landed proposal's synthetic
+// node), and this test proves those stay untouched. It does NOT assert on
+// the registered set's own before/after diff against the real graph: the
+// whole point of this package is that the registry is a proven
+// byte-identical mirror, so on a healthy registry that diff is legitimately
+// zero — asserting it must be nonzero would make this test fail exactly when
+// the codegen is doing its job correctly. Instead this test proves
+// non-vacuity a different way: it builds a synthetic graph containing every
+// registered ID PLUS one deliberately unregistered "control" node carrying a
+// distinctive sentinel claim, runs MergeIntoGraph, and asserts the sentinel
+// node's claim (and every other field) is untouched while at least one
+// registered node's claim now matches the registry (not the synthetic
+// placeholder claim it started with) — proving both halves of the contract:
+// registered nodes ARE overwritten, unregistered nodes are NOT.
 func TestMergeIntoGraph_UnregisteredNodesUntouched(t *testing.T) {
 	all := Requirements.All()
 	if len(all) == 0 {

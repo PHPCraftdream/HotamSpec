@@ -8,21 +8,25 @@ import (
 
 // MergeIntoGraph applies every registered Requirements entry onto g, IN
 // PLACE: for each registered requirement ID that exists in g.Requirements,
-// the STRUCTURAL fields (everything requirements_pilot.go's codegen wrote —
-// Claim, Owner, Status, Why, Assumptions, Relations, Enforcement, EnforcedBy,
-// MTag, Enforceability, Summary, CreatedAt, SettledAt, SourceRefs, DeclOrder,
-// BlockedOn, ImplementedBy, VerifiedBy) are REPLACED from the registry value,
-// while the EVENT fields (History, GateSignoffs, LastReviewedAt,
-// ReviewAfter, Evidence) are PASSED THROUGH untouched from the graph's
-// existing node.
+// the STRUCTURAL fields (everything the requirements_<topic>.go codegen
+// wrote — Claim, Owner, Status, Why, Assumptions, Relations, Enforcement,
+// EnforcedBy, MTag, Enforceability, Summary, CreatedAt, SettledAt,
+// SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy) are REPLACED
+// from the registry value, while the EVENT fields (History, GateSignoffs,
+// LastReviewedAt, ReviewAfter, Evidence) are PASSED THROUGH untouched from
+// the graph's existing node.
 //
-// Phase 0 scope, deliberately narrow:
+// Scope, deliberately narrow (unchanged since Phase 0/RAC-0, task #344):
 //   - A registry entry whose ID is absent from g.Requirements is an ERROR —
-//     Phase 0 never creates graph nodes, only mirrors ones that already
-//     exist (creation is a later phase's concern).
+//     this package never creates graph nodes, only mirrors ones that already
+//     exist (creation is a later phase's concern, see task #346/RAC-B).
 //   - A graph.Requirements entry whose ID is NOT registered is left
-//     COMPLETELY untouched — the ~280+ requirements outside the Phase 0
-//     pilot subset are unaffected by this function.
+//     COMPLETELY untouched. As of Phase A (task #345) the registry covers
+//     all 301 real domains/hotam-spec-self/graph.json requirements, so this
+//     case is now rare in practice against that domain — but MergeIntoGraph
+//     itself stays a general mechanism: any graph (including a synthetic one
+//     in a test, or a future not-yet-landed proposal's node) may contain IDs
+//     the registry does not know about, and those are unaffected.
 //   - Pure and deterministic: same g + same Requirements registry state
 //     always produces the same result; MergeIntoGraph itself never reads a
 //     clock, a file, or global mutable state beyond the Requirements
@@ -49,7 +53,7 @@ func MergeIntoGraph(g *ontology.Graph) error {
 		}
 		idx, found := indexByID[id]
 		if !found {
-			return fmt.Errorf("selfspec: MergeIntoGraph: registered requirement %q not found in graph — Phase 0 never creates graph nodes, only mirrors existing ones", id)
+			return fmt.Errorf("selfspec: MergeIntoGraph: registered requirement %q not found in graph — this package never creates graph nodes, only mirrors existing ones", id)
 		}
 		existing := g.Requirements[idx]
 		merged := *reg // copy: structural fields from the registry
