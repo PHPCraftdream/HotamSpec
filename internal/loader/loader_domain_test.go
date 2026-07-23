@@ -74,7 +74,11 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// applied in two steps: SETTLED+PROSE first, then a second
 		// apply-proposal to flip enforcement to ENFORCED once the wiring
 		// was confirmed reachable).
-		{"requirements", len(g.Requirements), 296},
+		// 296 + 1: R-shared-projections-mode-independent -- landed task #328
+		// (human signoff, resolver Marat Karamullin 2026-07-23) alongside an
+		// UPDATE to the existing R-orientation-faq-answerable (no count
+		// change for an update, only the new Requirement moves this pin).
+		{"requirements", len(g.Requirements), 297},
 		{"conflicts", len(g.Conflicts), 8},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
