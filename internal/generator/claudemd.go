@@ -1023,7 +1023,7 @@ func renderBusinessContentWithViolations(g *ontology.Graph, domainName, repoRoot
 			WrapBlock("LIVE-STATE", liveState),
 			WrapBlock("DOMAIN-MAP", domainMap),
 			WrapBlock("PARENT-PROJECT", RenderParentProjectBlock(g)),
-			WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
+			WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName, consumer)),
 			WrapBlock("AGENT-MAP", RenderAgentMapBlock()),
 			WrapBlock("CONCEPT-MAP", RenderConceptMapBlock(consumer)),
 		}
@@ -1039,7 +1039,7 @@ func renderBusinessContentWithViolations(g *ontology.Graph, domainName, repoRoot
 		WrapBlock("PROJECT-ESSENCE", RenderProjectEssenceBlock(repoRoot, domainName)),
 		WrapBlock("STAKEHOLDERS", RenderStakeholdersBlock(g)),
 		WrapBlock("LIVE-STATE", liveState),
-		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName)),
+		WrapBlock("CONSTITUTION", BuildConstitutionBlock(g, domainName, consumer)),
 		WrapBlock("DOMAIN-MAP", domainMap),
 		WrapBlock("PARENT-PROJECT", RenderParentProjectBlock(g)),
 		WrapBlock("AGENT-MAP", RenderAgentMapBlock()),

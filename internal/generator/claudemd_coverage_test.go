@@ -146,7 +146,7 @@ func TestRenderEmbeddedThinkingBlock_CrystalWithinBudget(t *testing.T) {
 func TestBuildAgentContext_Fixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	out := BuildAgentContext(g, "", 4200, "2026-07-12")
+	out := BuildAgentContext(g, "", 4200, "2026-07-12", false)
 	for _, want := range []string{
 		"AGENT-CONTEXT.md",
 		"## Top actions",
@@ -168,7 +168,7 @@ func TestBuildAgentContext_Fixture(t *testing.T) {
 func TestBuildAgentContext_CleanGraphWhatNow(t *testing.T) {
 	t.Parallel()
 	// a graph with no signals → the "_(none — graph clean)_" what-now branch
-	out := BuildAgentContext(&ontology.Graph{}, "hotam-spec-self", 0, "2026-07-12")
+	out := BuildAgentContext(&ontology.Graph{}, "hotam-spec-self", 0, "2026-07-12", false)
 	if !strings.Contains(out, "_(none — graph clean)_") {
 		t.Errorf("clean graph should render the none-actions sentinel, got:\n%s", out)
 	}
@@ -185,8 +185,8 @@ func TestBuildAgentContext_CleanGraphWhatNow(t *testing.T) {
 func TestBuildAgentContext_TodayIsInjectable(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	gotA := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-01-01")
-	gotB := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-12-31")
+	gotA := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-01-01", false)
+	gotB := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-12-31", false)
 
 	if gotA == gotB {
 		t.Fatalf("BuildAgentContext with two different today values produced byte-identical output — today is not actually threaded through")
@@ -212,8 +212,8 @@ func TestBuildAgentContext_TodayIsInjectable(t *testing.T) {
 func TestBuildAgentContext_SameTodayIsByteIdentical(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	a := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-07-12")
-	b := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-07-12")
+	a := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-07-12", false)
+	b := BuildAgentContext(g, "hotam-spec-self", 4200, "2026-07-12", false)
 	if a != b {
 		t.Fatalf("BuildAgentContext with the same today value produced different output across two calls — not idempotent")
 	}
@@ -396,7 +396,7 @@ func TestRenderRecentlyRejectedBlock_CapExceeded(t *testing.T) {
 
 func TestBuildConstitutionBlock_EmptyGraph(t *testing.T) {
 	t.Parallel()
-	out := BuildConstitutionBlock(&ontology.Graph{}, "hotam-spec-self")
+	out := BuildConstitutionBlock(&ontology.Graph{}, "hotam-spec-self", false)
 	if !strings.Contains(out, "_No SETTLED requirements yet._") {
 		t.Errorf("empty graph should render the no-settled notice, got: %s", out)
 	}

@@ -36,8 +36,12 @@ const agentContextWhatNowLimit = 10
 // compact agent-boot digest, target < 15KB. claudeMDCharCount feeds the
 // reused LIVE-STATE budget line exactly as it does for the root crystal
 // (see BuildLiveState); domainName qualifies the `hotam req show <id>`
-// pointer and the full-MD reference paths.
-func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string) string {
+// pointer and the full-MD reference paths. consumer selects the same
+// Constitution-index categorization scheme CLAUDE.md's own CONSTITUTION
+// block uses (buildConstitutionIndexModel — id-prefix bucketing for FULL,
+// enforcement-tier bucketing for CONSUMER; see
+// claudemd_constitutionindex.go's consumerCategoryOrder doc comment).
+func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
@@ -60,7 +64,7 @@ func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 	lines = append(lines, renderAgentContextCounters(g, today)...)
 	lines = append(lines, "")
 
-	lines = append(lines, renderAgentContextConstitutionIndex(g)...)
+	lines = append(lines, renderAgentContextConstitutionIndex(g, consumer)...)
 	lines = append(lines, "")
 
 	lines = append(lines, "## Details on demand", "")
@@ -185,12 +189,12 @@ func renderAgentContextDocsGenIndex(domainName string) []string {
 // buildConstitutionIndexModel/clusterIndexItems — the exact model that
 // backs CLAUDE.md's own CONSTITUTION block (claudemd_constitutionindex.go)
 // — rather than a second independent index builder.
-func renderAgentContextConstitutionIndex(g *ontology.Graph) []string {
+func renderAgentContextConstitutionIndex(g *ontology.Graph, consumer bool) []string {
 	out := []string{
 		"## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)",
 		"",
 	}
-	categories := buildConstitutionIndexModel(g)
+	categories := buildConstitutionIndexModel(g, consumer)
 	if len(categories) == 0 {
 		out = append(out, "_No SETTLED requirements yet._")
 		return out

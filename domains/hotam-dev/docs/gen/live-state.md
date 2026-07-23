@@ -2,6 +2,6 @@
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-dev/docs/gen/UNENFORCED.md.
 - **debt:** 0/9 SETTLED ENFORCED · 0 DRAFT · 0 OPEN · 6 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 13 nodes (req+conflict+assumption); OP-director budget 0 nodes (NODE_COUNT measure) (headroom -13)
+- **graph:** 13 nodes (req+conflict+assumption); OP-director budget: not set (no context_budget declared — headroom not computed)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary

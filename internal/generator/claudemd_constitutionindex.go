@@ -115,13 +115,60 @@ type constitutionCategory struct {
 	Requirements []ontology.Requirement
 }
 
+// consumerCategoryOrder is the CONSUMER-profile categorization for the
+// Constitution index: a business-domain requirement id carries no framework
+// semantics in its prefix (a consumer domain's ids are typically
+// spreadsheet-derived, e.g. R-FR-01..R-FR-32 — sequential, not topic-coded),
+// so id-prefix bucketing (digestCategories, framework-specific: "R-operator-",
+// "R-lifecycle-", ...) degenerates to dumping everything into "Other" (see
+// task #337 / external review R4 §4.6). The one dimension every Requirement
+// carries structurally, regardless of domain or id shape, is Enforcement —
+// exactly the same ENFORCED/STRUCTURAL/PROSE tri-state already shown to the
+// reader via the [E]/[S]/[P] flags on each index token. Grouping by that
+// tier answers a real orienting question for a business domain ("which
+// requirements are actually enforced today vs. still a prose commitment?")
+// without inventing a business taxonomy this engine has no authority to
+// assert (no cross-domain field like "axis" or "stakeholder" is populated
+// per-requirement — Owner is domain-wide here, Axis lives on Conflict, not
+// Requirement). Order: most-proven first (Enforced), then Structural, then
+// Prose, mirroring the flags legend's own E/S/P order.
+var consumerCategoryOrder = []struct {
+	Label       string
+	Enforcement string
+}{
+	{"Enforced", ontology.EnforcementENFORCED},
+	{"Structural", ontology.EnforcementSTRUCTURAL},
+	{"Prose", ontology.EnforcementPROSE},
+}
+
+// categorizeRequirementByEnforcement is consumerCategoryOrder's lookup: any
+// Enforcement value outside the three known constants (should not occur for
+// a SETTLED requirement, but the ontology field is a plain string) falls to
+// "Other" — the same honest-fallback discipline categorizeRequirement
+// already uses for unmatched id prefixes.
+func categorizeRequirementByEnforcement(r ontology.Requirement) string {
+	for _, c := range consumerCategoryOrder {
+		if r.Enforcement == c.Enforcement {
+			return c.Label
+		}
+	}
+	return "Other"
+}
+
 // buildConstitutionIndexModel mirrors build_constitution_index_model: pure
 // graph -> ordered category list, business + discipline SETTLED
 // requirements only (framework-plumbing ids excluded — the inverse
-// selection from BuildFrameworkInvariants's settled filter). Same category
-// order as digestCategories, then "Other"; each category's requirements
-// sorted by id.
-func buildConstitutionIndexModel(g *ontology.Graph) []constitutionCategory {
+// selection from BuildFrameworkInvariants's settled filter). Each category's
+// requirements sorted by id.
+//
+// consumer selects the categorization scheme: the FULL profile (hotam's own
+// self-hosting domains) keeps id-prefix bucketing (digestCategories, then
+// "Other") — its ids are framework-semantic by construction
+// (R-operator-..., R-lifecycle-..., ...), so the categories are meaningful.
+// The CONSUMER profile (external business domains) uses
+// categorizeRequirementByEnforcement instead — see consumerCategoryOrder's
+// doc comment for why.
+func buildConstitutionIndexModel(g *ontology.Graph, consumer bool) []constitutionCategory {
 	var settled []ontology.Requirement
 	for _, r := range g.Requirements {
 		if r.Status == ontology.StatusSETTLED && !isFrameworkPlumbing(r.ID) {
@@ -133,22 +180,36 @@ func buildConstitutionIndexModel(g *ontology.Graph) []constitutionCategory {
 	}
 
 	groups := make(map[string][]ontology.Requirement)
-	for _, r := range settled {
-		cat := categorizeRequirement(r.ID)
-		groups[cat] = append(groups[cat], r)
+	var order []string
+	if consumer {
+		for _, r := range settled {
+			cat := categorizeRequirementByEnforcement(r)
+			groups[cat] = append(groups[cat], r)
+		}
+		for _, c := range consumerCategoryOrder {
+			if _, ok := groups[c.Label]; ok {
+				order = append(order, c.Label)
+			}
+		}
+		if _, ok := groups["Other"]; ok {
+			order = append(order, "Other")
+		}
+	} else {
+		for _, r := range settled {
+			cat := categorizeRequirement(r.ID)
+			groups[cat] = append(groups[cat], r)
+		}
+		for _, dc := range digestCategories {
+			if _, ok := groups[dc.Label]; ok {
+				order = append(order, dc.Label)
+			}
+		}
+		if _, ok := groups["Other"]; ok {
+			order = append(order, "Other")
+		}
 	}
 	for cat := range groups {
 		sort.Slice(groups[cat], func(i, j int) bool { return groups[cat][i].ID < groups[cat][j].ID })
-	}
-
-	var order []string
-	for _, dc := range digestCategories {
-		if _, ok := groups[dc.Label]; ok {
-			order = append(order, dc.Label)
-		}
-	}
-	if _, ok := groups["Other"]; ok {
-		order = append(order, "Other")
 	}
 
 	out := make([]constitutionCategory, 0, len(order))
@@ -171,7 +232,7 @@ func buildConstitutionIndexModel(g *ontology.Graph) []constitutionCategory {
 // that AGENT-CONTEXT.md still carries in full (BuildAgentContext,
 // agentcontext.go) — this root-crystal block is intentionally the
 // summarized one.
-func BuildConstitutionBlock(g *ontology.Graph, domainName string) string {
+func BuildConstitutionBlock(g *ontology.Graph, domainName string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
@@ -189,7 +250,7 @@ func BuildConstitutionBlock(g *ontology.Graph, domainName string) string {
 		}
 	}
 
-	categories := buildConstitutionIndexModel(g)
+	categories := buildConstitutionIndexModel(g, consumer)
 	if len(categories) == 0 {
 		return generatedHeaderComment + "\n\n_No SETTLED requirements yet._"
 	}

@@ -9,4 +9,10 @@ Generated from the domain's own `Process` nodes (§Process, the opt-in behaviora
 
 ---
 
+## Live state (generated from typed carriers — authoritative for "where are we now")
+
+- **Conflicts** — 2 total: 2 DECIDED · 0 HELD · 0 UNRESOLVED
+
+_This section regenerates on every `hotam gen-spec` from `gate_signoffs`/conflict lifecycles — where authored prose below disagrees with it, THIS section is current._
+
 _This domain does not model any processes yet (§Process is opt-in — zero `Process` nodes declared in `graph.json`). There is no stage pipeline to render. Once a Process node is landed (`hotam apply-proposal` with a `ProposedProcess`), `hotam gen-spec` will populate this file with its stage table and flow diagram._

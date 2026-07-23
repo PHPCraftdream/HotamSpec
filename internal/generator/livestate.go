@@ -94,13 +94,28 @@ func BuildLiveStateWithViolations(g *ontology.Graph, domainName string, claudeMD
 	nodes := len(g.Requirements) + len(g.Conflicts) + len(g.Assumptions)
 	opBudget := 0
 	opMeasure := ontology.BudgetMeasureNODE_COUNT
+	budgetDeclared := false
 	if len(g.Operators) > 0 {
 		opBudget = g.Operators[0].ContextBudget.Limit
 		opMeasure = g.Operators[0].ContextBudget.Measure
+		budgetDeclared = opBudget > 0
 	}
 
+	// budgetDeclared is false both when a domain declares no Operator at all
+	// (g.Operators empty, e.g. gpsm-sm — a consumer domain with no OP-...
+	// node yet) and when an Operator exists but its ContextBudget.Limit is
+	// genuinely the zero-value (never configured). Either way, computing
+	// "headroom" against a 0 budget yields a large NEGATIVE number that
+	// reads as an alarming false signal on literally the first content line
+	// of the pulse a fresh agent reads (external review R4 §4.6, task
+	// #337). Render the honest "not set" form instead of a misleading
+	// negative headroom — no arithmetic against a budget that was never
+	// declared. Domains that DO declare a real budget (opBudget > 0, e.g.
+	// hotam-spec-self) are unaffected: this branch is unreachable for them.
 	var budgetLine string
-	if opMeasure == ontology.BudgetMeasureCRYSTAL_CHARS {
+	if !budgetDeclared {
+		budgetLine = fmt.Sprintf("- **graph:** %d nodes (req+conflict+assumption); OP-director budget: not set (no context_budget declared — headroom not computed)", nodes)
+	} else if opMeasure == ontology.BudgetMeasureCRYSTAL_CHARS {
 		used := claudeMDCharCount
 		budgetLine = fmt.Sprintf("- **graph:** %d nodes (req+conflict+assumption); OP-director budget %d chars (CRYSTAL_CHARS measure) — resident crystal %d chars (headroom %d)", nodes, opBudget, used, opBudget-used)
 	} else {

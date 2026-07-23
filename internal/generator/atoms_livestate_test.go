@@ -113,6 +113,70 @@ func TestBuildLiveState_RendersOnFixture(t *testing.T) {
 	}
 }
 
+// TestBuildLiveState_NoOperatorRendersBudgetNotSet proves the task #337 /
+// external review R4 §4.6 fix: a domain that declares NO Operator at all
+// (g.Operators empty — e.g. gpsm-sm, a consumer domain with no OP-... node
+// yet) must render an honest "budget: not set" line with NO headroom
+// arithmetic, never the previous default-to-zero "OP-director budget 0
+// nodes ... (headroom -N)" false alarm.
+func TestBuildLiveState_NoOperatorRendersBudgetNotSet(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Requirements: []ontology.Requirement{
+			{ID: "R-a", Status: ontology.StatusSETTLED, Enforcement: ontology.EnforcementENFORCED},
+		},
+	}
+	got := BuildLiveState(g, "gpsm-sm", 5000, "2026-07-12")
+	if !strings.Contains(got, "OP-director budget: not set") {
+		t.Errorf("expected honest 'budget: not set' line for a domain with no declared Operator, got:\n%s", got)
+	}
+	if strings.Contains(got, "headroom -") {
+		t.Errorf("must never render a negative headroom when budget is unset, got:\n%s", got)
+	}
+}
+
+// TestBuildLiveState_ZeroLimitOperatorRendersBudgetNotSet covers the sibling
+// degenerate case: an Operator node DOES exist but its ContextBudget.Limit
+// is the genuine zero-value (never configured) — same honest "not set"
+// rendering, not a negative headroom against a real Operator with an
+// unconfigured budget.
+func TestBuildLiveState_ZeroLimitOperatorRendersBudgetNotSet(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{
+		Operators: []ontology.Operator{
+			{ID: "OP-director", ContextBudget: ontology.ContextBudget{Limit: 0, Measure: ontology.BudgetMeasureNODE_COUNT}},
+		},
+		Requirements: []ontology.Requirement{
+			{ID: "R-a", Status: ontology.StatusSETTLED, Enforcement: ontology.EnforcementENFORCED},
+		},
+	}
+	got := BuildLiveState(g, "gpsm-sm", 5000, "2026-07-12")
+	if !strings.Contains(got, "OP-director budget: not set") {
+		t.Errorf("expected honest 'budget: not set' line for an Operator with Limit=0, got:\n%s", got)
+	}
+	if strings.Contains(got, "headroom -") {
+		t.Errorf("must never render a negative headroom when budget Limit is 0, got:\n%s", got)
+	}
+}
+
+// TestBuildLiveState_DeclaredBudgetUnaffected is the regression guard: a
+// domain that DOES declare a real (non-zero) budget — e.g. hotam-spec-self —
+// must keep rendering the existing headroom-computed line, byte-for-byte
+// unaffected by the task #337 fix. Mirrors TestBuildLiveState_RendersOnFixture's
+// NODE_COUNT-measure fixture but asserts the headroom number is present and
+// the new "not set" text is absent.
+func TestBuildLiveState_DeclaredBudgetUnaffected(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	got := BuildLiveState(g, "hotam-spec-self", 5000, "2026-07-12")
+	if strings.Contains(got, "budget: not set") {
+		t.Errorf("a domain with a real declared budget must not render the 'not set' fallback, got:\n%s", got)
+	}
+	if !strings.Contains(got, "headroom") {
+		t.Errorf("a domain with a real declared budget must still render headroom, got:\n%s", got)
+	}
+}
+
 // TestBuildLiveState_ThreeCipherPulsePresent enforces
 // R-three-cipher-pulse-structurally-injected: the LIVE-STATE block must
 // structurally carry all three pulse ciphers — top action, debt, and context

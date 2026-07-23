@@ -424,7 +424,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	}
 	liveStateAndAgentContextContents := [][]byte{
 		[]byte(generator.BuildLiveStateWithViolations(g, domainName, charCount, today, activeViolations)),
-		[]byte(generator.BuildAgentContext(g, domainName, charCount, today)),
+		[]byte(generator.BuildAgentContext(g, domainName, charCount, today, consumer)),
 	}
 	if err := writeFilesParallel(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
 		return written, nil, err
