@@ -81,9 +81,9 @@ func validateHistorySignoffShape(s *ontology.Signoff) error {
 	}
 	if strings.TrimSpace(s.ChosenVariant) != "" {
 		return validationError(
-			"'signoff.chosen_variant' must be empty on a History-attached signoff — chosen_variant " +
-				"is a Conflict-variant-only concept (which of several named Variants the resolver " +
-				"picked); a Requirement/Assumption signoff has no Variant list to choose from, so a " +
+			"'signoff.chosen_variant' must be empty on a History-attached signoff — chosen_variant "+
+				"is a Conflict-variant-only concept (which of several named Variants the resolver "+
+				"picked); a Requirement/Assumption signoff has no Variant list to choose from, so a "+
 				"non-empty chosen_variant here is unauditable junk, got %q.", s.ChosenVariant)
 	}
 	return nil
