@@ -74,13 +74,15 @@ func cmdAllViolations(args []string) error {
 // orphan-detail (diagnose.ReflectOrphanEntityType), honored verified_by
 // recursion-guard skips (invariants.HonoredSkipWarnings -- @fh's
 // "honored-skip must not be silent" re-review: a Skipped RunVerifiedByTest
-// result must never look identical to a genuinely proven entry), and a
-// Process/Step why containing a point-in-time status snapshot
-// (invariants.ProcessWhySnapshotWarnings, task #331/R4-process-why -- a
-// point-in-time claim like "27 of 32 SIGNED as of 2026-07-21" belongs to
-// PIPELINE.md's generated Live state section, never frozen into authored
-// prose nothing regenerates) that are informational for the resolver, never
-// a gate. Called on BOTH the clean and the violations-found path in
+// result must never look identical to a genuinely proven entry), and
+// authored prose (Process/Step why, manifest.json goals/charter) containing
+// a point-in-time status snapshot (invariants.AuthoredProseSnapshotWarnings,
+// task #331/R4-process-why + task #333/R4F-prose-lint's class-wide
+// extension -- a point-in-time claim like "27 of 32 SIGNED as of
+// 2026-07-21" belongs to PIPELINE.md's generated Live state section /
+// DOMAIN-MAP's gates line, never frozen into authored prose nothing
+// regenerates) that are informational for the resolver, never a gate.
+// Called on BOTH the clean and the violations-found path in
 // cmdAllViolations (see its own comment) so a warning is never hidden behind
 // an unrelated blocking violation. It never affects the exit code and never
 // appears in --json output (see cmdAllViolations' --json branch above).
@@ -93,7 +95,7 @@ func printAdvisorySection(domainDir string) error {
 	}
 	orphans := diagnose.ReflectOrphanEntityType(g)
 	skips := invariants.HonoredSkipWarnings(g)
-	snapshots := invariants.ProcessWhySnapshotWarnings(g)
+	snapshots := invariants.AuthoredProseSnapshotWarnings(g)
 	if len(orphans) == 0 && len(skips) == 0 && len(snapshots) == 0 {
 		return nil
 	}

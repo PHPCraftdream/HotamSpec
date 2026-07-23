@@ -17,6 +17,41 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Authored-prose snapshot lint generalized to manifest goals/charter**
+  (task #333, R4F-prose-lint — fourth external review §4.1 synthesis,
+  extending task #331/R4-process-why): the "live numbers baked into durable
+  authored prose" smell #331 fixed for `Process.Why`/`Step.Why` is a CLASS,
+  not a one-field problem — confirmed live in the same sibling domain:
+  `prat/gpsm-sm`'s manifest `goals` field, before task #329's rewording,
+  baked in an identical "32/32 SIGNED"-shaped snapshot. Renamed
+  `internal/invariants/process_why_snapshot.go` →
+  `internal/invariants/authored_prose_snapshot.go`
+  (`checkProcessWhySnapshotProse` → `checkAuthoredProseSnapshot`,
+  `ProcessWhySnapshotWarnings` → `AuthoredProseSnapshotWarnings`,
+  `check_process_why_snapshot_prose` → `check_authored_prose_snapshot`;
+  `cmd/hotam/all_violations.go`'s `printAdvisorySection` wiring updated to
+  the new name, same never-registered-in-`All`, non-blocking ADVISORY-band
+  discipline). The check now ALSO scans manifest.json's `goals` (each list
+  entry) and `charter` (a single string), resolved via
+  `loader.ResolveDomainPresentation` — the same loader the
+  DOMAIN-MAP/PROJECT-ESSENCE renderers already use — with the EXACT SAME two
+  predicates #331 established (a snapshot-marker phrase co-occurring with an
+  ISO date; or an "N из/of M" tally co-occurring with a domain-declared
+  `gate_stage_order` token), no broadening of the pattern set. Verified
+  read-only against both real sibling-repo consumer manifests: `gpsm-sm`'s
+  CURRENT (post-#329) goals/charter text produces zero violations, and a
+  reconstructed pre-#329-shaped goals sentence fires as expected; `prat`'s
+  goals/charter also produce zero violations. Deliberately NOT extended to
+  `Requirement.Claim`/`Conflict.Context`: a scan of `hotam-spec-self`'s own
+  297-requirement graph found zero real fires of the two precise predicates
+  there, but also found roughly a dozen claims pairing a bare digit with a
+  status word in ordinary normative prose — evidence that register is
+  noisier than why/goals/charter's narrower "narrate current standing"
+  role, left as a future extension pending a dedicated design consult. A
+  drafted (not landed) `ProposedRequirement`
+  (`proposals/draft-R-authored-prose-no-live-tallies.json`) claims the
+  class-wide discipline, pending human review per
+  `R-decided-needs-human-signoff`/`R-ai-presents-not-decides`.
 - **`gate_signoff_count` assert: explicit cohort denominator + multi-run
   guard** (task #330, R4-cohort — fourth external review): the
   `gate_signoff_count` orientation_faq assert kind

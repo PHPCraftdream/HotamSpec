@@ -1,0 +1,37 @@
+{
+  "kind": "Requirement",
+  "id": "R-authored-prose-no-live-tallies",
+  "claim": "Authored prose fields that narrate a domain's DURABLE rationale or description -- Process.Why/Step.Why and manifest.json's `goals`/`charter` -- MUST NOT carry a point-in-time status snapshot (a snapshot-marker phrase co-occurring with an ISO date, e.g. \"текущее положение\"/\"по состоянию на\"/\"as of\"/\"current status\" plus a dated claim; or a live \"N из/of M\" tally co-occurring with a stage token from the domain's OWN declared `gate_stage_order`). A live count or dated status claim belongs to a generated projection instead -- PIPELINE.md's generated \"Live state\" section, DOMAIN-MAP's gates line, or an assert-checked orientation_faq phrase template -- never frozen into prose that nothing regenerates. Requirement.Claim and Conflict.Context are DELIBERATELY OUT of this claim's scope for now: they carry more legitimate risk of false positives (a Requirement's claim text can legitimately assert a count or a status word as part of its own normative substance, unlike why/goals/charter's narrower status-narrative role) -- a future requirement MAY extend this discipline there if a design consult finds the same two predicates stay low-noise against that register.",
+  "owner": "framework-author",
+  "status": "DRAFT",
+  "why": "Task #333 (R4F-prose-lint), fourth external review §4.1 synthesis: the \"live numbers baked into durable authored prose\" smell task #331 found and fixed for Process.Why/Step.Why (prat/gpsm-sm's Process.Why literally read \"27 из 32 ФТ... ТЕКУЩЕЕ ПОЛОЖЕНИЕ на 2026-07-21\" while the graph had since moved to 32/32) is not unique to that one field -- it is a CLASS affecting any authored text field. Confirmed live in the same sibling domain: gpsm-sm's manifest.json `goals` field, before task #329's rewording, baked in an identical \"32/32 SIGNED\"-shaped snapshot. This requirement generalizes #331's engine-portion fix. `internal/invariants/authored_prose_snapshot.go`'s `checkAuthoredProseSnapshot` (renamed from `process_why_snapshot.go`'s `checkProcessWhySnapshotProse`, exported as `AuthoredProseSnapshotWarnings`, replacing `ProcessWhySnapshotWarnings` -- wired into `cmd/hotam`'s non-blocking ADVISORY section exactly as before, `all_violations.go:printAdvisorySection`, never registered in the `All` registry) now ALSO scans manifest.json's `goals` (each list entry) and `charter` (a single string), resolved via `loader.ResolveDomainPresentation` -- the identical loader already used by the DOMAIN-MAP/PROJECT-ESSENCE renderers -- with the EXACT SAME two predicates #331 established, no broadening of the pattern set. Verified against both real sibling-repo consumer manifests (read-only inspection, PRAT-hotam is never edited by this engine-side task): `domains/gpsm-sm/manifest.json`'s CURRENT (post-#329) goals/charter text produces zero violations (the rewording that removed the hardcoded tally is exactly the fix this check exists to push toward), and a reconstructed pre-#329-shaped goals sentence (a marker phrase + ISO date, mirroring the real historical smell) DOES fire, proving the check has real teeth. `domains/prat/manifest.json`'s goals/charter also produce zero violations. A scan of `hotam-spec-self`'s own 297-requirement graph found zero real fires of the two precise predicates against `Requirement.Claim`/`Conflict.Context` text (so extending there would currently be a safe no-op), but also found roughly a dozen claims pairing a bare digit with a status word in ordinary normative prose (e.g. a requirement legitimately describing a command's behavior using a count) -- evidence that the CLAIM/CONTEXT register is noisier than why/goals/charter's narrower \"narrate current standing\" role, so this requirement's claim text explicitly declines to extend there for now, leaving the door open to a future design consult.",
+  "assumptions": [],
+  "relations": [
+    {"kind": "refines", "target": "R-domain-overview-projection"}
+  ],
+  "enforcement": "PROSE",
+  "enforced_by": ["check_authored_prose_snapshot"],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-23",
+  "settled_at": "",
+  "last_reviewed_at": "",
+  "review_after": "",
+  "evidence": [
+    "internal/invariants/authored_prose_snapshot_test.go"
+  ],
+  "source_refs": [
+    "internal/invariants/authored_prose_snapshot.go",
+    "internal/loader/loader.go",
+    "cmd/hotam/all_violations.go"
+  ],
+  "blocked_on": "",
+  "implemented_by": [
+    "internal/invariants/authored_prose_snapshot.go:checkAuthoredProseSnapshot"
+  ],
+  "verified_by": [
+    "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnManifestGoalsPreTask329Shape",
+    "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_TrueNegativeOnRealPostTask329GpsmSmGoals"
+  ]
+}
