@@ -1,0 +1,41 @@
+{
+  "kind": "Requirement",
+  "id": "R-pipeline-live-state-from-typed-carriers",
+  "claim": "PIPELINE.md's current-status content (which stage a domain's requirements have reached, how many are SIGNED/DEFERRED at each declared gate stage, how many Conflicts are DECIDED/HELD/UNRESOLVED) MUST be generated from typed carriers ON EVERY `hotam gen-spec` run -- Requirement.gate_signoffs and Conflict lifecycle state, read live via internal/graphfacts's GateSignoffTally/GateFrontier/ConflictLifecycleTally -- NEVER carried as a point-in-time snapshot embedded in a Process's or Step's authored `why` prose. Authored `why` text holds DURABLE rationale only (why a stage exists, why this order, why this process matters) -- a live tally or a dated status claim frozen into that prose inevitably goes stale, because nothing regenerates prose the way `hotam gen-spec` regenerates a projection.",
+  "owner": "framework-author",
+  "status": "DRAFT",
+  "why": "Task #331 (R4-process-why), fourth external review: prat/gpsm-sm's Process.Why literally read \"27 из 32 ФТ... ТЕКУЩЕЕ ПОЛОЖЕНИЕ на 2026-07-21\" while the graph had since moved to 32/32 -- a real, confirmed contradiction between durable authored prose and live graph state, because the prose captured a snapshot nothing ever re-derived. The fix has two enforcement halves. (1) PIPELINE.md now renders a generated \"Live state\" section (internal/generator/pipeline.go's renderPipelineLiveState, called from BuildPipeline) placed BEFORE the first `## Process` section (R-domain-overview-projection's own \"where are we now\" before \"how does this work\" ordering) -- a pure function of graph.json state only (no `today`/date parameter, so gen-spec stays byte-reproducible run to run), rendering one line per gate_stage_order stage (SIGNED/DEFERRED tally via GateSignoffTally, honest \"not started\" beyond the GateFrontier) plus a Conflicts DECIDED/HELD/UNRESOLVED line via ConflictLifecycleTally, omitted entirely when the domain has no declared gate_stage_order and no Conflicts (honest no-op, not an empty placeholder). (2) A narrow, ADVISORY-ONLY lint (internal/invariants/process_why_snapshot.go's check_process_why_snapshot_prose, exported as ProcessWhySnapshotWarnings, wired into cmd/hotam's non-blocking ADVISORY section -- mirrors HonoredSkipWarnings' identical never-registered-in-All shape) flags a Process.Why or Step.Why text that either (a) co-occurs a fixed snapshot-marker phrase (\"текущее положение\" / \"по состоянию на\" / \"as of\" / \"current status\") with an ISO date, or (b) co-occurs a \"N из/of M\" tally with any stage token from the domain's OWN declared gate_stage_order. Deliberately scoped to Process.Why/Step.Why only (never Requirement.Why) and deliberately a small fixed pattern set, not a general number/date heuristic, verified against hotam-spec-self's own 253-requirement graph producing zero false positives. The actual gpsm-sm Process.Why migration (rewriting PR-gpsm-ott-delivery's stale text in the sibling PRAT-hotam repo) is intentionally OUT of this requirement's scope -- a separate follow-up task, not this engine-portion change.",
+  "assumptions": [],
+  "relations": [
+    {"kind": "refines", "target": "R-domain-overview-projection"}
+  ],
+  "enforcement": "PROSE",
+  "enforced_by": [],
+  "m_tag": "",
+  "enforceability": "ENFORCEABLE",
+  "summary": "",
+  "created_at": "2026-07-23",
+  "settled_at": "",
+  "last_reviewed_at": "",
+  "review_after": "",
+  "evidence": [
+    "internal/generator/pipeline_livestate_test.go",
+    "internal/invariants/process_why_snapshot_test.go",
+    "domains/hotam-spec-self/docs/gen/PIPELINE.md's own Live state section"
+  ],
+  "source_refs": [
+    "internal/generator/pipeline.go",
+    "internal/invariants/process_why_snapshot.go",
+    "internal/graphfacts/facts.go",
+    "cmd/hotam/all_violations.go"
+  ],
+  "blocked_on": "",
+  "implemented_by": [
+    "internal/generator/pipeline.go:renderPipelineLiveState",
+    "internal/invariants/process_why_snapshot.go:checkProcessWhySnapshotProse"
+  ],
+  "verified_by": [
+    "internal/generator/pipeline_livestate_test.go:TestBuildPipeline_LiveStateRendersDedupedGateTallyAndConflictLifecycle",
+    "internal/invariants/process_why_snapshot_test.go:TestCheckProcessWhySnapshotProse_FiresOnGpsmSmShapedSentence"
+  ]
+}

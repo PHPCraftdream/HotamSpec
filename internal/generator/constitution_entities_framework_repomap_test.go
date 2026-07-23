@@ -109,7 +109,7 @@ func TestBuildEntities_ByteIdenticalToFixture(t *testing.T) {
 func TestBuildPipeline_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildPipeline(g, "fixture-domain")
+	got := BuildPipeline(g, "fixture-domain", nil)
 	want, err := os.ReadFile("testdata/fixture/PIPELINE.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)

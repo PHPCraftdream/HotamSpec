@@ -2006,8 +2006,12 @@ func TestApply_Process_UpdateReplacesWhy(t *testing.T) {
 	if proc.Why != "a corrected rationale" {
 		t.Errorf("Why = %q, want replaced value", proc.Why)
 	}
-	if len(proc.History) != 1 || !strings.Contains(proc.History[0].Summary, "why updated") {
-		t.Errorf("History = %+v, want one entry mentioning 'why updated'", proc.History)
+	// task #331 (R4-process-why): the History summary now records the
+	// actual old->new why diff (mirroring ProposedAssumptionRewrite's
+	// audited-rewrite style) instead of a bare "why updated" flag.
+	if len(proc.History) != 1 || !strings.Contains(proc.History[0].Summary, "why: ") ||
+		!strings.Contains(proc.History[0].Summary, "a corrected rationale") {
+		t.Errorf("History = %+v, want one entry with a why: old→new diff mentioning the new value", proc.History)
 	}
 }
 

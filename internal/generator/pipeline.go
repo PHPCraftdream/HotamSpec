@@ -19,10 +19,12 @@
 package generator
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/graphfacts"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -95,7 +97,18 @@ var docURLFragmentPattern = regexp.MustCompile(`#[A-Za-z0-9-]+`)
 // nodes gets an honest, valid, non-empty placeholder — never a blank file or
 // a generator error (§Process is an opt-in aspect: "no processes modeled
 // yet" is a normal domain shape, not a defect).
-func BuildPipeline(g *ontology.Graph, domainName string) string {
+//
+// gateOrder is the domain's declared gate_stage_order (loader.
+// ResolveGateStageOrder), threaded through by the caller so this package
+// stays a pure function of its arguments (no filesystem reads of its own) —
+// it feeds ONLY renderPipelineLiveState (task #331, R4-process-why): a
+// generated "Live state" section rendered from typed carriers
+// (gate_signoffs, conflict lifecycle), so a domain's authored Process.Why
+// prose can stay durable rationale without also carrying a point-in-time
+// status snapshot that inevitably goes stale (nothing regenerates prose).
+// nil is the honest no-op — a domain with no declared gate_stage_order and
+// no Conflicts renders byte-identically to before this parameter existed.
+func BuildPipeline(g *ontology.Graph, domainName string, gateOrder []string) string {
 	sourceHint := "from the active domain's `graph.json`"
 	if domainName != "" {
 		sourceHint = "from `domains/" + domainName + "/graph.json`"
@@ -110,6 +123,10 @@ func BuildPipeline(g *ontology.Graph, domainName string) string {
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")
+
+	if liveState := renderPipelineLiveState(g, gateOrder); len(liveState) > 0 {
+		lines = append(lines, liveState...)
+	}
 
 	if g.IsEmpty() {
 		lines = append(lines, EmptyNotice)
@@ -221,6 +238,87 @@ func BuildPipeline(g *ontology.Graph, domainName string) string {
 	}
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
+}
+
+// renderPipelineLiveState renders PIPELINE.md's "Live state" section (task
+// #331, R4-process-why): the ONLY point-in-time-status content this file
+// carries that is guaranteed fresh on every `hotam gen-spec`, because it is
+// computed directly from typed carriers (Requirement.GateSignoffs via
+// internal/graphfacts's GateSignoffTally/GateFrontier, and g.Conflicts'
+// lifecycle via ConflictLifecycleTally) rather than living as free prose in
+// some Process/Step's authored `why` text. Authored `why` prose stays
+// durable rationale ("why this stage exists, why this order") — a
+// point-in-time claim like "27 of 32 requirements SIGNED as of 2026-07-21"
+// belongs HERE, regenerated fresh every run, never frozen into prose that
+// nothing re-derives (the exact staleness this task's design consult
+// diagnosed in gpsm-sm's own Process.Why).
+//
+// Deliberately a PURE function of graph state only — no `today`/date
+// parameter. Dating this section would recreate the identical
+// staleness-snapshot smell being fixed here, and would break `gen-spec`
+// idempotency (two consecutive renders of the same graph must be
+// byte-identical — CI's byte-reproducibility check, mirrored by this
+// package's own TestGenerator_DoubleRegenerateIsIdentical).
+//
+// Returns nil (the honest no-op — omit the whole section, not an empty
+// header) when order is empty AND the graph has no Conflicts: a domain that
+// never declared gate_stage_order and carries no Conflicts (e.g. a fresh
+// domain, or one whose methodology tracks neither) has nothing live to
+// report yet, and rendering an empty/placeholder section would itself be
+// the same "claims something that isn't there" smell this section exists to
+// avoid.
+func renderPipelineLiveState(g *ontology.Graph, order []string) []string {
+	if len(order) == 0 && len(g.Conflicts) == 0 {
+		return nil
+	}
+
+	lines := []string{
+		"## Live state (generated from typed carriers — authoritative for \"where are we now\")",
+		"",
+	}
+
+	if len(order) > 0 {
+		// GateFrontier returns the stage NAME of the furthest stage any
+		// Requirement has touched (plus its own tally, unused here — this
+		// loop recomputes each stage's own tally via GateSignoffTally so
+		// every stage up to and including the frontier gets its real
+		// number, not just the frontier itself). frontierIdx stays -1 (no
+		// Requirement has recorded a single matching GateSignoff yet) when
+		// !hasFrontier, so every stage renders "not started" — an honest
+		// "declared but never touched" domain state.
+		frontierStage, _, hasFrontier := graphfacts.GateFrontier(g, order)
+		frontierIdx := -1
+		if hasFrontier {
+			for i, stage := range order {
+				if stage == frontierStage {
+					frontierIdx = i
+					break
+				}
+			}
+		}
+		for i, stage := range order {
+			if i > frontierIdx {
+				lines = append(lines, "- **"+stage+"** — not started")
+				continue
+			}
+			tally := graphfacts.GateSignoffTally(g, order, stage)
+			total := tally.Signed + tally.Deferred
+			lines = append(lines, fmt.Sprintf("- **%s** — %d/%d SIGNED · %d DEFERRED", stage, tally.Signed, total, tally.Deferred))
+		}
+	}
+
+	if len(g.Conflicts) > 0 {
+		decided, total, _ := graphfacts.ConflictLifecycleTally(g, "DECIDED")
+		held, _, _ := graphfacts.ConflictLifecycleTally(g, "HELD")
+		unresolved, _, _ := graphfacts.ConflictLifecycleTally(g, "UNRESOLVED")
+		lines = append(lines, fmt.Sprintf("- **Conflicts** — %d total: %d DECIDED · %d HELD · %d UNRESOLVED", total, decided, held, unresolved))
+	}
+
+	lines = append(lines, "")
+	lines = append(lines, "_This section regenerates on every `hotam gen-spec` from `gate_signoffs`/conflict lifecycles — where authored prose below disagrees with it, THIS section is current._")
+	lines = append(lines, "")
+
+	return lines
 }
 
 // stageNameCell renders one Step's authored name verbatim (the methodology

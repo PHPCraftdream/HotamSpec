@@ -9,6 +9,12 @@ Generated from the domain's own `Process` nodes (§Process, the opt-in behaviora
 
 ---
 
+## Live state (generated from typed carriers — authoritative for "where are we now")
+
+- **Conflicts** — 3 total: 1 DECIDED · 1 HELD · 1 UNRESOLVED
+
+_This section regenerates on every `hotam gen-spec` from `gate_signoffs`/conflict lifecycles — where authored prose below disagrees with it, THIS section is current._
+
 ## Process `PR-fixture-review`
 
 Coverage needs one process row rendering steps/roles/drives.

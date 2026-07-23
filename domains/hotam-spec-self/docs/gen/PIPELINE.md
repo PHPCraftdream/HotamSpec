@@ -9,6 +9,12 @@ Generated from the domain's own `Process` nodes (§Process, the opt-in behaviora
 
 ---
 
+## Live state (generated from typed carriers — authoritative for "where are we now")
+
+- **Conflicts** — 8 total: 8 DECIDED · 0 HELD · 0 UNRESOLVED
+
+_This section regenerates on every `hotam gen-spec` from `gate_signoffs`/conflict lifecycles — where authored prose below disagrees with it, THIS section is current._
+
 ## Process `PR-closed-loop`
 
 The methodology's own process modeled as a Process node — eating its own dog food at the behavioral altitude (R-process-aspect-first).

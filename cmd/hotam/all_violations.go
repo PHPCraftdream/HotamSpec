@@ -71,17 +71,21 @@ func cmdAllViolations(args []string) error {
 }
 
 // printAdvisorySection prints a non-blocking "ADVISORY" section: signals like
-// orphan-detail (diagnose.ReflectOrphanEntityType) and honored verified_by
+// orphan-detail (diagnose.ReflectOrphanEntityType), honored verified_by
 // recursion-guard skips (invariants.HonoredSkipWarnings -- @fh's
 // "honored-skip must not be silent" re-review: a Skipped RunVerifiedByTest
-// result must never look identical to a genuinely proven entry) that are
-// informational for the resolver, never a gate. Called on BOTH the clean and
-// the violations-found path in cmdAllViolations (see its own comment) so a
-// skip warning is never hidden behind an unrelated blocking violation. It
-// never affects the exit code and never appears in --json output (see
-// cmdAllViolations' --json branch above). No-ops silently when there is
-// nothing advisory to report — an empty advisory section would be noise, not
-// signal.
+// result must never look identical to a genuinely proven entry), and a
+// Process/Step why containing a point-in-time status snapshot
+// (invariants.ProcessWhySnapshotWarnings, task #331/R4-process-why -- a
+// point-in-time claim like "27 of 32 SIGNED as of 2026-07-21" belongs to
+// PIPELINE.md's generated Live state section, never frozen into authored
+// prose nothing regenerates) that are informational for the resolver, never
+// a gate. Called on BOTH the clean and the violations-found path in
+// cmdAllViolations (see its own comment) so a warning is never hidden behind
+// an unrelated blocking violation. It never affects the exit code and never
+// appears in --json output (see cmdAllViolations' --json branch above).
+// No-ops silently when there is nothing advisory to report — an empty
+// advisory section would be noise, not signal.
 func printAdvisorySection(domainDir string) error {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
@@ -89,7 +93,8 @@ func printAdvisorySection(domainDir string) error {
 	}
 	orphans := diagnose.ReflectOrphanEntityType(g)
 	skips := invariants.HonoredSkipWarnings(g)
-	if len(orphans) == 0 && len(skips) == 0 {
+	snapshots := invariants.ProcessWhySnapshotWarnings(g)
+	if len(orphans) == 0 && len(skips) == 0 && len(snapshots) == 0 {
 		return nil
 	}
 	fmt.Println()
@@ -98,6 +103,9 @@ func printAdvisorySection(domainDir string) error {
 		fmt.Printf("[%s] %s: %s\n", f.Condition, f.Target, f.Imperative)
 	}
 	for _, v := range skips {
+		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
+	}
+	for _, v := range snapshots {
 		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
 	}
 	return nil

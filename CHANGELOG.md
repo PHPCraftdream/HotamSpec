@@ -17,6 +17,53 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **PIPELINE.md generated "Live state" section + advisory Process-why
+  snapshot lint** (task #331, R4-process-why — fourth external review): a
+  domain's `Process.Why` (durable authored prose) can carry a stale
+  point-in-time status claim that nothing ever re-derives — a real,
+  confirmed instance was found in `prat/gpsm-sm`'s `Process.Why`, which
+  literally read "27 из 32 ФТ... ТЕКУЩЕЕ ПОЛОЖЕНИЕ на 2026-07-21" while the
+  graph had since moved to 32/32. Two-part fix. (1) `BuildPipeline`
+  (`internal/generator/pipeline.go`) now takes a `gateOrder []string`
+  parameter and renders a generated "Live state" section — one line per
+  `gate_stage_order` stage via `graphfacts.GateSignoffTally` (honest "not
+  started" beyond the `graphfacts.GateFrontier`), plus a
+  `graphfacts.ConflictLifecycleTally` DECIDED/HELD/UNRESOLVED line when the
+  graph carries any Conflicts — placed BEFORE the first `## Process` section
+  (the "where are we now" before "how does this work" ordering,
+  `R-domain-overview-projection`). Deliberately a PURE function of graph
+  state only (no `today`/date parameter — dating this section would
+  recreate the exact staleness smell being fixed, and would break
+  `gen-spec`'s byte-reproducibility). Omitted entirely (not an empty
+  placeholder) when the domain declares no `gate_stage_order` and carries no
+  Conflicts — `hotam-spec-self`'s own PIPELINE.md gained only a Conflicts
+  line (8 total: 8 DECIDED · 0 HELD · 0 UNRESOLVED; it has no declared
+  `gate_stage_order`). `cmd/hotam/gen_spec.go` now resolves `gateOrder` via
+  `loader.ResolveGateStageOrder` and threads it through. (2) A new narrow,
+  ADVISORY-ONLY lint (`internal/invariants/process_why_snapshot.go`,
+  `check_process_why_snapshot_prose`, exported as
+  `ProcessWhySnapshotWarnings`) flags a `Process.Why`/`Step.Why` (never
+  `Requirement.Why`) that either (a) co-occurs a fixed snapshot-marker
+  phrase ("текущее положение" / "по состоянию на" / "as of" / "current
+  status") with an ISO date, or (b) co-occurs an "N из/of M" tally with any
+  stage token from the domain's OWN declared `gate_stage_order`. Never
+  registered in the `All` invariant registry — mirrors
+  `HonoredSkipWarnings`' identical never-blocking shape, wired into
+  `cmd/hotam`'s non-blocking `ADVISORY` section
+  (`all_violations.go:printAdvisorySection`) rather than
+  `invariants.AllViolations`, so it can never block `hotam all-violations`'s
+  exit code or `apply-proposal`'s gate. Verified against
+  `hotam-spec-self`'s own 253-requirement graph: 0 false positives. Minor
+  hardening: `ProposedProcess.mutate`'s Why-change branch
+  (`internal/proposal/mutate.go`) now records an old→new abbreviated diff in
+  the `HistoryEntry` (mirroring `ProposedAssumptionRewrite`'s audited-rewrite
+  style) instead of a bare `"why updated"` flag. A drafted (not landed)
+  `ProposedRequirement`
+  (`proposals/draft-R-pipeline-live-state-from-typed-carriers.json`) claims
+  this discipline as a graph-level requirement, pending human review per
+  `R-decided-needs-human-signoff`/`R-ai-presents-not-decides`. The actual
+  `gpsm-sm` `Process.Why` migration (rewriting the stale text in the sibling
+  `PRAT-hotam` repo) is a separate follow-up task, out of scope here.
 - **Live-graph-fact assertions for Orientation-FAQ entries** (task #321,
   R3-semantic-faq — external review): the Orientation-FAQ invariant
   (`check_orientation_faq_answered`) previously proved only that a declared

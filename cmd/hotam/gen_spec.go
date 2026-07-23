@@ -191,6 +191,15 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		specRows = generator.CollectSpecRows(g)
 	}
 
+	// gateOrder (task #331, R4-process-why): the domain's declared
+	// gate_stage_order, threaded into BuildPipeline so PIPELINE.md's
+	// generated "Live state" section can render a live SIGNED/DEFERRED
+	// tally per stage — the SAME resolver DOMAIN-MAP's sibling-pulse gate
+	// line already consults (see internal/generator/claudemd.go). nil for a
+	// domain that has not declared gate_stage_order (hotam-spec-self,
+	// hotam-dev) is the honest no-op BuildPipeline already handles.
+	gateOrder := loader.ResolveGateStageOrder(graphPathForDomain(domainDir))
+
 	repoMapDocs := []generator.GenDocEntry{
 		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g, domainName, consumer)},
 		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
@@ -200,7 +209,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		{Filename: "HISTORY.md", Content: generator.BuildHistory(g)},
 		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName, consumer)},
 		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
-		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName)},
+		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName, gateOrder)},
 		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
 		{Filename: "MODELS.md", Content: generator.BuildModels(g)},
 		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g)},

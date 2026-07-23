@@ -937,8 +937,16 @@ func (p ProposedProcess) mutate(g *ontology.Graph, today string) error {
 		if len(newEntitySlugs) > 0 {
 			changes = append(changes, "drives_entities added: ["+strings.Join(newEntitySlugs, ", ")+"]")
 		}
+		// why diff summary (task #331, R4-process-why): mirrors
+		// ProposedAssumptionRewrite.mutate's audited-rewrite style
+		// (old→new, both abbreviated) instead of a bare "why updated" flag
+		// -- a Process.Why rewrite is exactly the same "durable prose
+		// changed, record what it changed FROM/TO" event an Assumption
+		// statement rewrite already is, and the bare flag gave a History
+		// reader no way to see what changed without diffing graph.json by
+		// hand.
 		if strings.TrimSpace(p.Why) != "" && strings.TrimSpace(p.Why) != existing.Why {
-			changes = append(changes, "why updated")
+			changes = append(changes, "why: "+abbrev(existing.Why, 150)+"→"+abbrev(strings.TrimSpace(p.Why), 150))
 		}
 		existing.Why = coalesceStr(p.Why, "", existing.Why)
 		if len(changes) > 0 {
