@@ -33,13 +33,13 @@ test-race:
 # semantics). See ci.yml's own job comments for the full "why" on the
 # race/no-race package split.
 test-race-scoped:
-	go test -race -timeout 30m ./internal/gate/... ./internal/generator/... ./internal/invariants/...
+	go test -race -timeout 30m ./internal/gate/... ./internal/generator/... ./internal/invariants/... ./internal/fsio/...
 
 test-cmd-hotam:
 	go test -timeout 30m ./cmd/hotam/...
 
 test-other:
-	go test -timeout 30m $(shell go list ./... | grep -v -E 'cmd/hotam$$|internal/gate$$|internal/generator$$|internal/invariants$$')
+	go test -timeout 30m $(shell go list ./... | grep -v -E 'cmd/hotam$$|internal/gate$$|internal/generator$$|internal/invariants$$|internal/fsio$$')
 
 # Quick local iteration loop: skips cmd/hotam's slow e2e/killswitch tests
 # entirely (they self-skip under -short, see testing.Short() checks in

@@ -17,6 +17,43 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`-race` CI coverage ratchet, plus a fixed real gap it found** (task
+  #336, R4F-race-ratchet — fourth external review's final synthesis §4.5):
+  task #327's `test-race` job comment/CHANGELOG text claimed its
+  hand-picked package list (`internal/gate`, `internal/generator`,
+  `internal/invariants`) was "the only packages with real goroutine/sync
+  usage in non-test code". That was already false: `cmd/hotam/common.go`'s
+  `writeFilesParallel` used a real `go func` + `sync.WaitGroup` fan-out to
+  write generated files concurrently, and `cmd/hotam` is deliberately
+  excluded from `-race` wholesale (its e2e tests spawn a compiled
+  subprocess `-race` on the parent process can't instrument) — so this one
+  genuinely concurrent function silently rode along uncovered. Read
+  confirms it was safe today: each goroutine writes to a distinct index of
+  a pre-sized `errs` slice and a distinct file path, synchronized by
+  `wg.Wait()` before the merge — no shared mutable state, no data race —
+  but nothing mechanically connected "what has goroutines" to "what CI
+  race-tests", so the gap could silently reappear and grow. Fixed two ways:
+  (1) extracted `writeFileMkdir`/`writeFilesParallel` out of `cmd/hotam`
+  into a new `internal/fsio` package (pure stdlib, no `cmd/hotam`-internal
+  dependencies, zero behavior change — `cmd/hotam`'s own functions now just
+  delegate) and added `internal/fsio` to the `test-race` CI job and
+  `Makefile`'s `test-race-scoped`, keeping the rest of `cmd/hotam`'s
+  e2e-heavy tests out of `-race` as task #327 intended, at far lower cost
+  than adding all of `cmd/hotam` (measured at ~9-20 min under `-race` in
+  task #327); (2) added `TestRaceRatchet_GoroutinePackagesCoveredByCI`
+  (`internal/selfcheck/race_ratchet_test.go`), mirroring
+  `TestCorePeriphery_ImportRatchet`'s shape: AST-scans every non-test `.go`
+  file under `internal/` and `cmd/hotam/` for real `go` statements
+  (`go/ast.GoStmt`, not a grep for the word "goroutine"), collects the
+  packages that contain one, and cross-checks that set against the package
+  list parsed directly out of `.github/workflows/ci.yml`'s `test-race`
+  job's `go test -race` line — one source of truth (the YAML), no
+  hand-maintained list duplicated in Go. A new package with a goroutine and
+  no `-race` coverage now fails `go test ./internal/selfcheck/...`. Three
+  non-vacuity controls prove the ratchet actually fires: a synthetic
+  uncovered-package case, a synthetic AST comment-vs-real-statement case,
+  and a synthetic YAML-parsing case.
+
 - **Typed signoff on Requirement/Assumption History entries**
   (task #335, R4F-req-signoff — fourth external review's final synthesis
   §4.4): task #328's landed `R-shared-projections-mode-independent`/

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/fsio"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
@@ -129,46 +129,25 @@ func loadDomainGraph(domainDir string) (*ontology.Graph, error) {
 	return g, nil
 }
 
+// writeFileMkdir and writeFilesParallel used to live here as unexported
+// functions. Task #336 (R4F-race-ratchet — fourth external review's final
+// synthesis §4.5) extracted them into internal/fsio: writeFilesParallel was
+// real in-process goroutine concurrency (one goroutine per file, sync.
+// WaitGroup) sitting in cmd/hotam, which CI's test-race job deliberately
+// excludes wholesale (task #327 — cmd/hotam's e2e tests spawn a compiled
+// subprocess `-race` on the parent process can't instrument, so running
+// -race over the whole package buys little for a lot of wall-clock). That
+// blanket exclusion silently swallowed this one function that DID benefit
+// from -race. Extracting it into its own package lets internal/fsio join
+// the -race scope (see .github/workflows/ci.yml's test-race job and
+// TestRaceRatchet_GoroutinePackagesCoveredByCI in internal/selfcheck) while
+// the rest of cmd/hotam's e2e-heavy tests stay out of it as intended.
 func writeFileMkdir(path string, data []byte) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("mkdir for %s: %w", path, err)
-	}
-	if err := os.WriteFile(path, data, 0o644); err != nil {
-		return fmt.Errorf("write %s: %w", path, err)
-	}
-	return nil
+	return fsio.WriteFileMkdir(path, data)
 }
 
-// writeFilesParallel writes each (path, content) pair in paths[i]/contents[i]
-// to disk concurrently — one goroutine per file, each touching only its own
-// path, so there is no write collision to guard against. It mirrors
-// invariants.AllViolations' indexed-slice-then-merge shape: results land in
-// a pre-sized slot per index (never via append from a goroutine, which would
-// race), so the caller can rebuild output in the original, deterministic
-// order after wg.Wait() rather than in whatever order goroutines happen to
-// finish.
-//
-// It returns the first error encountered, selected deterministically by
-// index (lowest i wins) rather than by goroutine completion order, so a
-// failure is reproducible across runs even though the writes themselves are
-// concurrent.
 func writeFilesParallel(paths []string, contents [][]byte) error {
-	errs := make([]error, len(paths))
-	var wg sync.WaitGroup
-	for i := range paths {
-		wg.Add(1)
-		go func(idx int, p string, data []byte) {
-			defer wg.Done()
-			errs[idx] = writeFileMkdir(p, data)
-		}(i, paths[i], contents[i])
-	}
-	wg.Wait()
-	for _, err := range errs {
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return fsio.WriteFilesParallel(paths, contents)
 }
 
 func domainNameFromDir(domainDir string) string {
