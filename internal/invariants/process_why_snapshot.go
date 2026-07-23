@@ -69,13 +69,13 @@ var tallyPattern = regexp.MustCompile(`(?i)\d+\s+(из|of)\s+\d+`)
 // conditions, either sufficient on its own) when a Process.Why or Step.Why
 // text:
 //
-//   (a) contains a snapshotMarkerPhrases entry AND an ISO date
-//       (isoDatePattern) ANYWHERE in the same why text (co-occurrence in the
-//       same field, not necessarily the same sentence — simpler to implement
-//       correctly, per the design consult), OR
-//   (b) contains a tallyPattern match AND any stage token from the domain's
-//       OWN declared gate_stage_order (loader.ResolveGateStageOrder)
-//       anywhere in the same why text.
+//	(a) contains a snapshotMarkerPhrases entry AND an ISO date
+//	    (isoDatePattern) ANYWHERE in the same why text (co-occurrence in the
+//	    same field, not necessarily the same sentence — simpler to implement
+//	    correctly, per the design consult), OR
+//	(b) contains a tallyPattern match AND any stage token from the domain's
+//	    OWN declared gate_stage_order (loader.ResolveGateStageOrder)
+//	    anywhere in the same why text.
 //
 // (b) is scoped to the domain's OWN declared stage vocabulary (never a
 // hardcoded "P-G" family) — the engine does not know or care what a "gate"
