@@ -203,7 +203,18 @@ authored spec code where this claim is EMBODIED, e.g.
 path-qualified `file:test` refs where this claim is PROVEN, e.g.
 `"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"`; default `[]`;
 same `["<clear>"]` sentinel on UPDATE — the authored-era counterpart of
-`enforced_by`, which keeps naming engine-side `check_*`/`Test*` enforcers)
+`enforced_by`, which keeps naming engine-side `check_*`/`Test*` enforcers),
+`signoff` (an `{"decided_by": "...", "date": "...", "verbatim": "...",
+"instrument": "..."}` object recording a typed human-decision provenance for
+THIS UPDATE — default omitted/`null`; UPDATE-only, rejected on CREATE;
+`decided_by` MUST resolve to a declared Stakeholder id and `verbatim` is
+required; `date`/`instrument` default to today/`"personal"` when omitted;
+`chosen_variant` MUST stay empty — it is a Conflict-variant-only concept.
+When set, the resulting `HistoryEntry` gets `decided_by`/`signoff`
+populated instead of the free-text-only entry an UPDATE otherwise leaves.
+Prefer this over `--decision-ref` for a real judgment-call decision;
+`--decision-ref` remains best for lighter mechanical acknowledgments — see
+the semantic-conflict gate docs)
 
 ```json
 {
@@ -431,6 +442,15 @@ unaudited drift of what the assumption even claims.
 `statement` outright), `reason` (non-empty — a rewrite with no recorded
 reason is drift, not a decision, mirroring `AssumptionTransition`'s own
 `reason` requirement)
+**Optional:** `signoff` (an `{"decided_by": "...", "date": "...",
+"verbatim": "...", "instrument": "..."}` object recording a typed
+human-decision provenance SUPPLEMENTING `reason` — default omitted/`null`;
+never replaces the required `reason` field; `decided_by` MUST resolve to a
+declared Stakeholder id and `verbatim` is required; `date`/`instrument`
+default to today/`"personal"` when omitted; `chosen_variant` MUST stay
+empty — it is a Conflict-variant-only concept. When set, the rewrite's
+already-unconditional `HistoryEntry` gets `decided_by`/`signoff` populated
+too)
 
 ```json
 {
