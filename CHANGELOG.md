@@ -17,6 +17,62 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`internal/selfspec`: Phase B sync primitives (task #348, RAC-B1)**:
+  in-memory building blocks for the authority-flip `hotam sync-self` command
+  (task #349, RAC-B2, not yet built) — `graph.json` remains the sole
+  runtime-trusted format after this step; nothing here writes to disk or
+  changes what any existing command reads.
+  - `StructuralFieldDiffs(reg, graph ontology.Requirement) []FieldDiff`
+    (`diff.go`): the single source of truth for the FULL list of structural
+    fields (Claim, Owner, Status, Why, Assumptions, Relations, Enforcement,
+    EnforcedBy, MTag, Enforceability, Summary, CreatedAt, SettledAt,
+    SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy) that differ
+    between a registry entry and a graph node — a strictly richer
+    replacement for `internal/invariants`' unexported
+    `firstStructuralFieldDiff` (which stops at the first difference and was
+    missing `CreatedAt`/`DeclOrder` even though `MergeIntoGraph` replaces
+    both). `FieldDiff{Field string; Old, New any}` carries values WHOLE,
+    never truncated — truncation for display/hashing is a caller's job.
+    Meant to be reused by name at three future call sites (a dry-run render,
+    a live invariant, and a history-summary generator).
+  - `SyncGraph(g *ontology.Graph, today string) (*SyncReport, error)`
+    (`sync.go`): unlike `MergeIntoGraph` (which hard-errors on a registered
+    ID absent from the graph), `SyncGraph` CREATES a new node for it — with
+    structural fields from the registry, empty event fields, and one seed
+    `HistoryEntry{At: today, Summary: "created via sync-self"}`. For an
+    existing node whose structural fields disagree with the registry, it
+    performs the same field replacement `MergeIntoGraph` does AND appends a
+    `HistoryEntry` summarizing the change (`"field X: <old> -> <new>; ..."`)
+    — closing the gap that `MergeIntoGraph` deliberately never writes
+    History (it backs a shadow/mirror check, not a landing path).
+    `SyncReport{Entries []SyncReportEntry{ID string; Kind SyncKind; FieldDiffs
+    []FieldDiff}}` lists only nodes actually created (`SyncKindAdded`) or
+    changed (`SyncKindChanged`) — a no-op node is untouched and absent from
+    the report. A graph node with no matching registry ID is left completely
+    alone (deletion is out of scope; a future boot invariant, task
+    #351/RAC-B4, catches that drift). Mutates `g` in place; never touches
+    disk.
+  - `verifyAppendOnly(old, new *ontology.Graph) error` (`verify.go`): a pure,
+    `SyncGraph`-independent guard proving a graph transition respects the
+    append-only journal invariant — for every Requirement in `old`, its ID
+    must still exist in `new`, and its `History` AND `GateSignoffs` must each
+    be an exact PREFIX of the corresponding `new` list (stricter than a
+    length-only or superset check: catches both truncation and in-place
+    mutation of an already-recorded entry).
+  - `SourceFiles embed.FS` (`embed.go`, `//go:embed requirements_*.go
+    selfspec.go`): a build-time-frozen copy of this package's own
+    registration source files, laying the groundwork for a future
+    stale-binary guard (task #349+). `SourceFileFor(id string) (string,
+    bool)` looks up which `requirements_<topic>.go` file registers a given
+    ID (exact `MustRegister("<id>"` literal match); `false` is the
+    legitimate answer for a brand-new ID not yet placed in any thematic
+    file.
+  - Full unit test coverage in `diff_test.go`, `sync_test.go`,
+    `verify_test.go`, `embed_test.go` — including an integration test
+    (`TestSyncGraph_SatisfiesAppendOnly`) proving `SyncGraph`'s own output
+    actually satisfies `verifyAppendOnly`. `MergeIntoGraph` itself is
+    UNCHANGED — Phase A's byte-identical round-trip test
+    (`TestMergeIntoGraph_ByteIdenticalRoundTrip`) still passes.
 - **`internal/selfspec`: Phase A full-coverage requirements-as-code registry
   (task #345, RAC-A)**: scales Phase 0's (task #344, RAC-0) proven
   byte-identity mechanism from an 18-requirement hand-picked pilot subset to
