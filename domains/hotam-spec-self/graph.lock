@@ -1,5 +1,5 @@
 {
-  "sha256": "1d07e1620fc13ebccaaafa8f506b5c35dbc7bbba75f86969f95515c883dfda36",
-  "updated_at": "2026-07-22T22:16:12Z",
-  "note": "task #319: extended R-gate-signoff-single-carrier.enforced_by with check_gate_signoff_signed_has_provenance/check_gate_signoff_decided_by_is_known_stakeholder"
+  "sha256": "e05113c9738478293af2e1c71897fd58fd64ac13ccdf53f70375636efec2d718",
+  "updated_at": "2026-07-23T07:08:09Z",
+  "note": ""
 }

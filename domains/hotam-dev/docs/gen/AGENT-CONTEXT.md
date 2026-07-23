@@ -15,12 +15,13 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 ## Top actions (what-now, top 10)
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
+- [P1] STRUCTURE on `D:\ai_dev\prat\HotamSpec\domains\hotam-dev` — [check_domain_claude_md_current] D:\ai_dev\prat\HotamSpec\domains\hotam-dev\CLAUDE.md's generated portion (everything up to and including the durable-notes marker line) does not match what a fresh `hotam gen-spec --claude-md` run produces right now -- it is either stale (the domain's graph, requirements, or debt/pulse state changed since the crystal was last regenerated) or was edited by hand despite its own do-not-edit banner; content BELOW the marker line (durable notes) is never compared and is safe. Re-run `hotam gen-spec --domain D:\ai_dev\prat\HotamSpec\domains\hotam-dev --claude-md D:\ai_dev\prat\HotamSpec\domains\hotam-dev\CLAUDE.md` to regenerate it.
 - [P5] LATENT_CONNECTOR on `A-runtime-logs-append-only` — [HEURISTIC, for AI review] assumption(s) A-runtime-logs-append-only shared by 5 requirements (R-host-spawn-leaves-trace, R-land-leaves-trace, R-spawn-logged, R-t1-gate-is-default, R-wave-lands-atomically) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
 - [P5] LATENT_CONNECTOR on `A-single-resolver-session` — [HEURISTIC, for AI review] assumption(s) A-single-resolver-session shared by 5 requirements (R-commit-follows-review, R-push-only-on-request, R-wave-lands-atomically, R-wave-strictly-sequential, R-worktree-parallel-permitted) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
 
 ## Status counters
 
-SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-07-22)
+SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-07-23)
 
 ## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)
 
