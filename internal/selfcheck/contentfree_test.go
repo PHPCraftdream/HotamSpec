@@ -36,7 +36,11 @@ var frameworkScanRoots = []string{"internal", "cmd/hotam"}
 // they are exempted. The exempt set is DERIVED from generator.DomainDocReaders
 // at test time (not hardcoded) — only the values declared in that contract are
 // treated as infrastructure. Any other business stakeholder/axis found as a
-// string literal in framework source is a leak.
+// string literal in framework source is a leak — EXCEPT inside
+// internal/selfspec/ (see isContentIntakeSite), the task #344 (RAC-0) mirror
+// registry whose entire purpose is to carry real domains/hotam-spec-self/
+// graph.json Requirement content (including real Owner values like
+// "framework-reviewer") in reviewed Go source, by design.
 //
 // Only string literals are inspected (compiled-in data); comments are excluded.
 // Substring match is used because every denylist token is a distinctive
@@ -44,8 +48,9 @@ var frameworkScanRoots = []string{"internal", "cmd/hotam"}
 //
 // Discrimination: this test fails the moment a domain-specific axis slug or a
 // non-canonical stakeholder (e.g. "framework-reviewer") is hardcoded into any
-// non-test framework source string. A doctored scan over a fixture containing
-// such a token confirms the predicate is non-vacuous (see TestContentFree_NoBusinessData_DetectsViolation).
+// non-test, non-selfspec framework source string. A doctored scan over a
+// fixture containing such a token confirms the predicate is non-vacuous (see
+// TestContentFree_NoBusinessData_DetectsViolation).
 func TestContentFree_NoBusinessData(t *testing.T) {
 	t.Parallel()
 	denylist := businessTokenDenylist(t)
@@ -55,6 +60,9 @@ func TestContentFree_NoBusinessData(t *testing.T) {
 
 	files := collectGoFiles(t, frameworkScanRoots, false /* no tests */, false /* no testdata */)
 	for _, f := range files {
+		if isContentIntakeSite(f.path) {
+			continue
+		}
 		for _, lit := range stringLiterals(f.ast) {
 			for token, label := range denylist {
 				if strings.Contains(lit, token) {
@@ -139,14 +147,22 @@ func businessTokenDenylist(t *testing.T) map[string]string {
 // EXACT RULE (mechanically checked): in NON-TEST, NON-TESTDATA .go files under
 // internal/ and cmd/hotam/, a composite literal that constructs a graph node
 // (ontology.Requirement{...}, ontology.Conflict{...}, ...[]ontology.Axis{...},
-// etc.) may appear ONLY in the two content-INTAKE boundaries, which handle
+// etc.) may appear ONLY in the three content-INTAKE boundaries, which handle
 // content functionally rather than embedding illustrative examples:
 //
 //   - internal/proposal/* — the mechanical writer that applies resolver-approved
 //     proposals; it constructs nodes FROM proposal input, never embeds examples;
 //   - cmd/hotam/init_cmd.go — the `hotam init` domain scaffold, a functional,
 //     explicitly-replaceable seed template (its own Why text says "replace it"),
-//     not illustrative content that misleads adopters.
+//     not illustrative content that misleads adopters;
+//   - internal/selfspec/* — task #344 (RAC-0)'s Go registry MIRROR of a
+//     hand-picked subset of domains/hotam-spec-self/graph.json's real
+//     Requirement nodes (the "requirements-as-code" migration's Phase 0 pilot).
+//     Its ontology.Requirement{...} literals are codegen'd FROM the real graph
+//     (not illustrative examples authored by hand) and MergeIntoGraph proves
+//     them byte-identical to the committed file — the same "functional content
+//     handling, not illustrative content" justification as the other two sites,
+//     extended to a third content family.
 //
 // Anywhere else, a node-constructing composite literal is embedded example
 // graph content and fails this check. map[string]ontology.EntityType{} (an empty
@@ -161,7 +177,7 @@ func TestContentFree_NoExamples(t *testing.T) {
 			if isContentIntakeSite(f.path) {
 				continue
 			}
-			t.Errorf("R-content-free-no-examples: %s composite literal in %s — framework source modules must not embed example graph content (only internal/proposal and cmd/hotam/init_cmd.go may construct nodes)",
+			t.Errorf("R-content-free-no-examples: %s composite literal in %s — framework source modules must not embed example graph content (only internal/proposal, cmd/hotam/init_cmd.go, and internal/selfspec may construct nodes)",
 				hit.typeName, relPath(t, f.path))
 		}
 	}
@@ -193,14 +209,18 @@ var sample = ontology.Requirement{ID: "R-sample", Claim: "illustrative example"}
 	// main test (it is outside every intake boundary).
 }
 
-// isContentIntakeSite reports whether a file path is one of the two legitimate
-// content-handling boundaries where constructing graph nodes is allowed.
+// isContentIntakeSite reports whether a file path is one of the three
+// legitimate content-handling boundaries where constructing graph nodes (or
+// embedding real business-data string literals) is allowed.
 func isContentIntakeSite(path string) bool {
 	clean := filepath.ToSlash(path)
 	if strings.Contains(clean, "/internal/proposal/") {
 		return true
 	}
 	if strings.HasSuffix(clean, "cmd/hotam/init_cmd.go") {
+		return true
+	}
+	if strings.Contains(clean, "/internal/selfspec/") {
 		return true
 	}
 	return false

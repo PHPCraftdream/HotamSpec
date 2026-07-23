@@ -17,6 +17,86 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`internal/selfspec`: Phase 0 pilot of the requirements-as-code migration
+  (task #344, RAC-0)**: a Go registry proving the byte-identity mechanism
+  that later phases will scale to all 301 `hotam-spec-self` Requirements. NO
+  authority flip — `domains/hotam-spec-self/graph.json` remains the sole
+  runtime-trusted, universally-read format; `selfspec.Requirements`
+  (`internal/registry.Registry[ontology.Requirement]`, the same generic
+  registry `internal/invariants`' `All` and `internal/methodology`'s
+  `Sections`/`Tools` already use) is a proven-byte-identical MIRROR of a
+  hand-picked 18-requirement subset, extending the `internal/methodology/
+  sections_data.go`+`tools_data.go` pattern (canonical prose as reviewed Go
+  registry values) to a third content family.
+  - `internal/selfspec/requirements_pilot.go`: 18 `Requirements.MustRegister`
+    literals — the 6 requirements landed this session
+    (`R-shared-projections-mode-independent`, `R-gate-cohort-explicit-
+    denominator`, `R-authored-prose-no-live-tallies`, `R-pipeline-live-
+    state-from-typed-carriers`, `R-requirement-update-signoff-typed`,
+    `R-claude-md-current`), well-known stable SETTLED anchors
+    (`R-gate-signoff-single-carrier`, `R-orientation-faq-answerable`,
+    `R-signoff-preserved-in-substrate`, `R-generations-inherit-doc-test-code`,
+    `R-no-hand-edit-graph`, `R-anchor-everything`, `R-ai-presents-not-decides`,
+    `R-decided-needs-human-signoff`, `R-glossary-drift-stable`,
+    `R-conflict-is-connector-node`, `R-resolver-distinct-from-owners`), and
+    one REJECTED requirement (`R-agent-imports-framework`) proving the
+    pattern covers REJECTED status ahead of Phase A's ~42 REJECTED nodes.
+    Generated once by a throwaway codegen program
+    (`.scratch/selfspec-codegen/`, not committed — reads the real graph.json
+    and emits the `%q`-escaped Go literals) and reviewed by hand; carries
+    ONLY STRUCTURAL fields (`Claim`/`Why`/`Owner`/`Status`/`Relations`/
+    `Assumptions`/`Enforcement`/`EnforcedBy`/`Enforceability`/`MTag`/
+    `Summary`/`CreatedAt`/`SettledAt`/`BlockedOn`/`ImplementedBy`/
+    `VerifiedBy`/`SourceRefs`/`DeclOrder`) — `ImplementedBy`/`VerifiedBy`
+    stay `[]string`, deliberately never typed further (Proof cannot be typed
+    in Go at all, and execution-checking a named test actually exists and
+    passes is a strictly stronger guarantee than any compile-time type over
+    a `file:symbol` string).
+  - `internal/selfspec/merge.go`: `MergeIntoGraph(g *ontology.Graph) error`
+    replaces each registered requirement's structural fields in place from
+    the registry, passing the EVENT fields (`History`, `GateSignoffs`,
+    `LastReviewedAt`, `ReviewAfter`, `Evidence`) through from the graph's
+    existing node untouched. Phase 0 scope, deliberately narrow: a
+    registered ID absent from the graph is an error (no node creation yet);
+    a graph node not in the registry is left completely untouched.
+  - `internal/selfspec/merge_test.go`: `TestMergeIntoGraph_
+    ByteIdenticalRoundTrip` loads the real committed graph.json, runs the
+    merge, re-serializes via `loader.WriteGraph` (reusing the loader's own
+    canonical-marshal path — `SetEscapeHTML(false)`, sort-by-ID, 2-space
+    indent — rather than reimplementing serialization), and asserts the
+    output is byte-identical to the committed file; passed on the first run
+    (the codegen's nil-vs-`[]string{}` slice handling, `decl_order`
+    per-node preservation — the graph has 307 requirements with a non-zero
+    `decl_order`, not uniformly 0 as initially assumed — and `%q` escaping
+    of Cyrillic/typographic-dash content in `R-authored-prose-no-live-
+    tallies`'s claim/why all round-tripped correctly without a fix cycle).
+    `TestMergeIntoGraph_Idempotent` proves a second merge pass is a no-op.
+  - Extended `internal/selfcheck/contentfree_test.go`'s content-intake
+    exemption (`isContentIntakeSite`, previously `internal/proposal/*` +
+    `cmd/hotam/init_cmd.go` only) to include `internal/selfspec/*`: its
+    `ontology.Requirement{...}` literals are codegen'd FROM the real graph
+    (not illustrative examples) and its real `Owner`/business-content string
+    literals (e.g. `"framework-reviewer"`) are exactly what
+    `R-content-free-no-examples`/`R-content-free-no-business-data` exist to
+    forbid everywhere else — `check_content_free_no_examples`/
+    `check_content_free_no_business_data` correctly fired against the
+    unmodified checks on first run, confirming the checks have real teeth
+    before being deliberately, narrowly widened for this one new legitimate
+    boundary.
+  - No import-ratchet or race-ratchet change needed: `internal/selfspec`
+    imports only `internal/ontology`+`internal/registry` (core-ward, not a
+    periphery consumer), so `internal/selfcheck`'s `TestCorePeriphery_
+    ImportRatchet` needed no new allowed-set entry (same as `internal/
+    graphfacts`'s precedent, task #331/#334 wave); it spawns no goroutines,
+    so `TestRaceRatchet_GoroutinePackagesCoveredByCI` needed no CI package
+    list change either.
+  - Value of this phase: authority-by-construction (a Requirement's
+    structural shape becomes a reviewed Go diff, not a hand-edited JSON
+    blob) and a reviewed-diff workflow for the highest-friction fields —
+    explicitly NOT type safety. No invariant reads this registry yet (shadow
+    mode starts in Phase A, the ~301-requirement scale-up); no CLI command
+    writes through it (Phase B, the authority flip) — both future tasks.
+
 - **Land 4 R4-wave requirements with explicit human signoff** (task #339,
   R4F-land-batch): four Requirements drafted during earlier engine-work
   tasks — whose capability was already built and verified in those tasks —
