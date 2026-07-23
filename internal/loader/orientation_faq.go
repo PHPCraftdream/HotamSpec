@@ -96,6 +96,7 @@ type OrientationFAQEntry struct {
 //
 //   - "conflict_count_by_lifecycle" — graphfacts.ConflictLifecycleTally(g,
 //     LifecycleClass) ("DECIDED" | "HELD" | "UNRESOLVED").
+//
 //   - "requirement_count_by_status" — graphfacts.RequirementStatusTally(g,
 //     Status, Enforcement) (Enforcement optional — "" matches any
 //     enforcement level).
