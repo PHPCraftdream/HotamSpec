@@ -5,11 +5,25 @@ reader: domain-user
 
 Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — a future `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports.
 
-**9 requirement(s) carry `verified_by`; 2 have at least one recorded scenario narrative; 288 carry no `verified_by` yet (no code carrier, honest gap).**
+**13 requirement(s) carry `verified_by`; 2 have at least one recorded scenario narrative; 288 carry no `verified_by` yet (no code carrier, honest gap).**
 
 ---
 
 ## Requirements with a verified_by scenario
+
+## `R-authored-prose-no-live-tallies`
+
+**Claim:** Authored prose fields that narrate a domain's DURABLE rationale or description -- Process.Why/Step.Why and manifest.json's `goals`/`charter` -- MUST NOT carry a point-in-time status snapshot (a snapshot-marker phrase co-occurring with an ISO date, e.g. "текущее положение"/"по состоянию на"/"as of"/"current status" plus a dated claim; or a live "N из/of M" tally co-occurring with a stage token from the domain's OWN declared `gate_stage_order`). A live count or dated status claim belongs to a generated projection instead -- PIPELINE.md's generated "Live state" section, DOMAIN-MAP's gates line, or an assert-checked orientation_faq phrase template -- never frozen into prose that nothing regenerates. Requirement.Claim and Conflict.Context are DELIBERATELY OUT of this claim's scope for now: they carry more legitimate risk of false positives (a Requirement's claim text can legitimately assert a count or a status word as part of its own normative substance, unlike why/goals/charter's narrower status-narrative role) -- a future requirement MAY extend this discipline there if a design consult finds the same two predicates stay low-noise against that register.
+
+**Status:** DRAFT · **Enforcement:** PROSE
+
+### `internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnManifestGoalsPreTask329Shape`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
+
+### `internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_TrueNegativeOnRealPostTask329GpsmSmGoals`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
 
 ## `R-authored-spec-links-mechanically-checked`
 
@@ -70,6 +84,16 @@ _No scenario narrative: test passes but recorded no hotamspec scenario (plain go
 
 _No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
 
+## `R-gate-cohort-explicit-denominator`
+
+**Claim:** A `gate_signoff_count` orientation_faq assert (loader.OrientationFAQAssert) that ALSO declares a manifest-level `gate_cohort` ({"statuses": [...], "exclude": [...]}) answers a STRONGER question than the assert's pre-existing bare form: 'have ALL cohort requirements passed this stage' -- a cohort member that was NEVER ASSESSED at the target stage (no GateSignoff record at all, neither SIGNED nor DEFERRED) MUST count AGAINST `expect:"all"`, never be silently invisible to it. Absent a declared `gate_cohort`, the assert's denominator stays `total = tally.Signed + tally.Deferred` (today's semantics, byte-identical -- a Requirement never evaluated at the stage is invisible to that sum by construction, and this weaker form remains valid for a domain that has not opted into an explicit cohort declaration). Separately, a `gate_signoff_count` assert MUST tally FAIL CLOSED -- refuse to silently conflate distinct pipeline executions -- when its target stage carries GateSignoffs from more than one distinct `pipeline_run` and the assert itself does not declare which `pipeline_run` it means; declaring `pipeline_run` on the assert disambiguates and tallies only that one run's signoffs.
+
+**Status:** DRAFT · **Enforcement:** PROSE
+
+### `internal/invariants/orientation_faq_assert_test.go:TestCheckOrientationFAQAnswered_GateCohort_NeverEvaluatedMemberFailsAll`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
+
 ## `R-lifecycle-type-exists`
 
 **Claim:** A generic lifecycle module shall define State, Transition, and Lifecycle types.
@@ -99,6 +123,20 @@ _No scenario narrative: test passes but recorded no hotamspec scenario (plain go
 - Then the applied proposal is actually present in the graph on disk (Apply wrote it) — **held**
 - Value (applied_requirement=4 requirements after apply)
 
+## `R-pipeline-live-state-from-typed-carriers`
+
+**Claim:** PIPELINE.md's current-status content (which stage a domain's requirements have reached, how many are SIGNED/DEFERRED at each declared gate stage, how many Conflicts are DECIDED/HELD/UNRESOLVED) MUST be generated from typed carriers ON EVERY `hotam gen-spec` run -- Requirement.gate_signoffs and Conflict lifecycle state, read live via internal/graphfacts's GateSignoffTally/GateFrontier/ConflictLifecycleTally -- NEVER carried as a point-in-time snapshot embedded in a Process's or Step's authored `why` prose. Authored `why` text holds DURABLE rationale only (why a stage exists, why this order, why this process matters) -- a live tally or a dated status claim frozen into that prose inevitably goes stale, because nothing regenerates prose the way `hotam gen-spec` regenerates a projection.
+
+**Status:** DRAFT · **Enforcement:** PROSE
+
+### `internal/generator/pipeline_livestate_test.go:TestBuildPipeline_LiveStateRendersDedupedGateTallyAndConflictLifecycle`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
+
+### `internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnGpsmSmShapedSentence`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
+
 ## `R-requirement-freshness-fields`
 
 **Claim:** A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing.
@@ -106,6 +144,20 @@ _No scenario narrative: test passes but recorded no hotamspec scenario (plain go
 **Status:** SETTLED · **Enforcement:** ENFORCED
 
 ### `internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
+
+## `R-requirement-update-signoff-typed`
+
+**Claim:** A Requirement UPDATE or Assumption rewrite that records a real human decision MUST carry a typed signoff (ontology.Signoff -- decided_by/date/verbatim/instrument) on the resulting HistoryEntry, whose decided_by resolves to a declared Stakeholder; free-text --decision-ref remains only for mechanical acknowledgments (e.g. a traceability-completion fix binding an existing test to an existing requirement), never a substitute for a typed signoff on a real judgment-call decision.
+
+**Status:** DRAFT · **Enforcement:** PROSE
+
+### `internal/proposal/history_signoff_test.go:TestApply_Requirement_UpdateWithSignoff_LandsIntoHistory`
+
+_No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
+
+### `internal/invariants/history_signoff_checks_test.go:TestHistorySignoffChecks_CleanOnRealGraph`
 
 _No scenario narrative: test passes but recorded no hotamspec scenario (plain go test, no narrative to render)._
 

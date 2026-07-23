@@ -1663,6 +1663,54 @@
       "blocked_on": "blocked on the audit_atomicity tool (Planned in internal/methodology/tools_data.go)"
     },
     {
+      "id": "R-authored-prose-no-live-tallies",
+      "claim": "Authored prose fields that narrate a domain's DURABLE rationale or description -- Process.Why/Step.Why and manifest.json's `goals`/`charter` -- MUST NOT carry a point-in-time status snapshot (a snapshot-marker phrase co-occurring with an ISO date, e.g. \"текущее положение\"/\"по состоянию на\"/\"as of\"/\"current status\" plus a dated claim; or a live \"N из/of M\" tally co-occurring with a stage token from the domain's OWN declared `gate_stage_order`). A live count or dated status claim belongs to a generated projection instead -- PIPELINE.md's generated \"Live state\" section, DOMAIN-MAP's gates line, or an assert-checked orientation_faq phrase template -- never frozen into prose that nothing regenerates. Requirement.Claim and Conflict.Context are DELIBERATELY OUT of this claim's scope for now: they carry more legitimate risk of false positives (a Requirement's claim text can legitimately assert a count or a status word as part of its own normative substance, unlike why/goals/charter's narrower status-narrative role) -- a future requirement MAY extend this discipline there if a design consult finds the same two predicates stay low-noise against that register.",
+      "owner": "framework-author",
+      "status": "DRAFT",
+      "why": "Task #333 (R4F-prose-lint), fourth external review §4.1 synthesis: the \"live numbers baked into durable authored prose\" smell task #331 found and fixed for Process.Why/Step.Why (prat/gpsm-sm's Process.Why literally read \"27 из 32 ФТ... ТЕКУЩЕЕ ПОЛОЖЕНИЕ на 2026-07-21\" while the graph had since moved to 32/32) is not unique to that one field -- it is a CLASS affecting any authored text field. Confirmed live in the same sibling domain: gpsm-sm's manifest.json `goals` field, before task #329's rewording, baked in an identical \"32/32 SIGNED\"-shaped snapshot. This requirement generalizes #331's engine-portion fix. `internal/invariants/authored_prose_snapshot.go`'s `checkAuthoredProseSnapshot` (renamed from `process_why_snapshot.go`'s `checkProcessWhySnapshotProse`, exported as `AuthoredProseSnapshotWarnings`, replacing `ProcessWhySnapshotWarnings` -- wired into `cmd/hotam`'s non-blocking ADVISORY section exactly as before, `all_violations.go:printAdvisorySection`, never registered in the `All` registry) now ALSO scans manifest.json's `goals` (each list entry) and `charter` (a single string), resolved via `loader.ResolveDomainPresentation` -- the identical loader already used by the DOMAIN-MAP/PROJECT-ESSENCE renderers -- with the EXACT SAME two predicates #331 established, no broadening of the pattern set. Verified against both real sibling-repo consumer manifests (read-only inspection, PRAT-hotam is never edited by this engine-side task): `domains/gpsm-sm/manifest.json`'s CURRENT (post-#329) goals/charter text produces zero violations (the rewording that removed the hardcoded tally is exactly the fix this check exists to push toward), and a reconstructed pre-#329-shaped goals sentence (a marker phrase + ISO date, mirroring the real historical smell) DOES fire, proving the check has real teeth. `domains/prat/manifest.json`'s goals/charter also produce zero violations. A scan of `hotam-spec-self`'s own 297-requirement graph found zero real fires of the two precise predicates against `Requirement.Claim`/`Conflict.Context` text (so extending there would currently be a safe no-op), but also found roughly a dozen claims pairing a bare digit with a status word in ordinary normative prose (e.g. a requirement legitimately describing a command's behavior using a count) -- evidence that the CLAIM/CONTEXT register is noisier than why/goals/charter's narrower \"narrate current standing\" role, so this requirement's claim text explicitly declines to extend there for now, leaving the door open to a future design consult.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-domain-overview-projection"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": [
+        "check_authored_prose_snapshot"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-23",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [
+        "internal/invariants/authored_prose_snapshot_test.go"
+      ],
+      "source_refs": [
+        "internal/invariants/authored_prose_snapshot.go",
+        "internal/loader/loader.go",
+        "cmd/hotam/all_violations.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-23",
+          "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (project owner/resolver), 2026-07-23, verbatim: «Да, закрепить» — approval to land draft-R-authored-prose-no-live-tallies (task #339, batch signoff session)",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "internal/invariants/authored_prose_snapshot.go:checkAuthoredProseSnapshot"
+      ],
+      "verified_by": [
+        "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnManifestGoalsPreTask329Shape",
+        "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_TrueNegativeOnRealPostTask329GpsmSmGoals"
+      ]
+    },
+    {
       "id": "R-authored-spec-layer-progression",
       "claim": "Authored spec/ coverage of a domain SHALL proceed in layer order, general before specific, the same skeleton-first discipline R-domain-founded-in-wave-order already applies to graph founding: (1) MODELS -- first author the full skeleton of the domain's object model, every aggregate/entity/value-object that exists, before any one of them is fleshed out; (2) FIELDS -- then author each model's fields/attributes; (3) METHODS -- then author operations/methods, ALL the interactions between models (behavior, invariants, error paths), not just one model's; (4) TESTS -- then author the executable tests that prove requirements against that code. An agent building authored spec/ shall NOT take one requirement all the way from model to test before starting the next; it shall complete each layer across the WHOLE domain before advancing to the next layer.",
       "owner": "framework-author",
@@ -6909,6 +6957,54 @@
       "blocked_on": "blocked on test-tiering infrastructure (build tags / package layout, absent)"
     },
     {
+      "id": "R-gate-cohort-explicit-denominator",
+      "claim": "A `gate_signoff_count` orientation_faq assert (loader.OrientationFAQAssert) that ALSO declares a manifest-level `gate_cohort` ({\"statuses\": [...], \"exclude\": [...]}) answers a STRONGER question than the assert's pre-existing bare form: 'have ALL cohort requirements passed this stage' -- a cohort member that was NEVER ASSESSED at the target stage (no GateSignoff record at all, neither SIGNED nor DEFERRED) MUST count AGAINST `expect:\"all\"`, never be silently invisible to it. Absent a declared `gate_cohort`, the assert's denominator stays `total = tally.Signed + tally.Deferred` (today's semantics, byte-identical -- a Requirement never evaluated at the stage is invisible to that sum by construction, and this weaker form remains valid for a domain that has not opted into an explicit cohort declaration). Separately, a `gate_signoff_count` assert MUST tally FAIL CLOSED -- refuse to silently conflate distinct pipeline executions -- when its target stage carries GateSignoffs from more than one distinct `pipeline_run` and the assert itself does not declare which `pipeline_run` it means; declaring `pipeline_run` on the assert disambiguates and tallies only that one run's signoffs.",
+      "owner": "framework-author",
+      "status": "DRAFT",
+      "why": "Task #330 (R4-cohort), fourth external review: `gate_signoff_count`'s pre-existing denominator (`tally.Signed + tally.Deferred`) is blind to a Requirement with NO gate-signoff record at all at a stage -- it was never evaluated, so it contributes to neither Signed nor Deferred, and `expect:\"all\"` can pass while that requirement was silently never assessed. Confirmed live in `gpsm-sm`: 35 requirements total, only 32 carry any gate signoff at all at the relevant stage -- the other 3 (`R-domain-exists` REJECTED, `R-gpsm-pg1-passage`/`R-gpsm-project` SETTLED meta-requirements describing the pipeline itself rather than passing through it) are legitimately out of cohort, which is exactly why the simpler alternative (`total = all Requirements` regardless of role) was rejected during this task's design consult in favor of an explicit, domain-declared cohort. `loader.ResolveGateCohort` (`internal/loader/gate_cohort.go`) reads the optional manifest `gate_cohort` field (statuses default `[\"SETTLED\"]` when declared-but-empty); `graphfacts.CohortCount` (`internal/graphfacts/facts.go`) is the trivial counted-filter extraction (matching this package's own 'extracted so divergent reimplementations can't creep' discipline, mirroring `lastSignoffAtStage`'s identical rationale for the gate-tally dedup rule); `evalOrientationAssert` (`internal/invariants/orientation_faq_assert.go`) wires the cohort denominator in when declared, fails closed on an `exclude` id that matches no real Requirement or a `statuses` entry that is not a recognized status (reusing `graphfacts.RequirementStatusTally`'s own exact-match + OPEN-prefix matching rule, not a new one), and also wires the previously-unused `OrientationFAQAssert.State` field (`\"\"`/`\"SIGNED\"` byte-identical default vs `\"DEFERRED\"`). The multi-run half closes a second, related gap: `GateSignoff.PipelineRun` was already mandatory/populated on every signoff but `graphfacts` silently conflated every run's signoffs when tallying a stage -- `lastSignoffAtStage`/`GateSignoffTally` now take a `run` parameter (`\"\"` = all runs = the exact pre-existing behavior, still the default for `internal/generator/pipeline.go`'s Live-state renderer and `internal/generator/claudemd.go`'s DOMAIN-MAP renderer, both unchanged), and a new `graphfacts.PipelineRunsAtStage` plus `OrientationFAQAssert.PipelineRun` field let an assert either disambiguate a genuinely multi-run stage or fail closed when it does not. Actually declaring `gate_cohort` in `gpsm-sm`'s own manifest.json (activating the stronger check there) is intentionally a SEPARATE follow-up, out of this requirement's scope -- this requirement claims only the engine-portion capability now existing and regression-tested.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-orientation-faq-answerable"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-23",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [
+        "internal/graphfacts/facts_test.go",
+        "internal/invariants/orientation_faq_assert_test.go"
+      ],
+      "source_refs": [
+        "internal/loader/gate_cohort.go",
+        "internal/loader/orientation_faq.go",
+        "internal/graphfacts/facts.go",
+        "internal/invariants/orientation_faq_assert.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-23",
+          "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (project owner/resolver), 2026-07-23, verbatim: «Да, закрепить» — approval to land draft-R-gate-cohort-explicit-denominator (task #339, batch signoff session)",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "internal/graphfacts/facts.go:CohortCount",
+        "internal/invariants/orientation_faq_assert.go:evalOrientationAssert"
+      ],
+      "verified_by": [
+        "internal/invariants/orientation_faq_assert_test.go:TestCheckOrientationFAQAnswered_GateCohort_NeverEvaluatedMemberFailsAll"
+      ]
+    },
+    {
       "id": "R-gate-signoff-single-carrier",
       "claim": "A domain that runs its Requirements through a staged review methodology (e.g. prat/gpsm-sm's P-G0..P-G4 planning gates) has ONE typed carrier on the graph recording per-Requirement, per-stage gate passage -- Requirement.gate_signoffs -- instead of that fact being reconstructed from prose scattered across History entries, manifest goals, and Process why-fields (a drift that has already recurred once in this framework's own consumer domains). Within one Requirement and one pipeline_run, SIGNED gate_signoffs MUST appear in the domain-declared gate_stage_order (a manifest.json opt-in DATA field, never an engine-known enum -- the engine serves domains with no staged-gate discipline at all) -- no stage SIGNED before every earlier stage is SIGNED too. Every DEFERRED gate_signoff MUST carry a non-empty deferred_reason, and when that reason references a Conflict id (C-[0-9a-f]{8}), that id MUST resolve to a real Conflict node in the graph. Every SIGNED gate_signoff MUST carry a populated signoff (decided_by + verbatim) and non-empty evidence, and signoff.decided_by, when present, MUST resolve to a known Stakeholder.",
       "owner": "framework-author",
@@ -9509,6 +9605,56 @@
       "decl_order": 270
     },
     {
+      "id": "R-pipeline-live-state-from-typed-carriers",
+      "claim": "PIPELINE.md's current-status content (which stage a domain's requirements have reached, how many are SIGNED/DEFERRED at each declared gate stage, how many Conflicts are DECIDED/HELD/UNRESOLVED) MUST be generated from typed carriers ON EVERY `hotam gen-spec` run -- Requirement.gate_signoffs and Conflict lifecycle state, read live via internal/graphfacts's GateSignoffTally/GateFrontier/ConflictLifecycleTally -- NEVER carried as a point-in-time snapshot embedded in a Process's or Step's authored `why` prose. Authored `why` text holds DURABLE rationale only (why a stage exists, why this order, why this process matters) -- a live tally or a dated status claim frozen into that prose inevitably goes stale, because nothing regenerates prose the way `hotam gen-spec` regenerates a projection.",
+      "owner": "framework-author",
+      "status": "DRAFT",
+      "why": "Task #331 (R4-process-why), fourth external review: prat/gpsm-sm's Process.Why literally read \"27 из 32 ФТ... ТЕКУЩЕЕ ПОЛОЖЕНИЕ на 2026-07-21\" while the graph had since moved to 32/32 -- a real, confirmed contradiction between durable authored prose and live graph state, because the prose captured a snapshot nothing ever re-derived. The fix has two enforcement halves. (1) PIPELINE.md now renders a generated \"Live state\" section (internal/generator/pipeline.go's renderPipelineLiveState, called from BuildPipeline) placed BEFORE the first `## Process` section (R-domain-overview-projection's own \"where are we now\" before \"how does this work\" ordering) -- a pure function of graph.json state only (no `today`/date parameter, so gen-spec stays byte-reproducible run to run), rendering one line per gate_stage_order stage (SIGNED/DEFERRED tally via GateSignoffTally, honest \"not started\" beyond the GateFrontier) plus a Conflicts DECIDED/HELD/UNRESOLVED line via ConflictLifecycleTally, omitted entirely when the domain has no declared gate_stage_order and no Conflicts (honest no-op, not an empty placeholder). (2) A narrow, ADVISORY-ONLY lint (internal/invariants/process_why_snapshot.go's check_process_why_snapshot_prose, exported as ProcessWhySnapshotWarnings, wired into cmd/hotam's non-blocking ADVISORY section -- mirrors HonoredSkipWarnings' identical never-registered-in-All shape) flags a Process.Why or Step.Why text that either (a) co-occurs a fixed snapshot-marker phrase (\"текущее положение\" / \"по состоянию на\" / \"as of\" / \"current status\") with an ISO date, or (b) co-occurs a \"N из/of M\" tally with any stage token from the domain's OWN declared gate_stage_order. Deliberately scoped to Process.Why/Step.Why only (never Requirement.Why) and deliberately a small fixed pattern set, not a general number/date heuristic, verified against hotam-spec-self's own 253-requirement graph producing zero false positives. The actual gpsm-sm Process.Why migration (rewriting PR-gpsm-ott-delivery's stale text in the sibling PRAT-hotam repo) is intentionally OUT of this requirement's scope -- a separate follow-up task, not this engine-portion change.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-domain-overview-projection"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-23",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [
+        "internal/generator/pipeline_livestate_test.go",
+        "internal/invariants/authored_prose_snapshot_test.go",
+        "domains/hotam-spec-self/docs/gen/PIPELINE.md's own Live state section"
+      ],
+      "source_refs": [
+        "internal/generator/pipeline.go",
+        "internal/invariants/authored_prose_snapshot.go",
+        "internal/graphfacts/facts.go",
+        "cmd/hotam/all_violations.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-23",
+          "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (project owner/resolver), 2026-07-23, verbatim: «Да, закрепить» — approval to land draft-R-pipeline-live-state-from-typed-carriers (task #339, batch signoff session)",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "internal/generator/pipeline.go:renderPipelineLiveState",
+        "internal/invariants/authored_prose_snapshot.go:checkAuthoredProseSnapshot"
+      ],
+      "verified_by": [
+        "internal/generator/pipeline_livestate_test.go:TestBuildPipeline_LiveStateRendersDedupedGateTallyAndConflictLifecycle",
+        "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnGpsmSmShapedSentence"
+      ]
+    },
+    {
       "id": "R-post-compact-regen-from-substrate",
       "claim": "A PostCompact hook shall run `hotam gen-spec` after every auto-compact so the post-compact prompt reload reads fresh substrate-derived CLAUDE.md, not the stale pre-compact version.",
       "owner": "framework-author",
@@ -10599,6 +10745,62 @@
       ],
       "verified_by": [
         "internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory"
+      ]
+    },
+    {
+      "id": "R-requirement-update-signoff-typed",
+      "claim": "A Requirement UPDATE or Assumption rewrite that records a real human decision MUST carry a typed signoff (ontology.Signoff -- decided_by/date/verbatim/instrument) on the resulting HistoryEntry, whose decided_by resolves to a declared Stakeholder; free-text --decision-ref remains only for mechanical acknowledgments (e.g. a traceability-completion fix binding an existing test to an existing requirement), never a substitute for a typed signoff on a real judgment-call decision.",
+      "owner": "framework-author",
+      "status": "DRAFT",
+      "why": "Task #335 (R4F-req-signoff), fourth external review's final synthesis (§4.4): task #328's landed Requirement UPDATEs (R-shared-projections-mode-independent, R-orientation-faq-answerable) recorded real human approval only as free text in History.Summary -- History.DecidedBy ended up \"\" even though a real human (Marat Karamullin, project owner/resolver) approved with a real verbatim quote («Da, prizemlit oba kak est»), confirmed by direct read of domains/hotam-spec-self/graph.json. Conflict/GateSignoff already REQUIRE typed decided_by/verbatim (task #319); ProposedRequirement/ProposedAssumptionRewrite had no equivalent structure until this task added HistoryEntry.Signoff (internal/ontology/requirement.go), the optional Signoff field on ProposedRequirement/ProposedAssumptionRewrite (internal/proposal/types.go), shape validation (internal/proposal/validate.go's validateHistorySignoffShape -- decided_by/verbatim required, chosen_variant rejected as Conflict-variant-only junk), Stakeholder-resolution at mutate time (internal/proposal/mutate.go's resolveHistorySignoff, deliberately UNGATED unlike ProposedConflict.mutate's zero-Stakeholder escape hatch -- a typed signoff is per-proposal opt-in, so a domain choosing to use it must have named its humans), and two new ongoing invariants (internal/invariants/history_signoff_checks.go): check_history_signoff_has_provenance and check_history_signoff_decided_by_is_known_stakeholder. cmd/hotam/semantic_gate.go's hasOverride now accepts a typed Requirement Signoff on par with --ack-conflict/--decision-ref for overriding the semantic-conflict gate. This requirement is DRAFT, not applied, pending resolver review -- per R-ai-presents-not-decides/R-decided-needs-human-signoff, adopting a NEW authoring obligation (not just a NEW capability) is a judgment call for the resolver, not something the same task that built the capability should also unilaterally mandate. NOTE (surfaced, not resolved, by this same task): hotam-spec-self's own domain declares only ai-agent/domain-user/framework-author/framework-reviewer Stakeholders -- there is NO Stakeholder for Marat Karamullin in THIS domain (unlike PRAT-hotam's gpsm-sm domain, which does have one) -- so the first REAL use of this feature in hotam-spec-self itself needs either a new ProposedStakeholder or a resolver decision that domain-user/framework-author is the honest id to use.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-signoff-preserved-in-substrate"
+        },
+        {
+          "kind": "depends_on",
+          "target": "R-decided-needs-human-signoff"
+        }
+      ],
+      "enforcement": "PROSE",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-23",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": [
+        "internal/proposal/history_signoff_test.go",
+        "internal/invariants/history_signoff_checks_test.go"
+      ],
+      "source_refs": [
+        "internal/ontology/requirement.go",
+        "internal/ontology/signoff.go",
+        "internal/proposal/types.go",
+        "internal/proposal/validate.go",
+        "internal/proposal/mutate.go",
+        "internal/invariants/history_signoff_checks.go",
+        "cmd/hotam/semantic_gate.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-23",
+          "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (project owner/resolver), 2026-07-23, verbatim: «Да, закрепить» — approval to land 001-R-requirement-update-signoff-typed (task #339, batch signoff session)",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "internal/proposal/mutate.go:resolveHistorySignoff",
+        "internal/proposal/validate.go:validateHistorySignoffShape"
+      ],
+      "verified_by": [
+        "internal/proposal/history_signoff_test.go:TestApply_Requirement_UpdateWithSignoff_LandsIntoHistory",
+        "internal/invariants/history_signoff_checks_test.go:TestHistorySignoffChecks_CleanOnRealGraph"
       ]
     },
     {

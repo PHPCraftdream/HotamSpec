@@ -20,22 +20,22 @@
   "review_after": "",
   "evidence": [
     "internal/generator/pipeline_livestate_test.go",
-    "internal/invariants/process_why_snapshot_test.go",
+    "internal/invariants/authored_prose_snapshot_test.go",
     "domains/hotam-spec-self/docs/gen/PIPELINE.md's own Live state section"
   ],
   "source_refs": [
     "internal/generator/pipeline.go",
-    "internal/invariants/process_why_snapshot.go",
+    "internal/invariants/authored_prose_snapshot.go",
     "internal/graphfacts/facts.go",
     "cmd/hotam/all_violations.go"
   ],
   "blocked_on": "",
   "implemented_by": [
     "internal/generator/pipeline.go:renderPipelineLiveState",
-    "internal/invariants/process_why_snapshot.go:checkProcessWhySnapshotProse"
+    "internal/invariants/authored_prose_snapshot.go:checkAuthoredProseSnapshot"
   ],
   "verified_by": [
     "internal/generator/pipeline_livestate_test.go:TestBuildPipeline_LiveStateRendersDedupedGateTallyAndConflictLifecycle",
-    "internal/invariants/process_why_snapshot_test.go:TestCheckProcessWhySnapshotProse_FiresOnGpsmSmShapedSentence"
+    "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnGpsmSmShapedSentence"
   ]
 }

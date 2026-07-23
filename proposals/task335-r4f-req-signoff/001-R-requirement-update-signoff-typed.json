@@ -20,7 +20,7 @@
   "last_reviewed_at": "",
   "review_after": "",
   "evidence": [
-    "internal/proposal/proposal_test.go",
+    "internal/proposal/history_signoff_test.go",
     "internal/invariants/history_signoff_checks_test.go"
   ],
   "source_refs": [
@@ -38,6 +38,7 @@
     "internal/proposal/validate.go:validateHistorySignoffShape"
   ],
   "verified_by": [
+    "internal/proposal/history_signoff_test.go:TestApply_Requirement_UpdateWithSignoff_LandsIntoHistory",
     "internal/invariants/history_signoff_checks_test.go:TestHistorySignoffChecks_CleanOnRealGraph"
   ]
 }

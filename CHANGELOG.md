@@ -17,6 +17,56 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Land 4 R4-wave requirements with explicit human signoff** (task #339,
+  R4F-land-batch): four Requirements drafted during earlier engine-work
+  tasks — whose capability was already built and verified in those tasks —
+  are now landed into `hotam-spec-self`'s own graph, following
+  `R-decided-needs-human-signoff`/`R-ai-presents-not-decides` (present,
+  never decide; the resolver decided in an interactive conversation, one
+  question per draft, before this task executed the landings).
+  - `R-gate-cohort-explicit-denominator` (task #330, R4-cohort): a
+    `gate_signoff_count` orientation_faq assert that also declares a
+    manifest-level `gate_cohort` answers the stronger "have ALL cohort
+    requirements passed this stage" question — a cohort member never
+    assessed at the target stage counts AGAINST `expect:"all"` rather than
+    staying invisible to it; and a `gate_signoff_count` assert fails closed
+    when its target stage carries signoffs from more than one
+    `pipeline_run` and the assert itself doesn't disambiguate via a
+    declared `pipeline_run`.
+  - `R-authored-prose-no-live-tallies` (task #333, R4F-prose-lint,
+    generalizing task #331): authored prose fields narrating a domain's
+    durable rationale (`Process.Why`/`Step.Why`, manifest `goals`/
+    `charter`) must not carry a point-in-time status snapshot or a live
+    tally — that belongs in a generated projection instead, enforced by
+    `check_authored_prose_snapshot` (renamed/generalized from
+    `check_process_why_snapshot_prose`).
+  - `R-pipeline-live-state-from-typed-carriers` (task #331, R4-process-why):
+    PIPELINE.md's current-status content must be generated from typed
+    carriers (`Requirement.gate_signoffs`, Conflict lifecycle state) on
+    every `hotam gen-spec` run, never carried as a snapshot embedded in
+    authored `why` prose.
+  - `R-requirement-update-signoff-typed` (task #335, R4F-req-signoff): a
+    Requirement UPDATE or Assumption rewrite recording a real human
+    decision must carry a typed signoff (`ontology.Signoff`) on the
+    resulting HistoryEntry, whose `decided_by` resolves to a declared
+    Stakeholder; `--decision-ref` remains for lighter mechanical
+    acknowledgments only.
+
+  All four landed via `hotam apply-proposal --decision-ref` (consistent
+  with task #328's precedent — `hotam-spec-self`'s own domain declares no
+  Stakeholder for the human resolver, so `--decision-ref` sidesteps that
+  gap rather than inventing one). Two of the four drafts had gone stale
+  since being written: `draft-R-pipeline-live-state-from-typed-carriers.json`
+  still cited the pre-rename `process_why_snapshot.go`/
+  `checkProcessWhySnapshotProse` (task #333, landed earlier in this same
+  batch, renamed it to `authored_prose_snapshot.go`/
+  `checkAuthoredProseSnapshot`), and
+  `001-R-requirement-update-signoff-typed.json`'s `verified_by` cited only
+  an ongoing-invariant test that never executes `resolveHistorySignoff`/
+  `validateHistorySignoffShape` — both fixed as mechanical
+  reference-correction, no claim/content change, mirroring task #328's own
+  precedent for this kind of drift.
+
 - **`-race` CI coverage ratchet, plus a fixed real gap it found** (task
   #336, R4F-race-ratchet — fourth external review's final synthesis §4.5):
   task #327's `test-race` job comment/CHANGELOG text claimed its

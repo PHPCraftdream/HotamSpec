@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 176 / SETTLED 253; closeable-now 6; feature-blocked 35; inherent discipline 36; DRAFT 2; OPEN 0; REJECTED 42.**
+**Burn-down: SETTLED-ENFORCED 176 / SETTLED 253; closeable-now 6; feature-blocked 35; inherent discipline 36; DRAFT 6; OPEN 0; REJECTED 42.**
 
 ---
 
@@ -297,5 +297,9 @@ These ENFORCEABLE requirements stay PROSE because the feature they describe does
 
 | id | owner |
 |---|---|
+| `R-authored-prose-no-live-tallies` | `framework-author` |
+| `R-gate-cohort-explicit-denominator` | `framework-author` |
+| `R-pipeline-live-state-from-typed-carriers` | `framework-author` |
+| `R-requirement-update-signoff-typed` | `framework-author` |
 | `R-t1-selector-as-land-default` | `framework-author` |
 | `R-claude-md-tree-of-crystals` | `framework-author` |

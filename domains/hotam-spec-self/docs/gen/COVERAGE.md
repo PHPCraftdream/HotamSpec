@@ -15,7 +15,7 @@ Per PLAN-authored-spec-discipline.md §4 (refined by R-authored-spec-layer-progr
 
 | files scanned | objects (models) | fields | methods | typed errors | scenarios |
 |---|---|---|---|---|---|
-| 14 | 11 | 69 | 15 | 0 | 2 |
+| 24 | 13 | 73 | 16 | 0 | 2 |
 
 **Layer 5-in-progress — at least one SETTLED requirement narrates a scenario, and the ratchet tail above names the rest still to migrate.**
 
