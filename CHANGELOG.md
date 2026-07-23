@@ -16,7 +16,28 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
-### Added
+### Fixed
+- **`R-shared-projections-mode-independent` bound to its own regression test**
+  (task #334, R4F-bind-test — fourth external review §4.3 synthesis): task
+  #328 landed this requirement into `domains/hotam-spec-self/graph.json` as
+  SETTLED, enforcement PROSE, with empty `implemented_by`/`verified_by`, even
+  though a real regression test for exactly this property already existed
+  and was named in the requirement's own claim evidence —
+  `TestGenSpec_SharedProjectionsModeIndependent`
+  (`cmd/hotam/gen_spec_test.go`) — making it +1 to the self-hosting domain's
+  own "closeable debt" count. This claim is about GENERATOR/engine behavior
+  (`cmd/hotam/gen_spec.go`, `internal/generator/traceability.go`+
+  `coverage.go`), the same shape as the neighboring `R-empty-content-gen-notice`,
+  which binds via `enforced_by` to a bare `Test*` name rather than the
+  authored `implemented_by`+`verified_by` path (reserved for path-qualified
+  references into a domain's own authored `spec/` tree, per
+  `internal/invariants/authored_links.go`'s disjunctive
+  `check_enforced_requires_enforcer_or_authored_link` gate — an
+  engine-self-hosting requirement is not forced to fabricate one). Set
+  `enforcement: ENFORCED` and `enforced_by: [TestGenSpec_SharedProjectionsModeIndependent]`
+  only; `implemented_by`/`verified_by` correctly stay empty. Closeable debt
+  dropped from 42 to 41 (175/253 → 176/253 SETTLED ENFORCED);
+  `all-violations` stays at 0.
 - **Authored-prose snapshot lint generalized to manifest goals/charter**
   (task #333, R4F-prose-lint — fourth external review §4.1 synthesis,
   extending task #331/R4-process-why): the "live numbers baked into durable
