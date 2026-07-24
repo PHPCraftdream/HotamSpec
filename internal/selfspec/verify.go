@@ -7,7 +7,7 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
-// verifyAppendOnly is a PURE guard, independent of SyncGraph's own merge
+// VerifyAppendOnly is a PURE guard, independent of SyncGraph's own merge
 // logic: given two *ontology.Graph snapshots — old (before a mutation) and
 // new (after) — it checks that every append-only journal old carried is
 // still there in new, as an exact PREFIX (never truncated, never edited in
@@ -30,16 +30,16 @@ import (
 //     History (see GateSignoff's own doc comment) — must be an exact prefix
 //     of the matching new Requirement's GateSignoffs, by the identical rule.
 //
-// verifyAppendOnly takes two full graph snapshots and knows nothing about
+// VerifyAppendOnly takes two full graph snapshots and knows nothing about
 // SyncGraph, MergeIntoGraph, or any other specific mutation — it is a
 // general "did this graph transition respect the append-only journal
 // invariant" checker, reusable against any before/after pair.
-func verifyAppendOnly(old, new *ontology.Graph) error {
+func VerifyAppendOnly(old, new *ontology.Graph) error {
 	if old == nil {
-		return fmt.Errorf("selfspec: verifyAppendOnly: nil old graph")
+		return fmt.Errorf("selfspec: VerifyAppendOnly: nil old graph")
 	}
 	if new == nil {
-		return fmt.Errorf("selfspec: verifyAppendOnly: nil new graph")
+		return fmt.Errorf("selfspec: VerifyAppendOnly: nil new graph")
 	}
 
 	newByID := make(map[string]ontology.Requirement, len(new.Requirements))
@@ -50,7 +50,7 @@ func verifyAppendOnly(old, new *ontology.Graph) error {
 	for _, oldReq := range old.Requirements {
 		newReq, ok := newByID[oldReq.ID]
 		if !ok {
-			return fmt.Errorf("selfspec: verifyAppendOnly: requirement %q present in old graph is missing from new graph", oldReq.ID)
+			return fmt.Errorf("selfspec: VerifyAppendOnly: requirement %q present in old graph is missing from new graph", oldReq.ID)
 		}
 
 		if err := verifyHistoryPrefix(oldReq.ID, oldReq.History, newReq.History); err != nil {
@@ -68,11 +68,11 @@ func verifyAppendOnly(old, new *ontology.Graph) error {
 // newHistory, for the requirement named id.
 func verifyHistoryPrefix(id string, oldHistory, newHistory []ontology.HistoryEntry) error {
 	if len(newHistory) < len(oldHistory) {
-		return fmt.Errorf("selfspec: verifyAppendOnly: requirement %q: History shrank from %d to %d entries", id, len(oldHistory), len(newHistory))
+		return fmt.Errorf("selfspec: VerifyAppendOnly: requirement %q: History shrank from %d to %d entries", id, len(oldHistory), len(newHistory))
 	}
 	for i, oldEntry := range oldHistory {
 		if !reflect.DeepEqual(oldEntry, newHistory[i]) {
-			return fmt.Errorf("selfspec: verifyAppendOnly: requirement %q: History entry %d changed: old=%+v new=%+v", id, i, oldEntry, newHistory[i])
+			return fmt.Errorf("selfspec: VerifyAppendOnly: requirement %q: History entry %d changed: old=%+v new=%+v", id, i, oldEntry, newHistory[i])
 		}
 	}
 	return nil
@@ -83,11 +83,11 @@ func verifyHistoryPrefix(id string, oldHistory, newHistory []ontology.HistoryEnt
 // rule verifyHistoryPrefix applies to History, applied here to GateSignoffs.
 func verifyGateSignoffsPrefix(id string, oldSignoffs, newSignoffs []ontology.GateSignoff) error {
 	if len(newSignoffs) < len(oldSignoffs) {
-		return fmt.Errorf("selfspec: verifyAppendOnly: requirement %q: GateSignoffs shrank from %d to %d entries", id, len(oldSignoffs), len(newSignoffs))
+		return fmt.Errorf("selfspec: VerifyAppendOnly: requirement %q: GateSignoffs shrank from %d to %d entries", id, len(oldSignoffs), len(newSignoffs))
 	}
 	for i, oldEntry := range oldSignoffs {
 		if !reflect.DeepEqual(oldEntry, newSignoffs[i]) {
-			return fmt.Errorf("selfspec: verifyAppendOnly: requirement %q: GateSignoffs entry %d changed: old=%+v new=%+v", id, i, oldEntry, newSignoffs[i])
+			return fmt.Errorf("selfspec: VerifyAppendOnly: requirement %q: GateSignoffs entry %d changed: old=%+v new=%+v", id, i, oldEntry, newSignoffs[i])
 		}
 	}
 	return nil
