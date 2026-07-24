@@ -106,7 +106,7 @@ _No scenario narrative: test passes but recorded no hotamspec scenario (plain go
 
 ## `R-no-hand-edit-graph`
 
-**Claim:** Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land`, with direct hand-edits prohibited outside of bootstrap events.
+**Claim:** Changes to domains/*/graph.json shall be made only through `hotam apply-proposal` / `hotam land` (or, for a self-hosting domain's Requirement/Rejection structural fields, through `hotam sync-self` projecting internal/selfspec.Requirements onto the graph), with direct hand-edits prohibited outside of bootstrap events.
 
 **Status:** SETTLED · **Enforcement:** ENFORCED
 
