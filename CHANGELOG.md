@@ -17,6 +17,95 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **RAC-C: requirements-as-code propagated into the operator-facing crystal text (task #347 — closes the requirements-as-code wave, tasks #343-347)**:
+  the fourth and final phase of the RAC wave (#343 R5-head-cure → #344 RAC-0 →
+  #345 RAC-A → #346/#348-351 RAC-B) propagates the RAC-B authority flip
+  (`hotam sync-self`, RAC-B2/B3/B4) from mechanism into the text every
+  operator actually reads: the generated CLAUDE.md's MEDIATION-LOOP block,
+  the founding-canvas guidance for new domains, an explicit open Conflict
+  about the resolver-trust shift the flip introduces, and an honest
+  partial-debt correction on the requirement that predicted this whole
+  migration.
+  - **TRANSLATE-step branching** (`internal/generator/claudemd_static.go`,
+    `claudemd.go`): `RenderMediationLoopBlock` now takes `g *ontology.Graph`
+    (was: no args) and branches its TRANSLATE-step text on `g.SelfHosting`.
+    On the self-hosting domain, a Requirement/Rejection outcome is described
+    as a Go `ontology.Requirement` literal in
+    `internal/selfspec/requirements_<topic>.go` + `hotam sync-self` (whose
+    default dry-run render is named as the PRESENT-step artifact the
+    resolver reviews before `--confirm-hash`) — matching what RAC-B3 already
+    enforces (the old JSON-file description would otherwise describe a path
+    `apply-proposal`/`land` now actively refuse on this domain). Every other
+    outcome kind (Conflict, Assumption, ConflictTransition, OperatorBudget,
+    EntityType, GateSignoffBatch, ReviewMark) stays on the plain
+    `Proposed*`-JSON path on EVERY domain, self-hosting included. A consumer
+    domain's crystal keeps the single unbranched pre-RAC-C text for
+    Requirement too and never mentions `internal/selfspec`/`sync-self`
+    (`sync-self`'s own gate 0 refuses to run against a non-self-hosting
+    domain, so naming it to a consumer operator would point at a command
+    that cannot succeed for them). `nil` is treated as non-self-hosting (the
+    same default `ontology.Graph{}`'s zero value already establishes).
+    New test: `internal/generator/claudemd_selfhosting_translate_test.go`
+    (`TestRenderMediationLoopBlock_SelfHostingBranchesTranslateStep`) renders
+    both branches directly and asserts the self-hosting branch names
+    `internal/selfspec`/`sync-self`/`requirements_` while the consumer/nil
+    branch's TRANSLATE-step text does not, and that both keep every one of
+    the six mediation-loop step headings.
+  - **Founding-canvas step 6 middle path** (same files): the 8-step
+    `R-domain-founded-in-wave-order` canvas's step 6 ("Requirements, linked
+    to that code and those tests") now also describes a MIDDLE path for a
+    brand-new domain that wants requirement-authorship-in-code from day one
+    without adopting the self-hosting domain's full authority-flip
+    machinery: author Requirement drafts as `[]ontology.Requirement`
+    literals in that domain's own `spec/requirements.go`, then generate the
+    `ProposedRequirement` JSON proposals FROM those literals for landing
+    through the ordinary `apply-proposal`/`land` path — JSON is always a
+    projection of the code, never the reverse. Explicitly disclaimed as NOT
+    getting its own `sync-self`-equivalent CLI (that append-only/
+    byte-identity-enforcing machinery stays exclusive to `hotam-spec-self`;
+    a consumer analog is a distinct, not-yet-implemented future feature, and
+    the text says so rather than promising tooling that doesn't exist). This
+    paragraph is unconditional (rendered on every domain, self-hosting
+    included) since it is general methodology guidance about founding new
+    domains, not gated by `g.SelfHosting`. Named as the intended path for a
+    future life-domain (task #323's personal-operating-system pilot) and
+    similar new domains, without implementing that domain itself. Same test
+    file, `TestRenderMediationLoopBlock_FoundingCanvasStep6MiddlePath`.
+  - **New open Conflict — `reviewability-vs-code-authority`**
+    (`domains/hotam-spec-self/graph.json`, landed via `hotam land --batch`
+    against `domains/hotam-spec-self/proposals/task347-rac-c/`): a new Axis
+    (`reviewability-vs-code-authority` — "what form the resolver's signoff
+    attaches to: the raw artifact under review vs a rendered projection
+    trusted by construction") plus Conflict `C-d20cf537` on that axis,
+    members `R-ai-presents-not-decides` + `R-requirement-update-signoff-typed`
+    (only one SETTLED — `check_constituting_not_in_unresolved_conflict`
+    forbids an unresolved self-hosting Conflict from holding two SETTLED
+    constituting atoms, so the second member is deliberately the DRAFT
+    `R-requirement-update-signoff-typed`), resolver `framework-reviewer`,
+    lifecycle left `DETECTED` (per `R-conflict-is-connector-node`/
+    `R-ai-presents-not-decides`: presented, not silently resolved). Context:
+    before RAC-B, a resolver reviewed the exact `ProposedRequirement`/
+    `ProposedRejection` JSON that would be written; after RAC-B3, the
+    resolver instead reviews `hotam sync-self`'s rendered `SyncReport` diff
+    and trusts it BY CONSTRUCTION (proven byte-identity/append-only, not
+    re-derived by eye). Trivial for a programmer-resolver (an ordinary Go
+    code review); the open question is whether this pattern would still work
+    if ever extended to a consumer domain with a non-programmer resolver —
+    recorded now, unresolved, before any consumer domain proposes adopting
+    it.
+  - **`R-generations-inherit-doc-test-code` honest partial-debt correction**
+    (`internal/selfspec/requirements_authoredspec.go`, landed via
+    `hotam sync-self --confirm-hash`): the requirement's `Why` now records
+    that its Requirement-half claim ("EVERY SETTLED requirement MUST yield a
+    named Go declaration") is now backed by a real mechanism — the RAC-A
+    registry + RAC-B `sync-self` + RAC-B4's live
+    `check_self_requirements_match_registry` gate — while its EntityType-half
+    claim ("EVERY EntityType MUST yield a Go struct + lifecycle methods +
+    transition tests") remains completely unmet: no EntityType-to-Go
+    generator exists anywhere in this codebase. `Enforcement` stays `PROSE`;
+    this is a documentation-honesty fix, not a status promotion — the RAC
+    wave solved half the claim and the `Why` field says so instead of
+    implying more progress than exists.
 - **`check_self_requirements_match_registry` promoted to a real gate + dogfood landing (task #351, RAC-B4 — closes RAC-B/task #346, the authority-flip phase of the requirements-as-code migration)**:
   the RAC-A (task #345) shadow-only advisory check (`internal/invariants/
   selfspec_shadow.go`) — comparing `internal/selfspec.Requirements` (the Go
