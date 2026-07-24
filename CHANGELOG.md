@@ -17,6 +17,64 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Tunable, decoupled `verified_by` exec timeout — flake-class fix (task #352, FLAKY)**:
+  a systemic test-infrastructure flake, surfaced and confirmed three times this
+  session (#350, #340, #341/#342 verifications), not a one-off test bug.
+  `check_verified_by_test_passes` (internal/invariants/authored_links.go) and
+  `check_scenario_executes_impl` (internal/invariants/scenario_coverage.go)
+  shell `go test` as a SUBPROCESS (via internal/gate `RunVerifiedByTest` /
+  `RunVerifiedByTestRecording`) to actually execute each `verified_by` test.
+  The per-test execution timeout was a hardcoded **60s** sized for an unloaded
+  box; under the heavy parallelism of a full `go test ./...` (many `t.Parallel()`
+  tests, several of which each spawn `hotam`/`go test` subprocesses that in turn
+  call `RunVerifiedByTest`), CPU + Go build-cache contention pushed individual
+  subprocess `go test` invocations past 60s — *silently* in the sense that the
+  resulting `Err` (DeadlineExceeded) is correctly NOT memoized in `runCache`
+  (only `result.Err==nil` outcomes are cached), which made `AllViolations`
+  return **different violation counts across two calls inside the same process**
+  (the direct cause of `TestBuildStatusReport_MatchesOnRealDomain`'s
+  ViolationCount mismatch: `buildStatusReport` → `AllViolations` and the test's
+  own `AllViolations` diverged when one call timed out and the other didn't),
+  and of whole-package flakes (`TestRunVerifiedByTest_MUTATION_*`,
+  `TestRunVerifiedByTestRecording_*`) under load. All affected tests passed
+  reliably in isolation and failed only under the full parallel suite.
+  - **Configurable timeout** (`internal/gate/test_exec.go`): new
+    `HOTAM_VERIFIED_BY_EXEC_TIMEOUT` env var (a Go `time.ParseDuration` string,
+    e.g. `"120s"`, `"3m"`) overrides the per-test execution budget, read fresh
+    on every call so a loaded CI runner or a heavy local `go test ./...` can
+    extend it without recompiling. Unset/unparseable/non-positive →
+    `defaultTestExecTimeout` (fail-safe: a misconfigured value can never
+    disable the timeout guard).
+  - **Raised default 60s → 180s** (`defaultTestExecTimeout`), now equal to
+    `compileTimeout` with the same load-headroom rationale: under parallel
+    contention a compiled test binary's wall-clock execution can approach
+    cold-compile time, so the execution bound needs the same generosity the
+    compile bound already grants.
+  - **Decoupled execution budget from slot-wait budget** (the structural fix,
+    mirroring what `doCompileTestBinary` already did for the COMPILE step):
+    `runGoTest`/`runGoTestRecording` now run `cmd.Run` under their OWN
+    freshly-minted `execCtx` (`testExecTimeout`), NOT the caller's ctx, so time
+    spent QUEUEUING for a `globalExecSlots` slot under load cannot eat the
+    test's execution budget. Previously slot-wait + execution shared one 60s
+    ctx, so a 50s slot-wait left only 10s to run — the exact structural defect
+    the compile step was already fixed for; the execution step now gets the
+    same treatment on both sides of the slot-wait/run split. The caller's ctx
+    still bounds the pre-execution waits (compile singleflight + slot
+    acquisition), independently sized by `testExecTimeout`.
+  - **Honesty preserved, not weakened**: a timeout still surfaces as a
+    blocking `Err` → `check_verified_by_test_passes` violation ("could not be
+    executed") / an infra-note in `check_scenario_executes_impl`, never a quiet
+    pass or skip — a genuine infinite-loop test still fails loud within the
+    bound; the fix just ensures mere parallel contention no longer trips it.
+  - **Regression tests** (`internal/gate/test_exec_test.go`):
+    `TestTestExecTimeout_DefaultAndEnvOverride` (pure unit test: default/valid/
+    garbage/non-positive cases), and
+    `TestRunVerifiedByTest[_Recording]_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr`
+    (force `HOTAM_VERIFIED_BY_EXEC_TIMEOUT=300ms` against a 3s-sleeping
+    otherwise-passing test; assert the run surfaces `Err` containing "timed
+    out", is never `Skipped`, never `Passed` — and that compile succeeds under
+    its own 180s ctx, proving the budgets are decoupled).
+
 - **Generate-don't-lint inventory + `Requirement.Evidence` retirement (task #342, R5-generate-dont-lint)**:
   read-only inventory-consult over the authoring text surfaces the
   requirements-as-code wave (#343-347) and task #341 left untouched: FAQ

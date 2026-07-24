@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
 )
@@ -1203,5 +1204,151 @@ func TestRecordVerifiedByEntry_F6_KeepsMatchingReqID(t *testing.T) {
 	if len(out.artifacts) != 1 {
 		t.Fatalf("F6: expected recordVerifiedByEntry to keep the artifact whose req_id matches the rendered requirement, "+
 			"got %d artifacts", len(out.artifacts))
+	}
+}
+
+// --- task #352 (FLAKY): tunable, decoupled exec-timeout ---------------------
+
+// slowPassingTestSrc is a verified_by test that PASSES but only after sleeping
+// past a deliberately-tiny HOTAM_VERIFIED_BY_EXEC_TIMEOUT. Used by the
+// exec-timeout regression tests below: it lets the EXECUTION-timeout path fire
+// WITHOUT touching the compile step (which runs under its own independent
+// compileTimeout ctx), proving the two budgets are decoupled. The sleep is
+// generous (3s) relative to the tiny budget the tests set, so the result is a
+// genuine DeadlineExceeded regardless of subprocess-spawn jitter.
+const slowPassingTestSrc = `package model
+
+import (
+	"testing"
+	"time"
+)
+
+func TestRequireComplete_SlowButPassing(t *testing.T) {
+	time.Sleep(3 * time.Second)
+	if err := RequireComplete(0); err == nil {
+		t.Fatalf("expected error for zero fields, got nil")
+	}
+}`
+
+// slowScenarioTestSrc is the record-mode twin of slowPassingTestSrc: same
+// deliberate sleep past a tiny exec budget, but also drives the vendored
+// hotamspec recorder so RunVerifiedByTestRecording's exec-timeout path can be
+// exercised the same way.
+func slowScenarioTestSrc(modulePath string) string {
+	return `package model
+
+import (
+	"testing"
+	"time"
+
+	"` + modulePath + `/hotamspec"
+)
+
+func TestRequireComplete_SlowScenarioRecorded(t *testing.T) {
+	time.Sleep(3 * time.Second)
+	s := hotamspec.NewScenario(t, "R-slow-recording", "slow but passing")
+	s.Given("a fields count of zero", "fields", 0)
+	err := RequireComplete(0)
+	s.When("RequireComplete is called")
+	s.Then("an error is returned", err != nil)
+	s.Value("error_text", err)
+}`
+}
+
+// TestTestExecTimeout_DefaultAndEnvOverride is a pure unit test (no subprocess)
+// for testExecTimeout: unset env -> defaultTestExecTimeout; a valid positive
+// duration -> honored exactly; an unparseable or non-positive value -> default
+// (fail-safe, so a misconfigured env var can never disable the timeout guard).
+// Uses os.Setenv + manual restore (not t.Setenv) because it must rotate several
+// values within one test; it is non-Parallel so no concurrent test observes the
+// rotations.
+func TestTestExecTimeout_DefaultAndEnvOverride(t *testing.T) {
+	prev, hadPrev := os.LookupEnv(testExecTimeoutEnv)
+	t.Cleanup(func() {
+		if hadPrev {
+			os.Setenv(testExecTimeoutEnv, prev)
+		} else {
+			os.Unsetenv(testExecTimeoutEnv)
+		}
+	})
+
+	os.Unsetenv(testExecTimeoutEnv)
+	if got := testExecTimeout(); got != defaultTestExecTimeout {
+		t.Fatalf("unset env: testExecTimeout=%s, want default %s", got, defaultTestExecTimeout)
+	}
+
+	os.Setenv(testExecTimeoutEnv, "75s")
+	if got := testExecTimeout(); got != 75*time.Second {
+		t.Fatalf("env=75s: testExecTimeout=%s, want 75s", got)
+	}
+
+	os.Setenv(testExecTimeoutEnv, "not-a-duration")
+	if got := testExecTimeout(); got != defaultTestExecTimeout {
+		t.Fatalf("env=garbage: testExecTimeout=%s, want default %s (fail-safe)", got, defaultTestExecTimeout)
+	}
+
+	os.Setenv(testExecTimeoutEnv, "0s")
+	if got := testExecTimeout(); got != defaultTestExecTimeout {
+		t.Fatalf("env=0s: testExecTimeout=%s, want default %s (non-positive rejected)", got, defaultTestExecTimeout)
+	}
+
+	os.Setenv(testExecTimeoutEnv, "-5s")
+	if got := testExecTimeout(); got != defaultTestExecTimeout {
+		t.Fatalf("env=-5s: testExecTimeout=%s, want default %s (negative rejected)", got, defaultTestExecTimeout)
+	}
+}
+
+// TestRunVerifiedByTest_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr (task #352,
+// FLAKY) proves the spurious-timeout path is HONEST, not silent: with
+// HOTAM_VERIFIED_BY_EXEC_TIMEOUT forced tiny, a genuinely-passing test that
+// sleeps past the budget surfaces as Err (DeadlineExceeded) -- which
+// check_verified_by_test_passes turns into a BLOCKING violation ("could not be
+// executed"), never a quiet pass and never a quiet skip. The #352 FIX does NOT
+// weaken this honesty (a real hang must still surface loudly); it (a) raises
+// the default budget so this path fires only for genuine hangs under load, not
+// for mere parallel contention, and (b) makes the budget tunable. This test
+// pins the complement: WHEN the budget IS exceeded, the failure is loud and
+// never silently swallowed. It also proves compile is DECOUPLED: the compile
+// step succeeds under its own 180s compileTimeout ctx even though the execution
+// ctx is 300ms, so the result is an execution-timeout Err, not a compile error.
+func TestRunVerifiedByTest_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.T) {
+	ResetRunCacheForTest()
+	t.Setenv(testExecTimeoutEnv, "300ms")
+
+	root := writeModuleFixture(t, "example.com/exectimeout", "model", passingImplSrc, slowPassingTestSrc)
+	res := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_SlowButPassing")
+
+	if res.Skipped {
+		t.Fatalf("expected the timed-out run to be an honest Err, not a Skipped (recursion-guard) result: %+v", res)
+	}
+	if res.Err == nil {
+		t.Fatalf("SILENT SPURIOUS TIMEOUT (#352): a run that exceeded its exec budget must surface Err (DeadlineExceeded), got a quiet pass: %+v", res)
+	}
+	if !strings.Contains(res.Err.Error(), "timed out") {
+		t.Fatalf("expected a 'timed out' error, got %v", res.Err)
+	}
+	if res.Passed {
+		t.Fatalf("a timed-out run must NOT report Passed=true: %+v", res)
+	}
+}
+
+// TestRunVerifiedByTestRecording_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr is
+// the record-mode twin of the plain-mode test above (task #352): the same
+// honest-Err contract holds for RunVerifiedByTestRecording's execution path.
+func TestRunVerifiedByTestRecording_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.T) {
+	t.Setenv(testExecTimeoutEnv, "300ms")
+
+	const modulePath = "example.com/exectimeoutrec"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", slowScenarioTestSrc(modulePath))
+
+	res := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_SlowScenarioRecorded", "model/impl.go")
+	if res.Skipped {
+		t.Fatalf("expected honest Err not Skipped: %+v", res.TestRunResult)
+	}
+	if res.Err == nil {
+		t.Fatalf("SILENT SPURIOUS TIMEOUT (#352 record-mode): exceeded exec budget must surface Err, got %+v", res.TestRunResult)
+	}
+	if !strings.Contains(res.Err.Error(), "timed out") {
+		t.Fatalf("expected 'timed out' error, got %v", res.Err)
 	}
 }

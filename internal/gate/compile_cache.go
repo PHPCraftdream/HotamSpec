@@ -384,11 +384,11 @@ func compileSingleflight(key compileCacheKey, ctx context.Context, moduleRoot, p
 // compileTimeout bounds a single `go test -c` invocation. Compiling is
 // ordinarily fast (single-digit seconds for any package in any domain
 // this engine currently supports), but a hung compiler must not pin the
-// whole run. Deliberately INDEPENDENT of (and larger than) the per-test
-// execution timeout (60s) the caller's ctx carries: a caller's 60s test
-// deadline is meant to bound TEST execution, not compile -- a cold
-// compile of a large package legitimately takes longer than running one
-// test inside it, and consuming the test deadline on the compile would
+// whole run. Deliberately INDEPENDENT of the per-test execution timeout
+// (testExecTimeout, default 180s, configurable via testExecTimeoutEnv): a
+// caller's test deadline is meant to bound TEST execution, not compile -- a
+// cold compile of a large package legitimately takes longer than running
+// one test inside it, and consuming the test deadline on the compile would
 // leave only fragments of the budget for the actual test. doCompileTest
 // Binary creates its own context from context.Background() with this
 // timeout so the caller's per-test ctx cannot prematurely abort the
@@ -405,13 +405,16 @@ const compileTimeout = 180 * time.Second
 // the SAME capacity-2 semaphore runGoTest/runGoTestRecording use for test
 // execution, on the theory that `go test -c` is itself a full Go compile
 // ("not free", per globalExecSlots's own doc comment). That was wrong:
-// acquiring the slot ate into the caller's 60s per-test context budget
-// (the SAME ctx that also bounds the subsequent execution step), so under
+// acquiring the slot ate into the caller's per-test context budget (the
+// SAME ctx that also bounded the subsequent execution step), so under
 // heavy parallel load (go test ./... across many packages, each spawning
 // subprocesses) a compile that waited N seconds for a slot left only
-// 60-N seconds for execution -- and with 2 slots, a queue of compiles
-// could push N past 60s, causing the execution step to see an
-// already-expired ctx and report a spurious timeout. The Go build cache
+// (budget-N) seconds for execution -- and with 2 slots, a queue of
+// compiles could push N past the budget, causing the execution step to
+// see an already-expired ctx and report a spurious timeout. (Task #352
+// subsequently gave the EXECUTION step its OWN decoupled execCtx too --
+// see runGoTest's Step 2 comment -- so the slot-wait-vs-run budget split
+// is now structurally enforced on BOTH sides, not just compile.) The Go build cache
 // (GOCACHE) already serializes compiles of the same package internally
 // and bounds total compile parallelism by GOMAXPROCS, so the host-load
 // concern that justified globalExecSlots for EXECUTION (a compiled binary

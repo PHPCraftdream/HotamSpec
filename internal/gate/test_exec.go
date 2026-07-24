@@ -253,6 +253,61 @@ func inRecursionGuard() bool {
 // pushing a whole package past its -timeout budget.
 var globalExecSlots = make(chan struct{}, 2)
 
+// testExecTimeoutEnv, when set in the process's environment to a Go
+// time.ParseDuration string (e.g. "120s", "3m"), overrides the default
+// per-test execution timeout (defaultTestExecTimeout) that bounds BOTH
+// (a) the wall-clock budget a verified_by test's compiled binary gets to RUN
+// once it has a globalExecSlots slot (the execCtx runGoTest/
+// runGoTestRecording mint for cmd.Run), and (b) the budget the RunVerifiedBy
+// Test caller's own ctx gives to the steps that PRECEDE execution -- waiting
+// on an in-flight compile (compileSingleflight) and waiting on a
+// globalExecSlots slot. Unset or unparseable → defaultTestExecTimeout.
+//
+// Exists because the ORIGINAL fixed 60s budget was sized for an unloaded box
+// and was observed (tasks #350/#340/#341-342 verifications) to spuriously
+// expire under heavy parallel load: a full `go test ./...` run fans out many
+// t.Parallel() tests, several of which EACH spawn `hotam`/`go test`
+// subprocesses that in turn call RunVerifiedByTest; the resulting CPU + Go
+// build-cache contention pushed individual subprocess `go test` invocations
+// past 60s (especially the slot-wait + cold-compile portion), producing
+// non-deterministic Err results that (correctly) are NOT memoized in runCache
+// (RunVerifiedByTest only caches result.Err==nil outcomes) -- which made
+// AllViolations return DIFFERENT violation counts across two calls inside the
+// SAME process (e.g. TestBuildStatusReport_MatchesOnRealDomain calls
+// buildStatusReport -> AllViolations AND AllViolations separately, and a
+// timeout in one call but not the other mismatched ViolationCount). Making the
+// budget both (1) larger by default and (2) operator-tunable lets a loaded CI
+// runner or a heavy local `go test ./...` extend it, restoring determinism,
+// while a genuine infinite-loop test still surfaces within the bound.
+const testExecTimeoutEnv = "HOTAM_VERIFIED_BY_EXEC_TIMEOUT"
+
+// defaultTestExecTimeout is the per-test execution timeout used when
+// testExecTimeoutEnv is unset or unparseable. Deliberately EQUAL to
+// compileTimeout (180s): under heavy parallel load a compiled test binary's
+// wall-clock execution can approach cold-compile time due to CPU contention
+// from the outer `go test ./...` fan-out, so the execution bound needs the
+// same headroom the compile bound already grants (see compileTimeout's doc
+// comment for the load rationale). A genuine hang still surfaces within this
+// bound; a loaded run no longer spuriously times out. Operator-tunable via
+// testExecTimeoutEnv when even 180s is too tight (or too loose) for a given
+// host.
+const defaultTestExecTimeout = 180 * time.Second
+
+// testExecTimeout returns the per-test execution timeout, honoring
+// testExecTimeoutEnv when set to a parseable positive Go duration, otherwise
+// defaultTestExecTimeout. Read fresh on every RunVerifiedByTest /
+// RunVerifiedByTestRecording invocation (NOT process-cached) so an operator
+// or a test can change it between calls if needed (e.g. a test that wants to
+// exercise the timeout-error path sets a tiny value for one call).
+func testExecTimeout() time.Duration {
+	if v := os.Getenv(testExecTimeoutEnv); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			return d
+		}
+	}
+	return defaultTestExecTimeout
+}
+
 // runGoTest invokes the named test against a pre-compiled test binary
 // (compileTestBinary, the cache layer that compiles `go test -c` ONCE per
 // (moduleRoot, pkgPattern, coverPkgPattern) triple and reuses it across
@@ -290,6 +345,20 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	// as before -- ONE subprocess per test, in its own process, with its
 	// own env. The binary was compiled with the package's whole test
 	// entry; -test.run "^TestName$" selects exactly one test out of it.
+	//
+	// The slot-wait below is bounded by the CALLER's ctx (which also bounds
+	// the in-flight compile singleflight wait in compileTestBinary above).
+	// The EXECUTION itself (cmd.Run) runs under its OWN freshly-minted
+	// execCtx, NOT the caller's ctx, so time spent QUEUING for a slot under
+	// heavy parallel load cannot eat the test's execution budget -- the
+	// exact structural problem doCompileTestBinary already solved for the
+	// COMPILE step (see compile_cache.go's CONCURRENCY DECISION): there too,
+	// acquiring globalExecSlots under the caller's ctx ate into the budget
+	// for the step that actually does the work, and caused spurious timeouts
+	// under load. The same decoupling now applies here for execution's own
+	// slot-wait-vs-run split (task #352, FLAKY). execCtx's timeout comes from
+	// testExecTimeout (configurable via testExecTimeoutEnv) so a loaded host
+	// can extend it without recompiling.
 	select {
 	case globalExecSlots <- struct{}{}:
 	case <-ctx.Done():
@@ -298,7 +367,9 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	defer func() { <-globalExecSlots }()
 
 	runPattern := "^" + testName + "$"
-	cmd := exec.CommandContext(ctx, bin.path,
+	execCtx, execCancel := context.WithTimeout(context.Background(), testExecTimeout())
+	defer execCancel()
+	cmd := exec.CommandContext(execCtx, bin.path,
 		"-test.run", runPattern,
 		"-test.count", "1",
 	)
@@ -322,10 +393,10 @@ func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) Tes
 	err := cmd.Run()
 	output := boundOutput(buf.String())
 
-	if ctx.Err() == context.DeadlineExceeded {
+	if execCtx.Err() == context.DeadlineExceeded {
 		return TestRunResult{
 			Output: output,
-			Err:    fmt.Errorf("go test timed out running %s in %s: %w", runPattern, pkgPattern, ctx.Err()),
+			Err:    fmt.Errorf("go test timed out running %s in %s: %w", runPattern, pkgPattern, execCtx.Err()),
 		}
 	}
 	if err != nil {
@@ -496,7 +567,11 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 	}
 	defer os.RemoveAll(recordDir)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	// This ctx bounds only the PRE-execution waits (compile singleflight +
+	// globalExecSlots slot-wait); the record-mode cmd.Run execution gets its
+	// OWN execCtx inside runGoTestRecording (decoupled, see runGoTestRecording's
+	// execCtx comment), independently sized by testExecTimeout.
+	ctx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
 	defer cancel()
 	runResult, coverProfile := runGoTestRecording(ctx, moduleRoot, pattern, testName, recordDir, coverPkgPattern)
 
@@ -559,7 +634,12 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 		args = append(args, "-test.coverprofile="+coverProfilePath)
 	}
 
-	cmd := exec.CommandContext(ctx, bin.path, args...)
+	// execCtx decouples EXECUTION from the caller's slot-wait ctx, for the
+	// same load-contention reason as runGoTest (see its Step 2 comment);
+	// testExecTimeout makes it operator-tunable.
+	execCtx, execCancel := context.WithTimeout(context.Background(), testExecTimeout())
+	defer execCancel()
+	cmd := exec.CommandContext(execCtx, bin.path, args...)
 	// See runGoTest: a directly-invoked .test binary does not chdir into
 	// the package directory on its own the way `go test` does, so set
 	// cmd.Dir explicitly to preserve testdata/ + cwd-relative behavior.
@@ -587,10 +667,10 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 		// itself; CoverProfile simply stays nil.
 	}
 
-	if ctx.Err() == context.DeadlineExceeded {
+	if execCtx.Err() == context.DeadlineExceeded {
 		return TestRunResult{
 			Output: output,
-			Err:    fmt.Errorf("go test (record-mode) timed out running %s in %s: %w", runPattern, pkgPattern, ctx.Err()),
+			Err:    fmt.Errorf("go test (record-mode) timed out running %s in %s: %w", runPattern, pkgPattern, execCtx.Err()),
 		}, coverProfile
 	}
 	if err != nil {
@@ -1010,7 +1090,15 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 		if err != nil {
 			return TestRunResult{Err: err}
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		// This ctx bounds only the PRE-execution waits an in-flight caller
+		// can block on: the compile singleflight wait (compileTestBinary)
+		// and the globalExecSlots slot-wait. The actual cmd.Run execution
+		// gets its OWN freshly-minted execCtx inside runGoTest (decoupled
+		// so slot-wait time cannot eat the run budget -- see runGoTest's
+		// Step 2 comment), so this timeout and the run timeout are
+		// INDEPENDENT budgets, each sized by testExecTimeout (configurable
+		// via testExecTimeoutEnv, task #352).
+		ctx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
 		defer cancel()
 		return runGoTest(ctx, moduleRoot, pattern, testName)
 	})
