@@ -46,6 +46,7 @@ reader: (unresolved-reader)
 - `hotam use` — sets the active-domain preference for the current project by recording it in the project-root marker, so a bare `hotam <command>` targets the chosen domain.
 - `hotam propose` — drafts valid proposal JSON from flags and runs an automatic confront check before writing, collapsing the draft→confront→write→(land) workflow into one invocation.
 - `hotam version` — prints the hotam binary's version, commit, and build date.
+- `hotam sync-self` — mirrors the engine's own Go requirements registry onto its self-hosting domain graph, gated by a confirm-hash dry-run/confirm handshake plus confront/violation/append-only gates.
 
 Registered in the methodology but not yet implemented as `hotam` subcommands: attention, attention_hook, audit_atomicity, audit_tensions, claude_md_diff_watch, closure, context, context_producer, create_agent, create_axis, create_domain, create_entity_type, emit_cipher, gate_status, invoke_agent, mark_revisit_evaluated, review, setup_context_hook, setup_hooks, spawn_agent, spawn_log_isolation_status, ticket_comment, ticket_create, ticket_edit, ticket_list, ticket_move, ticket_show.
 
