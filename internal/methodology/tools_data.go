@@ -156,6 +156,15 @@ func init() {
 		Enforcer: "",
 		Run:      nil,
 	})
+	Tools.MustRegister("sync_self", Tool{
+		Command:  "sync_self",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam sync-self [--domain <path>] [--today YYYY-MM-DD] [--confirm-hash <hex>] [--reason \"...\"] [--ack-conflict <C-id>] [--decision-ref \"...\"] [--json]. Mirrors the engine's own Go requirements registry onto the self-hosting domain's graph.json, this repository's own domain only. Default dry-run computes the pending ADDED/CHANGED sync report, previews the confront/pre-post-violation/append-only gates, and prints a diff-hash; --confirm-hash re-verifies against the current on-disk state and, if every gate passes, writes graph.json, regenerates docs, and re-verifies with all-violations (rolling back on any post-write failure).",
+		Status:   Implemented,
+		Claim:    "mirrors the engine's own Go requirements registry onto its self-hosting domain graph, gated by a confirm-hash dry-run/confirm handshake plus confront/violation/append-only gates.",
+		Enforcer: "",
+		Run:      nil,
+	})
 
 	// --- Planned: methodology surface not yet implemented as a
 	// Go command. Command below is the historical tool name, not a

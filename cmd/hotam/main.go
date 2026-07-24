@@ -130,6 +130,8 @@ func main() {
 		err = cmdConfront(args)
 	case "propose":
 		err = cmdPropose(args)
+	case "sync-self":
+		err = cmdSyncSelf(args)
 	case "-h", "--help", "help":
 		printUsage(os.Stdout)
 		return
@@ -255,6 +257,21 @@ Commands:
         TARGET GRAPH DIRECTORY across every kind (including stakeholder).
         Other complex kinds (ConflictTransition, EntityType, …) keep the
         hand-authored-JSON path (hotam land <file.json>).
+  sync-self [--domain <path>] [--today YYYY-MM-DD] [--confirm-hash <hex>] [--reason "..."] [--ack-conflict <C-id>] [--decision-ref "..."] [--json]
+        Mirror internal/selfspec.Requirements (the Go registry, requirements_
+        <topic>.go) onto domains/hotam-spec-self/graph.json — the engine's own
+        self-hosting domain, and ONLY that domain (refuses any --domain whose
+        manifest.json does not set self_hosting: true). Default mode is
+        DRY-RUN: computes the pending ADDED/CHANGED SyncReport, previews the
+        confront/pre-post-violation/append-only gates, and prints a
+        "diff-hash: <hex>" — writes nothing. Pass the printed hash back via
+        --confirm-hash (with --today) to write for real: graph.json + docs
+        are only touched after the diff-hash is re-verified against the
+        CURRENT on-disk state, every gate passes, and a stale-binary check
+        confirms this binary's embedded internal/selfspec source matches
+        what's on disk (run via "go run ./cmd/hotam sync-self" to always be
+        fresh). --ack-conflict/--decision-ref override a confront-gate
+        refusal, mirroring "hotam land"'s same two flags.
   version, --version
         Print the hotam binary version.
 
