@@ -197,9 +197,26 @@ func RenderOperatorRoleBlock(g *ontology.Graph, scopeLabel string) string {
 
 // RenderMediationLoopBlock renders the MEDIATION-LOOP block content (without
 // sentinels): a static six-step input-processing loop, no graph/filesystem
-// dependency.
-func RenderMediationLoopBlock() string {
-	return mediationLoopText
+// dependency beyond g.SelfHosting.
+//
+// selfHosting (task #347, RAC-C part 1) selects which TRANSLATE-step outcome
+// text is interpolated for a Requirement: the self-hosting domain
+// (hotam-spec-self) routes a Requirement change through internal/selfspec (a
+// Go declaration, hand-edited in requirements_<topic>.go) + `hotam sync-self`
+// instead of a ProposedRequirement JSON file — the RAC-B3 guard on
+// apply-proposal/land makes the JSON path for Requirement/Rejection actively
+// refuse on this domain, so the loop text must describe the path that
+// actually works, not the one that is now blocked. Every OTHER outcome kind
+// (Conflict, Assumption, ConflictTransition, OperatorBudget, EntityType,
+// GateSignoffBatch, ReviewMark, ...) is unaffected by RAC-B3 and keeps the
+// plain Proposed* JSON path on EVERY domain, self-hosting included. A
+// consumer domain (selfHosting == false) keeps the single unbranched JSON
+// path for Requirement too — sync-self is scoped exclusively to
+// hotam-spec-self (cmdSyncSelf's own gate 0), so mentioning it to a consumer
+// operator would name a command that refuses to run against their domain.
+func RenderMediationLoopBlock(g *ontology.Graph) string {
+	selfHosting := g != nil && g.SelfHosting
+	return renderMediationLoopText(selfHosting)
 }
 
 // RenderEmbeddedThinkingBlock renders the EMBEDDED-THINKING block content
@@ -315,7 +332,7 @@ func RenderOperatorRecursionBlock(domainName string) string {
 func RenderMindContent(g *ontology.Graph, domainName string, consumer bool) string {
 	parts := []string{
 		WrapBlock("OPERATOR-ROLE", RenderOperatorRoleBlock(g, domainName)),
-		WrapBlock("MEDIATION-LOOP", RenderMediationLoopBlock()),
+		WrapBlock("MEDIATION-LOOP", RenderMediationLoopBlock(g)),
 		WrapBlock("EMBEDDED-THINKING", RenderEmbeddedThinkingBlock(domainName, consumer)),
 		WrapBlock("EMBEDDED-TOOLS", RenderEmbeddedToolsBlock(consumer)),
 		WrapBlock("OPERATOR-RECURSION", RenderOperatorRecursionBlock(domainName)),

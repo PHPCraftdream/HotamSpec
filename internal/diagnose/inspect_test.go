@@ -779,6 +779,22 @@ var knownLexicalOverlapMissByDesign = map[[2]string]struct{}{
 	{"R-context-bounded-delegation", "R-dependency-graph-parallelism"}:  {},
 	{"R-entity-derived-requirement", "R-speculative-aspects-frozen"}:    {},
 	{"R-content-free-framework", "R-empty-content-is-legitimate"}:       {}, // proven corpus-frequency false negative, accepted (see above)
+	// C-d20cf537 (task #347, RAC-C part 3, reviewability-vs-code-authority):
+	// R-ai-presents-not-decides claims "The AI agent shall NEVER close a
+	// Conflict silently -- it presents with justification and defers every
+	// resolution to the human resolver"; R-requirement-update-signoff-typed
+	// claims a Requirement UPDATE/Assumption rewrite recording a real human
+	// decision MUST carry a typed signoff. Different owners (ai-agent vs
+	// framework-author) and different immediate subject matter (Conflict
+	// closure vs Requirement-UPDATE provenance) -- the tension this Conflict
+	// actually holds (a resolver's trust shifting from reviewing the raw
+	// artifact to reviewing a rendered projection) was found by the operator
+	// through direct architectural reasoning while authoring the RAC-B/RAC-C
+	// migration, not through this heuristic's lexical/marker signal, mirroring
+	// the seven independently-verified misses above (R-tension-audit-
+	// shortlist-tool's own "0 of 8 conflicts machine-surfaced" precedent, now
+	// 0 of 9).
+	{"R-ai-presents-not-decides", "R-requirement-update-signoff-typed"}: {},
 }
 
 // TestInspectLexicalClaimOverlap_KnownConflictGroundTruth is the honest

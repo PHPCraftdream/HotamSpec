@@ -190,7 +190,7 @@ func TestRenderOperatorRoleBlock_CarriesDomainRegister(t *testing.T) {
 // the baked loop text, this test fails.
 func TestRenderMediationLoopBlock_NamesSixStepsAndRealTools(t *testing.T) {
 	t.Parallel()
-	inner := RenderMediationLoopBlock()
+	inner := RenderMediationLoopBlock(nil)
 
 	// all six steps named
 	for _, step := range []string{"ORIENT", "LOCATE", "CONFRONT", "TRANSLATE", "PRESENT", "LAND"} {

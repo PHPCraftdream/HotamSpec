@@ -14,7 +14,7 @@ import (
 // would need regenerating on every content change.
 func TestRenderMediationLoopBlock_ConfrontReferencesPortedCommand(t *testing.T) {
 	t.Parallel()
-	got := RenderMediationLoopBlock()
+	got := RenderMediationLoopBlock(nil)
 
 	if strings.Contains(got, "scan REQUIREMENTS.md/HISTORY.md by hand") {
 		t.Errorf("mediation loop still tells operators to scan by hand — CONFRONT should reference hotam confront:\n%s", got)

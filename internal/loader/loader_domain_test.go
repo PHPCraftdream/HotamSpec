@@ -20,7 +20,10 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		got  int
 		want int
 	}{
-		{"axes", len(g.Axes), 9},
+		// 9 + 1: task #347 (RAC-C part 3) landed the new
+		// reviewability-vs-code-authority Axis (resolver-trust-shift context
+		// for the new C-d20cf537 Conflict below).
+		{"axes", len(g.Axes), 10},
 		{"stakeholders", len(g.Stakeholders), 4},
 		{"assumptions", len(g.Assumptions), 16},
 		// 284 + 2: task #223 landed R-authored-spec-links-mechanically-checked
@@ -85,7 +88,11 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// signoff, resolver Marat Karamullin 2026-07-23, four drafts from
 		// tasks #330/#331/#333/#335 landed in one batch).
 		{"requirements", len(g.Requirements), 301},
-		{"conflicts", len(g.Conflicts), 8},
+		// 8 + 1: task #347 (RAC-C part 3) landed C-d20cf537
+		// (reviewability-vs-code-authority, DETECTED, unresolved by design --
+		// the resolver-trust-shift RAC-B3/B4's self-hosting authority flip
+		// introduces, presented not silently decided).
+		{"conflicts", len(g.Conflicts), 9},
 		{"operators", len(g.Operators), 1},
 		{"processes", len(g.Processes), 1},
 		{"goals", len(g.Goals), 1},
