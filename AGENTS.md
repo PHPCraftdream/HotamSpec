@@ -51,7 +51,7 @@ a direct anchor-cited answer — steps 2-6 are for graph/code changes
    ProposedConflictTransition / ProposedRejection / ProposedConflict /
    ProposedOperatorBudget / ProposedEntityType JSON, drafted as a `.json` file.
    Tension found → Conflict node with axis + context + resolver, never a silent
-   edit (R-no-hand-edit-graph, R-conflict-is-connector-node).
+   edit (R-no-hand-edit-graph, R-conflict-is-connector-node). On THIS domain (hotam-spec-self, self-hosting): a Requirement or Rejection outcome is NOT a ProposedRequirement/ProposedRejection JSON file — `hotam apply-proposal`/`hotam land` refuse that path here by construction (RAC-B3's self-hosting lock). Instead, declare or edit the requirement as a Go `ontology.Requirement` literal in `internal/selfspec/requirements_<topic>.go`, then project it onto the graph with `hotam sync-self`; sync-self's default dry-run renders the pending diff for the resolver to read BEFORE any write (the PRESENT step below), exactly like a JSON proposal's PRESENT — only `--confirm-hash <hex>` after that render actually writes. Conflict, Assumption, ConflictTransition, OperatorBudget, EntityType, and journal outcomes (GateSignoffBatch, ReviewMark) are unaffected by this lock and stay on the ordinary Proposed* JSON path described above, on this domain too.
    Meta-language: the business author writes the source claim in plain
    natural language, in ANY language — they never write or see reserved
    tokens. When that source asserts a hard universal/prohibition modality
@@ -103,7 +103,7 @@ Founding a NEW domain follows this same general-to-specific canvas, 8 steps
    `implemented_by` (file:symbol, WHERE it is embodied) and `verified_by` (file:test, WHERE
    it is proven); ENFORCED requires both, real and resolvable (R-spec-link-embodied-vs-proven,
    R-enforced-requires-enforcer-or-authored-link). SETTLED without a code link is honest
-   roadmap debt, never silently claimed ENFORCED.
+   roadmap debt, never silently claimed ENFORCED. A NEW domain MAY instead take a middle path: author Requirement drafts from day one as `[]ontology.Requirement` literals in that domain's own `spec/requirements.go` (authorship lives in code immediately, mirroring hotam-spec-self's registry shape), then generate the ProposedRequirement JSON proposals FROM those literals for landing through the ordinary `hotam apply-proposal`/`hotam land` path — the JSON is always a projection of the code, never the reverse, so authority never flips back onto the JSON once a domain adopts this path. Unlike hotam-spec-self's self-hosting authority flip, this middle path does NOT get its own `sync-self`-equivalent CLI command that projects the Go literals directly onto graph.json and enforces append-only/byte-identity guarantees — that is a distinct, NOT-YET-IMPLEMENTED future feature; today the code-to-JSON step is manual. This is the intended path for a future life-domain (task #323's personal-operating-system and similar new domains going forward), named here as an option, not a promise of tooling that does not exist yet.
 7. **Assumptions and conflicts** — the tensions and context this domain rests on.
 8. **Generated documentation and coverage audit** — `hotam gen-spec` renders
    `domains/hotam-spec-self/docs/gen/PIPELINE.md`/REQUIREMENTS.md/MODELS.md/TRACEABILITY.md/COVERAGE.md from the
@@ -183,7 +183,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-spec-self/docs/gen/UNENFORCED.md.
 - **debt:** 176/253 SETTLED ENFORCED · 6 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 325 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 21484 chars (headroom 128516)
+- **graph:** 326 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 23442 chars (headroom 126558)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 <!-- LIVE-STATE:END -->
@@ -207,7 +207,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
 - **atoms-count** — 253 SETTLED
-- **open actions** — 3 (top: [P0] enforcement-gradient: 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt.)
+- **open actions** — 4 (top: [P0] enforcement-gradient: 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt.)
 <!-- DOMAIN-MAP:END -->
 <!-- PARENT-PROJECT:BEGIN -->
 <!-- (generated by `hotam gen-spec` — do not hand-edit) -->

@@ -37,6 +37,11 @@
       "decl_order": 6
     },
     {
+      "slug": "reviewability-vs-code-authority",
+      "description": "What form the resolver's signoff attaches to: the raw artifact under review (a JSON proposal file, byte-for-byte) vs a rendered projection trusted by construction (a Go-diff + dry-run render backed by mechanically proven byte-identity/append-only guarantees). Direct-artifact review needs no extra trust; rendered-projection review is faster and matches authorship-in-code but requires the resolver to trust the rendering mechanism, not just their own eyes.",
+      "decl_order": 0
+    },
+    {
       "slug": "sequential-vs-parallel",
       "description": "Coupled work (dependency edges between requirements/operators/entities) must be processed sequentially; independent sub-graphs can be delegated to parallel sub-operators. The dependency-graph topology — not a guess — decides which, and domains are split along lines of independence.",
       "decl_order": 8
@@ -7054,7 +7059,7 @@
       "claim": "Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).",
       "owner": "framework-author",
       "status": "SETTLED",
-      "why": "Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code.",
+      "why": "Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. PARTIAL PROGRESS (task #347, RAC-C part 4): the Requirement-half of this claim now has a real mechanism -- internal/selfspec.Requirements is a Go registry of ontology.Requirement values (RAC-A, task #345) that `hotam sync-self` (RAC-B2, task #349) projects onto domains/hotam-spec-self/graph.json, mechanically verified byte-identical (embed_test.go/merge_test.go/sync_test.go) and checked live by check_self_requirements_match_registry (RAC-B4, task #351) -- so EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node, satisfying the requirement-generation half of the claim for the domain that defines it. The EntityType-half remains UNMET: EntityType is still NOT typed in Go anywhere in this codebase -- no EntityType struct, no generated lifecycle methods, no generated transition tests exist for any EntityType node (see internal/ontology/entity.go's EntityType, which stays a plain data value, never a code-generation target). This is honest REMAINING debt, not claimed solved by the Requirement-half's progress -- Enforcement stays PROSE until an EntityType-to-Go generator exists.",
       "assumptions": null,
       "relations": null,
       "enforcement": "PROSE",
@@ -7078,6 +7083,11 @@
         {
           "at": "2026-07-15",
           "summary": "semantic conflict acknowledged — human decision recorded: Marat Karamullin (resolver), 2026-07-15, PLAN-gen-code.md stage 0: opposite-marker hit vs R-review-mark-requires-substantive-review is a lexical false positive -- that requirement governs when last_reviewed_at may be stamped (must not backfill without substantive review), this requirement governs the form of generated artifacts (must inherit doc-test-code shape); topics are disjoint, reserved MUST tokens collided only textually. Confirmed via confront: no real semantic overlap.",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-24",
+          "summary": "field Why: Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. -> Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. PARTIAL PROGRESS (task #347, RAC-C part 4): the Requirement-half of this claim now has a real mechanism -- internal/selfspec.Requirements is a Go registry of ontology.Requirement values (RAC-A, task #345) that `hotam sync-self` (RAC-B2, task #349) projects onto domains/hotam-spec-self/graph.json, mechanically verified byte-identical (embed_test.go/merge_test.go/sync_test.go) and checked live by check_self_requirements_match_registry (RAC-B4, task #351) -- so EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node, satisfying the requirement-generation half of the claim for the domain that defines it. The EntityType-half remains UNMET: EntityType is still NOT typed in Go anywhere in this codebase -- no EntityType struct, no generated lifecycle methods, no generated transition tests exist for any EntityType node (see internal/ontology/entity.go's EntityType, which stays a plain data value, never a code-generation target). This is honest REMAINING debt, not claimed solved by the Requirement-half's progress -- Enforcement stays PROSE until an EntityType-to-Go generator exists.",
           "decided_by": ""
         }
       ],
@@ -14101,6 +14111,32 @@
       "created_at": "",
       "decided_at": "",
       "decl_order": 1
+    },
+    {
+      "id": "C-d20cf537",
+      "axis": "reviewability-vs-code-authority",
+      "context": "Before RAC-B (task #346), a resolver on hotam-spec-self reviewed a Requirement/Rejection change by reading the ProposedRequirement/ProposedRejection JSON artifact itself before signing off -- the artifact under review and the artifact that gets written to graph.json were the SAME file. RAC-B3 (task #350) now refuses that path for Requirement/Rejection on this self-hosting domain: the authored change lives as a Go `ontology.Requirement` literal in internal/selfspec/requirements_<topic>.go, and the resolver's PRESENT-step artifact is `hotam sync-self`'s dry-run render (a rendered SyncReport diff) rather than the literal Go source or the eventual graph.json bytes. Trust shifts from 'I approve the exact artifact I am looking at' to 'I approve a RENDER that I trust BY CONSTRUCTION, because internal/selfspec's byte-identity/append-only guarantees are proven by tests (embed_test.go, merge_test.go, sync_test.go), not because I re-derived them myself this time.' For a programmer-resolver this is a small, well-understood step -- reading a Go diff via `hotam sync-self --dry-run`'s field-level FieldDiff render is ordinary code review, and the byte-identity proof is independently mechanically checked (check_self_requirements_match_registry). The open question is architectural, not urgent: if this same pattern (author-in-code, resolver-signs-a-rendered-projection-not-the-source) is ever extended from this framework-internal self-hosting domain to a CONSUMER domain whose resolver is NOT a programmer (e.g. gpsm-pm, who reads REQUIREMENTS.md/TENSIONS.md prose, not Go source) -- would that resolver be able to meaningfully evaluate a Go-literal diff or a sync-render at all, or does the pattern silently assume programmer-literacy that does not generalize? This tension is recorded here, unresolved, BEFORE any consumer domain proposes adopting the sync-self pattern, so the question is not lost or discovered only after the fact.",
+      "members": [
+        "R-ai-presents-not-decides",
+        "R-requirement-update-signoff-typed"
+      ],
+      "resolver": "framework-reviewer",
+      "lifecycle": "DETECTED",
+      "shared_assumption": "A-stakeholders-care",
+      "derived": null,
+      "revisit_marker": "",
+      "decided_by": "",
+      "variants": null,
+      "signoff": null,
+      "created_at": "2026-07-24",
+      "decided_at": "",
+      "decl_order": 0,
+      "source_refs": [
+        "internal/selfspec/sync.go",
+        "cmd/hotam/sync_self.go",
+        "internal/selfspec/embed_test.go",
+        "internal/selfspec/merge_test.go"
+      ]
     },
     {
       "id": "C-d210d6d0",

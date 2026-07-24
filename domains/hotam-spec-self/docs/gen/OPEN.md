@@ -5,7 +5,7 @@ reader: ai-agent
 
 Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a resolver (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `hotam what-now` for the prioritized next actions that close these.
 
-Open requirements: **0**. Unresolved conflicts: **0**.
+Open requirements: **0**. Unresolved conflicts: **1**.
 
 ---
 
@@ -15,4 +15,6 @@ _None._
 
 ## Unresolved conflicts (no resolver resolution yet)
 
-_None._
+| id | axis | lifecycle | resolver | members |
+|---|---|---|---|---|
+| `C-d20cf537` | `reviewability-vs-code-authority` | DETECTED | `framework-reviewer` | R-ai-presents-not-decides, R-requirement-update-signoff-typed |

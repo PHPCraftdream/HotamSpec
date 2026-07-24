@@ -11,7 +11,7 @@ Generated from the domain's own `Process` nodes (§Process, the opt-in behaviora
 
 ## Live state (generated from typed carriers — authoritative for "where are we now")
 
-- **Conflicts** — 8 total: 8 DECIDED · 0 HELD · 0 UNRESOLVED
+- **Conflicts** — 9 total: 8 DECIDED · 0 HELD · 1 UNRESOLVED
 
 _This section regenerates on every `hotam gen-spec` from `gate_signoffs`/conflict lifecycles — where authored prose below disagrees with it, THIS section is current._
 

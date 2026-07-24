@@ -21,6 +21,16 @@ Generated from the active domain's `graph.json` (the tension graph). A **Conflic
 - **spawned (lineage):** `R-active-loop-playbooks`
 - **revisit marker:** REVISIT if domain-users report the playbook overhead negates the harness's directness (the loop becomes slower than free manual editing) — then re-calibrate band-by-band.
 
+### Axis `reviewability-vs-code-authority` — 1 conflict(s), single tension
+
+#### `C-d20cf537` — reviewability-vs-code-authority
+
+- **context:** Before RAC-B (task #346), a resolver on hotam-spec-self reviewed a Requirement/Rejection change by reading the ProposedRequirement/ProposedRejection JSON artifact itself before signing off -- the artifact under review and the artifact that gets written to graph.json were the SAME file. RAC-B3 (task #350) now refuses that path for Requirement/Rejection on this self-hosting domain: the authored change lives as a Go `ontology.Requirement` literal in internal/selfspec/requirements_<topic>.go, and the resolver's PRESENT-step artifact is `hotam sync-self`'s dry-run render (a rendered SyncReport diff) rather than the literal Go source or the eventual graph.json bytes. Trust shifts from 'I approve the exact artifact I am looking at' to 'I approve a RENDER that I trust BY CONSTRUCTION, because internal/selfspec's byte-identity/append-only guarantees are proven by tests (embed_test.go, merge_test.go, sync_test.go), not because I re-derived them myself this time.' For a programmer-resolver this is a small, well-understood step -- reading a Go diff via `hotam sync-self --dry-run`'s field-level FieldDiff render is ordinary code review, and the byte-identity proof is independently mechanically checked (check_self_requirements_match_registry). The open question is architectural, not urgent: if this same pattern (author-in-code, resolver-signs-a-rendered-projection-not-the-source) is ever extended from this framework-internal self-hosting domain to a CONSUMER domain whose resolver is NOT a programmer (e.g. gpsm-pm, who reads REQUIREMENTS.md/TENSIONS.md prose, not Go source) -- would that resolver be able to meaningfully evaluate a Go-literal diff or a sync-render at all, or does the pattern silently assume programmer-literacy that does not generalize? This tension is recorded here, unresolved, BEFORE any consumer domain proposes adopting the sync-self pattern, so the question is not lost or discovered only after the fact.
+- **members:** `R-ai-presents-not-decides`, `R-requirement-update-signoff-typed`
+- **resolver:** `framework-reviewer`
+- **lifecycle:** DETECTED
+- **shared assumption:** `A-stakeholders-care`
+
 ### Axis `framework-purity-vs-helpfulness` — 1 conflict(s), single tension
 
 #### `C-c3911f28` — framework-purity-vs-helpfulness
@@ -108,6 +118,7 @@ graph TD
     R_agent_never_lost["R-agent-never-lost"]
     R_ai_presents_not_decides["R-ai-presents-not-decides"]
     R_active_loop_playbooks["R-active-loop-playbooks"]
+    R_requirement_update_signoff_typed["R-requirement-update-signoff-typed"]
     R_content_free_framework["R-content-free-framework"]
     R_empty_content_is_legitimate["R-empty-content-is-legitimate"]
     R_crystallize_knowledge_to_code["R-crystallize-knowledge-to-code"]
@@ -122,6 +133,9 @@ graph TD
     R_agent_never_lost --> C_186c4347
     R_ai_presents_not_decides --> C_186c4347
     C_186c4347 -.spawns.-> R_active_loop_playbooks
+    C_d20cf537{"C-d20cf537\nreviewability-vs-code-authority"}
+    R_ai_presents_not_decides --> C_d20cf537
+    R_requirement_update_signoff_typed --> C_d20cf537
     C_c3911f28{"C-c3911f28\nframework-purity-vs-helpfulness"}
     R_content_free_framework --> C_c3911f28
     R_empty_content_is_legitimate --> C_c3911f28
@@ -151,6 +165,7 @@ graph TD
 | axis slug | description |
 |---|---|
 | `agent-autonomy-vs-human-control` | How far the AI agent acts vs how strictly it presents/asks. Autonomy makes the loop fast; human control keeps invisibility from being AI-created. |
+| `reviewability-vs-code-authority` | What form the resolver's signoff attaches to: the raw artifact under review (a JSON proposal file, byte-for-byte) vs a rendered projection trusted by construction (a Go-diff + dry-run render backed by mechanically proven byte-identity/append-only guarantees). Direct-artifact review needs no extra trust; rendered-projection review is faster and matches authorship-in-code but requires the resolver to trust the rendering mechanism, not just their own eyes. |
 | `framework-purity-vs-helpfulness` | Content-free shipping (zero business data in src/hotam_spec) vs out-of-the-box utility for a fresh adopter. Purity is honest; helpfulness lowers adoption cost. |
 | `core-vs-aspect` | What stays in the minimal framework core vs what becomes an opt-in pluggable aspect. Core costs every domain; aspects cost only those who load them. |
 | `apparatus-weight-vs-coverage` | Heavy formal machinery (Z3 / Quint / mutation testing) catches more contradictions but slows the loop. Calibration rule: weight of apparatus ∝ cost of an unnoticed conflict. |

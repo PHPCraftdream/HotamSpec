@@ -1,0 +1,18 @@
+{
+  "kind": "Conflict",
+  "axis": "reviewability-vs-code-authority",
+  "context": "Before RAC-B (task #346), a resolver on hotam-spec-self reviewed a Requirement/Rejection change by reading the ProposedRequirement/ProposedRejection JSON artifact itself before signing off -- the artifact under review and the artifact that gets written to graph.json were the SAME file. RAC-B3 (task #350) now refuses that path for Requirement/Rejection on this self-hosting domain: the authored change lives as a Go `ontology.Requirement` literal in internal/selfspec/requirements_<topic>.go, and the resolver's PRESENT-step artifact is `hotam sync-self`'s dry-run render (a rendered SyncReport diff) rather than the literal Go source or the eventual graph.json bytes. Trust shifts from 'I approve the exact artifact I am looking at' to 'I approve a RENDER that I trust BY CONSTRUCTION, because internal/selfspec's byte-identity/append-only guarantees are proven by tests (embed_test.go, merge_test.go, sync_test.go), not because I re-derived them myself this time.' For a programmer-resolver this is a small, well-understood step -- reading a Go diff via `hotam sync-self --dry-run`'s field-level FieldDiff render is ordinary code review, and the byte-identity proof is independently mechanically checked (check_self_requirements_match_registry). The open question is architectural, not urgent: if this same pattern (author-in-code, resolver-signs-a-rendered-projection-not-the-source) is ever extended from this framework-internal self-hosting domain to a CONSUMER domain whose resolver is NOT a programmer (e.g. gpsm-pm, who reads REQUIREMENTS.md/TENSIONS.md prose, not Go source) -- would that resolver be able to meaningfully evaluate a Go-literal diff or a sync-render at all, or does the pattern silently assume programmer-literacy that does not generalize? This tension is recorded here, unresolved, BEFORE any consumer domain proposes adopting the sync-self pattern, so the question is not lost or discovered only after the fact.",
+  "members": [
+    "R-ai-presents-not-decides",
+    "R-requirement-update-signoff-typed"
+  ],
+  "resolver": "framework-reviewer",
+  "shared_assumption": "A-stakeholders-care",
+  "initial_lifecycle": "DETECTED",
+  "source_refs": [
+    "internal/selfspec/sync.go",
+    "cmd/hotam/sync_self.go",
+    "internal/selfspec/embed_test.go",
+    "internal/selfspec/merge_test.go"
+  ]
+}

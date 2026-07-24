@@ -1,0 +1,6 @@
+{
+  "kind": "Axis",
+  "slug": "reviewability-vs-code-authority",
+  "description": "What form the resolver's signoff attaches to: the raw artifact under review (a JSON proposal file, byte-for-byte) vs a rendered projection trusted by construction (a Go-diff + dry-run render backed by mechanically proven byte-identity/append-only guarantees). Direct-artifact review needs no extra trust; rendered-projection review is faster and matches authorship-in-code but requires the resolver to trust the rendering mechanism, not just their own eyes.",
+  "why": "RAC-B3/RAC-B4 (tasks #350-351) moved Requirement/Rejection review on the self-hosting domain from 'resolver reads the exact JSON that gets written' to 'resolver reads hotam sync-self's rendered SyncReport diff, trusting internal/selfspec's proven byte-identity mechanism' -- no existing axis names this specific evidentiary-form tension (agent-autonomy-vs-human-control is about how much the AI acts vs asks, not what artifact the resolver's trust attaches to). Filed alongside C-reviewability-vs-code-authority's open Conflict (task #347, RAC-C part 3)."
+}
