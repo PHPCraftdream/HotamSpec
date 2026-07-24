@@ -26,7 +26,7 @@ import (
 // satisfy all ~47 invariants from scratch.
 func TestCmdLand_AppliesRegeneratesAndVerifies(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
 
 	// copySelfDomain only copies graph.json + manifest.json (main_test.go);
@@ -159,7 +159,7 @@ func TestCmdLand_InvalidProposalAppliesNothing(t *testing.T) {
 // hold the new node, byte-differ from the pre-land baseline.
 func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	gp := graphPathForDomain(domainDir)
 	lp := loader.LockPath(gp)
@@ -266,7 +266,7 @@ func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
 // still reflect the new graph (the direct genSpec below) instead of baseline.
 func TestRollbackLand_RestoresFilesAndRegeneratesDocs(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	gp := graphPathForDomain(domainDir)
 	lp := loader.LockPath(gp)
@@ -362,7 +362,7 @@ func TestRollbackLand_RestoresFilesAndRegeneratesDocs(t *testing.T) {
 // refactor accidentally rolled back on success.
 func TestCmdLand_SuccessPathDoesNotRollBack(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	gp := graphPathForDomain(domainDir)
 	lp := loader.LockPath(gp)
@@ -551,7 +551,7 @@ func TestResolveClaudeMDPath(t *testing.T) {
 // untouched (this test FAILS on the pre-fix code).
 func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
 	t.Parallel()
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 
 	// Pre-create a STALE root crystal so (a) resolveClaudeMDPath detects the
 	// project-root convention and (b) we can prove land OVERWRITES it.
@@ -635,7 +635,7 @@ func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
 // it must KEEP passing with the fix.
 func TestCmdLand_NoAutoCrystal_WhenNoProjectRootConvention(t *testing.T) {
 	t.Parallel()
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	// Deliberately create NO CLAUDE.md and NO marker at projectRoot.
 
 	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
@@ -673,7 +673,7 @@ func TestCmdLand_NoAutoCrystal_WhenNoProjectRootConvention(t *testing.T) {
 // branch this would write to the wrong place.
 func TestCmdLand_ExplicitClaudeMD_OverridesAutoDetect(t *testing.T) {
 	t.Parallel()
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 
 	// Pre-create CLAUDE.md at projectRoot so auto-detect is armed.
 	stale := []byte("STALE-AUTO-DETECT-TARGET\n")
@@ -739,7 +739,7 @@ func TestCmdLand_ExplicitClaudeMD_OverridesAutoDetect(t *testing.T) {
 // in gen_spec.go); a regression would make two consecutive renders differ.
 func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
 	t.Parallel()
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	// Seed a crystal so resolveClaudeMDPath arms the auto-write.
 	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), []byte("seed"), 0o644); err != nil {
 		t.Fatalf("write seed CLAUDE.md: %v", err)
@@ -805,6 +805,19 @@ func addSecondDomain(t *testing.T, projectRoot, domainName string) string {
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
 	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
+	// task #350/RAC-B3: applyToGraph now refuses ProposedRequirement/
+	// ProposedRejection when the target graph's manifest says
+	// self_hosting: true — this fixture is a copy of the real hotam-spec-
+	// self graph+manifest, so without this it would trip the new lock the
+	// moment a caller lands a Requirement into it. Callers of
+	// addSecondDomain exercise CLAUDE.md/active-domain plumbing, not the
+	// self-hosting lock itself (that has its own dedicated tests), so
+	// makeNonSelfHosting (main_test.go) here preserves their original
+	// intent — it also clears implemented_by/verified_by (illegal outside
+	// self_hosting: true, see that helper's doc comment), which a bare
+	// manifest-flag flip alone would leave broken the moment `hotam land`
+	// re-runs all-violations after gen-spec.
+	makeNonSelfHosting(t, domainDir)
 	return domainDir
 }
 
@@ -830,7 +843,7 @@ func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 	// copySelfDomainUnderRoot scaffolds the FIRST domain as
 	// "hotam-spec-self"; that is the name recorded as active_domain below.
 	// The SECOND domain, "second", is the one actually landed here.
-	projectRoot, _ := copySelfDomainUnderRoot(t)
+	projectRoot, _ := copyNonSelfHostingDomainUnderRoot(t)
 	secondDomainDir := addSecondDomain(t, projectRoot, "second")
 
 	// Root crystal convention: a real CLAUDE.md, plus a marker recording
@@ -919,7 +932,7 @@ func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 // just the single-domain unambiguous shortcut.
 func TestCmdLand_AutoCrystal_WhenLandingDomainIsActive(t *testing.T) {
 	t.Parallel()
-	projectRoot, activeDomainDir := copySelfDomainUnderRoot(t)
+	projectRoot, activeDomainDir := copyNonSelfHostingDomainUnderRoot(t)
 	addSecondDomain(t, projectRoot, "second")
 
 	stale := []byte("STALE-CRYSTAL-BASELINE\n")
@@ -973,7 +986,7 @@ func TestCmdLand_AutoCrystal_WhenLandingDomainIsActive(t *testing.T) {
 // unambiguous and must still auto-write even with zero recorded preference.
 func TestCmdLand_AutoCrystal_SingleDomainNoMarker(t *testing.T) {
 	t.Parallel()
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 
 	stale := []byte("STALE-SINGLE-DOMAIN-BASELINE\n")
 	if err := os.WriteFile(filepath.Join(projectRoot, "CLAUDE.md"), stale, 0o644); err != nil {

@@ -261,7 +261,7 @@ func TestSemanticConflictGate_AckConflictNonExistentFails(t *testing.T) {
 // must land exactly as before. This would FAIL if the gate were too aggressive.
 func TestSemanticConflictGate_NormalLandUnaffected(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	gp := graphPathForDomain(domainDir)
 
 	proposalPath := filepath.Join(t.TempDir(), "normal.json")

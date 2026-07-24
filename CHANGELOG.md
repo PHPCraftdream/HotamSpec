@@ -17,6 +17,53 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Self-hosting Requirement/Rejection lock (task #350, RAC-B3)**:
+  `internal/proposal.applyToGraph` — the single choke point single-file
+  `apply-proposal`, `--batch`, `hotam land`, and `propose --land` all funnel
+  through — now refuses a `ProposedRequirement` (CREATE or UPDATE) or
+  `ProposedRejection` BEFORE any mutation when the target graph's
+  `manifest.json` declares `self_hosting: true`. `hotam sync-self` (RAC-B2)
+  is now the SOLE sanctioned path for Requirement/Rejection changes in the
+  self-hosting domain; every other proposal kind (Conflict\*, Assumption\*,
+  EntityType, Process, Axis, Stakeholder, OperatorBudget, ReviewMark,
+  GateSignoffBatch) and every non-self-hosting domain are unaffected.
+  - The refusal message names the concrete `internal/selfspec/
+    requirements_<topic>.go` file the ID lives in (via the existing
+    `selfspec.SourceFileFor`) when the ID is already registered, or the
+    `internal/selfspec` package + `requirements_<topic>.go` filing
+    convention (without inventing a nonexistent filename) when the ID is
+    brand-new. Both name `hotam sync-self` as the way forward.
+  - The Rejection-specific message additionally reminds the operator that
+    landing a Rejection also appends a `replaces` Relation onto the
+    successor node(s) named in `replaced_by` — a structural edit to a
+    DIFFERENT node than the one being rejected — which a manual migration
+    into the Go registry workflow must add by hand.
+  - `internal/proposal` now imports `internal/selfspec`; verified against
+    `TestCorePeriphery_ImportRatchet` (`internal/selfcheck/imports_test.go`)
+    — `internal/selfspec` imports only `internal/ontology` +
+    `internal/registry` (both core-ward), so no cycle and no
+    core→periphery violation.
+  - New tests: `internal/proposal/self_hosting_lock_test.go` (known-ID /
+    unknown-ID / Rejection message shape, other-kinds-unaffected,
+    non-self-hosting-unaffected — all at the `applyToGraph` level, with a
+    real `manifest.json` on disk since `loader.LoadGraph` always resolves
+    `Graph.SelfHosting` from the manifest, never from an in-memory struct
+    field or graph.json's own `self_hosting` key) and
+    `cmd/hotam/self_hosting_lock_test.go` (CLI-level: `apply-proposal` and
+    `land` against the real `hotam-spec-self` fixture, plus a non-self-
+    hosting negative control).
+  - Existing `cmd/hotam` tests that landed a Requirement/Rejection against a
+    copy of the real self-hosting `hotam-spec-self` fixture (`copySelfDomain`)
+    were migrated to two new fixture helpers in `main_test.go`:
+    `copyNonSelfHostingDomain`/`copyNonSelfHostingDomainUnderRoot`, which
+    copy the real graph+manifest, force `self_hosting: false`, AND clear
+    every requirement's `implemented_by`/`verified_by` (illegal outside
+    `self_hosting: true` per `internal/gate.SpecRoot`), downgrading the 3
+    requirements that relied solely on the authored-link enforcement path to
+    `PROSE`/`INHERENTLY_PROSE` so `all-violations` stays clean post-land. A
+    bare manifest-flag flip alone is NOT sufficient for any test that runs
+    `hotam land`'s post-apply `gen-spec` + `all-violations` pipeline — see
+    `makeNonSelfHosting`'s doc comment in `cmd/hotam/main_test.go`.
 - **`hotam sync-self` command (task #349, RAC-B2)**: the CLI that finally
   exercises `internal/selfspec.SyncGraph` (RAC-B1) as a real authority-flip
   tool — mirrors `internal/selfspec.Requirements` (the Go registry) onto

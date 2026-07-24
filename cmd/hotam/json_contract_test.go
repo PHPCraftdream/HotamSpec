@@ -56,7 +56,7 @@ func TestProposeLandJSON_SingleDocument(t *testing.T) {
 	}
 	t.Parallel()
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	outPath := filepath.Join(t.TempDir(), "req-land-json.json")
 
 	stdout, stderr := runHotamJSON(t, binPath,
@@ -114,7 +114,7 @@ func TestCmdLandJSON_SingleDocument(t *testing.T) {
 	}
 	t.Parallel()
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 
 	proposalPath := filepath.Join(t.TempDir(), "land-json.json")
 	proposalJSON := `{
@@ -170,7 +170,7 @@ func TestCmdLandJSON_FailureStdoutClean(t *testing.T) {
 	}
 	t.Parallel()
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 
 	proposalPath := filepath.Join(t.TempDir(), "land-json-fail.json")
 	// Claim wording deliberately avoids the "must (not)" reserved-marker
@@ -308,7 +308,7 @@ func TestProposeLand_NonJSON_Unchanged(t *testing.T) {
 	}
 	t.Parallel()
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	outPath := filepath.Join(t.TempDir(), "req-land-prose.json")
 
 	cmd := exec.Command(binPath,
@@ -346,7 +346,7 @@ func TestCmdLand_NonJSON_Unchanged(t *testing.T) {
 	}
 	t.Parallel()
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 
 	proposalPath := filepath.Join(t.TempDir(), "land-prose.json")
 	proposalJSON := `{

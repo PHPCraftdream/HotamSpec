@@ -7,6 +7,7 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/selfspec"
 )
 
 // ConflictChecker is injected by a periphery-aware caller (cmd/hotam) so
@@ -117,6 +118,57 @@ func errDrivesEntityAlreadyExists(id, slug string) error {
 			"'drives_entities'.", id, slug, slug)
 }
 
+// errSelfHostingRequirementLocked is returned by applyToGraph BEFORE any
+// mutation when g.SelfHosting is true and p is a ProposedRequirement
+// (CREATE or UPDATE) — task #350/RAC-B3, the third of Phase B's
+// (task #346/RAC-B) four sequential steps. Once a domain is self-hosting,
+// internal/selfspec.Requirements (the Go registry, RAC-A's task #345) — not
+// a hand-authored proposal JSON landed through apply-proposal/land — is the
+// SOLE authority for that domain's Requirement nodes; `hotam sync-self`
+// (task #349/RAC-B2) is the only sanctioned path to change them. If id is
+// already registered, the message names the exact requirements_<topic>.go
+// file it lives in (via selfspec.SourceFileFor) so the author edits Go, not
+// JSON. If id is not yet registered (a brand-new requirement, not yet
+// placed into any thematic file), the message names the package and its
+// requirements_<topic>.go filing convention instead of a file that does not
+// exist yet.
+func errSelfHostingRequirementLocked(id string) error {
+	if file, ok := selfspec.SourceFileFor(id); ok {
+		return fmt.Errorf(
+			"requirement %q is self-hosting-locked: this domain's Requirement "+
+				"nodes are authored in Go, not landed via apply-proposal/land. "+
+				"%q is registered in internal/selfspec/%s — edit it there and run "+
+				"`hotam sync-self` to project the change onto the graph. No "+
+				"changes made.", id, id, file)
+	}
+	return fmt.Errorf(
+		"requirement %q is self-hosting-locked: this domain's Requirement "+
+			"nodes are authored in Go, not landed via apply-proposal/land. %q "+
+			"is not yet registered in the internal/selfspec package — add it to "+
+			"a requirements_<topic>.go file there (the thematic-file convention "+
+			"internal/selfspec's existing files follow) and run `hotam "+
+			"sync-self` to project it onto the graph. No changes made.", id, id)
+}
+
+// errSelfHostingRejectionLocked is applyToGraph's self-hosting-lock error for
+// a ProposedRejection (task #350/RAC-B3) — same rationale as
+// errSelfHostingRequirementLocked, plus a Rejection-specific warning: landing
+// a rejection also APPENDS a `replaces` Relation onto the SUCCESSOR
+// requirement(s) named in replaced_by (see ProposedRejection.mutate in
+// mutate.go) — a structural field on a DIFFERENT node than the one being
+// rejected. Migrating a rejection into the Go registry workflow must not
+// forget that second edit: the rejected requirement's Status/Why AND the
+// successor's Relations both need updating in Go before `hotam sync-self`.
+func errSelfHostingRejectionLocked(id string) error {
+	base := errSelfHostingRequirementLocked(id).Error()
+	return fmt.Errorf(
+		"%s Reminder for a Rejection specifically: landing one also adds a "+
+			"'replaces' relation onto the SUCCESSOR requirement(s) named in "+
+			"replaced_by — when moving this into the Go workflow, remember to "+
+			"add that 'replaces' Relation to the successor's own registry "+
+			"entry by hand; sync-self will not infer it for you.", base)
+}
+
 // applyToGraph validates and mutates g in place, then verifies the proposal
 // introduces no new invariant violations relative to the graph's pre-mutation
 // state. It performs no disk I/O — Apply and ApplyBatch own load/write so a
@@ -124,10 +176,29 @@ func errDrivesEntityAlreadyExists(id, slug string) error {
 // (all-or-nothing). The "before" baseline is captured from g's current state,
 // so in a batch each proposal is checked against the state left by the
 // previous one — exactly mirroring N sequential single Applies.
+//
+// SELF-HOSTING LOCK (task #350/RAC-B3): when g.SelfHosting is true, a
+// ProposedRequirement or ProposedRejection is refused here, BEFORE
+// a.validate()/a.mutate() run — this is the ONE choke point single-file
+// apply, --batch, `hotam land`, and `propose --land` all funnel through, so
+// gating here closes the self-hosting domain to hand-authored
+// Requirement/Rejection proposals on every path at once. Every other
+// Proposal kind (Conflict*, Assumption*, EntityType, Process, Axis,
+// Stakeholder, OperatorBudget, ReviewMark, GateSignoffBatch) is UNAFFECTED —
+// RAC-B only flips authority for Requirement nodes (and Rejection, which
+// mutates a Requirement's Status/Why plus a successor's Relations).
 func applyToGraph(g *ontology.Graph, today string, p Proposal) error {
 	a, ok := p.(actor)
 	if !ok {
 		return fmt.Errorf("unsupported proposal type %T", p)
+	}
+	if g.SelfHosting {
+		switch pr := p.(type) {
+		case ProposedRequirement:
+			return errSelfHostingRequirementLocked(pr.ID)
+		case ProposedRejection:
+			return errSelfHostingRejectionLocked(pr.RequirementID)
+		}
 	}
 	if err := a.validate(); err != nil {
 		return err

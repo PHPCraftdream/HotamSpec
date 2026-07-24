@@ -24,7 +24,7 @@ import (
 func TestCmdApplyProposal_OmittedDomainFallsThroughActiveDomainChain(t *testing.T) {
 	// Not t.Parallel(): t.Setenv (HOTAM_SPEC_PROJECT_ROOT/HOTAM_DOMAIN) must
 	// not race with other tests mutating the same process-global env vars.
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	t.Setenv(paths.EnvProjectRoot, projectRoot)
 	t.Setenv(paths.EnvActiveDomain, "")
 
@@ -65,7 +65,7 @@ func TestCmdApplyProposal_OmittedDomainFallsThroughActiveDomainChain(t *testing.
 // "--domain is required" check.
 func TestCmdLand_OmittedDomainFallsThroughActiveDomainChain(t *testing.T) {
 	// Not t.Parallel(): t.Setenv must not race with other env-mutating tests.
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	t.Setenv(paths.EnvProjectRoot, projectRoot)
 	t.Setenv(paths.EnvActiveDomain, "")
 
@@ -122,6 +122,7 @@ func TestCmdLand_OmittedDomainUsesMarkerTier3(t *testing.T) {
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
 	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
+	makeNonSelfHosting(t, domainDir)
 
 	markerPath := filepath.Join(projectRoot, paths.MarkerFilename)
 	if err := paths.WriteActiveDomain(markerPath, "marked-domain"); err != nil {

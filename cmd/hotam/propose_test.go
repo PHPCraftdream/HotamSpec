@@ -241,7 +241,7 @@ func TestCmdPropose_ValidationFails_NoFileWritten(t *testing.T) {
 // (and proving the shared landProposalFile function works).
 func TestCmdPropose_Land_AppliesRegeneratesReverifies(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	outPath := filepath.Join(t.TempDir(), "req-land.json")
 	genDir := filepath.Join(domainDir, "docs", "gen")
 

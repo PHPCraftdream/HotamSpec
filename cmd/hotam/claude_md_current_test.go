@@ -255,7 +255,7 @@ func TestCheckDomainClaudeMDCurrent_NoOpWhenCrystalNeverGenerated(t *testing.T) 
 // `hotam land` on such a domain now succeeds.
 func TestApplyProposal_FreshCrystalAndSpecMDNoLongerFalselyBlocked(t *testing.T) {
 	t.Parallel()
-	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	if err := os.WriteFile(filepath.Join(projectRoot, ".hotam-spec-project"), []byte("{}"), 0o644); err != nil {
 		t.Fatalf("write marker: %v", err)
 	}

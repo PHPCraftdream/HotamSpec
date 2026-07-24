@@ -25,7 +25,7 @@ func writeBatchProposal(t *testing.T, dir, name, content string) {
 // reflect the post-batch graph.
 func TestCmdLand_Batch_AppliesRegeneratesAndVerifies(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
 
 	// docs/gen/ does not exist before land — proves any content there after
@@ -91,7 +91,7 @@ func TestCmdLand_Batch_AppliesRegeneratesAndVerifies(t *testing.T) {
 // pre-batch state, and NOT regenerate docs/gen (nothing landed).
 func TestCmdLand_Batch_InvalidNth_AppliesNothing(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	gp := graphPathForDomain(domainDir)
 
@@ -149,7 +149,7 @@ func TestCmdLand_Batch_InvalidNth_AppliesNothing(t *testing.T) {
 // graph is even loaded.
 func TestCmdLand_Batch_UnparseableNth_AppliesNothing(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	gp := graphPathForDomain(domainDir)
 	before, err := os.ReadFile(gp)
 	if err != nil {
@@ -186,7 +186,7 @@ func TestCmdLand_Batch_UnparseableNth_AppliesNothing(t *testing.T) {
 // caller mistake; land must report it and change nothing.
 func TestCmdLand_Batch_EmptyDirFails(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	batchDir := t.TempDir()
 
 	err := cmdLand([]string{
@@ -206,7 +206,7 @@ func TestCmdLand_Batch_EmptyDirFails(t *testing.T) {
 // also supports --batch (applies the graph without regenerating docs).
 func TestCmdApplyProposal_Batch(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	batchDir := t.TempDir()
 
 	writeBatchProposal(t, batchDir, "01.json", `{
@@ -249,7 +249,7 @@ func TestCmdApplyProposal_Batch(t *testing.T) {
 // focused regression guard for the flag-parsing path specifically.)
 func TestCmdLand_SingleRegression(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
 	proposalJSON := `{
 		"kind": "Requirement", "id": "R-single-regression",

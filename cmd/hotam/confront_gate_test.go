@@ -40,7 +40,7 @@ func TestCmdApplyProposal_ConfrontAtGate_RunsAndNeverBlocks(t *testing.T) {
 	t.Parallel()
 
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	proposalPath := filepath.Join(t.TempDir(), "p.json")
 	writeBatchProposal(t, filepath.Dir(proposalPath), filepath.Base(proposalPath),
 		reqProposalJSON("R-apply-confront-gate", confrontOverlapClaim))
@@ -74,7 +74,7 @@ func TestCmdLand_ConfrontAtGate_RunsAndNeverBlocks(t *testing.T) {
 	t.Parallel()
 
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	proposalPath := filepath.Join(t.TempDir(), "p.json")
 	writeBatchProposal(t, filepath.Dir(proposalPath), filepath.Base(proposalPath),
 		reqProposalJSON("R-land-confront-gate", confrontOverlapClaim))
@@ -108,7 +108,7 @@ func TestCmdPropose_Land_PrintsExactlyOneConfrontReport(t *testing.T) {
 	t.Parallel()
 
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	outPath := filepath.Join(t.TempDir(), "draft.json")
 
 	out, err := exec.Command(binPath, "propose", "requirement",
@@ -142,7 +142,7 @@ func TestCmdLand_Batch_ConfrontSummary_AllClear(t *testing.T) {
 	t.Parallel()
 
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	batchDir := t.TempDir()
 	writeBatchProposal(t, batchDir, "01.json", reqProposalJSON("R-batch-clear-1", "zzqx wumbo frobnicator one"))
 	writeBatchProposal(t, batchDir, "02.json", reqProposalJSON("R-batch-clear-2", "splines reticulate novel two"))
@@ -180,7 +180,7 @@ func TestCmdLand_Batch_ConfrontSummary_FlaggedMix(t *testing.T) {
 	t.Parallel()
 
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	batchDir := t.TempDir()
 	writeBatchProposal(t, batchDir, "01-clear.json", reqProposalJSON("R-batch-mix-clear", confrontClearClaim))
 	writeBatchProposal(t, batchDir, "02-flagged.json", reqProposalJSON("R-batch-mix-flagged", confrontOverlapClaim))
@@ -225,7 +225,7 @@ func TestCmdApplyProposal_Batch_ConfrontSummary(t *testing.T) {
 	t.Parallel()
 
 	binPath := buildSharedHotamBinary(t)
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	batchDir := t.TempDir()
 	writeBatchProposal(t, batchDir, "01-clear.json", reqProposalJSON("R-apply-batch-clear", confrontClearClaim))
 	writeBatchProposal(t, batchDir, "02-flagged.json", reqProposalJSON("R-apply-batch-flagged", confrontOverlapClaim))

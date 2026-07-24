@@ -10,6 +10,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
@@ -54,6 +56,134 @@ func copySelfDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
 	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
 	return projectRoot, domainDir
+}
+
+// copyNonSelfHostingDomainUnderRoot mirrors copySelfDomainUnderRoot but
+// additionally forces self_hosting: false in the copied manifest.json — the
+// _UnderRoot-flavored sibling of copyNonSelfHostingDomain (below), for tests
+// that need BOTH the synthetic project root (auto-crystal / active-domain-
+// marker mechanics) AND a fixture the new self-hosting Requirement/Rejection
+// lock (task #350/RAC-B3) does not block.
+func copyNonSelfHostingDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
+	t.Helper()
+	projectRoot, domainDir = copySelfDomainUnderRoot(t)
+	makeNonSelfHosting(t, domainDir)
+	return projectRoot, domainDir
+}
+
+// copyNonSelfHostingDomain scaffolds a fixture at <tempRoot>/domains/hotam-spec-self
+// that starts as a copy of copySelfDomain's real graph+manifest, with
+// self_hosting forced to false AND every requirement's implemented_by/
+// verified_by stripped (see makeNonSelfHosting) — a genuinely non-self-
+// hosting double of the real self-hosting domain, safe to run all the way
+// through `hotam land`'s post-apply gen-spec + all-violations pipeline.
+//
+// It exists for task #350/RAC-B3: applyToGraph now refuses any
+// ProposedRequirement/ProposedRejection when g.SelfHosting is true, so every
+// test whose actual PURPOSE is to exercise ordinary
+// apply-proposal/land/propose --land plumbing (not the self-hosting lock
+// itself) needs a fixture that keeps that plumbing reachable. Using this
+// helper instead of copySelfDomain preserves each such test's original
+// intent (a real, invariant-clean, ~300-node graph, with real requirement
+// CLAIM TEXT still intact for confront/duplicate-detection tests that need
+// it) to apply a Requirement/Rejection proposal against, without tripping
+// the new lock — the lock itself is covered separately by dedicated tests
+// built on copySelfDomain (which stays self_hosting: true, unmodified).
+func copyNonSelfHostingDomain(t *testing.T) string {
+	t.Helper()
+	domainDir := copySelfDomain(t)
+	makeNonSelfHosting(t, domainDir)
+	return domainDir
+}
+
+// makeNonSelfHosting mutates the graph.json + manifest.json already copied
+// at domainDir (by copySelfDomain/copySelfDomainUnderRoot) so the fixture
+// becomes a genuinely valid NON-self-hosting domain:
+//
+//  1. manifest.json: self_hosting forced to false (forceSelfHostingFalse).
+//  2. graph.json: every requirement's ImplementedBy/VerifiedBy is cleared.
+//     The real hotam-spec-self graph's implemented_by/verified_by entries
+//     are internal/... engine-source paths, legal ONLY under
+//     self_hosting: true (internal/gate.SpecRoot requires domainDir/spec/
+//     otherwise — see check_implemented_by_symbol_resolvable /
+//     check_verified_by_test_resolvable in internal/invariants/
+//     authored_links.go); merely flipping the manifest flag without also
+//     clearing these would leave ~18 requirements failing those two checks
+//     the moment `hotam land` re-runs all-violations after gen-spec.
+//  3. graph.json: any requirement left SETTLED+ENFORCED with EnforcedBy
+//     also empty (i.e. it relied SOLELY on the now-cleared authored-link
+//     mechanism — 3 requirements in the real graph, e.g.
+//     R-spec-link-embodied-vs-proven) is downgraded to
+//     Enforcement=PROSE/Enforceability=INHERENTLY_PROSE, since
+//     check_enforced_requires_enforcer_or_authored_link requires EITHER
+//     enforced_by OR implemented_by+verified_by non-empty, and step 2 just
+//     removed the latter.
+//
+// The requirement CLAIM text (and every other structural field) is left
+// untouched, so tests that depend on the real corpus's semantic content
+// (e.g. confront_gate_test.go's duplicate-overlap detection against
+// R-entity-typed-anchors) keep working unchanged.
+func makeNonSelfHosting(t *testing.T, domainDir string) {
+	t.Helper()
+	forceSelfHostingFalse(t, filepath.Join(domainDir, "manifest.json"))
+
+	gp := graphPathForDomain(domainDir)
+	g, err := loader.LoadGraph(gp)
+	if err != nil {
+		t.Fatalf("load graph %s: %v", gp, err)
+	}
+	for i, r := range g.Requirements {
+		hadAuthoredLink := len(r.ImplementedBy) > 0 || len(r.VerifiedBy) > 0
+		r.ImplementedBy = nil
+		r.VerifiedBy = nil
+		if hadAuthoredLink && len(r.EnforcedBy) == 0 &&
+			r.Status == ontology.StatusSETTLED && r.Enforcement == ontology.EnforcementENFORCED {
+			r.Enforcement = ontology.EnforcementPROSE
+			r.Enforceability = ontology.EnforceabilityINHERENTLY_PROSE
+		}
+		g.Requirements[i] = r
+	}
+	if err := loader.WriteGraph(gp, g); err != nil {
+		t.Fatalf("write graph %s: %v", gp, err)
+	}
+	// loader.WriteGraph always ALSO writes graph.lock as a side effect (see
+	// that function's own body) — but copySelfDomain's contract (main_test.go
+	// doc comment) is that the fixture starts with NO graph.lock, matching a
+	// freshly copied domain that has never been apply/land'ed. Several tests
+	// (e.g. TestCmdLand_GenSpecFailure_RollsBackGraphJSON) assert this
+	// pre-land absence as an explicit precondition, so this write-then-clean
+	// step keeps makeNonSelfHosting's own graph.json rewrite from leaving a
+	// stray lock behind — it is purely a content fixup, not a "this domain
+	// was landed into" signal.
+	if err := os.Remove(loader.LockPath(gp)); err != nil && !os.IsNotExist(err) {
+		t.Fatalf("remove stray graph.lock %s: %v", loader.LockPath(gp), err)
+	}
+}
+
+// forceSelfHostingFalse rewrites the manifest.json at manifestPath so its
+// self_hosting field is false, regardless of what it was — the shared
+// mechanic behind copyNonSelfHostingDomain (above) and
+// TestCmdSyncSelf_RefusesNonSelfHostingDomain (sync_self_test.go), which
+// both need the real hotam-spec-self manifest (self_hosting: true) flipped
+// to false to build a non-self-hosting double of the same graph.
+func forceSelfHostingFalse(t *testing.T, manifestPath string) {
+	t.Helper()
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("read manifest %s: %v", manifestPath, err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("unmarshal manifest %s: %v", manifestPath, err)
+	}
+	m["self_hosting"] = false
+	out, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal manifest %s: %v", manifestPath, err)
+	}
+	if err := os.WriteFile(manifestPath, out, 0o644); err != nil {
+		t.Fatalf("write manifest %s: %v", manifestPath, err)
+	}
 }
 
 func copyFile(t *testing.T, src, dst string) {
@@ -364,7 +494,7 @@ func TestReorderFlagsFirst_HelpFlagDoesNotConsumePositional(t *testing.T) {
 
 func TestApplyProposal_SmokeEndToEnd(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	domainDir := copyNonSelfHostingDomain(t)
 	proposalJSON := `{"kind":"Requirement","ID":"R-smoke-test","Claim":"smoke claim","Owner":"framework-author","Status":"DRAFT","Why":"smoke"}`
 	p, err := parseProposal([]byte(proposalJSON))
 	if err != nil {
