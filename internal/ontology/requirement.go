@@ -61,26 +61,42 @@ type HistoryEntry struct {
 }
 
 type Requirement struct {
-	ID             string         `json:"id"`
-	Claim          string         `json:"claim"`
-	Owner          string         `json:"owner"`
-	Status         string         `json:"status"`
-	Why            string         `json:"why"`
-	Assumptions    []string       `json:"assumptions"`
-	Relations      []Relation     `json:"relations"`
-	Enforcement    string         `json:"enforcement"`
-	EnforcedBy     []string       `json:"enforced_by"`
-	MTag           string         `json:"m_tag"`
-	Enforceability string         `json:"enforceability"`
-	Summary        string         `json:"summary"`
-	CreatedAt      string         `json:"created_at"`
-	SettledAt      string         `json:"settled_at"`
-	LastReviewedAt string         `json:"last_reviewed_at"`
-	ReviewAfter    string         `json:"review_after"`
-	Evidence       []string       `json:"evidence"`
-	SourceRefs     []string       `json:"source_refs"`
-	History        []HistoryEntry `json:"history"`
-	DeclOrder      int            `json:"decl_order"`
+	ID             string     `json:"id"`
+	Claim          string     `json:"claim"`
+	Owner          string     `json:"owner"`
+	Status         string     `json:"status"`
+	Why            string     `json:"why"`
+	Assumptions    []string   `json:"assumptions"`
+	Relations      []Relation `json:"relations"`
+	Enforcement    string     `json:"enforcement"`
+	EnforcedBy     []string   `json:"enforced_by"`
+	MTag           string     `json:"m_tag"`
+	Enforceability string     `json:"enforceability"`
+	Summary        string     `json:"summary"`
+	CreatedAt      string     `json:"created_at"`
+	SettledAt      string     `json:"settled_at"`
+	LastReviewedAt string     `json:"last_reviewed_at"`
+	ReviewAfter    string     `json:"review_after"`
+	// Evidence is a RETIRED, superseded surface (task #342, R5-generate-
+	// dont-lint inventory consult, resolver decision 2026-07-24): a legacy
+	// free-text run-transcript/rationale-pointer field, almost universally
+	// empty across the real graph. The mechanical proof it once informally
+	// carried now lives entirely in typed carriers — EnforcedBy (check_*/
+	// Test* names) and VerifiedBy (file:test refs), backed by
+	// check_verified_by_test_passes actually EXECUTING each verified_by
+	// test — so a new Evidence entry should NOT be hand-written; if a
+	// rationale pointer is genuinely needed, it belongs in Why instead.
+	// The field is kept (not removed, not omitempty) only for byte-identical
+	// JSON compatibility with already-committed graph.json files: most
+	// committed requirements already declare an explicit "evidence": [], and
+	// adding omitempty would silently drop that key and break the byte-
+	// identical round-trip tests (selfspec/merge_test.go) for ~90% of this
+	// domain's requirements. Field position is ALSO load-bearing for byte
+	// identity (encoding/json marshals in declaration order) — do not move it.
+	Evidence   []string       `json:"evidence"`
+	SourceRefs []string       `json:"source_refs"`
+	History    []HistoryEntry `json:"history"`
+	DeclOrder  int            `json:"decl_order"`
 	// BlockedOn names the specific not-yet-built feature (a Planned tool from
 	// internal/methodology/tools_data.go, or an absent Go package) that prevents
 	// a real enforcement test from being written for this requirement TODAY,

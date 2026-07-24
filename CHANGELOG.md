@@ -17,6 +17,30 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Generate-don't-lint inventory + `Requirement.Evidence` retirement (task #342, R5-generate-dont-lint)**:
+  read-only inventory-consult over the authoring text surfaces the
+  requirements-as-code wave (#343-347) and task #341 left untouched: FAQ
+  `orientation_faq` content, `Process.why`/`Step.why`, `Requirement.evidence`,
+  domain `README.md`, and a meta-rule about task framing. Report presented to
+  the resolver; three of five surfaces recommended LEAVE (FAQ content is
+  already computed not stored, `Process.why`/`Step.why` is already ratcheted
+  by `checkAuthoredProseSnapshot`, domain READMEs don't exist and would
+  duplicate the generated DOMAIN-MAP), one recommended a drafted
+  self-referential Requirement kept unlanded per resolver decision
+  (`internal/selfspec/drafts/R-task-names-object-method-test.go`, `//go:build
+  ignore`, not landed), and one — `Requirement.Evidence` — got a resolver
+  decision: **retire, don't generate**. `internal/ontology/requirement.go`'s
+  `Evidence` field doc comment now marks it RETIRED/superseded (the
+  mechanical proof it informally carried already lives in `EnforcedBy`/
+  `VerifiedBy` + `check_verified_by_test_passes`) — no new entries should be
+  hand-written; a genuinely needed rationale pointer belongs in `Why`
+  instead. The field itself (and its JSON tag, without `omitempty`, and its
+  struct-declaration position) is UNCHANGED — most committed requirements
+  already carry an explicit `"evidence": []`, and either change would have
+  broken the byte-identical round-trip proof (`selfspec/merge_test.go`) for
+  ~90% of this domain's requirements; caught by running that test after an
+  initial draft edit, before committing.
+
 - **`DomainManifest` typed object + byte-identical manifest round-trip (task #341, R5-manifest-object — Phase 1)**:
   applies the same "object is primary, JSON is a serialization/projection"
   discipline the requirements-as-code wave (#343-#347) established for
