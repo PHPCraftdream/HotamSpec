@@ -17,6 +17,87 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`hotam sync-self` command (task #349, RAC-B2)**: the CLI that finally
+  exercises `internal/selfspec.SyncGraph` (RAC-B1) as a real authority-flip
+  tool — mirrors `internal/selfspec.Requirements` (the Go registry) onto
+  `domains/hotam-spec-self/graph.json`, the engine's OWN self-hosting
+  domain, and ONLY that domain (refuses any `--domain` whose
+  `manifest.json` does not set `self_hosting: true`). `graph.json` remains
+  the sole runtime-trusted format; this command is the first thing that can
+  actually write to it FROM the registry (previously `MergeIntoGraph`/
+  `SyncGraph` were library-only, unreachable from the CLI).
+  - `internal/selfspec.verifyAppendOnly` renamed to the exported
+    `VerifyAppendOnly` (`verify.go`, `verify_test.go`) — required so
+    `cmd/hotam` (outside the package) can call it as the last write-gate.
+  - **Default mode is dry-run** (no `--confirm-hash`): loads the domain
+    graph, runs `SyncGraph` against an in-memory copy (a second, independent
+    `loader.LoadGraph` of the same file — the simple stand-in for a
+    dedicated deep-clone helper, since the graph is otherwise mutated
+    in-place), renders a human-readable report per `SyncReportEntry`
+    (ID/Kind/FieldDiffs, values abbreviated to ~150 runes for display only),
+    runs every write-gate as a PREVIEW (see below), and prints
+    `diff-hash: <hex>` — a sha256 over canonical JSON of
+    `{base_graph_sha256, diff: SyncReport}` with FULL untruncated
+    `FieldDiff` values and entries sorted by ID. Writes nothing.
+  - **`--confirm-hash <hex> --today YYYY-MM-DD [--reason "..."]`** re-runs
+    `SyncGraph` against the CURRENT on-disk state (which may have moved
+    since the dry-run), refuses with "diff changed since PRESENT" on any
+    hash mismatch, then runs the full gate sequence for real. Gate order
+    before any write, strictly: **stale-binary → confront → pre/post-
+    violation-diff → append-only**.
+    1. **Stale-binary guard**: compares every file embedded in
+       `selfspec.SourceFiles` against the SAME files read fresh off disk
+       under the resolved engine repo root (`repoRootForDomain(domainDir)` +
+       `internal/selfspec/`) — a byte mismatch refuses with "stale binary;
+       run via `go run ./cmd/hotam sync-self` or rebuild". A `go run`
+       invocation always compiles fresh, so it trivially passes.
+    2. **Confront gate**: for every `ADDED` entry, and every `CHANGED` entry
+       whose `FieldDiffs` include `Field=="Claim"`, runs
+       `diagnose.Confront` + `diagnose.IsBlockingHit` against the working
+       graph — EXCLUDING, for a `CHANGED` entry, any hit whose ID equals the
+       entry's own ID (a requirement's own claim changing must never
+       self-block). Blockers require `--ack-conflict <C-id>` (validated
+       against a real Conflict node) or `--decision-ref "..."` to proceed,
+       mirroring `semanticConflictGate`'s override contract; an ack writes a
+       History audit entry on every flagged requirement (post-write,
+       pre-regen — mirrors `appendAckHistory`'s placement).
+    3. **Pre/post violation diff**: `invariants.AllViolationsForProposalGate`
+       on the untouched `before` graph vs. the post-`SyncGraph` `after`
+       graph; any violation present only in `after` refuses.
+    4. **Append-only guard**: `selfspec.VerifyAppendOnly(before, after)` —
+       last gate, since it is the most expensive-to-explain failure.
+  - **Write path** (only after every gate passes): `loader.WriteGraph` +
+    `loader.WriteLock` (note: `"sync-self: N changed, M added; diff-hash
+    <hex-prefix>[; reason: ...]"`) → `gen-spec` doc regeneration →
+    `all-violations` re-verification. Reuses `land.go`'s EXACT transactional
+    snapshot/rollback machinery (`snapshotGraphFiles`/`rollbackLand`) — a
+    snapshot is taken before the write, and any failure after it (lock
+    write, ack-history append, doc regen, or a post-regen violation) rolls
+    the domain back to its pre-sync state, same as `hotam land`.
+  - Registered in `internal/methodology/tools_data.go` as `sync_self`
+    (Implemented) and wired via `cmd/hotam/tool_wiring.go` — bumps the
+    engine's Implemented-tool count from 17 to 18 (README.md, the
+    `methodology` package's own count tests, and every generated doc/
+    fixture that projects the tool registry — `docs/gen/tools/INDEX.md`,
+    `REQUIREMENTS.md`, `REPO-MAP.md`, `FRAMEWORK-INVARIANTS.md`, the root
+    crystal's "Tool reference" line, and `internal/generator`'s golden test
+    fixtures — regenerated to match).
+  - e2e coverage in `cmd/hotam/sync_self_test.go`: dry-run never writes;
+    hash-mismatch refuses without writing; full ADDED and CHANGED
+    round-trips (dry-run → hash → `--confirm-hash` → graph actually
+    written, docs regenerated, `all-violations` clean); rollback on a
+    post-write failure (genSpec blocked, same injection technique as
+    `TestCmdLand_GenSpecFailure_RollsBackGraphJSON`); the self-hosting-only
+    domain guard; the stale-binary guard (a corrupted fixture-copied source
+    file); and a real-subprocess smoke test. The confront-blocker-refusal
+    and append-only-refusal scenarios are proven at the `runSyncGates`
+    function level instead of end-to-end through the CLI (registry entries
+    are fixed at compile time, so a real contradicting claim pair can't be
+    constructed by a test without depending on incidental, driftable
+    registry content) — `TestRunSyncGates_ConfrontBlocker_RequiresAck`,
+    `TestRunSyncGates_ConfrontBlocker_ExcludesSelfID`,
+    `TestRunSyncGates_NewViolation_Refuses`,
+    `TestRunSyncGates_AppendOnlyGate_CalledLast`.
 - **`internal/selfspec`: Phase B sync primitives (task #348, RAC-B1)**:
   in-memory building blocks for the authority-flip `hotam sync-self` command
   (task #349, RAC-B2, not yet built) — `graph.json` remains the sole
