@@ -17,6 +17,80 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`DomainManifest` typed object + byte-identical manifest round-trip (task #341, R5-manifest-object — Phase 1)**:
+  applies the same "object is primary, JSON is a serialization/projection"
+  discipline the requirements-as-code wave (#343-#347) established for
+  Requirements (the `internal/selfspec` registry ↔ `graph.json` via
+  `MergeIntoGraph` / `hotam sync-self`) to `manifest.json` — which until now had
+  NO single typed object: every field was read piecemeal by an independent
+  `Resolve*` function that re-opened and re-parsed the file for one key each
+  (`resolveSelfHosting`, `ResolveDiscipline`, `ResolveGenProfile`,
+  `ResolveRequireProvenance`, `ResolveParent`, `ResolveDomainPresentation`,
+  `ResolveGateStageOrder`, `ResolveGateCohort`, `ResolveOrientationFAQ`). Phase 1
+  is deliberately the conservative pilot (exactly as RAC-A/B phased the
+  requirements migration): READ + REPRODUCE only, no authority flip, no mutation
+  layer, no hand-edit guard.
+  - **Typed struct** (`internal/loader/manifest.go`): `DomainManifest` models
+    all 12 real manifest.json fields — `self_hosting` (bool), `purpose`,
+    `goals`, `director`, `parent` (`*string`, reproduces explicit JSON null),
+    `orientation_faq` ([]`OrientationFAQEntry`), `charter`, `discipline`,
+    `gen_profile`, `require_provenance`, `gate_stage_order`,
+    `gate_cohort` (`*GateCohortSpec`) — reusing the existing loader entry types
+    directly (one source of truth). Struct field-declaration order is
+    load-bearing for byte identity: it matches the on-disk field order of both
+    real committed manifests (self_hosting, purpose, goals, director, parent,
+    then orientation_faq), with the optional fields neither real manifest
+    carries today declared after that prefix with `omitempty`.
+  - **`LoadManifest`/`WriteManifest`**: lenient decode (no
+    `DisallowUnknownFields`, matching every existing `Resolve*` tolerant
+    contract) and a canonical write through the SAME encoder `graph.json` uses
+    (`SetEscapeHTML(false)` + 2-space indent), atomic write-to-temp + rename.
+    `ManifestPath(graphPath)` factors out the shared manifest.json path
+    resolution every `Resolve*` function performs inline.
+  - **Byte-identical round-trip proof**
+    (`internal/loader/manifest_test.go:TestLoadWriteManifest_ByteIdenticalRoundTrip`):
+    loads each real committed manifest (`domains/hotam-spec-self`,
+    `domains/hotam-dev`), re-serializes through `WriteManifest`, and asserts
+    byte-identical output — the same proof
+    `internal/selfspec/merge_test.go:TestMergeIntoGraph_ByteIdenticalRoundTrip`
+    provides for the Requirements registry. Plus idempotence, non-vacuous
+    field-capture, and nil-guard controls.
+  - **One-time canonicalization of the two real manifests**: the hand-authored
+    `manifest.json` files used inline arrays for short `keywords` lists
+    (`"keywords": ["a", "b"]`), which Go's `encoding/json` cannot reproduce
+    (it always multi-lines arrays — `graph.json` never hits this because it is
+    always machine-written in canonical form). Both real manifests were
+    canonicalized once through `WriteManifest` (the `keywords` arrays expanded
+    to multi-line; all field values byte-for-byte preserved — `hotam
+    all-violations` still 0 on both domains). Going forward, manifest.json
+    edits through the typed path stay canonical; the round-trip is now stable.
+  - **`Keywords` omitempty** (`internal/loader/orientation_faq.go`): the one
+    shared-type tag change byte identity required — `OrientationFAQEntry.Keywords`
+    gained `omitempty` so a nil Keywords slice re-marshals as an omitted key
+    (not `"keywords": null`). Behaviorally inert for all pre-existing callers
+    (`omitempty` affects only marshaling, never unmarshaling, and this type was
+    never marshaled before `WriteManifest`).
+  - **Design decisions documented in code** (the de-facto design consult, per
+    the brief): (1) ALL manifest fields are AUTHOR input — none is computed or
+    derived from graph state, so the whole `DomainManifest` is one homogeneous
+    authored surface (the structural/event split RAC draws for Requirements does
+    not apply here); (2) the `Resolve*` functions remain the runtime authority —
+    `DomainManifest` is a parallel proven-byte-identical typed surface, not a
+    replacement yet (mirrors how the `selfspec` registry was a mirror before
+    RAC-B flipped authority); (3) `parent` absent-vs-null is not distinguished
+    in Phase 1 (`*string` conflates both to nil; `ResolveParent` stays the
+    authority for that distinction until a later phase needs it on
+    `DomainManifest`).
+  - **Drafted Phase 2/3 plan**
+    (`internal/loader/drafts/manifest-mutation-phases.go`, `//go:build ignore`):
+    a durable architecture note — not implemented, not landed — for the two
+    follow-on phases this task explicitly scoped out: Phase 2 (typed mutation
+    layer, `ProposedManifestChange` with `Validate`/`Mutate`/`Apply`, mirroring
+    `internal/proposal`'s shape for graph nodes) and Phase 3 (hand-edit guard,
+    the `R-no-hand-edit-graph` analogue — a manifest content-pin or check that
+    refuses a direct hand-edit bypassing the typed path). Per the #340 draft
+    precedent, landing either is a separate resolver-approved step.
+
 - **debt ratchet (task #340, R5-debt-ratchet)**: a one-way ratchet that fails
   CI the moment "claimed but not mechanically guaranteed" debt GROWS against a
   frozen per-domain pin, turning silent debt accumulation into a visible,

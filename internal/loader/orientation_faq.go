@@ -44,7 +44,14 @@ import (
 // — tier-1: domainDir's parent is "domains") serves both crystal locations.
 type OrientationFAQEntry struct {
 	Question string   `json:"question"`
-	Keywords []string `json:"keywords"`
+	// omitempty is REQUIRED for byte-identical round-trip marshaling (task
+	// #341, R5-manifest-object): an entry authored without a "keywords" key
+	// unmarshals to a nil slice and MUST re-marshal with the key omitted, not
+	// as `"keywords": null`. omitempty has ZERO effect on unmarshaling (every
+	// existing reader is unaffected), and this type was never marshaled before
+	// DomainManifest.WriteManifest — so the change is behaviorally inert for
+	// all pre-existing callers.
+	Keywords []string `json:"keywords,omitempty"`
 	Link     string   `json:"link,omitempty"`
 	// Assert ties this entry to a LIVE graph-fact query (internal/graphfacts)
 	// instead of (or alongside) the static Keywords/Link signals above —
