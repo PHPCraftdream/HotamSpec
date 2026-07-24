@@ -2,13 +2,13 @@
 
 # Tool docs index
 
-44 tools registered — **17 Implemented** (real `hotam` CLI subcommands) · **27 Planned** (methodology surface only; no Go command exists yet).
+45 tools registered — **18 Implemented** (real `hotam` CLI subcommands) · **27 Planned** (methodology surface only; no Go command exists yet).
 
 This index splits the tool registry so a browser of `docs/gen/tools/` can tell at a glance which entries are real commands versus aspirational methodology surface. The root crystal's Tool reference block (`EMBEDDED-TOOLS`) collapses the Planned tools into a one-line summary; each per-tool `.md` file below carries full Status/Canon/Purpose detail.
 
 ## Implemented (real commands)
 
-These 17 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.
+These 18 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.
 
 - [`hotam all-violations`](all_violations.md) — Prints all invariant violations for a domain graph (internal/invariants); exits 1 if any are found.
 - [`hotam apply-proposal`](apply_proposal.md) — Mechanical writer for resolver-approved JSON proposals (internal/proposal): consumes an approved Proposed* JSON and applies the change to a domain graph.json.
@@ -24,6 +24,7 @@ These 17 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — runni
 - [`hotam propose`](propose.md) — Drafts valid proposal JSON from flags (schema knowledge in the tool, not agent memory), runs an automatic confront check before writing, and optionally --land (apply+regen+reverify) in the same call. Other complex kinds (ConflictTransition, EntityType, …) keep the hand-authored-JSON path (hotam land <file.json>).
 - [`hotam req`](req.md) — Compact agentic read interface over the domain graph (internal/query): answers 'what is R-x' / 'what touches R-x' without loading the full graph.json or a generated doc.
 - [`hotam status`](status.md) — Single-shot compact summary combining what-now's top action + debt (internal/diagnose), due's freshness counts (internal/freshness), and all-violations' violation count (internal/invariants), so an agent doesn't need to run all three separately. Never gates; exit code always 0.
+- [`hotam sync-self`](sync_self.md) — Mirrors the engine's own Go requirements registry onto the self-hosting domain's graph.json, this repository's own domain only. Default dry-run computes the pending ADDED/CHANGED sync report, previews the confront/pre-post-violation/append-only gates, and prints a diff-hash; --confirm-hash re-verifies against the current on-disk state and, if every gate passes, writes graph.json, regenerates docs, and re-verifies with all-violations (rolling back on any post-write failure).
 - [`hotam use`](use.md) — Sets the active-domain preference for the current project: records {"active_domain": "<name>"} in the project-root marker so a bare `hotam <command>` (no --domain) targets the chosen domain. Refuses if <root>/domains/<name>/graph.json does not exist.
 - [`hotam version`](version.md) — Prints the hotam binary's version, commit, and build date (build-time defaults "dev"/"unknown"/"unknown", overridable via -ldflags -X main.version/commit/buildDate).
 - [`hotam what-now`](what_now.md) — Derives the prioritized next correct action from any graph state (internal/diagnose), making being-lost structurally impossible.

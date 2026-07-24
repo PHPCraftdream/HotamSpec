@@ -65,7 +65,7 @@ go run ./cmd/hotam <command> [flags] [args]
 
 ## CLI commands
 
-The `hotam` binary (see `cmd/hotam/main.go`) implements 17 commands:
+The `hotam` binary (see `cmd/hotam/main.go`) implements 18 commands:
 
 ```
 hotam init <dir> [--name <domain-name>] [--profile consumer|full]
@@ -168,6 +168,18 @@ hotam propose <requirement|rejection|stakeholder|axis|assumption|conflict> [flag
         --context, --members, --resolver). Other complex kinds
         (ConflictTransition, EntityType, …) keep the hand-authored-JSON path
         (hotam land <file.json>).
+
+hotam sync-self [--domain <path>] [--today YYYY-MM-DD] [--confirm-hash <hex>]
+                [--reason "..."] [--ack-conflict <C-id>] [--decision-ref "..."] [--json]
+        Mirror internal/selfspec.Requirements (the Go registry) onto
+        domains/hotam-spec-self/graph.json — the engine's own self-hosting
+        domain, and only that domain. Default mode is dry-run: computes the
+        pending ADDED/CHANGED SyncReport, previews the confront/pre-post-
+        violation/append-only gates, and prints a diff-hash; writes nothing.
+        Pass the printed hash back via --confirm-hash (with --today) to write
+        for real, after re-verifying the hash against the current on-disk
+        state and a stale-binary check (run via `go run ./cmd/hotam sync-self`
+        to always be fresh).
 
 hotam version | hotam --version
         Print the hotam binary version (see Version above).
