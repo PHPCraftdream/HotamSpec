@@ -470,6 +470,26 @@ func runSyncSelfWrite(domainDir, gp string, before, after *ontology.Graph, repor
 	if err != nil {
 		return fmt.Errorf("sync-self: pre-write snapshot failed, nothing synced: %w", err)
 	}
+	// specSnapshot captures docs/gen/SPEC.md's PRE-sync bytes, taken before
+	// this function's own genSpec(..., includeSpec=true) call below can
+	// overwrite it. rollbackLand (land.go, shared with `hotam land`) restores
+	// graph.json/graph.lock and then re-renders every OTHER doc via a plain
+	// genSpec(..., false) call, which — per that flag's own contract in
+	// gen_spec.go — deliberately never touches an EXISTING SPEC.md (it only
+	// reads it for REPO-MAP.md's title). That is exactly right for `hotam
+	// land`, which never opts into --spec, but WRONG here once this
+	// function's own forward path has already written a NEW SPEC.md
+	// reflecting the post-sync graph: a rollback that restores graph.json to
+	// its pre-sync bytes but leaves the post-sync SPEC.md on disk would
+	// commit a SPEC.md whose narrative belongs to a graph state that no
+	// longer exists. restoreSpecSnapshot (below) is the local, sync-self-only
+	// fix — applied AFTER every rollbackLand call that can fire once genSpec
+	// has run with includeSpec=true — rather than widening rollbackLand's own
+	// shared signature for a concern only this caller has.
+	specSnapshot, specPresent, err := snapshotSpecMD(domainDir)
+	if err != nil {
+		return fmt.Errorf("sync-self: pre-write SPEC.md snapshot failed, nothing synced: %w", err)
+	}
 
 	added, changed := countSyncKinds(report)
 	shortHash := diffHash
@@ -500,16 +520,36 @@ func runSyncSelfWrite(domainDir, gp string, before, after *ontology.Graph, repor
 		}
 	}
 
-	written, _, err := genSpec(domainDir, claudeMDPath, today, "", false)
+	// includeSpec=true (unlike land.go's three genSpec call sites, which all
+	// pass false): a sync-self write can change a Requirement's Claim/Why —
+	// exactly the text docs/gen/SPEC.md embeds verbatim for every SETTLED
+	// requirement with a resolvable verified_by entry (gate.BuildSpecFromRows)
+	// — so a sync that changes such a requirement's Claim, followed by a
+	// non-spec genSpec, would leave a COMMITTED SPEC.md stale relative to the
+	// graph this same write just landed. Because check_spec_md_current
+	// (ComparesOnDiskProjection, spec_md_current.go) is NOT filtered out of
+	// the ordinary allViolations(domainDir) call below (only
+	// AllViolationsForProposalGate, used by gate 8 above, filters
+	// ComparesOnDiskProjection checks), that staleness would otherwise
+	// surface as a violation THIS FUNCTION ITSELF then rolls back — a
+	// self-inflicted failure on every Claim-changing sync-self run against a
+	// requirement any domain has already adopted the scenario-generated-spec
+	// layer for (task #351/RAC-B4 hit this rolling back its own R-no-hand-
+	// edit-graph landing, which carries a verified_by entry). Paying the real
+	// `go test`-per-verified_by cost here (once, on the rarer, explicitly
+	// --confirm-hash-gated write path — never on the default dry-run) keeps
+	// SPEC.md honestly current through the one write path capable of
+	// invalidating it, mirroring why check_spec_md_current exists at all.
+	written, _, err := genSpec(domainDir, claudeMDPath, today, "", true)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return rolledBackError("doc regeneration failed", err, rerr)
 	}
 	fmt.Fprintf(out, "regenerated %d doc(s)\n", len(written))
 
 	violations, err := allViolations(domainDir)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
@@ -517,13 +557,61 @@ func runSyncSelfWrite(domainDir, gp string, before, after *ontology.Graph, repor
 			fmt.Fprintf(out, "[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (sync already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not the sync itself)", len(violations))
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 
 	fmt.Fprintln(out, "sync-self landed: graph synced, docs regenerated, 0 violations")
 	if asJSON {
 		return printJSON(newSyncSelfResult(true, report, diffHash, nil, nil, violations))
+	}
+	return nil
+}
+
+// specMDPath returns the absolute path to a domain's docs/gen/SPEC.md — the
+// same relative location spec_md_current.go's specMDRelPath names, duplicated
+// here (that constant is unexported in package invariants) so this file's own
+// snapshot/restore pair agrees with checkSpecMDCurrent about exactly which
+// file it is guarding.
+func specMDPath(domainDir string) string {
+	return filepath.Join(domainDir, "docs", "gen", "SPEC.md")
+}
+
+// snapshotSpecMD reads a domain's current docs/gen/SPEC.md bytes (if any),
+// mirroring snapshotGraphFiles' present/absent shape so restoreSpecSnapshot
+// can distinguish "restore these bytes" from "this domain had no SPEC.md
+// before the write, remove whatever the write path created."
+func snapshotSpecMD(domainDir string) (data []byte, present bool, err error) {
+	data, err = os.ReadFile(specMDPath(domainDir))
+	switch {
+	case err == nil:
+		return data, true, nil
+	case os.IsNotExist(err):
+		return nil, false, nil
+	default:
+		return nil, false, fmt.Errorf("read pre-sync %s: %w", specMDPath(domainDir), err)
+	}
+}
+
+// rollbackSyncSelf wraps rollbackLand (land.go) with the SPEC.md-specific
+// restore this file's own runSyncSelfWrite doc comment explains is needed:
+// rollbackLand's own genSpec(..., includeSpec=false) call deliberately never
+// touches an on-disk SPEC.md (correct for `hotam land`, which never opts into
+// --spec), so once runSyncSelfWrite's forward path has rendered a NEW
+// SPEC.md (includeSpec=true, reflecting the post-sync graph), a bare
+// rollbackLand call would leave that new SPEC.md in place even after
+// graph.json is restored to its pre-sync bytes — a SPEC.md/graph mismatch
+// check_spec_md_current would then flag on the VERY NEXT all-violations run,
+// against a domain that is otherwise back to its pre-sync state. This restores
+// SPEC.md to its pre-sync bytes (or removes it, if it did not exist before)
+// AFTER rollbackLand's own graph+doc restore, so the two together return the
+// whole domain — graph, every other doc, and SPEC.md — to its pre-sync state.
+func rollbackSyncSelf(domainDir string, snap *graphSnapshot, specBytes []byte, specPresent bool, claudeMDPath, today string) error {
+	if err := rollbackLand(domainDir, snap, claudeMDPath, today); err != nil {
+		return err
+	}
+	if err := restoreGraphFile(specMDPath(domainDir), specPresent, specBytes); err != nil {
+		return fmt.Errorf("rollback SPEC.md restore: %w", err)
 	}
 	return nil
 }

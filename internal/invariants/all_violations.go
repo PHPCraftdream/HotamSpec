@@ -20,6 +20,7 @@ var frameworkScopedInvariantNames = map[string]struct{}{
 	"check_agent_has_docs_subdir":                   {},
 	"check_agent_has_tools_subdir":                  {},
 	"check_constituting_not_in_unresolved_conflict": {},
+	"check_self_requirements_match_registry":        {},
 }
 
 // AllViolations runs every registered, non-delegator, in-scope invariant

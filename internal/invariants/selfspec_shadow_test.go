@@ -205,18 +205,39 @@ func TestSelfRequirementsMatchRegistryWarnings_ExportedWrapperMatchesInternalChe
 	}
 }
 
-// TestCheckSelfRequirementsMatchRegistry_NeverRegisteredInAllRegistry is the
-// shadow-band contract itself: check_self_requirements_match_registry must
-// never appear in the All registry, so it can never surface in
-// invariants.AllViolations / block `hotam all-violations`'s exit code /
-// block internal/proposal/apply.go's proposal gate — mirrors
-// HonoredSkipWarnings/check_authored_prose_snapshot's identical
-// never-registered contract.
-func TestCheckSelfRequirementsMatchRegistry_NeverRegisteredInAllRegistry(t *testing.T) {
+// TestCheckSelfRequirementsMatchRegistry_RegisteredInAllRegistry is the
+// battle-mode contract itself (task #351, RAC-B4): check_self_requirements_
+// match_registry MUST appear in the All registry — the flip from RAC-A's
+// shadow-only posture (see this file's TestCheckSelfRequirementsMatchRegistry_
+// NeverRegisteredInAllRegistry, this test's direct predecessor, prior to
+// RAC-B4) to a real gate now that `hotam sync-self` (RAC-B2) is the
+// sanctioned write path and apply-proposal/land refuse Requirement/Rejection
+// edits on self-hosting domains (RAC-B3), making a registry/graph mismatch
+// real, actionable drift rather than ambiguous staleness.
+func TestCheckSelfRequirementsMatchRegistry_RegisteredInAllRegistry(t *testing.T) {
 	t.Parallel()
+	found := false
 	for _, inv := range All.All() {
 		if inv.Name == "check_self_requirements_match_registry" {
-			t.Fatalf("check_self_requirements_match_registry must NOT be registered in All (shadow-only, mirrors HonoredSkipWarnings/check_authored_prose_snapshot) — found it registered")
+			found = true
+			break
 		}
+	}
+	if !found {
+		t.Fatal("check_self_requirements_match_registry must be registered in All (task #351/RAC-B4 promoted it from RAC-A's shadow-only posture to a real gate) — not found registered")
+	}
+}
+
+// TestCheckSelfRequirementsMatchRegistry_SelfHostingScopedInFrameworkNames
+// is the belt-and-braces control for the SAME self-hosting boundary the
+// check's own internal `!g.SelfHosting` early-return already enforces:
+// frameworkScopedInvariantNames (all_violations.go) MUST also name this
+// check, so AllViolations' fan-out never even calls Check for a non-
+// self-hosting graph — mirroring check_bijection_r_to_enforcer's identical
+// double-gated posture.
+func TestCheckSelfRequirementsMatchRegistry_SelfHostingScopedInFrameworkNames(t *testing.T) {
+	t.Parallel()
+	if _, ok := frameworkScopedInvariantNames["check_self_requirements_match_registry"]; !ok {
+		t.Fatal("check_self_requirements_match_registry must be listed in frameworkScopedInvariantNames (all_violations.go) — double-gated self-hosting scoping, mirroring check_bijection_r_to_enforcer")
 	}
 }

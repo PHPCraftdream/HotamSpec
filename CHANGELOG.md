@@ -17,6 +17,82 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`check_self_requirements_match_registry` promoted to a real gate + dogfood landing (task #351, RAC-B4 — closes RAC-B/task #346, the authority-flip phase of the requirements-as-code migration)**:
+  the RAC-A (task #345) shadow-only advisory check (`internal/invariants/
+  selfspec_shadow.go`) — comparing `internal/selfspec.Requirements` (the Go
+  registry) against `domains/hotam-spec-self/graph.json`'s `Requirement`
+  nodes — is now registered in `All` (`All.MustRegister`), so it runs inside
+  `hotam all-violations`/`invariants.AllViolations` like any other framework
+  invariant and blocks the exit code on drift. Self-hosting-gated the same
+  way `check_bijection_r_to_enforcer` is: an internal `!g.SelfHosting`
+  early-return AND an entry in `frameworkScopedInvariantNames`
+  (`internal/invariants/all_violations.go`) so the fan-out never even calls
+  `Check` for a non-self-hosting graph. The now-redundant advisory wiring
+  (`SelfRequirementsMatchRegistryWarnings` in `cmd/hotam/all_violations.go`'s
+  `printAdvisorySection`) was removed to avoid double-reporting the same
+  drift in both the ordinary violations list and the ADVISORY section; the
+  exported wrapper function itself stays (still used directly by this
+  file's own tests). `TestCheckSelfRequirementsMatchRegistry_
+  NeverRegisteredInAllRegistry` (the RAC-A shadow-band contract) was
+  inverted into `TestCheckSelfRequirementsMatchRegistry_
+  RegisteredInAllRegistry`, plus a new
+  `TestCheckSelfRequirementsMatchRegistry_SelfHostingScopedInFrameworkNames`
+  belt-and-braces control. `TestRegistryComplete_CountMatchesTarget`'s
+  registered-invariant count ratchet updated 112 → 113.
+  - **Orphan-enforcer coupling**: `check_bijection_r_to_enforcer`
+    (`internal/invariants/self_reference.go`) requires every registered
+    `check_*` to be named in at least one SETTLED/ENFORCED requirement's
+    `enforced_by`. `R-no-hand-edit-graph` (`internal/selfspec/
+    requirements_deterministic.go`) now names
+    `check_self_requirements_match_registry` alongside its existing two
+    enforcers (`TestNoHandEditGraph_RealDomainLocksPinCurrentGraph`,
+    `check_graph_lock_pins_graph_json`), and its `Claim`/`Why` were updated
+    to reflect the new reality: for the self-hosting domain, a
+    Requirement/Rejection node's structural fields are now authored in Go
+    (`internal/selfspec`) and projected onto `graph.json` by
+    `hotam sync-self` (RAC-B2) — never by hand-editing `graph.json` — with
+    `check_self_requirements_match_registry` as the mechanism that makes a
+    bypass (a hand-edit RAC-B3's `apply-proposal`/`land` lock didn't catch,
+    or a registry edit nobody synced yet) mechanically detectable.
+  - **Dogfood landing**: the registry edit above was landed onto
+    `domains/hotam-spec-self/graph.json` THROUGH `hotam sync-self`
+    `--confirm-hash` itself — the first real, disk-writing `hotam sync-self`
+    run since RAC-B2 introduced the command, and the first time this
+    engine's own self-hosting domain was mutated by that path rather than
+    `apply-proposal`/`land`. The confront gate (gate 7) flagged three
+    lexical opposite-marker false positives against unrelated requirements
+    (`R-authored-spec-layer-progression`, `R-context-budget-rule`,
+    `R-rules-as-data`, all sharing only/any-style tokens with the new Claim
+    text, no real semantic tension) — landed with `--decision-ref` recording
+    the acknowledgment as a `HistoryEntry`, per the confront gate's
+    designed override contract (RAC-B2). Verified clean afterward:
+    `hotam all-violations --domain domains/hotam-spec-self` reports 0
+    violations (the new gate is silent because the registry and graph are
+    now in sync by construction).
+  - **`hotam sync-self` write-path fix found by the dogfood run itself**:
+    `runSyncSelfWrite` (`cmd/hotam/sync_self.go`) previously called
+    `genSpec` with `includeSpec=false` (mirroring `hotam land`'s three
+    identical call sites) — but a sync that changes a `Requirement`'s
+    `Claim`/`Why` can invalidate a committed `docs/gen/SPEC.md` (which
+    embeds `Claim` text verbatim for every SETTLED requirement with a
+    resolvable `verified_by`), and `check_spec_md_current`
+    (`ComparesOnDiskProjection`) is NOT filtered out of the ordinary
+    `allViolations` call the write path uses for its final post-write
+    check (only the proposal-gate view filters those) — so a Claim-changing
+    sync-self run against a `verified_by`-linked requirement rolled itself
+    back on its own SPEC.md staleness. Fixed by flipping
+    `runSyncSelfWrite`'s `genSpec` call to `includeSpec=true` (paying the
+    real `go test`-per-`verified_by` cost once, only on the rarer,
+    explicitly `--confirm-hash`-gated write path), plus a new local
+    snapshot/restore pair (`snapshotSpecMD`/`rollbackSyncSelf`) so a
+    post-genSpec rollback also restores `SPEC.md` to its pre-sync bytes —
+    `rollbackLand`'s own shared `genSpec(..., false)` call deliberately
+    never touches an existing `SPEC.md` (correct for `hotam land`, which
+    never opts into `--spec`), so without this, a rollback after the new
+    `includeSpec=true` call would leave a post-sync `SPEC.md` on disk next
+    to a restored pre-sync `graph.json`. `hotam land`'s own three call
+    sites are unchanged (same pre-existing `includeSpec=false` gap remains
+    there, out of RAC-B4's scope).
 - **Self-hosting Requirement/Rejection lock (task #350, RAC-B3)**:
   `internal/proposal.applyToGraph` — the single choke point single-file
   `apply-proposal`, `--batch`, `hotam land`, and `propose --land` all funnel

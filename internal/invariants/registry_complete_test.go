@@ -133,7 +133,19 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// GateSignoff.Signoff. Both are ongoing all-violations invariants, not
 	// proposal-time-only, since no landed HistoryEntry anywhere in
 	// hotam-spec-self's own graph carries a signoff yet.
-	const expected = 112
+	// Task #351 (RAC-B4) added a 113th, check_self_requirements_match_registry
+	// (selfspec_shadow.go): PROMOTED from a RAC-A (task #345) shadow-only
+	// advisory (never registered in All, wired only into cmd/hotam's
+	// non-blocking ADVISORY section) to a real, blocking All-registered gate,
+	// now that `hotam sync-self` (RAC-B2, task #349) is the sanctioned write
+	// path for a self-hosting domain's Requirement/Rejection structural
+	// fields and apply-proposal/land refuse such edits outright (RAC-B3, task
+	// #350) -- a registry/graph mismatch is real, actionable drift rather
+	// than ambiguous staleness. Self-hosting-gated (an internal
+	// `!g.SelfHosting` early-return AND an entry in
+	// frameworkScopedInvariantNames, all_violations.go), mirroring
+	// check_bijection_r_to_enforcer's identical double-gated posture.
+	const expected = 113
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

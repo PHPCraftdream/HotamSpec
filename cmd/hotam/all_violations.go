@@ -74,25 +74,30 @@ func cmdAllViolations(args []string) error {
 // orphan-detail (diagnose.ReflectOrphanEntityType), honored verified_by
 // recursion-guard skips (invariants.HonoredSkipWarnings -- @fh's
 // "honored-skip must not be silent" re-review: a Skipped RunVerifiedByTest
-// result must never look identical to a genuinely proven entry), authored
+// result must never look identical to a genuinely proven entry), and authored
 // prose (Process/Step why, manifest.json goals/charter) containing a
 // point-in-time status snapshot (invariants.AuthoredProseSnapshotWarnings,
 // task #331/R4-process-why + task #333/R4F-prose-lint's class-wide
 // extension -- a point-in-time claim like "27 of 32 SIGNED as of
 // 2026-07-21" belongs to PIPELINE.md's generated Live state section /
 // DOMAIN-MAP's gates line, never frozen into authored prose nothing
-// regenerates), and internal/selfspec.Requirements drifting from
-// domains/hotam-spec-self/graph.json (invariants.
-// SelfRequirementsMatchRegistryWarnings, task #345/RAC-A -- an honest no-op
-// for any graph that is not g.SelfHosting, since the registry mirrors only
-// this repo's own self-hosting domain; see that function's own doc comment)
-// that are informational for the resolver, never a gate. Called on BOTH the
-// clean and the violations-found path in cmdAllViolations (see its own
-// comment) so a warning is never hidden behind an unrelated blocking
-// violation. It never affects the exit code and never appears in --json
-// output (see cmdAllViolations' --json branch above). No-ops silently when
-// there is nothing advisory to report — an empty advisory section would be
-// noise, not signal.
+// regenerates) that are informational for the resolver, never a gate.
+// internal/selfspec.Requirements drifting from domains/hotam-spec-self/
+// graph.json was ALSO reported here through task #345 (RAC-A) via
+// invariants.SelfRequirementsMatchRegistryWarnings, but task #351 (RAC-B4)
+// promoted that check to a real, blocking All-registry gate
+// (check_self_requirements_match_registry, internal/invariants/
+// selfspec_shadow.go) now that `hotam sync-self` (RAC-B2) is the sanctioned
+// write path and apply-proposal/land refuse Requirement/Rejection edits on
+// self-hosting domains (RAC-B3) -- it is no longer wired here, since the
+// blocking gate already reports it via cmdAllViolations' ordinary violations
+// list, and reporting it in BOTH places would double-report the same drift.
+// Called on BOTH the clean and the violations-found path in cmdAllViolations
+// (see its own comment) so a warning is never hidden behind an unrelated
+// blocking violation. It never affects the exit code and never appears in
+// --json output (see cmdAllViolations' --json branch above). No-ops silently
+// when there is nothing advisory to report — an empty advisory section would
+// be noise, not signal.
 func printAdvisorySection(domainDir string) error {
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
@@ -101,8 +106,7 @@ func printAdvisorySection(domainDir string) error {
 	orphans := diagnose.ReflectOrphanEntityType(g)
 	skips := invariants.HonoredSkipWarnings(g)
 	snapshots := invariants.AuthoredProseSnapshotWarnings(g)
-	selfspecDrift := invariants.SelfRequirementsMatchRegistryWarnings(g)
-	if len(orphans) == 0 && len(skips) == 0 && len(snapshots) == 0 && len(selfspecDrift) == 0 {
+	if len(orphans) == 0 && len(skips) == 0 && len(snapshots) == 0 {
 		return nil
 	}
 	fmt.Println()
@@ -114,9 +118,6 @@ func printAdvisorySection(domainDir string) error {
 		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
 	}
 	for _, v := range snapshots {
-		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
-	}
-	for _, v := range selfspecDrift {
 		fmt.Printf("[%s] %s: %s\n", v.Check, v.ID, v.Message)
 	}
 	return nil
