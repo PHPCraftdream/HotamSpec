@@ -17,6 +17,55 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **debt ratchet (task #340, R5-debt-ratchet)**: a one-way ratchet that fails
+  CI the moment "claimed but not mechanically guaranteed" debt GROWS against a
+  frozen per-domain pin, turning silent debt accumulation into a visible,
+  conscious commit-time decision. New test
+  `internal/selfcheck/debt_ratchet_test.go` (alongside the existing
+  `race_ratchet_test.go` ratchet home), two distinct signals:
+  - **Check (a) — closeable-debt ceiling** (`TestDebtRatchet_CloseableDebtNotGrowing`):
+    for every domain with a pin, the live count of requirements where
+    `Requirement.IsCloseableDebt()` is true (`Enforcement != ENFORCED AND
+    Enforceability == ENFORCEABLE` — the actionable "a real test could be
+    written for it" set) MUST NOT exceed the pin. The count is status-agnostic
+    (DRAFT claims count, because a brand-new unenforced claim is growing debt
+    the moment it lands); pinned at 73 for hotam-spec-self, 6 for hotam-dev
+    (captured 2026-07-24).
+  - **Check (b) — PROSE-enforceable ceiling** (`TestDebtRatchet_ProseEnforceableNotGrowing`):
+    the narrower, softer signal — the count of `Enforcement == PROSE AND
+    Enforceability == ENFORCEABLE` requirements (no engine link at all) MUST
+    NOT exceed the pin, so adding a new PROSE claim requires converting an old
+    one to ENFORCED in the same wave; pinned at 70 / 1.
+  - **Design decisions (documented in the test file's header comment):** (1)
+    the pin is a per-domain numeric constant in two Go maps in the test itself
+    (`closeableDebtPins` / `proseEnforceablePins`), mirroring
+    `registry_complete_test.go`'s `const expected = N` ceiling pattern — a
+    single source of truth, not a second hand-maintained baseline file; (2)
+    per-domain (not one global ceiling) — each domain has its own maturity,
+    and only the two domains living in this repo are pinned; (3)
+    `INHERENTLY_PROSE` is excluded from both counts by construction
+    (`IsCloseableDebt` ANDs `ENFORCEABLE`; check (b) ANDs it explicitly) —
+    legitimate never-ENFORCED prose is not debt; (4) a domain with no pin
+    entry is SKIPPED (new-domain grace — a fresh domain legitimately starts
+    with a wall of DRAFT PROSE, and the ratchet must punish only GROWTH
+    relative to an already-recorded pin). On improvement (`got < pin`) the
+    test also fails, asking the author to LOWER the pin so a future regression
+    cannot hide inside the slack. Three non-vacuity controls prove the ratchet
+    actually fires (synthetic-graph fire-branch reachability, the
+    INHERENTLY_PROSE exclusion, and a dead-pin-key guard against a typo'd or
+    renamed domain). Mutation-tested against the live graph: pin 72 vs actual
+    73 fails RED with an actionable message.
+  - **Drafted (NOT landed) methodology requirement**
+    `.scratch/drafted_R-debt-ratchet-no-growth.go`: the self-referential
+    `R-debt-ratchet-no-growth` requirement formalizing this ratchet as a
+    SETTLED graph node, authored in the Go-literal form RAC-B now mandates for
+    hotam-spec-self Requirements (a `//go:build ignore` file so it never
+    enters the registry or touches graph.json), with a landing checklist for a
+    resolver-approved follow-on wave (paste into
+    `internal/selfspec/requirements_enforcement.go` → `hotam sync-self` →
+    `gen-spec`). `refines R-enforceability-kind-declared` (the enforceability
+    split this ratchet is the convergence mechanism for).
+
 - **RAC-C: requirements-as-code propagated into the operator-facing crystal text (task #347 — closes the requirements-as-code wave, tasks #343-347)**:
   the fourth and final phase of the RAC wave (#343 R5-head-cure → #344 RAC-0 →
   #345 RAC-A → #346/#348-351 RAC-B) propagates the RAC-B authority flip
