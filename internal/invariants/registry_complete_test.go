@@ -154,7 +154,17 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// canonical minimal Requirement + Registry ontology mirror
 	// (internal/ontology/canon), the vendoring infrastructure `hotam
 	// vendor-ontology` (cmd/hotam/vendor_ontology.go) writes.
-	const expected = 114
+	// Task #369 (RAC3-A: deriving Claim from a Requirement's verified_by
+	// scenario test(s)) added a 115th, check_claim_matches_scenario
+	// (claim_scenario_current.go): the drift-detection sibling of
+	// check_settled_requires_scenario -- discipline:full-gated, INHERENTLY_
+	// PROSE-exempt, ComparesOnDiskProjection (same real-`go test`-execution
+	// cost class as check_spec_md_current) -- proving a Requirement's
+	// committed Claim still matches a fresh re-derivation from its
+	// verified_by test(s)' currently-recorded hotamspec scenario
+	// description(s) (internal/selfspec.DeriveClaimsFromScenarios, the same
+	// machinery `hotam sync-domain` now runs at write time).
+	const expected = 115
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

@@ -17,6 +17,62 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Claim derived from a Requirement's `verified_by` scenario test(s) (task #369, RAC3-A)**:
+  a Requirement's `Claim` — the normative claim text — is no longer only a hand-authored
+  string; for a `discipline:"full"` domain, it is now DERIVED from the actually-executed
+  `verified_by` test(s)' recorded `hotamspec.NewScenario(t, id, description)` description(s),
+  using the exact same real-`go test`-execution machinery `hotam gen-spec --spec` already uses
+  to render `docs/gen/SPEC.md` (`gate.RunVerifiedByTestRecording`).
+  - **`internal/selfspec/claim_derive.go`** (new): `DeriveClaimsFromScenarios(reg, specRoot,
+    selfHosting, discipline)` mutates a `*registry.Registry[ontology.Requirement]` in place
+    (via `registry.Registry.Update`): for every registered Requirement in scope
+    (`RequirementInClaimDerivationScope` — `Enforceability != INHERENTLY_PROSE` AND at least
+    one `verified_by` entry), `Claim` is replaced with the CONCATENATION of every `verified_by`
+    test's recorded scenario title, in `verified_by`'s own declared order, joined by a single
+    space (`ClaimDerivationSeparator`) — resolver-settled design (confirmed against the real
+    `PRAT-hotam/domains/prat/spec/model/brd_package_test.go` pilot, whose
+    `R-brd-integrity-zero-blockers` requirement carries two `verified_by` tests, each
+    constructing its own `hotamspec.NewScenario`). A single `verified_by` entry is the
+    trivial n=1 case of the same rule, not a separate code path. Gated a pure domain-level
+    honest no-op when `discipline != loader.DisciplineFull` — every domain in this wave
+    (`hotam-spec-self`, `hotam-dev`, neither `discipline:full`) sees zero behavior change.
+  - **Integration point: `hotam sync-domain` only** (`cmd/hotam/sync_domain.go`) — not
+    `gen-spec --spec`. `Claim` is a graph-resident structural field the sync-domain/sync-self
+    machinery already replaces wholesale from a domain's Go-authored registry
+    (`internal/selfspec.MergeIntoGraph`/`SyncGraph`); `gen-spec --spec`'s `BuildSpecFromRows`
+    reads `Claim` verbatim from the graph (PLAN-scenario-generated-spec.md §2 D2: "claim
+    остаётся коротким авторским intent") and must keep doing so unmodified. `sync-domain` now
+    calls `selfspec.DeriveClaimsFromScenarios` on the freshly subprocess-dumped registry
+    BEFORE `SyncGraph` ever sees it, so a derived `Claim` flows through
+    `StructuralFieldDiffs`/`SyncGraph`/the confront gate exactly like any other authored
+    structural field, with zero special-casing downstream.
+  - **`internal/invariants/claim_scenario_current.go`** (new): `check_claim_matches_scenario`,
+    the drift-detection sibling of `check_settled_requires_scenario` — same
+    `discipline:"full"`-gated honest no-op, same `INHERENTLY_PROSE` exemption — proving a
+    Requirement's committed `Claim` still matches a fresh re-derivation from its `verified_by`
+    test(s)' CURRENTLY recorded scenario description(s) right now. Modeled on
+    `check_spec_md_current`'s form (a full re-render/re-execution comparison, not a cheap hash
+    compare, since Claim derivation is not a pure function of source text alone) and marked
+    `ComparesOnDiskProjection: true` for the identical reason `check_spec_md_current` carries
+    it — excluded from `AllViolationsForProposalGate`'s pre/post-mutation diff gate, since
+    `sync-domain` itself already derives and writes the current `Claim` through this exact
+    machinery immediately before that gate runs. Registered invariant count 114 → 115
+    (`internal/invariants/registry_complete_test.go` updated).
+  - **Tests**: `internal/selfspec/claim_derive_test.go` (single verified_by entry, multi-entry
+    concatenation in declared order — including a reversed-order variant proving declared
+    order, not some other ordering, drives the join — `discipline:full` gate, `INHERENTLY_PROSE`
+    exemption, no-`verified_by` no-op, a plain non-narrating entry contributing nothing without
+    aborting derivation, idempotent re-run reporting zero changes); `internal/invariants/
+    claim_scenario_current_test.go` (no-op without `discipline:full`, green when `Claim` already
+    matches, red when it diverges, `INHERENTLY_PROSE` exemption, no-`verified_by` skip, a
+    MUTATION probe proving genuine drift detection — clean, then red after editing the
+    underlying test's scenario title without re-deriving, then clean again after re-deriving —
+    and a cross-check proving the check's own re-derivation logic never disagrees with
+    `internal/selfspec.DeriveClaimsFromScenarios`); `cmd/hotam/
+    sync_domain_claim_derive_test.go` (`TestCmdSyncDomain_ClaimDerivedFromScenarioEndToEnd`, a
+    full real subprocess-driven end-to-end proof that `hotam sync-domain` itself — not merely
+    the derivation function in isolation — overrides a deliberately stale registry-literal
+    `Claim` with the real derived scenario text before landing, with `0` violations afterward).
 - **Generalized the self-hosting Requirement/Rejection lock to any consumer domain
   (`requirements_authority: "code"`, task #367, RAC2 Phase C)**: the final step of
   "Go-code-only authority" for consumer-domain requirements (#365 shipped vendoring

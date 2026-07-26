@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -104,6 +105,22 @@ func cmdSyncDomain(args []string) error {
 	if err != nil {
 		return fmt.Errorf("sync-domain: load working graph: %w", err)
 	}
+
+	// --- Claim derivation (task #369, RAC3-A): for a discipline:"full"
+	// domain, every in-scope Requirement's Claim (RequirementInClaimDerivationScope
+	// -- not INHERENTLY_PROSE, carries verified_by entries) is REPLACED, in
+	// reg, with the concatenation of its verified_by test(s)' recorded
+	// hotamspec scenario description(s), BEFORE SyncGraph ever sees the
+	// registry -- so a derived Claim flows through StructuralFieldDiffs/
+	// SyncGraph/gate 7 (confront) exactly like any other authored structural
+	// field, with zero special-casing downstream. A domain that has not
+	// opted into discipline:"full" (every consumer domain in this wave)
+	// sees this call do nothing at all (DeriveClaimsFromScenarios' own
+	// top-of-function honest no-op) -- sync-domain's cost/behavior for such
+	// a domain is completely unchanged by this task.
+	specRoot := gate.SpecRootForGraph(before)
+	selfspec.DeriveClaimsFromScenarios(reg, specRoot, before.SelfHosting, before.Discipline)
+
 	report, err := selfspec.SyncGraph(after, reg, syncToday)
 	if err != nil {
 		return fmt.Errorf("sync-domain: SyncGraph: %w", err)
