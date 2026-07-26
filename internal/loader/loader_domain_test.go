@@ -87,7 +87,10 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// R-requirement-update-signoff-typed -- landed task #339 (human
 		// signoff, resolver Marat Karamullin 2026-07-23, four drafts from
 		// tasks #330/#331/#333/#335 landed in one batch).
-		{"requirements", len(g.Requirements), 301},
+		// 301 + 1: R-vendored-ontology-matches-engine-canon -- landed task
+		// #365 (RAC2 Phase A) via `hotam sync-self`, the self-hosting
+		// anchor for check_ontology_vendor_current's orphan-enforcer gate.
+		{"requirements", len(g.Requirements), 302},
 		// 8 + 1: task #347 (RAC-C part 3) landed C-d20cf537
 		// (reviewability-vs-code-authority, DETECTED, unresolved by design --
 		// the resolver-trust-shift RAC-B3/B4's self-hosting authority flip

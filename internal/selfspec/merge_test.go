@@ -22,7 +22,11 @@ const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 // number so a future requirement landing in the graph without a matching
 // registry entry (or vice versa) fails loudly here instead of silently
 // leaving the registry's coverage incomplete.
-const wantRequirementCount = 301
+// 301 + 1: R-vendored-ontology-matches-engine-canon -- landed task #365
+// (RAC2 Phase A) via `hotam sync-self`, the self-hosting anchor for
+// check_ontology_vendor_current's orphan-enforcer gate (254 SETTLED + 42
+// REJECTED + 6 DRAFT = 302).
+const wantRequirementCount = 302
 
 // TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase A
 // (RAC-A, task #345, scaling Phase 0/RAC-0's proof to full coverage): load

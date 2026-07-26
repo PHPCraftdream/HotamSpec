@@ -17,6 +17,40 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`hotam vendor-ontology` + `check_ontology_vendor_current` — minimal Requirement/Registry
+  vendoring infrastructure for consumer-domain Go-code-authored requirements (task #365, RAC2
+  Phase A, "Go-code-only authority" for consumer-domain requirements)**: the first step toward
+  letting a consumer domain author its Requirement identity (id/claim/owner/status/relations) in
+  Go code, the same way `hotam-spec-self` already does via `internal/selfspec/requirements_*.go`
+  + `hotam sync-self`. Modeled 1-in-1 on the existing `hotam vendor-recorder` /
+  `check_recorder_current` mechanism.
+  - **`internal/ontology/canon`** (new package `hotamontology`): the canonical, minimal,
+    JSON-tag-identical mirror of `ontology.Requirement`'s STRUCTURAL fields only (`ID, Claim,
+    Owner, Status, Relations, Assumptions, Enforcement, EnforcedBy, Enforceability, MTag, Summary,
+    CreatedAt, SettledAt, BlockedOn, ImplementedBy, VerifiedBy, SourceRefs, DeclOrder`) — the
+    EVENT fields (`History`, `GateSignoffs`, `LastReviewedAt`, `ReviewAfter`, `Evidence`) are
+    deliberately excluded, mirroring `internal/selfspec/merge.go`'s own structural/event split.
+    Plus a generic `Registry[T]` mirror (`New`/`MustRegister`/`All`/`Get`), copied unchanged from
+    `internal/registry.Registry[T]`. Pure data/mechanism, no behavior — designed to be vendored
+    (copied by file, never imported via go.mod) into a domain's separate `spec/` Go module.
+  - **`internal/ontology/vendor`**: banner-stamping/stripping logic for the two canonical files
+    (`requirement.go`, `registry.go`), mirroring `internal/recorder/vendor`'s identical shape.
+  - **`cmd/hotam/vendor_ontology.go`** (`hotam vendor-ontology --domain <path>`): writes both
+    banner-stamped vendored files to `<domainDir>/spec/hotamontology/`, modeled directly on
+    `hotam vendor-recorder`. Requires `<domainDir>/spec/go.mod` to already exist; idempotent.
+  - **`internal/invariants/ontology_vendor_check.go`** (`check_ontology_vendor_current`):
+    sha256-compares each vendored file (if present) against the engine's own canon, post-banner —
+    an honest no-op for a domain that has never vendored the mirror, checked independently per
+    file. Modeled directly on `check_recorder_current`.
+  - **`internal/selfspec/requirements_authoredspec.go`**: added `R-vendored-ontology-matches-
+    engine-canon`, the self-hosting anchor for `check_ontology_vendor_current` (mirrors
+    `R-vendored-recorder-matches-engine-canon`'s identical role for `check_recorder_current`),
+    landed via `hotam sync-self`.
+  - Scope note: infrastructure only — does NOT implement `hotam sync-domain` (projecting a
+    domain's own Requirement registry onto its `graph.json`) and does NOT touch
+    `internal/proposal/apply.go`'s self-hosting lock; those are separate follow-up tasks
+    (#366, #367).
+
 - **Empty domains produce zero `docs/gen/` files; `hotam init` no longer auto-seeds
   (task #364)**: a business-empty domain graph (0 axes/stakeholders/requirements/
   conflicts/assumptions/operators/processes/goals/entity_types/entities) now

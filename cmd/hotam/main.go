@@ -106,6 +106,8 @@ func main() {
 		err = cmdGenSpec(args)
 	case "vendor-recorder":
 		err = cmdVendorRecorder(args)
+	case "vendor-ontology":
+		err = cmdVendorOntology(args)
 	case "what-now":
 		err = cmdWhatNow(args)
 	case "apply-proposal":
@@ -196,6 +198,14 @@ Commands:
         engine upgrade to pick up a newer canon; check_recorder_current
         (hotam all-violations) flags a vendored copy that has drifted from
         the engine's own canon.
+  vendor-ontology [--domain <path>]
+        Copy the engine's canonical minimal Requirement + Registry ontology
+        mirror (internal/ontology/canon/requirement.go + registry.go) into
+        <domain>/spec/hotamontology/{requirement.go,registry.go},
+        banner-stamped do-not-edit. Requires <domain>/spec/go.mod to already
+        exist. Re-run after an engine upgrade to pick up a newer canon;
+        check_ontology_vendor_current (hotam all-violations) flags a
+        vendored copy that has drifted from the engine's own canon.
   what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
         Print top-N diagnosed signals (default 20). With --json, emit the
         underlying signal slice as machine-readable JSON.

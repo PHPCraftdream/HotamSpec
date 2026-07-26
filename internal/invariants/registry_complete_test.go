@@ -145,7 +145,16 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// `!g.SelfHosting` early-return AND an entry in
 	// frameworkScopedInvariantNames, all_violations.go), mirroring
 	// check_bijection_r_to_enforcer's identical double-gated posture.
-	const expected = 113
+	// Task #365 (RAC2 Phase A: "Go-code-only authority" for consumer-domain
+	// requirements) added a 114th, check_ontology_vendor_current
+	// (ontology_vendor_check.go): the same filesystem-aware,
+	// honest-no-op-when-absent shape as check_recorder_current, this time
+	// sha256-comparing a domain's vendored spec/hotamontology/
+	// {requirement.go,registry.go} (if any) against the engine's own
+	// canonical minimal Requirement + Registry ontology mirror
+	// (internal/ontology/canon), the vendoring infrastructure `hotam
+	// vendor-ontology` (cmd/hotam/vendor_ontology.go) writes.
+	const expected = 114
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

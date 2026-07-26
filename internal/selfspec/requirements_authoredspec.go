@@ -233,3 +233,22 @@ var _ = Requirements.MustRegister("R-vendored-recorder-matches-engine-canon", on
 	SourceRefs:     []string{"PLAN-scenario-generated-spec.md", "internal/invariants/recorder_check.go"},
 	DeclOrder:      0,
 })
+
+var _ = Requirements.MustRegister("R-vendored-ontology-matches-engine-canon", ontology.Requirement{
+	ID:             "R-vendored-ontology-matches-engine-canon",
+	Claim:          "A domain's vendored minimal ontology mirror, when present at <domainDir>/spec/hotamontology/requirement.go and/or <domainDir>/spec/hotamontology/registry.go, shall be byte-identical (post-banner) to the engine's own canonical internal/ontology/canon package, so that every domain authoring Requirement identity in Go code relies on the identical structural shape the engine itself defines and generates, rather than a stale, locally-patched, or otherwise diverging copy. check_ontology_vendor_current (internal/invariants/ontology_vendor_check.go) mechanically enforces this via a sha256 comparison between each vendored file and the engine's canon (checked independently per file), and stays a quiet no-op for a domain that has not yet vendored the mirror (no file at either path).",
+	Owner:          "framework-author",
+	Status:         "SETTLED",
+	Why:            "Task #365 (RAC2 Phase A, \"Go-code-only authority\" for consumer-domain requirements): the goal is for a consumer domain's structural Requirement identity (id/claim/owner/status/relations) to be authored in Go code rather than hand-edited JSON, the same shape hotam-spec-self's own self-hosting already uses (internal/selfspec/requirements_*.go + `hotam sync-self`). Since a domain's spec/ tree is a SEPARATE Go module from the engine (per NEW-2-bis, no cross-module `replace` directive), the minimal Requirement type + generic Registry[T] a domain needs to declare its own requirement literals is VENDORED -- copied byte-for-byte into <domainDir>/spec/hotamontology/, banner-stamped, mirroring the existing scenario-recorder vendoring precedent (internal/recorder/canon + `hotam vendor-recorder`) 1-in-1: same canon/vendor package split, same banner convention, same sha256 post-banner comparison shape. Without an integrity check, a vendored copy could silently drift from the engine canon (a partial update, a local hand-edit, a stale vendoring after an engine upgrade changed the mirror's fields or JSON tags) -- corrupting the round-trip the moment that domain's registry is later projected onto its own graph.json (a later task, #366/#367, not this one). check_ontology_vendor_current closes that gap the same filesystem-aware, honest-no-op-when-absent shape check_recorder_current already established (itself modeled on check_graph_lock_pins_graph_json for graph.json+graph.lock integrity, R-no-hand-edit-graph): a vendored ontology mirror that diverges from the canon is the ontology-side analog of a hand-edited graph, detected the same way (sha256, content-addressed), just checked independently for each of the two vendored files (requirement.go, registry.go) so a partial drift is reported precisely. This requirement is the self-hosting anchor for the orphan-enforcer gate check_bijection_r_to_enforcer, symmetric to R-vendored-recorder-matches-engine-canon's identical role for check_recorder_current: the engine holds its own vendored-ontology-mirror integrity obligation, the same one it imposes on consumer domains that adopt this path. Task #365 is infrastructure ONLY -- it does not implement `hotam sync-domain` or touch internal/proposal/apply.go's self-hosting lock (later tasks #366/#367).",
+	Assumptions:    nil,
+	Relations:      []ontology.Relation{{Kind: "refines", Target: "R-vendored-recorder-matches-engine-canon"}},
+	Enforcement:    "ENFORCED",
+	EnforcedBy:     []string{"check_ontology_vendor_current"},
+	MTag:           "",
+	Enforceability: "ENFORCEABLE",
+	Summary:        "",
+	CreatedAt:      "2026-07-26",
+	SettledAt:      "2026-07-26",
+	SourceRefs:     []string{"internal/ontology/canon", "internal/invariants/ontology_vendor_check.go", "cmd/hotam/vendor_ontology.go"},
+	DeclOrder:      0,
+})
