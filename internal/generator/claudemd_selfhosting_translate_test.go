@@ -80,14 +80,20 @@ func TestRenderMediationLoopBlock_SelfHostingBranchesTranslateStep(t *testing.T)
 }
 
 // TestRenderMediationLoopBlock_FoundingCanvasStep6MiddlePath is the
-// acceptance test for task #347 (RAC-C part 2): founding-canvas step 6 must
-// describe the middle path for a NEW domain (Requirement drafts authored as
-// []ontology.Requirement literals in spec/requirements.go, JSON generated
-// FROM the code for landing) on BOTH self-hosting and consumer crystals —
-// this is general methodology text about founding domains, not gated by
-// g.SelfHosting — and must explicitly disclaim that a sync-self-equivalent
-// CLI for consumer domains is NOT YET IMPLEMENTED, never promising tooling
-// that does not exist.
+// acceptance test for task #347 (RAC-C part 2) and task #367 (RAC2 Phase C,
+// which updated this text once the middle path stopped being aspirational):
+// founding-canvas step 6 must describe the middle path for a NEW domain
+// (Requirement drafts authored as []ontology.Requirement literals in
+// spec/requirements.go, projected onto the graph via `hotam vendor-ontology`
+// + `hotam sync-domain`) on BOTH self-hosting and consumer crystals — this is
+// general methodology text about founding domains, not gated by
+// g.SelfHosting — and must name the real `hotam sync-domain` command instead
+// of disclaiming it as not-yet-implemented, since RAC2 (#365/#366/#367) built
+// it. It must NOT claim any specific domain has adopted the path: task #367's
+// own attempt to pilot this on domains/life was reverted by the resolver
+// mid-task (a business-empty domain should not carry vendored spec/
+// plumbing before it has a real Requirement to justify it), so the plumbing
+// proof lives in internal/proposal's own test suite, not in this prose.
 func TestRenderMediationLoopBlock_FoundingCanvasStep6MiddlePath(t *testing.T) {
 	t.Parallel()
 
@@ -99,11 +105,17 @@ func TestRenderMediationLoopBlock_FoundingCanvasStep6MiddlePath(t *testing.T) {
 		if !strings.Contains(inner, "middle path") {
 			t.Errorf("founding-canvas step 6 missing the 'middle path' framing:\n%s", inner)
 		}
-		if !strings.Contains(inner, "NOT-YET-IMPLEMENTED") && !strings.Contains(inner, "not-yet-implemented") && !strings.Contains(inner, "NOT YET IMPLEMENTED") {
-			t.Errorf("founding-canvas step 6 middle path must explicitly disclaim the consumer sync-self-equivalent as unimplemented:\n%s", inner)
+		if !strings.Contains(inner, "hotam sync-domain") {
+			t.Errorf("founding-canvas step 6 middle path must name the real `hotam sync-domain` command (RAC2 built it — no longer NOT-YET-IMPLEMENTED):\n%s", inner)
 		}
-		if !strings.Contains(inner, "task #323") && !strings.Contains(inner, "life-domain") {
-			t.Errorf("founding-canvas step 6 middle path must name the future life-domain intent:\n%s", inner)
+		if !strings.Contains(inner, "hotam vendor-ontology") {
+			t.Errorf("founding-canvas step 6 middle path must name the real `hotam vendor-ontology` command:\n%s", inner)
+		}
+		if strings.Contains(inner, "NOT-YET-IMPLEMENTED") || strings.Contains(inner, "not-yet-implemented") || strings.Contains(inner, "NOT YET IMPLEMENTED") {
+			t.Errorf("founding-canvas step 6 middle path must NOT claim the consumer sync-self-equivalent is unimplemented — RAC2 (#365/#366/#367) built it:\n%s", inner)
+		}
+		if strings.Contains(inner, "domains/life") || strings.Contains(inner, "life-domain") {
+			t.Errorf("founding-canvas step 6 middle path must NOT claim domains/life adopted this path — that pilot was reverted mid-task #367:\n%s", inner)
 		}
 	}
 }

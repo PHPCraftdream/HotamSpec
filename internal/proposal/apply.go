@@ -169,6 +169,46 @@ func errSelfHostingRejectionLocked(id string) error {
 			"entry by hand; sync-self will not infer it for you.", base)
 }
 
+// errRequirementsAuthorityCodeRequirementLocked is returned by applyToGraph
+// BEFORE any mutation when g.RequirementsAuthorityCode is true and p is a
+// ProposedRequirement (CREATE or UPDATE) — task #367/RAC2 Phase C, the
+// consumer-domain generalization of errSelfHostingRequirementLocked
+// (task #350/RAC-B3). SelfHosting's lock is reserved for hotam-spec-self,
+// whose Requirement registry is split across internal/selfspec's 27
+// thematic requirements_<topic>.go files and so needs
+// selfspec.SourceFileFor's per-ID lookup to name the right one. A domain
+// that instead declares `"requirements_authority": "code"` in its
+// manifest.json (having adopted RAC2's Go-code-only authority path — #365's
+// `hotam vendor-ontology` + #366's `hotam sync-domain`) keeps ALL its
+// Requirement literals in ONE file, <domain>/spec/requirements.go — there is
+// no thematic split and no per-ID file lookup to run, so this message names
+// that single fixed path directly, unconditionally (unlike
+// errSelfHostingRequirementLocked's known-ID/unknown-ID branch, which exists
+// ONLY because SourceFileFor's lookup can fail to resolve a specific file).
+func errRequirementsAuthorityCodeRequirementLocked(id string) error {
+	return fmt.Errorf(
+		"requirement %q is requirements-authority-locked: this domain's "+
+			"Requirement nodes are authored in Go, not landed via "+
+			"apply-proposal/land. Edit spec/requirements.go and run `hotam "+
+			"sync-domain` to project the change onto the graph. No changes "+
+			"made.", id)
+}
+
+// errRequirementsAuthorityCodeRejectionLocked is applyToGraph's
+// requirements-authority lock error for a ProposedRejection (task #367) —
+// same rationale as errRequirementsAuthorityCodeRequirementLocked, plus the
+// same Rejection-specific 'replaces' Relation warning
+// errSelfHostingRejectionLocked carries for hotam-spec-self.
+func errRequirementsAuthorityCodeRejectionLocked(id string) error {
+	base := errRequirementsAuthorityCodeRequirementLocked(id).Error()
+	return fmt.Errorf(
+		"%s Reminder for a Rejection specifically: landing one also adds a "+
+			"'replaces' relation onto the SUCCESSOR requirement(s) named in "+
+			"replaced_by — when moving this into spec/requirements.go, "+
+			"remember to add that 'replaces' Relation to the successor's own "+
+			"registry entry by hand; sync-domain will not infer it for you.", base)
+}
+
 // applyToGraph validates and mutates g in place, then verifies the proposal
 // introduces no new invariant violations relative to the graph's pre-mutation
 // state. It performs no disk I/O — Apply and ApplyBatch own load/write so a
@@ -187,6 +227,15 @@ func errSelfHostingRejectionLocked(id string) error {
 // Stakeholder, OperatorBudget, ReviewMark, GateSignoffBatch) is UNAFFECTED —
 // RAC-B only flips authority for Requirement nodes (and Rejection, which
 // mutates a Requirement's Status/Why plus a successor's Relations).
+//
+// REQUIREMENTS-AUTHORITY-CODE LOCK (task #367/RAC2 Phase C): the SAME choke
+// point, generalized to any OTHER domain that has opted in via
+// manifest.json's `"requirements_authority": "code"` (g.RequirementsAuthorityCode)
+// — see errRequirementsAuthorityCodeRequirementLocked's doc comment for how
+// this differs from the self-hosting lock (a single spec/requirements.go
+// file instead of hotam-spec-self's 27-file thematic split). A domain could
+// in principle set both flags; both checks run independently below and
+// either one alone is sufficient to refuse.
 func applyToGraph(g *ontology.Graph, today string, p Proposal) error {
 	a, ok := p.(actor)
 	if !ok {
@@ -198,6 +247,14 @@ func applyToGraph(g *ontology.Graph, today string, p Proposal) error {
 			return errSelfHostingRequirementLocked(pr.ID)
 		case ProposedRejection:
 			return errSelfHostingRejectionLocked(pr.RequirementID)
+		}
+	}
+	if g.RequirementsAuthorityCode {
+		switch pr := p.(type) {
+		case ProposedRequirement:
+			return errRequirementsAuthorityCodeRequirementLocked(pr.ID)
+		case ProposedRejection:
+			return errRequirementsAuthorityCodeRejectionLocked(pr.RequirementID)
 		}
 	}
 	if err := a.validate(); err != nil {

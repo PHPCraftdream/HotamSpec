@@ -49,6 +49,9 @@ func init() {
 	wireToolRun("propose", cmdPropose)
 	wireToolRun("sync_self", cmdSyncSelf)
 	wireToolRun("version", cmdVersion)
+	wireToolRun("vendor_ontology", cmdVendorOntology)
+	wireToolRun("scaffold_registrydump", cmdScaffoldRegistrydump)
+	wireToolRun("sync_domain", cmdSyncDomain)
 }
 
 // wireToolRun patches the Run field of the already-registered Tool named

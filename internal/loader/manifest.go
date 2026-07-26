@@ -142,6 +142,14 @@ type DomainManifest struct {
 	// GateCohort is the optional cohort spec for gate-signoff-count asserts
 	// (ResolveGateCohort).
 	GateCohort *GateCohortSpec `json:"gate_cohort,omitempty"`
+
+	// RequirementsAuthority is the optional "requirements_authority" opt-in
+	// (resolveRequirementsAuthorityCode, task #367/RAC2 Phase C). The single
+	// recognized non-empty value is RequirementsAuthorityCode ("code"),
+	// mirroring Discipline's DisciplineFull ("full") pattern above: it flips a
+	// CONSUMER domain's applyToGraph Requirement/Rejection lock on, the same
+	// lock SelfHosting flips on for hotam-spec-self itself.
+	RequirementsAuthority string `json:"requirements_authority,omitempty"`
 }
 
 // LoadManifest reads and decodes the manifest.json at path into a DomainManifest.

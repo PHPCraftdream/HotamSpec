@@ -17,6 +17,54 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Generalized the self-hosting Requirement/Rejection lock to any consumer domain
+  (`requirements_authority: "code"`, task #367, RAC2 Phase C)**: the final step of
+  "Go-code-only authority" for consumer-domain requirements (#365 shipped vendoring
+  infrastructure, #366 shipped `hotam sync-domain`). `internal/proposal/apply.go`'s
+  `applyToGraph` self-hosting lock (task #350/RAC-B3, previously gated only on
+  `g.SelfHosting` — hotam-spec-self's own 27-thematic-file registry) now ALSO refuses a
+  hand-authored `ProposedRequirement`/`ProposedRejection` when a domain's `manifest.json`
+  declares `"requirements_authority": "code"`, via a new `internal/ontology.Graph.RequirementsAuthorityCode`
+  field (populated by `internal/loader.resolveRequirementsAuthorityCode`, mirroring
+  `resolveSelfHosting`'s exact tolerant-default pattern). Unlike the self-hosting lock's
+  per-ID `selfspec.SourceFileFor` file lookup (needed because hotam-spec-self's registry is
+  split across 27 `requirements_<topic>.go` files), the new
+  `errRequirementsAuthorityCodeRequirementLocked`/`errRequirementsAuthorityCodeRejectionLocked`
+  errors name a single fixed path, `spec/requirements.go`, unconditionally — a consumer
+  domain adopting this path keeps its whole registry in ONE file. Both locks now run
+  independently in `applyToGraph`; a domain could in principle set both flags. New permanent
+  regression test `internal/proposal/requirements_authority_lock_test.go` mirrors
+  `self_hosting_lock_test.go`'s coverage shape (CREATE/UPDATE refused, Rejection's `replaces`
+  reminder, other proposal kinds unaffected, unset-flag negative control) and proves the lock
+  refuses a real `apply-proposal` invocation with the graph left untouched on disk.
+  - **`internal/loader/manifest.go`**: added `DomainManifest.RequirementsAuthority` (the typed
+    projection of the new manifest field, mirroring `Discipline`'s `"full"`-is-the-only-
+    recognized-value pattern).
+  - **Root CLAUDE.md founding-canvas step 6 updated** (`internal/generator/claudemd_static.go`'s
+    `mediationLoopFoundingCanvasStep6MiddlePath`): the "middle path" paragraph no longer
+    disclaims a consumer `sync-self`-equivalent as "a distinct, NOT-YET-IMPLEMENTED future
+    feature" — RAC2 (#365/#366/#367) built it. The paragraph now names `hotam vendor-ontology`
+    + `hotam sync-domain` + the `requirements_authority: "code"` manifest opt-in directly.
+    `TestRenderMediationLoopBlock_FoundingCanvasStep6MiddlePath` (generator package) updated to
+    assert the real commands are named and the stale disclaimer is gone.
+  - **Fixed a gap left by #365/#366**: `hotam vendor-ontology`, `hotam scaffold-registrydump`,
+    and `hotam sync-domain` were real, working `cmd/hotam` subcommands but had never been
+    registered in `internal/methodology/tools_data.go` (the tool registry every generated doc,
+    `README.md`'s command count, and the root crystal's Tool-reference line project from) or
+    wired into `cmd/hotam/tool_wiring.go`'s `Run` dispatch table. Registered all three
+    (Implemented count 18 → 21, total registry 45 → 48) and wired their `Run` functions;
+    regenerated the golden byte-identity fixtures that embed the tool listing
+    (`internal/generator/testdata/fixture/{REQUIREMENTS,REPO-MAP,tools-INDEX,FRAMEWORK-INVARIANTS}.md`)
+    and updated `README.md`'s CLI command list + count sentence to match.
+  - **Scope note**: this task's brief also called for piloting the migration on a real
+    business-empty domain (`domains/life`, a separate repo). That pilot was started, then
+    reverted mid-task by the resolver: a business-empty domain (0 Requirements) should not
+    carry vendored `spec/` scaffolding before it has a real Requirement to justify it — see
+    task #364's "empty domain generates 0 `docs/gen/` files" precedent, which the pilot's
+    vendored `spec/hotamontology` broke (the generator mistook it for an authored `spec/model`
+    and started writing `MODELS.md`). The lock generalization and CLAUDE.md text update above
+    are engine-only and unaffected; the pilot itself did not land — `domains/life` was left
+    with its working tree unchanged from before this task (nothing there was committed).
 - **`hotam sync-domain` + `hotam scaffold-registrydump` — Go-code-only authority for
   CONSUMER-domain Requirements (task #366, RAC2 Phase B)**: the second step of "Go-code-only
   authority" for consumer-domain requirements (task #365 shipped the vendoring infrastructure

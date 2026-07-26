@@ -38,16 +38,23 @@ package generator
 const mediationLoopTranslateSelfHostingNote = " On THIS domain (hotam-spec-self, self-hosting): a Requirement or Rejection outcome is NOT a ProposedRequirement/ProposedRejection JSON file — `hotam apply-proposal`/`hotam land` refuse that path here by construction (RAC-B3's self-hosting lock). Instead, declare or edit the requirement as a Go `ontology.Requirement` literal in `internal/selfspec/requirements_<topic>.go`, then project it onto the graph with `hotam sync-self`; sync-self's default dry-run renders the pending diff for the resolver to read BEFORE any write (the PRESENT step below), exactly like a JSON proposal's PRESENT — only `--confirm-hash <hex>` after that render actually writes. Conflict, Assumption, ConflictTransition, OperatorBudget, EntityType, and journal outcomes (GateSignoffBatch, ReviewMark) are unaffected by this lock and stay on the ordinary Proposed* JSON path described above, on this domain too."
 
 // mediationLoopFoundingCanvasStep6MiddlePath is interpolated into founding-
-// canvas step 6 (task #347, RAC-C part 2): the middle path for a NEW domain
-// that wants Requirement-authorship-in-code from day one WITHOUT the full
-// sync-self authority-flip machinery (which stays exclusive to
-// hotam-spec-self, the engine's own domain — RAC-B's cmdSyncSelf gate 0
-// refuses to run against any other domain). This is explicitly the intended
-// path for a future life-domain (e.g. task #323's personal-operating-system)
-// and similar new domains, named here as intent, NOT implemented by this
-// text: no sync-self-analog CLI exists yet for consumer domains, and this
-// paragraph must not claim otherwise.
-const mediationLoopFoundingCanvasStep6MiddlePath = " A NEW domain MAY instead take a middle path: author Requirement drafts from day one as `[]ontology.Requirement` literals in that domain's own `spec/requirements.go` (authorship lives in code immediately, mirroring hotam-spec-self's registry shape), then generate the ProposedRequirement JSON proposals FROM those literals for landing through the ordinary `hotam apply-proposal`/`hotam land` path — the JSON is always a projection of the code, never the reverse, so authority never flips back onto the JSON once a domain adopts this path. Unlike hotam-spec-self's self-hosting authority flip, this middle path does NOT get its own `sync-self`-equivalent CLI command that projects the Go literals directly onto graph.json and enforces append-only/byte-identity guarantees — that is a distinct, NOT-YET-IMPLEMENTED future feature; today the code-to-JSON step is manual. This is the intended path for a future life-domain (task #323's personal-operating-system and similar new domains going forward), named here as an option, not a promise of tooling that does not exist yet."
+// canvas step 6 (task #347, RAC-C part 2; updated by task #367, RAC2 Phase
+// C): the middle path for a NEW domain that wants Requirement-authorship-in-
+// code from day one WITHOUT hotam-spec-self's own self-hosting authority-flip
+// machinery (RAC-B's cmdSyncSelf gate 0 still refuses to run against any
+// other domain — that specific command stays exclusive to hotam-spec-self).
+// RAC2 (#365 `hotam vendor-ontology`, #366 `hotam sync-domain`, #367 this
+// task's applyToGraph lock generalization) now gives a CONSUMER domain its
+// OWN real equivalent, so this text no longer disclaims it as unimplemented.
+// The plumbing is proven by internal/proposal's own test suite (the
+// self-hosting-lock-shaped regression tests for RequirementsAuthorityCode),
+// not by a real domain's adoption yet — task #367's own attempt to pilot
+// this on domains/life was reverted by the resolver mid-task (a
+// business-empty domain should not carry vendored spec/ plumbing before it
+// has a real Requirement to justify it — see task #364's "empty domain = 0
+// generated files" precedent), so this text deliberately does NOT claim any
+// specific domain has adopted the path yet.
+const mediationLoopFoundingCanvasStep6MiddlePath = " A NEW domain MAY instead take a middle path: author Requirement drafts from day one as `[]ontology.Requirement` literals in that domain's own `spec/requirements.go` (authorship lives in code immediately, mirroring hotam-spec-self's registry shape), then project them onto the graph through `hotam vendor-ontology` (vendors the minimal Requirement+Registry mirror into `spec/hotamontology/`) followed by `hotam sync-domain` (reads `spec/requirements.go` via `spec/registrydump/main.go` and merges it into graph.json, dry-run by default, `--confirm-hash <hex>` to write) — the domain's own equivalent of `hotam sync-self`, generalized in task #367 (RAC2 Phase C). Declaring `\"requirements_authority\": \"code\"` in the domain's `manifest.json` then locks `hotam apply-proposal`/`hotam land` out of hand-authoring Requirement/Rejection proposals for that domain, the same lock hotam-spec-self's own `self_hosting` flag applies to itself — the JSON proposal path is permanently closed for Requirement/Rejection once a domain opts in, authority living in `spec/requirements.go` alone. This path is OPTIONAL, and best adopted once a domain has at least one real Requirement to migrate — an empty domain should stay empty (no vendored spec/ scaffolding) until then."
 
 func renderMediationLoopText(selfHosting bool) string {
 	translateStep := "4. **TRANSLATE** — outcome → typed nodes: ProposedRequirement /\n   ProposedConflictTransition / ProposedRejection / ProposedConflict /\n   ProposedOperatorBudget / ProposedEntityType JSON, drafted as a `.json` file.\n   Tension found → Conflict node with axis + context + resolver, never a silent\n   edit (R-no-hand-edit-graph, R-conflict-is-connector-node)."

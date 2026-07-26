@@ -165,6 +165,33 @@ func init() {
 		Enforcer: "",
 		Run:      nil,
 	})
+	Tools.MustRegister("vendor_ontology", Tool{
+		Command:  "vendor_ontology",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam vendor-ontology --domain <path>. Copies the engine's canonical minimal Requirement + Registry[T] mirror (internal/ontology/canon) into <domain>/spec/hotamontology/{requirement,registry}.go, banner-stamped do-not-edit. Requires <domain>/spec/go.mod to already exist (the domain's own Go module for its authored spec/ tree); idempotent, always overwrites with the current canon.",
+		Status:   Implemented,
+		Claim:    "vendors the engine's canonical minimal Requirement+Registry mirror into a consumer domain's own spec/ Go module, the RAC2 (task #365) infrastructure prerequisite for a domain to author its own Go requirements registry.",
+		Enforcer: "",
+		Run:      nil,
+	})
+	Tools.MustRegister("scaffold_registrydump", Tool{
+		Command:  "scaffold_registrydump",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam scaffold-registrydump --domain <path>. Writes <domain>/spec/registrydump/main.go, a minimal Go program that imports the domain's own spec/ module root package's Requirements registry plus the vendored spec/hotamontology package, and prints json.Marshal(Requirements.All()) to stdout. Requires spec/go.mod and an already-vendored spec/hotamontology (hotam vendor-ontology run first); idempotent.",
+		Status:   Implemented,
+		Claim:    "scaffolds the domain-side registrydump program that bridges a consumer domain's spec/ Go module boundary for hotam sync-domain to read (task #366).",
+		Enforcer: "",
+		Run:      nil,
+	})
+	Tools.MustRegister("sync_domain", Tool{
+		Command:  "sync_domain",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam sync-domain --domain <path> [--today YYYY-MM-DD] [--confirm-hash <hex>] [--reason \"...\"] [--ack-conflict <C-id>] [--decision-ref \"...\"] [--json]. Mirrors a CONSUMER domain's own Go requirements registry (spec/requirements.go, read via a `go run ./registrydump` subprocess inside the domain's own spec/ module) onto that domain's graph.json — the domain-scoped generalization of hotam sync-self (task #366, RAC2 Phase B). Same dry-run-by-default / --confirm-hash handshake and confront/violation/append-only gate order as sync-self.",
+		Status:   Implemented,
+		Claim:    "mirrors a consumer domain's own Go requirements registry onto its graph.json, generalizing hotam sync-self's mechanism to any domain that has adopted the Go-code-only authority path, gated by the same confirm-hash dry-run/confirm handshake plus confront/violation/append-only gates.",
+		Enforcer: "",
+		Run:      nil,
+	})
 
 	// --- Planned: methodology surface not yet implemented as a
 	// Go command. Command below is the historical tool name, not a

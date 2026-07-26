@@ -80,11 +80,14 @@ func TestNamedSectionVariables(t *testing.T) {
 func TestToolsComplete(t *testing.T) {
 	t.Parallel()
 	tools := Tools.All()
-	// 18 Implemented (gen_spec, what_now, apply_proposal, gate, all_violations,
+	// 21 Implemented (gen_spec, what_now, apply_proposal, gate, all_violations,
 	// req, brief, due, status, inspect, confront, land, init, init_project, use,
-	// propose, sync_self, version — every real `hotam` CLI subcommand) + 27
+	// propose, sync_self, version, vendor_ontology, scaffold_registrydump,
+	// sync_domain — every real `hotam` CLI subcommand; the last three added by
+	// task #367/RAC2 Phase C, which found #365/#366 had implemented them as
+	// real cmd/hotam subcommands but never registered them here) + 27
 	// Planned (methodology surface not yet implemented as Go commands).
-	const want = 45
+	const want = 48
 	if len(tools) != want {
 		t.Fatalf("expected %d tools, got %d", want, len(tools))
 	}
@@ -118,7 +121,7 @@ func TestToolsImplementedCount(t *testing.T) {
 			implemented++
 		}
 	}
-	const wantImplemented = 18
+	const wantImplemented = 21
 	if implemented != wantImplemented {
 		t.Fatalf("expected %d Implemented tools, got %d", wantImplemented, implemented)
 	}

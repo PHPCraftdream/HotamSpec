@@ -34,6 +34,22 @@ type Graph struct {
 	EntityTypes   []EntityType     `json:"entity_types"`
 	Entities      []EntityInstance `json:"entities"`
 	SelfHosting   bool             `json:"self_hosting"`
+	// RequirementsAuthorityCode is the domain's manifest.json
+	// "requirements_authority": "code" opt-in (loader.resolveRequirementsAuthorityCode,
+	// task #367/RAC2 Phase C), populated by the loader at LoadGraph time exactly
+	// like SelfHosting above -- deliberately unserialized (json:"-"): it lives in
+	// manifest.json, not graph.json, so it never round-trips through this
+	// struct's own JSON encoding. It is the CONSUMER-domain analogue of
+	// SelfHosting's Requirement/Rejection lock in internal/proposal/apply.go's
+	// applyToGraph: SelfHosting is reserved for hotam-spec-self (whose
+	// Requirement registry is split across internal/selfspec's 27 thematic
+	// requirements_<topic>.go files); RequirementsAuthorityCode is for any OTHER
+	// domain that has adopted RAC2's Go-code-only authority path (a single
+	// <domain>/spec/requirements.go registry, vendored via `hotam
+	// vendor-ontology` and projected via `hotam sync-domain`) and wants the SAME
+	// lock against hand-authored apply-proposal/land Requirement/Rejection
+	// proposals bypassing that registry.
+	RequirementsAuthorityCode bool `json:"-"`
 	// DomainDir is the filesystem path of the domain directory this graph was
 	// loaded from (the resolved --domain path, i.e. the parent dir of
 	// graph.json). Populated by the loader at LoadGraph time; deliberately

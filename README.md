@@ -65,7 +65,7 @@ go run ./cmd/hotam <command> [flags] [args]
 
 ## CLI commands
 
-The `hotam` binary (see `cmd/hotam/main.go`) implements 18 commands:
+The `hotam` binary (see `cmd/hotam/main.go`) implements 21 commands:
 
 ```
 hotam init <dir> [--name <domain-name>] [--profile consumer|full]
@@ -180,6 +180,38 @@ hotam sync-self [--domain <path>] [--today YYYY-MM-DD] [--confirm-hash <hex>]
         for real, after re-verifying the hash against the current on-disk
         state and a stale-binary check (run via `go run ./cmd/hotam sync-self`
         to always be fresh).
+
+hotam vendor-ontology --domain <path>
+        Copy the engine's canonical minimal Requirement + Registry[T] mirror
+        (internal/ontology/canon) into <domain>/spec/hotamontology/
+        {requirement,registry}.go, banner-stamped do-not-edit. Requires
+        <domain>/spec/go.mod to already exist (the domain's own Go module
+        for its authored spec/ tree); idempotent, always overwrites with the
+        current canon. Infrastructure prerequisite for a consumer domain to
+        author its own Go requirements registry (see the "middle path" in
+        CLAUDE.md's founding-canvas step 6).
+
+hotam scaffold-registrydump --domain <path>
+        Write <domain>/spec/registrydump/main.go, a minimal Go program that
+        imports the domain's own spec/ module root package's Requirements
+        registry plus the vendored spec/hotamontology package, and prints
+        json.Marshal(Requirements.All()) to stdout. Requires spec/go.mod and
+        an already-vendored spec/hotamontology (run vendor-ontology first);
+        idempotent. Bridges the module boundary hotam sync-domain needs to
+        read a consumer domain's own Go requirements registry.
+
+hotam sync-domain --domain <path> [--today YYYY-MM-DD] [--confirm-hash <hex>]
+                   [--reason "..."] [--ack-conflict <C-id>] [--decision-ref "..."] [--json]
+        Mirror a CONSUMER domain's own Go requirements registry
+        (<domain>/spec/requirements.go, read via a `go run ./registrydump`
+        subprocess inside the domain's own spec/ module) onto that domain's
+        graph.json — the domain-scoped generalization of sync-self. Same
+        dry-run-by-default / --confirm-hash handshake and confront/
+        pre-post-violation/append-only gate order as sync-self. Declaring
+        `"requirements_authority": "code"` in the domain's manifest.json
+        then locks apply-proposal/land out of hand-authoring
+        Requirement/Rejection proposals for that domain (the consumer-domain
+        analogue of sync-self's own self-hosting lock).
 
 hotam version | hotam --version
         Print the hotam binary version (see Version above).

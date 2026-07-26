@@ -92,20 +92,21 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		return nil, fmt.Errorf("load graph: decode %s: %w", path, err)
 	}
 	g := &ontology.Graph{
-		SchemaVersion: ontology.CurrentSchemaVersion,
-		Axes:          dto.Axes,
-		Stakeholders:  dto.Stakeholders,
-		Assumptions:   dto.Assumptions,
-		Requirements:  dto.Requirements,
-		Conflicts:     dto.Conflicts,
-		Operators:     dto.Operators,
-		Processes:     dto.Processes,
-		Goals:         dto.Goals,
-		EntityTypes:   dto.EntityTypes,
-		Entities:      dto.Entities,
-		SelfHosting:   resolveSelfHosting(path),
-		DomainDir:     filepath.Dir(path),
-		Discipline:    ResolveDiscipline(path),
+		SchemaVersion:             ontology.CurrentSchemaVersion,
+		Axes:                      dto.Axes,
+		Stakeholders:              dto.Stakeholders,
+		Assumptions:               dto.Assumptions,
+		Requirements:              dto.Requirements,
+		Conflicts:                 dto.Conflicts,
+		Operators:                 dto.Operators,
+		Processes:                 dto.Processes,
+		Goals:                     dto.Goals,
+		EntityTypes:               dto.EntityTypes,
+		Entities:                  dto.Entities,
+		SelfHosting:               resolveSelfHosting(path),
+		RequirementsAuthorityCode: resolveRequirementsAuthorityCode(path),
+		DomainDir:                 filepath.Dir(path),
+		Discipline:                ResolveDiscipline(path),
 	}
 	parentDecl := ResolveParent(path)
 	g.ManifestExists = parentDecl.ManifestExists
@@ -203,6 +204,48 @@ func resolveSelfHosting(graphPath string) bool {
 		return false
 	}
 	return m.SelfHosting
+}
+
+// RequirementsAuthorityCode is the one recognized value of manifest.json's
+// optional "requirements_authority" field (task #367/RAC2 Phase C) — a
+// CONSUMER-domain analogue of self_hosting's Requirement/Rejection lock.
+// self_hosting (RAC-B3, errSelfHostingRequirementLocked/
+// errSelfHostingRejectionLocked) is reserved for hotam-spec-self, whose
+// Requirement registry is scattered across internal/selfspec's 27
+// requirements_<topic>.go thematic files (task #345/RAC-A) and pins the
+// error message to selfspec.SourceFileFor's per-ID file lookup. A consumer
+// domain that adopts RAC2's "Go-code-only authority" path (#365
+// vendor-ontology + #366 sync-domain) instead keeps ALL its Requirement
+// literals in ONE file, <domain>/spec/requirements.go — there is no
+// thematic split and no SourceFileFor-style lookup to run, so the message
+// names that single fixed path directly. Declaring
+// `"requirements_authority": "code"` in a domain's manifest.json flips the
+// SAME lock (applyToGraph in internal/proposal/apply.go) on for that domain,
+// without touching self_hosting (a domain could in principle declare both,
+// though hotam-spec-self itself uses self_hosting, not this flag).
+const RequirementsAuthorityCode = "code"
+
+// resolveRequirementsAuthorityCode reads the optional
+// "requirements_authority" field from the manifest.json sitting next to
+// graph.json, mirroring resolveSelfHosting's exact pattern (read manifest,
+// tolerate a missing file, tolerate malformed JSON, default to false/absent
+// when the field is missing or holds any value other than the single
+// recognized literal "code") — the same "malformed opt-in never silently
+// masquerades as a real one" discipline ResolveDiscipline documents for
+// "full".
+func resolveRequirementsAuthorityCode(graphPath string) bool {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return false
+	}
+	var m struct {
+		RequirementsAuthority string `json:"requirements_authority"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return false
+	}
+	return m.RequirementsAuthority == RequirementsAuthorityCode
 }
 
 // GenProfileFull and GenProfileConsumer are the two accepted values for the
