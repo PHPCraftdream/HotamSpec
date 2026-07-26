@@ -141,7 +141,7 @@ func TestSyncGraph_SatisfiesAppendOnly(t *testing.T) {
 	old := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
 	newG := cloneAppendOnlyFixture(old)
 
-	if _, err := SyncGraph(newG, "2026-07-23"); err != nil {
+	if _, err := SyncGraph(newG, Requirements, "2026-07-23"); err != nil {
 		t.Fatalf("SyncGraph: %v", err)
 	}
 

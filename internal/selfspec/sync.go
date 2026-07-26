@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/registry"
 )
 
 // SyncKind classifies one SyncReport entry: whether SyncGraph created a
@@ -43,7 +44,14 @@ type SyncReport struct {
 // SyncGraph is Phase B's authority-flip primitive (task #346/RAC-B, this
 // step's task #348/RAC-B1): unlike MergeIntoGraph (merge.go), which errors
 // on a registered ID absent from g, SyncGraph CREATES a node for it instead.
-// For every ID in Requirements.All():
+//
+// reg is an explicit parameter (task #366/RAC2 Phase B), for the identical
+// reason MergeIntoGraph takes one — see that function's doc comment. Every
+// existing caller inside this package/cmd/hotam passes the package-global
+// Requirements explicitly (cmd/hotam/sync_self.go is a thin wrapper); this
+// refactor changes zero behavior for that caller.
+//
+// For every ID in reg.All():
 //
 //   - Absent from g.Requirements: SyncGraph APPENDS a new node built from
 //     the registry's structural fields, with every EVENT field empty except
@@ -79,11 +87,14 @@ type SyncReport struct {
 //
 // SyncGraph mutates g IN PLACE and returns a report of every requirement it
 // actually created or changed. It never touches disk — writing the result
-// through internal/loader.WriteGraph is the caller's job (the future `hotam
-// sync-self` CLI, task #349).
-func SyncGraph(g *ontology.Graph, today string) (*SyncReport, error) {
+// through internal/loader.WriteGraph is the caller's job (`hotam sync-self`,
+// task #349, and `hotam sync-domain`, task #366).
+func SyncGraph(g *ontology.Graph, reg *registry.Registry[ontology.Requirement], today string) (*SyncReport, error) {
 	if g == nil {
 		return nil, fmt.Errorf("selfspec: SyncGraph: nil graph")
+	}
+	if reg == nil {
+		return nil, fmt.Errorf("selfspec: SyncGraph: nil registry")
 	}
 
 	indexByID := make(map[string]int, len(g.Requirements))
@@ -93,16 +104,16 @@ func SyncGraph(g *ontology.Graph, today string) (*SyncReport, error) {
 
 	report := &SyncReport{}
 
-	for _, id := range registeredIDsSorted() {
-		reg, ok := Requirements.Get(id)
+	for _, id := range registeredIDsSorted(reg) {
+		entry, ok := reg.Get(id)
 		if !ok {
-			// unreachable: id came from Requirements itself.
+			// unreachable: id came from reg itself.
 			continue
 		}
 
 		idx, found := indexByID[id]
 		if !found {
-			created := *reg // structural fields from the registry
+			created := *entry // structural fields from the registry
 			created.LastReviewedAt = ""
 			created.ReviewAfter = ""
 			created.Evidence = nil
@@ -120,12 +131,12 @@ func SyncGraph(g *ontology.Graph, today string) (*SyncReport, error) {
 		}
 
 		existing := g.Requirements[idx]
-		diffs := StructuralFieldDiffs(*reg, existing)
+		diffs := StructuralFieldDiffs(*entry, existing)
 		if len(diffs) == 0 {
 			continue
 		}
 
-		merged := *reg // copy: structural fields from the registry
+		merged := *entry // copy: structural fields from the registry
 		// Event fields pass through untouched from the graph's existing node.
 		merged.LastReviewedAt = existing.LastReviewedAt
 		merged.ReviewAfter = existing.ReviewAfter

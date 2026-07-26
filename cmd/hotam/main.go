@@ -108,6 +108,8 @@ func main() {
 		err = cmdVendorRecorder(args)
 	case "vendor-ontology":
 		err = cmdVendorOntology(args)
+	case "scaffold-registrydump":
+		err = cmdScaffoldRegistrydump(args)
 	case "what-now":
 		err = cmdWhatNow(args)
 	case "apply-proposal":
@@ -134,6 +136,8 @@ func main() {
 		err = cmdPropose(args)
 	case "sync-self":
 		err = cmdSyncSelf(args)
+	case "sync-domain":
+		err = cmdSyncDomain(args)
 	case "-h", "--help", "help":
 		printUsage(os.Stdout)
 		return
@@ -206,6 +210,16 @@ Commands:
         exist. Re-run after an engine upgrade to pick up a newer canon;
         check_ontology_vendor_current (hotam all-violations) flags a
         vendored copy that has drifted from the engine's own canon.
+  scaffold-registrydump [--domain <path>]
+        Write <domain>/spec/registrydump/main.go — a generated program that
+        imports the domain's own spec/ module root package (expected to
+        declare a package-level Requirements registry, mirroring
+        internal/selfspec.Requirements' own shape) plus the vendored
+        spec/hotamontology, and prints
+        json.Marshal(Requirements.All()) to stdout. Requires <domain>/spec/go.mod
+        AND an already-vendored spec/hotamontology (run vendor-ontology first).
+        This is the domain-side half of the module-boundary bridge sync-domain
+        uses to read a consumer domain's own Go-authored Requirement registry.
   what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
         Print top-N diagnosed signals (default 20). With --json, emit the
         underlying signal slice as machine-readable JSON.
@@ -282,6 +296,17 @@ Commands:
         what's on disk (run via "go run ./cmd/hotam sync-self" to always be
         fresh). --ack-conflict/--decision-ref override a confront-gate
         refusal, mirroring "hotam land"'s same two flags.
+  sync-domain [--domain <path>] [--today YYYY-MM-DD] [--confirm-hash <hex>] [--reason "..."] [--ack-conflict <C-id>] [--decision-ref "..."] [--json]
+        The sync-self command generalized to any consumer domain that has
+        adopted the spec/requirements.go Go-authoring path (see
+        scaffold-registrydump above): subprocess-execs "go run ./registrydump"
+        inside <domain>/spec (its own separate Go module) to read the
+        domain's current Go-authored Requirement registry, then mirrors it
+        onto <domain>/graph.json — same dry-run-by-default / --confirm-hash
+        handshake and the same confront/pre-post-violation/append-only gate
+        order as sync-self. Unlike sync-self, it carries no stale-binary
+        guard: every run re-executes "go run" fresh, so there is no
+        embedded-in-binary registry that could go stale.
   version, --version
         Print the hotam binary version.
 

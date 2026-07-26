@@ -53,8 +53,18 @@ func firstRegisteredRequirement(t *testing.T) ontology.Requirement {
 }
 
 func TestSyncGraph_NilGraphIsError(t *testing.T) {
-	if _, err := SyncGraph(nil, "2026-07-23"); err == nil {
+	if _, err := SyncGraph(nil, Requirements, "2026-07-23"); err == nil {
 		t.Fatal("SyncGraph(nil, ...): want error, got nil")
+	}
+}
+
+// TestSyncGraph_NilRegistryIsError proves the task #366 parameterization
+// rejects a nil registry explicitly — see TestMergeIntoGraph_NilRegistryIsError
+// for the identical rationale applied to MergeIntoGraph.
+func TestSyncGraph_NilRegistryIsError(t *testing.T) {
+	g := &ontology.Graph{Requirements: []ontology.Requirement{{ID: "R-whatever"}}}
+	if _, err := SyncGraph(g, nil, "2026-07-23"); err == nil {
+		t.Fatal("SyncGraph(g, nil, ...): want error, got nil")
 	}
 }
 
@@ -71,7 +81,7 @@ func TestSyncGraph_CreatesNewNode(t *testing.T) {
 		},
 	}
 
-	report, err := SyncGraph(g, "2026-07-23")
+	report, err := SyncGraph(g, Requirements, "2026-07-23")
 	if err != nil {
 		t.Fatalf("SyncGraph: %v", err)
 	}
@@ -170,7 +180,7 @@ func TestSyncGraph_ChangedNodeAppendsHistory(t *testing.T) {
 
 	g := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
 
-	report, err := SyncGraph(g, "2026-07-23")
+	report, err := SyncGraph(g, Requirements, "2026-07-23")
 	if err != nil {
 		t.Fatalf("SyncGraph: %v", err)
 	}
@@ -235,7 +245,7 @@ func TestSyncGraph_UnchangedNodeNotInReport(t *testing.T) {
 
 	g := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
 
-	report, err := SyncGraph(g, "2026-07-23")
+	report, err := SyncGraph(g, Requirements, "2026-07-23")
 	if err != nil {
 		t.Fatalf("SyncGraph: %v", err)
 	}
@@ -264,7 +274,7 @@ func TestSyncGraph_UnregisteredNodeUntouchedAndNotInReport(t *testing.T) {
 		},
 	}
 
-	report, err := SyncGraph(g, "2026-07-23")
+	report, err := SyncGraph(g, Requirements, "2026-07-23")
 	if err != nil {
 		t.Fatalf("SyncGraph: %v", err)
 	}

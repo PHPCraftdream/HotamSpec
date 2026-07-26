@@ -17,6 +17,42 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`hotam sync-domain` + `hotam scaffold-registrydump` — Go-code-only authority for
+  CONSUMER-domain Requirements (task #366, RAC2 Phase B)**: the second step of "Go-code-only
+  authority" for consumer-domain requirements (task #365 shipped the vendoring infrastructure
+  only). `hotam sync-domain` generalizes `hotam sync-self` from the engine's own self-hosting
+  registry (`internal/selfspec.Requirements`) to ANY domain that authors its Requirement
+  literals in its own `spec/requirements.go`, importing the vendored `spec/hotamontology`
+  mirror — same dry-run-by-default / `--confirm-hash` handshake, same gate order (7 confront ->
+  8 pre/post-violation-diff -> 9 append-only), same transactional snapshot/rollback machinery
+  (`land.go`'s `snapshotGraphFiles`/`rollbackLand`) as `sync-self`.
+  - **`internal/selfspec/merge.go` + `sync.go`**: `MergeIntoGraph`/`SyncGraph` now take an
+    explicit `*registry.Registry[ontology.Requirement]` parameter instead of reading the
+    package-global `selfspec.Requirements` directly — a small, mechanical, behavior-preserving
+    refactor (`hotam sync-self` passes `selfspec.Requirements` explicitly as a thin wrapper;
+    proven byte-identical before/after via the full `sync-self` test suite).
+  - **`cmd/hotam/sync_domain.go`** (`hotam sync-domain --domain <path>`): the one structural
+    difference from `sync-self` — instead of a package-global Go registry embedded at the
+    engine's own build time, sync-domain subprocess-execs `go run ./registrydump` INSIDE the
+    domain's own `spec/` Go module (the same module-boundary-crossing principle
+    `internal/gate/test_exec.go` already uses to run a domain's `verified_by` tests), captures
+    its stdout as a JSON `[]ontology.Requirement` array, and builds an in-process registry from
+    it before handing it to the same `MergeIntoGraph`/`SyncGraph` sync-self itself calls. Every
+    subprocess failure mode (missing `spec/`, missing `registrydump/`, non-zero exit, invalid
+    JSON, duplicate ID) surfaces as a specific, actionable error — never a silently empty
+    registry that would look like "nothing to sync". Does NOT port sync-self's stale-binary
+    guard (`selfspec.SourceFiles`/`SourceFileFor`): that guard exists only because `go:embed`
+    freezes the engine's OWN source into the compiled `hotam` binary at build time; sync-domain
+    always re-executes `go run` fresh, so the "stale embedded binary" failure class does not
+    exist for this command.
+  - **`cmd/hotam/scaffold_registrydump.go`** (`hotam scaffold-registrydump --domain <path>`):
+    writes `<domainDir>/spec/registrydump/main.go`, a minimal generated program importing the
+    domain's own spec/ module root package (expected to declare
+    `var Requirements = hotamontology.New[hotamontology.Requirement]()`) plus the vendored
+    `spec/hotamontology`, and prints `json.Marshal(Requirements.All())` to stdout — the
+    domain-side half of the module-boundary bridge. Modeled on `hotam vendor-ontology`: requires
+    `spec/go.mod` AND an already-vendored `spec/hotamontology` to exist first; idempotent.
+
 - **`hotam vendor-ontology` + `check_ontology_vendor_current` — minimal Requirement/Registry
   vendoring infrastructure for consumer-domain Go-code-authored requirements (task #365, RAC2
   Phase A, "Go-code-only authority" for consumer-domain requirements)**: the first step toward

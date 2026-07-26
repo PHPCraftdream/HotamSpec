@@ -53,7 +53,7 @@ func TestMergeIntoGraph_ByteIdenticalRoundTrip(t *testing.T) {
 		t.Fatal("selfspec.Requirements is empty — registered nothing, this test would be vacuous")
 	}
 
-	if err := MergeIntoGraph(g); err != nil {
+	if err := MergeIntoGraph(g, Requirements); err != nil {
 		t.Fatalf("MergeIntoGraph: %v", err)
 	}
 
@@ -112,12 +112,12 @@ func TestMergeIntoGraph_Idempotent(t *testing.T) {
 		t.Fatalf("LoadGraph(%s): %v", domainGraphPath, err)
 	}
 
-	if err := MergeIntoGraph(g); err != nil {
+	if err := MergeIntoGraph(g, Requirements); err != nil {
 		t.Fatalf("MergeIntoGraph (first pass): %v", err)
 	}
 	once := writeGraphBytes(t, g)
 
-	if err := MergeIntoGraph(g); err != nil {
+	if err := MergeIntoGraph(g, Requirements); err != nil {
 		t.Fatalf("MergeIntoGraph (second pass): %v", err)
 	}
 	twice := writeGraphBytes(t, g)
@@ -138,15 +138,27 @@ func TestMergeIntoGraph_MissingRegistryIDIsError(t *testing.T) {
 	// (all 301 domains/hotam-spec-self/graph.json requirement IDs); none of
 	// them match the single node above, so MergeIntoGraph must fail on the
 	// first registered ID it cannot find.
-	if err := MergeIntoGraph(g); err == nil {
+	if err := MergeIntoGraph(g, Requirements); err == nil {
 		t.Fatal("MergeIntoGraph: want error when a registered ID is absent from the graph, got nil")
 	}
 }
 
 // TestMergeIntoGraph_NilGraphIsError is the boundary-condition control.
 func TestMergeIntoGraph_NilGraphIsError(t *testing.T) {
-	if err := MergeIntoGraph(nil); err == nil {
-		t.Fatal("MergeIntoGraph(nil): want error, got nil")
+	if err := MergeIntoGraph(nil, Requirements); err == nil {
+		t.Fatal("MergeIntoGraph(nil, Requirements): want error, got nil")
+	}
+}
+
+// TestMergeIntoGraph_NilRegistryIsError proves the task #366 parameterization
+// rejects a nil registry explicitly, rather than panicking on the first
+// reg.All() call — a caller building a registry from an external source
+// (e.g. `hotam sync-domain`'s subprocess-dumped registry) must get a clear
+// error, not a crash, if that construction ever yields nil.
+func TestMergeIntoGraph_NilRegistryIsError(t *testing.T) {
+	g := &ontology.Graph{Requirements: []ontology.Requirement{{ID: "R-whatever"}}}
+	if err := MergeIntoGraph(g, nil); err == nil {
+		t.Fatal("MergeIntoGraph(g, nil): want error, got nil")
 	}
 }
 
@@ -193,7 +205,7 @@ func TestMergeIntoGraph_UnregisteredNodesUntouched(t *testing.T) {
 		})
 	}
 
-	if err := MergeIntoGraph(g); err != nil {
+	if err := MergeIntoGraph(g, Requirements); err != nil {
 		t.Fatalf("MergeIntoGraph: %v", err)
 	}
 

@@ -109,7 +109,7 @@ func cmdSyncSelf(args []string) error {
 	if err != nil {
 		return fmt.Errorf("sync-self: load working graph: %w", err)
 	}
-	report, err := selfspec.SyncGraph(after, syncToday)
+	report, err := selfspec.SyncGraph(after, selfspec.Requirements, syncToday)
 	if err != nil {
 		return fmt.Errorf("sync-self: SyncGraph: %w", err)
 	}
