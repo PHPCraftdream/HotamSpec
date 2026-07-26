@@ -165,7 +165,7 @@ var Glossary = Sections.MustRegister("§Glossary", Section{
 		"domain's graph.json — not here.",
 	Why: "WHY a generated controlled vocabulary: terminology drift is its own kind of invisibility — 'axis'/'dimension', " +
 		"'resolver'/'owner', 'conflict'/'tension' fragment the methodology language without it. The vocabulary and its mirror " +
-		"(docs/gen/GLOSSARY.md) are generated from the same source so they cannot drift from each other.",
+		"(framework/GLOSSARY.md) are generated from the same source so they cannot drift from each other.",
 })
 
 var Scope = Sections.MustRegister("§Scope", Section{

@@ -1,5 +1,5 @@
 {
-  "sha256": "b0850459891f47c532be4630a100097eae753631cba1b57ff9f6435fab017fc8",
-  "updated_at": "2026-07-24T07:16:25Z",
-  "note": "sync-self: 1 changed, 0 added; diff-hash 7b166d5ac54b; reason: task #347 RAC-C part 4: honest partial-progress debt note (Requirement-half mechanized via RAC-A/B, EntityType-half still untyped)"
+  "sha256": "fa0f4e4d3d06a8d28dcee45b53175766dcc2c4323880a187a0a7ccaad147ae3c",
+  "updated_at": "2026-07-26T07:58:08Z",
+  "note": "sync-self: 1 changed, 0 added; diff-hash f6542e31641c"
 }

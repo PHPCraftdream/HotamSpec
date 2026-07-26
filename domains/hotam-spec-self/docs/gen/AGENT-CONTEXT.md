@@ -8,21 +8,20 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 
 - **top action:** [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See domains/hotam-spec-self/docs/gen/UNENFORCED.md.
 - **debt:** 176/253 SETTLED ENFORCED · 6 DRAFT · 0 OPEN · 41 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 326 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 23442 chars (headroom 126558)
+- **graph:** 326 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 23419 chars (headroom 126581)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary
 
 ## Top actions (what-now, top 10)
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
-- [P1] STRUCTURE on `D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self` — [check_domain_claude_md_current] D:\ai_dev\prat\HotamSpec\CLAUDE.md's generated portion (everything up to and including the durable-notes marker line) does not match what a fresh `hotam gen-spec --claude-md` run produces right now -- it is either stale (the domain's graph, requirements, or debt/pulse state changed since the crystal was last regenerated) or was edited by hand despite its own do-not-edit banner; content BELOW the marker line (durable notes) is never compared and is safe. Re-run `hotam gen-spec --domain D:\ai_dev\prat\HotamSpec\domains\hotam-spec-self --claude-md D:\ai_dev\prat\HotamSpec\CLAUDE.md` to regenerate it.
 - [P3] CONFLICT_STALLED on `C-d20cf537` — conflict 'C-d20cf537' on axis 'reviewability-vs-code-authority' is DETECTED with no resolver movement; resolver 'framework-reviewer' must ACKNOWLEDGE it
 - [P7] ADVISORY on `feature-blocked-roadmap` — 35 SETTLED requirements are feature-blocked debt (ENFORCEABLE, but the described feature does not exist yet — correctly PROSE, frozen by R-speculative-aspects-frozen). Honest roadmap, not neglected. See docs/reviews/2026-07-13-c1-roadmap-debt-triage.md.
-- [P7] ADVISORY on `review-freshness` — 10 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-24` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
+- [P7] ADVISORY on `review-freshness` — 10 SETTLED requirement(s) have NEVER been reviewed (no last_reviewed_at, no review_after) — run `hotam due --today 2026-07-26` for the list; freshness metadata is currently unpopulated (R-requirement-freshness-fields).
 
 ## Status counters
 
-SETTLED 253 · DRAFT 6 · REJECTED 42 · OVERDUE 0 (as of 2026-07-24)
+SETTLED 253 · DRAFT 6 · REJECTED 42 · OVERDUE 0 (as of 2026-07-26)
 
 ## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)
 
@@ -63,13 +62,14 @@ MANDATORY (named directly in this domain's CLAUDE.md boot text — read essentia
 - `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — framework-internal atoms behind the Constitution index.
 
 REFERENCE (load on demand for a specific task, not at boot):
-- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md`, `GLOSSARY.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.
+- `domains/hotam-spec-self/docs/gen/CONSTITUTION.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.
+- `framework/GLOSSARY.md` — methodology controlled vocabulary (project-shared).
 - `domains/hotam-spec-self/docs/gen/atoms-operator.md`, `atoms-substrate.md`, `atoms-discipline.md`, `atoms-check.md` — per-category atom detail.
 - `domains/hotam-spec-self/docs/gen/live-state.md` — the same pulse this file's Live-state section already carries, standalone.
 - `domains/hotam-spec-self/docs/gen/OPEN.md` — open-question detail behind the OPEN status.
 - `domains/hotam-spec-self/docs/gen/thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.
-- `domains/hotam-spec-self/docs/gen/tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).
-- `domains/hotam-spec-self/docs/gen/tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.
+- `framework/tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).
+- `framework/tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.
 
 ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):
 - `domains/hotam-spec-self/docs/gen/HISTORY.md` — REJECTED + DECIDED change-log; anti-relitigation lookup only.

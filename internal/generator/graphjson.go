@@ -15,6 +15,21 @@ func copyStrings(src []string) []string {
 	return out
 }
 
+// GraphJSONHasContent reports whether the docs/gen/graph.json archival
+// snapshot carries real domain content — i.e. whether the graph is non-empty
+// (task #364: withheld entirely from the docs/gen/ write set when the domain
+// has zero axes/stakeholders/requirements/conflicts/assumptions/operators/
+// processes/goals/entity_types/entities, mirroring the conditional-write
+// pattern DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already
+// use). BuildGraphJSON itself always succeeds and renders SOMETHING (a
+// well-formed, empty-arrays JSON payload) even for a fully empty graph — this
+// predicate is a WRITE-time gate genSpec applies on top, not a change to
+// BuildGraphJSON's own rendering, exactly like every other *MDHasContent
+// predicate in this package.
+func GraphJSONHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildGraphJSON(g *ontology.Graph) (string, error) {
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 	conflicts := NarrativeOrder(g.Conflicts, func(c ontology.Conflict) int { return c.DeclOrder })

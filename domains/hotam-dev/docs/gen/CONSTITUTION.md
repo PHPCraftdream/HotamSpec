@@ -33,7 +33,11 @@ Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-im
 
 ## 3. The hard boundary
 
+_No hard-boundary requirements SETTLED in this domain's graph yet._
+
 ## 4. The two super-rules (context discipline)
+
+_No super-rule requirements SETTLED in this domain's graph yet._
 
 ## 5. The conscience
 
@@ -73,14 +77,7 @@ graph is malformed — investigate the root cause; do not edit by hand.
 
 ## 7. The methodology's laws (full constitutional set)
 
-| anchor | enforcement | claim |
-|---|---|---|
-| **Closed loop & operator role** | | |
-| **Hard boundary** | | |
-| **Self + delegation** | | |
-| **Super-rules (crystallize + anchor)** | | |
-| **Loop machinery** | | |
-| **Conscience** | | |
+_No requirements from the methodology's constitutional set are SETTLED in this domain's graph yet._
 
 ## 8. What is yours; what is not
 

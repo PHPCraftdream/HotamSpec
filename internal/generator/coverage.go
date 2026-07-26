@@ -61,6 +61,20 @@ import (
 // "0 violations". A non-discipline:full domain produces no such section at
 // all (the exemption is dormant there -- the same honest-no-op shape
 // loader.DisciplineFull's own doc comment establishes).
+// CoverageMDHasContent reports whether COVERAGE.md carries real domain
+// content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use). A
+// genuinely empty domain has nothing to render but the EmptyNotice
+// placeholder BuildCoverage already falls back to (g.IsEmpty()) — so a
+// fresh, unmodeled domain now produces ZERO files under docs/gen/, not a
+// directory full of calm-but-empty placeholders.
+func CoverageMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildCoverage(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("COVERAGE", g), ""}
 	lines = append(lines, "# COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)")

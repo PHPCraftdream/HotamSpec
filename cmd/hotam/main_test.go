@@ -58,6 +58,26 @@ func copySelfDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
 	return projectRoot, domainDir
 }
 
+// initDomainUnderRoot scaffolds a FRESH (init-created) domain under
+// <root>/domains/<name> and returns BOTH the synthetic project root and the
+// domain dir. Placing the domain under a domains/ parent makes
+// repoRootForDomain's tier-1 (<root>/domains/<name>) resolve the project root
+// to the temp root itself — essential for task #357, where genSpec now WRITES
+// GLOSSARY.md + tools/*.md to <repoRoot>/framework/ : a bare temp-dir domain
+// (no domains/ parent) would fall through to tier-2's CWD-based
+// ProjectRootOrRaise() walk and contaminate THIS repo's real framework/ dir.
+// Tests that call genSpec must use this (or copySelfDomainUnderRoot) instead of
+// a bare t.TempDir() domain.
+func initDomainUnderRoot(t *testing.T, name, today string) (projectRoot, domainDir string) {
+	t.Helper()
+	projectRoot = t.TempDir()
+	domainDir = filepath.Join(projectRoot, "domains", name)
+	if _, err := initDomain(domainDir, name, today); err != nil {
+		t.Fatalf("initDomain: %v", err)
+	}
+	return projectRoot, domainDir
+}
+
 // copyNonSelfHostingDomainUnderRoot mirrors copySelfDomainUnderRoot but
 // additionally forces self_hosting: false in the copied manifest.json — the
 // _UnderRoot-flavored sibling of copyNonSelfHostingDomain (below), for tests
@@ -251,7 +271,7 @@ func copySelfDomainManifestSansOrientationFAQ(t *testing.T, dst string) {
 // (which files, non-empty) holds against a real, large domain graph.
 func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	t.Parallel()
-	domainDir := copySelfDomain(t)
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 
 	written, _, err := genSpec(domainDir, "", "2026-07-12", "", false)
 	if err != nil {
@@ -264,7 +284,7 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	filenames := []string{
 		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
-		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
+		"FRAMEWORK-INVARIANTS.md", "HISTORY.md", "CONSTITUTION.md",
 		"PIPELINE.md", "TRACEABILITY.md", "MODELS.md", "COVERAGE.md",
 		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
 		"atoms-discipline.md", "atoms-check.md", "graph.json",
@@ -289,10 +309,33 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 	if err != nil || len(entries) == 0 {
 		t.Errorf("thinking/ docs not written: %v", err)
 	}
-	toolsDir := filepath.Join(genDir, "tools")
+	// Task #357: GLOSSARY.md + tools/*.md live at the PROJECT-root framework/
+	// directory (sibling of domains/); FRAMEWORK-INVARIANTS.md returned to
+	// docs/gen/ (it is per-domain content).
+	projectFrameworkDir := filepath.Join(projectRoot, "framework")
+	if _, err := os.ReadFile(filepath.Join(genDir, "FRAMEWORK-INVARIANTS.md")); err != nil {
+		t.Errorf("docs/gen/FRAMEWORK-INVARIANTS.md not written: %v", err)
+	}
+	if _, err := os.ReadFile(filepath.Join(projectFrameworkDir, "GLOSSARY.md")); err != nil {
+		t.Errorf("framework/GLOSSARY.md not written: %v", err)
+	}
+	toolsDir := filepath.Join(projectFrameworkDir, "tools")
 	entries, err = os.ReadDir(toolsDir)
 	if err != nil || len(entries) == 0 {
-		t.Errorf("tools/ docs not written: %v", err)
+		t.Errorf("framework/tools/ docs not written: %v", err)
+	}
+	// docs/gen/tools/ and docs/gen/GLOSSARY.md must NOT survive (task #357
+	// migration cleanup removes the old-location leftovers).
+	if _, err := os.Stat(filepath.Join(genDir, "tools")); !os.IsNotExist(err) {
+		t.Errorf("docs/gen/tools/ must not exist after migration, got err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(genDir, "GLOSSARY.md")); !os.IsNotExist(err) {
+		t.Errorf("docs/gen/GLOSSARY.md must not exist after migration to framework/, got err=%v", err)
+	}
+	// The old per-domain framework/ directory must not survive (task #357
+	// retires #355's layout — cleanupStaleDomainFrameworkDir removes it).
+	if _, err := os.Stat(filepath.Join(domainDir, "framework")); !os.IsNotExist(err) {
+		t.Errorf("domains/<name>/framework/ must not exist after migration, got err=%v", err)
 	}
 
 	decPath := filepath.Join(genDir, "DECISIONS.md")

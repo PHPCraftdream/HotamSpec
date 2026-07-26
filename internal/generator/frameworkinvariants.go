@@ -166,6 +166,24 @@ func constitutionIndexLine(rid, claim, enforcement string) string {
 	return rid + " [" + flag + "]"
 }
 
+// FrameworkInvariantsMDHasContent reports whether FRAMEWORK-INVARIANTS.md
+// carries real domain content — i.e. whether the graph is non-empty (task
+// #364: withheld entirely from the docs/gen/ write set when the domain has
+// zero axes/stakeholders/requirements/conflicts/assumptions/operators/
+// processes/goals/entity_types/entities, mirroring the conditional-write
+// pattern DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already
+// use). Unlike most of this package's other Build* functions,
+// BuildFrameworkInvariants does NOT itself fall back to a bare EmptyNotice
+// on an empty graph — it always renders the framework's own tool-derived
+// requirements section (ScanToolRequirements, sourced from the methodology
+// tool registry, not from g) — but that framework self-documentation is
+// exactly the kind of noise a genuinely content-free domain should not carry
+// in its own docs/gen/ either, so the same graph-emptiness gate applies here
+// too, for consistency with every other file in this set.
+func FrameworkInvariantsMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildFrameworkInvariants(g *ontology.Graph, domainName string) string {
 	var settled []ontology.Requirement
 	for _, r := range g.Requirements {

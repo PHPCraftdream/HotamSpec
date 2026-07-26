@@ -12,10 +12,14 @@ import (
 )
 
 // setupGateTestDomain scaffolds a clean, invariant-valid minimal domain (via
-// initDomain — one seed stakeholder "owner" + one seed SETTLED requirement)
-// placed under a domains/<name> parent so resolveClaudeMDPath does not
-// auto-write any crystal. The seed requirement carries no opposite markers,
-// so the first test requirement can be landed without triggering the gate.
+// initDomain, then seedOwnerStakeholder — task #364 removed initDomain's own
+// auto-seeded Stakeholder "owner" + Requirement, so this fixture now adds the
+// Stakeholder itself) placed under a domains/<name> parent so
+// resolveClaudeMDPath does not auto-write any crystal. writeReqProposalJSON's
+// proposals use owner: "owner" by convention, so this Stakeholder must exist
+// before the first test requirement can be landed without a dangling-owner
+// violation; it carries no opposite markers, so that first landing also does
+// not trigger the semantic-conflict gate this test file exercises.
 func setupGateTestDomain(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
@@ -23,6 +27,7 @@ func setupGateTestDomain(t *testing.T) string {
 	if _, err := initDomain(domainDir, "gate-test", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	seedOwnerStakeholder(t, domainDir, "2026-07-14")
 	return domainDir
 }
 
@@ -136,9 +141,13 @@ func TestSemanticConflictGate_AckConflictSucceeds(t *testing.T) {
 		t.Fatalf("land first: %v", err)
 	}
 
-	// Create a valid Conflict node in the graph.
+	// Create a valid Conflict node in the graph. check_conflict_min_two_members
+	// needs a second, distinct pre-existing Requirement id — initDomain no
+	// longer auto-seeds one (task #364), so this fixture adds a harmless
+	// placeholder directly.
+	seedPlaceholderRequirement(t, domainDir, "2026-07-14", "R-gate-placeholder-2")
 	conflictID := addTestConflict(t, gp, "2026-07-14",
-		[]string{"R-gate-always-2", "R-domain-exists"})
+		[]string{"R-gate-always-2", "R-gate-placeholder-2"})
 
 	// Land the contradicting requirement WITH --ack-conflict — must succeed.
 	second := writeReqProposalJSON(t, "R-gate-never-2",
@@ -525,9 +534,13 @@ func TestApplyProposalGate_AckConflictSucceedsAndPersists(t *testing.T) {
 		t.Fatalf("land first: %v", err)
 	}
 
-	// Create a valid Conflict node in the graph.
+	// Create a valid Conflict node in the graph. check_conflict_min_two_members
+	// needs a second, distinct pre-existing Requirement id — initDomain no
+	// longer auto-seeds one (task #364), so this fixture adds a harmless
+	// placeholder directly.
+	seedPlaceholderRequirement(t, domainDir, "2026-07-14", "R-apply-placeholder-2")
 	conflictID := addTestConflict(t, gp, "2026-07-14",
-		[]string{"R-apply-always-2", "R-domain-exists"})
+		[]string{"R-apply-always-2", "R-apply-placeholder-2"})
 
 	// apply-proposal the contradicting requirement WITH --ack-conflict — must succeed.
 	second := writeReqProposalJSON(t, "R-apply-never-2",

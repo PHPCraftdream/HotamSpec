@@ -39,6 +39,20 @@ import (
 // convention every other cross-reference inside a generated docs/gen/*.md
 // file follows — see domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md);
 // the full-profile path never reads it.
+// RequirementsMDHasContent reports whether REQUIREMENTS.md carries real
+// domain content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use). A
+// genuinely empty domain has nothing to render but the EmptyNotice
+// placeholder BuildRequirements already falls back to (g.IsEmpty()) — so a
+// fresh, unmodeled domain now produces ZERO files under docs/gen/, not a
+// directory full of calm-but-empty placeholders.
+func RequirementsMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildRequirements(g *ontology.Graph, domainName string, consumer bool) string {
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 	stakeholders := NarrativeOrder(g.Stakeholders, func(s ontology.Stakeholder) int { return s.DeclOrder })
@@ -234,14 +248,12 @@ func gateSignoffRows(reqs []ontology.Requirement) []string {
 // := ... }` gate, cmd/hotam/gen_spec.go) and --profile full is what
 // re-enables it, so the pointer never dangles.
 //
-// The tools/INDEX.md pointer is domain-prefixed
-// ("domains/<domainName>/docs/gen/tools/INDEX.md"), matching the
-// repo-root-relative convention every other cross-reference inside a
-// generated docs/gen/*.md file follows (see
-// domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md) — a bare
-// "docs/gen/tools/INDEX.md" would resolve at the repo root, which is never
-// where a domain's generated docs live (domains/<name>/docs/gen/, see
-// cmd/hotam/init_project.go).
+// The tools/INDEX.md pointer is a repo-root-relative bare path
+// ("framework/tools/INDEX.md"), because task #357 promoted the tool docs
+// (and GLOSSARY.md) from a per-domain framework/ directory to the PROJECT
+// root's framework/ — a single shared copy sibling to domains/. A repo-root-
+// relative reference is correct here: framework/ is genuinely at the repo
+// root, not under any one domain.
 func consumerClosingSection(domainName string) []string {
 	return []string{
 		"## About Hotam-Spec",
@@ -250,7 +262,7 @@ func consumerClosingSection(domainName string) []string {
 		"",
 		"This file covers this domain's own requirement roster only. For the framework itself:",
 		"",
-		"- **Implemented commands** — `domains/" + domainName + "/docs/gen/tools/INDEX.md`.",
+		"- **Implemented commands** — `framework/tools/INDEX.md`.",
 		"- **Operating loop** (how an agent should read and act on this model) — the root crystal: `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.",
 		"- **Full methodology reference** (every §-section's Canon/Narrative/Why) — not generated under this profile; regenerate with `hotam gen-spec --profile full` if ever needed.",
 		"",

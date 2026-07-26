@@ -103,6 +103,26 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 		t.Fatalf("write risk_test.go: %v", err)
 	}
 
+	// Task #364 removed hotam init's auto-seeded Stakeholder "owner" — a bare
+	// `hotam init` now yields a genuinely empty graph. The Requirement below
+	// still needs a real, known Stakeholder id "owner" to satisfy
+	// check_no_dangling_requirement_owner, so seed it explicitly via a real
+	// ProposedStakeholder + apply-proposal (same pattern as
+	// TestExternal_FullLifecycle in external_e2e_test.go), through the actual
+	// hotam binary — not a hand-written graph.json.
+	stakeholderProposal := filepath.Join(workDir, "sh-owner.json")
+	writeJSONFile(t, stakeholderProposal, map[string]any{
+		"kind":   "Stakeholder",
+		"id":     "owner",
+		"name":   "Owner",
+		"domain": "governance",
+		"why":    "kill-switch e2e fixture: requirement owner stakeholder",
+	})
+	applyOut := run("apply-proposal", stakeholderProposal, "--domain", domainDir, "--today", "2026-07-12")
+	if !strings.Contains(applyOut, "applied Stakeholder owner") {
+		t.Fatalf("stakeholder seed did not apply cleanly:\n%s", applyOut)
+	}
+
 	reqProposal := filepath.Join(workDir, "r-risk.json")
 	writeJSONFile(t, reqProposal, map[string]any{
 		"kind":           "Requirement",

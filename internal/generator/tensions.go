@@ -16,6 +16,21 @@ type latentSuspect struct {
 
 const genericAssumptionThreshold = 8
 
+// TensionsMDHasContent reports whether TENSIONS.md carries real domain content
+// — i.e. whether the graph has at least one Conflict node OR at least one Axis
+// (the two structural elements TENSIONS.md exists to display). When false,
+// genSpec withholds TENSIONS.md from the docs/gen/ write set entirely (the
+// same conditional-write pattern DECISIONS.md/ENTITIES.md already use),
+// because a young domain with no conflicts and no axes has nothing to show
+// but the "no conflict nodes yet" template — pure noise for a young domain.
+// The latent-connector suspicions heuristic (which CAN produce output from
+// requirements alone, without conflicts/axes) is deliberately NOT the gate
+// here: it is a secondary advisory section, and a domain with zero conflicts
+// and zero axes has no tension architecture to document regardless.
+func TensionsMDHasContent(g *ontology.Graph) bool {
+	return len(g.Conflicts) > 0 || len(g.Axes) > 0
+}
+
 func BuildTensions(g *ontology.Graph) string {
 	conflicts := NarrativeOrder(g.Conflicts, func(c ontology.Conflict) int { return c.DeclOrder })
 	axes := NarrativeOrder(g.Axes, func(a ontology.Axis) int { return a.DeclOrder })

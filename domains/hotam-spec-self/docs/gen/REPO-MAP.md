@@ -60,7 +60,6 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/hotam-spec-self/docs/gen/CONSTITUTION.md` — The operator's boot sequence
 - `domains/hotam-spec-self/docs/gen/COVERAGE.md` — authored-spec discipline coverage
 - `domains/hotam-spec-self/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
-- `domains/hotam-spec-self/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
 - `domains/hotam-spec-self/docs/gen/HISTORY.md` — Methodology decision history
 - `domains/hotam-spec-self/docs/gen/MODELS.md` — authored object model overview
 - `domains/hotam-spec-self/docs/gen/OPEN.md` — Open registry
@@ -73,3 +72,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter
 - `domains/hotam-spec-self/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_
 - `domains/hotam-spec-self/docs/gen/ENTITIES.md` — _(not written: no entity_types declared)_
+
+**Framework reference (project-shared)** (`framework/`)
+
+- `framework/GLOSSARY.md` — Methodology controlled vocabulary

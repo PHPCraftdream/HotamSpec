@@ -10,8 +10,11 @@ import (
 // actual generated file set. It excludes AUDIT.md (a separate, low-traffic
 // review-tool artifact the generator does not produce at all) and
 // DECISIONS.md/ENTITIES.md (both legitimately absent for hotam-spec-self: no
-// M-tagged OPEN requirements, no entity_types declared). Used by the
-// real-domain determinism/smoke tests in byteidentical_test.go.
+// M-tagged OPEN requirements, no entity_types declared). Task #357 returned
+// FRAMEWORK-INVARIANTS.md to docs/gen/ (it is per-domain content). GLOSSARY.md
+// is NOT here (task #357 promoted it to the project-root framework/ — see
+// fixtureFrameworkDocs). Used by the real-domain determinism/smoke tests in
+// byteidentical_test.go.
 func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 	title := func(filename, h1 string) GenDocEntry {
 		return GenDocEntry{Filename: filename, Content: "# " + h1}
@@ -20,7 +23,6 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 		title("CONSTITUTION.md", "CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)"),
 		title("COVERAGE.md", "COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)"),
 		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
-		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
 		title("MODELS.md", "MODELS.md — authored object model overview (Hotam-Spec)"),
 		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
@@ -33,12 +35,25 @@ func hotamSpecSelfFixtureGenDocs() []GenDocEntry {
 	}
 }
 
+// fixtureFrameworkDocs is the PROJECT-root framework/ file listing shared
+// across all domains (task #357): GLOSSARY.md promoted from docs/gen/ to the
+// project root. tools/*.md are NOT listed here — REPO-MAP.md deliberately does
+// not enumerate subdirectory contents (mirroring its treatment of
+// docs/gen/thinking/), so framework/tools/ stays unlisted too.
+func fixtureFrameworkDocs() []GenDocEntry {
+	return []GenDocEntry{
+		{Filename: "GLOSSARY.md", Content: "# GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"},
+	}
+}
+
 // fixtureGenDocs is the docs/gen/ file listing for the small synthetic
 // fixture domain (P2-2): unlike hotam-spec-self, the fixture DOES declare an
 // entity_type and an M-tagged OPEN requirement, so DECISIONS.md/ENTITIES.md
 // are written too — exercising BuildRepoMap's decisionsWritten=true /
 // entitiesWritten=true branch (the hotam-spec-self case above only exercises
-// the false/false "not written" placeholder branch).
+// the false/false "not written" placeholder branch). Task #357 returned
+// FRAMEWORK-INVARIANTS.md to docs/gen/ (per-domain). GLOSSARY.md is NOT here
+// (task #357: promoted to project-root framework/, see fixtureFrameworkDocs).
 func fixtureGenDocs() []GenDocEntry {
 	title := func(filename, h1 string) GenDocEntry {
 		return GenDocEntry{Filename: filename, Content: "# " + h1}
@@ -49,7 +64,6 @@ func fixtureGenDocs() []GenDocEntry {
 		title("DECISIONS.md", "DECISIONS.md — Open methodology decisions (Hotam-Spec)"),
 		title("ENTITIES.md", "Entities"),
 		title("FRAMEWORK-INVARIANTS.md", "FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"),
-		title("GLOSSARY.md", "GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"),
 		title("HISTORY.md", "HISTORY.md — Methodology decision history (Hotam-Spec)"),
 		title("MODELS.md", "MODELS.md — authored object model overview (Hotam-Spec)"),
 		title("OPEN.md", "OPEN.md — Open registry (Hotam-Spec)"),
@@ -87,7 +101,7 @@ func TestBuildFrameworkInvariants_ByteIdenticalToFixture(t *testing.T) {
 func TestBuildRepoMap_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
-	got := BuildRepoMap(g, "fixture-domain", fixtureGenDocs(), true, true, false)
+	got := BuildRepoMap(g, "fixture-domain", fixtureGenDocs(), fixtureFrameworkDocs(), true, true, true, true, true, false)
 	want, err := os.ReadFile("testdata/fixture/REPO-MAP.md")
 	if err != nil {
 		t.Fatalf("read reference: %v", err)

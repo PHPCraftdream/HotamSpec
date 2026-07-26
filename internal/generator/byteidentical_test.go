@@ -161,7 +161,7 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 		{"MODELS.md", BuildModels},
 		{"COVERAGE.md", func(g *ontology.Graph) string { return BuildCoverage(g) }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
-			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
+			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), fixtureFrameworkDocs(), false, false, true, true, true, false)
 		}},
 		{"live-state.md", func(g *ontology.Graph) string { return BuildLiveState(g, "hotam-spec-self", 27646, "2026-07-12") }},
 	}
@@ -213,7 +213,7 @@ func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
 		{"MODELS.md", BuildModels},
 		{"COVERAGE.md", func(g *ontology.Graph) string { return BuildCoverage(g) }},
 		{"REPO-MAP.md", func(g *ontology.Graph) string {
-			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), false, false, false)
+			return BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), fixtureFrameworkDocs(), false, false, true, true, true, false)
 		}},
 		{"ATOMS_OPERATOR.md", BuildAtomsOperator},
 		{"ATOMS_SUBSTRATE.md", BuildAtomsSubstrate},

@@ -27,6 +27,10 @@ func setupProvenanceTestDomain(t *testing.T, requireProvenance bool) string {
 	if _, err := initDomain(domainDir, "prov-test", "2026-07-15"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	// initDomain no longer auto-seeds a Stakeholder (task #364); the proposals
+	// below land Requirements with owner: "owner" by convention, so seed it
+	// directly first.
+	seedOwnerStakeholder(t, domainDir, "2026-07-15")
 	if requireProvenance {
 		manifestPath := filepath.Join(domainDir, "manifest.json")
 		if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true, \"parent\": null}\n"), 0o644); err != nil {

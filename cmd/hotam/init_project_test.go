@@ -19,7 +19,7 @@ func TestInitProject_ScaffoldFromCleanDir(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 
-	written, err := initProject(dir, "main", "2026-07-13", false)
+	written, err := initProject(dir, "main", "2026-07-13", false, true)
 	if err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
@@ -41,14 +41,19 @@ func TestInitProject_ScaffoldFromCleanDir(t *testing.T) {
 		}
 	}
 
-	// Base domain graph + docs/gen populated by initDomain + genSpec.
+	// Base domain graph is created by initDomain.
 	graphJSON := filepath.Join(dir, "domains", "main", "graph.json")
 	if _, err := os.Stat(graphJSON); err != nil {
 		t.Errorf("base domain graph.json not created: %v", err)
 	}
+	// Task #364: initDomain no longer auto-seeds a Stakeholder + Requirement
+	// — the base domain is genuinely empty, so genSpec (called internally by
+	// initProject) withholds REQUIREMENTS.md (and every other content-gated
+	// docs/gen/ projection) entirely, rather than rendering it with a calm
+	// "no content yet" placeholder.
 	reqMD := filepath.Join(dir, "domains", "main", "docs", "gen", "REQUIREMENTS.md")
-	if _, err := os.Stat(reqMD); err != nil {
-		t.Errorf("docs/gen/REQUIREMENTS.md not created: %v", err)
+	if _, err := os.Stat(reqMD); !os.IsNotExist(err) {
+		t.Errorf("docs/gen/REQUIREMENTS.md must NOT be created for a genuinely empty base domain, stat err=%v", err)
 	}
 
 	// The written list must be non-empty and surface both the marker and the
@@ -85,7 +90,7 @@ func TestInitProject_RefusesWhenMarkerExists(t *testing.T) {
 		t.Fatalf("seed marker: %v", err)
 	}
 
-	_, err := initProject(dir, "main", "2026-07-13", false)
+	_, err := initProject(dir, "main", "2026-07-13", false, true)
 	if err == nil {
 		t.Fatal("expected a refusal error when the marker exists, got nil")
 	}
@@ -106,7 +111,7 @@ func TestInitProject_RefusesWhenClaudeMDExists(t *testing.T) {
 		t.Fatalf("seed CLAUDE.md: %v", err)
 	}
 
-	_, err := initProject(dir, "main", "2026-07-13", false)
+	_, err := initProject(dir, "main", "2026-07-13", false, true)
 	if err == nil {
 		t.Fatal("expected a refusal error when CLAUDE.md exists, got nil")
 	}
@@ -152,7 +157,7 @@ func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 
 	// (2) initProject (`hotam init-project`).
 	projDir := t.TempDir()
-	if _, err := initProject(projDir, "main", "2026-07-14", false); err != nil {
+	if _, err := initProject(projDir, "main", "2026-07-14", false, true); err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
 	projProfile := readManifestGenProfile(t, filepath.Join(projDir, "domains", "main", "manifest.json"))
@@ -263,5 +268,87 @@ func TestCmdInitProject_RequireProvenanceDefaultOff(t *testing.T) {
 	manifestPath := filepath.Join(dir, "domains", defaultInitProjectDomain, "manifest.json")
 	if _, present := readManifestRequireProvenance(t, manifestPath); present {
 		t.Errorf("default cmdInitProject (no --require-provenance) wrote a require_provenance field; want it absent")
+	}
+}
+
+// TestCmdInitProject_DisciplineDefaultFull proves the --discipline flag's
+// default (no flag passed) reproduces the pre-flag behavior byte-for-byte:
+// "discipline": "full" in the manifest, spec/go.mod + spec/hotamspec/hotamspec.go
+// vendored, and docs/gen/SPEC.md rendered — the BORN FULLY OBLIGATED contract
+// (task #273/W6.2) must not regress just because the flag now exists.
+func TestCmdInitProject_DisciplineDefaultFull(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{dir}); err != nil {
+		t.Fatalf("cmdInitProject (default): %v", err)
+	}
+
+	domainDir := filepath.Join(dir, "domains", defaultInitProjectDomain)
+	manifestData, err := os.ReadFile(filepath.Join(domainDir, "manifest.json"))
+	if err != nil {
+		t.Fatalf("read manifest.json: %v", err)
+	}
+	if !strings.Contains(string(manifestData), `"discipline": "full"`) {
+		t.Errorf("default cmdInitProject manifest.json missing \"discipline\": \"full\", got:\n%s", manifestData)
+	}
+	for _, rel := range []string{
+		filepath.Join("spec", "go.mod"),
+		filepath.Join("spec", "hotamspec", "hotamspec.go"),
+	} {
+		if _, err := os.Stat(filepath.Join(domainDir, rel)); err != nil {
+			t.Errorf("default cmdInitProject should scaffold %s: %v", rel, err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); err != nil {
+		t.Errorf("default cmdInitProject should render docs/gen/SPEC.md: %v", err)
+	}
+}
+
+// TestCmdInitProject_DisciplineOffOptOut proves `--discipline ""` (the escape
+// hatch added after dogfooding a business domain that wanted zero framework
+// code before any real content existed): the scaffolded manifest carries no
+// "discipline" key, no spec/ tree is created at all, no SPEC.md is rendered,
+// and the resulting domain is still `all-violations`-clean — matching a bare
+// `hotam init` domain exactly.
+func TestCmdInitProject_DisciplineOffOptOut(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{"--discipline", "", dir}); err != nil {
+		t.Fatalf("cmdInitProject --discipline \"\": %v", err)
+	}
+
+	domainDir := filepath.Join(dir, "domains", defaultInitProjectDomain)
+	manifestData, err := os.ReadFile(filepath.Join(domainDir, "manifest.json"))
+	if err != nil {
+		t.Fatalf("read manifest.json: %v", err)
+	}
+	if strings.Contains(string(manifestData), "discipline") {
+		t.Errorf("--discipline \"\" manifest.json should carry no discipline key, got:\n%s", manifestData)
+	}
+	if _, err := os.Stat(filepath.Join(domainDir, "spec")); !os.IsNotExist(err) {
+		t.Errorf("--discipline \"\" should not create domains/%s/spec/ at all, stat err = %v", defaultInitProjectDomain, err)
+	}
+	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); !os.IsNotExist(err) {
+		t.Errorf("--discipline \"\" should not render docs/gen/SPEC.md, stat err = %v", err)
+	}
+
+	if violations, err := allViolations(domainDir); err != nil {
+		t.Errorf("all-violations against --discipline \"\" domain failed: %v", err)
+	} else if len(violations) != 0 {
+		t.Errorf("--discipline \"\" domain is not all-violations clean: %+v", violations)
+	}
+}
+
+// TestCmdInitProject_DisciplineFlagRejectsBogusValue proves the flag validates
+// its value the same way --profile does on cmdInit — an unrecognized string is
+// a usage error, not silently treated as either "full" or "".
+func TestCmdInitProject_DisciplineFlagRejectsBogusValue(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{"--discipline", "bogus", dir}); err == nil {
+		t.Fatal("cmdInitProject --discipline bogus should return an error, got nil")
 	}
 }

@@ -25,6 +25,20 @@ var bandLabel = map[int]string{
 
 const ctxLineStatic = "context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary"
 
+// LiveStateMDHasContent reports whether docs/gen/live-state.md carries real
+// domain content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use).
+// Note: the crystal's own embedded LIVE-STATE block (CLAUDE.md/AGENTS.md/
+// GEMINI.md) is UNAFFECTED by this predicate — the root crystal keeps
+// rendering its live-state pulse regardless of domain content, this gate
+// only withholds the STANDALONE docs/gen/live-state.md projection.
+func LiveStateMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildLiveState(g *ontology.Graph, domainName string, claudeMDCharCount int, today string) string {
 	return BuildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, invariants.AllViolations(g))
 }

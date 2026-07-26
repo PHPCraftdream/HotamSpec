@@ -89,6 +89,45 @@ func TestExternal_InitProject(t *testing.T) {
 		t.Errorf("init-project output missing confirmation:\n%s", out)
 	}
 
+	// (1b) Task #364: initDomain no longer auto-seeds a Stakeholder + a
+	// Requirement — the base domain init-project just scaffolded is
+	// genuinely empty (0 nodes). The steps below (3b/3c: consumer-vs-full
+	// docs/gen file-count comparison; 9: freshness pulse) need REAL,
+	// non-empty, non-framework-internal domain content to exercise
+	// meaningfully — a literally empty graph now skips EVERY docs/gen/
+	// projection under either profile (this same task), which would
+	// collapse the consumer/full delta this test proves to zero regardless
+	// of profile. Land the SAME minimal Stakeholder+Requirement shape
+	// initDomain used to auto-seed, through the real ordinary proposal path
+	// (apply-proposal + land) — exactly the workflow a real adopter follows
+	// after `hotam init-project` returns an intentionally-empty domain.
+	stakeholderProposal := filepath.Join(workDir, "seed-owner.json")
+	writeJSONFile(t, stakeholderProposal, map[string]any{
+		"kind":   "Stakeholder",
+		"id":     "owner",
+		"name":   "Domain Owner",
+		"domain": "e2e fixture owner",
+	})
+	if out, err := runAt(workDir, "apply-proposal", stakeholderProposal, "--domain", domainDir, "--today", "2026-07-13"); err != nil {
+		t.Fatalf("apply-proposal seed stakeholder failed: %v\nOUTPUT:\n%s", err, out)
+	}
+	requirementProposal := filepath.Join(workDir, "seed-requirement.json")
+	writeJSONFile(t, requirementProposal, map[string]any{
+		"kind":             "Requirement",
+		"id":               "R-domain-exists",
+		"claim":            "The \"main\" domain shall exist as a valid, invariant-clean Hotam-Spec graph.",
+		"owner":            "owner",
+		"status":           "SETTLED",
+		"why":              "e2e fixture requirement (mirrors initDomain's retired auto-seed) — minimal non-empty content for the profile/freshness assertions below.",
+		"enforcement":      "PROSE",
+		"enforceability":   "INHERENTLY_PROSE",
+		"last_reviewed_at": "2026-07-13",
+		"review_after":     "2027-01-09",
+	})
+	if out, err := runAt(workDir, "land", requirementProposal, "--domain", domainDir, "--today", "2026-07-13"); err != nil {
+		t.Fatalf("land seed requirement failed: %v\nOUTPUT:\n%s", err, out)
+	}
+
 	// (2) Project-root marker exists.
 	marker := filepath.Join(projDir, ".hotam-spec-project")
 	if _, err := os.Stat(marker); err != nil {
@@ -231,15 +270,16 @@ func TestExternal_InitProject(t *testing.T) {
 		t.Errorf("second init-project should refuse with 'already exists', got:\n%s", dupOut)
 	}
 
-	// (9) R11-a: the seed requirement (R-domain-exists) must NOT trip a
-	// false "never-reviewed" freshness signal on the very first `hotam
-	// status` after a fresh init-project. Before the fix, initDomain left
-	// LastReviewedAt/ReviewAfter at their zero value, so this line read
-	// "0 overdue . 1 never-reviewed" and what-now's top action was an
-	// ADVISORY about the tool's own bootstrap artifact, not a real content
-	// gap. relOut was captured in step (6) via `status --domain
-	// domains/main`, run with the same --today (2026-07-13) init-project
-	// itself used to scaffold the seed, so this is the exact adopter path.
+	// (9) R11-a: the fixture requirement landed in step (1b) above (mirroring
+	// initDomain's now-retired auto-seed, task #364) must NOT trip a false
+	// "never-reviewed" freshness signal on `hotam status`. Before R11-a's
+	// original fix, initDomain's old seed left LastReviewedAt/ReviewAfter at
+	// their zero value, so this line read "0 overdue . 1 never-reviewed" and
+	// what-now's top action was an ADVISORY about the tool's own bootstrap
+	// artifact, not a real content gap; step (1b) above pins
+	// last_reviewed_at explicitly to the same --today (2026-07-13) this test
+	// uses throughout, so this remains the exact adopter path. relOut was
+	// captured in step (6) via `status --domain domains/main`.
 	if !strings.Contains(relOut, "freshness:   0 overdue · 0 never-reviewed") {
 		t.Errorf("fresh init-project's seed requirement trips a freshness signal on `hotam status` — want \"freshness:   0 overdue · 0 never-reviewed\", got:\n%s", relOut)
 	}

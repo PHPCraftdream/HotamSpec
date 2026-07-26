@@ -71,35 +71,35 @@ func TestBuildRequirements_ConsumerProfileDropsFrameworkNoise(t *testing.T) {
 	}
 }
 
-// TestBuildRequirements_ConsumerClosingSectionDomainPrefixesToolsIndex proves
-// the R7-a fix (F2, review-6 @fl follow-up on task #140): the consumer
-// closing section's "Implemented commands" pointer must be domain-prefixed
-// ("domains/<name>/docs/gen/tools/INDEX.md"), matching the repo-root-relative
-// convention every other cross-reference inside a generated docs/gen/*.md
-// file follows (see domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md, whose
-// cross-references are all "domains/hotam-spec-self/docs/gen/X.md" even
-// though the referencing and referenced files are siblings in the same
-// directory) — a bare "docs/gen/tools/INDEX.md" would resolve at the repo
-// root, which is never where a domain's generated docs live (see
-// cmd/hotam/init_project.go).
-func TestBuildRequirements_ConsumerClosingSectionDomainPrefixesToolsIndex(t *testing.T) {
+// TestBuildRequirements_ConsumerClosingSectionUsesProjectFrameworkToolsIndex
+// proves the task #357 fix: the consumer closing section's "Implemented
+// commands" pointer must be a repo-root-relative bare path
+// ("framework/tools/INDEX.md"), because task #357 promoted the tool docs
+// (and GLOSSARY.md) from a per-domain framework/ directory to the PROJECT
+// root's framework/ — a single shared copy sibling to domains/. The earlier
+// task #140/R7-a assertion (which REQUIRED a domain prefix) is now inverted:
+// a "domains/<name>/framework/tools/INDEX.md" reference would point inside a
+// domain that no longer carries its own framework/ copy, so it must NOT
+// survive.
+func TestBuildRequirements_ConsumerClosingSectionUsesProjectFrameworkToolsIndex(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 
 	const domainName = "some-other-domain"
 	consumer := BuildRequirements(g, domainName, true)
 
-	wantPrefixed := "`domains/" + domainName + "/docs/gen/tools/INDEX.md`"
-	if !strings.Contains(consumer, wantPrefixed) {
-		t.Errorf("consumer closing section must reference %q, got:\n%s", wantPrefixed, consumer)
+	wantBare := "`framework/tools/INDEX.md`"
+	if !strings.Contains(consumer, wantBare) {
+		t.Errorf("consumer closing section must reference the project-root %q, got:\n%s", wantBare, consumer)
 	}
 
-	// The bare (bug) form must not survive: a literal "docs/gen/tools/INDEX.md"
-	// NOT preceded by "domains/<name>/" would resolve to a nonexistent
-	// repo-root path.
-	bareForm := "`docs/gen/tools/INDEX.md`"
-	if strings.Contains(consumer, bareForm) {
-		t.Errorf("consumer closing section must NOT reference the bare, non-domain-prefixed form %q", bareForm)
+	// The domain-prefixed form must not survive: a literal
+	// "domains/<name>/framework/tools/INDEX.md" would resolve inside a domain
+	// that no longer carries its own framework/ copy (task #357 moved it to the
+	// project root), so it is a dangling reference.
+	prefixedForm := "`domains/" + domainName + "/framework/tools/INDEX.md`"
+	if strings.Contains(consumer, prefixedForm) {
+		t.Errorf("consumer closing section must NOT reference the per-domain form %q (framework/ is now project-shared)", prefixedForm)
 	}
 }
 

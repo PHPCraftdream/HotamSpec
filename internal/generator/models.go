@@ -80,6 +80,21 @@ func isVendoredRecorderFile(path string) bool {
 // Output is fully deterministic (files, objects, fields, methods, and
 // errors are all sorted) so re-running against an unchanged spec/ tree
 // yields byte-identical output.
+// ModelsMDHasContent reports whether MODELS.md carries real authored content
+// for this domain — i.e. whether the SAME go/ast scan BuildModels uses
+// (gate.ScanAuthoredModels) finds at least one authored file. When false,
+// genSpec withholds MODELS.md from the docs/gen/ write set entirely (the same
+// conditional-write pattern DECISIONS.md/ENTITIES.md already use), because a
+// domain with no authored spec/ model files has nothing to show but the
+// "nothing found yet" template — pure noise for a young domain.
+func ModelsMDHasContent(g *ontology.Graph) bool {
+	files, err := gate.ScanAuthoredModels(g)
+	if err != nil {
+		return false
+	}
+	return len(files) > 0
+}
+
 func BuildModels(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("MODELS", g), ""}
 	lines = append(lines, "# MODELS.md — authored object model overview (Hotam-Spec)")

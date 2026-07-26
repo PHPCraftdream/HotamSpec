@@ -62,7 +62,6 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/fixture-domain/docs/gen/DECISIONS.md` — Open methodology decisions
 - `domains/fixture-domain/docs/gen/ENTITIES.md` — Entities
 - `domains/fixture-domain/docs/gen/FRAMEWORK-INVARIANTS.md` — Framework-plumbing index
-- `domains/fixture-domain/docs/gen/GLOSSARY.md` — Methodology controlled vocabulary
 - `domains/fixture-domain/docs/gen/HISTORY.md` — Methodology decision history
 - `domains/fixture-domain/docs/gen/MODELS.md` — authored object model overview
 - `domains/fixture-domain/docs/gen/OPEN.md` — Open registry
@@ -72,3 +71,7 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/fixture-domain/docs/gen/TENSIONS.md` — The tension map
 - `domains/fixture-domain/docs/gen/TRACEABILITY.md` — requirement -> implemented_by -> verified_by
 - `domains/fixture-domain/docs/gen/UNENFORCED.md` — Burn-down meter
+
+**Framework reference (project-shared)** (`framework/`)
+
+- `framework/GLOSSARY.md` — Methodology controlled vocabulary

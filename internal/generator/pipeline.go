@@ -108,6 +108,17 @@ var docURLFragmentPattern = regexp.MustCompile(`#[A-Za-z0-9-]+`)
 // status snapshot that inevitably goes stale (nothing regenerates prose).
 // nil is the honest no-op — a domain with no declared gate_stage_order and
 // no Conflicts renders byte-identically to before this parameter existed.
+// PipelineMDHasContent reports whether PIPELINE.md carries real domain content
+// — i.e. whether the graph has at least one Process node (§Process is opt-in:
+// a domain with zero Process nodes has no stage pipeline to render). When
+// false, genSpec withholds PIPELINE.md from the docs/gen/ write set entirely
+// (the same conditional-write pattern DECISIONS.md/ENTITIES.md already use),
+// because a young domain with no Process nodes has nothing to show but the
+// "no processes modeled yet" template.
+func PipelineMDHasContent(g *ontology.Graph) bool {
+	return len(g.Processes) > 0
+}
+
 func BuildPipeline(g *ontology.Graph, domainName string, gateOrder []string) string {
 	sourceHint := "from the active domain's `graph.json`"
 	if domainName != "" {

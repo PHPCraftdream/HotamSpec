@@ -6,24 +6,24 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 )
 
-// TestInitDomain_SeedRequirementIsFresh proves the R11-a fix directly at the
-// unit level: initDomain's seed requirement (R-domain-exists) must classify
-// as freshness.Fresh — never freshness.NeverReviewed — as of the same
-// `today` it was scaffolded with. Before this fix, initDomain left
-// LastReviewedAt/ReviewAfter at their zero value, which freshness.Classify
-// reports as NeverReviewed: a fresh `hotam init`/`hotam init-project`'s
-// very first `hotam status` would report the tool's own bootstrap artifact
-// as unreviewed debt, not a real content gap.
-func TestInitDomain_SeedRequirementIsFresh(t *testing.T) {
+// TestInitDomain_ScaffoldsGenuinelyEmptyGraph proves task #364's core change
+// directly at the unit level: initDomain no longer auto-seeds a Stakeholder
+// ("owner") or a Requirement ("R-domain-exists") — a freshly-scaffolded
+// domain is genuinely empty (0 nodes of every kind), which is well-formed by
+// construction (R-empty-content-wellformed) and needs no worked example to
+// pass `all-violations` clean. This replaces the old
+// TestInitDomain_SeedRequirementIsFresh/SeedReviewAfterBeyondDueSoonWindow,
+// which asserted freshness properties of a seed Requirement that no longer
+// exists.
+func TestInitDomain_ScaffoldsGenuinelyEmptyGraph(t *testing.T) {
 	t.Parallel()
 
 	domainDir := t.TempDir()
 	today := "2026-07-15"
-	if _, err := initDomain(domainDir, "test-seed-freshness", today); err != nil {
+	if _, err := initDomain(domainDir, "test-empty-scaffold", today); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
 
@@ -31,68 +31,32 @@ func TestInitDomain_SeedRequirementIsFresh(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadDomainGraph: %v", err)
 	}
-
-	found := false
-	for _, r := range g.Requirements {
-		if r.ID != "R-domain-exists" {
-			continue
-		}
-		found = true
-		if r.LastReviewedAt != today {
-			t.Errorf("seed requirement LastReviewedAt = %q, want %q", r.LastReviewedAt, today)
-		}
-		if r.ReviewAfter == "" {
-			t.Errorf("seed requirement ReviewAfter is empty, want a date derived from %q + %d days", today, seedReviewCadenceDays)
-		}
-		status := freshness.Classify(r, today)
-		if status != freshness.Fresh {
-			t.Errorf("freshness.Classify(seed requirement, %q) = %s, want %s (this is the exact false-signal R11-a fixes)", today, status, freshness.Fresh)
-		}
+	if !g.IsEmpty() {
+		t.Errorf("freshly-scaffolded graph is not empty: %+v", g)
 	}
-	if !found {
-		t.Fatalf("seed requirement R-domain-exists not found in scaffolded graph")
+	if len(g.Stakeholders) != 0 {
+		t.Errorf("freshly-scaffolded graph has %d stakeholder(s), want 0 (no auto-seed)", len(g.Stakeholders))
 	}
-}
-
-// TestInitDomain_SeedReviewAfterBeyondDueSoonWindow confirms the exact
-// cadence offset chosen (seedReviewCadenceDays == 180) lands the seed
-// comfortably outside freshness.DueSoonWindowDays (30 days), so the seed is
-// genuinely Fresh at scaffold time, not merely "not yet NeverReviewed but
-// now DueSoon" — trading one false signal for another would not satisfy the
-// fix's intent.
-func TestInitDomain_SeedReviewAfterBeyondDueSoonWindow(t *testing.T) {
-	t.Parallel()
-
-	domainDir := t.TempDir()
-	today := "2026-07-15"
-	if _, err := initDomain(domainDir, "test-seed-cadence", today); err != nil {
-		t.Fatalf("initDomain: %v", err)
+	if len(g.Requirements) != 0 {
+		t.Errorf("freshly-scaffolded graph has %d requirement(s), want 0 (no auto-seed)", len(g.Requirements))
 	}
 
-	g, err := loadDomainGraph(domainDir)
+	violations, err := allViolations(domainDir)
 	if err != nil {
-		t.Fatalf("loadDomainGraph: %v", err)
+		t.Fatalf("allViolations: %v", err)
 	}
-	for _, r := range g.Requirements {
-		if r.ID != "R-domain-exists" {
-			continue
-		}
-		if r.ReviewAfter <= today {
-			t.Fatalf("seed ReviewAfter %q must be strictly after today %q", r.ReviewAfter, today)
-		}
-		if got := freshness.Classify(r, today); got != freshness.Fresh {
-			t.Errorf("seed requirement classified as %s at scaffold time, want %s (review cadence too short)", got, freshness.Fresh)
-		}
+	if len(violations) != 0 {
+		t.Errorf("freshly-scaffolded empty domain has %d violation(s), want 0: %+v", len(violations), violations)
 	}
 }
 
-// TestCmdInit_TodayFlagWiredToSeedFreshness proves `hotam init` (bare, not
-// init-project) gained --today date-pinning parity with init-project, AND
-// that the flag actually reaches initDomain's freshness seeding rather than
-// only affecting some other output: an explicit --today must produce a seed
-// requirement whose LastReviewedAt equals that exact pinned date and whose
-// freshness.Classify result is Fresh, not NeverReviewed.
-func TestCmdInit_TodayFlagWiredToSeedFreshness(t *testing.T) {
+// TestCmdInit_TodayFlagAcceptedWithoutError proves `hotam init --today
+// <date>` (bare, not init-project) still parses and does not error now that
+// initDomain no longer seeds anything the flag would date-stamp (task #364
+// retired the seed Requirement --today used to feed LastReviewedAt/
+// ReviewAfter). The flag is kept for API/call-site stability (see
+// initDomain's own doc comment) and must remain harmless to pass.
+func TestCmdInit_TodayFlagAcceptedWithoutError(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -100,35 +64,23 @@ func TestCmdInit_TodayFlagWiredToSeedFreshness(t *testing.T) {
 	pinnedToday := "2026-01-01"
 
 	if err := cmdInit([]string{"--today", pinnedToday, domainDir}); err != nil {
-		t.Fatalf("cmdInit: %v", err)
+		t.Fatalf("cmdInit --today %q: %v", pinnedToday, err)
 	}
 
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		t.Fatalf("loadDomainGraph: %v", err)
 	}
-	found := false
-	for _, r := range g.Requirements {
-		if r.ID != "R-domain-exists" {
-			continue
-		}
-		found = true
-		if r.LastReviewedAt != pinnedToday {
-			t.Errorf("seed requirement LastReviewedAt = %q, want pinned --today %q", r.LastReviewedAt, pinnedToday)
-		}
-		if got := freshness.Classify(r, pinnedToday); got != freshness.Fresh {
-			t.Errorf("hotam init --today %q: seed requirement classified as %s, want %s", pinnedToday, got, freshness.Fresh)
-		}
-	}
-	if !found {
-		t.Fatalf("seed requirement R-domain-exists not found after cmdInit")
+	if !g.IsEmpty() {
+		t.Errorf("cmdInit --today %q produced a non-empty graph: %+v", pinnedToday, g)
 	}
 }
 
 // TestCmdInit_TodayFlagDefaultsToSystemDate confirms omitting --today still
 // works (defaults to system date, exactly like init-project's own
 // long-standing --today convention) — the flag is additive, not a new
-// required argument.
+// required argument, and remains harmless to omit now that nothing in the
+// scaffolded graph is date-stamped by it.
 func TestCmdInit_TodayFlagDefaultsToSystemDate(t *testing.T) {
 	t.Parallel()
 
@@ -143,18 +95,8 @@ func TestCmdInit_TodayFlagDefaultsToSystemDate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadDomainGraph: %v", err)
 	}
-	found := false
-	for _, r := range g.Requirements {
-		if r.ID != "R-domain-exists" {
-			continue
-		}
-		found = true
-		if r.LastReviewedAt == "" {
-			t.Errorf("seed requirement LastReviewedAt is empty even without --today; want it defaulted to system date")
-		}
-	}
-	if !found {
-		t.Fatalf("seed requirement R-domain-exists not found after cmdInit")
+	if !g.IsEmpty() {
+		t.Errorf("cmdInit (default --today) produced a non-empty graph: %+v", g)
 	}
 }
 

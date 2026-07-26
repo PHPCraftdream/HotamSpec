@@ -277,13 +277,15 @@ func RenderEmbeddedThinkingBlock(domainName string, consumer bool) string {
 // Implemented and Planned tool counts (computed from methodology.Tools) and
 // directs the operator to `hotam -h` (the full command list with usage,
 // generated from the same registry), `hotam status --json` (structured pulse),
-// `hotam req` / `hotam brief` (agentic access), and docs/gen/tools/INDEX.md /
+// `hotam req` / `hotam brief` (agentic access), and framework/tools/INDEX.md /
 // internal/methodology/tools_data.go (the complete registry) for detail.
 //
 // consumer drops the internal/methodology/tools_data.go source-file reference
 // (a framework SOURCE FILE that does not exist in an external consumer's
-// project), keeping the docs/gen/tools/INDEX.md pointer (a real file in both
+// project), keeping the framework/tools/INDEX.md pointer (a real file in both
 // profiles). Same pattern as BuildToolDocsIndex's consumer branch (task #144).
+// Task #355 relocated tools/*.md out of docs/gen/tools/ into the sibling
+// framework/tools/ directory, so this pointer follows it there.
 func RenderEmbeddedToolsBlock(consumer bool) string {
 	tools := methodology.Tools.All()
 	implementedCount := 0
@@ -296,9 +298,9 @@ func RenderEmbeddedToolsBlock(consumer bool) string {
 		}
 	}
 
-	registryRef := "spec/docs/gen/tools/INDEX.md, internal/methodology/tools_data.go."
+	registryRef := "spec/framework/tools/INDEX.md, internal/methodology/tools_data.go."
 	if consumer {
-		registryRef = "spec/docs/gen/tools/INDEX.md."
+		registryRef = "spec/framework/tools/INDEX.md."
 	}
 
 	lines := []string{
@@ -1217,12 +1219,53 @@ func RenderClaudeMDFromTemplateWithViolations(g *ontology.Graph, domainName, rep
 		out = strings.ReplaceAll(out, "`spec/docs/thinking/`", "`domains/"+effectiveDomain+"/docs/gen/thinking/`")
 	}
 
-	// The three bare `docs/gen/...` links (bug 1) are rendered against the
-	// `spec/docs/gen/...` sentinel prefix regardless of profile (all four
-	// target files -- TENSIONS.md, REQUIREMENTS.md, HISTORY.md,
-	// tools/INDEX.md -- are always written by genSpec under EITHER profile),
-	// so this replace is unconditional.
+	// Conditional docs/gen/ files (task #361, extended by task #364):
+	// TENSIONS.md and PIPELINE.md are withheld by genSpec when the domain has
+	// no conflict/axis nodes or no process nodes respectively; REQUIREMENTS.md
+	// and HISTORY.md (previously always written, now gated the same way as
+	// every other file task #364 covers — RequirementsMDHasContent/
+	// HistoryMDHasContent, both reducing to !g.IsEmpty()) join them here. The
+	// mediation loop text (baked in claudemd_static.go) and the
+	// RECENTLY-REJECTED block's unconditional header line (RenderRecentlyRejectedBlock)
+	// reference these via the `spec/docs/gen/` sentinel; stripping the path
+	// prefix from these references BEFORE the sentinel replacement below
+	// leaves the file NAME in the prose (still useful as methodology guidance
+	// — "gen-spec renders PIPELINE.md/REQUIREMENTS.md/...") but removes the
+	// file-PATH token the test's link-extractor matches on, guaranteeing the
+	// crystal never claims a file exists at a specific docs/gen/ path that
+	// does not (TestCrystalLinks_EveryReferencedPathExistsOnDisk).
+	if !TensionsMDHasContent(g) {
+		out = strings.ReplaceAll(out, "spec/docs/gen/TENSIONS.md", "TENSIONS.md")
+	}
+	if !PipelineMDHasContent(g) {
+		out = strings.ReplaceAll(out, "spec/docs/gen/PIPELINE.md", "PIPELINE.md")
+	}
+	if !RequirementsMDHasContent(g) {
+		out = strings.ReplaceAll(out, "spec/docs/gen/REQUIREMENTS.md", "REQUIREMENTS.md")
+	}
+	if !HistoryMDHasContent(g) {
+		out = strings.ReplaceAll(out, "spec/docs/gen/HISTORY.md", "HISTORY.md")
+	}
+
+	// The bare `docs/gen/...` links are rendered against the
+	// `spec/docs/gen/...` sentinel prefix regardless of profile. Any of
+	// TENSIONS.md/PIPELINE.md/REQUIREMENTS.md/HISTORY.md may have been
+	// removed above (conditional); every OTHER `spec/docs/gen/...` sentinel
+	// this template carries is for a file genSpec writes unconditionally, so
+	// this final blanket replace is unconditional. tools/INDEX.md is NOT
+	// among them: task #355 relocated it (and the rest of tools/*.md) to the
+	// sibling framework/ directory, so its `spec/framework/...` sentinel is
+	// substituted separately just below.
 	out = strings.ReplaceAll(out, "spec/docs/gen/", "domains/"+effectiveDomain+"/docs/gen/")
+
+	// framework/ sentinel substitution (task #357): the EMBEDDED-TOOLS block's
+	// tools/INDEX.md pointer is rendered against a `spec/framework/...` sentinel
+	// and resolved here to the PROJECT-root `framework/` directory — a single
+	// shared copy sibling to domains/, byte-identical across all domains (tools/
+	// *.md + GLOSSARY.md were promoted from per-domain framework/ to the
+	// project root). tools/INDEX.md is always written under EITHER profile, so
+	// this replace is unconditional too.
+	out = strings.ReplaceAll(out, "spec/framework/", "framework/")
 
 	return out
 }

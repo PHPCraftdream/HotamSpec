@@ -17,6 +17,161 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Empty domains produce zero `docs/gen/` files; `hotam init` no longer auto-seeds
+  (task #364)**: a business-empty domain graph (0 axes/stakeholders/requirements/
+  conflicts/assumptions/operators/processes/goals/entity_types/entities) now
+  produces NO generated files at all — completing the conditional-write pattern
+  task #361 started for `TENSIONS.md`/`PIPELINE.md`/`MODELS.md` (and the
+  longer-standing `DECISIONS.md`/`ENTITIES.md` pattern) across the remaining
+  `docs/gen/*.md` set.
+  - **`cmd/hotam/init_cmd.go`** (`initDomain`): removed the auto-seeded
+    Stakeholder (`"owner"`) + SETTLED Requirement (`"R-domain-exists"`) a fresh
+    `hotam init`/`hotam init-project` used to write. A freshly-scaffolded domain
+    is now genuinely empty (`ontology.Graph{}`) — safe by construction, since an
+    empty graph already passes every structural invariant
+    (`R-empty-content-wellformed`).
+  - **`internal/generator`**: eleven new `*MDHasContent(g) bool` predicates —
+    `RequirementsMDHasContent`, `OpenMDHasContent`, `UnenforcedMDHasContent`,
+    `FrameworkInvariantsMDHasContent`, `HistoryMDHasContent`,
+    `ConstitutionMDHasContent`, `TraceabilityMDHasContent`, `CoverageMDHasContent`,
+    `RepoMapMDHasContent`, `AgentContextMDHasContent`, `LiveStateMDHasContent` —
+    plus `GraphJSONHasContent` for the `docs/gen/graph.json` archival copy. Each
+    reduces to `!g.IsEmpty()`, mirroring the existing `EmptyNotice`/`g.IsEmpty()`
+    fallback every one of these files' own `Build*` function already used.
+  - **`cmd/hotam/gen_spec.go`**: all twelve are now write-set-conditional (same
+    pattern as `DECISIONS.md`/`ENTITIES.md`/`TENSIONS.md`/`PIPELINE.md`/
+    `MODELS.md`) — `REQUIREMENTS.md`/`OPEN.md`/`UNENFORCED.md`/
+    `FRAMEWORK-INVARIANTS.md`/`HISTORY.md`/`CONSTITUTION.md`/`TRACEABILITY.md`/
+    `COVERAGE.md`/`REPO-MAP.md`/`AGENT-CONTEXT.md`/`live-state.md`/`graph.json`.
+    `repoMapDocs`/`mdDocs` construction moved off fixed-position slice indexing
+    (no longer valid once every entry's PRESENCE, not just its content, varies)
+    onto named `*MD` string variables gated by their own `*Written` bool. The
+    root/local crystal (`CLAUDE.md`/`AGENTS.md`/`GEMINI.md`) and the
+    project-shared `framework/` output (`GLOSSARY.md`, `tools/*.md`/`INDEX.md`)
+    are UNAFFECTED — both are written unconditionally, independent of domain
+    content, so a `hotam init-project` on an empty domain still gets a working
+    crystal.
+  - **`internal/selfspec/requirements_empty.go`**: `R-empty-content-gen-notice`'s
+    `Claim`/`Why` revised (via `hotam sync-self`, not a hand-edit) from "emit a
+    'no content yet' notice into `docs/gen/*.md`" to "write ZERO files under
+    `docs/gen/`" — the requirement's own text now matches the new behavior
+    instead of describing the retired one.
+  - `internal/generator/docs_gen_ownership_test.go`, `cmd/hotam/gen_spec_test.go`
+    (`TestGenSpec_MissingGraphRendersCalmNotice` updated for the new zero-file
+    behavior; `TestGenSpec_SharedProjectionsModeIndependent` restored — it was
+    referenced by `R-shared-projections-mode-independent`'s `enforced_by` but had
+    gone missing from the working tree), and every `cmd/hotam` test fixture that
+    relied on `initDomain`'s retired auto-seed (`semantic_gate_test.go`,
+    `land_test.go`, `provenance_gate_test.go`, `propose_test.go`,
+    `gen_spec_profile_test.go`, `init_project_test.go`,
+    `init_project_e2e_test.go`) updated for the new empty-by-default scaffold —
+    new shared test helpers `seedOwnerStakeholder`/`seedPlaceholderRequirement`/
+    `seedMinimalRequirement` in `cmd/hotam/common_test.go` reconstruct the old
+    seed's shape where a test's actual subject needs non-empty domain content.
+  - Unrelated, mechanical fixes needed to get `go vet ./cmd/hotam/...` clean
+    (both pre-existing gaps in the working tree, not introduced by this task):
+    `chdirAndRestore` test helper (used by `land_test.go`, only ever defined in
+    `internal/paths`) added locally to `cmd/hotam/common_test.go`.
+  - **Follow-up regression fix**: the first landing of this task left 8 real
+    `go test ./...` failures, caught by independent verification (not by the
+    task's own report). `cmd/hotam/killswitch_e2e_test.go`'s
+    `killswitchFixtureDomain` (shared by all 6 `TestKillswitch_*` e2e tests)
+    called bare `hotam init` and then landed a Requirement with
+    `"owner": "owner"`, relying on the auto-seeded Stakeholder `initDomain`
+    used to write — now removed. Fixed by seeding a real `Stakeholder "owner"`
+    via an explicit `apply-proposal` step inside the fixture (mirrors
+    `TestExternal_FullLifecycle`'s pattern), not by hand-editing `graph.json`.
+    Separately, `cmd/hotam/claudemd_links_test.go`'s
+    `TestConsumerProfile_NoFrameworkSourceReferences`/
+    `TestConsumerProfile_DocsGenNoFrameworkSourceReferences` hard-assumed
+    `REPO-MAP.md`/`CONSTITUTION.md` always exist on disk; both now treat
+    `os.IsNotExist` on those paths as the vacuous-true case (no file, nothing
+    to check) instead of failing. Full `go test ./... -timeout 30m`: 19/19
+    packages `ok`, 0 FAIL.
+- **Conditional docs/gen/ files for young domains (task #361)**: `TENSIONS.md`,
+  `PIPELINE.md`, and `MODELS.md` are now withheld from `docs/gen/` when the domain
+  has no content for them — exactly the conditional-write pattern `DECISIONS.md`/
+  `ENTITIES.md` already use. A freshly-scaffolded domain (no conflicts/axes, no
+  Process nodes, no authored `spec/model/*.go`) gets an honest `_(not written: …)_`
+  line in `REPO-MAP.md` instead of a pure-template file with zero facts.
+  - `generator.TensionsMDHasContent(g)` (conflict OR axis nodes),
+    `generator.PipelineMDHasContent(g)` (process nodes),
+    `generator.ModelsMDHasContent(g)` (the same `gate.ScanAuthoredModels` scan
+    `BuildModels` uses) gate the three files.
+  - **Fix A** (`internal/generator/constitution.go`): sections 3 ("hard boundary"),
+    4 ("super-rules"), and 7 ("methodology's laws") no longer render empty for a
+    domain that has content but lacks the constitution-set requirement IDs. Each
+    section now shows an honest `_No … SETTLED in this domain's graph yet._`
+    placeholder, and section 7's table suppresses empty category rows entirely.
+  - **`cmd/hotam/gen_spec.go`**: the three files are removed from the unconditional
+    `repoMapDocs`/`mdDocs` slices and appended conditionally (same pattern as
+    DECISIONS/ENTITIES). `BuildRepoMap` receives three new bool params for the
+    `_(not written: …)_ ` listing lines.
+  - **`internal/generator/agentcontext.go`**: `renderAgentContextDocsGenIndex`
+    and the "Details on demand" section omit the `TENSIONS.md` reference when the
+    domain has no conflict/axis nodes.
+  - **`internal/generator/claudemd.go`**: the mediation-loop text's
+    `spec/docs/gen/PIPELINE.md` and `spec/docs/gen/TENSIONS.md` sentinels are
+    reduced to bare file names (no path prefix) when the files aren't written,
+    so the crystal never claims a `docs/gen/` path that doesn't exist on disk.
+  - `docs_gen_ownership_test.go` (`genTopLevelOwned` + `ownedGenRelPaths`) and
+    `gen_spec_profile_test.go` (file-count pins) updated for the new conditional set.
+- **Framework-self-documentation split: project-shared vs per-domain (tasks #355→#357)**:
+  engine content that is byte-identical across all domains (`tools/*.md` +
+  `tools/INDEX.md` — the `hotam` CLI command reference, 46 files; and `GLOSSARY.md`
+  — the methodology controlled vocabulary) is promoted to a SINGLE project-root
+  `framework/` directory (sibling of `domains/`, NOT inside any one domain). Every
+  domain's `gen-spec` writes the same bytes to the same paths (idempotent
+  overwrite), so a multi-domain project carries exactly ONE copy. `GLOSSARY.md`
+  dropped its per-domain `reader:` header line to achieve true byte-identity
+  regardless of which domain regenerated it (mirroring `tools/*.md`, which never
+  carried one).
+  - `FRAMEWORK-INVARIANTS.md`, by contrast, is PER-DOMAIN (which framework-plumbing
+    SETTLED atoms THIS domain carries — it grows with the domain's own content,
+    like REQUIREMENTS.md). Task #355 had misclassified it as project-shared and
+    moved it to the per-domain `framework/`; #357 returns it to `docs/gen/` where
+    it belongs (and where the entity-projection invariant's own rule text already
+    referenced `domains/<name>/docs/gen/FRAMEWORK-INVARIANTS.md`).
+  - **`cmd/hotam/gen_spec.go`**: `projectFrameworkDir := filepath.Join(repoRoot,
+    "framework")` routes `GLOSSARY.md` + `tools/*.md` + `INDEX.md` to the project
+    root; `FRAMEWORK-INVARIANTS.md` writes back through `mdDocs` into `docs/gen/`.
+    `cleanupStaleProjectFrameworkFiles` (closed list: GLOSSARY.md + tools/*.md)
+    and `cleanupStaleDomainFrameworkDir` (removes the retired per-domain
+    `framework/` dir + its empty `tools/` subdir) replace the old single
+    `cleanupStaleFrameworkFiles`.
+  - **`internal/generator/repomap.go`**: "Framework reference (project-shared)"
+    section now lists project-root `framework/` files with repo-root-relative
+    paths; `FRAMEWORK-INVARIANTS.md` is back in the "Generated docs" listing.
+  - **Cross-reference path pointers** updated: `claudemd.go` (EMBEDDED-TOOLS:
+    `spec/framework/` → bare `framework/`), `requirements.go` (consumer closing:
+    `framework/tools/INDEX.md`), `agentcontext.go` (file index: FRAMEWORK-
+    INVARIANTS.md → docs/gen/, tools + GLOSSARY → project framework/),
+    `claudemd_constitutionindex.go` (invariantsPath → docs/gen/).
+  - New/updated tests: `TestProjectOwnsFramework_NoForeignOrOrphanFiles`
+    (project-level ownership), profile-count tests, link-existence tests, and
+    byte-identity fixtures updated for the new paths. Full `go test ./...` green.
+- **`hotam init-project --discipline full|""` flag (task #353)**: init-project's
+  BORN FULLY OBLIGATED scaffold (unconditional `discipline: "full"`, a vendored
+  `spec/hotamspec/hotamspec.go` recorder, `spec/go.mod`, and a rendered
+  `docs/gen/SPEC.md` — see task #273/W6.2) is now an explicit `--discipline`
+  flag instead of hardcoded behavior. Default (`full`, or the flag omitted)
+  reproduces the exact prior behavior byte-for-byte — the born-obligated e2e
+  proof (`TestExternal_InitProjectBornObligated`) is unchanged and still green.
+  `--discipline ""` is a new opt-out: no `discipline` key in `manifest.json`,
+  no `spec/` tree scaffolded at all, no `SPEC.md` rendered — matching a bare
+  `hotam init` domain exactly. Motivated by dogfooding a brand-new external
+  business domain (`life`, outside this repo) that wanted zero framework code
+  sitting in it before any real content existed: `discipline: full`'s value is
+  the scenario-narration upgrade (tests double as `SPEC.md` source via
+  `hotamspec.NewScenario`), not a precondition for writing real
+  `implemented_by`/`verified_by`-linked requirements, so an explicit opt-out
+  needed to exist rather than requiring a manual manifest/`spec/` cleanup after
+  every scaffold. `--discipline full` can always be turned on later via
+  `hotam vendor-recorder` if the narration upgrade is wanted after the fact.
+  New tests: `TestCmdInitProject_DisciplineDefaultFull`,
+  `TestCmdInitProject_DisciplineOffOptOut`,
+  `TestCmdInitProject_DisciplineFlagRejectsBogusValue`. Full `go test ./...`
+  (19 packages) green.
 - **Tunable, decoupled `verified_by` exec timeout — flake-class fix (task #352, FLAKY)**:
   a systemic test-infrastructure flake, surfaced and confirmed three times this
   session (#350, #340, #341/#342 verifications), not a one-off test bug.

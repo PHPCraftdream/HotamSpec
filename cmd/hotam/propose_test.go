@@ -1115,6 +1115,10 @@ func TestCmdPropose_Requirement_Land_RequireProvenance_WithFlags_Succeeds(t *tes
 	if _, err := initDomain(domainDir, "prov-propose-test", "2026-07-15"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	// initDomain no longer auto-seeds a Stakeholder (task #364); cmdPropose
+	// below lands a Requirement with --owner owner by convention, so seed it
+	// directly first.
+	seedOwnerStakeholder(t, domainDir, "2026-07-15")
 	manifestPath := filepath.Join(domainDir, "manifest.json")
 	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true, \"parent\": null}\n"), 0o644); err != nil {
 		t.Fatalf("write require_provenance manifest: %v", err)
@@ -1160,6 +1164,10 @@ func TestCmdPropose_Requirement_Land_RequireProvenance_MissingFlags_Refused(t *t
 	if _, err := initDomain(domainDir, "prov-propose-test-neg", "2026-07-15"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	// initDomain no longer auto-seeds a Stakeholder (task #364); cmdPropose
+	// below lands a Requirement with --owner owner by convention, so seed it
+	// directly first.
+	seedOwnerStakeholder(t, domainDir, "2026-07-15")
 	manifestPath := filepath.Join(domainDir, "manifest.json")
 	if err := os.WriteFile(manifestPath, []byte("{\"self_hosting\": false, \"require_provenance\": true, \"parent\": null}\n"), 0o644); err != nil {
 		t.Fatalf("write require_provenance manifest: %v", err)

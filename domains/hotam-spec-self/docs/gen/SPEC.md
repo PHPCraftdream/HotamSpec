@@ -298,7 +298,7 @@ Requirements with no `verified_by` entry at all: SETTLED without a code carrier 
 | `R-domain-self-hosting-flag` | SETTLED | Framework-jurisdiction invariants (frameworkScopedInvariantNames) shall run only against a graph whose manifest declares self_hosting=true. |
 | `R-drift-structurally-impossible` | SETTLED | The generated docs/gen/*.md and graph.json shall equal the regeneration of the current graph, byte-for-byte. |
 | `R-empty-content-calm-banner` | SETTLED | When the active domain has no content yet (empty graph), `hotam what-now` shall render a calm 'no content yet'-style signal, not an error. |
-| `R-empty-content-gen-notice` | SETTLED | When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail. |
+| `R-empty-content-gen-notice` | SETTLED | When the active domain has no content yet (missing or genuinely empty graph), `hotam gen-spec` shall NOT fail, and shall write ZERO files under docs/gen/ — no 'no content yet' notice rendered into a placeholder-filled docs/gen/*.md set. |
 | `R-empty-content-is-legitimate` | REJECTED | A freshly-cloned framework with no spec/content/graph.py shall be structurally well-formed; what_now renders a calm 'no content yet' banner and gen_spec emits the same notice. |
 | `R-empty-content-wellformed` | SETTLED | A freshly-cloned framework with an empty graph shall pass all structural invariants â€” an empty graph is well-formed. |
 | `R-enforceability-kind-declared` | SETTLED | A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline. |

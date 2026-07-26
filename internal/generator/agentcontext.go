@@ -41,10 +41,25 @@ const agentContextWhatNowLimit = 10
 // block uses (buildConstitutionIndexModel — id-prefix bucketing for FULL,
 // enforcement-tier bucketing for CONSUMER; see
 // claudemd_constitutionindex.go's consumerCategoryOrder doc comment).
+// AgentContextMDHasContent reports whether AGENT-CONTEXT.md carries real
+// domain content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use). A
+// genuinely empty domain's AGENT-CONTEXT.md would carry nothing but a
+// zeroed-out LIVE-STATE block and empty index sections — no different in
+// kind from every other file in this set that this same task gates.
+func AgentContextMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
+
+	tensionsWritten := TensionsMDHasContent(g)
 
 	lines := []string{
 		generatedHeaderComment,
@@ -70,14 +85,16 @@ func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 	lines = append(lines, "## Details on demand", "")
 	lines = append(lines, fmt.Sprintf("- One requirement's full claim + WHY + assumptions: `hotam req show <id> --domain domains/%s`.", domainName))
 	lines = append(lines, fmt.Sprintf("- Full requirement roster: `domains/%s/docs/gen/REQUIREMENTS.md`.", domainName))
-	lines = append(lines, fmt.Sprintf("- Tension clusters: `domains/%s/docs/gen/TENSIONS.md`.", domainName))
+	if tensionsWritten {
+		lines = append(lines, fmt.Sprintf("- Tension clusters: `domains/%s/docs/gen/TENSIONS.md`.", domainName))
+	}
 	lines = append(lines, fmt.Sprintf("- Rejection history: `domains/%s/docs/gen/HISTORY.md`.", domainName))
 	lines = append(lines, fmt.Sprintf("- Enforcement gap detail: `domains/%s/docs/gen/UNENFORCED.md`.", domainName))
 	lines = append(lines, fmt.Sprintf("- Framework-internal atoms: `domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md`.", domainName))
 	lines = append(lines, "- Review-freshness detail (which ids, how overdue): `hotam due --domain domains/"+domainName+"`.")
 	lines = append(lines, "")
 
-	lines = append(lines, renderAgentContextDocsGenIndex(domainName)...)
+	lines = append(lines, renderAgentContextDocsGenIndex(domainName, tensionsWritten)...)
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 }
@@ -157,31 +174,49 @@ func renderAgentContextCounters(g *ontology.Graph, today string) []string {
 // TestBuildGraphJSON_ByteIdenticalToFixture — it is a read-only, portable,
 // human-browsable snapshot of the domain graph co-located with its own
 // markdown shadow, not something any tool reads back at runtime.
-func renderAgentContextDocsGenIndex(domainName string) []string {
+//
+// tensionsWritten gates whether the TENSIONS.md entry appears at all: a domain
+// with no conflict/axis nodes does not write TENSIONS.md, so listing it as
+// MANDATORY would be a dead link (task #361). PIPELINE.md and MODELS.md are
+// NOT listed here at all (they are REFERENCE-level or absent, tracked in
+// REPO-MAP.md's "not written" lines instead).
+func renderAgentContextDocsGenIndex(domainName string, tensionsWritten bool) []string {
 	base := "domains/" + domainName + "/docs/gen/"
-	return []string{
+	// projectFW (task #357): GLOSSARY.md and tools/*.md are PROJECT-shared — a
+	// single copy at the repository root's framework/ directory, byte-identical
+	// regardless of which domain regenerated it. The references below use
+	// repo-root-relative paths (framework/...), not domain-prefixed ones, since
+	// the files are siblings of domains/, not inside any one domain.
+	projectFW := "framework/"
+	mandatory := []string{
 		"## docs/gen/ file index (which files do I actually need to read?)",
 		"",
 		"MANDATORY (named directly in this domain's CLAUDE.md boot text — read essentially every session):",
 		"- `AGENT-CONTEXT.md` (this file) — compact boot digest.",
 		"- `" + base + "REQUIREMENTS.md` — full requirement roster (LOCATE step).",
-		"- `" + base + "TENSIONS.md` — conflict clusters (LOCATE step).",
-		"- `" + base + "UNENFORCED.md` — enforcement-gap detail behind the top-action line.",
-		"- `" + base + "FRAMEWORK-INVARIANTS.md` — framework-internal atoms behind the Constitution index.",
+	}
+	if tensionsWritten {
+		mandatory = append(mandatory, "- `"+base+"TENSIONS.md` — conflict clusters (LOCATE step).")
+	}
+	mandatory = append(mandatory,
+		"- `"+base+"UNENFORCED.md` — enforcement-gap detail behind the top-action line.",
+		"- `"+base+"FRAMEWORK-INVARIANTS.md` — framework-internal atoms behind the Constitution index.",
 		"",
 		"REFERENCE (load on demand for a specific task, not at boot):",
-		"- `" + base + "CONSTITUTION.md`, `GLOSSARY.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.",
-		"- `" + base + "atoms-operator.md`, `atoms-substrate.md`, `atoms-discipline.md`, `atoms-check.md` — per-category atom detail.",
-		"- `" + base + "live-state.md` — the same pulse this file's Live-state section already carries, standalone.",
-		"- `" + base + "OPEN.md` — open-question detail behind the OPEN status.",
-		"- `" + base + "thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.",
-		"- `" + base + "tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).",
-		"- `" + base + "tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.",
+		"- `"+base+"CONSTITUTION.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.",
+		"- `"+projectFW+"GLOSSARY.md` — methodology controlled vocabulary (project-shared).",
+		"- `"+base+"atoms-operator.md`, `atoms-substrate.md`, `atoms-discipline.md`, `atoms-check.md` — per-category atom detail.",
+		"- `"+base+"live-state.md` — the same pulse this file's Live-state section already carries, standalone.",
+		"- `"+base+"OPEN.md` — open-question detail behind the OPEN status.",
+		"- `"+base+"thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.",
+		"- `"+projectFW+"tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).",
+		"- `"+projectFW+"tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.",
 		"",
 		"ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):",
-		"- `" + base + "HISTORY.md` — REJECTED + DECIDED change-log; anti-relitigation lookup only.",
-		"- `" + base + "graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.",
-	}
+		"- `"+base+"HISTORY.md` — REJECTED + DECIDED change-log; anti-relitigation lookup only.",
+		"- `"+base+"graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.",
+	)
+	return mandatory
 }
 
 // renderAgentContextConstitutionIndex renders the "## Constitution index"

@@ -67,6 +67,20 @@ func set(ids ...string) map[string]struct{} {
 	return out
 }
 
+// ConstitutionMDHasContent reports whether CONSTITUTION.md carries real
+// domain content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use). A
+// genuinely empty domain has nothing to render but the EmptyNotice
+// placeholder BuildConstitution already falls back to (g.IsEmpty()) — so a
+// fresh, unmodeled domain now produces ZERO files under docs/gen/, not a
+// directory full of calm-but-empty placeholders.
+func ConstitutionMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
@@ -128,15 +142,17 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 		"R-axis-controlled-vocab",
 		"R-stable-conflict-identity",
 	}
+	anyHardBoundary := false
 	for _, rid := range hardBoundaryIDs {
 		r, ok := reqByID[rid]
 		if ok {
 			lines = append(lines, "**"+rid+"** — "+r.Claim)
 			lines = append(lines, "")
+			anyHardBoundary = true
 		}
 	}
-	if g.IsEmpty() {
-		lines = append(lines, "_No content domain yet — but the hard boundary laws still hold._")
+	if !anyHardBoundary {
+		lines = append(lines, "_No hard-boundary requirements SETTLED in this domain's graph yet._")
 		lines = append(lines, "")
 	}
 
@@ -152,6 +168,7 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 		{"ORDER", "R-crystallize-before-split"},
 		{"BUDGET", "R-working-vs-substrate-budget"},
 	}
+	anySuperRule := false
 	for _, sr := range superRuleIDs {
 		r, ok := reqByID[sr.ID]
 		if ok {
@@ -159,10 +176,11 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 			lines = append(lines, "  Claim: "+r.Claim)
 			lines = append(lines, "  Why: "+r.Why)
 			lines = append(lines, "")
+			anySuperRule = true
 		}
 	}
-	if g.IsEmpty() {
-		lines = append(lines, "_No content domain yet — but the super-rule laws still hold._")
+	if !anySuperRule {
+		lines = append(lines, "_No super-rule requirements SETTLED in this domain's graph yet._")
 		lines = append(lines, "")
 	}
 
@@ -219,22 +237,35 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 		lines = append(lines, "_No content domain loaded yet — no `domains/<name>/graph.json` found or empty. The framework laws above still hold; the roster below will populate once a domain is loaded._")
 		lines = append(lines, "")
 	} else {
-		lines = append(lines, "| anchor | enforcement | claim |")
-		lines = append(lines, "|---|---|---|")
 		reqsOrdered := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
+		var tableRows []string
+		tableRows = append(tableRows, "| anchor | enforcement | claim |")
+		tableRows = append(tableRows, "|---|---|---|")
+		anyConstitutional := false
 		for _, cat := range constitutionCategories {
-			lines = append(lines, "| **"+cat.Label+"** | | |")
+			catHasReqs := false
 			for _, r := range reqsOrdered {
 				if _, in := cat.IDs[r.ID]; in {
+					if !catHasReqs {
+						tableRows = append(tableRows, "| **"+cat.Label+"** | | |")
+						catHasReqs = true
+						anyConstitutional = true
+					}
 					enf := r.Enforcement
 					if enf == "" {
 						enf = "PROSE"
 					}
-					lines = append(lines, "| `"+r.ID+"` | "+enf+" | "+Cell(r.Claim)+" |")
+					tableRows = append(tableRows, "| `"+r.ID+"` | "+enf+" | "+Cell(r.Claim)+" |")
 				}
 			}
 		}
-		lines = append(lines, "")
+		if !anyConstitutional {
+			lines = append(lines, "_No requirements from the methodology's constitutional set are SETTLED in this domain's graph yet._")
+			lines = append(lines, "")
+		} else {
+			lines = append(lines, tableRows...)
+			lines = append(lines, "")
+		}
 	}
 
 	lines = append(lines, "## 8. What is yours; what is not")

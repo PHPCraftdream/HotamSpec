@@ -27,7 +27,17 @@ func BuildGlossary(g *ontology.Graph, consumer bool) string {
 		}
 	}
 
-	lines := []string{Banner, ReaderHeaderLine("GLOSSARY", g), ""}
+	// GLOSSARY.md lives at the PROJECT root (framework/GLOSSARY.md, task #357),
+	// shared across all domains — byte-identical regardless of which domain's
+	// gen-spec regenerates it. The header therefore carries the shared Banner
+	// only, with NO per-domain `reader:` line (mirroring tools/*.md and
+	// tools/INDEX.md, the other project-shared framework files): a reader line
+	// resolves against the generating domain's stakeholder graph and would
+	// differ between domains, breaking the idempotent-overwrite contract.
+	// g remains a parameter (callers pass it) but is intentionally unused in
+	// the body — the glossary body is a pure function of the methodology
+	// registry (glossaryTerms), not the domain graph.
+	lines := []string{Banner, ""}
 	lines = append(lines, "# GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)")
 	lines = append(lines, "")
 	lines = append(lines,

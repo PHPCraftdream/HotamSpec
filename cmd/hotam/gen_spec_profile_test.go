@@ -11,8 +11,9 @@ import (
 )
 
 // countFilesUnder walks dir and returns the total file count, plus per-category
-// counts keyed by the immediate subdirectory under docs/gen/ (or "root" for
-// files directly in docs/gen/).
+// counts keyed by the immediate subdirectory (or "root" for files directly in
+// dir). Works for either docs/gen/ or framework/ (task #355: the generator's
+// output tree now spans both sibling directories).
 func countFilesUnder(t *testing.T, genDir string) (total int, byCat map[string]int) {
 	t.Helper()
 	byCat = map[string]int{"root": 0}
@@ -73,19 +74,23 @@ func thinkingDocsCount() int {
 // cuts the external seed output by skipping thinking/*.md, Planned tool docs,
 // and empty atoms docs — the three categories of framework-self-documentation
 // noise for an external business consumer. Uses a freshly-scaffolded domain
-// (initDomain's R-domain-exists matches no framework-internal atoms prefix),
-// so all four atoms docs render the empty notice and are correctly skipped.
-// Exact file counts are pinned so a regression that silently stops skipping is
-// caught immediately.
+// seeded with seedMinimalRequirement's placeholder content (its id,
+// "R-domain-exists", matches no framework-internal atoms prefix), so all four
+// atoms docs render the empty notice and are correctly skipped, while the
+// non-empty graph still exercises every OTHER docs/gen/ projection (task
+// #364 made an actually EMPTY graph skip those entirely, which would mask
+// the profile-specific skip this test exists to prove). Exact file counts
+// are pinned so a regression that silently stops skipping is caught
+// immediately.
 func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 	t.Parallel()
 
-	// Scaffold a fresh external domain — no framework-internal requirements,
-	// so all four atoms docs are genuinely empty.
-	domainDir := t.TempDir()
-	if _, err := initDomain(domainDir, "test-external", "2026-07-13"); err != nil {
-		t.Fatalf("initDomain: %v", err)
-	}
+	// Scaffold a fresh external domain with minimal non-framework-internal
+	// content — non-empty (so REQUIREMENTS.md/etc. render), but the one
+	// requirement's id matches no framework-internal atoms prefix, so all
+	// four atoms docs are still genuinely empty.
+	projectRoot, domainDir := initDomainUnderRoot(t, "test-external", "2026-07-13")
+	seedMinimalRequirement(t, domainDir, "test-external", "2026-07-13")
 	// initDomain writes {"self_hosting": false, "gen_profile": "consumer"}
 	// (R8-e: unified with init-project). We pass explicit "consumer" here to
 	// test the cut directly regardless of the manifest default.
@@ -95,17 +100,23 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 	genDir := filepath.Join(domainDir, "docs", "gen")
-	total, byCat := countFilesUnder(t, genDir)
+	// Task #357: GLOSSARY.md + tools/*.md live at the PROJECT-root framework/.
+	frameworkDir := filepath.Join(projectRoot, "framework")
+	genTotal, genByCat := countFilesUnder(t, genDir)
+	fwTotal, fwByCat := countFilesUnder(t, frameworkDir)
+	total := genTotal + fwTotal
 
-	// (1) No thinking/ directory at all.
+	// (1) No thinking/ directory at all under docs/gen/.
 	if _, err := os.Stat(filepath.Join(genDir, "thinking")); !os.IsNotExist(err) {
 		t.Errorf("consumer profile must not create thinking/ dir, got err=%v", err)
 	}
 
-	// (2) tools/ has exactly Implemented tools + INDEX.md (no Planned pages).
+	// (2) framework/tools/ has exactly Implemented tools + INDEX.md (no Planned
+	// pages). Task #355 relocated tools/*.md out of docs/gen/tools/ into the
+	// sibling framework/tools/ directory.
 	wantToolCount := implementedToolCount() + 1 // +INDEX.md
-	if byCat["tools"] != wantToolCount {
-		t.Errorf("consumer tools/ file count = %d, want %d (Implemented=%d + INDEX)", byCat["tools"], wantToolCount, implementedToolCount())
+	if fwByCat["tools"] != wantToolCount {
+		t.Errorf("consumer framework/tools/ file count = %d, want %d (Implemented=%d + INDEX)", fwByCat["tools"], wantToolCount, implementedToolCount())
 	}
 
 	// (3) No atoms-*.md files (all four are empty-notice for an external graph).
@@ -117,22 +128,28 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 		}
 	}
 
-	// (4) INDEX.md still written.
-	if _, err := os.Stat(filepath.Join(genDir, "tools", "INDEX.md")); err != nil {
-		t.Errorf("consumer profile must still write tools/INDEX.md: %v", err)
+	// (4) framework/tools/INDEX.md still written.
+	if _, err := os.Stat(filepath.Join(frameworkDir, "tools", "INDEX.md")); err != nil {
+		t.Errorf("consumer profile must still write framework/tools/INDEX.md: %v", err)
 	}
 
-	// (5) Pin the exact total: root (15 non-atoms .md) + graph.json (1) +
-	//     tools (Implemented + INDEX). This catches a regression that silently
-	//     stops skipping any category.
-	//     root = 13 fixed docs (incl. PIPELINE.md, TRACEABILITY.md, MODELS.md,
-	//     COVERAGE.md) + live-state.md + AGENT-CONTEXT.md = 15
-	//     (DECISIONS/ENTITIES not written for this minimal graph)
-	wantRoot := 15
-	wantTotal := wantRoot + 1 + wantToolCount
+	// (5) Pin the exact total across both output directories: docs/gen/ root
+	//     (11 non-atoms .md: TENSIONS/PIPELINE/MODELS not written for this
+	//     minimal graph — no conflicts/axes, no processes, no spec/ model files;
+	//     task #361) + live-state.md + AGENT-CONTEXT.md; GLOSSARY.md moved out
+	//     under task #357, FRAMEWORK-INVARIANTS.md moved back in — net same
+	//     count; DECISIONS/ENTITIES not written for this minimal graph) +
+	//     graph.json (1) + framework/ root (GLOSSARY.md=1) + framework/tools/
+	//     (Implemented + INDEX). This catches a regression that silently stops
+	//     skipping any category.
+	wantGenRoot := 11
+	wantGenTotal := wantGenRoot + 1 // + graph.json
+	wantFwRoot := 1                 // GLOSSARY.md
+	wantTotal := wantGenTotal + wantFwRoot + wantToolCount
 	if total != wantTotal {
-		t.Errorf("consumer total docs/gen file count = %d, want %d (root=%d + graph.json=1 + tools=%d)", total, wantTotal, wantRoot, wantToolCount)
+		t.Errorf("consumer total (docs/gen + framework) file count = %d, want %d (genRoot=%d + graph.json=1 + fwRoot=1 + tools=%d)", total, wantTotal, wantGenRoot, wantToolCount)
 	}
+	_ = genByCat // (genDir per-category not asserted here; thinking/tools/atoms checked above)
 
 	// (6) written must report exactly the files that landed on disk.
 	if len(consumerWritten) != total {
@@ -147,10 +164,8 @@ func TestGenSpec_ConsumerProfileSkipsFrameworkNoise(t *testing.T) {
 func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	t.Parallel()
 
-	domainDir := t.TempDir()
-	if _, err := initDomain(domainDir, "test-external", "2026-07-13"); err != nil {
-		t.Fatalf("initDomain: %v", err)
-	}
+	projectRoot, domainDir := initDomainUnderRoot(t, "test-external", "2026-07-13")
+	seedMinimalRequirement(t, domainDir, "test-external", "2026-07-13")
 
 	// Full profile
 	fullWritten, _, err := genSpec(domainDir, "", "2026-07-13", "full", false)
@@ -158,7 +173,10 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 		t.Fatalf("genSpec full: %v", err)
 	}
 	genDir := filepath.Join(domainDir, "docs", "gen")
-	fullTotal, fullByCat := countFilesUnder(t, genDir)
+	frameworkDir := filepath.Join(projectRoot, "framework")
+	fullGenTotal, fullByCat := countFilesUnder(t, genDir)
+	fullFwTotal, fullFwByCat := countFilesUnder(t, frameworkDir)
+	fullTotal := fullGenTotal + fullFwTotal
 
 	// (1) Full writes thinking docs.
 	wantThinking := thinkingDocsCount()
@@ -166,10 +184,10 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 		t.Errorf("full thinking/ count = %d, want %d (methodology sections)", fullByCat["thinking"], wantThinking)
 	}
 
-	// (2) Full writes ALL tool docs + INDEX.
+	// (2) Full writes ALL tool docs + INDEX (under framework/tools/, task #355).
 	wantToolFull := len(methodology.Tools.All()) + 1
-	if fullByCat["tools"] != wantToolFull {
-		t.Errorf("full tools/ count = %d, want %d (all tools + INDEX)", fullByCat["tools"], wantToolFull)
+	if fullFwByCat["tools"] != wantToolFull {
+		t.Errorf("full framework/tools/ count = %d, want %d (all tools + INDEX)", fullFwByCat["tools"], wantToolFull)
 	}
 
 	// (3) Full writes all 4 atoms docs (even when empty — the empty notice).
@@ -180,10 +198,16 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 	}
 
 	// (4) Pin the exact total for full (regression guard).
-	wantRootFull := 19 // 15 non-atoms (incl. PIPELINE.md, TRACEABILITY.md, MODELS.md, COVERAGE.md) + 4 atoms
-	wantTotalFull := wantRootFull + 1 + wantToolFull + wantThinking
+	//     docs/gen/ root = 15 (11 non-atoms + 4 atoms; TENSIONS/PIPELINE/MODELS
+	//     not written for this minimal graph — task #361; FRAMEWORK-INVARIANTS.md
+	//     moved out under task #355) + graph.json(1) + thinking(N).
+	//     framework/ root = 1 (FRAMEWORK-INVARIANTS.md) + tools(all+1).
+	wantRootFull := 15 // 11 non-atoms + 4 atoms
+	wantGenTotalFull := wantRootFull + 1 + wantThinking
+	wantFwRootFull := 1
+	wantTotalFull := wantGenTotalFull + wantFwRootFull + wantToolFull
 	if fullTotal != wantTotalFull {
-		t.Errorf("full total docs/gen file count = %d, want %d (root=%d + graph.json=1 + tools=%d + thinking=%d)", fullTotal, wantTotalFull, wantRootFull, wantToolFull, wantThinking)
+		t.Errorf("full total (docs/gen + framework) file count = %d, want %d (genRoot=%d + graph.json=1 + thinking=%d + fwRoot=1 + tools=%d)", fullTotal, wantTotalFull, wantRootFull, wantThinking, wantToolFull)
 	}
 
 	// (5) Empty profile against a manifest without gen_profile → resolves to
@@ -222,24 +246,26 @@ func TestGenSpec_FullProfileUnchanged(t *testing.T) {
 func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
 	t.Parallel()
 
-	// Two identical fresh domains, one consumer, one full.
-	dirConsumer := t.TempDir()
-	if _, err := initDomain(dirConsumer, "ext", "2026-07-13"); err != nil {
-		t.Fatalf("initDomain consumer: %v", err)
-	}
+	// Two identical fresh domains under two SEPARATE project roots (so each
+	// gets its own project-root framework/ — a shared dir would let the second
+	// genSpec's cleanup remove the first's tool pages, corrupting the count).
+	rootConsumer, dirConsumer := initDomainUnderRoot(t, "ext-consumer", "2026-07-13")
+	seedMinimalRequirement(t, dirConsumer, "ext-consumer", "2026-07-13")
 	if _, _, err := genSpec(dirConsumer, "", "2026-07-13", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
-	consumerTotal, _ := countFilesUnder(t, filepath.Join(dirConsumer, "docs", "gen"))
+	consumerGenTotal, _ := countFilesUnder(t, filepath.Join(dirConsumer, "docs", "gen"))
+	consumerFwTotal, _ := countFilesUnder(t, filepath.Join(rootConsumer, "framework"))
+	consumerTotal := consumerGenTotal + consumerFwTotal
 
-	dirFull := t.TempDir()
-	if _, err := initDomain(dirFull, "ext", "2026-07-13"); err != nil {
-		t.Fatalf("initDomain full: %v", err)
-	}
+	rootFull, dirFull := initDomainUnderRoot(t, "ext-full", "2026-07-13")
+	seedMinimalRequirement(t, dirFull, "ext-full", "2026-07-13")
 	if _, _, err := genSpec(dirFull, "", "2026-07-13", "full", false); err != nil {
 		t.Fatalf("genSpec full: %v", err)
 	}
-	fullTotal, _ := countFilesUnder(t, filepath.Join(dirFull, "docs", "gen"))
+	fullGenTotal, _ := countFilesUnder(t, filepath.Join(dirFull, "docs", "gen"))
+	fullFwTotal, _ := countFilesUnder(t, filepath.Join(rootFull, "framework"))
+	fullTotal := fullGenTotal + fullFwTotal
 
 	wantDelta := thinkingDocsCount() + plannedToolCount() + 4 // +4 empty atoms
 	actualDelta := fullTotal - consumerTotal
@@ -282,15 +308,13 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 	if plannedCmd == "" {
 		t.Fatal("precondition: at least one Planned tool must exist")
 	}
-	plannedToolPage := filepath.Join("docs", "gen", "tools", plannedCmd+".md")
 
-	domainDir := t.TempDir()
-	if _, err := initDomain(domainDir, "test-external", "2026-07-13"); err != nil {
-		t.Fatalf("initDomain: %v", err)
-	}
+	projectRoot, domainDir := initDomainUnderRoot(t, "test-external", "2026-07-13")
+	seedMinimalRequirement(t, domainDir, "test-external", "2026-07-13")
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	thinkingDir := filepath.Join(genDir, "thinking")
-	fullPlannedToolPage := filepath.Join(domainDir, plannedToolPage)
+	projectFrameworkDir := filepath.Join(projectRoot, "framework")
+	fullPlannedToolPage := filepath.Join(projectFrameworkDir, "tools", plannedCmd+".md")
 
 	// (1) full profile: thinking/*.md and the Planned-tool page exist on disk.
 	if _, _, err := genSpec(domainDir, "", "2026-07-13", "full", false); err != nil {
@@ -352,10 +376,14 @@ func TestGenSpec_ProfileSwitchCleansStaleFiles(t *testing.T) {
 		t.Errorf("removed slice must list the deleted planned-tool page %s, got %v", plannedCmd, removed)
 	}
 	// On disk, the only file NOT accounted for by written must be the single
-	// hand-placed file — every stale GENERATOR file must be gone.
-	total, _ := countFilesUnder(t, genDir)
-	if total != len(consumerWritten)+1 {
-		t.Errorf("consumer on-disk=%d, want written(%d)+1 (the hand-placed file) — a larger gap means stale generator output survived cleanup", total, len(consumerWritten))
+	// hand-placed file — every stale GENERATOR file must be gone. Counts BOTH
+	// output directories (docs/gen/ + project-root framework/, task #357) since
+	// `written` spans both.
+	genOnDisk, _ := countFilesUnder(t, genDir)
+	fwOnDisk, _ := countFilesUnder(t, filepath.Join(projectRoot, "framework"))
+	totalOnDisk := genOnDisk + fwOnDisk
+	if totalOnDisk != len(consumerWritten)+1 {
+		t.Errorf("consumer on-disk=%d, want written(%d)+1 (the hand-placed file) — a larger gap means stale generator output survived cleanup", totalOnDisk, len(consumerWritten))
 	}
 
 	// (3) full profile again on the same domain: everything restored. The
@@ -398,6 +426,9 @@ func TestGenSpec_ConsumerRequirementsToolsIndexReferenceExistsOnDisk(t *testing.
 	if _, err := initDomain(domainDir, "test-linkcheck-requirements", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	// A genuinely empty graph (task #364) now skips REQUIREMENTS.md entirely;
+	// seed minimal content so it renders and this test can assert on its body.
+	seedMinimalRequirement(t, domainDir, "test-linkcheck-requirements", "2026-07-14")
 	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
@@ -409,13 +440,15 @@ func TestGenSpec_ConsumerRequirementsToolsIndexReferenceExistsOnDisk(t *testing.
 	}
 	text := string(content)
 
-	domainName := domainNameFromDir(domainDir)
-	wantToken := "domains/" + domainName + "/docs/gen/tools/INDEX.md"
-	if !strings.Contains(text, wantToken) {
+	// Task #357: tools/INDEX.md lives at the PROJECT-root framework/, so the
+	// consumer REQUIREMENTS.md references it with a bare repo-root-relative
+	// path (NOT a domain-prefixed one — framework/ is a sibling of domains/).
+	wantToken := "framework/tools/INDEX.md"
+	if !strings.Contains(text, "`"+wantToken+"`") {
 		t.Fatalf("consumer REQUIREMENTS.md must reference %q, got:\n%s", wantToken, text)
 	}
 	if strings.Contains(text, "`docs/gen/tools/INDEX.md`") {
-		t.Errorf("consumer REQUIREMENTS.md must NOT reference the bare, non-domain-prefixed form `docs/gen/tools/INDEX.md`")
+		t.Errorf("consumer REQUIREMENTS.md must NOT reference the pre-#355 location `docs/gen/tools/INDEX.md`")
 	}
 
 	resolved := filepath.Join(repoRoot, filepath.FromSlash(wantToken))

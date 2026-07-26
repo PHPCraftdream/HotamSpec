@@ -86,6 +86,20 @@ type traceabilityLink struct {
 // so it stays mode-independent (a routine `hotam land` regeneration always
 // calls this function the same way SPEC.md's --spec run does, and both must
 // produce the identical committed bytes).
+// TraceabilityMDHasContent reports whether TRACEABILITY.md carries real
+// domain content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use). A
+// genuinely empty domain has nothing to render but the EmptyNotice
+// placeholder BuildTraceability already falls back to (g.IsEmpty()) — so a
+// fresh, unmodeled domain now produces ZERO files under docs/gen/, not a
+// directory full of calm-but-empty placeholders.
+func TraceabilityMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
 func BuildTraceability(g *ontology.Graph) string {
 	lines := []string{Banner, ReaderHeaderLine("TRACEABILITY", g), ""}
 	lines = append(lines, "# TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)")

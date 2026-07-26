@@ -129,6 +129,19 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// --claude-md still embeds the correct fixpoint count into AGENT-CONTEXT.md
 	// (closing the former mode-dependent "0 chars" disagreement).
 	repoRoot := repoRootForDomain(domainDir)
+	// projectFrameworkDir (task #357): GLOSSARY.md and tools/*.md are PROJECT-
+	// shared — a single framework/ directory at the repository root (sibling of
+	// domains/), byte-identical regardless of which domain's gen-spec
+	// regenerated it. Every domain writes the same bytes to the same paths
+	// (idempotent overwrite), so a multi-domain project carries exactly ONE
+	// copy of this engine self-documentation.
+	projectFrameworkDir := filepath.Join(repoRoot, "framework")
+	// domainFrameworkDir: the OLD per-domain framework/ directory (task #355's
+	// layout, now retired by #357). Kept only as the cleanup target — every
+	// generator-owned file that #355 wrote here has moved (FRAMEWORK-
+	// INVARIANTS.md back to docs/gen/, tools/*.md up to projectFrameworkDir),
+	// so cleanupStaleDomainFrameworkDir removes the lot and prunes the empty dir.
+	domainFrameworkDir := filepath.Join(domainDir, "framework")
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
 
 	// activeViolations/activeOverride/charCount are computed LATER in this
@@ -158,12 +171,88 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 
 	decisionsWritten := generator.DecisionsMDHasContent(g)
 	entitiesWritten := generator.EntitiesMDHasContent(g)
+	tensionsWritten := generator.TensionsMDHasContent(g)
+	pipelineWritten := generator.PipelineMDHasContent(g)
+	modelsWritten := generator.ModelsMDHasContent(g)
+	// requirementsWritten..graphJSONWritten (task #364): the remaining
+	// docs/gen/*.md projections that used to be written UNCONDITIONALLY, now
+	// gated the SAME way DECISIONS/ENTITIES/TENSIONS/PIPELINE/MODELS already
+	// are — withheld entirely when the domain graph is genuinely empty (0
+	// axes/stakeholders/requirements/conflicts/assumptions/operators/
+	// processes/goals/entity_types/entities), so a freshly-scaffolded,
+	// unmodeled domain now produces ZERO files under docs/gen/ instead of a
+	// directory full of calm-but-empty placeholders. See each
+	// generator.XxxMDHasContent's own doc comment (internal/generator) for
+	// why the predicate is graph-emptiness: every one of these files'
+	// EmptyNotice fallback is keyed off the SAME g.IsEmpty() check already.
+	requirementsWritten := generator.RequirementsMDHasContent(g)
+	openWritten := generator.OpenMDHasContent(g)
+	unenforcedWritten := generator.UnenforcedMDHasContent(g)
+	frameworkInvariantsWritten := generator.FrameworkInvariantsMDHasContent(g)
+	historyWritten := generator.HistoryMDHasContent(g)
+	constitutionWritten := generator.ConstitutionMDHasContent(g)
+	traceabilityWritten := generator.TraceabilityMDHasContent(g)
+	coverageWritten := generator.CoverageMDHasContent(g)
+	repoMapWritten := generator.RepoMapMDHasContent(g)
+	agentContextWritten := generator.AgentContextMDHasContent(g)
+	liveStateWritten := generator.LiveStateMDHasContent(g)
+	graphJSONWritten := generator.GraphJSONHasContent(g)
 
-	// repoMapDocs is the canonical set of docs written into
-	// domains/<name>/docs/gen/ (REQUIREMENTS/TENSIONS/OPEN/UNENFORCED/
-	// GLOSSARY/HISTORY/CONSTITUTION/FRAMEWORK-INVARIANTS/PIPELINE/
-	// TRACEABILITY/MODELS/COVERAGE/REPO-MAP.md, plus conditional
-	// DECISIONS/ENTITIES.md and — only when includeSpec is true — SPEC.md) —
+	// requirementsMD..coverageMD hold the rendered content for the 8
+	// previously-unconditional top-level docs/gen/ projections
+	// (REQUIREMENTS/OPEN/UNENFORCED/FRAMEWORK-INVARIANTS/HISTORY/
+	// CONSTITUTION/TRACEABILITY/COVERAGE.md), computed ONLY when their own
+	// *MDHasContent(g) predicate above is true. Both repoMapDocs (REPO-MAP.md's
+	// own "Generated docs" listing, via fullRepoMapDocs below) and mdDocs (the
+	// actual docs/gen/ write set, below) read from these SAME named variables
+	// — no positional indexing into a shared slice, which broke once each
+	// entry's PRESENCE, not just its content, became conditional.
+	var requirementsMD, openMD, unenforcedMD, frameworkInvariantsMD, historyMD, constitutionMD, traceabilityMD, coverageMD string
+	if requirementsWritten {
+		requirementsMD = generator.BuildRequirements(g, domainName, consumer)
+	}
+	if openWritten {
+		openMD = generator.BuildOpen(g)
+	}
+	if unenforcedWritten {
+		unenforcedMD = generator.BuildUnenforced(g)
+	}
+	if frameworkInvariantsWritten {
+		// FRAMEWORK-INVARIANTS.md is a PER-DOMAIN projection (which framework-
+		// plumbing SETTLED atoms THIS domain carries) — it grows with the
+		// domain's own content, exactly like REQUIREMENTS.md. Task #357
+		// returned it to docs/gen/ (where it lived before #355's short-lived
+		// relocation).
+		frameworkInvariantsMD = generator.BuildFrameworkInvariants(g, domainName)
+	}
+	if historyWritten {
+		historyMD = generator.BuildHistory(g)
+	}
+	if constitutionWritten {
+		constitutionMD = generator.BuildConstitution(g, domainName, consumer)
+	}
+	if traceabilityWritten {
+		traceabilityMD = generator.BuildTraceability(g)
+	}
+	if coverageWritten {
+		coverageMD = generator.BuildCoverage(g)
+	}
+
+	// repoMapDocs is the CONDITIONAL set of docs written into
+	// domains/<name>/docs/gen/ (REQUIREMENTS/OPEN/UNENFORCED/
+	// FRAMEWORK-INVARIANTS/HISTORY/CONSTITUTION/TRACEABILITY/COVERAGE.md) —
+	// task #364 extended the SAME conditional-write pattern
+	// TENSIONS/PIPELINE/MODELS/DECISIONS/ENTITIES already used to this
+	// remaining, previously-unconditional set: each entry is appended only
+	// when its own *MDHasContent(g) predicate is true, in the SAME declared
+	// order the old fixed literal used.
+	// promoted it (and tools/*.md) to the PROJECT-root framework/ directory
+	// (frameworkDocs below) — engine self-documentation that is byte-identical
+	// for every domain, kept out of the per-domain business-projection tree.
+	// FRAMEWORK-INVARIANTS.md, by contrast, IS here — it is per-domain (which
+	// plumbing atoms THIS domain carries), so it stays in docs/gen/. REPO-MAP.md's
+	// own "Generated docs" section lists exactly this docs/gen/ set, and a
+	// separate "Framework reference (project-shared)" section lists framework/ —
 	// it deliberately excludes atoms-*.md and live-state.md, which are only
 	// ever materialized at the repo-root docs/methodology/atoms/ (and inside
 	// root CLAUDE.md's LIVE-STATE block) for the single active domain, never
@@ -200,19 +289,38 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// hotam-dev) is the honest no-op BuildPipeline already handles.
 	gateOrder := loader.ResolveGateStageOrder(graphPathForDomain(domainDir))
 
-	repoMapDocs := []generator.GenDocEntry{
-		{Filename: "REQUIREMENTS.md", Content: generator.BuildRequirements(g, domainName, consumer)},
-		{Filename: "TENSIONS.md", Content: generator.BuildTensions(g)},
-		{Filename: "OPEN.md", Content: generator.BuildOpen(g)},
-		{Filename: "UNENFORCED.md", Content: generator.BuildUnenforced(g)},
-		{Filename: "GLOSSARY.md", Content: generator.BuildGlossary(g, consumer)},
-		{Filename: "HISTORY.md", Content: generator.BuildHistory(g)},
-		{Filename: "CONSTITUTION.md", Content: generator.BuildConstitution(g, domainName, consumer)},
-		{Filename: "FRAMEWORK-INVARIANTS.md", Content: generator.BuildFrameworkInvariants(g, domainName)},
-		{Filename: "PIPELINE.md", Content: generator.BuildPipeline(g, domainName, gateOrder)},
-		{Filename: "TRACEABILITY.md", Content: generator.BuildTraceability(g)},
-		{Filename: "MODELS.md", Content: generator.BuildModels(g)},
-		{Filename: "COVERAGE.md", Content: generator.BuildCoverage(g)},
+	// glossaryMD is PROJECT-shared (task #357): the methodology controlled
+	// vocabulary, byte-identical for every domain. Written to the repo-root
+	// framework/ directory and listed under REPO-MAP.md's "Framework reference
+	// (project-shared)" section (frameworkDocs below).
+	glossaryMD := generator.BuildGlossary(g, consumer)
+	frameworkDocs := []generator.GenDocEntry{
+		{Filename: "GLOSSARY.md", Content: glossaryMD},
+	}
+	var repoMapDocs []generator.GenDocEntry
+	if requirementsWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "REQUIREMENTS.md", Content: requirementsMD})
+	}
+	if openWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "OPEN.md", Content: openMD})
+	}
+	if unenforcedWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "UNENFORCED.md", Content: unenforcedMD})
+	}
+	if frameworkInvariantsWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "FRAMEWORK-INVARIANTS.md", Content: frameworkInvariantsMD})
+	}
+	if historyWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "HISTORY.md", Content: historyMD})
+	}
+	if constitutionWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "CONSTITUTION.md", Content: constitutionMD})
+	}
+	if traceabilityWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "TRACEABILITY.md", Content: traceabilityMD})
+	}
+	if coverageWritten {
+		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "COVERAGE.md", Content: coverageMD})
 	}
 	// SPEC.md (BuildSpec, W1.3) is the one docs/gen/ projection that EXECUTES
 	// real `go test` subprocesses (one per verified_by entry) rather than
@@ -230,8 +338,13 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// including the file it is about to (re)write); its own title is fixed by
 	// the H1 line BuildRepoMap always emits, so a placeholder with just that
 	// heading is enough for mdTitle() to extract "Repository file index".
-	repoMapSelfEntry := generator.GenDocEntry{Filename: "REPO-MAP.md", Content: "# REPO-MAP.md — Repository file index (Hotam-Spec)"}
-	fullRepoMapDocs := append(append([]generator.GenDocEntry{}, repoMapDocs...), repoMapSelfEntry)
+	// Only appended when REPO-MAP.md itself will actually be written this run
+	// (repoMapWritten, task #364) — an empty domain that withholds every
+	// OTHER doc must not list itself as a phantom "Generated doc" either.
+	fullRepoMapDocs := append([]generator.GenDocEntry{}, repoMapDocs...)
+	if repoMapWritten {
+		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "REPO-MAP.md", Content: "# REPO-MAP.md — Repository file index (Hotam-Spec)"})
+	}
 	// SPEC.md acknowledgment on a plain run (mode-independence fix,
 	// continuing task #317): when this run did NOT render SPEC.md
 	// (!includeSpec), but a SPEC.md already exists on disk from a prior
@@ -253,7 +366,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 			fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "SPEC.md", Content: string(existing)})
 		}
 	}
-	var decisionsMD, entitiesMD string
+	var decisionsMD, entitiesMD, tensionsMD, pipelineMD, modelsMD string
 	if decisionsWritten {
 		decisionsMD = generator.BuildDecisions(g)
 		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "DECISIONS.md", Content: decisionsMD})
@@ -262,7 +375,25 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		entitiesMD = generator.BuildEntities(g, domainName)
 		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "ENTITIES.md", Content: entitiesMD})
 	}
-	repoMapMD := generator.BuildRepoMap(g, domainName, fullRepoMapDocs, decisionsWritten, entitiesWritten, consumer)
+	if tensionsWritten {
+		tensionsMD = generator.BuildTensions(g)
+		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "TENSIONS.md", Content: tensionsMD})
+	}
+	if pipelineWritten {
+		pipelineMD = generator.BuildPipeline(g, domainName, gateOrder)
+		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "PIPELINE.md", Content: pipelineMD})
+	}
+	if modelsWritten {
+		modelsMD = generator.BuildModels(g)
+		fullRepoMapDocs = append(fullRepoMapDocs, generator.GenDocEntry{Filename: "MODELS.md", Content: modelsMD})
+	}
+	// BuildRepoMap is only ever CALLED when repoMapWritten (task #364) — a
+	// fully-empty graph withholds REPO-MAP.md itself (see mdDocs below), so
+	// there is no reason to render a string nothing will ever write.
+	var repoMapMD string
+	if repoMapWritten {
+		repoMapMD = generator.BuildRepoMap(g, domainName, fullRepoMapDocs, frameworkDocs, decisionsWritten, entitiesWritten, tensionsWritten, pipelineWritten, modelsWritten, consumer)
+	}
 
 	// Atoms docs: under the consumer profile, each of the four atoms-*.md
 	// files is rendered first (unchanged Build* behavior), then WRITTEN only
@@ -285,20 +416,39 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		return !consumer || !strings.Contains(content, emptyAtomsNotice)
 	}
 
-	mdDocs := []docEntry{
-		{"REQUIREMENTS.md", repoMapDocs[0].Content},
-		{"TENSIONS.md", repoMapDocs[1].Content},
-		{"OPEN.md", repoMapDocs[2].Content},
-		{"UNENFORCED.md", repoMapDocs[3].Content},
-		{"GLOSSARY.md", repoMapDocs[4].Content},
-		{"HISTORY.md", repoMapDocs[5].Content},
-		{"CONSTITUTION.md", repoMapDocs[6].Content},
-		{"FRAMEWORK-INVARIANTS.md", repoMapDocs[7].Content},
-		{"PIPELINE.md", repoMapDocs[8].Content},
-		{"TRACEABILITY.md", repoMapDocs[9].Content},
-		{"MODELS.md", repoMapDocs[10].Content},
-		{"COVERAGE.md", repoMapDocs[11].Content},
-		{"REPO-MAP.md", repoMapMD},
+	// mdDocs (task #364): each of the 8 previously-fixed top-level entries,
+	// plus REPO-MAP.md, is now conditional on its own *Written flag computed
+	// above — reading from the SAME named *MD variables repoMapDocs/
+	// fullRepoMapDocs used, rather than indexing into repoMapDocs by fixed
+	// position (which is no longer valid once every entry's PRESENCE, not
+	// just its content, varies with domain emptiness).
+	var mdDocs []docEntry
+	if requirementsWritten {
+		mdDocs = append(mdDocs, docEntry{"REQUIREMENTS.md", requirementsMD})
+	}
+	if openWritten {
+		mdDocs = append(mdDocs, docEntry{"OPEN.md", openMD})
+	}
+	if unenforcedWritten {
+		mdDocs = append(mdDocs, docEntry{"UNENFORCED.md", unenforcedMD})
+	}
+	if frameworkInvariantsWritten {
+		mdDocs = append(mdDocs, docEntry{"FRAMEWORK-INVARIANTS.md", frameworkInvariantsMD})
+	}
+	if historyWritten {
+		mdDocs = append(mdDocs, docEntry{"HISTORY.md", historyMD})
+	}
+	if constitutionWritten {
+		mdDocs = append(mdDocs, docEntry{"CONSTITUTION.md", constitutionMD})
+	}
+	if traceabilityWritten {
+		mdDocs = append(mdDocs, docEntry{"TRACEABILITY.md", traceabilityMD})
+	}
+	if coverageWritten {
+		mdDocs = append(mdDocs, docEntry{"COVERAGE.md", coverageMD})
+	}
+	if repoMapWritten {
+		mdDocs = append(mdDocs, docEntry{"REPO-MAP.md", repoMapMD})
 	}
 	if includeSpec {
 		mdDocs = append(mdDocs, docEntry{"SPEC.md", specMD})
@@ -325,6 +475,15 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	}
 	if entitiesWritten {
 		mdDocs = append(mdDocs, docEntry{"ENTITIES.md", entitiesMD})
+	}
+	if tensionsWritten {
+		mdDocs = append(mdDocs, docEntry{"TENSIONS.md", tensionsMD})
+	}
+	if pipelineWritten {
+		mdDocs = append(mdDocs, docEntry{"PIPELINE.md", pipelineMD})
+	}
+	if modelsWritten {
+		mdDocs = append(mdDocs, docEntry{"MODELS.md", modelsMD})
 	}
 
 	// mdDocs's content was already fully rendered above (each entry a pure
@@ -418,28 +577,57 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		return written, nil, err
 	}
 
-	liveStateAndAgentContextPaths := []string{
-		filepath.Join(genDir, "live-state.md"),
-		filepath.Join(genDir, "AGENT-CONTEXT.md"),
+	// live-state.md/AGENT-CONTEXT.md (task #364): withheld like every other
+	// docs/gen/ projection this task gates when the domain graph is
+	// genuinely empty (agentContextWritten/liveStateWritten, computed
+	// above). charCount/activeViolations above are STILL computed
+	// unconditionally regardless of this gate — they also feed the root/
+	// local crystal render below, which is written whenever claudeMDPath is
+	// set, independent of domain content.
+	var liveStateAndAgentContextPaths []string
+	var liveStateAndAgentContextContents [][]byte
+	if liveStateWritten {
+		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "live-state.md"))
+		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildLiveStateWithViolations(g, domainName, charCount, today, activeViolations)))
 	}
-	liveStateAndAgentContextContents := [][]byte{
-		[]byte(generator.BuildLiveStateWithViolations(g, domainName, charCount, today, activeViolations)),
-		[]byte(generator.BuildAgentContext(g, domainName, charCount, today, consumer)),
+	if agentContextWritten {
+		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "AGENT-CONTEXT.md"))
+		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildAgentContext(g, domainName, charCount, today, consumer)))
 	}
 	if err := writeFilesParallel(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
 		return written, nil, err
 	}
 	written = append(written, liveStateAndAgentContextPaths...)
 
-	graphJSON, err := generator.BuildGraphJSON(g)
-	if err != nil {
-		return written, nil, fmt.Errorf("build graph.json: %w", err)
+	// graph.json archival copy (task #364): withheld like every other
+	// docs/gen/ projection this task gates when the domain graph is
+	// genuinely empty (graphJSONWritten, computed above) — BuildGraphJSON
+	// itself still succeeds and would render a well-formed, empty-arrays
+	// payload, but there is nothing to archive for a domain with no content.
+	if graphJSONWritten {
+		graphJSON, err := generator.BuildGraphJSON(g)
+		if err != nil {
+			return written, nil, fmt.Errorf("build graph.json: %w", err)
+		}
+		gp := filepath.Join(genDir, "graph.json")
+		if err := writeFileMkdir(gp, []byte(graphJSON)); err != nil {
+			return written, nil, err
+		}
+		written = append(written, gp)
 	}
-	gp := filepath.Join(genDir, "graph.json")
-	if err := writeFileMkdir(gp, []byte(graphJSON)); err != nil {
+
+	// framework/GLOSSARY.md (task #357): the methodology controlled vocabulary
+	// is PROJECT-shared — written to the repo-root framework/ directory (single
+	// copy, byte-identical across domains). Written here (after the docs/gen/
+	// batch above) so it lands at projectFrameworkDir, and appended to `written`
+	// so cleanupStaleProjectFrameworkFiles treats it as current rather than
+	// stale. FRAMEWORK-INVARIANTS.md, by contrast, is per-domain and now writes
+	// through mdDocs into docs/gen/ (where it was before task #355).
+	glossaryPath := filepath.Join(projectFrameworkDir, "GLOSSARY.md")
+	if err := writeFileMkdir(glossaryPath, []byte(glossaryMD)); err != nil {
 		return written, nil, err
 	}
-	written = append(written, gp)
+	written = append(written, glossaryPath)
 
 	// thinking/*.md and tools/*.md: BuildThinkingDocs/BuildToolDocs return
 	// maps (Go randomizes map iteration order per run), so the filenames are
@@ -476,7 +664,10 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// (skip the 27 Planned tools whose page is entirely historical/aspirational
 	// prose for a command that doesn't exist yet). tools/INDEX.md is written
 	// unconditionally below regardless of profile (cheap, useful, and already
-	// the recommended pointer per the crystal-trim philosophy).
+	// the recommended pointer per the crystal-trim philosophy). Task #357:
+	// both land under the PROJECT-root framework/tools/ (sibling of domains/),
+	// NOT docs/gen/tools/ — engine self-documentation shared across all domains,
+	// byte-identical regardless of which domain regenerated it.
 	toolDocs := generator.BuildToolDocs(consumer)
 	toolKeys := make([]string, 0, len(toolDocs))
 	for cmd := range toolDocs {
@@ -489,7 +680,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	toolPaths := make([]string, len(toolKeys))
 	toolContents := make([][]byte, len(toolKeys))
 	for i, cmd := range toolKeys {
-		toolPaths[i] = filepath.Join(genDir, "tools", cmd+".md")
+		toolPaths[i] = filepath.Join(projectFrameworkDir, "tools", cmd+".md")
 		toolContents[i] = []byte(toolDocs[cmd])
 	}
 	if err := writeFilesParallel(toolPaths, toolContents); err != nil {
@@ -499,10 +690,10 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 
 	// tools/INDEX.md: a single entry-point page splitting the registry into
 	// Implemented (real commands) vs Planned (methodology surface only), so a
-	// browser of docs/gen/tools/ is not misled by the raw file count (40 .md
+	// browser of framework/tools/ is not misled by the raw file count (40 .md
 	// files, only 13 backing runnable commands). Purely additive — one extra
 	// file alongside the per-tool docs above.
-	toolIndexPath := filepath.Join(genDir, "tools", "INDEX.md")
+	toolIndexPath := filepath.Join(projectFrameworkDir, "tools", "INDEX.md")
 	if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex(consumer))); err != nil {
 		return written, nil, err
 	}
@@ -589,10 +780,35 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	if !includeSpec {
 		exemptFromCleanup = []string{"SPEC.md"}
 	}
-	removed, err := cleanupStaleGenFiles(genDir, written, exemptFromCleanup)
+	removedGen, err := cleanupStaleGenFiles(genDir, written, exemptFromCleanup)
 	if err != nil {
 		return written, nil, err
 	}
+	// Project-root framework/ cleanup pass (task #357): symmetric to the
+	// docs/gen/ pass above — deletes generator-owned files under the shared
+	// project-root framework/ that are NOT in this run's written list (e.g. a
+	// full→consumer profile switch drops the Planned-tool pages). The docs/gen/
+	// pass above ALSO deletes stale leftovers from the pre-#357 layout
+	// (docs/gen/GLOSSARY.md, docs/gen/tools/*.md): those closed-list entries are
+	// no longer written to docs/gen/, so they register as stale and get removed
+	// — that is the migration path from the old location to the new one.
+	removedProjectFW, err := cleanupStaleProjectFrameworkFiles(projectFrameworkDir, written)
+	if err != nil {
+		return written, nil, err
+	}
+	// Per-domain framework/ migration cleanup (task #357 retires #355's
+	// layout): the old domains/<name>/framework/ directory held FRAMEWORK-
+	// INVARIANTS.md + tools/*.md; both have moved (FRAMEWORK-INVARIANTS.md back
+	// to docs/gen/, tools/*.md up to the project root). This pass removes every
+	// generator-owned file left in the per-domain framework/ dir, then prunes
+	// the now-empty tools/ subdir and framework/ dir itself so neither orphan
+	// files nor empty directories survive the migration.
+	removedDomainFW, err := cleanupStaleDomainFrameworkDir(domainFrameworkDir)
+	if err != nil {
+		return written, nil, err
+	}
+	removed := append(append(append([]string{}, removedGen...), removedProjectFW...), removedDomainFW...)
+	sort.Strings(removed)
 	return written, removed, nil
 }
 
@@ -658,9 +874,20 @@ func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames [
 		exemptSet[filepath.Clean(filepath.Join(genDir, name))] = true
 	}
 
-	// (1) Closed list of top-level docs/gen/ filenames genSpec ever produces.
-	// graph.json is always written so it never qualifies for removal, but is
-	// listed for completeness so the candidate set matches genSpec's surface.
+	// (1) Closed list of top-level docs/gen/ filenames genSpec is authoritative
+	// over. FRAMEWORK-INVARIANTS.md is written here (task #357 returned it to
+	// docs/gen/ — it is per-domain content). GLOSSARY.md is listed here
+	// INTENTIONALLY even though task #357 promoted its WRITE to the project-
+	// root framework/: a pre-#357 domain still carries docs/gen/GLOSSARY.md on
+	// disk, and since it is no longer in this run's written list for docs/gen/,
+	// listing it here makes it register as stale and get removed — the
+	// migration path from the old location to the new one (no orphan doubles
+	// left behind). graph.json (task #364: now conditional, like every other
+	// entry in this list except GLOSSARY.md's migration case above) is
+	// listed here so a domain that transitions from non-empty to genuinely
+	// empty (e.g. its last Requirement rejected with nothing landed to
+	// replace it) has its stale archival copy correctly removed on the next
+	// gen-spec run, exactly like every other conditional file in this set.
 	topLevelFiles := []string{
 		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
 		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
@@ -676,9 +903,12 @@ func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames [
 
 	// (2) thinking/*.md and (3) tools/*.md — every .md in these two directories
 	// is generator-owned (nothing else is ever placed there), so glob-and-diff
-	// against written is safe. A non-existent directory yields an empty match
-	// set from filepath.Glob (nil error), which is the correct no-candidates
-	// outcome.
+	// against written is safe. tools/ is still globbed here for migration:
+	// tasks #355→#357 relocated tools/*.md writes first to per-domain
+	// framework/tools/ then to the project-root framework/tools/, so an existing
+	// docs/gen/tools/ directory's files are no longer in this run's written list
+	// and get cleaned up here. A non-existent directory yields an empty match
+	// set (nil error), which is the correct no-candidates outcome.
 	for _, sub := range []string{"thinking", "tools"} {
 		matches, err := filepath.Glob(filepath.Join(genDir, sub, "*.md"))
 		if err != nil {
@@ -703,6 +933,116 @@ func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames [
 			return nil, fmt.Errorf("remove stale gen file %s: %w", cp, err)
 		}
 		removed = append(removed, cp)
+	}
+	sort.Strings(removed)
+	return removed, nil
+}
+
+// cleanupStaleProjectFrameworkFiles deletes generator-owned files under the
+// PROJECT-root framework/ directory that exist on disk but are NOT in this
+// run's written list (task #357: GLOSSARY.md + tools/*.md are project-shared).
+// Same closed-list discipline as cleanupStaleGenFiles: only (1) GLOSSARY.md
+// (the one top-level file genSpec writes here — FRAMEWORK-INVARIANTS.md is NOT
+// here, it is per-domain under docs/gen/) and (2) every framework/tools/*.md
+// (the per-tool registry pages + INDEX.md) are candidates, so a hand-placed
+// file under framework/ with an unrecognized name is left alone (no blind glob
+// of framework/*.md). It returns the sorted list of deleted file paths, and
+// shares the SAME writtenSet the docs/gen/ pass uses.
+func cleanupStaleProjectFrameworkFiles(projectFrameworkDir string, written []string) ([]string, error) {
+	writtenSet := make(map[string]bool, len(written))
+	for _, p := range written {
+		writtenSet[filepath.Clean(p)] = true
+	}
+
+	var candidates []string
+	// (1) Closed list of top-level framework/ filenames genSpec produces here.
+	// GLOSSARY.md is the only one (tools/ is globbed below).
+	topLevelFiles := []string{"GLOSSARY.md"}
+	for _, name := range topLevelFiles {
+		candidates = append(candidates, filepath.Join(projectFrameworkDir, name))
+	}
+
+	// (2) framework/tools/*.md — every .md in this directory is generator-owned
+	// (per-tool pages + INDEX.md), so glob-and-diff against written is safe. A
+	// non-existent directory yields an empty match set (nil error), the correct
+	// no-candidates outcome for a fresh project whose framework/tools/ was never
+	// materialized.
+	matches, err := filepath.Glob(filepath.Join(projectFrameworkDir, "tools", "*.md"))
+	if err != nil {
+		return nil, fmt.Errorf("glob framework/tools: %w", err)
+	}
+	candidates = append(candidates, matches...)
+
+	var removed []string
+	for _, c := range candidates {
+		cp := filepath.Clean(c)
+		if writtenSet[cp] {
+			continue
+		}
+		if _, err := os.Stat(cp); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("stat stale framework file %s: %w", cp, err)
+		}
+		if err := os.Remove(cp); err != nil {
+			return nil, fmt.Errorf("remove stale framework file %s: %w", cp, err)
+		}
+		removed = append(removed, cp)
+	}
+	sort.Strings(removed)
+	return removed, nil
+}
+
+// cleanupStaleDomainFrameworkDir removes the OLD per-domain framework/ directory
+// retired by task #357 (which superseded #355's per-domain framework/ layout).
+// Every generator-owned file #355 wrote there — FRAMEWORK-INVARIANTS.md and
+// tools/*.md — has moved (FRAMEWORK-INVARIANTS.md back to docs/gen/, tools/*.md
+// up to the project-root framework/), so ALL of them are stale here and get
+// removed. After the files are gone, the now-empty tools/ subdir and the
+// framework/ dir itself are pruned so neither orphan files nor empty
+// directories survive the migration (os.Remove on an empty dir succeeds; on a
+// non-empty dir it fails and is silently ignored — a hand-placed file would
+// block removal, the safe outcome). A non-existent dir is a no-op.
+func cleanupStaleDomainFrameworkDir(domainFrameworkDir string) ([]string, error) {
+	var candidates []string
+	// Closed list: exactly the files genSpec (under #355) ever wrote to the
+	// per-domain framework/ dir.
+	topLevelFiles := []string{"FRAMEWORK-INVARIANTS.md"}
+	for _, name := range topLevelFiles {
+		candidates = append(candidates, filepath.Join(domainFrameworkDir, name))
+	}
+	matches, err := filepath.Glob(filepath.Join(domainFrameworkDir, "tools", "*.md"))
+	if err != nil {
+		return nil, fmt.Errorf("glob domain framework/tools: %w", err)
+	}
+	candidates = append(candidates, matches...)
+
+	var removed []string
+	for _, c := range candidates {
+		cp := filepath.Clean(c)
+		if _, err := os.Stat(cp); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("stat stale domain-framework file %s: %w", cp, err)
+		}
+		if err := os.Remove(cp); err != nil {
+			return nil, fmt.Errorf("remove stale domain-framework file %s: %w", cp, err)
+		}
+		removed = append(removed, cp)
+	}
+	// Prune the now-empty tools/ subdir and the framework/ dir itself. os.Remove
+	// succeeds only on a truly empty directory; a non-empty one (a hand-placed
+	// file an operator added) blocks removal — the safe, conservative outcome.
+	toolsSubdir := filepath.Join(domainFrameworkDir, "tools")
+	if err := os.Remove(toolsSubdir); err != nil && !os.IsNotExist(err) {
+		// Non-empty or permission error: not fatal — the files that matter are
+		// already gone; an empty-dir prune failure is best-effort.
+		_ = err
+	}
+	if err := os.Remove(domainFrameworkDir); err != nil && !os.IsNotExist(err) {
+		_ = err
 	}
 	sort.Strings(removed)
 	return removed, nil

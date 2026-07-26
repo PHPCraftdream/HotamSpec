@@ -257,6 +257,9 @@ func BuildConstitutionBlock(g *ontology.Graph, domainName string, consumer bool)
 
 	agentContextPath := fmt.Sprintf("domains/%s/docs/gen/AGENT-CONTEXT.md", domainName)
 	rosterPath := fmt.Sprintf("domains/%s/docs/gen/REQUIREMENTS.md", domainName)
+	// Task #357: FRAMEWORK-INVARIANTS.md moved back to docs/gen/ — it is a
+	// per-domain projection (which framework-plumbing atoms THIS domain has),
+	// not project-shared content, so it belongs with the other docs/gen/ files.
 	invariantsPath := fmt.Sprintf("domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md", domainName)
 	unenforcedPath := fmt.Sprintf("domains/%s/docs/gen/UNENFORCED.md", domainName)
 

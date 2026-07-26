@@ -23,15 +23,20 @@ import (
 // init creates the minimal on-disk shape a domain needs to be immediately
 // usable:
 //
-//   - <dir>/graph.json — a graph with one seed Stakeholder and one seed
-//     SETTLED Requirement (both PROSE-enforced, so `all-violations` is 0
-//     the instant the domain is created — no dangling owner references,
-//     no unenforceable-but-claimed-ENFORCED nodes). An empty graph (no
-//     nodes at all) also passes every invariant, as verified in the e2e
-//     test below and used by cmdGate/cmdWhatNow's own fixtures, but a
-//     single worked stakeholder+requirement pair gives an adopter
-//     something to `hotam req show` / `hotam what-now` against
-//     immediately instead of a wall of "nothing here yet".
+//   - <dir>/graph.json — a genuinely EMPTY graph (0 axes/stakeholders/
+//     requirements/conflicts/assumptions/operators/processes/goals/
+//     entity_types/entities). Task #364 retired the earlier auto-seeded
+//     Stakeholder ("owner") + SETTLED Requirement ("R-domain-exists") this
+//     scaffold used to write: an empty graph already passes every
+//     structural invariant by construction (R-empty-content-wellformed,
+//     internal/invariants/empty_content_test.go), so `all-violations` is 0
+//     the instant the domain is created with no need for a worked example
+//     to make that true — and a business-empty graph is also what
+//     `hotam gen-spec` now (same task) treats as ZERO docs/gen/ output
+//     (no REQUIREMENTS.md/OPEN.md/etc, no docs/gen/ directory at all): a
+//     genuinely fresh domain should carry no generated files until the
+//     adopter models something real, rather than a permanent worked-example
+//     artifact nobody asked for that they would otherwise have to reject.
 //   - <dir>/docs/gen/ — created empty; `hotam gen-spec --domain <dir>`
 //     populates it (init deliberately does NOT call gen-spec itself, so
 //     `hotam init` stays a pure scaffold step and the doc-generation step
@@ -50,8 +55,9 @@ import (
 //     wrapping project and no --parent flag is, by definition, a ROOT domain
 //     unless told otherwise, so it satisfies check_project_parent_declared
 //     (internal/invariants/project_parent.go) the instant `hotam init`
-//     returns — no migration window, matching the seed requirement's own
-//     born-clean discipline. --parent <name> overrides this default to a
+//     returns — no migration window, matching the domain's own born-clean
+//     discipline (task #364: it is born with zero nodes, which already
+//     passes every structural invariant). --parent <name> overrides this default to a
 //     child declaration ("parent": "<name>") for a caller founding a domain
 //     that IS a sub-project of an existing one; this flag does NOT validate
 //     that a domain named <name> actually exists on disk (matching how
@@ -79,7 +85,7 @@ func cmdInit(args []string) error {
 	fs := newFlagSet("init")
 	name := fs.String("name", "", "domain name (default: the last path segment of <dir>)")
 	profile := fs.String("profile", "", "gen-spec profile: consumer|full (default: consumer, matching init-project; full produces the heavier framework-self-hosting doc set)")
-	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — used as the seed requirement's last_reviewed_at/review_after basis; pin this for reproducible/byte-identical scaffolding")
+	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — reserved for reproducible/byte-identical scaffolding (currently unused: task #364 removed the seed Requirement this flag used to date-stamp)")
 	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into this domain (writes require_provenance: true into manifest.json; see internal/loader.ResolveRequireProvenance)")
 	parentFlag := fs.String("parent", "", "name of this domain's parent domain (default: none — this is a root domain, written as \"parent\": null; PLAN-scenario-generated-spec.md §2 D6). Not validated against a live filesystem lookup.")
 	fs.Parse(args)
@@ -156,14 +162,19 @@ func cmdInit(args []string) error {
 	return nil
 }
 
-// seedReviewCadenceDays is the review interval applied to the seed
-// requirement's review_after, measured from `today` (the domain's
-// scaffold date). 180 days (~6 months) is a reasonable default review
-// cadence — long enough that a freshly-scaffolded domain doesn't
-// immediately trip freshness/what-now's DUE-SOON lookahead
-// (internal/freshness.DueSoonWindowDays == 30 days), short enough that a
-// domain left completely untouched for a long time still eventually
-// surfaces its seed requirement for review.
+// seedReviewCadenceDays was the review interval applied to initDomain's old
+// auto-seeded requirement's review_after, measured from `today` (the
+// domain's scaffold date) — 180 days (~6 months), long enough that a
+// freshly-scaffolded domain didn't immediately trip freshness/what-now's
+// DUE-SOON lookahead (internal/freshness.DueSoonWindowDays == 30 days),
+// short enough that a domain left completely untouched for a long time
+// still eventually surfaced its seed requirement for review. Task #364
+// retired that auto-seed (initDomain now writes a genuinely empty graph),
+// so this constant is unused in production code today; it is kept
+// (alongside addDaysLocal below) for test fixtures that reconstruct the old
+// seed's exact shape when a test's real subject needs non-empty domain
+// content (e.g. exercising gen-spec's consumer-vs-full profile behavior,
+// which an empty graph would trivially skip end to end).
 const seedReviewCadenceDays = 180
 
 // initDomain performs the actual scaffold and returns every path it wrote,
@@ -172,14 +183,19 @@ const seedReviewCadenceDays = 180
 // graph.json (initializing on top of a real domain would silently discard
 // it), but tolerates (and creates) an otherwise-empty target directory.
 //
-// today (YYYY-MM-DD) seeds the scaffolded requirement's freshness fields
-// (last_reviewed_at/review_after) so the seed is born FRESH rather than
-// NEVER-REVIEWED — see internal/freshness.Classify. Without this, a fresh
-// `hotam init`/`hotam init-project` immediately reports `hotam status`'s
-// top action as an ADVISORY about the tool's own bootstrap artifact never
-// having been reviewed, which is a false signal about a business adopter's
-// first interaction with the tool, not a real content gap.
+// today (YYYY-MM-DD) is threaded through for API/call-site stability with
+// cmdInit/initProject (both pin it for reproducible scaffolding elsewhere in
+// their own output) and with the many existing tests that already pass a
+// pinned date. Task #364 retired the auto-seeded Requirement whose
+// last_reviewed_at/review_after this parameter used to seed (see
+// seedReviewCadenceDays/addDaysLocal below, now unused in THIS function but
+// kept — package-private, zero cost — for test fixtures that want to
+// replicate the old seed's freshness shape); an empty graph has no
+// Requirement to carry a freshness field at all, so `today` is currently a
+// reserved/unused parameter here, not a silent behavior change for any
+// caller.
 func initDomain(domainDir, domainName, today string) ([]string, error) {
+	_ = today // see doc comment above — reserved, currently unused now that no seed Requirement exists.
 	graphPath := graphPathForDomain(domainDir)
 	if _, err := os.Stat(graphPath); err == nil {
 		return nil, fmt.Errorf("refusing to init: %s already exists", graphPath)
@@ -187,31 +203,13 @@ func initDomain(domainDir, domainName, today string) ([]string, error) {
 		return nil, fmt.Errorf("stat %s: %w", graphPath, err)
 	}
 
-	seedOwnerID := "owner"
-	seedRequirementID := "R-domain-exists"
-
-	g := &ontology.Graph{
-		Stakeholders: []ontology.Stakeholder{
-			{
-				ID:     seedOwnerID,
-				Name:   "Domain Owner",
-				Domain: "owns this domain's seed requirement; replace or extend via Stakeholder proposals",
-			},
-		},
-		Requirements: []ontology.Requirement{
-			{
-				ID:             seedRequirementID,
-				Claim:          fmt.Sprintf("The %q domain shall exist as a valid, invariant-clean Hotam-Spec graph.", domainName),
-				Owner:          seedOwnerID,
-				Status:         ontology.StatusSETTLED,
-				Why:            "Seed requirement created by `hotam init` as a worked example — replace it (via a Rejection + a real proposal) with your domain's first actual requirement.",
-				Enforcement:    ontology.EnforcementPROSE,
-				Enforceability: ontology.EnforceabilityINHERENTLY_PROSE,
-				LastReviewedAt: today,
-				ReviewAfter:    addDaysLocal(today, seedReviewCadenceDays),
-			},
-		},
-	}
+	// A genuinely empty graph (task #364): 0 axes/stakeholders/requirements/
+	// conflicts/assumptions/operators/processes/goals/entity_types/entities.
+	// ontology.Graph{}.IsEmpty() is true by construction, and an empty graph
+	// passes every structural invariant (R-empty-content-wellformed) — no
+	// seed content is needed to make a freshly-scaffolded domain
+	// invariant-clean.
+	g := &ontology.Graph{}
 
 	if err := loader.WriteGraph(graphPath, g); err != nil {
 		return nil, fmt.Errorf("write %s: %w", graphPath, err)
@@ -230,7 +228,7 @@ func initDomain(domainDir, domainName, today string) ([]string, error) {
 	}
 
 	readmePath := filepath.Join(domainDir, "README.md")
-	readme := fmt.Sprintf(readmeTemplate, domainName, seedRequirementID)
+	readme := fmt.Sprintf(readmeTemplate, domainName)
 	if err := writeFileMkdir(readmePath, []byte(readme)); err != nil {
 		return nil, err
 	}
@@ -269,10 +267,12 @@ hotam all-violations --domain .
 
 # see the next correct action
 hotam what-now --domain .
-
-# browse the seed requirement
-hotam req show %[2]s --domain .
 ` + "```" + `
+
+This domain starts genuinely empty (0 nodes) — ` + "`hotam gen-spec`" + ` writes
+nothing under ` + "`docs/gen/`" + ` until you land your first real content (a
+Stakeholder, a Requirement, ...); an empty graph is well-formed by
+construction (R-empty-content-wellformed), not an error to work around.
 
 ## Founding order (general before specific, authored by hand)
 

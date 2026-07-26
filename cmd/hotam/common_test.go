@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -8,7 +9,120 @@ import (
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
+
+// chdirAndRestore changes the process CWD to dir for the duration of the
+// calling test, restoring the original CWD via t.Cleanup. Mirrors
+// internal/paths' own unexported test helper of the same name (that one is
+// package-private to internal/paths, so cmd/hotam needs its own copy for the
+// same pattern — used by tests that need a hermetic, marker-less CWD to
+// isolate CWD-based project-root resolution, e.g.
+// TestCmdLand_AutoCrystal_RepoRootIsDomainDir in land_test.go). Pre-existing
+// gap: this test file already called chdirAndRestore without ever defining
+// it in this package — fixed here as a mechanical, behavior-neutral addition
+// (unrelated to task #364's own seed/docs-gen changes) so cmd/hotam's own
+// test binary compiles at all.
+func chdirAndRestore(t *testing.T, dir string) {
+	t.Helper()
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(orig)
+	})
+}
+
+// seedOwnerStakeholder adds a Stakeholder with ID "owner" to the domain at
+// domainDir, via the ordinary proposal pipeline. Task #364 removed
+// initDomain's auto-seeded Stakeholder ("owner") + Requirement
+// ("R-domain-exists") — a fresh `hotam init` domain is now genuinely empty
+// (0 nodes, R-empty-content-wellformed) — so any test fixture that lands a
+// further proposal using the "owner" id by convention (mirroring the retired
+// seed's Stakeholder id) must seed it itself first, or
+// check_no_dangling_requirement_owner fires on that fixture's own proposal.
+// This is test-fixture plumbing only, not a reintroduction of the retired
+// production auto-seed.
+func seedOwnerStakeholder(t *testing.T, domainDir, today string) {
+	t.Helper()
+	if err := proposal.Apply(graphPathForDomain(domainDir), today, proposal.ProposedStakeholder{
+		ID:     "owner",
+		Name:   "Domain Owner",
+		Domain: "test fixture owner",
+	}); err != nil {
+		t.Fatalf("seedOwnerStakeholder: %v", err)
+	}
+}
+
+// seedPlaceholderRequirement adds a minimal SETTLED, PROSE/INHERENTLY_PROSE
+// Requirement under the given id directly via the proposal pipeline (not
+// through cmdLand/cmdApplyProposal, so it does not interfere with a caller's
+// own gate-behavior assertions). Used where a test needs a second, harmless,
+// pre-existing Requirement id to satisfy check_conflict_min_two_members
+// (every Conflict needs >= 2 distinct member requirements) — mirroring the
+// role initDomain's now-retired seed Requirement ("R-domain-exists") used to
+// play as an always-present second member in these fixtures. Precondition:
+// a Stakeholder "owner" must already exist in the domain (e.g. via
+// seedOwnerStakeholder), since this requirement's Owner is "owner".
+func seedPlaceholderRequirement(t *testing.T, domainDir, today, id string) {
+	t.Helper()
+	if err := proposal.Apply(graphPathForDomain(domainDir), today, proposal.ProposedRequirement{
+		ID:             id,
+		Claim:          fmt.Sprintf("%s is a placeholder test-fixture requirement.", id),
+		Owner:          "owner",
+		Status:         "SETTLED",
+		Why:            "Test fixture placeholder — a second, harmless pre-existing Requirement for Conflict-membership tests.",
+		Enforcement:    "PROSE",
+		Enforceability: "INHERENTLY_PROSE",
+		LastReviewedAt: today,
+		ReviewAfter:    addDaysLocal(today, seedReviewCadenceDays),
+		// R-review-mark-carries-evidence: last_reviewed_at/review_after on a
+		// Requirement proposal require non-empty evidence, or the gate refuses
+		// (a freshness stamp with no evidence is indistinguishable from an
+		// administrative date backfill riding along a routine content edit).
+		Evidence: []string{"test fixture backfill — seedPlaceholderRequirement"},
+	}); err != nil {
+		t.Fatalf("seedPlaceholderRequirement(%s): %v", id, err)
+	}
+}
+
+// seedMinimalRequirement seeds domainDir with the SAME shape of content
+// initDomain used to auto-seed before task #364 removed it: one Stakeholder
+// "owner" (via seedOwnerStakeholder) plus one SETTLED, PROSE/
+// INHERENTLY_PROSE Requirement ("R-domain-exists") whose id matches no
+// framework-internal atoms prefix. It exists for tests whose actual subject
+// is profile-based (or otherwise content-shaped) doc-generation behavior —
+// e.g. consumer-vs-full skipping, or a REQUIREMENTS.md content assertion —
+// which needs a genuinely non-empty, non-framework-internal domain to
+// exercise meaningfully. A truly empty domain (bare initDomain, this same
+// task) now skips EVERY docs/gen/ projection outright, which would mask
+// exactly the behavior those tests exist to prove.
+func seedMinimalRequirement(t *testing.T, domainDir, domainName, today string) {
+	t.Helper()
+	seedOwnerStakeholder(t, domainDir, today)
+	if err := proposal.Apply(graphPathForDomain(domainDir), today, proposal.ProposedRequirement{
+		ID:             "R-domain-exists",
+		Claim:          fmt.Sprintf("The %q domain shall exist as a valid, invariant-clean Hotam-Spec graph.", domainName),
+		Owner:          "owner",
+		Status:         "SETTLED",
+		Why:            "Test fixture requirement (mirrors initDomain's retired auto-seed) — minimal non-empty, non-framework-internal content for profile/content-behavior tests.",
+		Enforcement:    "PROSE",
+		Enforceability: "INHERENTLY_PROSE",
+		LastReviewedAt: today,
+		ReviewAfter:    addDaysLocal(today, seedReviewCadenceDays),
+		// R-review-mark-carries-evidence: last_reviewed_at/review_after on a
+		// Requirement proposal require non-empty evidence, or the gate refuses
+		// (a freshness stamp with no evidence is indistinguishable from an
+		// administrative date backfill riding along a routine content edit).
+		Evidence: []string{"test fixture backfill — seedMinimalRequirement"},
+	}); err != nil {
+		t.Fatalf("seedMinimalRequirement: %v", err)
+	}
+}
 
 // captureStderr redirects os.Stderr to a pipe for the duration of fn, returning
 // whatever fn wrote to stderr. It is process-global (os.Stderr is a single

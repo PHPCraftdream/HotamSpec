@@ -14,9 +14,21 @@ import (
 // rather than hardcoding either section (R-doc-names-reader's sibling bug:
 // REPO-MAP.md must name the real domain, not always hotam-spec-self).
 //
+// frameworkDocs lists the files written into the PROJECT-root framework/
+// directory this run (task #357: GLOSSARY.md + the tools/*.md registry —
+// byte-identical for every domain, promoted from the former per-domain
+// framework/ to a single shared copy sibling to domains/). REPO-MAP.md renders
+// them under a distinct "Framework reference" section so its listing stays
+// honest about what is actually on disk (a framework/ dir that exists but is
+// unmentioned would be a stale, self-contradictory map).
+//
 // decisionsWritten/entitiesWritten additionally control the two conditional
 // "_(not written: ...)_ " placeholder lines emitted when DECISIONS.md /
 // ENTITIES.md were withheld because their source registry is empty.
+// tensionsWritten/pipelineWritten/modelsWritten do the same for TENSIONS.md /
+// PIPELINE.md / MODELS.md (task #361: a young domain with no conflicts/axes,
+// no processes, or no authored spec/ model files gets an honest "not written"
+// line instead of a pure-template file).
 //
 // consumer gates the Framework-body section (repoMapFrameworkBodyContent): it
 // describes the FRAMEWORK's own internal/ Go package layout, which does not
@@ -24,7 +36,22 @@ import (
 // under consumer. The Tools section (renderRepoMapToolsSection — registry-
 // derived CLI commands, no internal/ paths) stays in both profiles. Full
 // profile renders byte-identical to before.
-func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, decisionsWritten, entitiesWritten bool, consumer bool) string {
+// RepoMapMDHasContent reports whether REPO-MAP.md carries real domain
+// content — i.e. whether the graph is non-empty (task #364: withheld
+// entirely from the docs/gen/ write set when the domain has zero axes/
+// stakeholders/requirements/conflicts/assumptions/operators/processes/goals/
+// entity_types/entities, mirroring the conditional-write pattern
+// DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already use).
+// This is self-consistent: when the graph is empty, every OTHER docs/gen/
+// file this predicate's siblings gate is also withheld, so REPO-MAP.md would
+// otherwise be the lone file listing an otherwise-empty directory — dropping
+// it too means a genuinely empty domain now produces ZERO files under
+// docs/gen/, not one calm-but-pointless index of nothing.
+func RepoMapMDHasContent(g *ontology.Graph) bool {
+	return !g.IsEmpty()
+}
+
+func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, frameworkDocs []GenDocEntry, decisionsWritten, entitiesWritten, tensionsWritten, pipelineWritten, modelsWritten bool, consumer bool) string {
 	lines := []string{Banner, ReaderHeaderLine("REPO_MAP", g), ""}
 	lines = append(lines, "# REPO-MAP.md — Repository file index (Hotam-Spec)")
 	lines = append(lines, "")
@@ -54,6 +81,36 @@ func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, d
 	}
 	if !entitiesWritten {
 		lines = append(lines, "- `domains/"+domainName+"/docs/gen/ENTITIES.md` — _(not written: no entity_types declared)_")
+	}
+	if !tensionsWritten {
+		lines = append(lines, "- `domains/"+domainName+"/docs/gen/TENSIONS.md` — _(not written: no conflict or axis nodes)_")
+	}
+	if !pipelineWritten {
+		lines = append(lines, "- `domains/"+domainName+"/docs/gen/PIPELINE.md` — _(not written: no process nodes)_")
+	}
+	if !modelsWritten {
+		lines = append(lines, "- `domains/"+domainName+"/docs/gen/MODELS.md` — _(not written: no authored spec/ model files)_")
+	}
+
+	// Framework reference section (task #357): project-shared self-
+	// documentation (GLOSSARY.md + the tools/*.md registry) lives at the
+	// PROJECT-root framework/ directory — a single copy sibling to domains/,
+	// byte-identical regardless of business content. Listed here (sorted, like
+	// the Generated docs section above) with repo-root-relative paths so
+	// REPO-MAP.md stays honest about every generated directory that exists on
+	// disk. tools/*.md subdirectory contents are deliberately NOT enumerated
+	// (mirroring docs/gen/'s own treatment of thinking/); the entry below is
+	// the one top-level file (GLOSSARY.md) plus a pointer to the tools/ subdir.
+	if len(frameworkDocs) > 0 {
+		lines = append(lines, "")
+		lines = append(lines, "**Framework reference (project-shared)** (`framework/`)")
+		lines = append(lines, "")
+		sortedFw := make([]GenDocEntry, len(frameworkDocs))
+		copy(sortedFw, frameworkDocs)
+		sort.Slice(sortedFw, func(i, j int) bool { return sortedFw[i].Filename < sortedFw[j].Filename })
+		for _, d := range sortedFw {
+			lines = append(lines, "- `framework/"+d.Filename+"` — "+mdTitle(d.Content))
+		}
 	}
 
 	lines = append(lines, "")

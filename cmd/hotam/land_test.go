@@ -1042,27 +1042,33 @@ func TestCmdLand_AutoCrystal_SingleDomainNoMarker(t *testing.T) {
 // whose isolation pattern this test mirrors.
 //
 // Fixture: initDomain (NOT copySelfDomainUnderRoot/selfDomainGraph) — a
-// minimal, non-self-hosting, invariant-clean domain whose one seed
-// Requirement is PROSE-enforced with no implemented_by/verified_by at all.
-// This test's own subject is CLAUDE.md auto-write via repoRootForDomain's
-// tier-3 fallback, nothing about self-hosting symbol resolution — but the
-// production hotam-spec-self graph (self_hosting: true) carries real
-// internal/...-relative implemented_by/verified_by links, and resolving
-// those during gen-spec's post-land structural-floor validation depends on
-// internal/gate.engineRoot's os.Getwd()-based fallback to find this
-// engine's go.mod when the copied domainDir itself has none above it. This
-// test's own chdirAndRestore below (needed for the tier-3 isolation this
-// test DOES care about) moves CWD to a hermetic dir with no reachable
+// minimal, non-self-hosting, invariant-clean domain (task #364: genuinely
+// empty on scaffold, plus a directly-seeded "owner" Stakeholder so the
+// proposal below has a resolvable owner) with no implemented_by/verified_by
+// links anywhere. This test's own subject is CLAUDE.md auto-write via
+// repoRootForDomain's tier-3 fallback, nothing about self-hosting symbol
+// resolution — but the production hotam-spec-self graph (self_hosting: true)
+// carries real internal/...-relative implemented_by/verified_by links, and
+// resolving those during gen-spec's post-land structural-floor validation
+// depends on internal/gate.engineRoot's os.Getwd()-based fallback to find
+// this engine's go.mod when the copied domainDir itself has none above it.
+// This test's own chdirAndRestore below (needed for the tier-3 isolation
+// this test DOES care about) moves CWD to a hermetic dir with no reachable
 // go.mod either, so that fallback can't succeed — spuriously failing
 // structural-floor resolution for links this test was never meant to
-// exercise. initDomain's seed requirement has no such links, sidestepping
-// the CWD dependency entirely while still giving cmdLand a real
-// SETTLED/PROSE requirement to land and a real graph to validate.
+// exercise. This fixture's Requirement (landed below, DRAFT) has no such
+// links, sidestepping the CWD dependency entirely while still giving
+// cmdLand a real requirement to land and a real graph to validate.
 func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
 	root := t.TempDir()
 	if _, err := initDomain(root, "bare-root-is-domain", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	// initDomain no longer auto-seeds a Stakeholder (task #364); the proposal
+	// below lands a Requirement with owner: "owner" by convention, so seed
+	// that Stakeholder directly first (or check_no_dangling_requirement_owner
+	// would fire on cmdLand's own post-apply validation).
+	seedOwnerStakeholder(t, root, "2026-07-14")
 
 	empty := t.TempDir()
 	chdirAndRestore(t, empty)

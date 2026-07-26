@@ -5,24 +5,37 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/PHPCraftdream/HotamSpec/internal/loader"
-	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
-	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 // TestGenSpec_MissingGraphRendersCalmNotice enforces R-empty-content-gen-notice:
 // when the active domain has NO graph.json at all (a freshly cloned framework
-// with no domain populated yet), gen-spec must NOT fail — it must render a calm
-// 'no content yet' notice into docs/gen/*.md, mirroring the empty-but-present
-// case. The two situations are indistinguishable to an adopter with nothing
-// modeled yet, so they produce identical output: a missing graph.json is
-// substituted with an empty graph (loadGraphOrEmpty), and every generator
-// already detects g.IsEmpty() and emits the generator.EmptyNotice placeholder.
+// with no domain populated yet), gen-spec must NOT fail. Task #364 changed
+// WHAT the calm behavior is: rather than rendering a "no content yet" notice
+// into an otherwise-unconditional docs/gen/*.md set, gen-spec now writes
+// ZERO files under docs/gen/ — the two situations (missing graph.json vs. an
+// empty-but-present one) are still indistinguishable to an adopter with
+// nothing modeled yet (a missing graph.json is substituted with an empty
+// graph, loadGraphOrEmpty), so they still produce IDENTICAL output: nothing.
 //
 // EXACT RULE (mechanically checked): genSpec against a temp dir containing NO
-// graph.json returns no error, writes docs/gen/REQUIREMENTS.md, and that file
-// contains the calm 'No domain content loaded' notice.
+// graph.json returns no error, and docs/gen/ either does not exist at all or
+// contains 0 files — not a directory full of calm-but-empty placeholders.
+// The PROJECT-shared framework/ output (GLOSSARY.md, tools/*.md/INDEX.md) is
+// UNAFFECTED by this gate — it is written unconditionally, independent of
+// domain content — so `written` is still non-empty overall.
+//
+// Profile: this test passes the CONSUMER profile explicitly — the same
+// default a real `hotam init`/`hotam init-project` domain gets (initDomain
+// writes gen_profile: consumer, R8-e). Under consumer, atoms-*.md and
+// docs/gen/thinking/*.md are ALSO withheld for an empty/framework-internal-
+// free graph (a PRE-EXISTING, unrelated gate — shouldWriteAtoms's own
+// empty-notice check, and thinking/*.md's `if !consumer` gate), so "0 files"
+// is exactly true end to end. Under the FULL profile (this function's own
+// empty-string-profile default, which resolves to "full" for a manifest-less
+// dir), atoms-*.md/thinking/*.md remain unconditional regardless of domain
+// content — an intentionally separate, PRE-EXISTING design this task does not
+// change (see shouldWriteAtoms's own doc comment in gen_spec.go) — so
+// asserting "0 files" there would conflate two independent gates.
 //
 // Discrimination: see TestGenSpec_MissingGraph_MalformedStillErrors — a
 // graph.json that EXISTS but is malformed (a decode error, not IsNotExist)
@@ -30,35 +43,52 @@ import (
 // is the discrimination rather than a blanket error-swallow.
 func TestGenSpec_MissingGraphRendersCalmNotice(t *testing.T) {
 	t.Parallel()
-	// A genuinely empty domain dir: exists, but NO graph.json.
-	domainDir := t.TempDir()
+	// A genuinely empty domain dir: exists, but NO graph.json. Placed under a
+	// domains/ parent so repoRootForDomain's tier-1 resolves the project root to
+	// the temp root (task #357: genSpec writes GLOSSARY.md + tools/*.md to
+	// <repoRoot>/framework/ — a bare temp dir would leak through tier-2 to the
+	// real repo's framework/).
+	projectRoot := t.TempDir()
+	domainDir := filepath.Join(projectRoot, "domains", "empty")
 	if _, err := os.Stat(filepath.Join(domainDir, "graph.json")); !os.IsNotExist(err) {
 		t.Fatalf("precondition: graph.json must not exist in the temp domain dir")
 	}
 
-	written, _, err := genSpec(domainDir, "", "2026-07-12", "", false)
+	written, _, err := genSpec(domainDir, "", "2026-07-12", "consumer", false)
 	if err != nil {
 		t.Fatalf("R-empty-content-gen-notice: genSpec on missing graph.json must not fail, got: %v", err)
 	}
 	if len(written) == 0 {
-		t.Fatal("R-empty-content-gen-notice: genSpec wrote no files")
+		t.Fatal("R-empty-content-gen-notice: genSpec wrote no files at all (expected the project-shared framework/ files at minimum)")
 	}
 
-	reqMD, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "REQUIREMENTS.md"))
-	if err != nil {
-		t.Fatalf("read generated REQUIREMENTS.md: %v", err)
-	}
-	const calmSubstring = "No domain content loaded"
-	if !strings.Contains(string(reqMD), calmSubstring) {
-		t.Fatalf("R-empty-content-gen-notice: generated REQUIREMENTS.md must carry the calm 'no content yet' notice, got:\n%s", string(reqMD))
+	// docs/gen/ must either not exist, or exist with 0 files — no
+	// REQUIREMENTS.md, no docs/gen/graph.json, nothing.
+	genDir := filepath.Join(domainDir, "docs", "gen")
+	if st, statErr := os.Stat(genDir); statErr == nil {
+		if !st.IsDir() {
+			t.Fatalf("%s exists but is not a directory", genDir)
+		}
+		entries, rdErr := os.ReadDir(genDir)
+		if rdErr != nil {
+			t.Fatalf("ReadDir %s: %v", genDir, rdErr)
+		}
+		var names []string
+		for _, e := range entries {
+			names = append(names, e.Name())
+		}
+		if len(entries) != 0 {
+			t.Errorf("R-empty-content-gen-notice: docs/gen/ for a missing/empty graph must be empty, got %d entr(y/ies): %v", len(entries), names)
+		}
+	} else if !os.IsNotExist(statErr) {
+		t.Fatalf("stat %s: %v", genDir, statErr)
 	}
 
-	// The calm notice is specific to emptiness: a generated graph.json (the
-	// normalized artifact under docs/gen/) is also written, reflecting the
-	// empty graph the generators ran over.
-	genGraph := filepath.Join(domainDir, "docs", "gen", "graph.json")
-	if _, err := os.Stat(genGraph); err != nil {
-		t.Fatalf("R-empty-content-gen-notice: generated docs/gen/graph.json must be written, got: %v", err)
+	// written must not list any docs/gen/ path for this run.
+	for _, p := range written {
+		if strings.Contains(filepath.ToSlash(p), "/docs/gen/") {
+			t.Errorf("R-empty-content-gen-notice: written unexpectedly includes a docs/gen/ file for an empty domain: %s", p)
+		}
 	}
 }
 
@@ -69,7 +99,11 @@ func TestGenSpec_MissingGraphRendersCalmNotice(t *testing.T) {
 // discrimination, not a blanket error-swallow.
 func TestGenSpec_MissingGraph_MalformedStillErrors(t *testing.T) {
 	t.Parallel()
-	domainDir := t.TempDir()
+	projectRoot := t.TempDir()
+	domainDir := filepath.Join(projectRoot, "domains", "malformed")
+	if err := os.MkdirAll(domainDir, 0o755); err != nil {
+		t.Fatalf("mkdir domain: %v", err)
+	}
 	garbage := []byte("{ this is not valid json")
 	if err := os.WriteFile(filepath.Join(domainDir, "graph.json"), garbage, 0o644); err != nil {
 		t.Fatalf("write malformed graph.json: %v", err)
@@ -79,241 +113,81 @@ func TestGenSpec_MissingGraph_MalformedStillErrors(t *testing.T) {
 	}
 }
 
-// chdirAndRestore changes the process working directory to dir for the
-// duration of the test, restoring the original on cleanup. It mirrors
-// internal/paths's same-named helper (project_root_chain_test.go), which is
-// package-private there and so cannot be imported here. Used by the
-// repoRootForDomain tier-3 test below, which must isolate CWD from this
-// repo's own tree (whose domains/ marker would otherwise satisfy the
-// ProjectRootOrRaise fallback) to exercise the no-markers-found branch.
-func chdirAndRestore(t *testing.T, dir string) {
-	t.Helper()
-	orig, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		_ = os.Chdir(orig)
-	})
-}
-
-// TestRepoRootForDomain_DomainsConvention covers tier 1: a domainDir whose
-// parent is literally "domains" derives repoRoot as the parent of domains/,
-// with no CWD/env dependency (tier 1 is checked before any marker search).
-// This is the common in-repo / external-project-convention case, unchanged
-// by the tier-3 addition.
-func TestRepoRootForDomain_DomainsConvention(t *testing.T) {
-	t.Parallel()
-	root := t.TempDir()
-	domainDir := filepath.Join(root, "domains", "acme")
-	got := repoRootForDomain(domainDir)
-	if got != root {
-		t.Errorf("repoRootForDomain(%q) = %q, want %q (parent of domains/)", domainDir, got, root)
-	}
-}
-
-// TestRepoRootForDomain_ProjectRootResolves covers tier 2: a domainDir that
-// does NOT follow the domains/<name> layout, where paths.ProjectRootOrRaise()
-// succeeds (here via the R1 env override HOTAM_SPEC_PROJECT_ROOT). The
-// resolved root must be the env-supplied project root — this preserves the
-// CWD/env-based resolution that copySelfDomain-style fixtures (flat
-// t.TempDir()/hotam-spec-self layouts) and TestGenSpec_SmokeWritesByte
-// IdenticalFiles rely on when go test runs from inside this checkout.
-func TestRepoRootForDomain_ProjectRootResolves(t *testing.T) {
-	// Bare domain dir with no domains/ parent — tier 1 is skipped.
-	domainDir := filepath.Join(t.TempDir(), "hotam-spec-self")
-	target := t.TempDir()
-	t.Setenv(paths.EnvProjectRoot, target)
-	got := repoRootForDomain(domainDir)
-	if got != target {
-		t.Errorf("repoRootForDomain(%q) = %q, want env-resolved project root %q", domainDir, got, target)
-	}
-}
-
-// TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir covers tier 3: a
-// bare domain dir with NO project markers discoverable (both project-root env
-// vars cleared, CWD an isolated marker-less temp dir outside the repo). This
-// is exactly the shape `hotam init <dir>` scaffolds anywhere on disk and then
-// advertises via "next: hotam gen-spec --domain <dir>". repoRootForDomain
-// must NOT error — it returns domainDir itself, which RenderDomainMapBlock
-// turns into the graceful "domains/ directory absent" text (the e2e test
-// asserts the rendered output; this asserts the resolution function).
+// TestGenSpec_SharedProjectionsModeIndependent enforces
+// R-shared-projections-mode-independent: TRACEABILITY.md/COVERAGE.md/
+// REPO-MAP.md render byte-identically whether or not the SAME domain's most
+// recent gen-spec state includes a --spec run, EXCEPT SPEC.md itself (the
+// sole --spec-shaped artifact, separately enforced by
+// check_spec_md_current). BuildTraceability/BuildCoverage are pure functions
+// of g alone (no specRows dependency) so they are trivially mode-independent
+// by construction; REPO-MAP.md is the interesting case — its own "Generated
+// docs" listing must still name SPEC.md on a PLAIN run that follows an
+// earlier --spec run (the file already exists on disk), via genSpec's own
+// "SPEC.md acknowledgment on a plain run" logic (gen_spec.go) — otherwise a
+// plain `hotam land` immediately after a `hotam gen-spec --spec` would make
+// REPO-MAP.md regress to a stale, self-contradictory listing.
 //
-// CWD/env isolation mirrors internal/paths's
-// TestProjectRootOrRaise_FailureNoEnv exactly.
-func TestRepoRootForDomain_NoProjectRootFallsBackToDomainDir(t *testing.T) {
-	empty := t.TempDir()
-	chdirAndRestore(t, empty)
-	t.Setenv(paths.EnvProjectRoot, "")
-	t.Setenv(paths.EnvDomainsRoot, "")
-
-	// Hermeticity precondition: this test exercises the tier-3 fallback
-	// (repoRootForDomain returns domainDir when NO project root resolves),
-	// reachable only when the CWD ancestry carries no project-root marker
-	// within MaxMarkerSearchDepth levels. On a host whose own directory tree
-	// is polluted with stray markers (e.g. a developer home with domains/,
-	// .claude/, CLAUDE.md from unrelated tooling) within that depth, R3
-	// resolves and the tier-3 branch is unreachable — skip (green) with an
-	// actionable message rather than fail red, since the production logic is
-	// correct and only the test's environmental precondition is unmet.
-	skipIfCwdAncestryNotHermetic(t, empty)
-
-	domainDir := filepath.Join(t.TempDir(), "bare-acme")
-	got := repoRootForDomain(domainDir)
-	if got != domainDir {
-		t.Errorf("repoRootForDomain(%q) = %q, want domainDir itself (tier-3 fallback when no project root resolves)", domainDir, got)
-	}
-}
-
-// TestCmdGenSpec_LocalCrystalDefaultForNonActiveDomain is the task A2
-// practical proof: `hotam gen-spec` (cmdGenSpec) against a NON-active consumer
-// domain, in a convention-carrying multi-domain project, MUST write that
-// domain's OWN local <domainDir>/CLAUDE.md (+ AGENTS.md + GEMINI.md) WITHOUT
-// an explicit --claude-md flag — the systematic default that previously
-// required the one-off `gen-spec --claude-md <path>` (task A0). It also
-// asserts the ROOT crystal (for the active domain) is NOT touched, proving
-// the local write is not a root hijack.
-func TestCmdGenSpec_LocalCrystalDefaultForNonActiveDomain(t *testing.T) {
-	t.Parallel()
-	root := t.TempDir()
-	// Two domains under domains/: "active" (named in the marker) and
-	// "consumer" (the non-active one gen-spec is run against).
-	activeDir := filepath.Join(root, "domains", "active")
-	consumerDir := filepath.Join(root, "domains", "consumer")
-	for _, d := range []string{activeDir, consumerDir} {
-		if err := os.MkdirAll(d, 0o755); err != nil {
-			t.Fatalf("mkdir %s: %v", d, err)
-		}
-		copyFile(t, selfDomainGraph, filepath.Join(d, "graph.json"))
-		copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(d, "manifest.json"))
-	}
-	// Crystal convention: a root CLAUDE.md (baseline, must stay untouched) +
-	// marker naming "active" as the active domain.
-	rootBaseline := []byte("ROOT-CRYSTAL-FOR-ACTIVE\n")
-	if err := os.WriteFile(filepath.Join(root, "CLAUDE.md"), rootBaseline, 0o644); err != nil {
-		t.Fatalf("write root CLAUDE.md: %v", err)
-	}
-	if err := paths.WriteActiveDomain(filepath.Join(root, paths.MarkerFilename), "active"); err != nil {
-		t.Fatalf("write marker: %v", err)
-	}
-
-	// gen-spec against the NON-active "consumer" domain, NO --claude-md.
-	if err := cmdGenSpec([]string{"--domain", consumerDir, "--today", "2026-07-14"}); err != nil {
-		t.Fatalf("cmdGenSpec: %v", err)
-	}
-
-	// The local crystal must now exist at <consumerDir>/CLAUDE.md (+ fan-out).
-	for _, name := range []string{"CLAUDE.md", "AGENTS.md", "GEMINI.md"} {
-		p := filepath.Join(consumerDir, name)
-		b, err := os.ReadFile(p)
-		if err != nil {
-			t.Errorf("local crystal %s not written by default (task A2): %v", p, err)
-			continue
-		}
-		if len(b) == 0 {
-			t.Errorf("local crystal %s written but empty", p)
-		}
-	}
-
-	// Root crystal must be UNTOUCHED — the local write is not a root hijack.
-	got, err := os.ReadFile(filepath.Join(root, "CLAUDE.md"))
-	if err != nil {
-		t.Fatalf("read root CLAUDE.md: %v", err)
-	}
-	if string(got) != string(rootBaseline) {
-		t.Errorf("root CLAUDE.md was modified by gen-spec against the non-active domain — local-crystal default must not hijack the root")
-	}
-}
-
-// TestGenSpec_SharedProjectionsModeIndependent is the end-to-end regression
-// this fix (continuing task #317, CI's "gen-spec idempotency" step) actually
-// depends on: `hotam land`'s own routine regeneration (cmd/hotam/land.go)
-// ALWAYS calls plain genSpec (includeSpec == false), never --spec — so any
-// docs/gen/ projection whose rendered bytes differ depending on --spec would
-// be silently reverted by the very next `hotam land`, making a
-// `--spec`-shaped commit of that projection inherently unstable. This test
-// proves TRACEABILITY.md, COVERAGE.md, and REPO-MAP.md are NOT such a
-// projection any more: running genSpec with includeSpec=true (which also
-// exercises the real go-test recording pass CollectSpecRows performs) then
-// again with includeSpec=false, against the SAME unchanged graph, must leave
-// all three files byte-identical across both runs.
-//
-// The fixture graph deliberately carries a SETTLED requirement with NO
-// verified_by entry at all (zero resolvable scenarios) — CollectSpecRows
-// then does zero go-test subprocess invocations (it only ever iterates
-// requirements that DO carry verified_by), so the --spec pass here is cheap
-// while still exercising the real includeSpec=true code path end-to-end
-// (SPEC.md is rendered and written, TRACEABILITY.md/COVERAGE.md/REPO-MAP.md
-// are rendered from the SAME genSpec call that did so).
+// Task #364: a bare initDomain now scaffolds a genuinely EMPTY graph, under
+// which TRACEABILITY.md/COVERAGE.md/REPO-MAP.md are ALL withheld regardless
+// of --spec (this same task) — proving nothing about mode-independence. This
+// test seeds minimal real content first (seedMinimalRequirement) so all
+// three files actually render under both modes.
 func TestGenSpec_SharedProjectionsModeIndependent(t *testing.T) {
 	t.Parallel()
-	domainDir := t.TempDir()
-	g := &ontology.Graph{
-		Requirements: []ontology.Requirement{
-			{
-				ID:             "R-mode-independent-trivial",
-				Claim:          "A trivial SETTLED requirement with no code carrier yet.",
-				Owner:          "spec-author",
-				Status:         ontology.StatusSETTLED,
-				Enforcement:    ontology.EnforcementPROSE,
-				Enforceability: ontology.EnforceabilityENFORCEABLE,
-			},
-		},
+	root := t.TempDir()
+	domainDir := filepath.Join(root, "domains", "shared-mode-test")
+	if _, err := initDomain(domainDir, "shared-mode-test", "2026-07-23"); err != nil {
+		t.Fatalf("initDomain: %v", err)
 	}
-	if err := loader.WriteGraph(filepath.Join(domainDir, "graph.json"), g); err != nil {
-		t.Fatalf("write graph.json: %v", err)
-	}
+	seedMinimalRequirement(t, domainDir, "shared-mode-test", "2026-07-23")
 
-	const today = "2026-07-19"
-	projections := []string{"TRACEABILITY.md", "COVERAGE.md", "REPO-MAP.md"}
-
-	if _, _, err := genSpec(domainDir, "", today, "", true); err != nil {
-		t.Fatalf("genSpec(includeSpec=true): %v", err)
-	}
-	withSpec := make(map[string][]byte, len(projections))
-	for _, name := range projections {
-		b, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", name))
-		if err != nil {
-			t.Fatalf("read %s after includeSpec=true run: %v", name, err)
+	names := []string{"TRACEABILITY.md", "COVERAGE.md", "REPO-MAP.md"}
+	readAll := func(t *testing.T) map[string]string {
+		t.Helper()
+		out := map[string]string{}
+		for _, n := range names {
+			data, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", n))
+			if err != nil {
+				t.Fatalf("read %s: %v", n, err)
+			}
+			out[n] = string(data)
 		}
-		withSpec[name] = b
-	}
-	// Sanity: the --spec run must have actually rendered SPEC.md (proving
-	// includeSpec=true really took the real recording-pass code path, not a
-	// no-op), and TRACEABILITY.md must acknowledge --spec-shaped machinery
-	// exists (pointing at SPEC.md), even though it renders no verdict itself.
-	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); err != nil {
-		t.Fatalf("precondition: SPEC.md must exist after includeSpec=true run: %v", err)
+		return out
 	}
 
-	if _, _, err := genSpec(domainDir, "", today, "", false); err != nil {
-		t.Fatalf("genSpec(includeSpec=false): %v", err)
+	// (1) A REAL --spec run first — this domain's one seeded Requirement is
+	// INHERENTLY_PROSE with no verified_by, so CollectSpecRows finds nothing
+	// to execute (no real `go test` subprocess spawned), keeping this fast
+	// while still exercising includeSpec=true's code path and establishing
+	// SPEC.md on disk.
+	if _, _, err := genSpec(domainDir, "", "2026-07-23", "", true); err != nil {
+		t.Fatalf("genSpec --spec: %v", err)
 	}
-	for _, name := range projections {
-		b, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", name))
-		if err != nil {
-			t.Fatalf("read %s after includeSpec=false run: %v", name, err)
-		}
-		if string(b) != string(withSpec[name]) {
-			t.Errorf("%s is NOT byte-identical between includeSpec=true and includeSpec=false runs (continuing task #317's CI idempotency fix) — got %d bytes, want %d bytes matching the --spec run", name, len(b), len(withSpec[name]))
+	afterSpec := readAll(t)
+
+	// (2) A subsequent PLAIN run (includeSpec=false) on the SAME,
+	// already-spec'd domain: SPEC.md already exists on disk, so REPO-MAP.md's
+	// own acknowledgment logic still lists it — all three files must render
+	// byte-identically to the --spec run.
+	if _, _, err := genSpec(domainDir, "", "2026-07-23", "", false); err != nil {
+		t.Fatalf("genSpec plain (after --spec): %v", err)
+	}
+	afterPlain := readAll(t)
+	for _, n := range names {
+		if afterSpec[n] != afterPlain[n] {
+			t.Errorf("R-shared-projections-mode-independent violated: %s differs between a --spec run and a subsequent plain run:\n--spec:\n%s\n\nplain:\n%s", n, afterSpec[n], afterPlain[n])
 		}
 	}
 
-	// SPEC.md itself must survive the plain run untouched on disk (the
-	// cleanupStaleGenFiles exemption, W2.3) AND still be acknowledged by
-	// REPO-MAP.md's own listing (the stat-based fix this task adds) — a
-	// plain run must never silently make REPO-MAP.md forget SPEC.md exists.
-	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); err != nil {
-		t.Fatalf("SPEC.md must still exist after includeSpec=false run (cleanupStaleGenFiles exemption): %v", err)
+	// (3) Round-trip back to --spec once more: still byte-identical, proving
+	// this is a stable fixpoint, not an artifact of write order.
+	if _, _, err := genSpec(domainDir, "", "2026-07-23", "", true); err != nil {
+		t.Fatalf("genSpec --spec (round-trip): %v", err)
 	}
-	repoMap, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "REPO-MAP.md"))
-	if err != nil {
-		t.Fatalf("read REPO-MAP.md: %v", err)
-	}
-	if !strings.Contains(string(repoMap), "SPEC.md") {
-		t.Errorf("REPO-MAP.md must still list SPEC.md after a plain (includeSpec=false) run, since SPEC.md still exists on disk:\n%s", string(repoMap))
+	afterSpec2 := readAll(t)
+	for _, n := range names {
+		if afterSpec[n] != afterSpec2[n] {
+			t.Errorf("R-shared-projections-mode-independent violated: %s not stable across a --spec -> plain -> --spec round-trip", n)
+		}
 	}
 }
