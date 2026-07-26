@@ -16,6 +16,37 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Investigated (task #368, no code change)
+- **Test suite wall-clock time** — measured, not guessed, on an idle machine (16 cores,
+  GOCACHE=`D:\system_artefact\go-build`), both hypotheses this task set out to test came back
+  negative, so no refactor was made:
+  - **`cmd/hotam -short` vs full**: `-short` (skips the 48 real-subprocess tests) = 349.1s,
+    full = 449.6s — only ~22% savings, below the ~30% threshold this task set as the bar for
+    a structural in-process-conversion refactor (`cmd/hotam/vendor_ontology.go`'s
+    `cmdX(args)`/`x(domainDir)` split pattern). Below that bar, refactoring 48 subprocess
+    tests carries real regression risk (weakening what they assert) for a modest win — not
+    done.
+  - **`-p 4` on `cmd/hotam`**: 460.7s — statistically the same as the `-p 16` default
+    (`-p` controls cross-PACKAGE build/test parallelism; `cmd/hotam` is a single package, so
+    `-p` has no effect on it at all, as expected once this was checked directly).
+  - **`-parallel 4` on `cmd/hotam`**: 810.6s — **80% SLOWER** than the `-p`/`-parallel`-default
+    baseline (449.6-460.7s). This directly REFUTES the standing hypothesis (carried over from
+    task #366's own `TestCmdSyncSelf_RollbackOnPostWriteFailure` CPU-contention symptom) that
+    reducing intra-package test parallelism would relieve subprocess-vs-subprocess CPU
+    oversubscription. It does the opposite: `cmd/hotam`'s subprocess tests are I/O/exec-wait
+    heavy, and cutting parallelism just serializes that waiting. **Do not pass `-parallel <N>`
+    below the default when running this suite.**
+  - **Root cause of the earlier apparent contention symptoms** (task #366's flake, and this
+    resolver's own two false-timeout signals earlier this session) was simpler and already
+    identified independently: **running more than one `go test ./...` invocation
+    concurrently** in the same session/machine, not oversubscription *within* a single
+    `go test` run. The fix is process discipline (one full-suite run at a time — already
+    adopted this session, see task #369's commit message for the fuller incident writeup),
+    not a test-suite code or flag change.
+  - Windows Defender exclusion (GOCACHE + repo + temp dir) remains a plausible, unverified
+    lever — requires administrator privileges this task could not exercise; left as a
+    standing recommendation for the resolver/user to apply manually, not evaluated here.
+
 ### Added
 - **Claim derived from a Requirement's `verified_by` scenario test(s) (task #369, RAC3-A)**:
   a Requirement's `Claim` — the normative claim text — is no longer only a hand-authored
