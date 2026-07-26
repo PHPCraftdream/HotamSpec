@@ -274,6 +274,7 @@ var _ = All.MustRegister("check_status_in_lifecycle", Invariant{
 func checkCanonicalLifecyclesWellformed(g *ontology.Graph) []Violation {
 	canonical := []ontology.Lifecycle{
 		ontology.RequirementStatusLifecycle,
+		ontology.RequirementProofLifecycle,
 		ontology.ConflictLifecycle,
 		ontology.OperatorLifecycle,
 		ontology.ProcessLifecycle,
@@ -296,9 +297,10 @@ var _ = All.MustRegister("check_canonical_lifecycles_wellformed", Invariant{
 	Name:  "check_canonical_lifecycles_wellformed",
 	Canon: methodology.Lifecycle,
 	Claim: "the framework's own lifecycle constants are well-formed.",
-	Rule: "REQUIREMENT_STATUS_LIFECYCLE, CONFLICT_LIFECYCLE, OPERATOR_LIFECYCLE, PROCESS_LIFECYCLE, and GOAL_LIFECYCLE " +
-		"MUST each pass check_lifecycle_wellformed (no structural issues). This check runs on every invocation of the full " +
-		"invariant suite -- the framework checks its own shipped state machines, not only user content.",
+	Rule: "REQUIREMENT_STATUS_LIFECYCLE, REQUIREMENT_PROOF_LIFECYCLE, CONFLICT_LIFECYCLE, OPERATOR_LIFECYCLE, " +
+		"PROCESS_LIFECYCLE, and GOAL_LIFECYCLE MUST each pass check_lifecycle_wellformed (no structural issues). This check " +
+		"runs on every invocation of the full invariant suite -- the framework checks its own shipped state machines, not " +
+		"only user content.",
 	Why: "self-application is the methodology's bootstrap test. If the framework's own lifecycles are malformed, all " +
 		"downstream status validation is meaningless. References: R-statemachine-wellformedness, R-lifecycle-abstraction, " +
 		"R-process-aspect-first.",

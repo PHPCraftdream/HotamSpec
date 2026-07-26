@@ -127,6 +127,73 @@ var RequirementStatusLifecycle = Lifecycle{
 	PrefixStates: []string{"OPEN"},
 }
 
+// RequirementProofLifecycle is the state machine backing Requirement.State()
+// (task #370, RAC3-B): whether a Requirement's normative Claim is actually
+// PROVEN by real, currently-executed evidence, as opposed to merely
+// declared. This is deliberately a SEPARATE Lifecycle value from
+// RequirementStatusLifecycle above -- that one governs the editorial
+// workflow of the Claim text itself (DRAFT -> SETTLED -> ... -> REJECTED,
+// decided by a human resolver via a ProposedRequirement/transition); this
+// one governs a MECHANICALLY COMPUTED verdict over the SAME requirement's
+// verified_by carrier (see internal/selfspec/requirement_state.go,
+// task #369's RAC3-A drift/execution machinery), never resolver-decided and
+// never stored on the node itself -- it is re-derived fresh on every read,
+// exactly like Requirement.IsCloseableDebt() derives from Enforcement +
+// Enforceability rather than being its own stored field.
+//
+//   - NO_CARRIER: the requirement declares no verified_by entry at all --
+//     nothing to prove or disprove (mirrors
+//     selfspec.RequirementInClaimDerivationScope's own "len(VerifiedBy) == 0"
+//     half, and check_settled_requires_scenario's "missing carrier" branch).
+//   - UNVERIFIED: verified_by is declared but the freshest attempt to run it
+//     could not produce a verdict at all -- every entry fails to parse/
+//     resolve, or the run was Skipped (gate's recursion guard) or hit an
+//     infrastructure Err (gate.TestRunResult) -- "declared, never actually
+//     proven, for reasons short of a real red bar."
+//   - FAILING: verified_by resolved and ran, but at least one entry's `go
+//     test` invocation did not pass (CompileFailed or Passed==false) -- a
+//     real, currently-red bar.
+//   - STALE: every verified_by entry runs and passes, but the requirement's
+//     committed Claim no longer matches what a fresh re-derivation from
+//     those passing runs would produce right now -- the exact drift
+//     check_claim_matches_scenario (internal/invariants/claim_scenario_current.go)
+//     detects; State() surfaces the SAME verdict as a first-class Requirement
+//     state instead of only as a violation a caller must separately query.
+//   - PROVEN: verified_by resolved, ran, passed, AND the committed Claim
+//     currently matches its fresh re-derivation -- the healthy terminal
+//     state: real evidence, currently in agreement with what is claimed.
+//
+// This Lifecycle is CYCLIC (proof freshness can regress the moment a
+// verified_by test's scenario text changes without a re-sync, or a passing
+// test starts failing) -- there is no single terminal state a requirement
+// "graduates" to permanently, mirroring ConflictLifecycle's own Cyclic:true
+// shape (a DECIDED conflict can return to DETECTED when its revisit_marker
+// condition fires) rather than RequirementStatusLifecycle's acyclic shape.
+var RequirementProofLifecycle = Lifecycle{
+	Slug: "requirement-proof",
+	States: []State{
+		{Name: "NO_CARRIER", Kind: StateKindInitial, Why: "no verified_by entry declared -- nothing to prove or disprove yet"},
+		{Name: "UNVERIFIED", Kind: StateKindNormal, Why: "verified_by declared but the freshest attempt produced no verdict (unresolvable entry, Skipped, or infra Err)"},
+		{Name: "FAILING", Kind: StateKindNormal, Why: "verified_by resolved and ran, but at least one entry does not currently pass"},
+		{Name: "STALE", Kind: StateKindNormal, Why: "every verified_by entry passes, but the committed Claim no longer matches a fresh re-derivation (drift)"},
+		{Name: "PROVEN", Kind: StateKindQuiescent, Why: "every verified_by entry passes AND the committed Claim matches a fresh re-derivation right now"},
+	},
+	Transitions: []Transition{
+		{Src: "NO_CARRIER", Dst: "UNVERIFIED", Event: "verified-by-declared", Why: "a verified_by entry is added but not yet resolvable/run"},
+		{Src: "UNVERIFIED", Dst: "FAILING", Event: "run-resolves-and-fails", Why: "the entry now resolves and runs, but does not pass"},
+		{Src: "UNVERIFIED", Dst: "STALE", Event: "run-resolves-and-passes-stale-claim", Why: "the entry now resolves and passes, but Claim has drifted"},
+		{Src: "UNVERIFIED", Dst: "PROVEN", Event: "run-resolves-and-passes-fresh-claim", Why: "the entry now resolves, passes, and Claim already matches"},
+		{Src: "FAILING", Dst: "UNVERIFIED", Event: "carrier-becomes-unresolvable", Why: "a previously-running entry is renamed/removed and no longer resolves"},
+		{Src: "FAILING", Dst: "STALE", Event: "fix-makes-it-pass-stale-claim", Why: "the implementation is fixed, the test passes again, but Claim was not re-derived"},
+		{Src: "FAILING", Dst: "PROVEN", Event: "fix-makes-it-pass-fresh-claim", Why: "the implementation is fixed, the test passes, and Claim already matches"},
+		{Src: "STALE", Dst: "PROVEN", Event: "resync-claim", Why: "hotam sync-domain re-derives Claim from the currently-passing scenario"},
+		{Src: "STALE", Dst: "FAILING", Event: "regression-after-drift", Why: "the test starts failing while Claim was already stale"},
+		{Src: "PROVEN", Dst: "STALE", Event: "scenario-title-edited-without-resync", Why: "a verified_by test's recorded scenario text changes without re-running hotam sync-domain"},
+		{Src: "PROVEN", Dst: "FAILING", Event: "regression", Why: "a previously-passing verified_by entry starts failing"},
+	},
+	Cyclic: true,
+}
+
 var ConflictLifecycle = Lifecycle{
 	Slug: "conflict-lifecycle",
 	States: []State{

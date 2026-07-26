@@ -33,12 +33,14 @@ import (
 // any existing call site.
 type SpecRow = gate.SpecRow
 
-// ScenarioVerdict is a type alias for gate.ScenarioVerdict -- see SpecRow's
-// doc comment; internal/generator/traceability.go's and
-// internal/generator/coverage.go's BuildTraceability/BuildCoverage
-// `verdicts ...map[string]ScenarioVerdict` parameters keep compiling and
-// behaving identically because ScenarioVerdict and gate.ScenarioVerdict are
-// the exact same type after this alias.
+// ScenarioVerdict is a type alias for gate.ScenarioVerdict. NEITHER
+// BuildTraceability NOR BuildCoverage (this package) has accepted a verdicts
+// parameter since task #317 deliberately removed that overlay to keep both
+// docs mode-independent (see gate.ScenarioVerdict's own doc comment,
+// "HISTORICAL NOTE", for the full story) -- this alias is kept only for this
+// package's existing public surface / test coverage. task #370's
+// internal/selfspec.RequirementState is the current, general-purpose home
+// for a real execution-based per-requirement proof verdict.
 type ScenarioVerdict = gate.ScenarioVerdict
 
 // CollectSpecRows re-exports gate.CollectSpecRows -- see that function's own

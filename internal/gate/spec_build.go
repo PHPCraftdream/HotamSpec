@@ -168,16 +168,31 @@ type SpecRow struct {
 }
 
 // ScenarioVerdict is one requirement's REAL (executed, `--spec`-gated)
-// scenario-narrative outcome -- the shared shape
-// internal/generator.BuildTraceability/BuildCoverage render their optional
-// "verdict" sub-column from (PLAN-scenario-generated-spec.md §3 W1.4),
-// derived from the SAME SpecRow/specTestOutcome data BuildSpecFromRows
-// itself renders narratives from (see ScenarioVerdictsFromRows) so a
-// `gen-spec --spec` run pays the real RunVerifiedByTestRecording cost
-// exactly ONCE per verified_by entry, shared across SPEC.md, TRACEABILITY.md,
-// and COVERAGE.md in the same invocation (cmd/hotam's genSpec calls
-// CollectSpecRows once and derives both BuildSpecFromRows's input and this
-// verdict map from it).
+// scenario-narrative outcome, derived from the same SpecRow/specTestOutcome
+// data BuildSpecFromRows itself renders narratives from (see
+// ScenarioVerdictsFromRows).
+//
+// HISTORICAL NOTE (task #317, superseded by task #370/RAC3-B's audit): this
+// type was originally meant to feed an optional "verdict" sub-column on
+// internal/generator.BuildTraceability/BuildCoverage (PLAN-scenario-
+// generated-spec.md §3 W1.4) -- but task #317 deliberately REMOVED that
+// overlay (see internal/generator/scenario_traceability_test.go's
+// TestBuildTraceability_ModeIndependent_.../
+// TestBuildCoverage_ModeIndependent_...) to keep those two docs pure,
+// mode-independent functions of the graph plus a cheap AST scan, so `hotam
+// land`'s routine (non---spec) regeneration can never flip their content --
+// see cmd/hotam/gen_spec.go's own comment on specRows for the current,
+// authoritative wiring (SPEC.md only). Neither BuildTraceability nor
+// BuildCoverage has taken a verdicts parameter since; this type and
+// ScenarioVerdictsFromRows are kept only because generator.ScenarioVerdict
+// re-exports them as part of this package's public surface and a test
+// exercises them directly to prove they have zero effect on generator
+// output -- task #370's own RequirementState (internal/selfspec/
+// requirement_state.go) is the CURRENT, correct home for "is this
+// requirement's verified_by evidence real, passing, and fresh" as a
+// general-purpose, execution-based predicate; a caller that genuinely needs
+// a real per-requirement pass/fail+freshness verdict should use that instead
+// of this narrower, SPEC.md-era shape.
 type ScenarioVerdict struct {
 	// Narrated is true when at least one verified_by entry produced at
 	// least one hotamspec.Artifact with verdict "pass" -- the same bar

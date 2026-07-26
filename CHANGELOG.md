@@ -73,6 +73,69 @@ History predating this file is not backfilled — see `git log` and
     full real subprocess-driven end-to-end proof that `hotam sync-domain` itself — not merely
     the derivation function in isolation — overrides a deliberately stale registry-literal
     `Claim` with the real derived scenario text before landing, with `0` violations afterward).
+- **`Requirement.State()` — a computed, execution-based proof lifecycle (task #370, RAC3-B)**:
+  the second half of the "is a Requirement's Claim real?" wave #369/RAC3-A started. A
+  Requirement's proof status — is `verified_by` even declared, has it ever been run, did the
+  last run pass, and does the committed `Claim` still match a fresh re-derivation — is now a
+  single computed value instead of something every consumer would otherwise have to re-derive
+  ad hoc.
+  - **`internal/ontology/lifecycle.go`**: new `RequirementProofLifecycle` (`Slug:
+    "requirement-proof"`), a canonical `Lifecycle` value in the same family as
+    `RequirementStatusLifecycle`/`ConflictLifecycle` — 5 states (`NO_CARRIER` → `UNVERIFIED` →
+    `FAILING`/`STALE`/`PROVEN`, `Cyclic: true`, since a passing/fresh requirement can regress the
+    moment its scenario text changes without a re-sync or its test starts failing again).
+    Registered into `checkCanonicalLifecyclesWellformed`'s canonical list
+    (`internal/invariants/lifecycle_checks.go`) alongside the other four, so the framework's own
+    self-application check validates it too. Deliberately a SEPARATE Lifecycle value from
+    `RequirementStatusLifecycle` — that one governs the editorial DRAFT/SETTLED/OPEN/REJECTED
+    workflow (resolver-decided); this one governs a mechanically computed verdict over the same
+    requirement's `verified_by` carrier (never resolver-decided, never stored on the node,
+    re-derived fresh on every read).
+  - **`internal/selfspec/requirement_state.go`** (new): `RequirementState(r, specRoot,
+    selfHosting)` computes the state by actually re-running every `verified_by` entry — the
+    same `gate.RunVerifiedByTestRecording` + drift-comparison machinery
+    `check_claim_matches_scenario`/`DeriveClaimsFromScenarios` already use. Lives in
+    `internal/selfspec` (not as an `ontology.Requirement` method) for the same import-cycle
+    reason `claim_derive.go`'s functions do: `internal/gate` already imports `internal/ontology`,
+    so `ontology` cannot import `gate` back. NOT gated by `Enforceability` (unlike
+    `RequirementInClaimDerivationScope`) — an `INHERENTLY_PROSE` requirement with a real
+    `verified_by` entry still has a real, checkable proof state; `State()` answers "is the
+    evidence that exists actually current and passing", not "is this requirement in
+    Claim-derivation scope".
+  - **Audit finding — no generator duplicates this predicate (by design, not an oversight)**:
+    every `internal/generator` doc (`TRACEABILITY.md`, `COVERAGE.md`, `UNENFORCED.md`,
+    `REQUIREMENTS.md`, `AGENT-CONTEXT.md`'s constitution index) was audited against this new
+    function. None duplicate it: task #317 already, deliberately, removed a real-execution
+    "verdict overlay" from `TRACEABILITY.md`/`COVERAGE.md` specifically to keep them pure,
+    mode-independent functions of the graph plus a cheap AST scan (proven by
+    `internal/generator/scenario_traceability_test.go`'s `TestBuild{Traceability,Coverage}_ModeIndependent_...`
+    tests) — `hotam land`'s routine, non-`--spec` regeneration must never flip their content.
+    Migrating them to `RequirementState()` (which spawns real `go test` subprocesses) would
+    reintroduce exactly the instability #317 fixed, not perform a safe refactor. `docs/gen/` was
+    regenerated for both self-hosted domains (`hotam-spec-self`, `hotam-dev`) and diffed
+    byte-for-byte against the pre-task tree to confirm zero incidental output drift from this
+    change.
+  - **Fixed a staleness bug found in passing while auditing #369's `spec.go`/`spec_build.go`**:
+    `gate.ScenarioVerdict`/`ScenarioVerdictsFromRows` (and their `generator.ScenarioVerdict`
+    re-export) were leftover dead code from BEFORE task #317's fix — their doc comments still
+    claimed `BuildTraceability`/`BuildCoverage` render an optional "verdict" sub-column from
+    them, but neither function has accepted a verdicts parameter since #317 removed that overlay
+    (confirmed via `grep`: the type is now referenced only by its own definition, the `spec.go`
+    re-export, and a test that calls it solely to prove it has zero effect on generator output).
+    Corrected both doc comments (`internal/gate/spec_build.go`, `internal/generator/spec.go`) to
+    describe the current, accurate wiring and point at `RequirementState` as the current home
+    for a real per-requirement proof verdict; left the exported symbols themselves in place
+    (still used by `internal/generator/scenario_traceability_test.go`'s mode-independence
+    proof), out of scope for this task to remove.
+  - **Tests**: `internal/selfspec/requirement_state_test.go` — one test per
+    `RequirementProofLifecycle` state (`NO_CARRIER`, `UNVERIFIED` via both an unresolvable
+    module path and a malformed `file:symbol` entry, `FAILING` via both a genuine test failure
+    and a compile failure, `PROVEN` with and without a narrated scenario, `STALE` on Claim
+    drift, a multi-`verified_by`-entry case proving ALL entries must pass), plus a single
+    end-to-end MUTATION test walking one fixture requirement through every transition
+    (`NO_CARRIER` → `UNVERIFIED` → `FAILING` → `STALE` → `PROVEN`) by mutating its
+    `verified_by`/`Claim`/on-disk test body between reads, mirroring
+    `claim_scenario_current_test.go`'s own mutation-probe shape for the drift half alone.
 - **Generalized the self-hosting Requirement/Rejection lock to any consumer domain
   (`requirements_authority: "code"`, task #367, RAC2 Phase C)**: the final step of
   "Go-code-only authority" for consumer-domain requirements (#365 shipped vendoring
