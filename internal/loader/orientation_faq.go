@@ -43,7 +43,7 @@ import (
 // base (the repo root, derived in the check the SAME way gen-spec derives it
 // — tier-1: domainDir's parent is "domains") serves both crystal locations.
 type OrientationFAQEntry struct {
-	Question string   `json:"question"`
+	Question string `json:"question"`
 	// omitempty is REQUIRED for byte-identical round-trip marshaling (task
 	// #341, R5-manifest-object): an entry authored without a "keywords" key
 	// unmarshals to a nil slice and MUST re-marshal with the key omitted, not

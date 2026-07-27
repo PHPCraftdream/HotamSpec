@@ -36,12 +36,12 @@ import (
 //     proven-byte-identical typed surface, exactly as the selfspec Requirements
 //     registry was a proven mirror before RAC-B flipped authority.
 //   - NO mutation layer, NO hand-edit guard. The Proposed*-style typed mutation
-//   objects (analogous to internal/proposal for graph nodes) and the
+//     objects (analogous to internal/proposal for graph nodes) and the
 //     R-no-hand-edit-graph analogue that would forbid editing manifest.json
-//   outside the typed path are the NEXT phases (see
-//   internal/loader/drafts/manifest-mutation-phases.go). Phase 1 does not block
-//   hand-editing manifest.json — the file stays freely hand-authored, as it is
-//   today.
+//     outside the typed path are the NEXT phases (see
+//     internal/loader/drafts/manifest-mutation-phases.go). Phase 1 does not block
+//     hand-editing manifest.json — the file stays freely hand-authored, as it is
+//     today.
 //
 // FIELD-DECLARATION ORDER IS LOAD-BEARING for byte identity. Go's
 // encoding/json marshals struct fields in declaration order (NOT alphabetical),
