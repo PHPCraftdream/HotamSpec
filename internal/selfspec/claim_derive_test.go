@@ -1,10 +1,9 @@
 package selfspec
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
@@ -103,45 +102,45 @@ func TestBrdPackage_SignOff_Plain(t *testing.T) {
 }
 `
 
-// writeClaimDeriveFixtureModule builds a standalone temp Go module (go.mod +
+// writeClaimDeriveFixtureModule builds a standalone Go module (go.mod +
 // vendored REAL hotamspec recorder + model/impl.go + one or more test files)
-// at the module root -- mirrors spec_md_current_test.go's
-// writeSpecMDFixtureModule exactly, parameterized over which test source(s)
-// to write so this one helper serves the single-test, multi-test, and
+// at a STABLE, content-hash-keyed path under gate.FixtureCacheRoot() rather
+// than a fresh t.TempDir() -- mirrors spec_md_current_test.go's
+// writeSpecMDFixtureModule shape, parameterized over which test source(s) to
+// write so this one helper serves the single-test, multi-test, and
 // plain-test fixture shapes below.
+//
+// PILOT for task #376: `t.TempDir()` gives every test RUN its own fresh
+// absolute path, and the Go compiler bakes that absolute path into its
+// `compile.exe ... -pack <path>/impl.go` command line -- Go's build cache
+// keys off that exact command line, so byte-identical fixture content
+// written to a freshly-rolled temp directory is a guaranteed cache MISS
+// across separate `go test` processes (proven empirically in task #374's
+// .scratch/task374-fixtureA-build.log vs task374-fixtureB-build.log: same
+// bytes, different temp dir, different -buildid / cache entry). Routing
+// through gate.EnsureContentAddressedFixture instead publishes this exact
+// same file set to a STABLE path keyed by its own content hash, so a SECOND
+// `go test` process (e.g. this same test re-run) that builds the identical
+// fixture content reuses the FIRST process's Go build-cache entry instead of
+// recompiling from scratch. See gate/fixture_cache.go's doc comment for the
+// full concurrent-writer / stale-write / retention design this delegates to
+// -- this function's own contract (an absolute module-root path containing
+// exactly the requested files) is unchanged from the t.TempDir() version;
+// only the deterministic-vs-fresh choice of WHERE on disk moved.
 func writeClaimDeriveFixtureModule(t *testing.T, testFiles map[string]string) (moduleRoot string) {
 	t.Helper()
-	root := t.TempDir()
 	modulePath := "example.com/claimderive"
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module "+modulePath+"\n\ngo 1.21\n"), 0o644); err != nil {
-		t.Fatalf("WriteFile go.mod: %v", err)
-	}
 
-	modelDir := filepath.Join(root, "model")
-	if err := os.MkdirAll(modelDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll model: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(modelDir, "impl.go"), []byte(claimDeriveFixtureImplSrc), 0o644); err != nil {
-		t.Fatalf("WriteFile impl.go: %v", err)
+	files := map[string][]byte{
+		"go.mod":                 []byte("module " + modulePath + "\n\ngo 1.21\n"),
+		"model/impl.go":          []byte(claimDeriveFixtureImplSrc),
+		"hotamspec/hotamspec.go": []byte(recordervendor.BodyForHash()),
 	}
 	for name, content := range testFiles {
-		if err := os.WriteFile(filepath.Join(modelDir, name), []byte(content), 0o644); err != nil {
-			t.Fatalf("WriteFile %s: %v", name, err)
-		}
+		files["model/"+name] = []byte(content)
 	}
 
-	hotamspecDir := filepath.Join(root, "hotamspec")
-	if err := os.MkdirAll(hotamspecDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll hotamspec: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(hotamspecDir, "hotamspec.go"), []byte(recordervendor.BodyForHash()), 0o644); err != nil {
-		t.Fatalf("WriteFile vendored hotamspec.go: %v", err)
-	}
-	// modulePath is embedded via the caller's own test-source template
-	// (claimDeriveFixtureSingleTestSrc etc. take modulePath as a parameter);
-	// this function itself only ever writes what it is handed.
-	_ = modulePath
-	return root
+	return gate.EnsureContentAddressedFixture(files, t.Fatalf)
 }
 
 func claimDeriveFixtureReq(id string, verifiedBy []string, enforceability string) ontology.Requirement {

@@ -16,6 +16,34 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Added
+- **`internal/gate/fixture_cache.go` — `EnsureContentAddressedFixture`, a stable content-hash
+  path for test fixture modules (pilot).** Continuation of the `-vet=off`/`-short` speed wave
+  above: task #374 (same investigation) proved the `t.TempDir()`-per-test-run fixture pattern
+  (used throughout `internal/selfspec`, `internal/invariants`, `internal/generator` via
+  `gate.RunVerifiedByTestRecording`) structurally defeats Go's build cache — the compiler bakes
+  the fixture's absolute source path into its action ID, so byte-identical fixture content
+  written to a fresh temp directory is a guaranteed cache MISS across separate `go test`
+  processes, independent of disk speed or antivirus exclusions. `EnsureContentAddressedFixture`
+  publishes a fixture's file set under `<os.TempDir()>/hotamspec-fixture-cache/<sha256-of-tree>/`
+  instead: two separate `go test` processes building the identical fixture converge on the same
+  path and share one Go build-cache entry. Design resolves four correctness concerns explicitly
+  (see the file's own doc comment): concurrent publishers race via an atomic `os.Rename` from a
+  private tmp dir (no lock needed — the rename itself is the arbiter, verified empirically on
+  Windows that renaming onto an existing directory fails cleanly rather than corrupting either
+  side); a completeness marker written last, inside the tmp dir, before the rename, means a
+  reader can never observe a partially-published directory; unbounded growth is bounded by a
+  documented best-effort age-based eviction (7-day cutoff, 1-in-20-calls opportunistic sweep);
+  the function's return contract (an absolute path to exactly the requested files) is identical
+  to `t.TempDir()`'s, so no caller assertion changes, only where the bytes live on disk. Verified:
+  a 12-goroutine concurrent-publish race test passes under `-race`; a direct `-x`-trace rebuild of
+  an already-published fixture from a second, independent `go test -c` process shows zero
+  `compile.exe` invocations (pure `packagefile ...=<hash>` cache references) — a genuine
+  cross-process build-cache hit, the mirror image of task #374's own cache-miss demonstration.
+  Applied as a PILOT to one call site only (`internal/selfspec/claim_derive_test.go`'s
+  `writeClaimDeriveFixtureModule`) — `internal/invariants` and `internal/generator`'s equivalent
+  fixture helpers are untouched, left for a follow-up wave if this pilot proves durable.
+
 ### Fixed
 - **`-vet=off` added to `internal/gate/compile_cache.go`'s `doCompileTestBinary`** — `go test -c`
   runs `go vet` on the target package by default before compiling, a real repeated cost paid on
