@@ -16,6 +16,34 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Fixed
+- **`-vet=off` added to `internal/gate/compile_cache.go`'s `doCompileTestBinary`** — `go test -c`
+  runs `go vet` on the target package by default before compiling, a real repeated cost paid on
+  every compile-cache miss across the dozens of `gate.RunVerifiedByTestRecording` call sites
+  (`cmd/hotam` subprocess tests, RAC2/RAC3 machinery, `internal/generator`'s SPEC.md rendering).
+  Does not weaken vetting of real repository code: `go vet ./...` already runs, separately, over
+  the whole repo as its own top-level check every task/CI run already performs; the packages
+  compiled here are either the target verified_by test's own (already-repo-vetted) package, or
+  hand-written fixture-module stand-ins under a temp module root that were never part of the
+  repository at all. Verified post-fix on an uncontended run: `internal/gate` 220-297s → 146s,
+  `internal/generator` 279-330s → 167s, `internal/invariants` → 111s. Full `go test ./...` stays
+  green (0 FAIL), `all-violations` stays 0 on both self-hosted domains, `go vet ./...` unaffected.
+- **RAC3's new subprocess-spawning tests gated behind `-short`** — tasks #369/#370 added 15
+  test functions (across `internal/selfspec/claim_derive_test.go`,
+  `internal/selfspec/requirement_state_test.go`, `internal/invariants/claim_scenario_current_test.go`)
+  that drive `gate.RunVerifiedByTestRecording` (a real `go build` + `go test` subprocess against
+  a temp fixture module) with no `testing.Short()` gate — the same class of cost `cmd/hotam`'s 48
+  subprocess tests already gate, but these three files were missed at RAC3 landing time. Measured
+  before the fix: the `internal/selfspec` subset alone cost ~27.7s, the `internal/invariants`
+  subset ~17.5s — a meaningful fraction of why the full suite grew from the user's remembered
+  "~1 minute" baseline. Each of the 15 gated functions was individually traced (not assumed) to
+  confirm it actually reaches the subprocess call past every scope/discipline early-return; tests
+  that don't reach it (e.g. `TestDeriveClaimsFromScenarios_NonFullDisciplineIsNoOp`,
+  `TestRequirementState_NoCarrier`) were deliberately left un-gated as honestly cheap already.
+  Verified post-fix: `internal/selfspec -short` dropped from ~27.7s to 0.7s; the 4 gated
+  `TestCheckClaimMatchesScenario_*` tests in isolation dropped from ~17.5s to 0.066s. Full
+  `go test ./...` stays green (0 FAIL), `all-violations` stays 0 on both self-hosted domains.
+
 ### Investigated (task #368, no code change)
 - **Test suite wall-clock time** — measured, not guessed, on an idle machine (16 cores,
   GOCACHE=`D:\system_artefact\go-build`), both hypotheses this task set out to test came back

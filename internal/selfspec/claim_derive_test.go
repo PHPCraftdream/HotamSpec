@@ -155,6 +155,9 @@ func claimDeriveFixtureReq(id string, verifiedBy []string, enforceability string
 // case: one verified_by entry, one hotamspec scenario -- Claim becomes
 // exactly that scenario's recorded title.
 func TestDeriveClaimsFromScenarios_SingleVerifiedByEntry(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-derive e2e: discipline=full + ENFORCEABLE + verified_by in scope drives DeriveClaimsFromScenarios into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": claimDeriveFixtureSingleTestSrc("example.com/claimderive"),
 	})
@@ -179,6 +182,9 @@ func TestDeriveClaimsFromScenarios_SingleVerifiedByEntry(t *testing.T) {
 // space-joined, in verified_by's own declared order -- mirroring the real
 // pilot precedent (PRAT-hotam R-brd-integrity-zero-blockers).
 func TestDeriveClaimsFromScenarios_MultiVerifiedByEntryConcatenatesInOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-derive e2e: discipline=full + ENFORCEABLE + two verified_by entries drives DeriveClaimsFromScenarios into TWO real go build/go test subprocess runs (forward and reversed order) via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": claimDeriveFixtureMultiTestSrc("example.com/claimderive"),
 	})
@@ -284,6 +290,9 @@ func TestDeriveClaimsFromScenarios_NoVerifiedByIsUntouched(t *testing.T) {
 // hotamspec scenario at all contributes nothing to the concatenation,
 // without aborting derivation for entries that DO narrate.
 func TestDeriveClaimsFromScenarios_PlainNonScenarioEntryContributesNothing(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-derive e2e: discipline=full + ENFORCEABLE + two verified_by entries (one narrating, one plain) drives DeriveClaimsFromScenarios into real go build/go test subprocess runs via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"scenario_test.go": claimDeriveFixtureSingleTestSrc("example.com/claimderive"),
 		"plain_test.go":    claimDeriveFixturePlainTestSrc,
@@ -308,6 +317,9 @@ func TestDeriveClaimsFromScenarios_PlainNonScenarioEntryContributesNothing(t *te
 // moved -- calling derivation twice in a row (idempotent, unchanged source)
 // reports zero changes the second time.
 func TestDeriveClaimsFromScenarios_UnchangedIDsNotReported(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-derive e2e: discipline=full + ENFORCEABLE + verified_by in scope drives DeriveClaimsFromScenarios into TWO real go build/go test subprocess runs (first pass + idempotent second pass) via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": claimDeriveFixtureSingleTestSrc("example.com/claimderive"),
 	})

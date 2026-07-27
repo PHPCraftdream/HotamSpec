@@ -435,7 +435,21 @@ func doCompileTestBinary(ctx context.Context, moduleRoot, pkgPattern, coverPkgPa
 	compileCtx, cancel := context.WithTimeout(context.Background(), compileTimeout)
 	defer cancel()
 
-	args := []string{"test", "-c", "-o", binaryPath, "-count=1"}
+	// -vet=off: `go test -c` runs `go vet` on the target package by default
+	// before compiling -- a real, repeated cost on EVERY compile-cache miss
+	// (one per distinct (moduleRoot, pkgPattern, coverPkgPattern) triple this
+	// process reaches, i.e. dozens of spawn points across the verified_by
+	// execution call graph). This does NOT weaken vetting of real repo code:
+	// `go vet ./...` already runs, separately, over the whole repository as
+	// its own top-level check in every task/CI run, covering every real
+	// source file. The packages compiled HERE are the target verified_by
+	// test's OWN package (hand-written repo code, already covered by the
+	// top-level `go vet ./...` too) plus, in some callers, tiny hand-written
+	// fixture-module stand-ins under a temporary module root that are never
+	// part of the repository at all -- skipping vet on this narrow,
+	// already-covered-elsewhere recompile path is a pure latency win with no
+	// loss of real vet coverage.
+	args := []string{"test", "-c", "-vet=off", "-o", binaryPath, "-count=1"}
 	if coverPkgPattern != "" {
 		args = append(args, "-coverpkg="+coverPkgPattern)
 	}

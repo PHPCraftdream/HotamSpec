@@ -135,6 +135,9 @@ func TestCheckClaimMatchesScenario_NoOpWithoutDisciplineFull(t *testing.T) {
 // control: discipline:full, Claim already equals the fresh derivation ->
 // clean.
 func TestCheckClaimMatchesScenario_GreenWhenClaimMatches(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-scenario e2e: discipline:full drives checkClaimMatchesScenario's freshDerivedClaim into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	title := "the real recorded title"
 	root := writeClaimScenarioFixtureModule(t, "R-claim-scenario-2", title)
 	r := claimScenarioReq("R-claim-scenario-2", title, []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
@@ -151,6 +154,9 @@ func TestCheckClaimMatchesScenario_GreenWhenClaimMatches(t *testing.T) {
 // discipline:full, committed Claim disagrees with what the verified_by
 // test's CURRENT recorded scenario title says.
 func TestCheckClaimMatchesScenario_FiresWhenClaimDiverges(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-scenario e2e: discipline:full drives checkClaimMatchesScenario's freshDerivedClaim into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	root := writeClaimScenarioFixtureModule(t, "R-claim-scenario-3", "the real recorded title")
 	r := claimScenarioReq("R-claim-scenario-3", "a stale claim that no longer matches", []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
 	g := claimScenarioFixtureGraph(t, root, "full", r)
@@ -192,6 +198,9 @@ func TestCheckClaimMatchesScenario_NoVerifiedByIsSkipped(t *testing.T) {
 // "someone edited the verified_by test's description but forgot to re-run
 // `hotam sync-domain`"), then GREEN again once Claim is re-derived to match.
 func TestCheckClaimMatchesScenario_MUTATION_StaleAfterTitleEditWithoutResync(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-scenario e2e: discipline:full drives checkClaimMatchesScenario's freshDerivedClaim into repeated real go build/go test subprocesses via gate.RunVerifiedByTestRecording (FRESH, EDITED, RE-DERIVED passes); skipped in -short")
+	}
 	reqID := "R-claim-scenario-mutation"
 	originalTitle := "the original recorded title"
 	root := writeClaimScenarioFixtureModule(t, reqID, originalTitle)
@@ -248,6 +257,9 @@ func TestCheckClaimMatchesScenario_MUTATION_StaleAfterTitleEditWithoutResync(t *
 // independent (deliberately duplicated, see freshDerivedClaim's own doc
 // comment) implementations can never silently disagree.
 func TestCheckClaimMatchesScenario_MatchesSelfspecDerivation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-scenario e2e: cross-checks freshDerivedClaim against selfspec.DeriveClaimsFromScenarios, each driving a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
 	reqID := "R-claim-scenario-crosscheck"
 	title := "cross-checked recorded title"
 	root := writeClaimScenarioFixtureModule(t, reqID, title)

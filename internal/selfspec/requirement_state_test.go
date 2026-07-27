@@ -89,6 +89,9 @@ func TestRequirementState_UnverifiedWhenEntryMalformed(t *testing.T) {
 // TestRequirementState_FailingWhenTestFails proves a verified_by entry that
 // resolves, compiles, and runs but does NOT pass yields FAILING.
 func TestRequirementState_FailingWhenTestFails(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: a real fixture module is compiled and run via gate.RunVerifiedByTestRecording (RequirementState) to drive the verdict to FAILING; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": requirementStateFailingTestSrc,
 	})
@@ -104,6 +107,9 @@ func TestRequirementState_FailingWhenTestFails(t *testing.T) {
 // whose package fails to BUILD is also FAILING (CompileFailed counts as not
 // passing), not UNVERIFIED -- a real red bar, not merely "no verdict yet".
 func TestRequirementState_FailingWhenCompileFails(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: a real fixture module that fails to BUILD is compiled via gate.RunVerifiedByTestRecording (RequirementState) to drive the verdict to FAILING; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": requirementStateCompileFailTestSrc,
 	})
@@ -119,6 +125,9 @@ func TestRequirementState_FailingWhenCompileFails(t *testing.T) {
 // healthy terminal case: verified_by passes AND resolves a scenario, and the
 // committed Claim already equals that scenario's title -> PROVEN.
 func TestRequirementState_ProvenWhenClaimMatchesFreshScenario(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: a real fixture module is compiled and run TWICE via gate.RunVerifiedByTestRecording (once for the pass/fail verdict, once via deriveClaimFromVerifiedBy for the PROVEN/STALE comparison); skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": claimDeriveFixtureSingleTestSrc("example.com/claimderive"),
 	})
@@ -137,6 +146,9 @@ func TestRequirementState_ProvenWhenClaimMatchesFreshScenario(t *testing.T) {
 // evidence alone is enough -- mirrors check_claim_matches_scenario's own
 // "cannot prove drift either way" skip, but on the positive (proven) side.
 func TestRequirementState_ProvenWhenNoScenarioNarrated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: a real fixture module (plain, non-narrating test) is compiled and run TWICE via gate.RunVerifiedByTestRecording (verdict + deriveClaimFromVerifiedBy); skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": claimDeriveFixturePlainTestSrc,
 	})
@@ -153,6 +165,9 @@ func TestRequirementState_ProvenWhenNoScenarioNarrated(t *testing.T) {
 // disagrees with the CURRENT scenario title -> STALE, mirroring
 // check_claim_matches_scenario's own RED case exactly.
 func TestRequirementState_StaleWhenClaimDrifted(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: a real fixture module is compiled and run TWICE via gate.RunVerifiedByTestRecording (verdict + deriveClaimFromVerifiedBy) to drive the drift verdict to STALE; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"impl_test.go": claimDeriveFixtureSingleTestSrc("example.com/claimderive"),
 	})
@@ -169,6 +184,9 @@ func TestRequirementState_StaleWhenClaimDrifted(t *testing.T) {
 // overall verdict to reach PROVEN/STALE -- one failing entry alongside a
 // passing one is FAILING, not a partial credit state.
 func TestRequirementState_MultiVerifiedByAllMustPass(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: a real fixture module with two verified_by entries is compiled and run via gate.RunVerifiedByTestRecording for each entry; skipped in -short")
+	}
 	root := writeClaimDeriveFixtureModule(t, map[string]string{
 		"scenario_test.go": claimDeriveFixtureSingleTestSrc("example.com/claimderive"),
 		"failing_test.go":  requirementStateFailingTestSrc,
@@ -192,6 +210,9 @@ func TestRequirementState_MultiVerifiedByAllMustPass(t *testing.T) {
 // (claim_scenario_current_test.go) already established for the drift half
 // alone; this test walks the FULL proof lifecycle in one place.
 func TestRequirementState_MUTATION_TransitionsAcrossLifecycle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requirement-state e2e: steps 3-5 write a real Go module to disk and recompile/re-run it repeatedly via gate.RunVerifiedByTestRecording (RequirementState + deriveClaimFromVerifiedBy) across the FAILING/STALE/PROVEN transitions; skipped in -short")
+	}
 	reqID := "R-state-mutation"
 
 	// 1. NO_CARRIER: no verified_by at all yet.
