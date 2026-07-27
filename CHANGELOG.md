@@ -45,6 +45,54 @@ History predating this file is not backfilled — see `git log` and
   fixture helpers are untouched, left for a follow-up wave if this pilot proves durable.
 
 ### Fixed
+- **`hashPackageInputs` (`internal/gate/test_exec.go`) no longer walks/hashes stray compiled
+  build outputs at the module root (task #379, continuing task #378's profiling)** — task #378
+  CPU-profiled three real heavy tests (`TestCmdSyncSelf_FullRoundTrip`,
+  `TestGenSpec_CrystalFixpointConvergesAcrossRuns`, `TestBuildStatusReport_MatchesOnRealDomain`)
+  and found `gate.RunVerifiedByTest`'s `hashPackageInputs` — the whole-module content hash that
+  keys the verdict cache, computed UNCONDITIONALLY before every cache lookup, once per
+  `verified_by` entry (13 in `hotam-spec-self`, run pairwise via `runVerifiedByTestJobs`'s
+  2-worker pool) — at 20.6-28.8% of cumulative CPU across all three profiles, with
+  `path/filepath.WalkDir` (its underlying full-module traversal) at 16.6-27.3%. Reading the walk
+  (moduleRoot-recursive, skipping only dot-prefixed directories and `vendor/`, no file-suffix
+  filter since task #368-era NEW-4 widened it to catch `//go:embed`/`testdata/` inputs) found
+  this repo's own module root littered with ~50MB of gitignored, untracked, ad-hoc `go build -o`/
+  `go test -c` debugging leftovers (`hotam.exe`, `hotam.test.exe`, `invariants.test.exe`, etc.) —
+  files that are pure BUILD OUTPUTS, structurally incapable of being a `go test` INPUT (no
+  `.go` source `//go:embed`s or opens a sibling `.exe`), yet walked and SHA-256'd on every single
+  call regardless. **Fix**: `hashPackageInputs`'s walk now also skips regular files whose
+  extension is `.exe`/`.dll`/`.so`/`.dylib`/`.test` (`isBuildOutputExtension`, case-insensitive) —
+  a strict, narrowly-scoped subset of NEW-4's "hash everything a test could read" rule, excluded
+  only because these specific extensions can never be read as an input, not because hashing them
+  is merely inconvenient; every other non-`.go` file (testdata, embedded fixtures) is still
+  hashed exactly as before, so NEW-4's stale-green guarantee is fully preserved. Whole-module
+  hashing itself (vs. a precise transitive-import-graph scope) was NOT changed — re-read the
+  file's own NEW-2 doc comment and confirmed the coarse-but-correct design is still the right
+  tradeoff for this engine's module sizes; a blind "compute the walk once per process" in-memory
+  cache was considered and REJECTED, because the existing `TestRunVerifiedByTest_MUTATION_*`
+  tests genuinely mutate source files mid-process between two `RunVerifiedByTest` calls in the
+  SAME process and rely on the second call observing the new content — a walk-level cache with no
+  invalidation signal would silently break exactly the tests that prove cache correctness.
+  Added `TestHashPackageInputs_BuildOutputExtensionExcluded` (`internal/gate/test_exec_test.go`)
+  proving a stray `.exe`'s creation AND later content mutation both leave the module hash
+  unchanged, alongside the pre-existing NEW-2/NEW-4 mutation tests (unmodified, still green) that
+  prove everything else still invalidates. Verified before/after on the same three tests task
+  #378 profiled (plain wall-clock, `go test -run <name> -count=1`): `TestCmdSyncSelf_
+  FullRoundTrip` 83.92s → 79.98s, `TestBuildStatusReport_MatchesOnRealDomain` 22.50s → 18.55s,
+  `TestGenSpec_CrystalFixpointConvergesAcrossRuns` 33.68s → 29.19s (combined wall 117.71s →
+  109.24s, ~7.2%). A fresh cpuprofile of `TestBuildStatusReport_MatchesOnRealDomain` post-fix
+  confirms the direction: `hashPackageInputs` cum% 28.76% → 24.00%, `filepath.walkDir` unaffected
+  (23.74%→23.58%, expected — directory count didn't change, only ~8 file reads were removed out
+  of ~2400 walked files; the win comes from the removed files' large byte size dominating
+  `sha256.block` time, not their small share of total file/syscall count, which is also why the
+  wall-clock win is real but modest rather than dramatic). Full `go test ./... -timeout 45m
+  -count=1` stays green (0 FAIL, 19 packages ok), `all-violations` stays 0 on both
+  `domains/hotam-spec-self` and `domains/hotam-dev`, `go build ./...`/`go vet ./...`/`gofmt -l .`
+  clean. `internal/gate/compile_cache.go` and `internal/gate/fixture_cache.go` (both flagged as
+  changed earlier this session) were re-read in full during this task's investigation — no bug
+  found in either; `compile_cache.go`'s compiled binaries and `fixture_cache.go`'s published
+  fixtures both live under `os.TempDir()`, never under `moduleRoot`, so neither contributes to
+  `hashPackageInputs`'s walk cost and neither needed a fix.
 - **`-vet=off` added to `internal/gate/compile_cache.go`'s `doCompileTestBinary`** — `go test -c`
   runs `go vet` on the target package by default before compiling, a real repeated cost paid on
   every compile-cache miss across the dozens of `gate.RunVerifiedByTestRecording` call sites

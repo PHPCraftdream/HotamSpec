@@ -666,6 +666,52 @@ func TestHashPackageInputs_NEW4_NonGoFileChangeChangesModuleHash(t *testing.T) {
 	}
 }
 
+// TestHashPackageInputs_BuildOutputExtensionExcluded is the direct proof for
+// task #379's perf fix: a stray compiled-binary file (.exe/.dll/.so/.dylib/
+// .test) sitting at the module root -- the exact shape #378's profiling
+// found littering this repo's own module root (hotam.exe, hotam.test.exe,
+// etc., left by ad-hoc `go build -o`/`go test -c` debugging sessions) --
+// must NOT be walked/hashed: creating one, or later mutating its bytes, must
+// leave the module hash UNCHANGED, because such a file can never be a `go
+// test` INPUT (only ever an output). This is deliberately narrower than
+// NEW-4's non-.go-file coverage above (which must keep changing the hash for
+// genuine test inputs like testdata/golden files) -- this test would fail if
+// a future edit widened the exclusion list beyond compiled-binary
+// extensions.
+func TestHashPackageInputs_BuildOutputExtensionExcluded(t *testing.T) {
+	t.Parallel()
+	root := writeModuleFixture(t, "example.com/buildoutputmod", "model", passingImplSrc, passingTestSrc)
+
+	h1, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs: %v", err)
+	}
+
+	exePath := filepath.Join(root, "stray.exe")
+	if err := os.WriteFile(exePath, []byte("not a real binary, just bytes"), 0o644); err != nil {
+		t.Fatalf("WriteFile stray.exe: %v", err)
+	}
+
+	h2, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after adding stray.exe): %v", err)
+	}
+	if h1 != h2 {
+		t.Fatalf("expected the SAME module hash after adding a stray .exe file at the module root (compiled build outputs are never a go test input), got %q then %q", h1, h2)
+	}
+
+	if err := os.WriteFile(exePath, []byte("different bytes -- still just a stray binary"), 0o644); err != nil {
+		t.Fatalf("WriteFile stray.exe (mutate): %v", err)
+	}
+	h3, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after mutating stray.exe): %v", err)
+	}
+	if h1 != h3 {
+		t.Fatalf("expected the SAME module hash after mutating a stray .exe file's content, got %q then %q", h1, h3)
+	}
+}
+
 // TestClearInheritedRecursionGuard_UnsetsEnv is the direct unit proof for the
 // exported function cmd/hotam's main() calls at CLI entry: given a
 // (simulated-externally-forged) non-empty recursionGuardEnv, calling

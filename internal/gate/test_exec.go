@@ -1309,6 +1309,31 @@ func singleflightRun(key cacheKey, hash string, run func() TestRunResult) TestRu
 // path is a no-op for cache-key purposes beyond a few extra sha256.Write
 // calls). The SAME skip list applies (.git, vendor) -- broadening the file
 // SUFFIX filter never broadens which directories are walked.
+//
+// PERF (task #379, continuing #378's profiling finding): compiled BUILD
+// OUTPUTS -- *.exe/*.dll/*.so/*.dylib/*.test binaries left at the module
+// root by ad-hoc `go build -o foo.exe` / `go test -c` debugging sessions --
+// are structurally incapable of being a `go test` INPUT: they are what the
+// toolchain PRODUCES, never something it reads to decide a package's
+// compile-or-test verdict (unlike a //go:embed target or testdata/ golden
+// file, which NEW-4 above correctly keeps hashing because a test's own code
+// reads those at run time). #378's profiling of three real heavy tests
+// (TestCmdSyncSelf_FullRoundTrip, TestGenSpec_CrystalFixpointConvergesAcrossRuns,
+// TestBuildStatusReport_MatchesOnRealDomain) found hashPackageInputs at
+// 28-33% of total CPU, with this repo's own module root littered with ~50MB
+// of exactly such stray binaries (hotam.exe, hotam.test.exe,
+// invariants.test.exe, etc. -- gitignored, never tracked, but still walked
+// and SHA-256'd on every single RunVerifiedByTest call, of which a single
+// AllViolations pass makes roughly one per verified_by entry). Skipping
+// these extensions cannot cause a stale cache hit: excluding a file from the
+// hash only matters if that file could have changed what `go test` observes
+// for the SAME (moduleRoot, pkgPattern) the next time it runs, and a binary
+// artifact's bytes are never consulted by `go test` itself (it does not
+// `go:embed` or open its own sibling .exe). This is a strict subset of
+// NEW-4's "hash everything a test could read" guarantee -- these specific
+// extensions are excluded from "everything" only because they can never be
+// read as an INPUT in the first place, not because hashing them is merely
+// inconvenient.
 func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 	_ = pkgDir // NEW-2: cache key is now the whole module, not one package dir; see doc comment.
 	h := sha256.New()
@@ -1354,13 +1379,18 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 		// reads at run time can flip its verdict exactly as a .go edit can,
 		// and must invalidate the cache the same way. Only the directory
 		// skip-list (.git, vendor) bounds the walk now; there is no file-name
-		// suffix filter left.
+		// suffix filter left, EXCEPT the compiled-build-output extensions
+		// isBuildOutputExtension excludes -- see the PERF doc comment above
+		// this function for why that exclusion cannot weaken invalidation.
 		if !d.Type().IsRegular() {
 			// Skip symlinks/devices/etc: os.ReadFile on a non-regular entry
 			// either follows a symlink (already reachable via its target
 			// path elsewhere in the walk, or intentionally outside the
 			// module) or fails outright -- neither is a "file whose content
 			// affects go test" in the sense this hash needs to capture.
+			return nil
+		}
+		if isBuildOutputExtension(d.Name()) {
 			return nil
 		}
 		rel, relErr := filepath.Rel(moduleRoot, path)
@@ -1387,4 +1417,32 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// buildOutputExtensions is the set of file-name suffixes hashPackageInputs
+// excludes from the walk (task #379): compiled artifacts the Go toolchain
+// PRODUCES on this engine's supported platforms, never something `go test`
+// reads as an input when deciding a package's verdict. Mirrors this
+// project's own .gitignore build-output section (*.exe, *.dll, *.so,
+// *.dylib) plus *.test (the `go test -c` compiled-binary suffix this
+// package's own compile_cache.go produces, though that cache writes under
+// os.TempDir() rather than moduleRoot -- included here defensively in case a
+// stray `go test -c -o foo.test` lands at the module root the same way
+// `go build -o foo.exe` has). Case-insensitive on the extension so a
+// Windows-style ".EXE" (filesystems here are case-insensitive) is still
+// recognized.
+var buildOutputExtensions = map[string]bool{
+	".exe":   true,
+	".dll":   true,
+	".so":    true,
+	".dylib": true,
+	".test":  true,
+}
+
+// isBuildOutputExtension reports whether name's extension marks it as a
+// compiled build artifact excluded from hashPackageInputs's walk -- see the
+// PERF doc comment on hashPackageInputs and buildOutputExtensions' doc
+// comment for why this exclusion cannot weaken cache invalidation.
+func isBuildOutputExtension(name string) bool {
+	return buildOutputExtensions[strings.ToLower(filepath.Ext(name))]
 }
