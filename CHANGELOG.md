@@ -17,6 +17,54 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`internal/invariants/scenario_coverage.go`'s `check_scenario_executes_impl` (the
+  coverage-proof gate) now caches `RunVerifiedByTestRecording` results for the process's whole
+  lifetime, not just within one `checkScenarioExecutesImpl` call (task #387).** Round-2
+  profiling after the #383/#384 caching wave above found this check newly dominant: 78% of all
+  subprocess-record cost (272.9 of 349.9s measured) across a single `cmd/hotam` test binary's
+  run, because `coverageRunCache` was allocated fresh (`cache := &coverageRunCache{}`) inside
+  every `checkScenarioExecutesImpl` call — every one of `cmd/hotam`'s 8-12 tests that call
+  `AllViolations()`/`whatNow()`/`buildStatusReport()` against the SAME real `hotam-spec-self`
+  graph (336 nodes, unchanged across those calls) re-ran every `verified_by` test's coverage
+  recording from a cold cache, even though `gate.runCache` (`internal/gate/test_exec.go`) had
+  already proven this exact class of waste safe to eliminate for the plain pass/fail sibling
+  check (`check_verified_by_test_passes`), via content-hash invalidation instead of
+  scope-limited caching.
+  - **Fix**: `coverageRunCache` is now a package-level, process-lifetime `sync.Map` (mirroring
+    `gate.runCache`'s shape exactly), keyed by `(testFile, testName, coverPkgFile)`. A lookup now
+    also carries a `gate.HashPackageInputs(moduleRoot, pkgDir)` content hash (the SAME hash
+    `gate.runCache` already trusts, over the SAME module root `RunVerifiedByTestRecording` itself
+    resolves the test's package to, via a new minimal exported wrapper,
+    `gate.HashPackageInputs`, around the existing package-private `hashPackageInputs`): a hash
+    match reuses the cached `RecordingResult` (pass/fail + scenario artifacts + coverage
+    profile — all deterministic for the same binary+test); a hash mismatch (real content changed
+    since the entry was cached) replaces the entry and re-runs the subprocess, exactly as
+    `gate.runCache` already does for `RunVerifiedByTest`. Single-flight `sync.Once`-per-entry
+    de-duplication of concurrent callers for the same key is preserved (previously scoped to one
+    `checkScenarioExecutesImpl` call, now scoped to the whole process) via a
+    `LoadOrStore`+`CompareAndSwap` retry loop, race-free without holding a lock across the
+    (subprocess-spawning) run itself. `ResetCoverageRunCacheForTest` added (mirrors
+    `gate.ResetRunCacheForTest`'s naming/shape) for tests that need a known-empty cache.
+  - **3 new tests** in `internal/invariants/scenario_coverage_test.go`: cache reuse across two
+    separate `checkScenarioExecutesImpl` calls over an unchanged package (asserts exactly one
+    cache entry survives both calls, with byte-identical `CoverProfile` on the second call);
+    cache invalidation on a real content edit between two calls (asserts the content hash
+    actually changes and the stale entry is replaced, not silently reused — the exact silent
+    forgery this whole check exists to prevent); and race-free concurrent access to
+    `runOrReuseCoverage` under `-race` with 32 goroutines contending on the same key across two
+    different hashes (exercises both the single-flight-hit and invalidate-and-retry paths at
+    once).
+  - **Verified by the resolver**: `go build`/`vet`/`gofmt` clean; `go test -race` clean on both
+    `internal/invariants` (33.0s) and `internal/gate` (46.4s); full `go test ./...` green (see
+    below); `all-violations` 0 on both `domains/hotam-spec-self` and `domains/hotam-dev`. Before/
+    after timing, `TestBuildStatusReport_MatchesOnRealDomain` (2 in-process `AllViolations`-class
+    calls over the real self-hosting graph): **15.33s → 11.30s** (−26%). A sharper synthetic
+    probe (4 back-to-back `invariants.AllViolations(g)` calls, same real graph, same process,
+    reverted/re-applied in place to get an apples-to-apples before/after): before — call 1
+    (cold) 8.5s, calls 2-4 (warm but re-recording every time) ≈1.41-1.42s each; after — call 1
+    (cold) 9.1s, calls 2-4 (warm, cache hit) ≈0.66-0.71s each, a **~52% reduction** in warm
+    per-call cost. The win scales with call count per process — `cmd/hotam`'s own 8-12-test suite
+    that motivated this fix pays the ~9s cold cost once instead of once per test.
 - **In-process caches for `hashPackageInputs` and test-file AST parsing (tasks #383/#384),
   closing the top finding from tasks #380/#381/#382's broader post-fix profiling.** That
   profiling found `hashPackageInputs` (`internal/gate/test_exec.go`) still dominant even after

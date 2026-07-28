@@ -1637,6 +1637,22 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 	return digest, nil
 }
 
+// HashPackageInputs is the exported wrapper around hashPackageInputs
+// (task #387): hashPackageInputs itself is package-private, but
+// internal/invariants' own process-lifetime coverageRunCache (mirroring
+// runCache's shape above) needs the SAME content hash runCache already uses
+// for RunVerifiedByTest's cache invalidation, so a RunVerifiedByTestRecording
+// result can be invalidated on the identical signal (any *.go / go.mod /
+// go.sum change anywhere under moduleRoot) rather than reinventing a second,
+// possibly-divergent hashing scheme in a different package. See
+// hashPackageInputs' own doc comment for what is and is not hashed, and
+// runCache's doc comment (this file) for why a whole-module content hash,
+// not a narrower per-file one, is the correct invalidation granularity for a
+// `go test`-shaped cache entry.
+func HashPackageInputs(moduleRoot, pkgDir string) (string, error) {
+	return hashPackageInputs(moduleRoot, pkgDir)
+}
+
 // buildOutputExtensions is the set of file-name suffixes hashPackageInputs
 // excludes from the walk (task #379): compiled artifacts the Go toolchain
 // PRODUCES on this engine's supported platforms, never something `go test`
