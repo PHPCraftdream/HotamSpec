@@ -17,6 +17,59 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **In-process caches for `hashPackageInputs` and test-file AST parsing (tasks #383/#384),
+  closing the top finding from tasks #380/#381/#382's broader post-fix profiling.** That
+  profiling found `hashPackageInputs` (`internal/gate/test_exec.go`) still dominant even after
+  task #379's build-output exclusion — the real remaining cost was `os.ReadFile`-ing the FULL
+  CONTENT of every regular file in a module on every single `RunVerifiedByTest`/
+  `RunVerifiedByTestRecording` call, with zero reuse between calls even within the same process
+  — plus a smaller, separately-surfaced cost in uncached `go/parser.ParseFile` calls inside
+  `internal/gate.collectTestFuncNames`/`scanTestFile` (~6-8% cum). Both were written and reviewed
+  under an unusual constraint: the implementing agents were required to make zero `go build`/
+  `vet`/`test`/`gofmt` calls (the resolver's machine was reserved for the user's own benchmark
+  session), so both diffs were designed, implemented, and self-reviewed purely by static reading
+  before any execution — then fully verified by the resolver afterward (this entry).
+  - **`internal/gate/test_exec.go`'s `hashPackageInputs`** now consults a process-lifetime,
+    `moduleRoot`-keyed cache (`perFileHashCache`, mutex-guarded map matching this file's existing
+    `inFlightCalls` style) before recomputing: the directory walk still runs in full every call
+    (the walk itself was never the expensive part), but for each file, its current `(mtime, size)`
+    is compared against what was recorded the last time this cache actually read that file's
+    bytes — a match reuses the previously-read bytes (no `os.ReadFile`, no re-hash), a miss (or a
+    file added/removed since the last call) falls through to a real read. The combined digest for
+    an unchanged tree is byte-for-byte identical to a full cold computation (verified by dedicated
+    tests), and a fully-unchanged tree short-circuits to just one `os.Stat` per file. Honest
+    residual gap, explicitly documented rather than hidden: a mutation that preserves the exact
+    same byte size **and** lands within the same filesystem mtime tick as the cached read is not
+    caught — a genuinely new, narrow trade made for this perf win, not a pre-existing limitation
+    (the old implementation always re-read raw bytes, so it never had this gap). 7 new tests cover
+    warm-cache reuse, size-change detection, same-size-forced-mtime-change detection, added-file
+    detection, removed-file detection, and race-free concurrent access (`-race` clean, personally
+    verified 3× by the resolver).
+  - **`internal/gate/gate.go`'s `collectTestFuncNames`/`scanTestFile`** now share a single
+    `sync.Map`-based cache (`testFileParseCache`, keyed by absolute path) of the EXTRACTED
+    result (`Test*` names + `check_*` literal associations) rather than the raw `*ast.File` —
+    deliberate, since `go/ast` nodes have no internal synchronization and would be unsafe to
+    share across goroutines, while the extracted shape is small and immutable. A cache entry is
+    valid only while a fresh `os.Stat`'s `(mtime, size)` matches what was recorded at parse time.
+    Every real call site of both functions was audited (via grep across the whole repo) and none
+    write a `_test.go` file and then re-scan it in the same process — a materially lower-risk
+    shape than `hashPackageInputs`' target (which `hotam land` genuinely does mutate-then-rehash
+    mid-process against `graph.json`), so the cache needed no extra defense beyond the same
+    mtime+size check applied unconditionally as defense-in-depth. Bonus finding surfaced while
+    auditing call sites: `internal/invariants/*_test.go` files were already being parsed TWICE
+    per `buildScan` call (once via `scanTestDir`, once via `walkTestFuncs`) even before this
+    change — the shared cache now collapses that redundancy within a single call, not just across
+    process-lifetime calls. 4 new tests cover unchanged-file reuse, mutation invalidation,
+    same-(mtime,size)-different-path non-collision, and race-free concurrent access.
+  - **Verified by the resolver** (build/vet/gofmt clean; `-race` clean on all new tests plus the
+    whole `internal/gate` package; `internal/invariants`/`internal/generator` green;
+    `all-violations` 0 on both `hotam-spec-self` and `hotam-dev`; full `go test ./...` green,
+    0 FAIL, 19/19 packages). **Real, dramatic wall-clock effect**, well beyond task #379's earlier
+    modest ~7%: a clean full-suite run dropped from the 11-15 minute range measured earlier this
+    same session to **5m0.9s**, with `cmd/hotam` alone (the session's dominant cost all day) down
+    from the previously-measured 650-900s range to **293.1s** — consistent with tasks #380/#381's
+    profiling, which found `hashPackageInputs` and uncached AST parsing together accounting for a
+    large share of that package's own CPU time.
 - **`internal/gate/fixture_cache.go` — `EnsureContentAddressedFixture`, a stable content-hash
   path for test fixture modules (pilot).** Continuation of the `-vet=off`/`-short` speed wave
   above: task #374 (same investigation) proved the `t.TempDir()`-per-test-run fixture pattern

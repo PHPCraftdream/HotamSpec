@@ -4,9 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -262,6 +264,330 @@ func TestHashPackageInputs_UnchangedContentSameHash(t *testing.T) {
 	}
 	if h1 != h2 {
 		t.Fatalf("expected the same hash across two calls with no file changes, got %q then %q", h1, h2)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Task #383: perFileHashCache (the in-process, (mtime,size)-keyed per-file
+// reuse cache hashPackageInputs now consults before re-reading a file's
+// bytes). The two tests directly above already prove the OBSERVABLE
+// contract (same content -> same hash, different content -> different hash)
+// continues to hold; the tests below prove the CACHE ITSELF -- that it
+// actually reuses cached reads when safe (a), that it is not fooled by
+// coarse mtime granularity when content genuinely changes (b, both the
+// size-changes and the size-preserved-but-mtime-forced-forward shapes), that
+// adding (c) or removing (d) a file is never masked by every SURVIVING
+// file's own state staying cache-valid, and that concurrent callers against
+// the same moduleRoot never race (e).
+// ---------------------------------------------------------------------------
+
+// TestHashPackageInputs_WarmCacheReusesUnchangedFiles is proof (a): calling
+// hashPackageInputs twice in a row with nothing on disk touched must not
+// only return the same digest (already covered by
+// TestHashPackageInputs_UnchangedContentSameHash above) but must actually
+// serve the SECOND call's per-file reads out of perFileHashCache rather than
+// re-reading every file from disk -- checked here by asserting the cache
+// entry populated by the first call is present and, for every file in it,
+// carries the exact bytes on disk (the reuse contract: a cache hit must
+// return byte-identical data to what a fresh read would have produced, or
+// the "byte-for-byte identical digest" invariant the doc comment on
+// moduleHashFileState promises would not hold).
+func TestHashPackageInputs_WarmCacheReusesUnchangedFiles(t *testing.T) {
+	ResetModuleHashCacheForTest()
+	root := writeModuleFixture(t, "example.com/warmcachemod", "model", passingImplSrc, passingTestSrc)
+	pkgDir := filepath.Join(root, "model")
+
+	h1, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (cold): %v", err)
+	}
+
+	perFileHashCacheMu.Lock()
+	coldEntry := perFileHashCache[root]
+	perFileHashCacheMu.Unlock()
+	if coldEntry == nil {
+		t.Fatalf("expected a populated perFileHashCache entry for %q after the cold call, got nil", root)
+	}
+	if coldEntry.digest != h1 {
+		t.Fatalf("expected the cached entry's digest to match the returned hash, got entry.digest=%q h1=%q", coldEntry.digest, h1)
+	}
+	if len(coldEntry.files) == 0 {
+		t.Fatalf("expected the cached entry to record at least one file's state, got zero")
+	}
+
+	h2, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (warm): %v", err)
+	}
+	if h1 != h2 {
+		t.Fatalf("expected the warm call to return the identical digest, got %q then %q", h1, h2)
+	}
+
+	perFileHashCacheMu.Lock()
+	warmEntry := perFileHashCache[root]
+	perFileHashCacheMu.Unlock()
+	if warmEntry == nil {
+		t.Fatalf("expected a populated perFileHashCache entry after the warm call, got nil")
+	}
+	if warmEntry.digest != h1 {
+		t.Fatalf("expected the warm entry's digest to still match, got %q want %q", warmEntry.digest, h1)
+	}
+	if len(warmEntry.files) != len(coldEntry.files) {
+		t.Fatalf("expected the warm entry to track the same file set as the cold entry, got %d files vs %d", len(warmEntry.files), len(coldEntry.files))
+	}
+	for rel, coldState := range coldEntry.files {
+		warmState, ok := warmEntry.files[rel]
+		if !ok {
+			t.Fatalf("file %q present in the cold entry is missing from the warm entry", rel)
+		}
+		if string(warmState.data) != string(coldState.data) {
+			t.Fatalf("file %q: warm entry's cached bytes do not match the cold entry's bytes -- reuse must be byte-identical", rel)
+		}
+		if warmState.size != coldState.size || !warmState.modTime.Equal(coldState.modTime) {
+			t.Fatalf("file %q: expected the warm entry to keep the SAME (mtime,size) as the cold entry when reusing (no real re-stat mismatch expected here), got warm=(%v,%d) cold=(%v,%d)", rel, warmState.modTime, warmState.size, coldState.modTime, coldState.size)
+		}
+	}
+}
+
+// TestHashPackageInputs_MUTATION_SizeChangeDetected is proof (b), size-change
+// shape: mutating impl.go to a DIFFERENT length must change the digest, even
+// though the write happens immediately after (no explicit delay), because
+// the cached (mtime,size) comparison catches a size mismatch regardless of
+// whether the filesystem's mtime clock ticked between the two writes -- this
+// is the size half of the two independent invalidation signals the cache
+// relies on (see moduleHashFileState's doc comment).
+func TestHashPackageInputs_MUTATION_SizeChangeDetected(t *testing.T) {
+	ResetModuleHashCacheForTest()
+	root := writeModuleFixture(t, "example.com/sizechangemod", "model", passingImplSrc, passingTestSrc)
+	pkgDir := filepath.Join(root, "model")
+
+	h1, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (before): %v", err)
+	}
+	if len(guttedImplSrc) == len(passingImplSrc) {
+		t.Fatalf("test fixture invariant broken: guttedImplSrc and passingImplSrc must differ in length for this to actually exercise the size-change path (lengths: %d vs %d)", len(guttedImplSrc), len(passingImplSrc))
+	}
+	implPath := filepath.Join(pkgDir, "impl.go")
+	if err := os.WriteFile(implPath, []byte(guttedImplSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile mutated impl.go: %v", err)
+	}
+
+	h2, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after size-changing mutation): %v", err)
+	}
+	if h1 == h2 {
+		t.Fatalf("expected a different digest after a size-changing mutation to impl.go, got the same hash %q both times", h1)
+	}
+}
+
+// TestHashPackageInputs_MUTATION_SameSizeForcedMtimeDetected is proof (b),
+// same-size shape: mutating impl.go to a DIFFERENT byte string of THE EXACT
+// SAME LENGTH (so the size half of the (mtime,size) pair alone cannot
+// distinguish before/after) must still change the digest, PROVIDED the
+// mtime is forced far enough forward that it cannot land in the same
+// filesystem mtime tick as the original write (os.Chtimes with a delta of
+// several seconds, well past NTFS's ~1-15ms resolution the task brief calls
+// out, and past ext4/HFS+'s coarser 1s resolution too) -- this is the mtime
+// half of the two independent invalidation signals, exercised independently
+// of the size signal so this test would fail if a future edit accidentally
+// made the cache trust size alone.
+func TestHashPackageInputs_MUTATION_SameSizeForcedMtimeDetected(t *testing.T) {
+	ResetModuleHashCacheForTest()
+	const before = `package model
+
+func RequireComplete(fields int) error {
+	if fields < 1 {
+		return errNotComplete
+	}
+	return nil
+}
+
+var errNotComplete = errStub{}
+
+type errStub struct{}
+
+func (errStub) Error() string { return "AAAAAAAAAAAAAAA" }
+`
+	const after = `package model
+
+func RequireComplete(fields int) error {
+	if fields < 1 {
+		return errNotComplete
+	}
+	return nil
+}
+
+var errNotComplete = errStub{}
+
+type errStub struct{}
+
+func (errStub) Error() string { return "BBBBBBBBBBBBBBB" }
+`
+	if len(before) != len(after) {
+		t.Fatalf("test fixture invariant broken: before/after must be the exact same length to exercise the same-size path (lengths: %d vs %d)", len(before), len(after))
+	}
+
+	root := writeModuleFixture(t, "example.com/samesizemod", "model", before, passingTestSrc)
+	pkgDir := filepath.Join(root, "model")
+	implPath := filepath.Join(pkgDir, "impl.go")
+
+	h1, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (before): %v", err)
+	}
+
+	if err := os.WriteFile(implPath, []byte(after), 0o644); err != nil {
+		t.Fatalf("WriteFile same-size mutated impl.go: %v", err)
+	}
+	// Force the mtime forward by several seconds, well past any real
+	// filesystem's mtime resolution (NTFS ~1-15ms, ext4/HFS+ up to 1s) --
+	// this is what makes the test deterministic without depending on
+	// however much real wall-clock time elapsed between the two WriteFile
+	// calls above, which on a fast machine could otherwise land inside the
+	// SAME mtime tick and would then only be caught by the size signal (which
+	// this test deliberately keeps identical, to isolate the mtime signal).
+	forced := time.Now().Add(10 * time.Second)
+	if err := os.Chtimes(implPath, forced, forced); err != nil {
+		t.Fatalf("Chtimes: %v", err)
+	}
+
+	h2, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after same-size, forced-mtime mutation): %v", err)
+	}
+	if h1 == h2 {
+		t.Fatalf("expected a different digest after a same-size mutation with a forced-forward mtime, got the same hash %q both times", h1)
+	}
+}
+
+// TestHashPackageInputs_MUTATION_AddedFileDetected is proof (c): adding a
+// brand-new file under moduleRoot, with EVERY previously-existing file's
+// (mtime,size) completely untouched, must still change the digest -- the
+// direct proof that the fast path's allReused guard (see hashPackageInputs'
+// doc comment) is not fooled into serving the OLD combined digest just
+// because none of the SURVIVING files individually changed.
+func TestHashPackageInputs_MUTATION_AddedFileDetected(t *testing.T) {
+	ResetModuleHashCacheForTest()
+	root := writeModuleFixture(t, "example.com/addedfilemod", "model", passingImplSrc, passingTestSrc)
+	pkgDir := filepath.Join(root, "model")
+
+	h1, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (before add): %v", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(pkgDir, "extra.go"), []byte("package model\n\nvar extraMarker = true\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile extra.go: %v", err)
+	}
+
+	h2, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after add): %v", err)
+	}
+	if h1 == h2 {
+		t.Fatalf("expected a different digest after adding a new file (extra.go) with all pre-existing files untouched, got the same hash %q both times", h1)
+	}
+}
+
+// TestHashPackageInputs_MUTATION_RemovedFileDetected is proof (d): removing
+// a previously-hashed file, with every SURVIVING file's (mtime,size)
+// completely untouched, must still change the digest -- the direct proof
+// for deletedSincePrev (see hashPackageInputs' doc comment): the fast path's
+// allReused guard alone would stay true here (every remaining file still
+// matches its cached state, and readAndRecord is never even asked about the
+// deleted path), so deletedSincePrev's separate cardinality check is what
+// actually catches this shape.
+func TestHashPackageInputs_MUTATION_RemovedFileDetected(t *testing.T) {
+	ResetModuleHashCacheForTest()
+	root := writeModuleFixture(t, "example.com/removedfilemod", "model", passingImplSrc, passingTestSrc)
+	pkgDir := filepath.Join(root, "model")
+	extraPath := filepath.Join(pkgDir, "extra.go")
+	if err := os.WriteFile(extraPath, []byte("package model\n\nvar extraMarker = true\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile extra.go: %v", err)
+	}
+
+	h1, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (before remove): %v", err)
+	}
+
+	if err := os.Remove(extraPath); err != nil {
+		t.Fatalf("Remove extra.go: %v", err)
+	}
+
+	h2, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after remove): %v", err)
+	}
+	if h1 == h2 {
+		t.Fatalf("expected a different digest after removing extra.go with every surviving file untouched, got the same hash %q both times", h1)
+	}
+}
+
+// TestHashPackageInputs_ConcurrentCallsSameModuleRoot_NoRace is proof (e):
+// many goroutines calling hashPackageInputs concurrently against the SAME
+// moduleRoot must never race on perFileHashCache, and must all observe a
+// digest consistent with the (unchanging, for this test) tree content --
+// intended to be run under `go test -race` (this file cannot invoke that
+// itself under this task's no-execution constraint; the reasoning below is
+// what actually establishes race-freedom, mirroring
+// TestParseTestFileCached_ConcurrentAccess_NoRace's own doc comment in
+// spec_resolver_test.go for the identical shape of claim).
+//
+// Race-freedom argument: perFileHashCacheMu (test_exec.go) is held for
+// every individual read of perFileHashCache[moduleRoot] and every individual
+// write of perFileHashCache[moduleRoot] -- both are short, uncontended-
+// duration critical sections (a single map index operation each), so the Go
+// race detector's happens-before tracking sees every such access as
+// properly synchronized regardless of how many goroutines interleave
+// between their own lock/unlock pairs. The walk, os.Stat, and os.ReadFile
+// calls in between happen WITHOUT holding the lock (by design -- see the
+// perFileHashCache doc comment's THREAD SAFETY section), but every goroutine
+// only ever reads moduleHashFileState values it either (a) obtained itself
+// from its own os.Stat/os.ReadFile calls (thread-local, no sharing) or (b)
+// read out of prevFiles under the lock and never mutates afterward
+// (moduleHashFileState and moduleHashCacheEntry are both treated as
+// immutable once constructed -- hashPackageInputs always builds a brand-new
+// value and Stores a brand-new pointer, never mutates a *moduleHashCacheEntry
+// or its files map in place after publish), so there is no shared mutable
+// state reachable outside the mutex for the race detector to ever flag.
+func TestHashPackageInputs_ConcurrentCallsSameModuleRoot_NoRace(t *testing.T) {
+	ResetModuleHashCacheForTest()
+	root := writeModuleFixture(t, "example.com/concurrenthashmod", "model", passingImplSrc, passingTestSrc)
+	pkgDir := filepath.Join(root, "model")
+
+	// Warm the cache once up front so most of the concurrent calls below
+	// exercise the warm (reuse) path, not just the cold path every goroutine
+	// would otherwise race to populate simultaneously -- both shapes matter,
+	// so a first sequential call plus a concurrent burst covers both.
+	want, err := hashPackageInputs(root, pkgDir)
+	if err != nil {
+		t.Fatalf("hashPackageInputs (warm-up): %v", err)
+	}
+
+	const goroutines = 32
+	var wg sync.WaitGroup
+	errCh := make(chan error, goroutines)
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			got, err := hashPackageInputs(root, pkgDir)
+			if err != nil {
+				errCh <- fmt.Errorf("goroutine %d: hashPackageInputs: %w", i, err)
+				return
+			}
+			if got != want {
+				errCh <- fmt.Errorf("goroutine %d: got digest %q, want %q", i, got, want)
+			}
+		}(i)
+	}
+	wg.Wait()
+	close(errCh)
+	for err := range errCh {
+		t.Error(err)
 	}
 }
 

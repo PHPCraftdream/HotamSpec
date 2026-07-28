@@ -891,14 +891,24 @@ type cacheEntry struct {
 // DeterministicOrder's 21x loop) never even touches disk.
 var runCache sync.Map // cacheKey -> cacheEntry
 
-// ResetRunCacheForTest clears the in-memory verdict cache AND the binary
-// compile cache (compile_cache.go), plus resets the compile-invocation
-// counter. Test-only helper (exported so internal/invariants' tests, a
-// different package, can call it). There is no on-disk/cross-process
-// cache to also clear: see the removed-disk-cache history below (NEW-3)
-// -- runCache (this in-memory sync.Map) is the ONLY verdict cache
-// RunVerifiedByTest maintains, and it is process-lifetime only, so
-// clearing it here is complete.
+// ResetRunCacheForTest clears the in-memory verdict cache, the per-file
+// module-hash cache (perFileHashCache, task #383), AND the binary compile
+// cache (compile_cache.go), plus resets the compile-invocation counter.
+// Test-only helper (exported so internal/invariants' tests, a different
+// package, can call it). There is no on-disk/cross-process cache to also
+// clear: see the removed-disk-cache history below (NEW-3) -- runCache and
+// perFileHashCache (both in-memory only) are the ONLY caches
+// RunVerifiedByTest/hashPackageInputs maintain, and both are process-lifetime
+// only, so clearing them here is complete. Clearing perFileHashCache is not
+// required for CORRECTNESS (a stale per-file entry only ever gates a
+// same-value fast-path reuse or falls through to a real re-read -- see
+// hashPackageInputs' own doc comment -- it can never make a genuinely
+// changed file hash as unchanged except via the documented residual
+// mtime-tick/same-size gap), but it is reset here anyway so each test's
+// cache-population assertions (e.g.
+// TestHashPackageInputs_WarmCacheReusesUnchangedFiles) start from a known
+// empty state rather than depending on t.TempDir()'s per-test path
+// uniqueness to make leftover entries harmless by coincidence.
 //
 // The compile cache reset (added by the binary-level compile cache,
 // compile_cache.go) is needed for the SAME reason the verdict cache reset
@@ -915,6 +925,7 @@ var runCache sync.Map // cacheKey -> cacheEntry
 // design decision in full.
 func ResetRunCacheForTest() {
 	runCache = sync.Map{}
+	ResetModuleHashCacheForTest()
 	resetCompileCacheForTest()
 }
 
@@ -1174,6 +1185,116 @@ func singleflightRun(key cacheKey, hash string, run func() TestRunResult) TestRu
 	}
 }
 
+// moduleHashFileState is what perFileHashCache remembers about one file the
+// last time hashPackageInputs actually read+used its bytes: the (mtime,
+// size) pair observed at that read, plus the exact bytes read -- keeping the
+// bytes (not just a digest of them) lets the reuse path feed the SAME data
+// into the combiner loop at the bottom of hashPackageInputs that a fresh
+// os.ReadFile would have produced, so a fully warm cache hit and a fully cold
+// computation write byte-for-byte identical input into the running sha256,
+// and therefore produce the byte-for-byte identical final digest for the
+// same tree content (task #383's required invariant -- this is strictly an
+// internal fast-path, never an observably different hash).
+type moduleHashFileState struct {
+	modTime time.Time
+	size    int64
+	data    []byte
+}
+
+// moduleHashCacheEntry is the memoized walk state for one moduleRoot: the
+// per-relative-path state observed on the last hashPackageInputs call for
+// that module, plus that call's resulting combined digest (returned directly
+// when EVERY file in the current walk still matches its cached state and no
+// file was added or removed -- see the fast-path check at the top of the
+// walk below).
+type moduleHashCacheEntry struct {
+	files  map[string]moduleHashFileState
+	digest string
+}
+
+// perFileHashCacheMu/perFileHashCache is the in-process, moduleRoot-keyed
+// cache task #383 adds: profiling (#378/#380/#381) found os.ReadFile itself
+// -- not the sha256 hashing -- dominating hashPackageInputs's cost
+// (1215.88 of 1226.93s CPU in one profiled run), because the ORIGINAL
+// implementation re-reads and re-hashes EVERY regular file under moduleRoot
+// from scratch on every single call, even when the process already computed
+// this exact digest moments ago and nothing on disk has changed since.
+//
+// Design: on every call, the directory walk itself still runs in full (the
+// walk is not the expensive part -- only os.ReadFile's content read is), but
+// for each file encountered, its CURRENT (mtime, size) is compared against
+// the (mtime, size) recorded the last time this cache actually read that
+// file's bytes. When they match, the previously-read bytes are reused
+// verbatim (no os.ReadFile, no re-hash of that file's content) instead of
+// touching disk again; only new or changed files are actually read. The
+// file SET is also compared (see hashPackageInputs below): a file added or
+// removed relative to the cached entry is exactly as significant as a
+// content change and forces the affected part of the digest to be
+// recomputed from the current walk, never silently reused from a smaller or
+// larger cached set.
+//
+// A sync.Mutex guarding a plain map is used here, matching this file's own
+// inFlightMu/inFlightCalls pattern (singleflightRun above) rather than
+// introducing a second concurrency idiom (sync.Map, as runCache uses) into
+// the same file for no reason: the operations this cache needs -- "read the
+// whole per-module entry", "replace the whole per-module entry" -- are
+// coarse-grained (one entry per moduleRoot, read+possibly-rewritten once per
+// hashPackageInputs call) rather than the fine-grained independent-key
+// read/write pattern sync.Map is suited for, so a plain mutex is the more
+// direct match, exactly as inFlightCalls already is for the same reason.
+//
+// THREAD SAFETY (risk 3, task #382's finding): internal/invariants and
+// internal/gate both run verified_by jobs concurrently (runExecWorkers,
+// singleflightRun above), so multiple goroutines can call hashPackageInputs
+// for the SAME moduleRoot at once. perFileHashCacheMu guards every individual
+// access to the perFileHashCache MAP itself (the lookup at the top of
+// hashPackageInputs and the store at the bottom, see hashPackageInputs'
+// use below) -- Go map reads/writes are never safe to interleave without
+// this, so every actual map access is race-free by construction, and the
+// data each goroutine reads out (a *moduleHashCacheEntry) is never mutated
+// in place after publish (hashPackageInputs always builds a brand-new
+// moduleHashCacheEntry and stores that pointer, rather than mutating a
+// previously-published one), so a goroutine that read a pointer under the
+// lock can safely keep reading through it after unlocking without racing a
+// concurrent in-place mutation.
+//
+// The lock is deliberately NOT held across the walk/os.Stat/os.ReadFile
+// calls in between (only around the short lookup and the short store) --
+// this means two goroutines racing to hash the SAME moduleRoot at the SAME
+// moment (e.g. two different verified_by entries in the same package both
+// missing the runCache/singleflightRun layer above them at once --
+// singleflightRun already collapses same-KEY concurrent callers, but two
+// DIFFERENT cacheKeys in the same module, e.g. two different testName values
+// for the same pkgDir, are NOT collapsed by singleflightRun and can both
+// reach hashPackageInputs concurrently) can both read the SAME prevEntry,
+// both redundantly walk+read the module once each, and both then publish
+// their own freshly-built entry (the second Store simply overwrites the
+// first) -- a missed dedup opportunity, not a correctness bug: both
+// goroutines observe a mutually consistent snapshot of the files they
+// individually stat, so both independently compute the SAME correct digest
+// for the same on-disk content, and whichever entry ends up stored is
+// equally valid for the next caller to consult.
+var (
+	perFileHashCacheMu sync.Mutex
+	perFileHashCache   = map[string]*moduleHashCacheEntry{}
+)
+
+// ResetModuleHashCacheForTest clears the in-process per-file hash cache
+// (perFileHashCache) task #383 adds. Exported test-only helper, also called
+// from ResetRunCacheForTest (so every existing caller of that function gets
+// this reset for free) but kept separately callable too: t.TempDir() gives
+// every test its own moduleRoot path so cross-test collisions cannot happen
+// even without this, but calling it keeps each test's cache state
+// independently verifiable (e.g.
+// TestHashPackageInputs_WarmCacheReusesUnchangedFiles below asserts on cache
+// population directly) rather than depending on prior tests' leftover
+// entries never mattering by coincidence of unique temp paths.
+func ResetModuleHashCacheForTest() {
+	perFileHashCacheMu.Lock()
+	perFileHashCache = map[string]*moduleHashCacheEntry{}
+	perFileHashCacheMu.Unlock()
+}
+
 // hashPackageInputs computes a single SHA-256 digest over every file that can
 // affect `go test`'s verdict for the WHOLE MODULE rooted at moduleRoot: go.mod
 // and go.sum (if present) at moduleRoot, plus EVERY file anywhere under
@@ -1336,10 +1457,67 @@ func singleflightRun(key cacheKey, hash string, run func() TestRunResult) TestRu
 // inconvenient.
 func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 	_ = pkgDir // NEW-2: cache key is now the whole module, not one package dir; see doc comment.
+
+	// PERF (task #383): consult the per-module cache BEFORE doing any
+	// reading. prevFiles is the file-state snapshot from the last call that
+	// actually populated the cache for this moduleRoot (nil if this is the
+	// first call, or the cache was reset) -- the walk below uses it to decide,
+	// per file, whether the cached bytes can be reused or the file must be
+	// actually read. The mutex is only held for the cheap map lookup/copy,
+	// never across the walk or any disk I/O.
+	perFileHashCacheMu.Lock()
+	prevEntry := perFileHashCache[moduleRoot]
+	perFileHashCacheMu.Unlock()
+	var prevFiles map[string]moduleHashFileState
+	if prevEntry != nil {
+		prevFiles = prevEntry.files
+	}
+
 	h := sha256.New()
+	newFiles := make(map[string]moduleHashFileState, len(prevFiles))
+	// allReused tracks, across every path readAndRecord is called for in
+	// THIS call, whether every one of them was served from prevFiles (stays
+	// true) or at least one had to be freshly read (goes false the moment
+	// any single file misses -- see readAndRecord below). Combined with
+	// deletedSincePrev after the walk, this is what detects an
+	// added-or-removed file (task #383, risk 1's "file set changed" case):
+	// hashPackageInputs itself always recomputes the digest fully from
+	// (fresh-or-reused) bytes in the combiner loop below regardless of this
+	// flag's value -- allReused only gates the SEPARATE whole-digest fast
+	// path (skip the combiner loop entirely and return the previous
+	// digest), never whether any individual file's bytes get read.
+	allReused := true
+	sawPaths := make(map[string]bool, len(prevFiles))
+
+	readAndRecord := func(relKey, path string) ([]byte, error) {
+		info, statErr := os.Stat(path)
+		if statErr != nil {
+			return nil, statErr
+		}
+		sawPaths[relKey] = true
+		if prev, ok := prevFiles[relKey]; ok && prev.size == info.Size() && prev.modTime.Equal(info.ModTime()) {
+			// Cached (mtime, size) still match: reuse the bytes read on a
+			// previous call instead of touching disk again. See the
+			// perFileHashCache doc comment above for the residual gap this
+			// leaves open (a content mutation that preserves BOTH the exact
+			// byte size AND lands within the same mtime tick as the cached
+			// read) and why it is an accepted, narrow, explicitly-documented
+			// trade for the os.ReadFile cost this cache removes from the hot
+			// path.
+			newFiles[relKey] = prev
+			return prev.data, nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil, readErr
+		}
+		allReused = false
+		newFiles[relKey] = moduleHashFileState{modTime: info.ModTime(), size: info.Size(), data: data}
+		return data, nil
+	}
 
 	for _, modFile := range []string{"go.mod", "go.sum"} {
-		data, err := os.ReadFile(filepath.Join(moduleRoot, modFile))
+		data, err := readAndRecord(modFile, filepath.Join(moduleRoot, modFile))
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
@@ -1398,7 +1576,7 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 			return relErr
 		}
 		relSlash := filepath.ToSlash(rel)
-		data, readErr := os.ReadFile(path)
+		data, readErr := readAndRecord(relSlash, path)
 		if readErr != nil {
 			return readErr
 		}
@@ -1410,13 +1588,53 @@ func hashPackageInputs(moduleRoot, pkgDir string) (string, error) {
 		return "", walkErr
 	}
 
+	// deletedSincePrev catches a file that was in prevFiles but is absent
+	// from THIS walk's sawPaths (deleted, or renamed away) -- a pure
+	// cardinality drop with no offsetting addition. It is deliberately only
+	// a COUNT comparison, not a full set-equality check, because it does not
+	// need to be: pairing it with allReused below is what makes the
+	// combined guard sound. Any ADDED file (a brand-new path, or the "new
+	// name" half of a rename) can never have a prevFiles entry to match
+	// against, so readAndRecord always falls to a real os.ReadFile for it
+	// and sets allReused=false -- meaning the only shape a bare count
+	// comparison could miss (an add and a delete landing in the same call,
+	// leaving len(sawPaths)==len(prevFiles) even though the actual path
+	// SETS differ) is already independently caught by allReused turning
+	// false for the added path. deletedSincePrev only has to catch what
+	// allReused cannot: a PURE deletion (no offsetting add), where every
+	// surviving file still matches its cached state and allReused would
+	// otherwise incorrectly stay true.
+	deletedSincePrev := len(prevFiles) != len(sawPaths)
+
+	if allReused && !deletedSincePrev && prevEntry != nil && prevEntry.digest != "" {
+		// Full fast path: every file this walk touched matched its cached
+		// (mtime, size) state (allReused, which also implies no file was
+		// ADDED -- see deletedSincePrev's doc comment above), and no
+		// previously-cached file went missing either (deletedSincePrev
+		// false). Nothing changed -- return the previously-combined digest
+		// directly, without even running the sha256 combiner loop again.
+		// This is the warm-cache hot path task #383 exists for: a
+		// completely unchanged module tree costs one os.Stat per file and
+		// nothing else.
+		perFileHashCacheMu.Lock()
+		perFileHashCache[moduleRoot] = &moduleHashCacheEntry{files: newFiles, digest: prevEntry.digest}
+		perFileHashCacheMu.Unlock()
+		return prevEntry.digest, nil
+	}
+
 	sort.Strings(relPaths)
 	for _, rel := range relPaths {
 		h.Write([]byte(rel + "\n"))
 		h.Write(fileData[rel])
 	}
 
-	return hex.EncodeToString(h.Sum(nil)), nil
+	digest := hex.EncodeToString(h.Sum(nil))
+
+	perFileHashCacheMu.Lock()
+	perFileHashCache[moduleRoot] = &moduleHashCacheEntry{files: newFiles, digest: digest}
+	perFileHashCacheMu.Unlock()
+
+	return digest, nil
 }
 
 // buildOutputExtensions is the set of file-name suffixes hashPackageInputs
