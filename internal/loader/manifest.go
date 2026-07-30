@@ -150,6 +150,25 @@ type DomainManifest struct {
 	// CONSUMER domain's applyToGraph Requirement/Rejection lock on, the same
 	// lock SelfHosting flips on for hotam-spec-self itself.
 	RequirementsAuthority string `json:"requirements_authority,omitempty"`
+
+	// ClaimAuthority is the optional "claim_authority" opt-in
+	// (resolveClaimAuthorityScenario, task #388/W0.1). The single recognized
+	// non-empty value is ClaimAuthorityScenario ("scenario"); an absent key
+	// (or any other value, including the documented default literal
+	// "authored") resolves to the SAME honest-no-op default as an absent key
+	// — mirroring RequirementsAuthority's own "one recognized literal, every
+	// other value/absence treated identically" contract above. It gates
+	// check_claim_matches_scenario (internal/invariants/claim_scenario_current.go)
+	// IN ADDITION TO that check's existing g.Discipline == loader.DisciplineFull
+	// guard — both conditions are required, neither replaces the other: a
+	// domain can be discipline:"full" (real scenario-carrier + SPEC.md
+	// obligations) without also being claim_authority:"scenario" (the
+	// stricter promise that Claim's own TEXT is byte-for-byte derived from
+	// verified_by scenario titles). See that check's doc comment for why the
+	// two conditions were merged into one trigger by task #369 in the first
+	// place, and why that was a violation of R-scenario-spec-obligations-
+	// mechanically-enforced's own "each gate its own opt-in trigger" law.
+	ClaimAuthority string `json:"claim_authority,omitempty"`
 }
 
 // LoadManifest reads and decodes the manifest.json at path into a DomainManifest.

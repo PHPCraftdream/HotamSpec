@@ -17,6 +17,50 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **New manifest.json opt-in key `claim_authority: "scenario"` gives `check_claim_matches_scenario`
+  its own opt-in trigger, fixing a live regression against two real consumer domains (task #388,
+  W0.1).** `check_claim_matches_scenario` (task #369) activated for ANY domain with
+  `discipline: "full"`, but `PRAT-hotam/domains/prat` and `PRAT-hotam/domains/gpsm-sm` had both
+  flipped `discipline: "full"` long before that check existed, consenting only to the four gates
+  live at that time (`check_settled_requires_scenario`, `check_scenario_executes_impl`,
+  `check_spec_md_current`, `check_model_complete`) — never to a fifth. Result: `all-violations`
+  against `domains/prat` reported **20 violations before this fix (19 × `check_claim_matches_scenario`
+  + 1 pre-existing, unrelated `check_domain_claude_md_current`)**; `domains/gpsm-sm` reported
+  **23 (22 × `check_claim_matches_scenario` + 1 pre-existing `check_domain_claude_md_current`)**.
+  This directly violated `R-scenario-spec-obligations-mechanically-enforced`'s own documented law
+  ("each gate is an honest no-op before its own opt-in trigger fires... the discipline:\"full\"
+  flip lands in the same commit that completes a domain's migration") — a new mechanical
+  obligation was silently wired into an already-spent trigger.
+  - **Fix**: `internal/loader/manifest.go`'s `DomainManifest` gained a `ClaimAuthority string
+    json:"claim_authority,omitempty"` field (mirroring `RequirementsAuthority`'s exact shape);
+    `internal/loader/loader.go` gained `ClaimAuthorityScenario` (the recognized literal
+    `"scenario"`) and `resolveClaimAuthorityScenario` (mirroring
+    `resolveRequirementsAuthorityCode`); `internal/ontology/graph.go`'s `Graph` gained
+    `ClaimAuthorityScenario bool json:"-"`, populated by `loader.LoadGraph`.
+    `checkClaimMatchesScenario` (`internal/invariants/claim_scenario_current.go`) now requires
+    BOTH `g.Discipline == loader.DisciplineFull` AND `g.ClaimAuthorityScenario` — neither
+    condition alone activates the check; a domain missing either is an honest no-op, exactly as
+    it was for every domain before task #369 shipped.
+  - **Ratchet**: `claim_authority: "scenario"` is a ONE-WAY door, symmetric with
+    `discipline: "full"`'s own F2 ratchet. `internal/loader/lock.go`'s `graph.lock` gained
+    `ClaimAuthorityScenarioObserved bool json:"claim_authority_scenario_observed,omitempty"`
+    (additive, ratcheted by `WriteLock` exactly like `DisciplineFullObserved`), plus
+    `ReadClaimAuthorityPin`. A new invariant, `check_claim_authority_ratchet`
+    (`internal/invariants/claim_authority_ratchet.go`), fires if a domain that was ever observed
+    with `claim_authority: "scenario"` later reports a manifest without it — mirroring
+    `check_discipline_ratchet` exactly.
+  - **Self-hosting anchor**: a new SETTLED requirement, `R-opt-in-trigger-owns-its-own-obligations`
+    (`internal/selfspec/requirements_authoredspec.go`, `refines R-scenario-spec-obligations-
+    mechanically-enforced`), names `check_claim_authority_ratchet` as its `enforced_by`, landed via
+    `hotam sync-self` (confront-gate false positives on shared modal words — must/must-not/never/
+    always against unrelated requirements' shared vocabulary — acknowledged via `--decision-ref`,
+    the sanctioned override for exactly this class of lexical-only collision).
+  - **Verification**: `all-violations` against `PRAT-hotam/domains/prat` and `domains/gpsm-sm`
+    dropped from 20/23 to **1 violation each** (the pre-existing, unrelated
+    `check_domain_claude_md_current` staleness, present in the baseline before this fix and
+    untouched by it) — **zero `check_claim_matches_scenario` violations remain, with no hand-edit
+    to either domain's `graph.json`/`graph.lock`/tests/code**. `all-violations` against
+    `domains/hotam-spec-self` and `domains/hotam-dev` (this repo's own self-hosting domains): 0.
 - **`internal/invariants/scenario_coverage.go`'s `check_scenario_executes_impl` (the
   coverage-proof gate) now caches `RunVerifiedByTestRecording` results for the process's whole
   lifetime, not just within one `checkScenarioExecutesImpl` call (task #387).** Round-2

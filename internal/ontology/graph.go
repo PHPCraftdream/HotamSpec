@@ -50,6 +50,25 @@ type Graph struct {
 	// lock against hand-authored apply-proposal/land Requirement/Rejection
 	// proposals bypassing that registry.
 	RequirementsAuthorityCode bool `json:"-"`
+	// ClaimAuthorityScenario is the domain's manifest.json "claim_authority":
+	// "scenario" opt-in (loader.resolveClaimAuthorityScenario, task #388/
+	// W0.1), populated by the loader at LoadGraph time exactly like
+	// RequirementsAuthorityCode above -- deliberately unserialized
+	// (json:"-"): it lives in manifest.json, not graph.json, so it never
+	// round-trips through this struct's own JSON encoding. It is the SECOND,
+	// narrower opt-in trigger check_claim_matches_scenario
+	// (internal/invariants/claim_scenario_current.go) requires IN ADDITION TO
+	// Discipline == DisciplineFull -- neither condition alone is sufficient;
+	// both flags together are check_claim_matches_scenario's real gate. A
+	// domain can be Discipline == DisciplineFull (the real
+	// check_settled_requires_scenario/check_scenario_executes_impl/
+	// check_spec_md_current/check_model_complete obligations) without ALSO
+	// carrying ClaimAuthorityScenario (the stricter, separately-opted-into
+	// promise that Claim's own text is byte-for-byte derived from its
+	// verified_by scenario titles) -- see ClaimAuthorityScenario's own doc
+	// comment in internal/loader/loader.go for why the two were split into
+	// independent triggers.
+	ClaimAuthorityScenario bool `json:"-"`
 	// DomainDir is the filesystem path of the domain directory this graph was
 	// loaded from (the resolved --domain path, i.e. the parent dir of
 	// graph.json). Populated by the loader at LoadGraph time; deliberately

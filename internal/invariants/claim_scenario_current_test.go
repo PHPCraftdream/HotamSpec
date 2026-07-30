@@ -92,18 +92,37 @@ func writeClaimScenarioFixtureModule(t *testing.T, reqID, title string) (moduleR
 
 // claimScenarioFixtureGraph builds the graph the way loader.LoadGraph would
 // populate DomainDir/Discipline (via a real manifest.json on disk), mirroring
-// scenario_discipline_test.go's graphForDiscipline helper.
+// scenario_discipline_test.go's graphForDiscipline helper. discipline:"full"
+// ALONE is no longer sufficient to activate check_claim_matches_scenario
+// (task #388/W0.1) -- every call site that wants the check to actually run
+// must use claimScenarioFixtureGraphWithAuthority(t, domainDir, discipline,
+// loader.ClaimAuthorityScenario, r) instead. This helper always writes
+// claim_authority absent (the "authored"/default case), so it now doubles as
+// the NO-OP fixture for the new dual-gate no-op tests.
 func claimScenarioFixtureGraph(t *testing.T, domainDir, discipline string, r ontology.Requirement) *ontology.Graph {
 	t.Helper()
-	manifest := `{"discipline": "` + discipline + `"}`
+	return claimScenarioFixtureGraphWithAuthority(t, domainDir, discipline, "", r)
+}
+
+// claimScenarioFixtureGraphWithAuthority is claimScenarioFixtureGraph's
+// superset: it additionally writes manifest.json's "claim_authority" field
+// (task #388/W0.1) and populates g.ClaimAuthorityScenario the way
+// loader.LoadGraph would (via loader.resolveClaimAuthorityScenario, exercised
+// indirectly here through a real on-disk manifest read since that resolver is
+// unexported outside package loader -- this test package reads it back the
+// same way loader.LoadGraph itself does, by re-deriving from the literal).
+func claimScenarioFixtureGraphWithAuthority(t *testing.T, domainDir, discipline, claimAuthority string, r ontology.Requirement) *ontology.Graph {
+	t.Helper()
+	manifest := `{"discipline": "` + discipline + `", "claim_authority": "` + claimAuthority + `"}`
 	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
 		t.Fatalf("WriteFile manifest.json: %v", err)
 	}
 	graphPath := filepath.Join(domainDir, "graph.json")
 	return &ontology.Graph{
-		DomainDir:    domainDir,
-		Discipline:   loader.ResolveDiscipline(graphPath),
-		Requirements: []ontology.Requirement{r},
+		DomainDir:              domainDir,
+		Discipline:             loader.ResolveDiscipline(graphPath),
+		ClaimAuthorityScenario: claimAuthority == loader.ClaimAuthorityScenario,
+		Requirements:           []ontology.Requirement{r},
 	}
 }
 
@@ -132,8 +151,8 @@ func TestCheckClaimMatchesScenario_NoOpWithoutDisciplineFull(t *testing.T) {
 }
 
 // TestCheckClaimMatchesScenario_GreenWhenClaimMatches proves the positive
-// control: discipline:full, Claim already equals the fresh derivation ->
-// clean.
+// control: discipline:full + claim_authority:"scenario" (task #388/W0.1's
+// dual-gate), Claim already equals the fresh derivation -> clean.
 func TestCheckClaimMatchesScenario_GreenWhenClaimMatches(t *testing.T) {
 	if testing.Short() {
 		t.Skip("claim-scenario e2e: discipline:full drives checkClaimMatchesScenario's freshDerivedClaim into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
@@ -141,9 +160,12 @@ func TestCheckClaimMatchesScenario_GreenWhenClaimMatches(t *testing.T) {
 	title := "the real recorded title"
 	root := writeClaimScenarioFixtureModule(t, "R-claim-scenario-2", title)
 	r := claimScenarioReq("R-claim-scenario-2", title, []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
-	g := claimScenarioFixtureGraph(t, root, "full", r)
+	g := claimScenarioFixtureGraphWithAuthority(t, root, "full", loader.ClaimAuthorityScenario, r)
 	if g.Discipline != loader.DisciplineFull {
 		t.Fatalf("test setup: expected DisciplineFull, got %q", g.Discipline)
+	}
+	if !g.ClaimAuthorityScenario {
+		t.Fatalf("test setup: expected ClaimAuthorityScenario=true")
 	}
 	if vs := runCheck(t, "check_claim_matches_scenario", g); len(vs) != 0 {
 		t.Fatalf("expected no violations when Claim already matches the fresh derivation, got %v", vs)
@@ -151,18 +173,43 @@ func TestCheckClaimMatchesScenario_GreenWhenClaimMatches(t *testing.T) {
 }
 
 // TestCheckClaimMatchesScenario_FiresWhenClaimDiverges is the RED case:
-// discipline:full, committed Claim disagrees with what the verified_by
-// test's CURRENT recorded scenario title says.
+// discipline:full + claim_authority:"scenario", committed Claim disagrees
+// with what the verified_by test's CURRENT recorded scenario title says.
 func TestCheckClaimMatchesScenario_FiresWhenClaimDiverges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("claim-scenario e2e: discipline:full drives checkClaimMatchesScenario's freshDerivedClaim into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
 	}
 	root := writeClaimScenarioFixtureModule(t, "R-claim-scenario-3", "the real recorded title")
 	r := claimScenarioReq("R-claim-scenario-3", "a stale claim that no longer matches", []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
-	g := claimScenarioFixtureGraph(t, root, "full", r)
+	g := claimScenarioFixtureGraphWithAuthority(t, root, "full", loader.ClaimAuthorityScenario, r)
 	vs := runCheck(t, "check_claim_matches_scenario", g)
 	if !hasViolationFor(vs, "R-claim-scenario-3") {
-		t.Fatalf("expected a violation for a diverged Claim under discipline:full, got %v", vs)
+		t.Fatalf("expected a violation for a diverged Claim under discipline:full+claim_authority:scenario, got %v", vs)
+	}
+}
+
+// TestCheckClaimMatchesScenario_NoOpWithDisciplineFullButNoClaimAuthority is
+// the CORE regression fix this task exists for (task #388/W0.1, acceptance
+// criterion (a)): a domain that is discipline:"full" but has NOT separately
+// opted into claim_authority:"scenario" must stay an honest no-op, even for a
+// Claim that flatly disagrees with its scenario -- exactly the shape of
+// prat's and gpsm-sm's real manifests (discipline:"full" flipped long before
+// claim_authority existed, never consenting to the exact-drift gate).
+func TestCheckClaimMatchesScenario_NoOpWithDisciplineFullButNoClaimAuthority(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-scenario e2e: discipline:full drives checkClaimMatchesScenario's freshDerivedClaim into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
+	root := writeClaimScenarioFixtureModule(t, "R-claim-scenario-noauth", "the real recorded title")
+	r := claimScenarioReq("R-claim-scenario-noauth", "a completely different, stale claim that would fire if compared", []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
+	g := claimScenarioFixtureGraph(t, root, "full", r) // claim_authority absent -- the default
+	if g.Discipline != loader.DisciplineFull {
+		t.Fatalf("test setup: expected DisciplineFull, got %q", g.Discipline)
+	}
+	if g.ClaimAuthorityScenario {
+		t.Fatalf("test setup: expected ClaimAuthorityScenario=false (absent key)")
+	}
+	if vs := runCheck(t, "check_claim_matches_scenario", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for discipline:full WITHOUT claim_authority:scenario (task #388/W0.1), got %v", vs)
 	}
 }
 
@@ -173,7 +220,7 @@ func TestCheckClaimMatchesScenario_FiresWhenClaimDiverges(t *testing.T) {
 func TestCheckClaimMatchesScenario_InherentlyProseIsExempt(t *testing.T) {
 	root := writeClaimScenarioFixtureModule(t, "R-claim-scenario-4", "the real recorded title")
 	r := claimScenarioReq("R-claim-scenario-4", "a stale claim that no longer matches", []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityINHERENTLY_PROSE)
-	g := claimScenarioFixtureGraph(t, root, "full", r)
+	g := claimScenarioFixtureGraphWithAuthority(t, root, "full", loader.ClaimAuthorityScenario, r)
 	if vs := runCheck(t, "check_claim_matches_scenario", g); len(vs) != 0 {
 		t.Fatalf("expected no violations for an INHERENTLY_PROSE requirement, got %v", vs)
 	}
@@ -185,7 +232,7 @@ func TestCheckClaimMatchesScenario_InherentlyProseIsExempt(t *testing.T) {
 func TestCheckClaimMatchesScenario_NoVerifiedByIsSkipped(t *testing.T) {
 	root := t.TempDir()
 	r := claimScenarioReq("R-claim-scenario-5", "any claim at all", nil, ontology.EnforceabilityENFORCEABLE)
-	g := claimScenarioFixtureGraph(t, root, "full", r)
+	g := claimScenarioFixtureGraphWithAuthority(t, root, "full", loader.ClaimAuthorityScenario, r)
 	if vs := runCheck(t, "check_claim_matches_scenario", g); len(vs) != 0 {
 		t.Fatalf("expected no violations for a requirement with no verified_by entries, got %v", vs)
 	}
@@ -207,7 +254,7 @@ func TestCheckClaimMatchesScenario_MUTATION_StaleAfterTitleEditWithoutResync(t *
 	testPath := filepath.Join(root, "model", "impl_test.go")
 
 	r := claimScenarioReq(reqID, originalTitle, []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
-	g := claimScenarioFixtureGraph(t, root, "full", r)
+	g := claimScenarioFixtureGraphWithAuthority(t, root, "full", loader.ClaimAuthorityScenario, r)
 
 	// FRESH: Claim matches the currently-recorded title -- clean.
 	if vs := runCheck(t, "check_claim_matches_scenario", g); len(vs) != 0 {

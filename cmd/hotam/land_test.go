@@ -686,10 +686,17 @@ func TestCmdLand_ExplicitClaudeMD_OverridesAutoDetect(t *testing.T) {
 	explicit := filepath.Join(otherDir, "CLAUDE.md")
 
 	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	// Claim text is deliberately generic/throwaway (this test exercises
+	// --claude-md path routing, not confront/duplicate-detection) --
+	// reworded away from "explicit ... must override auto-detection" (task
+	// #388/W0.1: that phrasing now lexically collides, opposite-marker
+	// must-vs-must-not plus shared tokens "explicit"/"must", with the new
+	// R-opt-in-trigger-owns-its-own-obligations requirement's real claim
+	// text in the full hotam-spec-self corpus this fixture copies).
 	proposalJSON := `{
 		"kind": "Requirement",
 		"id": "R-land-override",
-		"claim": "explicit --claude-md must override auto-detection",
+		"claim": "a directly-supplied CLAUDE.md output path takes priority over the auto-detected crystal location",
 		"owner": "framework-author",
 		"status": "DRAFT",
 		"why": "override coverage"

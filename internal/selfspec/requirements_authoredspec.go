@@ -252,3 +252,22 @@ var _ = Requirements.MustRegister("R-vendored-ontology-matches-engine-canon", on
 	SourceRefs:     []string{"internal/ontology/canon", "internal/invariants/ontology_vendor_check.go", "cmd/hotam/vendor_ontology.go"},
 	DeclOrder:      0,
 })
+
+var _ = Requirements.MustRegister("R-opt-in-trigger-owns-its-own-obligations", ontology.Requirement{
+	ID:             "R-opt-in-trigger-owns-its-own-obligations",
+	Claim:          "An already-spent opt-in trigger (a manifest.json flag whose flip was accepted by a domain to activate a SPECIFIC, named set of obligations at the time the domain flipped it) is CLOSED to new mechanical obligations: a later check that imposes a NEW class of duty MUST NOT activate merely because that same already-spent trigger is set, and MUST instead require its OWN, separately-declared opt-in trigger -- a new manifest.json flag (or an equally explicit signal) that the domain affirmatively sets to consent to the new obligation. A domain's consent, once given to a NAMED set of obligations, is never silently reinterpreted to cover obligations invented after that consent was given.",
+	Owner:          "framework-author",
+	Status:         "SETTLED",
+	Why:            "Task #388 (W0.1), a live regression against R-scenario-spec-obligations-mechanically-enforced's own law: that requirement's Why text already states the rule this requirement now anchors as its own first-class node -- \"Each gate is an honest no-op before its own opt-in trigger fires... the discipline:\\\"full\\\" flip lands in the same commit that completes a domain's migration.\" Task #369 (RAC3-A, check_claim_matches_scenario) violated exactly that law: it activated on discipline:\"full\" ALONE, an opt-in trigger PRAT-hotam's `prat` and `gpsm-sm` domains had already spent (flipped) long before check_claim_matches_scenario existed, consenting only to the four checks live at that time (check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current, check_model_complete). The result was a LIVE regression: `all-violations --domain domains/prat` produced 19 check_claim_matches_scenario violations and `--domain domains/gpsm-sm` produced 22, against two domains that had done nothing wrong -- their claims simply predated a check that retroactively redefined what discipline:\"full\" meant. Task #388 fixes this by giving check_claim_matches_scenario its OWN opt-in trigger, claim_authority:\"scenario\" (loader.ClaimAuthorityScenario, internal/loader/loader.go), required IN ADDITION TO discipline:\"full\" -- neither condition alone activates the check (see claim_scenario_current.go's own doc comment). check_claim_authority_ratchet (internal/invariants/claim_authority_ratchet.go, symmetric with check_discipline_ratchet's F2 ratchet for discipline:\"full\") makes that new trigger's OWN one-way-door promise mechanical: once a domain has explicitly opted into claim_authority:\"scenario\", it cannot silently un-opt. Together, the two checks are the mechanical embodiment of this requirement's claim: a new obligation gets a new, named, separately-ratcheted trigger -- it does not silently ride in on an old one.",
+	Assumptions:    nil,
+	Relations:      []ontology.Relation{{Kind: "refines", Target: "R-scenario-spec-obligations-mechanically-enforced"}},
+	Enforcement:    "ENFORCED",
+	EnforcedBy:     []string{"check_claim_authority_ratchet"},
+	MTag:           "",
+	Enforceability: "ENFORCEABLE",
+	Summary:        "",
+	CreatedAt:      "2026-07-30",
+	SettledAt:      "2026-07-30",
+	SourceRefs:     []string{"internal/loader/loader.go", "internal/invariants/claim_scenario_current.go", "internal/invariants/claim_authority_ratchet.go", "internal/loader/lock.go"},
+	DeclOrder:      0,
+})

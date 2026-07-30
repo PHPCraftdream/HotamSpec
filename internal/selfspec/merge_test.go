@@ -26,7 +26,11 @@ const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 // (RAC2 Phase A) via `hotam sync-self`, the self-hosting anchor for
 // check_ontology_vendor_current's orphan-enforcer gate (254 SETTLED + 42
 // REJECTED + 6 DRAFT = 302).
-const wantRequirementCount = 302
+// 302 + 1: R-opt-in-trigger-owns-its-own-obligations -- landed task #388
+// (W0.1) via `hotam sync-self`, the self-hosting anchor for
+// check_claim_authority_ratchet's orphan-enforcer gate (255 SETTLED + 42
+// REJECTED + 6 DRAFT = 303).
+const wantRequirementCount = 303
 
 // TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase A
 // (RAC-A, task #345, scaling Phase 0/RAC-0's proof to full coverage): load

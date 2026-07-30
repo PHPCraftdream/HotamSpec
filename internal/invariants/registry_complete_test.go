@@ -164,7 +164,16 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// verified_by test(s)' currently-recorded hotamspec scenario
 	// description(s) (internal/selfspec.DeriveClaimsFromScenarios, the same
 	// machinery `hotam sync-domain` now runs at write time).
-	const expected = 115
+	// Task #388 (W0.1: giving check_claim_matches_scenario its own opt-in
+	// trigger, claim_authority:"scenario", instead of piggy-backing on the
+	// already-spent discipline:"full" trigger) added a 116th,
+	// check_claim_authority_ratchet (claim_authority_ratchet.go): the
+	// claim_authority:"scenario" one-way ratchet, symmetric with
+	// check_discipline_ratchet's own F2 ratchet for discipline:"full" -- once
+	// a domain has been observed with claim_authority:"scenario" (pinned in
+	// graph.lock's ClaimAuthorityScenarioObserved), silently withdrawing that
+	// opt-in is a regression violation.
+	const expected = 116
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

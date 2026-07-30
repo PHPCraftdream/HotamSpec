@@ -23,11 +23,25 @@ import (
 // graph.lock already on disk -- the same additive-field convention
 // Requirement.blocked_on/implemented_by/verified_by already established for
 // graph.json's own schema migrations.
+//
+// ClaimAuthorityScenarioObserved is the F2-shaped ratchet pin for
+// claim_authority:"scenario" (task #388/W0.1), symmetric with
+// DisciplineFullObserved above: once a domain's manifest.json has EVER been
+// observed with claim_authority:"scenario", this field is pinned true and
+// NEVER goes back to false, closing the identical silent-regression gap F2
+// closed for discipline:"full" (see check_claim_authority_ratchet,
+// internal/invariants/claim_authority_ratchet.go). ADDITIVE
+// (json:"claim_authority_scenario_observed,omitempty"): an existing
+// graph.lock written before this field existed lacks it entirely and decodes
+// with the Go zero value (false) -- 100% backward compatible with every
+// graph.lock already on disk, the same convention DisciplineFullObserved
+// itself established.
 type lockData struct {
-	SHA256                 string `json:"sha256"`
-	UpdatedAt              string `json:"updated_at"`
-	Note                   string `json:"note"`
-	DisciplineFullObserved bool   `json:"discipline_full_observed,omitempty"`
+	SHA256                         string `json:"sha256"`
+	UpdatedAt                      string `json:"updated_at"`
+	Note                           string `json:"note"`
+	DisciplineFullObserved         bool   `json:"discipline_full_observed,omitempty"`
+	ClaimAuthorityScenarioObserved bool   `json:"claim_authority_scenario_observed,omitempty"`
 }
 
 func LockPath(graphPath string) string {
@@ -65,19 +79,25 @@ func WriteLock(graphPath string, note string) error {
 		return fmt.Errorf("write lock: hash %s: %w", graphPath, err)
 	}
 	// F2 ratchet: preserve a previously-pinned discipline:full observation.
-	// Read the existing lock (if any) to get the old DisciplineFullObserved.
+	// Read the existing lock (if any) to get the old DisciplineFullObserved /
+	// ClaimAuthorityScenarioObserved.
 	prevFullObserved := false
+	prevClaimAuthorityObserved := false
 	if prevLock, pErr := readLockData(graphPath); pErr == nil {
 		prevFullObserved = prevLock.DisciplineFullObserved
+		prevClaimAuthorityObserved = prevLock.ClaimAuthorityScenarioObserved
 	}
 	// Observe the live discipline. If it is "full" now, pin it; otherwise
 	// preserve the previous pin (ratchet: once true, always true).
 	liveFull := ResolveDiscipline(graphPath) == DisciplineFull
+	// task #388/W0.1 ratchet: same one-way pin, for claim_authority:"scenario".
+	liveClaimAuthorityScenario := resolveClaimAuthorityScenario(graphPath)
 	lock := lockData{
-		SHA256:                 hash,
-		UpdatedAt:              time.Now().UTC().Format(time.RFC3339),
-		Note:                   note,
-		DisciplineFullObserved: prevFullObserved || liveFull,
+		SHA256:                         hash,
+		UpdatedAt:                      time.Now().UTC().Format(time.RFC3339),
+		Note:                           note,
+		DisciplineFullObserved:         prevFullObserved || liveFull,
+		ClaimAuthorityScenarioObserved: prevClaimAuthorityObserved || liveClaimAuthorityScenario,
 	}
 	data, err := json.MarshalIndent(lock, "", "  ")
 	if err != nil {
@@ -120,6 +140,21 @@ func ReadDisciplinePin(graphPath string) (fullObserved bool, exists bool) {
 		return false, false
 	}
 	return lock.DisciplineFullObserved, true
+}
+
+// ReadClaimAuthorityPin reads graph.lock next to graphPath and returns
+// whether claim_authority:"scenario" was ever observed (task #388/W0.1's
+// ratchet pin), mirroring ReadDisciplinePin exactly. Returns (false, false)
+// when the lock does not exist or cannot be parsed -- the caller
+// (check_claim_authority_ratchet) treats absence as "no pin yet" (honest
+// no-op, same shape as ReadDisciplinePin's own absent-lock bail). Returns
+// (pinValue, true) when the lock exists and was parsed.
+func ReadClaimAuthorityPin(graphPath string) (scenarioObserved bool, exists bool) {
+	lock, err := readLockData(graphPath)
+	if err != nil {
+		return false, false
+	}
+	return lock.ClaimAuthorityScenarioObserved, true
 }
 
 func VerifyLock(graphPath string) (bool, error) {

@@ -425,6 +425,7 @@
     "R-operator-prompt-loaded-at-session-start",
     "R-operator-references-stakeholder",
     "R-operator-type-vs-facet",
+    "R-opt-in-trigger-owns-its-own-obligations",
     "R-orientation-faq-answerable",
     "R-overlap-single-presenter",
     "R-parallel-mutating-agents-use-worktree",
@@ -1065,6 +1066,41 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "TaskList P1-77 / external review flagged a concrete bug in the pre-fix cmd/hotam/land.go:86: step (a) apply writes a new graph.json to disk, but if step (b) gen-spec or step (c) all-violations then fails, the command returned early and left that NEW graph.json sitting next to STALE (pre-land) docs/gen/*.md — the exact drift `hotam land` exists to prevent, now created BY a failed land instead of prevented by a successful one. The fix is a compensating-rollback design, not two-phase commit on the filesystem: cmdLand snapshots graph.json + graph.lock (snapshotGraphFiles) before step (a) ever writes; if step (b) or (c) fails, rollbackLand restores those exact pre-land bytes and then re-runs genSpec. This is sufficient (not just a partial fix) specifically because genSpec is a PURE function of the on-disk graph.json — it calls loadDomainGraph fresh every invocation and deterministically re-renders every doc from it, so restoring the graph and re-rendering restores the docs to the identical pre-land content too, without needing to snapshot docs/gen/*.md separately. A first-ever land into a brand-new domain (graph.json/graph.lock absent pre-land) rolls back to absence via restoreGraphFile's remove-if-absent path, keeping rollback idempotent and correct even at that boundary. Proven 2026-07-13 by three tests in cmd/hotam/land_test.go: TestCmdLand_GenSpecFailure_RollsBackGraphJSON forces a genSpec failure after a successful apply via a --claude-md path pointed at a directory, and proves graph.json is byte-identical to the pre-land baseline and graph.lock is removed again (pre-land state was absent); TestRollbackLand_RestoresFilesAndRegeneratesDocs unit-tests the rollbackLand helper directly, proving the docs are re-rendered to baseline content (not just the graph file restored) after a simulated post-apply, post-gen-spec failure; TestCmdLand_SuccessPathDoesNotRollBack is the regression guard proving the happy path still lands normally and does NOT spuriously roll back (graph.lock remains, new node present in both graph.json and docs) — together these prove the rollback fires exactly when needed and never when not. This is the SAME situation as the sibling R-land-tier-trace/-best-effort/-skips-dry-run requirements (also `hotam land` CLI-orchestration behavior), except those three remain genuinely unimplemented (no runtime land-log writer exists yet in cmd/hotam), so they stay PROSE correctly — this requirement is the one case among the wave-6 closeable-debt list where the enforcer already existed but the resolver could not see it. ENFORCED 2026-07-13: TestCmdLand_GenSpecFailure_RollsBackGraphJSON, TestRollbackLand_RestoresFilesAndRegeneratesDocs, TestCmdLand_SuccessPathDoesNotRollBack in cmd/hotam/land_test.go, resolver widened to cover cmd/ this session (task #97) — internal/gate.TestFuncNames (mechanism #1, the Test*-name half of enforced_by resolution) now walks both internal/**/*_test.go and cmd/**/*_test.go, so a real Go test enforcer living in cmd/hotam is no longer structurally invisible to check_enforced_by_resolvable / hotam gate just because of which directory it happens to live in. Mechanism #2 (the check_* literal -> tests map) stays scoped to internal/invariants only, per its own unchanged reasoning."
+    },
+    {
+      "assumptions": [],
+      "claim": "An already-spent opt-in trigger (a manifest.json flag whose flip was accepted by a domain to activate a SPECIFIC, named set of obligations at the time the domain flipped it) is CLOSED to new mechanical obligations: a later check that imposes a NEW class of duty MUST NOT activate merely because that same already-spent trigger is set, and MUST instead require its OWN, separately-declared opt-in trigger -- a new manifest.json flag (or an equally explicit signal) that the domain affirmatively sets to consent to the new obligation. A domain's consent, once given to a NAMED set of obligations, is never silently reinterpreted to cover obligations invented after that consent was given.",
+      "enforced_by": [
+        "check_claim_authority_ratchet"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-30",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        },
+        {
+          "at": "2026-07-30",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #388/W0.1 resolver-delegated agent: confront hits are lexical opposite-marker false positives (shared common words: manifest, new, must, named, opt, mechanical -- none share this requirement's actual subject, opt-in trigger obligation scoping) against six unrelated requirements (orientation FAQ, gate signoff carrier, domain founding wave order, shared projections, domain overview, doc-test-code generation). Reviewed and accepted per R-structural-floor-vs-mirror-audit's own documented confront-gate near-miss precedent."
+        }
+      ],
+      "id": "R-opt-in-trigger-owns-its-own-obligations",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/loader/loader.go",
+        "internal/invariants/claim_scenario_current.go",
+        "internal/invariants/claim_authority_ratchet.go",
+        "internal/loader/lock.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Task #388 (W0.1), a live regression against R-scenario-spec-obligations-mechanically-enforced's own law: that requirement's Why text already states the rule this requirement now anchors as its own first-class node -- \"Each gate is an honest no-op before its own opt-in trigger fires... the discipline:\\\"full\\\" flip lands in the same commit that completes a domain's migration.\" Task #369 (RAC3-A, check_claim_matches_scenario) violated exactly that law: it activated on discipline:\"full\" ALONE, an opt-in trigger PRAT-hotam's `prat` and `gpsm-sm` domains had already spent (flipped) long before check_claim_matches_scenario existed, consenting only to the four checks live at that time (check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current, check_model_complete). The result was a LIVE regression: `all-violations --domain domains/prat` produced 19 check_claim_matches_scenario violations and `--domain domains/gpsm-sm` produced 22, against two domains that had done nothing wrong -- their claims simply predated a check that retroactively redefined what discipline:\"full\" meant. Task #388 fixes this by giving check_claim_matches_scenario its OWN opt-in trigger, claim_authority:\"scenario\" (loader.ClaimAuthorityScenario, internal/loader/loader.go), required IN ADDITION TO discipline:\"full\" -- neither condition alone activates the check (see claim_scenario_current.go's own doc comment). check_claim_authority_ratchet (internal/invariants/claim_authority_ratchet.go, symmetric with check_discipline_ratchet's F2 ratchet for discipline:\"full\") makes that new trigger's OWN one-way-door promise mechanical: once a domain has explicitly opted into claim_authority:\"scenario\", it cannot silently un-opt. Together, the two checks are the mechanical embodiment of this requirement's claim: a new obligation gets a new, named, separately-ratcheted trigger -- it does not silently ride in on an old one."
     },
     {
       "assumptions": [

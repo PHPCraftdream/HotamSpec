@@ -105,6 +105,7 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		Entities:                  dto.Entities,
 		SelfHosting:               resolveSelfHosting(path),
 		RequirementsAuthorityCode: resolveRequirementsAuthorityCode(path),
+		ClaimAuthorityScenario:    resolveClaimAuthorityScenario(path),
 		DomainDir:                 filepath.Dir(path),
 		Discipline:                ResolveDiscipline(path),
 	}
@@ -246,6 +247,57 @@ func resolveRequirementsAuthorityCode(graphPath string) bool {
 		return false
 	}
 	return m.RequirementsAuthority == RequirementsAuthorityCode
+}
+
+// ClaimAuthorityScenario is the one recognized value of manifest.json's
+// optional "claim_authority" field (task #388/W0.1) — the SECOND, narrower
+// opt-in trigger check_claim_matches_scenario requires IN ADDITION TO
+// discipline:"full" (DisciplineFull above). Before this field existed,
+// check_claim_matches_scenario (task #369) activated for ANY discipline:full
+// domain, silently loading a brand-new exact-drift obligation onto an
+// ALREADY-SPENT trigger: prat and gpsm-sm had both flipped discipline:"full"
+// long before check_claim_matches_scenario landed, consenting to the FOUR
+// checks that existed at that time (check_settled_requires_scenario,
+// check_scenario_executes_impl, check_spec_md_current, check_model_complete),
+// never to a fifth. ClaimAuthorityScenario gives that fifth obligation its
+// OWN trigger, exactly the discipline the doc comment on DisciplineFull
+// itself preaches ("the same kind of quiet regression... exist to catch") —
+// see R-scenario-spec-obligations-mechanically-enforced
+// (internal/selfspec/requirements_authoredspec.go) for the framework law this
+// field exists to stop violating.
+//
+// The absent-key default is "authored" (Claim is a human-authored field, the
+// long-standing behavior for every domain, including discipline:full ones,
+// before task #369) — mirroring RequirementsAuthority's own "one recognized
+// literal, absence/any-other-value treated identically" contract. "authored"
+// itself is never compared against explicitly (there is exactly one
+// recognized opt-in literal, matching DisciplineFull's own single-literal
+// convention); it exists only as the documented name for the default so a
+// manifest author can write it explicitly for clarity without changing
+// behavior.
+const ClaimAuthorityScenario = "scenario"
+
+// resolveClaimAuthorityScenario reads the optional "claim_authority" field
+// from the manifest.json sitting next to graph.json, mirroring
+// resolveRequirementsAuthorityCode's exact pattern (read manifest, tolerate a
+// missing file, tolerate malformed JSON, default to false/absent when the
+// field is missing or holds any value other than the single recognized
+// literal "scenario") — the same "malformed opt-in never silently
+// masquerades as a real one" discipline ResolveDiscipline documents for
+// "full".
+func resolveClaimAuthorityScenario(graphPath string) bool {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return false
+	}
+	var m struct {
+		ClaimAuthority string `json:"claim_authority"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return false
+	}
+	return m.ClaimAuthority == ClaimAuthorityScenario
 }
 
 // GenProfileFull and GenProfileConsumer are the two accepted values for the

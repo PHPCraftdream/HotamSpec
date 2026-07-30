@@ -90,7 +90,10 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// 301 + 1: R-vendored-ontology-matches-engine-canon -- landed task
 		// #365 (RAC2 Phase A) via `hotam sync-self`, the self-hosting
 		// anchor for check_ontology_vendor_current's orphan-enforcer gate.
-		{"requirements", len(g.Requirements), 302},
+		// 302 + 1: R-opt-in-trigger-owns-its-own-obligations -- landed task
+		// #388 (W0.1) via `hotam sync-self`, the self-hosting anchor for
+		// check_claim_authority_ratchet's orphan-enforcer gate.
+		{"requirements", len(g.Requirements), 303},
 		// 8 + 1: task #347 (RAC-C part 3) landed C-d20cf537
 		// (reviewability-vs-code-authority, DETECTED, unresolved by design --
 		// the resolver-trust-shift RAC-B3/B4's self-hosting authority flip
