@@ -92,22 +92,23 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		return nil, fmt.Errorf("load graph: decode %s: %w", path, err)
 	}
 	g := &ontology.Graph{
-		SchemaVersion:             ontology.CurrentSchemaVersion,
-		Axes:                      dto.Axes,
-		Stakeholders:              dto.Stakeholders,
-		Assumptions:               dto.Assumptions,
-		Requirements:              dto.Requirements,
-		Conflicts:                 dto.Conflicts,
-		Operators:                 dto.Operators,
-		Processes:                 dto.Processes,
-		Goals:                     dto.Goals,
-		EntityTypes:               dto.EntityTypes,
-		Entities:                  dto.Entities,
-		SelfHosting:               resolveSelfHosting(path),
-		RequirementsAuthorityCode: resolveRequirementsAuthorityCode(path),
-		ClaimAuthorityScenario:    resolveClaimAuthorityScenario(path),
-		DomainDir:                 filepath.Dir(path),
-		Discipline:                ResolveDiscipline(path),
+		SchemaVersion:                ontology.CurrentSchemaVersion,
+		Axes:                         dto.Axes,
+		Stakeholders:                 dto.Stakeholders,
+		Assumptions:                  dto.Assumptions,
+		Requirements:                 dto.Requirements,
+		Conflicts:                    dto.Conflicts,
+		Operators:                    dto.Operators,
+		Processes:                    dto.Processes,
+		Goals:                        dto.Goals,
+		EntityTypes:                  dto.EntityTypes,
+		Entities:                     dto.Entities,
+		SelfHosting:                  resolveSelfHosting(path),
+		RequirementsAuthorityCode:    resolveRequirementsAuthorityCode(path),
+		ClaimAuthorityScenario:       resolveClaimAuthorityScenario(path),
+		PublicSurfaceAuthorityLinked: resolvePublicSurfaceAuthorityLinked(path),
+		DomainDir:                    filepath.Dir(path),
+		Discipline:                   ResolveDiscipline(path),
 	}
 	parentDecl := ResolveParent(path)
 	g.ManifestExists = parentDecl.ManifestExists
@@ -298,6 +299,61 @@ func resolveClaimAuthorityScenario(graphPath string) bool {
 		return false
 	}
 	return m.ClaimAuthority == ClaimAuthorityScenario
+}
+
+// PublicSurfaceAuthorityLinked is the one recognized value of manifest.json's
+// optional "public_surface_authority" field (task #396/W1.4) -- a BRAND NEW
+// opt-in trigger, entirely independent of DisciplineFull/ClaimAuthorityScenario
+// above, for check_public_surface_linked_or_marked
+// (internal/invariants/model_complete_symmetric.go): the SYMMETRIC inverse of
+// check_model_complete's own obligation. check_model_complete asks "for every
+// method ALREADY cited as implemented_by, is it scenario-complete?";
+// check_public_surface_linked_or_marked asks "for every EXPORTED authored
+// symbol (receiver method, interface method, or top-level function/
+// constructor) in the domain's scanned model inventory, is it EITHER cited +
+// scenario-complete OR explicitly marked infrastructure/ignored?" -- so no
+// public surface can silently go uncovered by omission.
+//
+// This is a NEW obligation, not a restatement of an old one --
+// R-opt-in-trigger-owns-its-own-obligations (internal/selfspec/
+// requirements_authoredspec.go, task #388's own anchor for exactly this law)
+// forbids activating a new duty merely because an already-spent trigger
+// (discipline:"full") is set: prat and gpsm-sm both flipped discipline:"full"
+// long before this check existed, consenting only to the obligation set live
+// at that time, never to this one. PublicSurfaceAuthorityLinked gives this
+// check its own, separately-declared, separately-ratcheted trigger
+// (check_public_surface_authority_ratchet, internal/invariants/
+// public_surface_authority_ratchet.go), so no domain sees a NEW violation
+// from this task landing unless it explicitly opts in.
+//
+// The absent-key default is the honest no-op (identical to
+// ClaimAuthorityScenario's own "absence/any-other-value treated identically"
+// contract): a domain with no "public_surface_authority" key, or any value
+// other than the single recognized literal "linked", is completely
+// unaffected by check_public_surface_linked_or_marked.
+const PublicSurfaceAuthorityLinked = "linked"
+
+// resolvePublicSurfaceAuthorityLinked reads the optional
+// "public_surface_authority" field from the manifest.json sitting next to
+// graph.json, mirroring resolveClaimAuthorityScenario's exact pattern (read
+// manifest, tolerate a missing file, tolerate malformed JSON, default to
+// false/absent when the field is missing or holds any value other than the
+// single recognized literal "linked") -- the same "malformed opt-in never
+// silently masquerades as a real one" discipline ResolveDiscipline documents
+// for "full".
+func resolvePublicSurfaceAuthorityLinked(graphPath string) bool {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return false
+	}
+	var m struct {
+		PublicSurfaceAuthority string `json:"public_surface_authority"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return false
+	}
+	return m.PublicSurfaceAuthority == PublicSurfaceAuthorityLinked
 }
 
 // GenProfileFull and GenProfileConsumer are the two accepted values for the

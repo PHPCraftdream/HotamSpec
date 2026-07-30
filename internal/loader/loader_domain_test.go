@@ -98,7 +98,11 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// count change) and added its two atomic successors,
 		// R-requirement-generation-mechanized-by-registry and
 		// R-entity-type-realized-by-go-symbol-never-generated.
-		{"requirements", len(g.Requirements), 305},
+		// 305 + 1: R-public-surface-authority-owns-its-own-obligations --
+		// landed task #396 (W1.4) via `hotam sync-self`, the self-hosting
+		// anchor for check_public_surface_linked_or_marked/
+		// check_public_surface_authority_ratchet's orphan-enforcer gate.
+		{"requirements", len(g.Requirements), 306},
 		// 8 + 1: task #347 (RAC-C part 3) landed C-d20cf537
 		// (reviewability-vs-code-authority, DETECTED, unresolved by design --
 		// the resolver-trust-shift RAC-B3/B4's self-hosting authority flip

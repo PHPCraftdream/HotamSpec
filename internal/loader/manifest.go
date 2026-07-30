@@ -169,6 +169,26 @@ type DomainManifest struct {
 	// place, and why that was a violation of R-scenario-spec-obligations-
 	// mechanically-enforced's own "each gate its own opt-in trigger" law.
 	ClaimAuthority string `json:"claim_authority,omitempty"`
+
+	// PublicSurfaceAuthority is the optional "public_surface_authority"
+	// opt-in (resolvePublicSurfaceAuthorityLinked, task #396/W1.4). The
+	// single recognized non-empty value is PublicSurfaceAuthorityLinked
+	// ("linked"); an absent key (or any other value) resolves to the SAME
+	// honest-no-op default as an absent key -- mirroring ClaimAuthority's
+	// own "one recognized literal, every other value/absence treated
+	// identically" contract above. It gates
+	// check_public_surface_linked_or_marked
+	// (internal/invariants/model_complete_symmetric.go) as its OWN,
+	// INDEPENDENT trigger -- it does NOT require g.Discipline ==
+	// loader.DisciplineFull as a co-requirement (unlike ClaimAuthority,
+	// which requires discipline:"full" IN ADDITION TO claim_authority:
+	// "scenario"). This mirrors R-opt-in-trigger-owns-its-own-obligations:
+	// a brand-new obligation (every public authored symbol either cited +
+	// scenario-complete, or explicitly marked infrastructure/ignored) gets
+	// its OWN, separately-declared, separately-ratcheted trigger, never
+	// riding in on an already-spent one (discipline:"full" was already
+	// spent by prat/gpsm-sm before this check existed).
+	PublicSurfaceAuthority string `json:"public_surface_authority,omitempty"`
 }
 
 // LoadManifest reads and decodes the manifest.json at path into a DomainManifest.

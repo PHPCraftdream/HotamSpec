@@ -180,7 +180,26 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// to a real Go declaration in the domain's authored spec/model/ tree,
 	// reusing the identical gate.ParseFileColonSymbol/SpecRootForGraph/
 	// ResolveSpecSymbol machinery.
-	const expected = 117
+	// Task #396 (W1.4: the symmetric inverse of check_model_complete) added
+	// TWO more. An 118th, check_public_surface_linked_or_marked
+	// (model_complete_symmetric.go): every EXPORTED authored symbol (receiver
+	// method, interface method, or top-level function/constructor) in the
+	// domain's scanned model inventory must be EITHER cited by a SETTLED
+	// requirement's implemented_by AND scenario-complete (the identical bar
+	// check_model_complete applies, via a shared collectCitedSymbols
+	// aggregation both checks now call), OR its doc comment carries an
+	// explicit INFRASTRUCTURE:/IGNORED: marker with a stated reason -- gated
+	// behind its own BRAND NEW opt-in trigger, public_surface_authority:
+	// "linked" (loader.PublicSurfaceAuthorityLinked), deliberately NOT
+	// co-gated with discipline:"full" (per R-opt-in-trigger-owns-its-own-
+	// obligations: a new obligation never rides in on an already-spent
+	// trigger). A 119th, check_public_surface_authority_ratchet
+	// (public_surface_authority_ratchet.go): the public_surface_authority:
+	// "linked" one-way ratchet, symmetric with check_claim_authority_ratchet
+	// -- once a domain has been observed with public_surface_authority:
+	// "linked" (pinned in graph.lock's PublicSurfaceAuthorityLinkedObserved),
+	// silently withdrawing that opt-in is a regression violation.
+	const expected = 119
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

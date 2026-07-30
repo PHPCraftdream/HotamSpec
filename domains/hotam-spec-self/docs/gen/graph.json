@@ -449,6 +449,7 @@
     "R-project-root-not-hardcoded",
     "R-proposed-conflict-kind-exists",
     "R-proposed-stakeholder-kind-exists",
+    "R-public-surface-authority-owns-its-own-obligations",
     "R-rdf-store",
     "R-recently-rejected-surfaced",
     "R-reflection-predicates-first-class",
@@ -1222,6 +1223,37 @@
         "internal/invariants/authored_prose_snapshot_test.go:TestCheckAuthoredProseSnapshot_FiresOnGpsmSmShapedSentence"
       ],
       "why": "Task #331 (R4-process-why), fourth external review: prat/gpsm-sm's Process.Why literally read \"27 из 32 ФТ... ТЕКУЩЕЕ ПОЛОЖЕНИЕ на 2026-07-21\" while the graph had since moved to 32/32 -- a real, confirmed contradiction between durable authored prose and live graph state, because the prose captured a snapshot nothing ever re-derived. The fix has two enforcement halves. (1) PIPELINE.md now renders a generated \"Live state\" section (internal/generator/pipeline.go's renderPipelineLiveState, called from BuildPipeline) placed BEFORE the first `## Process` section (R-domain-overview-projection's own \"where are we now\" before \"how does this work\" ordering) -- a pure function of graph.json state only (no `today`/date parameter, so gen-spec stays byte-reproducible run to run), rendering one line per gate_stage_order stage (SIGNED/DEFERRED tally via GateSignoffTally, honest \"not started\" beyond the GateFrontier) plus a Conflicts DECIDED/HELD/UNRESOLVED line via ConflictLifecycleTally, omitted entirely when the domain has no declared gate_stage_order and no Conflicts (honest no-op, not an empty placeholder). (2) A narrow, ADVISORY-ONLY lint (internal/invariants/process_why_snapshot.go's check_process_why_snapshot_prose, exported as ProcessWhySnapshotWarnings, wired into cmd/hotam's non-blocking ADVISORY section -- mirrors HonoredSkipWarnings' identical never-registered-in-All shape) flags a Process.Why or Step.Why text that either (a) co-occurs a fixed snapshot-marker phrase (\"текущее положение\" / \"по состоянию на\" / \"as of\" / \"current status\") with an ISO date, or (b) co-occurs a \"N из/of M\" tally with any stage token from the domain's OWN declared gate_stage_order. Deliberately scoped to Process.Why/Step.Why only (never Requirement.Why) and deliberately a small fixed pattern set, not a general number/date heuristic, verified against hotam-spec-self's own 253-requirement graph producing zero false positives. The actual gpsm-sm Process.Why migration (rewriting PR-gpsm-ott-delivery's stale text in the sibling PRAT-hotam repo) is intentionally OUT of this requirement's scope -- a separate follow-up task, not this engine-portion change."
+    },
+    {
+      "assumptions": [],
+      "claim": "check_public_surface_linked_or_marked's obligation (every EXPORTED authored symbol -- receiver method, interface method, or top-level function/constructor -- is EITHER cited by a SETTLED requirement's implemented_by AND scenario-complete, OR its doc comment carries an explicit INFRASTRUCTURE:/IGNORED: marker with a stated reason) is gated behind its own opt-in trigger, public_surface_authority:\"linked\" (loader.PublicSurfaceAuthorityLinked), entirely INDEPENDENT of discipline:\"full\" -- it does NOT activate merely because a domain has already flipped discipline:\"full\" for the four pre-existing scenario-generated-spec obligations, and it does NOT require discipline:\"full\" as a co-requirement either.",
+      "enforced_by": [
+        "check_public_surface_linked_or_marked",
+        "check_public_surface_authority_ratchet"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-30",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-public-surface-authority-owns-its-own-obligations",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/loader/loader.go",
+        "internal/invariants/model_complete_symmetric.go",
+        "internal/invariants/public_surface_authority_ratchet.go",
+        "internal/loader/lock.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Task #396 (W1.4): check_model_complete only asks 'for every method ALREADY cited as implemented_by, is it scenario-complete?' -- a public method/interface-method/constructor no requirement has ever cited is invisible to that check, so a domain's model can silently accumulate uncovered public surface with no gate noticing. check_public_surface_linked_or_marked (internal/invariants/model_complete_symmetric.go) closes that gap with the SYMMETRIC inverse obligation. This is a BRAND NEW class of duty, and R-opt-in-trigger-owns-its-own-obligations already states the general law it must obey: 'an already-spent opt-in trigger is closed to new mechanical obligations... a new duty requires its own, separately-declared opt-in trigger.' check_model_complete and its three siblings (check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current) plus check_discipline_ratchet are ALL already bundled under discipline:\"full\", and TWO REAL CONSUMER DOMAINS (PRAT-hotam/domains/prat, domains/gpsm-sm) had ALREADY flipped that flag long before this check existed, consenting only to the obligation set live at that time -- never to this one. Tacking check_public_surface_linked_or_marked onto discipline:\"full\" would have reproduced EXACTLY the live regression task #369 caused and task #388 fixed: both domains would jump from 0 to many violations overnight, since neither has ever cited an interface method or constructor (those categories did not exist in gate.ScanAuthoredModels before task #393) nor added any infrastructure/ignored marker anywhere. This requirement is the concrete INSTANCE of R-opt-in-trigger-owns-its-own-obligations' general law for this specific new check -- mirroring the identical relationship R-scenario-spec-obligations-mechanically-enforced's own four gates have to their shared anchor -- not a restatement of the general law itself. The mechanical embodiment: public_surface_authority:\"linked\" (internal/loader/loader.go's PublicSurfaceAuthorityLinked, manifest.json's \"public_surface_authority\" field) is a wholly new, independently-resolved DomainManifest field, and check_public_surface_authority_ratchet (internal/invariants/public_surface_authority_ratchet.go, symmetric with check_claim_authority_ratchet) makes that trigger's own one-way-door promise mechanical: once a domain has explicitly opted in (pinned in graph.lock's PublicSurfaceAuthorityLinkedObserved), it cannot silently un-opt. This wave deliberately opts NO real domain into public_surface_authority:\"linked\" -- domains/hotam-spec-self, domains/hotam-dev, and everything under PRAT-hotam stay honest no-ops for this check."
     },
     {
       "assumptions": [],

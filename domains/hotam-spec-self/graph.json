@@ -10515,6 +10515,47 @@
       "decl_order": 243
     },
     {
+      "id": "R-public-surface-authority-owns-its-own-obligations",
+      "claim": "check_public_surface_linked_or_marked's obligation (every EXPORTED authored symbol -- receiver method, interface method, or top-level function/constructor -- is EITHER cited by a SETTLED requirement's implemented_by AND scenario-complete, OR its doc comment carries an explicit INFRASTRUCTURE:/IGNORED: marker with a stated reason) is gated behind its own opt-in trigger, public_surface_authority:\"linked\" (loader.PublicSurfaceAuthorityLinked), entirely INDEPENDENT of discipline:\"full\" -- it does NOT activate merely because a domain has already flipped discipline:\"full\" for the four pre-existing scenario-generated-spec obligations, and it does NOT require discipline:\"full\" as a co-requirement either.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Task #396 (W1.4): check_model_complete only asks 'for every method ALREADY cited as implemented_by, is it scenario-complete?' -- a public method/interface-method/constructor no requirement has ever cited is invisible to that check, so a domain's model can silently accumulate uncovered public surface with no gate noticing. check_public_surface_linked_or_marked (internal/invariants/model_complete_symmetric.go) closes that gap with the SYMMETRIC inverse obligation. This is a BRAND NEW class of duty, and R-opt-in-trigger-owns-its-own-obligations already states the general law it must obey: 'an already-spent opt-in trigger is closed to new mechanical obligations... a new duty requires its own, separately-declared opt-in trigger.' check_model_complete and its three siblings (check_settled_requires_scenario, check_scenario_executes_impl, check_spec_md_current) plus check_discipline_ratchet are ALL already bundled under discipline:\"full\", and TWO REAL CONSUMER DOMAINS (PRAT-hotam/domains/prat, domains/gpsm-sm) had ALREADY flipped that flag long before this check existed, consenting only to the obligation set live at that time -- never to this one. Tacking check_public_surface_linked_or_marked onto discipline:\"full\" would have reproduced EXACTLY the live regression task #369 caused and task #388 fixed: both domains would jump from 0 to many violations overnight, since neither has ever cited an interface method or constructor (those categories did not exist in gate.ScanAuthoredModels before task #393) nor added any infrastructure/ignored marker anywhere. This requirement is the concrete INSTANCE of R-opt-in-trigger-owns-its-own-obligations' general law for this specific new check -- mirroring the identical relationship R-scenario-spec-obligations-mechanically-enforced's own four gates have to their shared anchor -- not a restatement of the general law itself. The mechanical embodiment: public_surface_authority:\"linked\" (internal/loader/loader.go's PublicSurfaceAuthorityLinked, manifest.json's \"public_surface_authority\" field) is a wholly new, independently-resolved DomainManifest field, and check_public_surface_authority_ratchet (internal/invariants/public_surface_authority_ratchet.go, symmetric with check_claim_authority_ratchet) makes that trigger's own one-way-door promise mechanical: once a domain has explicitly opted in (pinned in graph.lock's PublicSurfaceAuthorityLinkedObserved), it cannot silently un-opt. This wave deliberately opts NO real domain into public_surface_authority:\"linked\" -- domains/hotam-spec-self, domains/hotam-dev, and everything under PRAT-hotam stay honest no-ops for this check.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-opt-in-trigger-owns-its-own-obligations"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_public_surface_linked_or_marked",
+        "check_public_surface_authority_ratchet"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-30",
+      "settled_at": "2026-07-30",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "internal/loader/loader.go",
+        "internal/invariants/model_complete_symmetric.go",
+        "internal/invariants/public_surface_authority_ratchet.go",
+        "internal/loader/lock.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-30",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-rdf-store",
       "claim": "The tension graph shall be persisted in an RDF triplestore with SHACL shapes and SPARQL traversal.",
       "owner": "framework-author",

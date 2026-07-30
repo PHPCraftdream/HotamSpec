@@ -69,6 +69,26 @@ type Graph struct {
 	// comment in internal/loader/loader.go for why the two were split into
 	// independent triggers.
 	ClaimAuthorityScenario bool `json:"-"`
+	// PublicSurfaceAuthorityLinked is the domain's manifest.json
+	// "public_surface_authority": "linked" opt-in
+	// (loader.resolvePublicSurfaceAuthorityLinked, task #396/W1.4), populated
+	// by the loader at LoadGraph time exactly like ClaimAuthorityScenario
+	// above -- deliberately unserialized (json:"-"): it lives in
+	// manifest.json, not graph.json, so it never round-trips through this
+	// struct's own JSON encoding. It is the SOLE opt-in trigger for
+	// check_public_surface_linked_or_marked (internal/invariants/
+	// model_complete_symmetric.go) -- the SYMMETRIC inverse of
+	// check_model_complete: every exported authored symbol (receiver method,
+	// interface method, or top-level function/constructor) must be EITHER
+	// cited by a SETTLED requirement's implemented_by AND scenario-complete,
+	// OR carry an explicit INFRASTRUCTURE/IGNORED doc-comment marker.
+	// Deliberately NOT co-gated with Discipline == DisciplineFull (unlike
+	// ClaimAuthorityScenario, which requires discipline:"full" IN ADDITION TO
+	// claim_authority:"scenario") -- see
+	// loader.PublicSurfaceAuthorityLinked's own doc comment in
+	// internal/loader/loader.go for why this is a brand-new, wholly
+	// independent trigger per R-opt-in-trigger-owns-its-own-obligations.
+	PublicSurfaceAuthorityLinked bool `json:"-"`
 	// DomainDir is the filesystem path of the domain directory this graph was
 	// loaded from (the resolved --domain path, i.e. the parent dir of
 	// graph.json). Populated by the loader at LoadGraph time; deliberately

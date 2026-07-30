@@ -17,6 +17,77 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **New check `check_public_surface_linked_or_marked` — the SYMMETRIC INVERSE of `check_model_complete`: every
+  exported authored symbol (receiver method, interface method, or top-level function/constructor) must be
+  EITHER cited + scenario-complete OR explicitly marked infrastructure/ignored, gated behind its own brand-new
+  opt-in trigger (task #396, W1.4).** `check_model_complete` only ever asked "for every method ALREADY cited as
+  `implemented_by` by a SETTLED requirement, is it scenario-complete?" — a public method/interface-method/
+  constructor no requirement has ever cited was completely invisible to that check, so a domain's model could
+  silently accumulate uncovered public surface with zero gate noticing. This task was blocked on task #393
+  specifically because "symmetry only makes sense once the scan sees the WHOLE public surface, including
+  interface methods and constructors" — before #393, `gate.ScanAuthoredModels` could not see those categories
+  at all (`ModelObject.InterfaceMethods`, `ModelFile.Funcs`).
+  - **Compliance rule.** For every exported symbol in the domain's scanned model inventory
+    (`ModelObject.Methods`, `ModelObject.InterfaceMethods` with `Name != ""` — `Embedded` entries skipped, they
+    are not this object's own declared method — and `ModelFile.Funcs`), the symbol is compliant iff (a) it is
+    cited by at least one SETTLED requirement's `implemented_by` AND that citation's aggregated
+    `anyVerifiedByEntryHasScenario` is true (the IDENTICAL bar `check_model_complete` already applies), OR (b)
+    its own doc comment carries the literal substring `"INFRASTRUCTURE:"` or `"IGNORED:"` followed by
+    non-empty trimmed trailing text (`infrastructureOrIgnoredReason`, new file `internal/invariants/
+    model_complete_symmetric.go`). A bare marker with nothing after it does NOT count as marked — a reason is
+    required. The marker is deliberately an ordinary-prose reserved-word convention, NOT a `//directive:`-line
+    convention: `gate.docText` joins a `*ast.CommentGroup` via `(*ast.CommentGroup).Text()`, which
+    AUTOMATICALLY STRIPS Go-directive-shaped lines (e.g. `//go:generate`) from its output, so a bare directive
+    marker would be silently deleted before `Doc` ever captured it.
+  - **Own, independent opt-in trigger — the single most important design constraint.** New manifest.json key
+    `public_surface_authority: "linked"` (`loader.PublicSurfaceAuthorityLinked`,
+    `internal/loader/loader.go`/`manifest.go`), wired into `LoadGraph` and `ontology.Graph.PublicSurfaceAuthorityLinked`
+    (`json:"-"`, mirrors `ClaimAuthorityScenario`'s shape exactly). This check does NOT activate on
+    `discipline:"full"` — `check_model_complete` and its three siblings plus `check_discipline_ratchet` are ALL
+    already bundled under that trigger, and two real consumer domains (`PRAT-hotam/domains/prat`,
+    `domains/gpsm-sm`) had ALREADY flipped it long before this check existed, consenting only to the
+    obligation set live at that time. Tacking this new obligation onto `discipline:"full"` would have
+    reproduced EXACTLY the live regression task #369 caused and task #388 fixed (`R-opt-in-trigger-owns-its-
+    own-obligations`): both domains would jump from 0 to many violations overnight, since neither has ever
+    cited an interface method/constructor nor added any infrastructure/ignored marker anywhere. Unlike
+    `claim_authority:"scenario"` (which requires `discipline:"full"` IN ADDITION), `public_surface_authority:
+    "linked"` is deliberately NOT co-gated with `discipline:"full"` at all — it is sufficient and necessary on
+    its own. Ratcheted one-way, mirroring `check_claim_authority_ratchet`'s exact shape: `graph.lock` gained
+    `PublicSurfaceAuthorityLinkedObserved` (`internal/loader/lock.go`, `loader.WriteLock`/
+    `loader.ReadPublicSurfaceAuthorityPin`), and new invariant `check_public_surface_authority_ratchet`
+    (`internal/invariants/public_surface_authority_ratchet.go`) fires if a domain ever observed with
+    `public_surface_authority:"linked"` later reports a manifest without it.
+  - **Citation-collection refactor, not a re-implementation.** `check_model_complete`'s former inline citation-
+    collection loop is now the shared `collectCitedSymbols` helper (`internal/invariants/model_complete.go`),
+    generalized from `matchCitedExportedMethod` (receiver methods only) to `matchCitedSymbol` (receiver
+    methods, interface methods, AND top-level funcs, in that priority order per candidate object/file — a
+    qualified `"Type.Symbol"` citation never accidentally resolves to an unrelated func of the same bare
+    name). `check_model_complete` filters `collectCitedSymbols`' output back down to receiver methods only, so
+    its own behavior is UNCHANGED — `internal/invariants/model_complete_test.go` has a ZERO-line diff, proving
+    the refactor did not alter that check's output.
+  - New self-hosting anchor requirement `R-public-surface-authority-owns-its-own-obligations`
+    (`internal/selfspec/requirements_authoredspec.go`, `refines R-opt-in-trigger-owns-its-own-obligations` —
+    the concrete INSTANCE of that general law for this specific new check, not a restatement of it, mirroring
+    `R-scenario-spec-obligations-mechanically-enforced`'s own relationship to its four gates). `EnforcedBy`
+    names both new checks (`check_public_surface_linked_or_marked`, `check_public_surface_authority_ratchet`).
+    Landed via `hotam sync-self`.
+  - `internal/invariants/registry_complete_test.go`'s registered-invariant count moves 117 → 119 (two new
+    checks); `internal/selfspec/merge_test.go`'s `wantRequirementCount` and
+    `internal/loader/loader_domain_test.go`'s requirement-count assertion both move 305 → 306.
+  - **This wave opts NO real domain into `public_surface_authority:"linked"`** — `domains/hotam-spec-self`,
+    `domains/hotam-dev`, and everything under `PRAT-hotam` stay honest no-ops for this check; `all-violations`
+    confirmed 0 on both `domains/hotam-spec-self` and `domains/hotam-dev` after landing.
+  - New tests: `internal/loader/public_surface_authority_test.go` (`resolvePublicSurfaceAuthorityLinked`
+    true/false/absent/malformed cases, `LoadGraph` end-to-end wiring),
+    `internal/invariants/public_surface_authority_ratchet_test.go` (mirrors
+    `claim_authority_ratchet_test.go`'s full regression/no-op/independence suite),
+    `internal/invariants/model_complete_symmetric_test.go` (`infrastructureOrIgnoredReason` marker parsing,
+    `check_public_surface_linked_or_marked` across all combinations of cited/uncited × complete/incomplete ×
+    marked/unmarked, across all three symbol categories, plus the honest-no-op case).
+  - Verified: `go build`/`go vet`/`gofmt` clean (excl. pre-existing untracked `.scratch` draft), targeted tests
+    (`internal/loader`, `internal/invariants`, `internal/ontology`, `cmd/hotam`) all pass, full `go test ./...`
+    green.
+
 - **`ontology.EntityType` gains `ModelSymbol`, a one-directional link from a graph EntityType node to the Go
   type in a domain's authored `spec/model/` that realizes it; `R-generations-inherit-doc-test-code`'s
   EntityType-generation half is REJECTED and replaced by two atomic successors (task #395, W1.3).** Two
